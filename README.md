@@ -1,5 +1,5 @@
 <p align="center">
-  <img src=".github/assets/otto-avatar.png" width="96" alt="Otto" />
+  <img src=".github/assets/otto-avatar.png" width="144" alt="Otto" />
 </p>
 
 # Otto
