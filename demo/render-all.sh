@@ -13,7 +13,7 @@ render OttoV01Practices           otto-v01-practices
 render OttoV01Routines            otto-v01-routines
 render OttoV01Skills              otto-v01-skills
 render OttoV01Standards           otto-v01-standards
-render OttoV01AutonomyTicketcraft otto-v01-autonomy-ticketcraft
+render OttoV01Autonomy otto-v01-autonomy
 render OttoV01Desktop             otto-v01-desktop
 render OttoV01Knowledge           otto-v01-knowledge
 

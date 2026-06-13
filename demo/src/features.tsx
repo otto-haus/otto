@@ -170,8 +170,8 @@ export const features: Feature[] = [
       "Standards are explicit, human-ratified canon that can block fake done.",
   },
   {
-    id: "OttoV01AutonomyTicketcraft",
-    file: "otto-v01-autonomy-ticketcraft",
+    id: "OttoV01Autonomy",
+    file: "otto-v01-autonomy",
     name: "Autonomy",
     kicker: "own the reversible · gate the rest",
     tagline:

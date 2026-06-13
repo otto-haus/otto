@@ -34,6 +34,6 @@ signs off. A demo never marks a feature Shipped.
 | 3 | Routines | `out/otto-v01-routines.mp4` | Routines bundle Practices; recurring activation needs approval | That a recurring schedule has run in production | ☐ |
 | 4 | Skills | `out/otto-v01-skills.mp4` | Skills are loadable workflow + context packages | Coverage beyond the charter / routine skills | ☐ |
 | 5 | Standards | `out/otto-v01-standards.mp4` | Human-ratified canon + precedents can block fake done | That a review has blocked a real PR yet | ☐ |
-| 6 | Autonomy / Ticketcraft | `out/otto-v01-autonomy-ticketcraft.mp4` | Three-zone model; Ticketcraft compiles bounded slices | A fully automated multi-worker run | ☐ |
+| 6 | Autonomy | `out/otto-v01-autonomy.mp4` | Three-zone model; Ticketcraft compiles bounded slices | A fully automated multi-worker run | ☐ |
 | 7 | Desktop | `out/otto-v01-desktop.mp4` | The workspace builds and reads state from files (real build log) | A production-complete UI | ☐ |
 | 8 | Knowledge | `out/otto-v01-knowledge.mp4` | A *proposed* AI-frontier Knowledge surface, clearly marked | Verified/benchmarked model ratings or active routing | ☐ |

@@ -16,7 +16,7 @@ tag, no release, no npm publish without explicit approval).
 | Routines | ✅ | manual | ✅ | ☐ | ☐ | ☐ | extension + specs; approval-gated activation |
 | Skills | ✅ | manual | ✅ | ☐ | ☐ | ☐ | charter + routine agent workflows |
 | Standards | ✅ | manual | ✅ | ☐ | ☐ | ☐ | registry, precedents, anti-patterns |
-| Autonomy / Ticketcraft | ✅ | manual | ✅ | ☐ | ☐ | ☐ | spec + worker/ticket templates |
+| Autonomy | ✅ | manual | ✅ | ☐ | ☐ | ☐ | spec + worker/ticket templates |
 | Desktop | ✅ | build ✅ | ✅ | ☐ | ☐ | ☐ | preview workspace shell — sidebar surfaces, chat-primary (Vite + React) |
 | Knowledge | proposed | — | ✅ | ☐ | ☐ | ☐ | **Built, not Shipped** — proposed AI-frontier surface, routing unratified |
 | Channels | deferred | — | — | — | — | ☐ | deferred from v0.1 |
@@ -63,13 +63,13 @@ in tracked files; the `VINNY_*` env tokens above are the allowed back-compat fal
   `VINNY_OS_ROOT` fallback. Default runtime root `~/.otto`.
 - **Bin alias:** the practices CLI is `otto-practices` (was `vinny-practices`).
 - **Historical:** the old GitHub remote `origin = TryVeto/vinny-os` is preserved untouched.
-- **Owned namespaces:** Sebastian owns the `otto-hq` and `otto-do` GitHub orgs and the `otto.do` domain. `otto-do` is canonical; `otto-hq` is held but not used for v0.1.
+- **Namespace is NOT final.** Sebastian owns the `otto-do`, `otto-haus`, and `otto-hq` GitHub orgs, and the `otto.haus` domain (`otto.do` was unavailable). `@otto-do` is only the current *local implementation* choice — the final public org, package scope, and domain are an approval ask before push.
 
 ## GitHub metadata (prepared — NOT applied; push is Sebastian's call)
 
-- Owner / repo: `otto-do/otto`  ·  Description: `The behavior layer for persistent AI agents.`
+- Owner / repo: `otto-do/otto` *(provisional — namespace pending approval)* · Description: `The behavior layer for persistent AI agents.`
 - Topics: `ai-agents` `agent-runtime` `autonomous-agents` `guardrails` `local-first` `letta` `routines` `practices`
-- Homepage: blank for v0.1 (or `https://otto.do` once DNS settled)
+- Homepage: blank — Otto v0.1 does not depend on a website (`otto.haus` is the current domain asset)
 - Avatar: `~/Library/CloudStorage/Dropbox/This Cycle/otto/otto-pfp-github.png`
 
 ## Open issues / honest gaps
@@ -77,10 +77,17 @@ in tracked files; the `VINNY_*` env tokens above are the allowed back-compat fal
 - Demo terminals are faithful re-enactments, not live captures (see `demo/README.md`).
 - Charter, Routines, Skills, Standards, Autonomy have no automated unit tests yet (manual).
 - Knowledge is **proposed**; model-registry ratings are qualitative, routing unratified.
-- Namespace confirmed: Sebastian owns `otto-hq`, `otto-do`, and `otto.do`; **`otto-do` is canonical** (`otto-hq` owned but non-canonical for now).
+- **Namespace is OPEN** — not yet decided. Orgs owned: `otto-do`, `otto-haus`, `otto-hq`. Domain asset: `otto.haus` (`otto.do` unavailable). `@otto-do` is the current local choice; final org / scope / domain is an approval ask before push.
 - Desktop chat is a prototype shell (file-backed panes work; the Letta runtime is not yet wired).
 
 ## Final gate — Sebastian approves before any push/tag
+
+**Sequence (nothing is pushed, tagged, published, or changed on GitHub until step 4):**
+
+1. Sebastian watches the demos.
+2. Sebastian approves which features ship.
+3. Sebastian confirms namespace / org / package scope / domain.
+4. Then we push together.
 
 | Item | Approved? |
 |---|:--:|
@@ -89,7 +96,7 @@ in tracked files; the `VINNY_*` env tokens above are the allowed back-compat fal
 | Demo videos (8, in `demo/out/`) | ☐ |
 | Test receipts | ☐ |
 | Remaining old-name hits (all intentional) | ☐ |
-| Namespace: `otto-do` canonical (otto-hq + otto.do also owned) | ✅ confirmed |
-| GitHub metadata | ☐ |
+| Namespace / org / package scope / domain (`otto-do` / `otto-haus` / `otto-hq`; `otto.haus`) | ☐ open — decide before push |
+| GitHub metadata (incl. avatar) — not applied yet | ☐ |
 | Release/tag name (`v0.1.0`) | ☐ |
-| **Push `otto-do/otto` + tag** (Red — explicit) | ☐ |
+| **Push + tag** (Red — explicit, step 4) | ☐ |

@@ -6,4 +6,4 @@ known limitations, approval status. Shipped status lives in
 tries it and approves.
 
 - [charter](charter.md) · [practices](practices.md) · [routines](routines.md) · [skills](skills.md)
-- [standards](standards.md) · [autonomy-ticketcraft](autonomy-ticketcraft.md) · [desktop](desktop.md) · [knowledge](knowledge.md) *(proposed)*
+- [standards](standards.md) · [autonomy](autonomy.md) · [desktop](desktop.md) · [knowledge](knowledge.md) *(proposed)*

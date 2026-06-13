@@ -40,7 +40,7 @@ corrections stick, one-way doors stay gated, and "done" means proven.
 | **Practices** | Executable Standards — repeatable workflows with a purpose, trigger, inputs, outputs, state, guardrails, evidence standard, and improvement loop. |
 | **Routines** | Repeated bundles of Practices. Recurring activation requires approval — attention is a one-way door. |
 | **Standards** | The explicit canon: what Otto rewards, refuses, and does under pressure. Precedents are the case law. |
-| **Autonomy / Ticketcraft** | What Otto may own without a human in the loop vs. what must escalate. Ticketcraft compiles bounded worker slices. |
+| **Autonomy** | What Otto may own without a human in the loop vs. what must escalate. Ticketcraft compiles bounded worker slices. |
 | **Skills** | Reusable capability/context packages an agent loads to do a kind of work. |
 | **Approvals** | First-class, scoped, time-bound records of human consent for consequential, one-way actions. |
 | **Receipts** | Proof. No artifact, no progress. Done requires mapped proof. |
@@ -123,7 +123,7 @@ v0.1 status is honest and tracked in [`RELEASE_CHECKLIST.md`](RELEASE_CHECKLIST.
 | Routines | ✅ | manual | ✅ | core — repeated bundles of Practices |
 | Skills | ✅ | manual | ✅ | capability layer |
 | Standards | ✅ | manual | ✅ | canon + precedents + anti-patterns |
-| Autonomy / Ticketcraft | ✅ | manual | ✅ | spec + worker/ticket templates |
+| Autonomy | ✅ | manual | ✅ | spec + worker/ticket templates |
 | Desktop | ✅ | build | ✅ | preview workspace shell — sidebar surfaces, chat-primary |
 | Knowledge | proposed | — | ✅ | proposed AI-frontier surface present; routing unratified |
 

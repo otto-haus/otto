@@ -13,7 +13,7 @@ tries the demo and approves. Claude is execution lead; Sebastian is the only rel
 | Routines | ✅ | manual | ✅ | [routines](../receipts/otto-v01/routines.md) | ☐ | ☐ |
 | Skills | ✅ | manual | ✅ | [skills](../receipts/otto-v01/skills.md) | ☐ | ☐ |
 | Standards | ✅ | manual | ✅ | [standards](../receipts/otto-v01/standards.md) | ☐ | ☐ |
-| Autonomy / Ticketcraft | ✅ | manual | ✅ | [autonomy-ticketcraft](../receipts/otto-v01/autonomy-ticketcraft.md) | ☐ | ☐ |
+| Autonomy | ✅ | manual | ✅ | [autonomy](../receipts/otto-v01/autonomy.md) | ☐ | ☐ |
 | Desktop | ✅ | build ✅ | ✅ | [desktop](../receipts/otto-v01/desktop.md) | ☐ | ☐ |
 | Knowledge | proposed | — | ✅ | [knowledge](../receipts/otto-v01/knowledge.md) | ☐ | ☐ |
 
