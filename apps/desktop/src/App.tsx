@@ -47,6 +47,18 @@ const initialSurface = (): SurfaceId => {
   return VALID.includes(h) ? h : 'chat';
 };
 
+// Honest per-surface data source: which panes read real files vs sample/prototype data.
+const DATA_SOURCE: Partial<Record<SurfaceId, 'file' | 'sample'>> = {
+  practices: 'file',
+  settings: 'file',
+  charters: 'sample',
+  standards: 'sample',
+  routines: 'sample',
+  curation: 'sample',
+  receipts: 'sample',
+  autonomy: 'sample',
+};
+
 export function App() {
   const [active, setActiveState] = useState<SurfaceId>(initialSurface());
   const setActive = (id: SurfaceId) => {
@@ -75,6 +87,8 @@ export function App() {
                 {meta.sub && <div className="topbar__sub">{meta.sub}</div>}
               </div>
               <div className="topbar__right">
+                {DATA_SOURCE[active] === 'file' && <span className="pill pill--ok">file-backed</span>}
+                {DATA_SOURCE[active] === 'sample' && <span className="pill">sample data</span>}
                 <span className="pill pill--info">v0.1 preview</span>
               </div>
             </header>
