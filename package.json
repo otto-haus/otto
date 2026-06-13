@@ -26,7 +26,11 @@
     "README.md",
     "LICENSE"
   ],
+  "workspaces": [
+    "packages/*"
+  ],
   "scripts": {
-    "install-extension": "./scripts/install.sh"
+    "install-extension": "./scripts/install.sh",
+    "typecheck": "tsc -p packages/core/tsconfig.json"
   }
 }
