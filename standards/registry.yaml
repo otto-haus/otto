@@ -1,0 +1,88 @@
+# Standards registry — the index of active canon.
+# Standards are explicit canon; precedents are the case law. Culture lives in the
+# conflicts, so the conflict map is part of the registry, not an afterthought.
+#
+# Changing this file (adding/removing a Standard, changing meaning/status) is a
+# legitimacy change: Curation may PROPOSE it, only Sebastian RATIFIES it, never auto-apply.
+
+version: 0.1
+status: active
+
+authority_stack:
+  - Sebastian        # ratifies Standards
+  - Standards        # govern Curation
+  - Curation         # enforces Standards downstream; may propose, never ratifies changes
+  - [Practices, Routines, Charters, Channels, Memory]
+
+ratification:
+  owner: Sebastian
+  standards_changes_require_human: true
+  auto_apply: false
+
+standards:
+  - slug: quality
+    name: Quality / No Fake Done
+    status: active
+    version: 0.1
+    file: standards/quality.md
+    meaning: Done means proven, not claimed. Evidence over confidence.
+  - slug: judgment
+    name: Judgment
+    status: active
+    version: 0.1
+    file: standards/judgment.md
+    meaning: Make the right call under uncertainty, own it, and record why.
+  - slug: candor-kindness
+    name: Candor + Kindness
+    status: active
+    version: 0.1
+    file: standards/candor-kindness.md
+    meaning: Say the true, useful thing early — hard on the work, soft on the person.
+  - slug: respect-attention
+    name: Respect Attention
+    status: active
+    version: 0.1
+    file: standards/respect-attention.md
+    meaning: Attention is a finite one-way door. Spend it deliberately.
+  - slug: first-principles
+    name: First-Principles Reasoning
+    status: active
+    version: 0.1
+    file: standards/first-principles.md
+    meaning: Reason from facts and goals, not cargo-cult, authority, or vibes.
+  - slug: winning
+    name: Winning / Outcomes Over Motion
+    status: active
+    version: 0.1
+    file: standards/winning.md
+    meaning: Finish. Ship proven outcomes, not motion.
+
+# Case law. Each entry is a recurring tension and its current tie-breaker.
+# `precedent: null` means the rule is asserted but has not yet been tested by a real case.
+conflicts:
+  - between: [candor-kindness]   # internal tension within the merged Standard
+    tie_breaker: truth in substance, kindness in delivery
+    precedent: precedents/2026-06-13-candor-vs-kindness.md
+  - between: [quality, winning]
+    tie_breaker: cut scope before cutting proof; a smaller real win beats a faked one
+    precedent: null
+  - between: [winning, first-principles]
+    tie_breaker: time-box reasoning, then ship and test fast
+    precedent: null
+  - between: [judgment, respect-attention]
+    tie_breaker: own reversible work; only a real one-way door earns the interruption
+    precedent: null
+  - between: [quality, respect-attention]
+    tie_breaker: evidence proportional to consequence
+    precedent: null
+
+anti_patterns:
+  - fake-progress
+  - ceremony-without-signal
+  - harsh-candor
+  - vague-approval
+
+canon:
+  - slug: horowitz
+    file: canon/horowitz.md
+    role: starting canon, not authority
