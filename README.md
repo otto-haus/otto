@@ -124,7 +124,7 @@ v0.1 status is honest and tracked in [`RELEASE_CHECKLIST.md`](RELEASE_CHECKLIST.
 | Skills | ✅ | manual | ✅ | capability layer |
 | Standards | ✅ | manual | ✅ | canon + precedents + anti-patterns |
 | Autonomy / Ticketcraft | ✅ | manual | ✅ | spec + worker/ticket templates |
-| Desktop | ✅ | build | ✅ | preview workspace (Vite + React) |
+| Desktop | ✅ | build | ✅ | preview workspace shell — sidebar surfaces, chat-primary |
 | Knowledge | proposed | — | ✅ | proposed AI-frontier surface present; routing unratified |
 
 Legend: ✅ automated/done · `manual` manually verifiable, no automated test · `build` build/typecheck

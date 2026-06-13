@@ -17,7 +17,7 @@ tag, no release, no npm publish without explicit approval).
 | Skills | ✅ | manual | ✅ | ☐ | ☐ | ☐ | charter + routine agent workflows |
 | Standards | ✅ | manual | ✅ | ☐ | ☐ | ☐ | registry, precedents, anti-patterns |
 | Autonomy / Ticketcraft | ✅ | manual | ✅ | ☐ | ☐ | ☐ | spec + worker/ticket templates |
-| Desktop | ✅ | build ✅ | ✅ | ☐ | ☐ | ☐ | preview workspace (Vite + React) |
+| Desktop | ✅ | build ✅ | ✅ | ☐ | ☐ | ☐ | preview workspace shell — sidebar surfaces, chat-primary (Vite + React) |
 | Knowledge | proposed | — | ✅ | ☐ | ☐ | ☐ | **Built, not Shipped** — proposed AI-frontier surface, routing unratified |
 | Channels | deferred | — | — | — | — | ☐ | deferred from v0.1 |
 | Curation / Approvals | deferred¹ | — | — | — | — | ☐ | deferred from v0.1 (¹Approval is a core type) |
@@ -63,6 +63,7 @@ in tracked files; the `VINNY_*` env tokens above are the allowed back-compat fal
   `VINNY_OS_ROOT` fallback. Default runtime root `~/.otto`.
 - **Bin alias:** the practices CLI is `otto-practices` (was `vinny-practices`).
 - **Historical:** the old GitHub remote `origin = TryVeto/vinny-os` is preserved untouched.
+- **Owned namespaces:** Sebastian owns the `otto-hq` and `otto-do` GitHub orgs and the `otto.do` domain. `otto-do` is canonical; `otto-hq` is held but not used for v0.1.
 
 ## GitHub metadata (prepared — NOT applied; push is Sebastian's call)
 
@@ -76,7 +77,8 @@ in tracked files; the `VINNY_*` env tokens above are the allowed back-compat fal
 - Demo terminals are faithful re-enactments, not live captures (see `demo/README.md`).
 - Charter, Routines, Skills, Standards, Autonomy have no automated unit tests yet (manual).
 - Knowledge is **proposed**; model-registry ratings are qualitative, routing unratified.
-- Namespace `otto-do` vs `otto-hq`: chose `otto-do` per master ticket; confirm below.
+- Namespace confirmed: Sebastian owns `otto-hq`, `otto-do`, and `otto.do`; **`otto-do` is canonical** (`otto-hq` owned but non-canonical for now).
+- Desktop chat is a prototype shell (file-backed panes work; the Letta runtime is not yet wired).
 
 ## Final gate — Sebastian approves before any push/tag
 
@@ -87,7 +89,7 @@ in tracked files; the `VINNY_*` env tokens above are the allowed back-compat fal
 | Demo videos (8, in `demo/out/`) | ☐ |
 | Test receipts | ☐ |
 | Remaining old-name hits (all intentional) | ☐ |
-| Namespace decision: `otto-do` / `@otto-do/` | ☐ |
+| Namespace: `otto-do` canonical (otto-hq + otto.do also owned) | ✅ confirmed |
 | GitHub metadata | ☐ |
 | Release/tag name (`v0.1.0`) | ☐ |
 | **Push `otto-do/otto` + tag** (Red — explicit) | ☐ |

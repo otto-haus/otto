@@ -1,96 +1,87 @@
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import type { PracticeSpec } from '@otto-do/core';
 import practicesData from './data/practices.json';
-import { mockApprovals, mockRuns } from './mockData.js';
-import { ApprovalsPanel } from './components/ApprovalsPanel.js';
-import { PracticeList } from './components/PracticeList.js';
-import { RunsPanel } from './components/RunsPanel.js';
+import { mockApprovals, mockRuns } from './mockData';
+import { Sidebar, type SurfaceId } from './components/Sidebar';
+import { Chat } from './surfaces/Chat';
+import {
+  Charters,
+  Standards,
+  Practices,
+  Routines,
+  Curation,
+  Receipts,
+  Autonomy,
+  Settings,
+} from './surfaces/Panes';
 
-const practices = practicesData as PracticeSpec[];
+const META: Record<SurfaceId, { title: string; sub: string }> = {
+  chat: { title: 'Chat', sub: '' },
+  charters: { title: 'Charters', sub: 'Operating contracts — intent compiled into evidence-checked work.' },
+  standards: { title: 'Standards', sub: 'The explicit canon: what Otto rewards, refuses, and does under pressure.' },
+  practices: { title: 'Practices', sub: 'Executable Standards — validated, repeatable workflows.' },
+  routines: { title: 'Routines', sub: 'Repeated bundles of Practices. Recurring activation needs approval.' },
+  curation: { title: 'Curation', sub: 'What compounds. Consequential proposals become Approvals.' },
+  receipts: { title: 'Receipts', sub: 'Runs and their proof. No artifact, no progress.' },
+  autonomy: { title: 'Autonomy', sub: 'What Otto owns without a human in the loop — and what escalates.' },
+  settings: { title: 'Settings', sub: 'Runtime, agent, and Letta connection.' },
+};
+
+function renderSurface(id: SurfaceId) {
+  switch (id) {
+    case 'charters': return <Charters />;
+    case 'standards': return <Standards />;
+    case 'practices': return <Practices />;
+    case 'routines': return <Routines />;
+    case 'curation': return <Curation />;
+    case 'receipts': return <Receipts />;
+    case 'autonomy': return <Autonomy />;
+    case 'settings': return <Settings />;
+    default: return null;
+  }
+}
+
+const VALID: SurfaceId[] = ['chat', 'charters', 'standards', 'practices', 'routines', 'curation', 'receipts', 'autonomy', 'settings'];
+const initialSurface = (): SurfaceId => {
+  const h = typeof location !== 'undefined' ? (location.hash.slice(1) as SurfaceId) : 'chat';
+  return VALID.includes(h) ? h : 'chat';
+};
 
 export function App() {
-  const [selectedSlug, setSelectedSlug] = useState<PracticeSpec['slug']>(practices[0]?.slug ?? '');
-
-  const selectedPractice = practices.find((practice) => practice.slug === selectedSlug) ?? practices[0];
-  const counts = useMemo(
-    () => ({
-      active: practices.filter((practice) => practice.status === 'active').length,
-      draft: practices.filter((practice) => practice.status === 'draft').length,
-    }),
-    [],
-  );
-  const selectedRuns = mockRuns.filter((run) => !selectedPractice || run.practice === selectedPractice.slug);
+  const [active, setActiveState] = useState<SurfaceId>(initialSurface());
+  const setActive = (id: SurfaceId) => {
+    setActiveState(id);
+    if (typeof location !== 'undefined') location.hash = id;
+  };
+  const counts: Partial<Record<SurfaceId, number>> = {
+    practices: (practicesData as PracticeSpec[]).length,
+    curation: mockApprovals.filter((a) => a.status === 'pending').length,
+    receipts: mockRuns.length,
+  };
+  const meta = META[active];
 
   return (
-    <main className="shell">
-      <header className="topbar">
-        <div>
-          <p className="eyebrow">Otto Desktop</p>
-          <h1>Otto — Practices</h1>
-        </div>
-        <div className="topbar__counts" aria-label="Practice counts">
-          <span><strong>{counts.active}</strong> active</span>
-          <span><strong>{counts.draft}</strong> draft</span>
-        </div>
-      </header>
-
-      <section className="hero panel">
-        <div>
-          <p className="eyebrow">UI = workspace</p>
-          <h2>Executable culture, visible from the repo.</h2>
-          <p>
-            This v0 shell reads Practice specs from disk and shows the operating surface:
-            invocations, recent Runs, Receipts, and gated Approvals. No network wiring yet.
-          </p>
-        </div>
-        <div className="hero__terminal" aria-label="Contract invariants">
-          <code>Practice → Run → Receipt</code>
-          <code>Gate → Approval</code>
-          <code>Files = truth</code>
-        </div>
-      </section>
-
-      <div className="workspace">
-        <PracticeList practices={practices} selectedSlug={selectedPractice?.slug ?? ''} onSelect={(practice) => setSelectedSlug(practice.slug)} />
-
-        <section className="detail-grid" aria-label="Selected practice detail">
-          {selectedPractice ? (
-            <article className="panel practice-detail">
-              <div className="panel__heading panel__heading--row">
-                <div>
-                  <p className="eyebrow">Selected Practice</p>
-                  <h2>{selectedPractice.name}</h2>
-                </div>
-                <span className={`status-badge status-badge--${selectedPractice.status}`}>{selectedPractice.status}</span>
-              </div>
-              <p className="lede">{selectedPractice.summary}</p>
-              <div className="detail-columns">
-                <div>
-                  <h3>State paths</h3>
-                  <ul>
-                    {selectedPractice.state_paths.map((path) => <li key={path}>{path}</li>)}
-                  </ul>
-                </div>
-                <div>
-                  <h3>Evidence standard</h3>
-                  <ul>
-                    {selectedPractice.evidence_standard.map((item) => <li key={item}>{item}</li>)}
-                  </ul>
-                </div>
-              </div>
+    <div className="app">
+      <Sidebar active={active} onSelect={setActive} counts={counts} />
+      <main className="main">
+        {active === 'chat' ? (
+          <div className="content content--chat"><Chat /></div>
+        ) : (
+          <>
+            <header className="topbar">
               <div>
-                <h3>Guardrails</h3>
-                <ul className="guardrail-list">
-                  {selectedPractice.guardrails.map((guardrail) => <li key={guardrail}>{guardrail}</li>)}
-                </ul>
+                <div className="eyebrow">otto workspace</div>
+                <h1>{meta.title}</h1>
+                {meta.sub && <div className="topbar__sub">{meta.sub}</div>}
               </div>
-            </article>
-          ) : null}
-
-          <RunsPanel runs={selectedRuns.length > 0 ? selectedRuns : mockRuns} />
-          <ApprovalsPanel approvals={mockApprovals.filter((approval) => approval.status === 'pending')} />
-        </section>
-      </div>
-    </main>
+              <div className="topbar__right">
+                <span className="pill pill--info">v0.1 preview</span>
+              </div>
+            </header>
+            <div className="content">{renderSurface(active)}</div>
+          </>
+        )}
+      </main>
+    </div>
   );
 }
