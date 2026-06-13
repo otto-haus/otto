@@ -36,7 +36,7 @@ correction -> proposal -> ratification -> practice/standard/routine -> receipt -
 
 ## What Otto is not
 
-- **Not a memory engine.** That is Letta. Otto governs what memory should change.
+- **Not a memory engine.** That is Letta. Otto does not own canonical agent memory. Otto owns the culture loop around memory: what gets proposed, ratified, written back, rejected, repeated, and turned into future behavior.
 - **Not an orchestrator.** That is Paperclip. Otto governs how work should be done.
 - **Not a chat app or RAG product.** Otto Shell is a workspace for behavior, receipts,
   approvals, and work state.
@@ -118,12 +118,13 @@ Authority model:
 Human -> Core Principles -> Standards -> Curation -> Practices / Routines / Charters / Memory
 ```
 
-The human owns consequences. The agent owns orchestration. Workers own bounded execution.
-Authority flows down; proposals flow up.
+The human owns consequences. Paperclip can own work orchestration. Otto owns behavior governance. Workers own bounded execution. Authority flows down; proposals flow up.
 
 ---
 
-## Stack fit
+## Reference operating stack
+
+This is the first Otto deployment stack, not the definition of Otto. Otto should survive replacement of any substrate except its own behavior layer.
 
 Otto is one layer in a local-first agent system:
 
