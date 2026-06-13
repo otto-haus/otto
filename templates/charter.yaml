@@ -1,0 +1,29 @@
+# Machine contract — source of truth for AC ids, gates, plan ids, status.
+# charter.md is the human render of this. Keep AC ids in sync across both faces.
+slug: <slug>
+objective: <one line>
+status: proposed          # proposed | active | blocked | complete | cancelled
+why_now: <trigger / value>
+scope: <what is in>
+non_goals: <what is explicitly out>
+acceptance_criteria:
+  - id: AC1
+    text: <criterion>
+    proof: null           # receipt path/link once proven
+  - id: AC2
+    text: <criterion>
+    proof: null
+gates:                    # armed one-way-door classes
+  - send/post/publish
+  - spend
+  - deploy
+  - merge-to-main
+  - delete-important-data
+  - credential/security
+  - customer/live-file
+plan:
+  - id: S1
+    step: <text>
+    done: false
+stop_conditions: <when to stop and ask>
+first_next_action: <the very next concrete step>

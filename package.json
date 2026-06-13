@@ -1,0 +1,30 @@
+{
+  "name": "vinny-os",
+  "version": "0.1.0",
+  "description": "Vinny OS — an open-source operating contract system for autonomous agents. Core: Charter. Turn intent into evidence-checked autonomous work.",
+  "type": "module",
+  "license": "Apache-2.0",
+  "keywords": [
+    "ai-agents",
+    "charter",
+    "vinny-os",
+    "letta",
+    "letta-code",
+    "agent-extension",
+    "autonomous-agents",
+    "permissions",
+    "guardrails"
+  ],
+  "files": [
+    "extension",
+    "skill",
+    "templates",
+    "docs",
+    "scripts",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "install-extension": "./scripts/install.sh"
+  }
+}

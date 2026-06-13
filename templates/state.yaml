@@ -1,0 +1,25 @@
+slug: <slug>
+objective: <one line>
+status: proposed        # proposed | active | blocked | complete | cancelled
+current_phase: scout    # scout | judge | worker | auditor | recorder
+created_at: <iso8601>
+updated_at: <iso8601>
+plan:
+  - id: S1
+    step: <text>
+    done: false
+completed_steps: []
+open_loops: []
+blockers: []
+approval_gates:
+  - send/post/publish
+  - spend
+  - deploy
+  - merge-to-main
+  - delete-important-data
+  - credential/security
+  - customer/live-file
+receipt_paths: []
+next_action: <text>
+no_evidence_loops: 0
+risk_notes: []

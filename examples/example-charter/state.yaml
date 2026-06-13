@@ -1,0 +1,39 @@
+slug: vinny-os-charter-v0
+objective: Ship Charter v0.1 (Vinny OS core) as an OSS operating contract system
+status: active
+current_phase: auditor
+created_at: 2026-06-13T09:13:00-07:00
+updated_at: 2026-06-13T09:30:00-07:00
+plan:
+  - id: S1
+    step: Write extension (command + gates)
+    done: true
+  - id: S2
+    step: Write skill workflow + templates
+    done: true
+  - id: S3
+    step: Write docs + README + license
+    done: true
+  - id: S4
+    step: Install into Letta; dogfood
+    done: false
+  - id: S5
+    step: Gate the public publish for human approval
+    done: false
+completed_steps: [S1, S2, S3]
+open_loops:
+  - public publish pending approval (license + visibility + repo name)
+blockers: []
+approval_gates:
+  - publish-public-repo
+  - deploy
+  - merge-to-main
+  - delete-important-data
+  - credential/security
+receipt_paths:
+  - examples/example-charter/charter.md
+  - examples/example-charter/charter.yaml
+next_action: Install into Letta, /reload, smoke-test, then request publish approval.
+no_evidence_loops: 0
+risk_notes:
+  - Keep org-specific doctrine out of the OSS core.

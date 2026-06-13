@@ -1,0 +1,46 @@
+slug: vinny-os-charter-v0
+objective: Ship Charter v0.1 (Vinny OS core) as an OSS operating contract system
+status: active
+why_now: Long autonomous runs need durable, owned contracts with gates and receipts.
+scope: Compiler, Runtime, Loop (Scout/Judge/Worker + Auditor/Recorder), Gates, docs, install.
+non_goals: Heavy PM UI; cloud service; org-specific doctrine in the OSS core.
+acceptance_criteria:
+  - id: AC1
+    text: /charter <intent> produces a structured proposed charter (both faces)
+    proof: receipts/propose.txt
+  - id: AC2
+    text: approve persists charters/<slug>/{charter.md,charter.yaml,state.yaml,ledger.md}
+    proof: receipts/state-after-approve.txt
+  - id: AC3
+    text: operational updates need no approval; legitimacy changes do
+    proof: receipts/gate-demo.txt
+  - id: AC4
+    text: gates force approval on deploy/publish/delete even in unrestricted mode
+    proof: receipts/gate-block.txt
+  - id: AC5
+    text: completion requires AC-by-AC receipts + user-facing summary
+    proof: null
+gates:
+  - publish-public-repo
+  - deploy
+  - merge-to-main
+  - delete-important-data
+  - credential/security
+plan:
+  - id: S1
+    step: Write extension (command + gates)
+    done: true
+  - id: S2
+    step: Write skill workflow + templates
+    done: true
+  - id: S3
+    step: Write docs + README + license
+    done: true
+  - id: S4
+    step: Install into Letta; dogfood
+    done: false
+  - id: S5
+    step: Gate the public publish for human approval
+    done: false
+stop_conditions: Stop and ask before any public push, license choice, or visibility change.
+first_next_action: Run /reload and smoke-test /charter end to end.
