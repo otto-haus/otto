@@ -118,17 +118,17 @@ v0.1 status is honest and tracked in [`RELEASE_CHECKLIST.md`](RELEASE_CHECKLIST.
 
 | Feature | Built | Tested | Demo | Notes |
 |---|:--:|:--:|:--:|---|
-| Charter | ✅ | manual | ▢ | core — operating contracts + gates |
-| Practices | ✅ | ✅ | ▢ | core — loader/validator + 6 unit tests |
-| Routines | ✅ | manual | ▢ | core — repeated bundles of Practices |
-| Skills | ✅ | manual | ▢ | capability layer |
-| Standards | ✅ | manual | ▢ | canon + precedents + anti-patterns |
-| Autonomy / Ticketcraft | ✅ | manual | ▢ | spec + worker/ticket templates |
-| Desktop | ✅ | build | ▢ | preview workspace (Vite + React) |
-| Knowledge | proposed | — | — | proposed; not integrated in v0.1 |
+| Charter | ✅ | manual | ✅ | core — operating contracts + gates |
+| Practices | ✅ | ✅ | ✅ | core — loader/validator + 6 unit tests |
+| Routines | ✅ | manual | ✅ | core — repeated bundles of Practices |
+| Skills | ✅ | manual | ✅ | capability layer |
+| Standards | ✅ | manual | ✅ | canon + precedents + anti-patterns |
+| Autonomy / Ticketcraft | ✅ | manual | ✅ | spec + worker/ticket templates |
+| Desktop | ✅ | build | ✅ | preview workspace (Vite + React) |
+| Knowledge | proposed | — | ✅ | proposed AI-frontier surface present; routing unratified |
 
-Legend: ✅ automated · `manual` manually verifiable, no automated test · `build` build/typecheck
-passes · ▢ demo pending · "Shipped" requires Sebastian's approval.
+Legend: ✅ automated/done · `manual` manually verifiable, no automated test · `build` build/typecheck
+passes · Demo ✅ = a video exists in `demo/out/` · **Tried + Approved are Sebastian's** and pending.
 Channels and Curation/Approvals are **deferred** from v0.1.
 
 ## Compatibility

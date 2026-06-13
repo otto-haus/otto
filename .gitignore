@@ -9,7 +9,9 @@ reviews/
 field-notes/
 follow-ups/
 runs/
-receipts/
+# Runtime receipts are ignored, but the v0.1 release receipts are tracked artifacts.
+receipts/*
+!receipts/otto-v01/
 .env
 .env.*
 

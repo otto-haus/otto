@@ -1,0 +1,130 @@
+# Model registry — Otto Knowledge / AI Frontier
+#
+# What this is: Knowledge's machine-readable view of model/provider capability and the
+# routing it implies. This is the file Autonomy reads to answer "which model owns
+# reasoning / coding / docs right now, and what is safe to delegate."
+#
+# Doctrine:
+#   Knowledge keeps Otto's assumptions current.
+#   Autonomy should track actual AI capability, not inherited human-era assumptions.
+#
+# CHANGE POLICY (loophole-proof):
+#   - FACTS (strengths/weaknesses notes, costs, links, last_verified) — Knowledge may
+#     update autonomously via the AI Frontier Review Routine; each update writes a receipt.
+#   - ROUTING (default_roles, the `routing:` block, allowlist) — these are BEHAVIOR POLICY.
+#     Knowledge may only PROPOSE changes; they go through Curation (type: knowledge_update)
+#     and require Sebastian's ratification before they become active. See docs/knowledge.md.
+#
+# HONESTY NOTE (Quality / No Fake Done):
+#   Capability ratings below are qualitative and grounded in Sebastian's observed stack,
+#   not freshly benchmarked numbers. Every entry carries `verified` + `last_verified`.
+#   The AI Frontier Review Routine replaces unverified entries with sourced ratings.
+
+version: 0.1
+status: proposed            # proposed | active  (active routing requires Curation ratification)
+last_reviewed: "2026-06-13"
+next_review_due: "2026-06-20"
+
+# ---------------------------------------------------------------------------
+# Rating scale (qualitative, until benchmarks are attached by the Routine)
+#   leading | strong | capable | weak | n/a
+# Dimensions tracked per the ticket:
+#   reasoning, coding, writing, tool_use, agentic_reliability,
+#   long_context, latency, cost
+# ---------------------------------------------------------------------------
+
+# Roles Autonomy routes to (the ticket's role taxonomy).
+roles:
+  - main_otto            # orchestration owner: reasoning, judgment, ticket sizing
+  - standards_review      # grading work against Standards
+  - curation_decisions    # classify/risk proposals
+  - autonomy_policy       # decide what Otto may own without asking
+  - ticket_worker         # bounded implementation tickets
+  - code_worker           # code generation + review
+  - docs_worker           # docs / specs / writing
+
+models:
+  - provider: openai
+    model: codex-5.5-extra-high
+    handle_note: Sebastian's primary code powerhouse + strong logical reasoning (ai_stack).
+    strengths:
+      reasoning: leading
+      coding: leading
+      tool_use: strong
+      agentic_reliability: strong
+    weaknesses:
+      latency: capable        # extra-high reasoning trades latency
+    cost_tier: high
+    default_roles:
+      - main_otto
+      - standards_review
+      - curation_decisions
+      - autonomy_policy
+      - code_worker
+    constraints: Prefer batch/async + cheapest path when latency does not matter (ai_stack).
+    verified: false
+    last_verified: "2026-06-13"
+    notes: Current best available choice for high-judgment orchestration and code review.
+
+  - provider: anthropic
+    model: claude-opus-class
+    handle_note: Claude Code (design/frontend) + Claude Cowork (PDF/PPT/report deliverables).
+    strengths:
+      coding: leading
+      writing: leading
+      tool_use: strong
+      long_context: strong
+    weaknesses: {}
+    cost_tier: high
+    default_roles:
+      - ticket_worker
+      - docs_worker
+    constraints: Strong default for bounded implementation + written deliverables.
+    verified: false
+    last_verified: "2026-06-13"
+    notes: Strong default for bounded implementation tickets and docs/writing work.
+
+  - provider: openai
+    model: chatgpt-extended-pro
+    handle_note: Decision support and logical reasoning (ai_stack).
+    strengths:
+      reasoning: strong
+    weaknesses: {}
+    cost_tier: medium
+    default_roles: []           # advisory/decision-support; not a routed worker yet
+    verified: false
+    last_verified: "2026-06-13"
+    notes: Used by Sebastian for decision support; candidate for autonomy_policy second-opinion.
+
+# ---------------------------------------------------------------------------
+# ACTIVE ROUTING (behavior policy — Curation-gated).
+# Autonomy reads this block. Until status above is `active` and a Curation approval
+# exists, treat these as PROPOSED defaults, not ratified policy.
+# Thesis (Autonomy doctrine): Main Otto = strongest reasoning; workers = strongest
+# coding/writing. Considers reasoning/coding intensity, cost, latency, ToS, data sensitivity.
+# ---------------------------------------------------------------------------
+routing:
+  status: proposed
+  curation_proposal: null       # prop_id once a Curation proposal exists
+  approved_by: null
+  assignments:
+    main_otto: openai/codex-5.5-extra-high
+    standards_review: openai/codex-5.5-extra-high
+    curation_decisions: openai/codex-5.5-extra-high
+    autonomy_policy: openai/codex-5.5-extra-high
+    ticket_worker: anthropic/claude-opus-class
+    code_worker: openai/codex-5.5-extra-high
+    docs_worker: anthropic/claude-opus-class
+
+# Provider allowlist is a permission surface — changing it is Curation-gated.
+provider_allowlist:
+  status: proposed
+  providers:
+    - openai
+    - anthropic
+
+# Deferred (see docs/knowledge.md "Deferred"): no Knowledge graph in v1.
+deferred:
+  - cognee
+  - relationship_graph
+  - automatic_market_intelligence

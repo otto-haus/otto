@@ -1,0 +1,64 @@
+# Knowledge → Curation proposal (type: knowledge_update)
+#
+# Use this when a Knowledge finding would CHANGE BEHAVIOR (routing, autonomy, ticket
+# sizing, provider allowlist). Facts (notes/costs/links) do NOT need this — they update
+# autonomously with a receipt. Behavior policy does.
+#
+# This conforms to the shared Curation proposal shape (curation/templates/proposal.yaml).
+# Copy into the Curation proposals store; Curation classifies + Sebastian ratifies.
+
+proposal_id: prop_YYYY_MM_DD_NNN
+type: knowledge_update          # a Knowledge-driven behavior change
+status: proposed
+
+title: <e.g. switch docs_worker to a cheaper model / raise default ticket size>
+summary: <one line — the behavior change>
+rationale: <what changed in capability/cost that justifies this now>
+expected_behavior_change: <concrete future behavior — what Otto will do differently>
+
+source:
+  knowledge_files:
+    - knowledge/ai-frontier/model-registry.yaml
+    - knowledge/ai-frontier/observed-performance/<file>.md
+  external:
+    - <Artificial Analysis / METR / pricing page / release note>
+  receipt_path: <knowledge update receipt that motivated this>
+
+proposed_by: Otto
+created_at: <iso8601>
+
+target:
+  kind: knowledge                # the routing/policy this touches
+  path: knowledge/ai-frontier/model-registry.yaml
+  action: update                 # update routing / allowlist / autonomy assumption
+
+# Routing & autonomy expansion are consequential by nature → always ratify.
+risk:
+  reversibility: reversible      # routing flips are reversible, but consequential
+  scope: internal
+  impact: medium                 # behavior-changing
+  identity_impact: none          # raise to `authority` only if it changes who decides
+  permission_change: none        # `requests_new` if it expands the provider allowlist
+
+autonomy_decision:
+  decision: request_ratification
+  reason: Changes behavior policy (model routing / autonomy / ticket sizing). Knowledge proposes; Curation ratifies; Sebastian approves.
+
+ratification:
+  required: true
+  requested_from: Sebastian
+  approved_by: null
+  approved_at: null
+
+evidence:
+  inputs:
+    - <observed-performance file paths>
+    - <external source links>
+  checks:
+    - expected behavior change stated
+    - registry diff reviewed
+    - observed performance supports the claim (our evidence wins ties)
+
+result:
+  applied_at: null
+  receipt_path: null

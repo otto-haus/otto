@@ -1,0 +1,72 @@
+# Conforms to Routine in packages/core/src/types.ts
+# AI Frontier Review — keeps Knowledge's AI capability assumptions current.
+#
+# Autonomy boundary: Otto may run this as a one-off trial autonomously. Recurring
+# activation requires Sebastian's nod (a standing Routine is a standing claim on
+# attention). Updating FACTS is autonomous; proposing routing/autonomy changes goes
+# through Curation.
+id: routine_ai_frontier_review_v0
+slug: ai-frontier-review
+name: AI Frontier Review
+status: proposed                 # proposed | trial | active | paused | retired
+summary: Keep Otto's model-capability assumptions current so Autonomy, routing, and ticket sizing track the real AI frontier.
+steps:
+  - practice: review
+    invocation: /review knowledge-sources
+    inputs:
+      sources:
+        - Artificial Analysis
+        - METR / frontier capability notes
+        - SWE-bench / coding evals
+      focus: capability changes in reasoning, coding, writing, tool use, agentic reliability, long-context
+  - practice: review
+    invocation: /review provider-costs
+    inputs:
+      sources:
+        - provider pricing pages
+        - provider ToS / data-handling notes
+      focus: cost changes and constraint changes affecting what Otto may send
+  - practice: review
+    invocation: /review observed-vs-external
+    inputs:
+      focus: compare external claims to knowledge/ai-frontier/observed-performance; our evidence wins ties
+  - practice: decision
+    invocation: /decision update-model-registry
+    inputs:
+      target: knowledge/ai-frontier/model-registry.yaml
+      autonomous: facts only          # ratings/notes/costs/links + receipt
+  - practice: decision
+    invocation: /decision propose-routing-changes
+    inputs:
+      target: Curation
+      gate: routing / autonomy / ticket-sizing / allowlist changes are Curation proposals (type knowledge_update)
+  - practice: field-note
+    invocation: /field-note knowledge-receipt
+    inputs:
+      template: knowledge/_templates/knowledge-update-receipt.md
+reads:
+  - knowledge/ai-frontier/model-registry.yaml
+  - knowledge/ai-frontier/capability-notes.md
+  - knowledge/ai-frontier/provider-costs.md
+  - knowledge/ai-frontier/benchmark-links.md
+  - knowledge/ai-frontier/observed-performance/
+writes_autonomously:                 # FACTS
+  - knowledge/ai-frontier/capability-notes.md
+  - knowledge/ai-frontier/provider-costs.md
+  - knowledge/ai-frontier/benchmark-links.md
+  - knowledge/ai-frontier/model-registry.yaml   # facts blocks only, not routing
+proposes_via_curation:               # POLICY (gated)
+  - model routing (model-registry routing block)
+  - autonomy expansion (more workers / larger tickets / more delegation)
+  - ticket sizing assumptions
+  - provider allowlist
+schedule:
+  cron: "0 9 * * 1"                  # Mondays 09:00 — mechanism only
+  timezone: America/Los_Angeles
+attention_cost: low
+requires_approval_to_activate: true  # recurring activation belongs to Sebastian
+relevant_standards:
+  - first-principles                 # reason from current facts, not inherited assumptions
+  - quality                          # No Fake Done: sourced claims, receipts
+  - respect-attention                # low, earned attention cost
+created_at: "2026-06-13T00:00:00Z"

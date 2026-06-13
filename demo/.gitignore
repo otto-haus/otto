@@ -1,0 +1,5 @@
+node_modules/
+# Rendered videos are large; produced locally into out/ and reviewed via Desktop symlinks.
+# They are not committed for v0.1 (decide on hosting at push time).
+out/*.mp4
+out/*.png
