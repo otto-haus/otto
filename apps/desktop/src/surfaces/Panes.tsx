@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import type { PracticeSpec } from '@otto-haus/core';
 import practicesData from '../data/practices.json';
 import { mockRuns, mockApprovals } from '../mockData';
@@ -16,6 +16,7 @@ import {
   type ReadyStatus,
 } from '../sampleData';
 import { Icon } from '../components/icons';
+import { ottoApi, type ConnectionInfo, type RuntimeStatus, type StatusCode } from '../runtime';
 
 const practices = practicesData as PracticeSpec[];
 
@@ -263,6 +264,147 @@ export const Autonomy: React.FC = () => (
   </div>
 );
 
+/* ---------- Connect Letta (live setup) ---------- */
+const codePill: Record<StatusCode, [string, string]> = {
+  ready: ['pill--ok', 'connected'],
+  'no-api-key': ['pill--warn', 'needs API key'],
+  'no-agent': ['pill--warn', 'needs agent'],
+  unreachable: ['pill--warn', 'unreachable'],
+  'sdk-missing': ['pill--warn', 'SDK missing'],
+  stale: ['pill--warn', 'stale session'],
+  error: ['pill--warn', 'not connected'],
+};
+
+const inputStyle: React.CSSProperties = {
+  border: '1px solid var(--line)',
+  borderRadius: 8,
+  padding: '8px 10px',
+  fontSize: 13.5,
+  background: '#fff',
+  color: 'var(--ink)',
+  width: '100%',
+  marginTop: 4,
+};
+
+const ConnectLetta: React.FC = () => {
+  const api = ottoApi();
+  const [info, setInfo] = useState<ConnectionInfo | null>(null);
+  const [status, setStatus] = useState<RuntimeStatus | null>(null);
+  const [baseUrl, setBaseUrl] = useState('');
+  const [agentId, setAgentId] = useState('');
+  const [apiKey, setApiKey] = useState('');
+  const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    if (!api) return;
+    api.connection.get().then((c) => {
+      setInfo(c);
+      setBaseUrl(c.baseUrl ?? '');
+      setAgentId(c.agentId ?? '');
+    });
+    api.runtime.status().then(setStatus).catch(() => {});
+  }, [api]);
+
+  if (!api) {
+    return (
+      <div className="panel">
+        <div className="eyebrow">connect letta</div>
+        <div className="h-sec" style={{ marginTop: 6 }}>Connect Letta</div>
+        <p className="muted" style={{ marginTop: 6 }}>
+          Base URL, API key, and agent are set here in the desktop app — this is the web preview.
+          Open Otto Desktop to connect a live Letta agent.
+        </p>
+      </div>
+    );
+  }
+
+  const connect = async () => {
+    setBusy(true);
+    try {
+      const next = await api.connection.save({
+        baseUrl: baseUrl.trim() || null,
+        agentId: agentId.trim() || null,
+        apiKey: apiKey ? apiKey : undefined, // send only when entered; blank keeps the stored key
+      });
+      setStatus(next);
+      setApiKey(''); // never retain the key in renderer state
+      setInfo(await api.connection.get());
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const code: StatusCode = status?.ready ? 'ready' : status?.code ?? 'error';
+  const [cls, label] = codePill[code] ?? ['pill--warn', 'not connected'];
+
+  return (
+    <div className="panel">
+      <div className="row" style={{ justifyContent: 'space-between', alignItems: 'center' }}>
+        <div className="eyebrow">connect letta</div>
+        <span className={`pill ${cls}`}>{label}</span>
+      </div>
+      <div className="h-sec" style={{ marginTop: 6 }}>Connect Letta</div>
+      <p className="muted" style={{ marginTop: 4 }}>
+        Point Otto at your Letta agent. The key is stored locally in{' '}
+        <span className="mono">~/.otto/secrets.env</span> (0600) and never leaves your machine.
+      </p>
+      {status && !status.ready && status.reason && (
+        <p className="faint" style={{ marginTop: 6 }}>↳ {status.reason}</p>
+      )}
+      <div className="grid" style={{ gap: 12, marginTop: 12 }}>
+        <label>
+          <span className="faint" style={{ fontSize: 12 }}>Base URL · local / self-hosted (blank = Letta Cloud)</span>
+          <input
+            style={inputStyle}
+            value={baseUrl}
+            onChange={(e) => setBaseUrl(e.target.value)}
+            placeholder="http://localhost:8283"
+            spellCheck={false}
+          />
+        </label>
+        <label>
+          <span className="faint" style={{ fontSize: 12 }}>
+            API key{' '}
+            {info?.hasApiKey && <span className="pill pill--ok" style={{ marginLeft: 4 }}>stored</span>}
+          </span>
+          <input
+            className="mono"
+            style={inputStyle}
+            type="password"
+            value={apiKey}
+            onChange={(e) => setApiKey(e.target.value)}
+            placeholder={info?.hasApiKey ? '•••••••• — leave blank to keep current' : 'paste your Letta API key'}
+            spellCheck={false}
+            autoComplete="off"
+          />
+        </label>
+        <label>
+          <span className="faint" style={{ fontSize: 12 }}>Agent ID</span>
+          <input
+            className="mono"
+            style={inputStyle}
+            value={agentId}
+            onChange={(e) => setAgentId(e.target.value)}
+            placeholder="agent-..."
+            spellCheck={false}
+          />
+        </label>
+      </div>
+      <div className="row" style={{ marginTop: 14, gap: 12, alignItems: 'center' }}>
+        <button className="btn btn--primary" onClick={connect} disabled={busy}>
+          {busy ? 'Connecting…' : 'Save & Connect'}
+        </button>
+        {status?.ready && (
+          <span className="muted" style={{ fontSize: 13 }}>
+            {status.agentId}
+            {status.model ? ` · ${status.model}` : ''}
+          </span>
+        )}
+      </div>
+    </div>
+  );
+};
+
 /* ---------- Settings (Setup + Readiness) ---------- */
 const readyPill = (s: ReadyStatus) => {
   const map: Record<ReadyStatus, [string, string]> = {
@@ -296,6 +438,7 @@ export const Settings: React.FC = () => {
   const group = (keys: string[]) => readiness.filter((r) => keys.includes(r.key));
   return (
     <div className="grid" style={{ maxWidth: 880, gap: 16 }}>
+      <ConnectLetta />
       <div className="panel" style={ready ? undefined : { borderColor: '#e7dcc0', background: 'var(--warn-tint)' }}>
         <div className="eyebrow">readiness</div>
         <div className="h-sec" style={{ marginTop: 6 }}>

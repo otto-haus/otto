@@ -1,7 +1,8 @@
 import { randomUUID } from 'node:crypto';
 import type { BrowserWindow } from 'electron';
-import type { PermissionRequest, PermissionResponse, RuntimeStatus } from './shared/types';
+import type { PermissionRequest, PermissionResponse, RuntimeStatus, StatusCode } from './shared/types';
 import { ConfigStore } from './config-store';
+import { getSecret, hasSecret } from './secret-store';
 import { TraceWriter } from './trace-writer';
 
 type SDK = typeof import('@letta-ai/letta-code-sdk');
@@ -75,14 +76,28 @@ export class LettaRunner {
     return o;
   }
 
+  /** Inject the stored Letta key + base URL into the env the SDK hands the spawned CLI. */
+  private applyConnectionEnv() {
+    const key = getSecret('LETTA_API_KEY');
+    if (key && !process.env.LETTA_API_KEY) process.env.LETTA_API_KEY = key;
+    const baseUrl = this.config.baseUrl();
+    if (baseUrl && !process.env.LETTA_BASE_URL) process.env.LETTA_BASE_URL = baseUrl;
+  }
+
+  private hasApiKey(): boolean {
+    return hasSecret('LETTA_API_KEY') || !!process.env.LETTA_API_KEY;
+  }
+
   /** Connect; recover from a stale conversation; never throw to the renderer. */
   async init(): Promise<RuntimeStatus> {
     const cli = resolveCli();
+    this.applyConnectionEnv();
     const agentId = this.config.agentId();
     if (!agentId) {
       this.status = {
         ready: false,
-        reason: 'No agent configured — set OTTO_AGENT_ID or agentId in ~/.otto/config.json',
+        code: 'no-agent',
+        reason: 'No agent selected — add one in Settings → Connect Letta.',
         ...cli,
       };
       return this.status;
@@ -92,7 +107,7 @@ export class LettaRunner {
     try {
       sdk = await this.loadSdk();
     } catch (e) {
-      this.status = { ready: false, reason: `Letta SDK unavailable: ${msg(e)}`, agentId, ...cli };
+      this.status = { ready: false, code: 'sdk-missing', reason: `Letta SDK unavailable: ${msg(e)}`, agentId, ...cli };
       return this.status;
     }
 
@@ -120,6 +135,7 @@ export class LettaRunner {
       this.config.update({ agentId: r.init.agentId ?? agentId, conversationId: r.init.conversationId ?? null });
       this.status = {
         ready: true,
+        code: 'ready',
         agentId: r.init.agentId,
         conversationId: r.init.conversationId,
         model: r.init.model,
@@ -128,8 +144,10 @@ export class LettaRunner {
         ...cli,
       };
     } catch (e) {
-      // agent-not-found / auth / provider — diagnose cleanly, do not crash.
-      this.status = { ready: false, reason: msg(e), agentId, ...cli };
+      // agent-not-found / auth / provider / unreachable — diagnose cleanly, do not crash.
+      const reason = msg(e);
+      const code = classify(reason, this.hasApiKey());
+      this.status = { ready: false, code, reason: friendly(code, reason), agentId, ...cli };
     }
     return this.status;
   }
@@ -193,4 +211,35 @@ export class LettaRunner {
 
 function msg(e: unknown): string {
   return e instanceof Error ? e.message : String(e);
+}
+
+/** Map a raw connect error to a diagnosis category for the Settings UI. */
+function classify(reason: string, hasKey: boolean): StatusCode {
+  const r = reason.toLowerCase();
+  if (!hasKey || r.includes('letta_api_key') || r.includes('api key') || r.includes('unauthorized') || r.includes('401'))
+    return 'no-api-key';
+  if (r.includes('not found') || r.includes('not-found')) return 'stale';
+  if (
+    r.includes('econnrefused') ||
+    r.includes('enotfound') ||
+    r.includes('fetch failed') ||
+    r.includes('network') ||
+    r.includes('socket') ||
+    r.includes('timed out')
+  )
+    return 'unreachable';
+  return 'error';
+}
+
+function friendly(code: StatusCode, reason: string): string {
+  switch (code) {
+    case 'no-api-key':
+      return 'No Letta API key. Add it in Settings → Connect Letta to authenticate.';
+    case 'unreachable':
+      return `Can't reach the Letta backend — check the base URL in Settings. (${reason})`;
+    case 'stale':
+      return `Agent or conversation not found — pick a valid agent in Settings. (${reason})`;
+    default:
+      return reason;
+  }
 }

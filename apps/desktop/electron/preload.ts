@@ -1,5 +1,7 @@
 import { contextBridge, ipcRenderer } from 'electron';
 import type {
+  ConnectionInfo,
+  ConnectionInput,
   OttoConfig,
   OttoEvent,
   PermissionRequest,
@@ -17,6 +19,10 @@ const api = {
   config: {
     get: (): Promise<OttoConfig> => ipcRenderer.invoke('otto:config:get'),
     set: (patch: Partial<OttoConfig>): Promise<OttoConfig> => ipcRenderer.invoke('otto:config:set', patch),
+  },
+  connection: {
+    get: (): Promise<ConnectionInfo> => ipcRenderer.invoke('otto:connection:get'),
+    save: (input: ConnectionInput): Promise<RuntimeStatus> => ipcRenderer.invoke('otto:connection:save', input),
   },
   permission: {
     respond: (requestId: string, response: PermissionResponse): void =>

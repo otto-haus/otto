@@ -3,9 +3,19 @@ import { useEffect, useState } from 'react';
 // Renderer-side view of the window.otto bridge exposed by electron/preload.ts.
 // In the web preview window.otto is undefined → the app stays a file-backed shell.
 
+export type StatusCode =
+  | 'ready'
+  | 'no-agent'
+  | 'no-api-key'
+  | 'unreachable'
+  | 'sdk-missing'
+  | 'stale'
+  | 'error';
+
 export type RuntimeStatus = {
   ready: boolean;
   reason?: string;
+  code?: StatusCode;
   agentId?: string | null;
   conversationId?: string | null;
   model?: string;
@@ -14,6 +24,9 @@ export type RuntimeStatus = {
   cliPath: string;
   cliResolved: boolean;
 };
+
+export type ConnectionInfo = { baseUrl: string | null; agentId: string | null; hasApiKey: boolean };
+export type ConnectionInput = { baseUrl?: string | null; agentId?: string | null; apiKey?: string | null };
 
 export type OttoEvent = { message: { type: string; [k: string]: unknown } };
 
@@ -25,6 +38,10 @@ type OttoApi = {
     abort(): Promise<void>;
   };
   config: { get(): Promise<unknown>; set(patch: unknown): Promise<unknown> };
+  connection: {
+    get(): Promise<ConnectionInfo>;
+    save(input: ConnectionInput): Promise<RuntimeStatus>;
+  };
   permission: { respond(requestId: string, response: unknown): void };
   onEvent(cb: (e: OttoEvent) => void): () => void;
   onPermission(cb: (req: unknown) => void): () => void;

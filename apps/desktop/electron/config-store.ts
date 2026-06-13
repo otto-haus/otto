@@ -35,4 +35,9 @@ export class ConfigStore {
   agentId(): string | null {
     return process.env.OTTO_AGENT_ID || this.cfg.agentId || null;
   }
+
+  /** Letta base URL for local/self-hosted backends: LETTA_BASE_URL env wins, then config. */
+  baseUrl(): string | null {
+    return process.env.LETTA_BASE_URL || this.cfg.baseUrl || null;
+  }
 }
