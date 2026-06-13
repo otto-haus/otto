@@ -16,6 +16,28 @@ behavior.
 
 ---
 
+## What this looks like
+
+Without Otto, an agent can remember a correction and still repeat the same mistake.
+
+Example: the agent says “done” without proof. You correct it.
+
+With Otto, that correction should become a proposal:
+
+```txt
+Pattern:        “done” claimed without evidence
+Proposed rule:  completion requires receipts mapped to acceptance criteria
+Result:         future done claims must attach test output, logs, or artifacts
+Gate:           human ratifies before it becomes canon
+```
+
+Once ratified, the correction becomes a Standard, Practice, or receipt requirement.
+The next run changes.
+
+Search finds pages. Memory remembers facts. Otto changes behavior.
+
+---
+
 ## North star
 
 Otto exists to make agent behavior compound.
