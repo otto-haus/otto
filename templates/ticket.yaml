@@ -1,0 +1,44 @@
+# Ticket — machine source of truth for one bounded execution slice.
+# Compiled by /ticket (Ticketcraft) from a Charter or raw work intent.
+# See docs/ticketcraft.md and docs/autonomy.md.
+
+ticket_id: ticket_<slug>
+status: proposed          # proposed | active | blocked | review | merged | cancelled
+charter: <charter-slug>   # parent bet this slice belongs to (optional)
+
+owner: worker_<nnn>       # temporary worker conversation id
+model: claude-opus-4.8-max
+
+worktree: .letta/worktrees/<ticket>
+branch: feat/<ticket>
+
+objective: <one sharp sentence: what success looks like>
+why: <why this slice matters to the bet>
+
+owned_paths:              # worker may freely change these
+  - <package-or-dir>/**
+shared_paths:             # touch only with coordination; changes may need approval
+  - packages/core/**
+
+non_goals:
+  - <explicitly out of scope>
+
+acceptance_criteria:      # each must map to receipt proof
+  - id: AC1
+    text: <criterion>
+    proof: <receipt path / check>
+
+checks:
+  - bun test
+  - bun run typecheck
+
+stop_conditions:
+  - <when the worker must halt and report instead of continuing>
+
+requires_approval_for:    # one-way doors → escalate to Approvals
+  - shared_contract_change
+  - protected_main_merge
+  - external_side_effect
+
+receipt_path: receipts/<date>/<ticket>.md
+integration_notes: <how to merge back; conflicts; ordering vs other tickets>
