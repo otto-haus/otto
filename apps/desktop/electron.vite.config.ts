@@ -13,7 +13,11 @@ export default defineConfig({
     build: {
       outDir: 'out/main',
       lib: { entry: resolve(root, 'electron/main.ts'), formats: ['cjs'] },
-      rollupOptions: { output: { entryFileNames: 'index.cjs' } },
+      // `electron` is a devDependency, so externalizeDepsPlugin (which externalizes
+      // `dependencies`) leaves it bundleable in lib mode — which inlines the npm stub's
+      // getElectronPath() and crashes the main process. Externalize it explicitly so the
+      // bundle does `require("electron")` and resolves Electron's built-in API at runtime.
+      rollupOptions: { external: ['electron'], output: { entryFileNames: 'index.cjs' } },
     },
   },
   preload: {
@@ -21,7 +25,7 @@ export default defineConfig({
     build: {
       outDir: 'out/preload',
       lib: { entry: resolve(root, 'electron/preload.ts'), formats: ['cjs'] },
-      rollupOptions: { output: { entryFileNames: 'index.cjs' } },
+      rollupOptions: { external: ['electron'], output: { entryFileNames: 'index.cjs' } },
     },
   },
   renderer: {
