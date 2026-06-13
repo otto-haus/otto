@@ -20,8 +20,8 @@ Otto Desktop is the workspace over all surfaces. It reads files as truth and sho
   - Evidence: `apps/desktop/src/components/Sidebar.tsx` line 4-13 defines `SurfaceId` type with all 9 surfaces; GROUPS array lines 17-36 renders navigation for all 9
 - [x] Chat/workspace is primary.
   - Evidence: App.tsx line 68 renders Chat as the default surface when active === 'chat'; location.hash initialization defaults to 'chat' (App.tsx line 46)
-- [x] No visible Vinny/Veto/Cockpit/.veto-os in normal UI.
-  - Evidence: grep search across apps/desktop/src/ returns no matches; Sidebar.tsx line 58-62 shows brand name as "otto" not "vinny" or "cockpit"
+- [x] No visible legacy branding/runtime paths in normal UI.
+  - Evidence: grep search across apps/desktop/src/ returns no matches; Sidebar.tsx line 58-62 shows brand name as "otto" not legacy branding
 - [x] Debug is hidden by default.
   - Evidence: No debug pane, debug toolbar, or developer-mode toggle in UI components; no debug surface in SurfaceId type or renderSurface() switch
 - [x] Runtime status is shown cleanly.

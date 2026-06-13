@@ -148,7 +148,9 @@ The roadmap only matters if each step makes behavior compound or gates irreversi
 
 ## Install
 
-Requires [Bun](https://bun.sh).
+Agents: start with [`INSTALL_FOR_AGENTS.md`](INSTALL_FOR_AGENTS.md).
+
+Humans: requires [Bun](https://bun.sh).
 
 ```sh
 git clone https://github.com/otto-haus/otto
@@ -220,7 +222,9 @@ otto/
   routines/       proposed Routine specs
   standards/      canon, precedents, anti-patterns, registry
   templates/      Charter, Practice, Routine, Standard, Ticket, Worker packets
-  docs/           architecture, runtime, autonomy, desktop, practices, routines
+  docs/           architecture, install, runtime, autonomy, desktop, practices, routines
+  AGENTS.md       operating notes for AI coding agents
+  INSTALL_FOR_AGENTS.md  agent-first install protocol
   receipts/       proof artifacts for v0.1
   SHIP_CHECKS/    per-surface acceptance checks
 ```
@@ -229,4 +233,4 @@ otto/
 
 ## License
 
-[Apache-2.0](LICENSE)
+[MIT](LICENSE)

@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "description": "Otto PracticeSpec loader, validator, and CLI.",
   "type": "module",
-  "license": "Apache-2.0",
+  "license": "MIT",
   "types": "./src/index.ts",
   "exports": {
     ".": {

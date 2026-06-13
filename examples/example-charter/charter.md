@@ -13,7 +13,7 @@ Compiler (intent -> contract), Runtime (charter.md/state.yaml/ledger/receipts),
 Loop (Scout/Judge/Worker/Review), Gates (one-way-door approval overlay), docs, install.
 
 ## Non-goals
-A heavy project-management UI; cloud service; org-specific (Veto) doctrine in core.
+A heavy project-management UI; cloud service; organization-specific doctrine in core.
 
 ## Acceptance criteria
 1. `/charter <intent>` produces a structured proposed charter -> proof: receipts/propose.txt

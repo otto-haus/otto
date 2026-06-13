@@ -1,7 +1,7 @@
 # A first-class, scoped, time-bound approval record for a one-way door.
 # Only act on an approval that is `approved`, unexpired, and within `scope`.
 id: <short-id>
-requested_action: <exact action, e.g. "create public GitHub repo seb-veto/otto and push main">
+requested_action: <exact action, e.g. "create public GitHub repo example-org/otto and push main">
 scope: <narrowly what this covers>
 evidence_required: <proof needed before/after, e.g. "local commit exists; license confirmed">
 requested_at: <iso8601>

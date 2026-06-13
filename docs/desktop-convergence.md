@@ -23,13 +23,13 @@ No v0.1 release implies both are active products.
 
 ## State of the Electron reference app
 
-Architecturally it matches the Desktop Shell Spec (`_Meta/Veto OS Desktop Shell — Spec.md`):
+Architecturally it matches the legacy Desktop Shell Spec:
 `electron/main.ts · preload.ts · ipc.ts · letta-runner.ts · trace-writer.ts · lane-store.ts`
 plus a `ui/` (Sidebar, Chat, PromptBox, ToolCard, PermissionModal, DebugPanel). But for v0.1
 it is **not usable**:
 
-- **Stale/half-renamed branding** — stray `veto` / `cockpit` / `Ni` artifacts and a
-  `Message Vinny…` placeholder; data dir `~/.veto-os` (should be `~/.otto`).
+- **Stale/half-renamed branding** — stray legacy brand artifacts and a
+  legacy placeholder; data dir should be `~/.otto`.
 - **Session init fails** — `session:start` → "no init message received"; the CLI errors on a
   memory git sync: `git clone http://localhost:<port>/v1/git/agent-…/state.git` → **HTTP 400**.
   Most likely the SDK attempts a MemFS git sync that the **local Letta backend** does not
@@ -48,7 +48,7 @@ requires Letta backend changes").
   `preload` (`window.otto`), `ipc`, `letta-runner` (single session, **memfs off by default**,
   `OTTO_AGENT_ID`, `LETTA_CLI_PATH` override, **conversation recovery**), `config-store`
   (`~/.otto/config.json`), `trace-writer` (`~/.otto/runs`). Renderer LiveChat gates Send on
-  `session.initialize()`. No `veto`/`cockpit`/`Ni`/`~/.veto-os`; no hardcoded agent; no lanes.
+  `session.initialize()`. No legacy branding or runtime paths; no hardcoded agent; no lanes.
 - **Still to prove (needs a display + Sebastian's Letta backend):** a live launch + one real turn.
   `OTTO_AGENT_ID=<id> bun run --cwd apps/desktop electron:dev` (prefix `env -u ELECTRON_RUN_AS_NODE`
   if that var is inherited). The Letta review confirmed the agent is reachable, so this should connect.

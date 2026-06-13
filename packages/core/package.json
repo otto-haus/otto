@@ -1,9 +1,9 @@
 {
   "name": "@otto-haus/core",
   "version": "0.0.0",
-  "description": "Otto v0 shared contract — core primitives (Practice, Routine, Channel, Run, Receipt, Approval, Charter).",
+  "description": "Otto v0 shared contract \u2014 core primitives (Practice, Routine, Channel, Run, Receipt, Approval, Charter).",
   "type": "module",
-  "license": "Apache-2.0",
+  "license": "MIT",
   "types": "./src/index.ts",
   "exports": {
     ".": {

@@ -23,7 +23,7 @@ Grade outcomes over time.
 ```
 
 Assume Horowitz has seen more than we have. Learn the canon carefully — then test every
-claim against Veto/Otto receipts. Keep what bites; drop what doesn't.
+claim against Otto receipts. Keep what bites; drop what doesn't.
 
 ## What we take from him
 

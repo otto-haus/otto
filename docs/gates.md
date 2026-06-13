@@ -55,5 +55,4 @@ still works). Do this only intentionally.
 ## Extending
 
 Add patterns to `BASH_GATES`, `SECRET_PATH`, or `TOOL_NAME_GATE` in
-`extension/charter.ts`. Keep Veto-specific / org-specific gates in a separate private
-config (e.g. `veto-charters/`) so the OSS core stays generic.
+`extension/charter.ts`. Keep org-specific gates in a separate private config so the OSS core stays generic.

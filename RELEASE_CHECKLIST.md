@@ -62,7 +62,7 @@ Per-feature receipts: [`receipts/otto-v01/`](receipts/otto-v01/). Demos: [`demo/
 
 ## Rename / packaging sweep
 
-- `Vinny OS` / `Vinny` → `Otto`; `cockpit` → `workspace`; `TryVeto/vinny-os` → `otto-haus/otto`.
+- `Vinny OS` / `Vinny` → `Otto`; `cockpit` → `workspace`; old private repo target → `otto-haus/otto`.
 - Packages: `@vinny-os/*` → `@otto-haus/*`; root → `otto`; bin `vinny-practices` → `otto-practices`.
 - Local repo renamed `~/Code/vinny-os` → `~/Code/otto` (nested worktrees repaired).
 - Lockfile regenerated; workspace resolution verified (`@otto-haus/core|practices|desktop`).
@@ -76,15 +76,14 @@ Per-feature receipts: [`receipts/otto-v01/`](receipts/otto-v01/). Demos: [`demo/
 | "Vinny OS" (1) | `README.md` Compatibility section | Documents the rename for migrating users |
 | `vinny-os` | `bun.lock` | Generated lockfile only — n/a (no hand-edit) |
 
-`bun run verify:v0` enforces no *product*-name hits (`Vinny OS`/`vinny-os`/`@vinny-os`/`TryVeto`/`cockpit`)
-in tracked files; the `VINNY_*` env tokens above are the allowed back-compat fallbacks.
+`bun run verify:v0` enforces no old product-name hits in tracked files; the `VINNY_*` env tokens above are the allowed back-compat fallbacks.
 
 ## Compatibility notes
 
 - **Env vars:** `OTTO_HOME` preferred, `VINNY_HOME` fallback; `OTTO_ROOT` preferred,
   `VINNY_OS_ROOT` fallback. Default runtime root `~/.otto`.
 - **Bin alias:** the practices CLI is `otto-practices` (was `vinny-practices`).
-- **Historical:** the old GitHub remote `origin = TryVeto/vinny-os` is preserved untouched.
+- **Historical:** the old private GitHub remote is preserved untouched locally.
 - **Namespace target: `otto-haus` (NOT final).** Target identity = org `otto-haus`, repo `otto-haus/otto`, scope `@otto-haus`, domain `otto.haus`, future dream `ot.to`. Also owned but non-canonical: `otto-do`, `otto-hq` (`otto.do` was unavailable, not owned). Implemented locally as `@otto-haus`; the final public namespace is an approval ask before push.
 
 ## GitHub metadata (prepared — NOT applied; push is Sebastian's call)

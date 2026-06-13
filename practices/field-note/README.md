@@ -39,7 +39,7 @@ entities, insights, open questions, follow-up candidates, memory writeback sugge
 
 ## Requiredness read
 
-Apply the field test: would this office stop a covered instruction on a busy Friday
+Apply the field test: would this team stop a consequential action on a busy Friday
 without the current record? What is the smallest version they would actually use?
 
 ## Evidence standard

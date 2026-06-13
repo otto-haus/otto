@@ -1,7 +1,7 @@
 id: publish-otto
 requested_action: Create public GitHub repo otto-haus/otto and push main.
 scope: First public release of Otto / Charter v0.1 only. No deploy, no package publish.
-evidence_required: Local git commit exists; license confirmed (Apache-2.0); README reviewed.
+evidence_required: Local git commit exists; license confirmed (MIT); README reviewed.
 requested_at: 2026-06-13T09:30:00-07:00
 expires_at: 2026-06-20T09:30:00-07:00
 status: approved
