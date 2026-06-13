@@ -1,0 +1,27 @@
+{
+  "name": "@vinny-os/practices",
+  "version": "0.0.0",
+  "description": "Vinny OS PracticeSpec loader, validator, and CLI.",
+  "type": "module",
+  "license": "Apache-2.0",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "default": "./src/index.ts"
+    }
+  },
+  "bin": {
+    "vinny-practices": "./src/cli.ts"
+  },
+  "files": [
+    "src"
+  ],
+  "dependencies": {
+    "@vinny-os/core": "workspace:*",
+    "yaml": "^2.9.0"
+  },
+  "devDependencies": {
+    "@types/node": "^25.9.3"
+  }
+}
