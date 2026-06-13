@@ -23,7 +23,7 @@ Grade outcomes over time.
 ```
 
 Assume Horowitz has seen more than we have. Learn the canon carefully — then test every
-claim against Veto/Vinny receipts. Keep what bites; drop what doesn't.
+claim against Veto/Otto receipts. Keep what bites; drop what doesn't.
 
 ## What we take from him
 
@@ -42,7 +42,7 @@ claim against Veto/Vinny receipts. Keep what bites; drop what doesn't.
 
 ## Where we adapt (not copy)
 
-- Horowitz writes for human orgs at scale. Vinny OS is one human + an autonomous agent.
+- Horowitz writes for human orgs at scale. Otto is one human + an autonomous agent.
   Our "shocking rules" are **gates and receipts**, not war stories.
 - His culture is enforced socially; ours is enforced by **Curation** (proposal +
   ratification) and file-based proof.

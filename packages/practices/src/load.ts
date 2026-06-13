@@ -1,6 +1,6 @@
 import { readFile } from 'node:fs/promises';
 import { parse } from 'yaml';
-import type { ApprovalRequirement, PracticeSpec } from '@vinny-os/core';
+import type { ApprovalRequirement, PracticeSpec } from '@otto-do/core';
 
 const APPROVAL_ALIASES: Record<string, ApprovalRequirement> = {
   'enabling-globally': 'enabling-globally',

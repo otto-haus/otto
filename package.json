@@ -1,14 +1,14 @@
 {
-  "name": "vinny-os",
+  "name": "otto",
   "version": "0.1.0",
-  "description": "Vinny OS — turn repeated agent workflows into executable culture. Practices (purpose, state, guardrails, evidence) invoked via slash commands. Flagship Practice: Charter.",
+  "description": "Otto — the behavior layer for persistent AI agents. Turns operating contracts, practices, routines, standards, approvals, receipts, and corrections into governed future behavior.",
   "type": "module",
   "license": "Apache-2.0",
   "keywords": [
     "ai-agents",
     "practices",
     "charter",
-    "vinny-os",
+    "otto",
     "letta",
     "letta-code",
     "agent-extension",
@@ -33,6 +33,11 @@
   ],
   "scripts": {
     "install-extension": "./scripts/install.sh",
-    "typecheck": "tsc -p packages/core/tsconfig.json"
+    "typecheck": "tsc -p packages/core/tsconfig.json",
+    "test": "bun test",
+    "verify:v0": "bash scripts/verify-v0.sh"
+  },
+  "devDependencies": {
+    "typescript": "^5.6.3"
   }
 }

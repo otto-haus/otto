@@ -1,5 +1,5 @@
-slug: vinny-os-charter-v0
-objective: Ship Charter v0.1 (Vinny OS core) as an OSS operating contract system
+slug: otto-charter-v0
+objective: Ship Charter v0.1 (Otto core) as an OSS operating contract system
 status: active
 why_now: Long autonomous runs need durable, owned contracts with gates and receipts.
 scope: Compiler, Runtime, Loop (Scout/Judge/Worker + Auditor/Recorder), Gates, docs, install.

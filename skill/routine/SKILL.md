@@ -1,6 +1,6 @@
 ---
 name: routine
-description: Routine — repeated bundles of Practices. Use when the user invokes /routine, wants recurring agent behavior, asks to compose Practices on a trigger, or when Vinny should mine/propose a Routine from repeated work. Recurring activation belongs to the human.
+description: Routine — repeated bundles of Practices. Use when the user invokes /routine, wants recurring agent behavior, asks to compose Practices on a trigger, or when Otto should mine/propose a Routine from repeated work. Recurring activation belongs to the human.
 ---
 
 # Routine
@@ -38,7 +38,7 @@ Routine specs conform to `Routine` in `packages/core/src/types.ts`:
 
 ## Runtime
 
-Default root: `$ROUTINE_HOME/` or `$VINNY_HOME/`, falling back to `~/.vinny`.
+Default root: `$ROUTINE_HOME/`, else `$OTTO_HOME/` (or `$VINNY_HOME/` for back-compat), falling back to `~/.otto`.
 
 ```txt
 routines/<slug>/routine.yaml     product truth
@@ -46,7 +46,7 @@ runs/                            runtime execution records (gitignored)
 receipts/                        proof artifacts / quick-audit surface (gitignored)
 ```
 
-Files = truth. Memory = lessons. UI = cockpit.
+Files = truth. Memory = lessons. UI = workspace.
 
 ## Subcommands
 

@@ -1,6 +1,6 @@
-# Vinny OS Desktop
+# Otto Desktop
 
-A v0 Desktop cockpit for viewing Vinny OS Practices, mock Runs, and pending Approvals.
+A v0 Desktop workspace for viewing Otto Practices, mock Runs, and pending Approvals.
 
 ## Install
 

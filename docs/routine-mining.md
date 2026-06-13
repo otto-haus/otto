@@ -1,7 +1,7 @@
 # Routine Mining
 
 Routines are not only authored top-down — they are **mined** from repeated bundles of
-Practices. Vinny owns the mining loop; the human legitimizes recurring activation.
+Practices. Otto owns the mining loop; the human legitimizes recurring activation.
 
 ```txt
 Observe repeated need
@@ -34,7 +34,7 @@ Observe repeated need
 ## Who does what
 
 ```txt
-Vinny      owns Routine operations  (observe, compose, draft, trial, measure, recommend).
+Otto      owns Routine operations  (observe, compose, draft, trial, measure, recommend).
 The human  owns Routine legitimacy  (approve recurring activation, behavior changes, side effects).
 ```
 

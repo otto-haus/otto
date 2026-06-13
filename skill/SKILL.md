@@ -13,7 +13,7 @@ Compiler       messy intent -> compact contract (charter.md + charter.yaml)
 Runtime        charter.* / state.yaml / ledger.md / approvals / receipts / traces / notes
 Loop           Scout -> Judge -> Worker   (+ Auditor proves/rejects done, Recorder keeps files current)
 Gates          one-way doors require human approval
-Substrate      Files = truth, Memory = lessons, UI = cockpit
+Substrate      Files = truth, Memory = lessons, UI = workspace
 ```
 
 ## Core principle
@@ -34,7 +34,7 @@ and approves one-way doors.
   in Letta memory blocks. Never treat chat or memory as the source of truth for status.
 - **Memory = lessons.** Write durable lessons learned to memory on completion, not
   live state.
-- **UI = cockpit.** The command/status output is a view over the files.
+- **UI = workspace.** The command/status output is a view over the files.
 
 ## Runtime (Files = truth)
 

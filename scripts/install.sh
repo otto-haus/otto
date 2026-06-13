@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Install Vinny OS into Letta Code:
+# Install Otto into Letta Code:
 #  - symlink the Charter and Routine extensions into ~/.letta/extensions/
 #  - install the skills into the agent's memory skills dir
 #  - scaffold the Charter runtime under $CHARTER_HOME/charters/ (default ~/.charter)
@@ -11,7 +11,7 @@ REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 EXT_DIR="${HOME}/.letta/extensions"
 CHARTER_HOME="${CHARTER_HOME:-${HOME}/.charter}"
 
-echo "Vinny OS / Charter repo: ${REPO_DIR}"
+echo "Otto / Charter repo: ${REPO_DIR}"
 
 # 1. Extension (symlink so the repo stays source of truth)
 mkdir -p "${EXT_DIR}"

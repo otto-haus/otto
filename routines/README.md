@@ -27,7 +27,7 @@ records belong in local `runs/` and `receipts/` directories, which are gitignore
 ```txt
 Routine file = product truth
 Letta cron   = execution backend
-Desktop      = cockpit
+Desktop      = workspace
 ```
 
 ## Status lifecycle
@@ -36,6 +36,6 @@ Desktop      = cockpit
 proposed → trial → active → paused → retired
 ```
 
-Vinny may draft and trial low-risk Routines autonomously. **Recurring activation is
+Otto may draft and trial low-risk Routines autonomously. **Recurring activation is
 the human's call** — a standing Routine spends attention, and attention is a one-way
 door. See [`../docs/architecture/v0-contract.md`](../docs/architecture/v0-contract.md).

@@ -8,7 +8,7 @@ Standards changes only become real when Sebastian ratifies them.
 
 ```yaml
 period: <YYYY-MM-DD .. YYYY-MM-DD>
-reviewer: Vinny
+reviewer: Otto
 ratified_by: <Sebastian | pending>
 ```
 

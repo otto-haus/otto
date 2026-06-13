@@ -1,6 +1,6 @@
 # Standards
 
-**The explicit operating canon of Vinny OS.** What we reward, refuse, and do under
+**The explicit operating canon of Otto.** What we reward, refuse, and do under
 pressure.
 
 ```txt

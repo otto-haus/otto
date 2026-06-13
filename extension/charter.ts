@@ -5,7 +5,7 @@
  * Object model:   Intent -> Charter -> State -> Receipt
  * Roles (loop):   Scout -> Judge -> Worker   (+ Auditor proves/rejects done,
  *                 Recorder keeps files current)
- * Substrate:      Files = truth, Memory = lessons, UI = cockpit
+ * Substrate:      Files = truth, Memory = lessons, UI = workspace
  * Principle:      The human owns charter legitimacy; the agent owns operations.
  *
  * This single-file Letta Code extension provides:
@@ -54,7 +54,7 @@ const KNOWN_SUBCOMMANDS = new Set([
 const SKILL_HINT =
   `Use the "charter" skill workflow. Object model: Intent -> Charter -> State -> Receipt. ` +
   `Runtime root (Files = truth, NOT Letta memory): ${CHARTERS_DIR}/<slug>/. ` +
-  `Memory = lessons only. Doctrine: the human owns charter legitimacy; you (Vinny) own ` +
+  `Memory = lessons only. Doctrine: the human owns charter legitimacy; you (Otto) own ` +
   `operations. Contract is charter.yaml (machine source of truth) + charter.md (human ` +
   `render); keep them in sync (Recorder). Operational updates need no approval; ` +
   `legitimacy changes (objective, scope, acceptance criteria, gates, budget/time, ` +
@@ -85,7 +85,7 @@ function usage(): string {
     "  /charter cancel             cancel the active/proposed charter",
     "",
     "Compatibility: /goal maps to /charter. Prefer /charter in product language.",
-    `Runtime: ${CHARTERS_DIR}/<slug>/   (Files = truth, Memory = lessons, UI = cockpit)`,
+    `Runtime: ${CHARTERS_DIR}/<slug>/   (Files = truth, Memory = lessons, UI = workspace)`,
   ].join("\n");
 }
 

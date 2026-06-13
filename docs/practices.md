@@ -1,12 +1,12 @@
 # Practices — the product concept
 
 > Practices are executable culture.
-> Vinny mines them. The human legitimizes them. Vinny OS makes them repeatable.
+> Otto mines them. The human legitimizes them. Otto makes them repeatable.
 
 ## Why this exists
 
 World-class execution is built through repeated high-value behaviors under pressure.
-Vinny OS turns those behaviors into **Practices** — not one-off prompts, not a pile of
+Otto turns those behaviors into **Practices** — not one-off prompts, not a pile of
 "slash commands," not "automations."
 
 ```txt
@@ -44,7 +44,7 @@ the invocation layer, not the concept).
 ## Product model
 
 ```txt
-Vinny OS
+Otto
   Practices
     Charter      (active — fully implemented)
     Decision     (draft)
@@ -60,7 +60,7 @@ Vinny OS
 A Practice is a durable workflow with:
 
 - **purpose** — the repeated behavior it improves
-- **trigger** — when Vinny recommends or invokes it
+- **trigger** — when Otto recommends or invokes it
 - **inputs** — what the user/environment must provide
 - **outputs** — artifacts, decisions, drafts, receipts, state updates
 - **state** — where durable records live (`state_paths`)

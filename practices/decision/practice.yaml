@@ -41,7 +41,7 @@ metrics:
   - graded_decisions
   - decision_quality_score
   - user_edits_required
-owner: Vinny
+owner: Otto
 approval_required_for:
   - enabling globally
   - external side effects

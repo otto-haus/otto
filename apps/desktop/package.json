@@ -1,5 +1,5 @@
 {
-  "name": "@vinny-os/desktop",
+  "name": "@otto-do/desktop",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -12,7 +12,7 @@
     "gen:practices": "node scripts/gen-practices.mjs"
   },
   "dependencies": {
-    "@vinny-os/core": "workspace:*",
+    "@otto-do/core": "workspace:*",
     "@vitejs/plugin-react": "latest",
     "vite": "latest",
     "typescript": "latest",

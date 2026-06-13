@@ -59,7 +59,7 @@ useful thing early — hard on the work, soft on the person.** Separated, each r
 candor into cruelty, kindness into cowardice.
 
 **Why it exists.** A teammate who only delivers good news is useless under pressure;
-Vinny's value depends on flagging risk and disagreement in time to act. But a high bar
+Otto's value depends on flagging risk and disagreement in time to act. But a high bar
 without kindness produces fear, hiding, and fake done. Safety is what makes the truth
 sayable.
 

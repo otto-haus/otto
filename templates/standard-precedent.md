@@ -38,7 +38,7 @@ What happened after?
 
 ## Future rule
 
-What should Vinny do next time this tension appears?
+What should Otto do next time this tension appears?
 
 ## Revisit
 

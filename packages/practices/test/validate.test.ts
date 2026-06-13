@@ -1,8 +1,11 @@
 import { describe, expect, test } from 'bun:test';
-import type { PracticeSpec } from '@vinny-os/core';
+import { dirname, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import type { PracticeSpec } from '@otto-do/core';
 import { loadPracticeSpec, normalizeApprovalRequirement, validatePracticeSpec } from '../src/index.js';
 
-const root = '/Users/seb/Code/vinny-os/.letta/worktrees/practices-core';
+// Repo root resolved from this test file — portable across clones, no hardcoded absolute path.
+const root = resolve(dirname(fileURLToPath(import.meta.url)), '../../..');
 
 const validSpec: PracticeSpec = {
   name: 'Example',
@@ -18,7 +21,7 @@ const validSpec: PracticeSpec = {
   guardrails: ['guardrail'],
   evidence_standard: ['evidence'],
   metrics: ['uses'],
-  owner: 'Vinny',
+  owner: 'Otto',
   approval_required_for: ['enabling-globally', 'external-side-effects', 'permission-expansion'],
 };
 

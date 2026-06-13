@@ -1,10 +1,10 @@
-# Charter architecture (Vinny OS core)
+# Charter architecture (Otto core)
 
 Charter is a local-first operating contract system for autonomous agents.
 
 ```
 Object model   Intent -> Charter -> State -> Receipt
-Substrate      Files = truth, Memory = lessons, UI = cockpit
+Substrate      Files = truth, Memory = lessons, UI = workspace
 ```
 
 ## Compiler

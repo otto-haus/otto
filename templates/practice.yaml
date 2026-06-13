@@ -16,7 +16,7 @@ summary: <one line — the repeated behavior this Practice improves>
 
 invocations:                  # slash commands = invocation mechanics
   - /<slug> <verb>
-triggers:                     # when Vinny should recommend or invoke it
+triggers:                     # when Otto should recommend or invoke it
   - <trigger>
 inputs:                       # what the user/environment must provide
   - <input>
@@ -30,7 +30,7 @@ evidence_standard:            # what counts as successful completion
   - <criterion>
 metrics:                      # see docs/metrics.md for the full block
   - uses
-owner: Vinny
+owner: Otto
 
 # Standing floor — every Practice keeps at least these three. A Practice
 # can NEVER remove these; it may only add more.

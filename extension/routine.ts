@@ -1,8 +1,8 @@
 /**
- * Routine — repeated bundles of Practices for Vinny OS.
+ * Routine — repeated bundles of Practices for Otto.
  *
  * Model:      Routine -> [Practice...] -> [Run...] -> Receipts
- * Substrate:  Files = truth, Letta cron = execution backend, UI = cockpit
+ * Substrate:  Files = truth, Letta cron = execution backend, UI = workspace
  * Contract:   docs/architecture/v0-contract.md + packages/core/src/types.ts
  * Autonomy:   proposals + low-risk one-off trials can be autonomous.
  *             RECURRING ACTIVATION belongs to the human — attention is a one-way door.
@@ -12,7 +12,7 @@
  *   2. routine-gates — approval before enabling recurring schedules.
  *
  * Disable gates: ROUTINE_GATES=off
- * Runtime home:  ROUTINE_HOME=/path (or VINNY_HOME=/path; default ~/.vinny)
+ * Runtime home:  ROUTINE_HOME, else OTTO_HOME, else VINNY_HOME (back-compat); default ~/.otto
  */
 
 type CommandResult =
@@ -21,10 +21,10 @@ type CommandResult =
   | { type: "handled" };
 
 const HOME = process.env.HOME ?? process.env.USERPROFILE ?? "~";
-const VINNY_HOME = process.env.ROUTINE_HOME ?? process.env.VINNY_HOME ?? `${HOME}/.vinny`;
-const ROUTINES_DIR = `${VINNY_HOME}/routines`;
-const RUNS_DIR = `${VINNY_HOME}/runs`;
-const RECEIPTS_DIR = `${VINNY_HOME}/receipts`;
+const RUNTIME_HOME = process.env.ROUTINE_HOME ?? process.env.OTTO_HOME ?? process.env.VINNY_HOME ?? `${HOME}/.otto`;
+const ROUTINES_DIR = `${RUNTIME_HOME}/routines`;
+const RUNS_DIR = `${RUNTIME_HOME}/runs`;
+const RECEIPTS_DIR = `${RUNTIME_HOME}/receipts`;
 
 const KNOWN_SUBCOMMANDS = new Set([
   "list", "show", "run", "pause", "resume", "propose", "mine", "receipt", "help",
@@ -33,7 +33,7 @@ const KNOWN_SUBCOMMANDS = new Set([
 const SKILL_HINT =
   `Use the "routine" skill workflow. Contract: Routine = repeated bundle of ` +
   `canonical Practices (charter, decision, review, field-note, follow-up). ` +
-  `Runtime root (Files = truth, NOT Letta memory): ${VINNY_HOME}/. ` +
+  `Runtime root (Files = truth, NOT Letta memory): ${RUNTIME_HOME}/. ` +
   `Routine specs live in ${ROUTINES_DIR}/<slug>/routine.yaml and conform to ` +
   `packages/core/src/types.ts. Runs and Receipts live in ${RUNS_DIR}/ and ` +
   `${RECEIPTS_DIR}/. Recurring activation is a standing claim on attention and ` +
@@ -53,7 +53,7 @@ function usage(): string {
     "  /routine mine              mine repeated bundles of Practices",
     "  /routine receipt <run-id>  render a Run receipt",
     "",
-    `Runtime: ${VINNY_HOME}/ (Files = truth, Memory = lessons, UI = cockpit)`,
+    `Runtime: ${RUNTIME_HOME}/ (Files = truth, Memory = lessons, UI = workspace)`,
   ].join("\n");
 }
 
@@ -171,7 +171,7 @@ function runRoutine(args: string): CommandResult {
       systemReminder: true,
       content:
         `[/routine] ${SKILL_HINT}\n\n` +
-        `Give the cockpit view: list Routines under ${ROUTINES_DIR}/ with status, ` +
+        `Give the workspace view: list Routines under ${ROUTINES_DIR}/ with status, ` +
         `schedule, attention cost, last Run, and blocked approvals. If none exist, invite ` +
         `"/routine propose <intent>".`,
     };

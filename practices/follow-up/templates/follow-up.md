@@ -29,5 +29,5 @@ What a good response looks like.
 - [ ] recipient + channel confirmed
 - send_status: BLOCKED until approved
 
-> Vinny may not send, post, or publish this without explicit approval.
+> Otto may not send, post, or publish this without explicit approval.
 > Approval here authorizes this one message only.

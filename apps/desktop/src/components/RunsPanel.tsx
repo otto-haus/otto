@@ -1,4 +1,4 @@
-import type { Run } from '@vinny-os/core';
+import type { Run } from '@otto-do/core';
 
 type RunsPanelProps = {
   runs: Run[];

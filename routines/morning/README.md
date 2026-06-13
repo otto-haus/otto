@@ -29,5 +29,5 @@ See [`templates/daily-brief.md`](templates/daily-brief.md).
 
 ## Autonomy
 
-Vinny may draft and run a one-off trial. **Recurring 07:00 activation requires human
+Otto may draft and run a one-off trial. **Recurring 07:00 activation requires human
 approval** because a daily brief is a standing claim on attention.

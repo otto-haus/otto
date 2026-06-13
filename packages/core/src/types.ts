@@ -1,7 +1,7 @@
 /**
- * Vinny OS — v0 shared contract (core types).
+ * Otto — v0 shared contract (core types).
  *
- * This file is the SINGLE SOURCE OF TRUTH for the primitives that every Vinny OS
+ * This file is the SINGLE SOURCE OF TRUTH for the primitives that every Otto
  * lane depends on (practices/core, routines, channels, desktop). Keep it small,
  * stable, and dependency-free. Changing a type here is a legitimacy change — it
  * affects shared meaning — so it goes through review, not a drive-by edit.
@@ -10,11 +10,11 @@
  *   Charter   = operating contracts
  *   Practices = executable culture
  *   Routines  = repeated bundles of Practices
- *   Channels  = where Vinny reaches you
+ *   Channels  = where Otto reaches you
  *   Runs      = execution records
  *   Receipts  = proof
  *
- * Substrate rule: Files = truth, Memory = lessons, UI = cockpit.
+ * Substrate rule: Files = truth, Memory = lessons, UI = workspace.
  */
 
 // ---------------------------------------------------------------------------
@@ -101,7 +101,7 @@ export interface PracticeSpec {
   implementation?: PracticeImplementation;
   /** Slash-command invocations, e.g. ["/charter propose", "/charter step"]. */
   invocations: string[];
-  /** When Vinny should recommend or invoke this Practice. */
+  /** When Otto should recommend or invoke this Practice. */
   triggers: string[];
   /** What the user/environment must provide. */
   inputs: string[];
@@ -175,13 +175,13 @@ export interface Schedule {
 }
 
 // ---------------------------------------------------------------------------
-// Channel — where Vinny reaches you
+// Channel — where Otto reaches you
 // ---------------------------------------------------------------------------
 
 export interface Channel {
   id: Id;
   kind: ChannelKind;
-  /** Human label, e.g. "Discord #vinny". */
+  /** Human label, e.g. "Discord #otto". */
   label: string;
   /** Opaque address (channel id, handle, email, etc.). */
   address: string;
@@ -303,7 +303,7 @@ export interface CharterRef {
 //   Gate     -> Approval                           (one-way doors)
 //
 // Invariants (see docs/architecture/v0-contract.md):
-//   1. Files = truth, Memory = lessons, UI = cockpit.
+//   1. Files = truth, Memory = lessons, UI = workspace.
 //   2. approval_required_for ⊇ APPROVAL_FLOOR for every Practice.
 //   3. No artifact, no progress: a Run yields a Receipt or a block.
 //   4. Done requires every AcceptanceCriterion mapped to a Receipt.

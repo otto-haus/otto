@@ -1,4 +1,4 @@
-import type { PracticeSpec } from '@vinny-os/core';
+import type { PracticeSpec } from '@otto-do/core';
 
 type PracticeCardProps = {
   practice: PracticeSpec;

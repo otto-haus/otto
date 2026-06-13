@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import type { PracticeSpec } from '@vinny-os/core';
+import type { PracticeSpec } from '@otto-do/core';
 import practicesData from './data/practices.json';
 import { mockApprovals, mockRuns } from './mockData.js';
 import { ApprovalsPanel } from './components/ApprovalsPanel.js';
@@ -25,8 +25,8 @@ export function App() {
     <main className="shell">
       <header className="topbar">
         <div>
-          <p className="eyebrow">Vinny OS Desktop</p>
-          <h1>Vinny OS — Practices</h1>
+          <p className="eyebrow">Otto Desktop</p>
+          <h1>Otto — Practices</h1>
         </div>
         <div className="topbar__counts" aria-label="Practice counts">
           <span><strong>{counts.active}</strong> active</span>
@@ -36,7 +36,7 @@ export function App() {
 
       <section className="hero panel">
         <div>
-          <p className="eyebrow">UI = cockpit</p>
+          <p className="eyebrow">UI = workspace</p>
           <h2>Executable culture, visible from the repo.</h2>
           <p>
             This v0 shell reads Practice specs from disk and shows the operating surface:

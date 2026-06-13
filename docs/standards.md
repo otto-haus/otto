@@ -1,6 +1,6 @@
 # Standards
 
-Standards are the **explicit operating canon** of Vinny OS: what we reward, refuse, and
+Standards are the **explicit operating canon** of Otto: what we reward, refuse, and
 do under pressure. They are the horizontal layer that guides decisions, Curation,
 Practices, Routines, Charters, Channels, Skills, and Reviews.
 
@@ -181,7 +181,7 @@ When Standards conflict in a real decision, write a **Precedent** under
 situation, the Standards in tension, which one won, why (first-principles), the cost, the
 outcome, the future rule, and when to revisit.
 
-Precedents are practical canon: the next time the same tension appears, Vinny follows the
+Precedents are practical canon: the next time the same tension appears, Otto follows the
 precedent unless first principles or new evidence overturn it.
 
 > A v0 Standard with no precedent is suspect. List virtues only after one has cost you a

@@ -1,7 +1,7 @@
 # Practice Mining
 
 Practices are not only authored top-down — they are **mined** from repeated work.
-Vinny owns the mining loop; the human legitimizes the result.
+Otto owns the mining loop; the human legitimizes the result.
 
 ```txt
 Observe repeated behavior
@@ -26,7 +26,7 @@ Observe repeated behavior
 ## Who does what
 
 ```txt
-Vinny      owns Practice operations  (observe, propose, draft, measure, recommend).
+Otto      owns Practice operations  (observe, propose, draft, measure, recommend).
 The human  owns Practice legitimacy  (approve activation, behavior changes, side effects).
 ```
 

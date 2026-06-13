@@ -1,6 +1,6 @@
 # Practice Mining Routine
 
-**Purpose:** let Vinny discover repeated workflows.
+**Purpose:** let Otto discover repeated workflows.
 
 Scans recent Runs and receipts for behaviors happening more than once, then drafts
 Practice/Routine proposals so executable culture grows from real work instead of
@@ -28,6 +28,6 @@ guesswork.
 
 ## Autonomy
 
-Vinny may draft and trial this Routine and may write proposal files. Activating any
+Otto may draft and trial this Routine and may write proposal files. Activating any
 mined Practice/Routine — and activating this Routine on a recurring schedule — requires
 human approval.

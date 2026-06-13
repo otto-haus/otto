@@ -11,19 +11,19 @@ Ticketcraft:  messy work   → sharp ticket packet
 Internal/package name: Ticketcraft. User-facing command: `/ticket`.
 
 It is part of [Autonomy](autonomy.md): compiling sharp, bounded tickets is what lets
-Main Vinny own orchestration while workers execute.
+Main Otto own orchestration while workers execute.
 
 ## Why it matters
 
 ```txt
 Sebastian gives intent.
-Vinny compiles tickets.
+Otto compiles tickets.
 Workers execute.
-Vinny reviews / integrates.
+Otto reviews / integrates.
 Sebastian sees only doors.
 ```
 
-The compiler uses Vinny's superior local context — repo state, owned vs shared paths,
+The compiler uses Otto's superior local context — repo state, owned vs shared paths,
 prior decisions, blockers, tool/runtime constraints — to turn vague work into a
 worker-ready packet a temporary executor can run without redefining scope.
 

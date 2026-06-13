@@ -58,7 +58,7 @@
       "premature_done_prevented",
       "user_edits_required"
     ],
-    "owner": "Vinny",
+    "owner": "Otto",
     "approval_required_for": [
       "enabling-globally",
       "external-side-effects",
@@ -117,7 +117,7 @@
       "decision_quality_score",
       "user_edits_required"
     ],
-    "owner": "Vinny",
+    "owner": "Otto",
     "approval_required_for": [
       "enabling-globally",
       "external-side-effects",
@@ -172,7 +172,7 @@
       "followups_staged",
       "memory_writebacks"
     ],
-    "owner": "Vinny",
+    "owner": "Otto",
     "approval_required_for": [
       "enabling-globally",
       "external-side-effects",
@@ -225,7 +225,7 @@
       "sends_after_approval",
       "user_edits_required"
     ],
-    "owner": "Vinny",
+    "owner": "Otto",
     "approval_required_for": [
       "enabling-globally",
       "external-side-effects",
@@ -279,7 +279,7 @@
       "risks_flagged",
       "ac_unmapped"
     ],
-    "owner": "Vinny",
+    "owner": "Otto",
     "approval_required_for": [
       "enabling-globally",
       "external-side-effects",

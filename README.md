@@ -1,10 +1,10 @@
-# Vinny OS
+# Otto
 
 **An open-source system for turning repeated agent workflows into executable culture.**
 
 > Practices are executable culture.
 
-Vinny OS runs long, autonomous agent work safely by turning repeated high-value
+Otto runs long, autonomous agent work safely by turning repeated high-value
 behaviors into **Practices** — deliberate workflows with a purpose, trigger, inputs,
 outputs, durable state, guardrails, an evidence standard, and an improvement loop.
 Slash commands are just the invocation layer. The Practice is the workflow behind it.
@@ -40,7 +40,7 @@ See [`docs/practices.md`](docs/practices.md).
 
 ## Standards
 
-**Standards** are the explicit operating canon — what Vinny OS rewards, refuses, and does
+**Standards** are the explicit operating canon — what Otto rewards, refuses, and does
 under pressure. Culture is the lived outcome; Standards are the deliberate choice we grade
 it against. A Practice exists only if it reinforces a Standard.
 
@@ -91,7 +91,7 @@ Loop       Scout -> Judge -> Worker   (+ Auditor proves done, Recorder keeps fil
 Gates      one-way doors require human approval
 ```
 
-Substrate: **Files = truth, Memory = lessons, UI = cockpit.** Active state lives in
+Substrate: **Files = truth, Memory = lessons, UI = workspace.** Active state lives in
 files (default `~/.charter/charters/`), never in agent memory. See
 [`docs/architecture.md`](docs/architecture.md),
 [`docs/runtime-spec.md`](docs/runtime-spec.md), and [`docs/gates.md`](docs/gates.md).
@@ -101,8 +101,8 @@ files (default `~/.charter/charters/`), never in agent memory. See
 Charter ships as a single-file [Letta Code](https://letta.com) extension plus a skill.
 
 ```sh
-git clone https://github.com/TryVeto/vinny-os
-cd vinny-os
+git clone https://github.com/otto-do/otto
+cd otto
 ./scripts/install.sh
 ```
 
@@ -162,14 +162,14 @@ Practice logic — a Practice that hits a one-way door stops and asks. See
 
 ## Desktop
 
-Vinny OS Desktop is a cockpit over Practices: active Practices, invocations, recent
+Otto Desktop is a workspace over Practices: active Practices, invocations, recent
 runs, pending proposals, metrics, and approval controls. See
 [`docs/desktop.md`](docs/desktop.md).
 
 ## Layout
 
 ```
-vinny-os/
+otto/
   standards/               the explicit canon
     registry.yaml          index of Standards + conflict map (case law)
     standards/             the v0 Standards (one file each)

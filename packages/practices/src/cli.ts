@@ -12,7 +12,7 @@ interface Row {
 }
 
 function defaultRepoRoot(): string {
-  return process.env.VINNY_OS_ROOT ?? resolve(dirname(fileURLToPath(import.meta.url)), '../../..');
+  return process.env.OTTO_DO_ROOT ?? process.env.VINNY_OS_ROOT ?? resolve(dirname(fileURLToPath(import.meta.url)), '../../..');
 }
 
 function formatTable(rows: Row[]): string {

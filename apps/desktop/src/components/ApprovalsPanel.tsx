@@ -1,4 +1,4 @@
-import type { Approval } from '@vinny-os/core';
+import type { Approval } from '@otto-do/core';
 
 type ApprovalsPanelProps = {
   approvals: Approval[];

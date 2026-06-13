@@ -1,4 +1,4 @@
-import type { PracticeSpec } from '@vinny-os/core';
+import type { PracticeSpec } from '@otto-do/core';
 import { PracticeCard } from './PracticeCard.js';
 
 type PracticeListProps = {

@@ -1,7 +1,7 @@
 {
-  "name": "@vinny-os/practices",
+  "name": "@otto-do/practices",
   "version": "0.0.0",
-  "description": "Vinny OS PracticeSpec loader, validator, and CLI.",
+  "description": "Otto PracticeSpec loader, validator, and CLI.",
   "type": "module",
   "license": "Apache-2.0",
   "types": "./src/index.ts",
@@ -12,13 +12,13 @@
     }
   },
   "bin": {
-    "vinny-practices": "./src/cli.ts"
+    "otto-practices": "./src/cli.ts"
   },
   "files": [
     "src"
   ],
   "dependencies": {
-    "@vinny-os/core": "workspace:*",
+    "@otto-do/core": "workspace:*",
     "yaml": "^2.9.0"
   },
   "devDependencies": {

@@ -1,5 +1,5 @@
-import { APPROVAL_FLOOR } from '@vinny-os/core';
-import type { ApprovalRequirement, PracticeSpec, PracticeStatus } from '@vinny-os/core';
+import { APPROVAL_FLOOR } from '@otto-do/core';
+import type { ApprovalRequirement, PracticeSpec, PracticeStatus } from '@otto-do/core';
 
 export interface PracticeValidationResult {
   errors: string[];

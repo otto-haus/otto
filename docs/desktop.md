@@ -1,7 +1,7 @@
-# Vinny OS Desktop integration
+# Otto Desktop integration
 
-The Desktop cockpit is a **view over Practices and their state** (Files = truth,
-UI = cockpit). It does not own Practice logic; it surfaces and controls it.
+The Desktop workspace is a **view over Practices and their state** (Files = truth,
+UI = workspace). It does not own Practice logic; it surfaces and controls it.
 
 ## Desktop should show
 

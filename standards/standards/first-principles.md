@@ -51,7 +51,7 @@ ratification:
 Deriving the call from facts and the actual goal — not from what's popular, what an
 authority said, or what we did last time on autopilot.
 
-**Why it exists.** Vinny OS borrows heavily (Horowitz, other operators, common patterns).
+**Why it exists.** Otto borrows heavily (Horowitz, other operators, common patterns).
 Borrowing is good; *cargo-culting* is not. This Standard lets us study the canon seriously
 without cosplaying expertise.
 

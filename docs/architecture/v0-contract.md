@@ -1,4 +1,4 @@
-# Vinny OS — v0 shared contract
+# Otto — v0 shared contract
 
 This is the **foundation layer**. It fixes the shared meaning of the core objects so
 that parallel lanes (practices/core, routines, channels, desktop) build against the
@@ -17,13 +17,13 @@ Status: v0 (draft contract). Changing a primitive here is a legitimacy change.
 Charter   = operating contracts
 Practices = executable culture
 Routines  = repeated bundles of Practices
-Channels  = where Vinny reaches you
+Channels  = where Otto reaches you
 Runs      = execution records
 Receipts  = proof
 ```
 
-Supporting terms: **Vinny** = agent identity; **Vinny OS** = the system/repo;
-**Vinny OS Desktop** = the cockpit; **Letta** = memory/runtime substrate.
+Supporting terms: **Otto** = the persistent agent and behavior system (one identity, many functions);
+**Otto Desktop** = the workspace; **Letta** = memory/runtime substrate.
 
 ## Object model
 
@@ -41,7 +41,7 @@ Gate     -> Approval                            (one-way doors)
 - A **Run** is one execution of a Practice. It yields **Receipts** (proof) or a block.
 - A **Routine** bundles Practices into a repeated sequence; schedules/cron are the
   mechanism, Routines are the product language.
-- A **Channel** is where Vinny reaches the human. Outbound is an external side effect.
+- A **Channel** is where Otto reaches the human. Outbound is an external side effect.
 - An **Approval** is a first-class, scoped, time-bound record of human consent for a
   one-way door.
 
@@ -60,7 +60,7 @@ Gate     -> Approval                            (one-way doors)
 
 ## Invariants (non-negotiable)
 
-1. **Files = truth, Memory = lessons, UI = cockpit.** Live state lives in files
+1. **Files = truth, Memory = lessons, UI = workspace.** Live state lives in files
    (Charter: `$CHARTER_HOME/charters/`), never in agent memory. Memory holds lessons.
 2. **Approval floor.** Every `PracticeSpec.approval_required_for` is a superset of
    `APPROVAL_FLOOR` (`enabling-globally`, `external-side-effects`,
@@ -90,7 +90,7 @@ Charter  : draft -> active -> (blocked) -> complete | cancelled
   loader that reads `practices/<slug>/practice.yaml` into these types.
 - **routines** — composes Practices via `Routine` / `RoutineStep` / `Schedule`.
 - **channels** — delivers `Run` results via `Channel` (gated outbound).
-- **desktop** — a cockpit/view over `PracticeSpec`, `Run`, `Approval`, `PracticeMetrics`.
+- **desktop** — a workspace/view over `PracticeSpec`, `Run`, `Approval`, `PracticeMetrics`.
 
 ## Change policy
 

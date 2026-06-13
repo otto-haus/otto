@@ -3,7 +3,7 @@
 id: <YYYYMMDD-kebab-task>
 date: <ISO-8601>
 mode: done            # done | risk
-reviewer: Vinny
+reviewer: Otto
 recommendation: <pass | fail | blocked>
 
 ## Acceptance criteria → evidence

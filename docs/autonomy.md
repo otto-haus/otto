@@ -1,13 +1,13 @@
 # Autonomy
 
-Autonomy is the operating layer that defines what Vinny may own **without Sebastian
-in the loop**. It lets Vinny orchestrate tickets, workers, worktrees, retries, checks,
+Autonomy is the operating layer that defines what Otto may own **without Sebastian
+in the loop**. It lets Otto orchestrate tickets, workers, worktrees, retries, checks,
 and integration steps — escalating only consequential doors to Approvals.
 
 ## Doctrine
 
 ```txt
-Vinny owns orchestration.
+Otto owns orchestration.
 Workers own bounded execution.
 Sebastian owns consequences.
 
@@ -26,7 +26,7 @@ Move fast on good judgment.
 ## Product model
 
 ```txt
-Main Vinny   = orchestrator / judgment / memory / Standards
+Main Otto   = orchestrator / judgment / memory / Standards
 Ticket worker = temporary executor
 Worktree     = isolated build surface
 Files        = source of truth
@@ -34,14 +34,14 @@ Receipts     = proof
 Approvals    = one-way-door ratification
 ```
 
-One Vinny identity. Many temporary worker conversations. One worktree per ticket.
+One Otto identity. Many temporary worker conversations. One worktree per ticket.
 Workers are **not** persistent identities and never redefine shared meaning.
 
 ## Desired workflow
 
-Sebastian → Main Vinny: *"Build Vinny OS."*
+Sebastian → Main Otto: *"Build Otto."*
 
-Vinny then:
+Otto then:
 
 ```txt
 1. create/update Charter
@@ -95,13 +95,13 @@ logic — even mid-run, even if "the ticket says so."
 
 ## Worker model
 
-A worker is a temporary executor given a bounded packet. It is not Vinny.
+A worker is a temporary executor given a bounded packet. It is not Otto.
 
 Worker packet shape (template: [`../templates/worker-packet.md`](../templates/worker-packet.md)):
 
 ```md
 # Worker Packet
-You are a temporary worker for Vinny OS. You are not Vinny.
+You are a temporary worker for Otto. You are not Otto.
 
 ## Ticket / Objective / Owned paths / Shared contracts
 ## Constraints / Checks / Stop conditions / Receipt required
@@ -112,7 +112,7 @@ You are a temporary worker for Vinny OS. You are not Vinny.
 Default thesis (configurable, not religious):
 
 ```txt
-Main Vinny:    strongest reasoning model   (e.g. GPT-5.5 extra-high)
+Main Otto:    strongest reasoning model   (e.g. GPT-5.5 extra-high)
 Worker agents: strongest coding/writing model (e.g. Claude Opus 4.8 Max)
 ```
 
@@ -149,8 +149,8 @@ Every feature/ticket uses a worktree.
 Layout (Letta-managed convention used by this repo):
 
 ```txt
-/Users/seb/Code/vinny-os                         main checkout
-/Users/seb/Code/vinny-os/.letta/worktrees/<ticket>   per-ticket build surface
+~/Code/otto                          main checkout
+~/Code/otto/.letta/worktrees/<ticket>    per-ticket build surface
 ```
 
 Rules: never dirty main checkout for worker tasks · one worktree per ticket ·
@@ -178,7 +178,7 @@ receipt_path: receipts/...
 
 ## Autonomy settings
 
-Exposed in Vinny OS Desktop:
+Exposed in Otto Desktop:
 
 ```yaml
 autonomy:
@@ -203,7 +203,7 @@ Active tickets · Workers · Worktrees · Branches · PRs · Checks
 Receipts · Blockers · Pending approvals · Next autonomous action
 ```
 
-It answers: *What is Vinny managing for me? What needs me? What is safe and already
+It answers: *What is Otto managing for me? What needs me? What is safe and already
 moving?*
 
 ## Receipts
@@ -222,7 +222,7 @@ Log it and fix the policy, not just the instance:
 autonomy_failure:
   type: unnecessary_escalation
   question_asked: "Retry PR merge or clean worktrees?"
-  why_vinny_should_have_owned_it: "Operational, reversible, no consequence."
+  why_otto_should_have_owned_it: "Operational, reversible, no consequence."
   fix: [update autonomy policy, add playbook, improve worker prompt]
 ```
 
@@ -253,7 +253,7 @@ review-only, or planning-only output is always available without enabling anythi
 ## Non-goals
 
 ```txt
-no separate persistent Vinny identities
+no separate persistent Otto identities
 workers never redefine shared meaning
 never bypass provider ToS
 agents never approve one-way doors
@@ -265,6 +265,6 @@ never hide autonomous actions without receipts
 ## Final principle
 
 ```txt
-Vinny owns orchestration.
+Otto owns orchestration.
 Sebastian owns consequences.
 ```

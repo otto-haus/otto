@@ -1,11 +1,11 @@
 # Routines — repeated bundles of Practices
 
 > Routines make Practices compound.
-> Vinny may propose them. The human legitimizes recurring activation.
+> Otto may propose them. The human legitimizes recurring activation.
 
 ## Why this exists
 
-Long-term memory is only valuable if it changes future behavior. Vinny OS turns
+Long-term memory is only valuable if it changes future behavior. Otto turns
 repeated combinations of Practices into **Routines** — not cron jobs, reminders, or
 automations.
 
@@ -38,7 +38,7 @@ See the shared contract: [`architecture/v0-contract.md`](architecture/v0-contrac
 ## Product model
 
 ```txt
-Vinny OS
+Otto
   Practices
     Charter · Decision · Review · Field Note · Follow-up
   Routines
@@ -82,7 +82,7 @@ routines/
 ```
 
 Runtime `runs/` and `receipts/` are intentionally gitignored. Files remain truth; UI is
-a cockpit over those files.
+a workspace over those files.
 
 ## Autonomy boundary
 

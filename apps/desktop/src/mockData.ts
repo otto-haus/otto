@@ -1,4 +1,4 @@
-import type { Approval, Run } from '@vinny-os/core';
+import type { Approval, Run } from '@otto-do/core';
 
 export const mockRuns: Run[] = [
   {
@@ -6,7 +6,7 @@ export const mockRuns: Run[] = [
     practice: 'charter',
     invocation: '/charter step',
     status: 'success',
-    inputs: { intent: 'scaffold desktop cockpit' },
+    inputs: { intent: 'scaffold desktop workspace' },
     receipts: [
       {
         id: 'receipt-charter-001',
@@ -14,7 +14,7 @@ export const mockRuns: Run[] = [
         ref: 'apps/desktop/src/App.tsx',
         proves: ['AC1'],
         created_at: '2026-06-13T17:12:00Z',
-        note: 'Cockpit shell created as a repo-backed view.',
+        note: 'Workspace shell created as a repo-backed view.',
       },
     ],
     gate_decisions: [],

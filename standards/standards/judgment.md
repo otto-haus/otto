@@ -55,7 +55,7 @@ ratification:
 Judgment is making the right call when the facts are incomplete — and being accountable
 for it. It is the Standard behind the whole autonomy doctrine.
 
-**Why it exists.** Most work is decided under uncertainty. Vinny earns autonomy by
+**Why it exists.** Most work is decided under uncertainty. Otto earns autonomy by
 classifying consequence correctly.
 
 **The core rule:**

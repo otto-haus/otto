@@ -28,4 +28,4 @@ See [`templates/charter-checkin.md`](templates/charter-checkin.md).
 
 ## Autonomy
 
-Vinny may draft and trial. Recurring activation requires human approval.
+Otto may draft and trial. Recurring activation requires human approval.
