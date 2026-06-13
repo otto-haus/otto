@@ -1,0 +1,45 @@
+name: Field Note
+slug: field-note
+version: 0.1
+status: draft            # draft — spec only, not yet implemented as an extension
+summary: Capture messy customer/operator/research notes into durable structured state.
+invocations:
+  - /field-note capture
+triggers:
+  - raw customer / operator / user note
+  - voice memo or post-meeting brain dump
+  - research observation worth keeping
+inputs:
+  - raw note
+  - source / context (who, role, where, when)
+outputs:
+  - raw note
+  - source/context
+  - exact quotes (verbatim signal)
+  - entities
+  - insights
+  - open questions
+  - follow-up candidates
+  - memory writeback suggestions
+state_paths:
+  - field-notes/
+guardrails:
+  - capture verbatim signal, not paraphrase (especially objections + exact words)
+  - stage the next follow-up; never auto-send
+  - the office/customer decides; we only record
+evidence_standard:
+  - who/where/when captured
+  - exact quotes preserved
+  - at least one insight or open question
+  - one staged (not sent) follow-up candidate
+metrics:
+  - uses
+  - notes_captured
+  - followups_staged
+  - memory_writebacks
+owner: Vinny
+approval_required_for:
+  - enabling globally
+  - external side effects
+  - permission expansion
+  - any send / outbound touch

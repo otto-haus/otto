@@ -1,34 +1,60 @@
 # Vinny OS
 
-**An open-source operating contract system for autonomous agents.**
+**An open-source system for turning repeated agent workflows into executable culture.**
 
-> Turn intent into evidence-checked autonomous work.
+> Practices are executable culture.
 
-Vinny OS is an open layer for running long, autonomous agent work safely. Its core is
-**Charter**: a system that takes messy human intent, compiles it into a compact
-operating contract, runs it autonomously with durable file-based state, gates the
-one-way doors behind human approval, and proves it's done with receipts.
-
-```
-The human owns charter legitimacy.
-The agent owns charter operations.
-```
-
-## Why
-
-The human is often not in the weeds enough to write the best goal. The agent has
-better local context — repo state, current blockers, prior decisions, tool/runtime
-constraints, the real acceptance criteria and implementation path. So the agent
-should operationalize vague intent into durable, sharp contracts — while the human
-keeps authority over legitimacy and over irreversible actions.
-
-## Object model
+Vinny OS runs long, autonomous agent work safely by turning repeated high-value
+behaviors into **Practices** — deliberate workflows with a purpose, trigger, inputs,
+outputs, durable state, guardrails, an evidence standard, and an improvement loop.
+Slash commands are just the invocation layer. The Practice is the workflow behind it.
 
 ```
-Intent  ->  Charter  ->  State  ->  Receipt
+Culture    = shared practices.
+Practices  = executable culture.
 ```
 
-## Charter — the four parts
+The flagship Practice, **Charter**, is fully implemented today: it takes messy human
+intent, compiles it into a compact operating contract, runs it autonomously with
+durable file-based state, gates the one-way doors behind human approval, and proves
+it's done with receipts.
+
+```
+The human owns legitimacy.
+The agent owns operations.
+```
+
+## The layer model
+
+```
+Practice       cultural / workflow ritual   (the product concept)
+Slash command  technical shortcut           (the invocation mechanism)
+Tool           action primitive             (the capability used)
+State          files / memory               (the durable record)
+```
+
+Internal docs may still say "slash command." Product language says **Practice**.
+See [`docs/practices.md`](docs/practices.md).
+
+## Practices
+
+| Practice | Status | Purpose | Invoke |
+|----------|--------|---------|--------|
+| **Charter**   | `active` | Turn intent into evidence-checked autonomous work | `/charter` |
+| **Decision**  | `draft`  | Record first-principles decisions and grade them later | `/decision` |
+| **Review**    | `draft`  | Prevent fake done by mapping claims to evidence | `/review` |
+| **Field Note**| `draft`  | Capture messy customer/operator notes into durable state | `/field-note` |
+| **Follow-up** | `draft`  | Draft relationship follow-ups behind an approval gate | `/follow-up` |
+
+Each Practice lives in [`practices/<slug>/`](practices/) with a compact `practice.yaml`
+spec, a `README.md`, and artifact `templates/`. Charter is real code (extension +
+skill); the other four are draft specs that reuse Charter's primitives.
+
+---
+
+## Charter — the flagship Practice
+
+> Object model: **Intent → Charter → State → Receipt.**
 
 ```
 Compiler   messy intent -> compact contract (charter.md + charter.yaml)
@@ -38,12 +64,11 @@ Gates      one-way doors require human approval
 ```
 
 Substrate: **Files = truth, Memory = lessons, UI = cockpit.** Active state lives in
-files (default `~/.charter/charters/`), never in agent memory.
+files (default `~/.charter/charters/`), never in agent memory. See
+[`docs/architecture.md`](docs/architecture.md),
+[`docs/runtime-spec.md`](docs/runtime-spec.md), and [`docs/gates.md`](docs/gates.md).
 
-See [`docs/architecture.md`](docs/architecture.md), [`docs/runtime-spec.md`](docs/runtime-spec.md),
-and [`docs/gates.md`](docs/gates.md).
-
-## Install (Letta Code)
+### Install (Letta Code)
 
 Charter ships as a single-file [Letta Code](https://letta.com) extension plus a skill.
 
@@ -59,7 +84,7 @@ Then run `/reload` in Letta Code. This:
 - installs `skill/SKILL.md` into your agent's `skills/charter/`
 - scaffolds the runtime under `~/.charter/charters/` (override with `CHARTER_HOME`)
 
-## Commands
+### Commands
 
 ```
 /charter propose <intent>   compile messy intent into a proposed charter
@@ -75,14 +100,14 @@ Then run `/reload` in Letta Code. This:
 Also: `update`, `block`, `audit`, `sharpen`, `split`, `cancel`.
 `/goal` is a compatibility alias; prefer `/charter`.
 
-## Charter Gates
+### Charter Gates
 
 A permission overlay forces an approval prompt — even in unrestricted mode — before
 send/post/publish, spend, deploy, merge to protected main, force-push, delete/destroy,
 credential/security changes, and other one-way doors. Approvals are recorded as
 scoped, time-bound files under `approvals/`. Disable with `CHARTER_GATES=off`.
 
-## Anti-fake-progress
+### Anti-fake-progress
 
 ```
 No artifact, no progress.
@@ -90,21 +115,47 @@ Two no-evidence loops force block/sharpen.
 Done requires AC-by-AC proof mapping.
 ```
 
+---
+
+## Practice Mining
+
+Practices can be mined from repeated work: observe a recurring behavior → propose a
+Practice → human approves → activate → measure → refine or deprecate. Proposals use
+[`templates/practice-proposal.md`](templates/practice-proposal.md). See
+[`docs/practice-mining.md`](docs/practice-mining.md).
+
+## Safety & autonomy
+
+Practices **cannot** bypass human approval. Every `practice.yaml` carries an
+`approval_required_for` floor (enabling globally, external side effects, permission
+expansion); communication Practices add a hard no-send gate. Approval gates outrank
+Practice logic — a Practice that hits a one-way door stops and asks. See
+[`docs/autonomy.md`](docs/autonomy.md).
+
+## Desktop
+
+Vinny OS Desktop is a cockpit over Practices: active Practices, invocations, recent
+runs, pending proposals, metrics, and approval controls. See
+[`docs/desktop.md`](docs/desktop.md).
+
 ## Layout
 
 ```
 vinny-os/
-  extension/charter.ts     Letta Code command + gates overlay
-  skill/SKILL.md           agent workflow
-  templates/               charter.md / charter.yaml / state.yaml / ledger.md /
-                           approval.yaml / delegation packet
-  docs/                    architecture / runtime spec / gates
+  practices/               the Practices
+    charter/               practice.yaml + README   (wraps the extension/skill below)
+    decision/ review/ field-note/ follow-up/        practice.yaml + README + templates
+  extension/charter.ts     Charter: Letta Code command + gates overlay
+  skill/SKILL.md           Charter: agent workflow
+  templates/               Charter artifact templates + practice.yaml schema + proposal
+  docs/                    practices / mining / autonomy / desktop / metrics
+                           + architecture / runtime-spec / gates (Charter)
   examples/                a filled example charter
   scripts/install.sh       install into Letta Code
 ```
 
-Org-specific doctrine, gates, and templates should live in a separate private repo
-so this core stays generic.
+Org-specific doctrine, gates, and templates should live in a separate private repo so
+this core stays generic.
 
 ## License
 

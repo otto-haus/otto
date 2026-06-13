@@ -1,0 +1,54 @@
+name: Charter
+slug: charter
+version: 0.1
+status: active           # active — fully implemented as a Letta Code extension + skill
+summary: Evidence-checked operating contracts for autonomous work.
+implementation:
+  extension: extension/charter.ts   # Letta Code command + charter-gates overlay
+  skill: skill/SKILL.md             # agent workflow
+  templates: templates/             # charter.md / charter.yaml / state.yaml / ledger.md / approval.yaml / delegation-packet.md
+invocations:
+  - /charter propose
+  - /charter approve
+  - /charter step
+  - /charter status
+  - /charter complete
+triggers:
+  - vague intent with a durable objective
+  - long-running task (> ~30 min)
+  - work requiring evidence and receipts
+inputs:
+  - intent
+  - constraints
+  - approval boundaries (one-way doors)
+outputs:
+  - charter.md
+  - charter.yaml
+  - state.yaml
+  - ledger.md
+  - approvals
+  - receipts
+  - traces
+state_paths:
+  - $CHARTER_HOME/charters/        # default ~/.charter/charters/ — OUTSIDE Letta memory
+guardrails:
+  - one-way doors require human approval (charter-gates overlay)
+  - no artifact, no progress; two no-evidence loops force block/sharpen
+  - done requires AC-by-AC proof mapping
+  - files are truth, not chat or memory
+evidence_standard:
+  - every acceptance criterion mapped to a receipt
+  - cleanup recorded
+  - risk notes recorded
+  - user acceptance where required
+metrics:
+  - uses
+  - successful_runs
+  - blocked_runs
+  - premature_done_prevented
+  - user_edits_required
+owner: Vinny
+approval_required_for:
+  - enabling globally
+  - external side effects
+  - permission expansion

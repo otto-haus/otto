@@ -2,6 +2,14 @@ node_modules/
 .DS_Store
 *.log
 # Local/private runtime state should never be committed to the OSS repo.
+# (Practice runtime state lives in these dirs, analogous to charters/.)
 charters/
+decisions/
+reviews/
+field-notes/
+follow-ups/
 .env
 .env.*
+
+# Local Letta Code worktrees / runtime
+.letta/

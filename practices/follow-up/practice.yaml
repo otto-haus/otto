@@ -1,0 +1,42 @@
+name: Follow-up
+slug: follow-up
+version: 0.1
+status: draft            # draft — spec only, not yet implemented as an extension
+summary: Draft relationship/customer follow-ups with explicit approval gates.
+invocations:
+  - /follow-up draft
+triggers:
+  - a field note produced a follow-up candidate
+  - a relationship/customer touch is owed
+  - a thread needs a next step
+inputs:
+  - context (often from a field note)
+  - recipient
+  - desired outcome
+outputs:
+  - draft
+  - source context
+  - recipient
+  - risk notes
+  - approval card
+state_paths:
+  - follow-ups/
+guardrails:
+  - NO-SEND-WITHOUT-APPROVAL — drafts only; never send/post/publish autonomously
+  - every draft renders an approval card before any outbound action
+  - cite the source context the draft is based on (no invented facts)
+evidence_standard:
+  - draft tied to a real source/context
+  - recipient + risk notes present
+  - approval card generated; send blocked until approved
+metrics:
+  - uses
+  - drafts_created
+  - sends_after_approval
+  - user_edits_required
+owner: Vinny
+approval_required_for:
+  - enabling globally
+  - external side effects
+  - permission expansion
+  - ANY send / post / publish / outbound touch

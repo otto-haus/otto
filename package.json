@@ -1,11 +1,12 @@
 {
   "name": "vinny-os",
   "version": "0.1.0",
-  "description": "Vinny OS — an open-source operating contract system for autonomous agents. Core: Charter. Turn intent into evidence-checked autonomous work.",
+  "description": "Vinny OS — turn repeated agent workflows into executable culture. Practices (purpose, state, guardrails, evidence) invoked via slash commands. Flagship Practice: Charter.",
   "type": "module",
   "license": "Apache-2.0",
   "keywords": [
     "ai-agents",
+    "practices",
     "charter",
     "vinny-os",
     "letta",
@@ -16,6 +17,7 @@
     "guardrails"
   ],
   "files": [
+    "practices",
     "extension",
     "skill",
     "templates",

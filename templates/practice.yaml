@@ -1,0 +1,40 @@
+# Canonical Practice spec schema.
+# Copy to practices/<slug>/practice.yaml and fill in. Keep it compact —
+# rationale, examples, and artifact templates live in README.md / templates/.
+
+name: <Display Name>          # e.g. Decision
+slug: <kebab-slug>            # e.g. decision  (matches the directory name)
+version: 0.1
+status: draft                 # draft | active | deprecated
+summary: <one line — the repeated behavior this Practice improves>
+
+# Only for Practices implemented as code (like Charter). Omit for draft specs.
+# implementation:
+#   extension: extension/<name>.ts
+#   skill: skill/SKILL.md
+#   templates: templates/
+
+invocations:                  # slash commands = invocation mechanics
+  - /<slug> <verb>
+triggers:                     # when Vinny should recommend or invoke it
+  - <trigger>
+inputs:                       # what the user/environment must provide
+  - <input>
+outputs:                      # artifacts / decisions / drafts / receipts produced
+  - <output>
+state_paths:                  # where durable records live
+  - <dir>/
+guardrails:                   # what it must not do, or must ask before doing
+  - <guardrail>
+evidence_standard:            # what counts as successful completion
+  - <criterion>
+metrics:                      # see docs/metrics.md for the full block
+  - uses
+owner: Vinny
+
+# Standing floor — every Practice keeps at least these three. A Practice
+# can NEVER remove these; it may only add more.
+approval_required_for:
+  - enabling globally
+  - external side effects
+  - permission expansion

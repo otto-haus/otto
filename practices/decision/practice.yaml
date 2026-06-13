@@ -1,0 +1,48 @@
+name: Decision
+slug: decision
+version: 0.1
+status: draft            # draft — spec only, not yet implemented as an extension
+summary: Record first-principles decisions and grade their quality later.
+invocations:
+  - /decision record
+  - /decision grade
+triggers:
+  - high-stakes decision
+  - architecture choice
+  - tool / vendor choice
+  - any meaningful, hard-to-reverse decision
+inputs:
+  - decision
+  - context
+  - options considered
+outputs:
+  - decision.md
+  - decision.yaml
+  - assumptions
+  - options considered
+  - rationale
+  - risks
+  - expected outcome
+  - revisit date
+  - grade
+state_paths:
+  - decisions/
+guardrails:
+  - external advice is input, not authority
+  - first-principles reasoning is mandatory
+  - the Practice never auto-approves an irreversible action
+evidence_standard:
+  - rationale recorded
+  - assumptions recorded
+  - options + expected outcome recorded
+  - revisit date set
+metrics:
+  - uses
+  - graded_decisions
+  - decision_quality_score
+  - user_edits_required
+owner: Vinny
+approval_required_for:
+  - enabling globally
+  - external side effects
+  - permission expansion

@@ -1,0 +1,42 @@
+name: Review
+slug: review
+version: 0.1
+status: draft            # draft — spec only, not yet implemented as an extension
+summary: Prevent fake done and premature completion by mapping claims to evidence.
+invocations:
+  - /review done
+  - /review risk
+triggers:
+  - a task is about to be marked done
+  - a claim of completion needs proof
+  - before a one-way door or handoff
+inputs:
+  - the work / claim of done
+  - acceptance criteria
+  - context and artifacts
+outputs:
+  - acceptance criteria map
+  - evidence checklist
+  - remaining risks
+  - cleanup notes
+  - pass/fail recommendation
+state_paths:
+  - reviews/
+guardrails:
+  - done requires mapped proof (claim -> evidence)
+  - any unmapped acceptance criterion => not done
+  - the Practice recommends; the human (or Charter's acceptance gate) decides
+evidence_standard:
+  - every acceptance criterion mapped to evidence
+  - remaining risks listed
+  - cleanup verified
+metrics:
+  - uses
+  - premature_done_prevented
+  - risks_flagged
+  - ac_unmapped
+owner: Vinny
+approval_required_for:
+  - enabling globally
+  - external side effects
+  - permission expansion
