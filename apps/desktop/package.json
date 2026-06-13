@@ -1,0 +1,27 @@
+{
+  "name": "@vinny-os/desktop",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "predev": "bun run gen:practices",
+    "dev": "vite",
+    "prebuild": "bun run gen:practices",
+    "build": "tsc -b && vite build",
+    "typecheck": "tsc --noEmit",
+    "gen:practices": "node scripts/gen-practices.mjs"
+  },
+  "dependencies": {
+    "@vinny-os/core": "workspace:*",
+    "@vitejs/plugin-react": "latest",
+    "vite": "latest",
+    "typescript": "latest",
+    "react": "latest",
+    "react-dom": "latest",
+    "yaml": "latest"
+  },
+  "devDependencies": {
+    "@types/react": "latest",
+    "@types/react-dom": "latest"
+  }
+}

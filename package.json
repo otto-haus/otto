@@ -28,7 +28,8 @@
     "LICENSE"
   ],
   "workspaces": [
-    "packages/*"
+    "packages/*",
+    "apps/*"
   ],
   "scripts": {
     "install-extension": "./scripts/install.sh",

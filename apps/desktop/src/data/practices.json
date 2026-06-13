@@ -1,0 +1,289 @@
+[
+  {
+    "name": "Charter",
+    "slug": "charter",
+    "version": "0.1",
+    "status": "active",
+    "summary": "Evidence-checked operating contracts for autonomous work.",
+    "implementation": {
+      "extension": "extension/charter.ts",
+      "skill": "skill/SKILL.md",
+      "templates": "templates/"
+    },
+    "invocations": [
+      "/charter propose",
+      "/charter approve",
+      "/charter step",
+      "/charter status",
+      "/charter complete"
+    ],
+    "triggers": [
+      "vague intent with a durable objective",
+      "long-running task (> ~30 min)",
+      "work requiring evidence and receipts"
+    ],
+    "inputs": [
+      "intent",
+      "constraints",
+      "approval boundaries (one-way doors)"
+    ],
+    "outputs": [
+      "charter.md",
+      "charter.yaml",
+      "state.yaml",
+      "ledger.md",
+      "approvals",
+      "receipts",
+      "traces"
+    ],
+    "state_paths": [
+      "$CHARTER_HOME/charters/"
+    ],
+    "guardrails": [
+      "one-way doors require human approval (charter-gates overlay)",
+      "no artifact, no progress; two no-evidence loops force block/sharpen",
+      "done requires AC-by-AC proof mapping",
+      "files are truth, not chat or memory"
+    ],
+    "evidence_standard": [
+      "every acceptance criterion mapped to a receipt",
+      "cleanup recorded",
+      "risk notes recorded",
+      "user acceptance where required"
+    ],
+    "metrics": [
+      "uses",
+      "successful_runs",
+      "blocked_runs",
+      "premature_done_prevented",
+      "user_edits_required"
+    ],
+    "owner": "Vinny",
+    "approval_required_for": [
+      "enabling-globally",
+      "external-side-effects",
+      "permission-expansion"
+    ]
+  },
+  {
+    "name": "Decision",
+    "slug": "decision",
+    "version": "0.1",
+    "status": "draft",
+    "summary": "Record first-principles decisions and grade their quality later.",
+    "invocations": [
+      "/decision record",
+      "/decision grade"
+    ],
+    "triggers": [
+      "high-stakes decision",
+      "architecture choice",
+      "tool / vendor choice",
+      "any meaningful, hard-to-reverse decision"
+    ],
+    "inputs": [
+      "decision",
+      "context",
+      "options considered"
+    ],
+    "outputs": [
+      "decision.md",
+      "decision.yaml",
+      "assumptions",
+      "options considered",
+      "rationale",
+      "risks",
+      "expected outcome",
+      "revisit date",
+      "grade"
+    ],
+    "state_paths": [
+      "decisions/"
+    ],
+    "guardrails": [
+      "external advice is input, not authority",
+      "first-principles reasoning is mandatory",
+      "the Practice never auto-approves an irreversible action"
+    ],
+    "evidence_standard": [
+      "rationale recorded",
+      "assumptions recorded",
+      "options + expected outcome recorded",
+      "revisit date set"
+    ],
+    "metrics": [
+      "uses",
+      "graded_decisions",
+      "decision_quality_score",
+      "user_edits_required"
+    ],
+    "owner": "Vinny",
+    "approval_required_for": [
+      "enabling-globally",
+      "external-side-effects",
+      "permission-expansion"
+    ]
+  },
+  {
+    "name": "Field Note",
+    "slug": "field-note",
+    "version": "0.1",
+    "status": "draft",
+    "summary": "Capture messy customer/operator/research notes into durable structured state.",
+    "invocations": [
+      "/field-note capture"
+    ],
+    "triggers": [
+      "raw customer / operator / user note",
+      "voice memo or post-meeting brain dump",
+      "research observation worth keeping"
+    ],
+    "inputs": [
+      "raw note",
+      "source / context (who, role, where, when)"
+    ],
+    "outputs": [
+      "raw note",
+      "source/context",
+      "exact quotes (verbatim signal)",
+      "entities",
+      "insights",
+      "open questions",
+      "follow-up candidates",
+      "memory writeback suggestions"
+    ],
+    "state_paths": [
+      "field-notes/"
+    ],
+    "guardrails": [
+      "capture verbatim signal, not paraphrase (especially objections + exact words)",
+      "stage the next follow-up; never auto-send",
+      "the office/customer decides; we only record"
+    ],
+    "evidence_standard": [
+      "who/where/when captured",
+      "exact quotes preserved",
+      "at least one insight or open question",
+      "one staged (not sent) follow-up candidate"
+    ],
+    "metrics": [
+      "uses",
+      "notes_captured",
+      "followups_staged",
+      "memory_writebacks"
+    ],
+    "owner": "Vinny",
+    "approval_required_for": [
+      "enabling-globally",
+      "external-side-effects",
+      "permission-expansion",
+      "send-or-publish"
+    ]
+  },
+  {
+    "name": "Follow-up",
+    "slug": "follow-up",
+    "version": "0.1",
+    "status": "draft",
+    "summary": "Draft relationship/customer follow-ups with explicit approval gates.",
+    "invocations": [
+      "/follow-up draft"
+    ],
+    "triggers": [
+      "a field note produced a follow-up candidate",
+      "a relationship/customer touch is owed",
+      "a thread needs a next step"
+    ],
+    "inputs": [
+      "context (often from a field note)",
+      "recipient",
+      "desired outcome"
+    ],
+    "outputs": [
+      "draft",
+      "source context",
+      "recipient",
+      "risk notes",
+      "approval card"
+    ],
+    "state_paths": [
+      "follow-ups/"
+    ],
+    "guardrails": [
+      "NO-SEND-WITHOUT-APPROVAL — drafts only; never send/post/publish autonomously",
+      "every draft renders an approval card before any outbound action",
+      "cite the source context the draft is based on (no invented facts)"
+    ],
+    "evidence_standard": [
+      "draft tied to a real source/context",
+      "recipient + risk notes present",
+      "approval card generated; send blocked until approved"
+    ],
+    "metrics": [
+      "uses",
+      "drafts_created",
+      "sends_after_approval",
+      "user_edits_required"
+    ],
+    "owner": "Vinny",
+    "approval_required_for": [
+      "enabling-globally",
+      "external-side-effects",
+      "permission-expansion",
+      "send-or-publish"
+    ]
+  },
+  {
+    "name": "Review",
+    "slug": "review",
+    "version": "0.1",
+    "status": "draft",
+    "summary": "Prevent fake done and premature completion by mapping claims to evidence.",
+    "invocations": [
+      "/review done",
+      "/review risk"
+    ],
+    "triggers": [
+      "a task is about to be marked done",
+      "a claim of completion needs proof",
+      "before a one-way door or handoff"
+    ],
+    "inputs": [
+      "the work / claim of done",
+      "acceptance criteria",
+      "context and artifacts"
+    ],
+    "outputs": [
+      "acceptance criteria map",
+      "evidence checklist",
+      "remaining risks",
+      "cleanup notes",
+      "pass/fail recommendation"
+    ],
+    "state_paths": [
+      "reviews/"
+    ],
+    "guardrails": [
+      "done requires mapped proof (claim -> evidence)",
+      "any unmapped acceptance criterion => not done",
+      "the Practice recommends; the human (or Charter's acceptance gate) decides"
+    ],
+    "evidence_standard": [
+      "every acceptance criterion mapped to evidence",
+      "remaining risks listed",
+      "cleanup verified"
+    ],
+    "metrics": [
+      "uses",
+      "premature_done_prevented",
+      "risks_flagged",
+      "ac_unmapped"
+    ],
+    "owner": "Vinny",
+    "approval_required_for": [
+      "enabling-globally",
+      "external-side-effects",
+      "permission-expansion"
+    ]
+  }
+]
