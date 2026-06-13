@@ -12,9 +12,11 @@ tag, no release, no npm publish without explicit approval).
 Otto v0.1 is a **local-first, file-backed artifact**, not a runtime. **Nothing here is
 automatically enforced.** The shared **Curation** proposal/ratification engine is **not built**
 (no schema, no queue, no lifecycle), so Standards, Approvals, and Knowledge "enforcement" is
-**manual editorial judgment**, not an automated gate. The `/ticket` compiler, worker
-orchestration, and a live Letta runtime are **not in v0.1**. The one genuinely live runtime
-hook is **Charter's permission gate** (asks before one-way doors). Per-surface evidence and the
+**manual editorial judgment**, not an automated gate. The `/ticket` compiler and worker
+orchestration are **not in v0.1**. The **desktop Electron runtime bridge to Letta is implemented**
+(`apps/desktop`) but **not proven live** — chat is gated on a real `session.initialize()` against
+`OTTO_AGENT_ID`, recovers stale sessions, and reports the exact blocker; nothing claims "connected"
+until that succeeds. The runtime hook proven so far is **Charter's permission gate**. Per-surface evidence and the
 full cutline are in [`SPEC_COMPLIANCE.md`](SPEC_COMPLIANCE.md); Ship Checks in [`SHIP_CHECKS/`](SHIP_CHECKS/); claims classified in [`CLAIMS_AUDIT.md`](CLAIMS_AUDIT.md).
 
 **v0.1 cutline:** Ship — namespace · practices · skills. Proposed (honest preview) — desktop ·
@@ -32,7 +34,7 @@ knowledge · runs-receipts · worker-orchestration · channels. **Cut — curati
 | Charter | ✅ | manual | ✅ | proposed | operating contract; permission **gates are live**; AC-by-AC auditing is **manual** (Auditor not coded) |
 | Routines | ✅ | manual | ✅ | proposed | specs + one-off trials + approval gate; recurring Letta-cron scheduler **deferred** |
 | Standards | ✅ | manual | ✅ | proposed | canon + precedents; can block work **via review**; automated enforcement deferred (needs Curation) |
-| Desktop | ✅ | build ✅ | ✅ | proposed | preview workspace shell (Vite); chat is a **prototype**, not wired to the Letta runtime |
+| Desktop | ✅ | build ✅ | ✅ | proposed | **Electron shell present** + web preview; Letta connection path implemented (`OTTO_AGENT_ID` · `~/.otto` · recovery); **live chat blocked until a valid agent/provider/session** — not "connected" |
 | Autonomy | ✅ files | — | ✅ | defer | spec + worker/ticket templates; **`/ticket` compiler is not runtime**; single-worker only |
 | Knowledge | ✅ files | — | ✅ | defer | **Built, not Shipped** — proposed AI-frontier surface; routing unratified, no runtime |
 | Runs / Receipts | ✅ types | — | — | defer | Run/Receipt types + receipts exist; **no run engine** (runs not created at runtime) |

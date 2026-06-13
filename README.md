@@ -98,7 +98,7 @@ otto/
     core/         shared v0 contract — Practice, Routine, Channel, Run, Receipt, Approval, Charter
     practices/    PracticeSpec loader, validator, CLI (otto-practices)
   apps/
-    desktop/      Otto Desktop — the workspace (Vite + React, preview)
+    desktop/      Otto Desktop — Electron + Vite workspace shell (Letta bridge; chat gated on session init)
   extension/      Letta Code commands: charter.ts (Charter + gates), routine.ts
   skill/          agent workflows: SKILL.md (Charter), routine/SKILL.md
   practices/      Practices: charter, decision, review, field-note, follow-up
