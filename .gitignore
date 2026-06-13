@@ -17,3 +17,6 @@ receipts/*
 
 # Local Letta Code worktrees / runtime
 .letta/
+
+# Electron build output (electron-vite)
+apps/desktop/out/
