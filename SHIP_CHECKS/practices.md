@@ -25,7 +25,7 @@ Practices are repeated behaviors worth preserving. They make Standards executabl
 ```sh
 bun test                                   # 6 pass / 0 fail ✓
 bun packages/practices/src/cli.ts          # 5 specs validate ✓
-bun --cwd apps/desktop run gen:practices   # regenerates practices.json ✓
+bun run --cwd apps/desktop gen:practices   # regenerates practices.json ✓
 ```
 
 ## Required demo

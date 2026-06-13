@@ -32,7 +32,7 @@ Otto Desktop is the workspace over all surfaces. It reads files as truth and sho
 ## Required runtime behavior
 
 - [x] App launches locally.
-  - Evidence: apps/desktop/package.json lines 7-12 define "dev" script: "vite" (standard Vite dev server); receipts/otto-v01/desktop.md line 9 confirms "bun --cwd apps/desktop run dev → http://localhost:5173"; dist/ directory present with assets, favicon, index.html
+  - Evidence: apps/desktop/package.json lines 7-12 define "dev" script: "vite" (standard Vite dev server); receipts/otto-v01/desktop.md line 9 confirms "bun run --cwd apps/desktop dev → http://localhost:5173"; dist/ directory present with assets, favicon, index.html
 - [x] Sidebar navigation works.
   - Evidence: Sidebar.tsx lines 44-52 bind onClick handlers to button elements; App.tsx lines 51-55 manage state and hash navigation; location.hash updates on surface selection per line 54
 - [x] Practices surface reads generated real `practices.json`.
@@ -48,9 +48,9 @@ Otto Desktop is the workspace over all surfaces. It reads files as truth and sho
 ## Required commands
 
 ```sh
-bun --cwd apps/desktop run typecheck     # tsc --noEmit per package.json line 11
-bun --cwd apps/desktop run build         # tsc -b && vite build per line 10; includes prebuild gen:practices
-bun --cwd apps/desktop run dev           # vite per line 8; includes predev gen:practices
+bun run --cwd apps/desktop typecheck     # tsc --noEmit per package.json line 11
+bun run --cwd apps/desktop build         # tsc -b && vite build per line 10; includes prebuild gen:practices
+bun run --cwd apps/desktop dev           # vite per line 8; includes predev gen:practices
 # Electron not applicable
 ```
 

@@ -51,8 +51,8 @@ defer (Built, not Shipped) / cut · "—" not present. **Tried + Approved are Se
 bun run typecheck                       → exit 0 (tsc -p packages/core)
 bun test                                → 6 pass / 0 fail (7 expect calls)
 bun packages/practices/src/cli.ts       → 5 practice specs validate (charter active)
-bun --cwd apps/desktop run typecheck    → exit 0 (tsc --noEmit)
-bun --cwd apps/desktop run build        → vite build ok (22 modules, dist/ 204 kB)
+bun run --cwd apps/desktop typecheck    → exit 0 (tsc --noEmit)
+bun run --cwd apps/desktop build        → vite build ok (22 modules, dist/ 204 kB)
 bun run verify:v0                        → core checks + this table pointer
 ```
 

@@ -31,8 +31,8 @@ Deferred from v0.1: **Channels**, **Curation / Approvals**.
 bun run typecheck                     → exit 0
 bun test                              → 6 pass / 0 fail
 bun packages/practices/src/cli.ts     → 5 specs validate (charter active)
-bun --cwd apps/desktop run typecheck  → exit 0
-bun --cwd apps/desktop run build      → vite build ok (22 modules, dist/ 204 kB)
+bun run --cwd apps/desktop typecheck  → exit 0
+bun run --cwd apps/desktop build      → vite build ok (22 modules, dist/ 204 kB)
 bun run verify:v0                     → all checks + status pointer
 ```
 

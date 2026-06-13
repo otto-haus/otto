@@ -5,8 +5,8 @@
 - [ ] `bun run verify:v0` passes.
 - [ ] `bun run typecheck` passes.
 - [ ] `bun test` passes.
-- [ ] `bun --cwd apps/desktop run typecheck` passes.
-- [ ] `bun --cwd apps/desktop run build` passes.
+- [ ] `bun run --cwd apps/desktop typecheck` passes.
+- [ ] `bun run --cwd apps/desktop build` passes.
 - [ ] Namespace approved by Sebastian.
 - [ ] README approved by Sebastian.
 - [ ] Ship decisions approved per feature.

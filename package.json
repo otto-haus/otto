@@ -33,7 +33,7 @@
   ],
   "scripts": {
     "install-extension": "./scripts/install.sh",
-    "typecheck": "tsc -p packages/core/tsconfig.json",
+    "typecheck": "tsc -p packages/core/tsconfig.json && tsc -p packages/practices/tsconfig.json",
     "test": "bun test",
     "verify:v0": "bash scripts/verify-v0.sh"
   },

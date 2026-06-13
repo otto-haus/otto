@@ -6,9 +6,9 @@
   (near-monochrome warm paper, Inter + IBM Plex Mono, hairline-first, one inverted "ink moment" for
   the one-way-door approval). `@otto-haus/desktop`; "cockpit" → "workspace". Old dashboard components removed.
 - **Demo:** `demo/out/otto-v01-desktop.mp4`
-- **Run command (verify app can run):** `bun --cwd apps/desktop run dev` → http://localhost:5173
-  (surfaces deep-link via `#chat`, `#practices`, `#curation`, …). Build: `bun --cwd apps/desktop run build`.
-- **Test command/output:** `bun --cwd apps/desktop run typecheck` → exit 0. `… run build` → vite ok,
+- **Run command (verify app can run):** `bun run --cwd apps/desktop dev` → http://localhost:5173
+  (surfaces deep-link via `#chat`, `#practices`, `#curation`, …). Build: `bun run --cwd apps/desktop build`.
+- **Test command/output:** `bun run --cwd apps/desktop typecheck` → exit 0. `… run build` → vite ok,
   23 modules, `dist/` ~220 kB; `gen:practices` wrote 5 specs. Ran headless Chrome against the dev
   server and screenshotted Chat / Practices / Curation — all render correctly.
 - **What appears — interactive vs prototype:**

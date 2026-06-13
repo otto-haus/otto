@@ -12,8 +12,8 @@ point of the cutline. See [`SPEC_COMPLIANCE.md`](SPEC_COMPLIANCE.md).
 | `bun run verify:v0` | all core checks pass | `result: 5 passed, 0 failed` | ✅ |
 | `bun run typecheck` | exit 0 (tsc packages/core) | exit 0 | ✅ |
 | `bun test` | unit tests pass | `6 pass / 0 fail` | ✅ |
-| `bun --cwd apps/desktop run typecheck` | exit 0 | exit 0 | ✅ |
-| `bun --cwd apps/desktop run build` | vite build ok | built (23 modules, dist/ ~220 kB) | ✅ |
+| `bun run --cwd apps/desktop typecheck` | exit 0 | exit 0 | ✅ |
+| `bun run --cwd apps/desktop build` | vite build ok | built (23 modules, dist/ ~220 kB) | ✅ |
 
 ## Practices — **ship**
 
@@ -60,7 +60,7 @@ point of the cutline. See [`SPEC_COMPLIANCE.md`](SPEC_COMPLIANCE.md).
 
 ## Desktop — **proposed**
 
-- **Command:** `bun --cwd apps/desktop run dev` → http://localhost:5173 (surfaces via `#chat`, `#practices`, …)
+- **Command:** `bun run --cwd apps/desktop dev` → http://localhost:5173 (surfaces via `#chat`, `#practices`, …)
 - **Expected:** workspace shell launches; sidebar nav works; Practices reads real `practices.json`; chat input **disabled** and labeled.
 - **Actual:** typecheck + build pass; headless-Chrome screenshots of Chat/Practices/Curation render; chat input now has `disabled` + "not wired to the Letta runtime" label. ✅ (preview)
 - **Limitations:** chat is a prototype, **not wired to the Letta runtime**; not Electron-packaged. See [`docs/desktop-convergence.md`](docs/desktop-convergence.md).

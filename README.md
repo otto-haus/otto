@@ -70,7 +70,7 @@ git clone https://github.com/otto-haus/otto
 cd otto
 bun install
 
-bun run typecheck      # core types
+bun run typecheck      # core + practices types
 bun test               # unit tests
 bun run verify:v0      # core checks + shipped-status pointer
 ```
@@ -78,7 +78,7 @@ bun run verify:v0      # core checks + shipped-status pointer
 Otto Desktop — the workspace (preview):
 
 ```sh
-bun --cwd apps/desktop run dev      # or: build / typecheck
+bun run --cwd apps/desktop dev      # or: build / typecheck
 ```
 
 Charter ships as a single-file [Letta Code](https://letta.com) extension plus a skill:

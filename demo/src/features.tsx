@@ -212,7 +212,7 @@ export const features: Feature[] = [
       "A workspace over Otto — a left rail of surfaces, chat-primary. Files are truth; the UI reads them.",
     termTitle: "otto desktop",
     lines: [
-      L("cmd", "bun --cwd apps/desktop run dev"),
+      L("cmd", "bun run --cwd apps/desktop dev"),
       L("dim", "gen:practices → 5 Practice specs → src/data/practices.json"),
       L("good", "VITE v8 ready → http://localhost:5173"),
       L("rule"),

@@ -16,9 +16,9 @@ say "Otto v0.1 — verify:v0"
 say "repo: $ROOT"
 say "──────────────────────────────────────────────"
 
-# 1. Core typecheck
-say "[1/5] core typecheck (tsc -p packages/core)"
-if bun run typecheck >/tmp/otto_v0_typecheck.log 2>&1; then ok "typecheck"; else no "typecheck (see /tmp/otto_v0_typecheck.log)"; fi
+# 1. Typecheck core + practices (root `typecheck` runs both project configs)
+say "[1/5] typecheck (core + practices)"
+if bun run typecheck >/tmp/otto_v0_typecheck.log 2>&1; then ok "typecheck (core + practices)"; else no "typecheck (see /tmp/otto_v0_typecheck.log)"; fi
 
 # 2. Unit tests
 say "[2/5] unit tests (bun test)"
@@ -34,7 +34,7 @@ if bun packages/practices/src/cli.ts >/tmp/otto_v0_practices.log 2>&1; then ok "
 
 # 4. Desktop typecheck
 say "[4/5] desktop typecheck"
-if bun --cwd apps/desktop run typecheck >/tmp/otto_v0_desktop.log 2>&1; then ok "desktop typecheck"; else no "desktop typecheck (see /tmp/otto_v0_desktop.log)"; fi
+if bun run --cwd apps/desktop typecheck >/tmp/otto_v0_desktop.log 2>&1; then ok "desktop typecheck"; else no "desktop typecheck (see /tmp/otto_v0_desktop.log)"; fi
 
 # 5. No accidental old product names in product/code.
 #    Allowed: the generated lockfile, and the rename-documentation files that discuss old

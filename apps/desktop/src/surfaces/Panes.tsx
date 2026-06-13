@@ -197,9 +197,9 @@ export const Curation: React.FC = () => (
           <div style={{ gridColumn: '1 / -1' }}><div className="k">evidence required</div><div className="v">{a.evidence_required}</div></div>
         </div>
         <div className="row" style={{ gap: 10, marginTop: 14 }}>
-          <button className="btn btn--primary">Approve</button>
-          <button className="btn">Deny</button>
-          <span className="pill" style={{ marginLeft: 'auto' }}>expires {new Date(a.expires_at).toLocaleDateString()}</span>
+          <button className="btn btn--primary" disabled aria-disabled="true">Approve</button>
+          <button className="btn" disabled aria-disabled="true">Deny</button>
+          <span className="pill" style={{ marginLeft: 'auto' }}>preview — not wired · expires {new Date(a.expires_at).toLocaleDateString()}</span>
         </div>
       </div>
     ))}

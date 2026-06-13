@@ -3,7 +3,7 @@
   "configVersion": 1,
   "workspaces": {
     "": {
-      "name": "@otto-do/demo",
+      "name": "@otto-haus/demo",
       "dependencies": {
         "@remotion/cli": "4.0.290",
         "@remotion/google-fonts": "4.0.290",
