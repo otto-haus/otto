@@ -4,22 +4,22 @@ Otto must not ship two competing desktop apps. This records the decision.
 
 ## Decision
 
-- **Canonical desktop (v0.1): `apps/desktop`** — the Vite + React **workspace shell**.
-  It embodies the product shape: a left sidebar of canonical surfaces (Chat · Charters ·
-  Standards · Practices · Routines · Curation · Receipts · Autonomy · Settings), a
-  chat-primary central pane, the house design system, and a real file-backed Practices
-  surface (reads the generated `practices.json`). It typechecks and builds clean.
-- **Reference-only: `~/Code/vinny-desktop`** — an Electron app on
-  `@letta-ai/letta-code-sdk`. **Not part of v0.1.** It is the runtime reference, not a
-  shipped product.
+- **Canonical desktop: `apps/desktop`** — now a real **Electron** app (Vite + React renderer +
+  an Electron main process with the Letta runtime). It keeps the product shape (sidebar of
+  canonical surfaces, chat-primary, house design, file-backed Practices) AND adds the runtime
+  layer ported here. It also still runs as a **web preview** (`bun run --cwd apps/desktop dev`)
+  for fast iteration.
+- **Superseded — reference-only: `~/Code/vinny-desktop`** — the original Electron spike. Its
+  useful pieces are ported; it is no longer a product and is not part of any release.
 
 No v0.1 release implies both are active products.
 
-## Why the Vite shell is canonical for v0.1
+## Two run modes (same renderer)
 
-Otto v0.1 is a **local-first artifact**, not a SaaS runtime. The Vite shell honestly
-represents the product: file-backed panes are real; the chat pane is explicitly marked a
-prototype that is **not wired to the Letta runtime**. That is shippable as a preview.
+- **Web preview** (`dev`/`build`) — no `window.otto`; file-backed panes; chat honestly disabled.
+  Screenshottable; used for verification.
+- **Electron** (`electron:dev`/`electron:build`) — `window.otto` present; the renderer's LiveChat
+  calls `runtime.init()` and enables Send only after `session.initialize()` succeeds.
 
 ## State of the Electron reference app
 
@@ -42,24 +42,24 @@ These are real fixes, but they require touching Letta-backend/runtime integratio
 scope for a local-first v0.1 (see the Build Contract "stop and ask if Electron runtime
 requires Letta backend changes").
 
-## Ported vs unported
+## Ported (done) vs still to prove
 
-- **Ported (as product shape):** the sidebar-surface model, chat-primary layout, house
-  aesthetic, and file-backed Practices — all live in `apps/desktop`.
-- **Unported (deferred to post-v0.1):** the Electron `main/preload/ipc`, the Letta SDK
-  `Session` runner, lane store, trace writer, and the live permission-gate modal.
-
-## Path to converge (post-v0.1, not in this release)
-
-1. Port `electron/` (main, preload, ipc, letta-runner, trace-writer) into `apps/desktop`.
-2. `memfs: false` by default; runtime root `~/.otto`; expose a typed `window.otto` IPC surface.
-3. Rebrand fully (Otto, `Message Otto…`, no veto/cockpit/Ni); replace lanes with the canonical surfaces.
-4. Fix session init (test the `memfs:false` / skip-git-sync hypothesis against the local backend).
-5. Send disabled until a session is ready; runtime-unavailable shown cleanly; debug hidden by default.
+- **Ported into `apps/desktop` (typechecks + builds):** `electron/main` (BrowserWindow "Otto"),
+  `preload` (`window.otto`), `ipc`, `letta-runner` (single session, **memfs off by default**,
+  `OTTO_AGENT_ID`, `LETTA_CLI_PATH` override, **conversation recovery**), `config-store`
+  (`~/.otto/config.json`), `trace-writer` (`~/.otto/runs`). Renderer LiveChat gates Send on
+  `session.initialize()`. No `veto`/`cockpit`/`Ni`/`~/.veto-os`; no hardcoded agent; no lanes.
+- **Still to prove (needs a display + Sebastian's Letta backend):** a live launch + one real turn.
+  `OTTO_AGENT_ID=<id> bun run --cwd apps/desktop electron:dev` (prefix `env -u ELECTRON_RUN_AS_NODE`
+  if that var is inherited). The Letta review confirmed the agent is reachable, so this should connect.
+- **Deferred (post-v0.1):** the dedicated permission-gate modal (canUseTool is routed to the
+  renderer over IPC but the approval-modal UI is not built — approval buttons stay disabled until it is);
+  live token streaming via `extractStreamTextDelta`.
 
 ## v0.1 ship decision
 
-**Desktop ships as a preview workspace shell** (`apps/desktop`), clearly marked: file-backed
-panes are real; chat is a prototype not wired to the Letta runtime. The live Electron+Letta
-runtime is **deferred**. `vinny-desktop` is reference-only. *(Pending Sebastian's approval to
-keep this cutline, or to fund the Electron port as part of v0.1.)*
+**Desktop ships as the canonical Otto workspace shell** (`apps/desktop`). The Electron runtime is
+ported and builds; **chat is gated on a real `session.initialize()`** and reports the Letta blocker
+truthfully when not connected. The web preview remains an honest, file-backed fallback.
+`vinny-desktop` is superseded/reference-only. *(Pending Sebastian's launch to prove the live turn,
+and approval of the cutline.)*

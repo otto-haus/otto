@@ -63,4 +63,9 @@ point of the cutline. See [`SPEC_COMPLIANCE.md`](SPEC_COMPLIANCE.md).
 - **Command:** `bun run --cwd apps/desktop dev` → http://localhost:5173 (surfaces via `#chat`, `#practices`, …)
 - **Expected:** workspace shell launches; sidebar nav works; Practices reads real `practices.json`; chat input **disabled** and labeled.
 - **Actual:** typecheck + build pass; headless-Chrome screenshots of Chat/Practices/Curation render; chat input now has `disabled` + "not wired to the Letta runtime" label. ✅ (preview)
-- **Limitations:** chat is a prototype, **not wired to the Letta runtime**; not Electron-packaged. See [`docs/desktop-convergence.md`](docs/desktop-convergence.md).
+- **Electron runtime (ported):** `bun run --cwd apps/desktop electron:typecheck` → exit 0;
+  `bun run --cwd apps/desktop electron:build` → compiles main + preload + renderer. Live launch
+  (needs a display + a reachable Letta agent): `OTTO_AGENT_ID=<id> bun run --cwd apps/desktop electron:dev`
+  (prefix `env -u ELECTRON_RUN_AS_NODE` if inherited) → chat enables only after `session.initialize()`.
+- **Limitations:** the live launch + one real chat turn are **Sebastian's to prove** (no display here).
+  The permission-gate modal is not built yet (approval buttons stay disabled). See [`docs/desktop-convergence.md`](docs/desktop-convergence.md).

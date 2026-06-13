@@ -1,8 +1,91 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Icon } from '../components/icons';
 import { agent, requiredMissing, isReady } from '../sampleData';
+import { isElectron, useRuntime } from '../runtime';
 
-export const Chat: React.FC = () => (
+// In Electron (window.otto present) → the runtime-wired LiveChat.
+// In the web preview → the file-backed PreviewChat (unchanged).
+export const Chat: React.FC = () => (isElectron() ? <LiveChat /> : <PreviewChat />);
+
+/* ---------- LiveChat (Electron, wired to the Letta runtime) ---------- */
+const LiveChat: React.FC = () => {
+  const rt = useRuntime();
+  const [draft, setDraft] = useState('');
+  const st = rt.status;
+  const ready = !!st?.ready;
+
+  const submit = () => {
+    const t = draft.trim();
+    if (t && ready && !rt.busy) {
+      rt.send(t);
+      setDraft('');
+    }
+  };
+
+  return (
+    <div className="chat">
+      <div className="chat__head">
+        <span className="brand__mark" style={{ width: 28, height: 28, borderRadius: 8 }}>{Icon.owl}</span>
+        <div>
+          <div style={{ fontWeight: 600 }}>Otto</div>
+          <div className="chat__id">
+            {st
+              ? `${st.agentId ?? 'no agent'} · ${st.model ?? 'model unset'}${st.memfsEnabled ? ' · MemFS on' : ''}`
+              : 'connecting…'}
+          </div>
+        </div>
+        <span className={`pill ${ready ? 'pill--ok' : 'pill--warn'}`} style={{ marginLeft: 'auto' }}>
+          {ready ? 'connected' : 'not connected'}
+        </span>
+      </div>
+
+      <div className="chat__stream">
+        {!ready && st && (
+          <div className="inkblock" style={{ maxWidth: 760 }}>
+            <div className="inkblock__eyebrow"><span className="dot dot--warn" /> runtime not ready</div>
+            <div className="inkblock__title">Otto can't connect yet</div>
+            <div className="inkblock__meta">
+              <span>{st.reason ?? 'unknown reason'}</span>
+              <span>cli: {st.cliResolved ? st.cliPath : 'bundled @letta-ai/letta-code'}</span>
+            </div>
+            <div className="inkblock__actions">
+              <button className="btn btn--solid-d" onClick={rt.retry}>Retry</button>
+            </div>
+          </div>
+        )}
+        {rt.messages.map((m, i) => (
+          <div key={i} className={`msg${m.who === 'user' ? ' msg--user' : ''}`}>
+            <div className="msg__who">{m.who === 'user' ? 'Sebastian' : m.who === 'error' ? 'error' : 'Otto'}</div>
+            <div className="msg__body" style={m.who === 'error' ? { color: 'var(--stop)' } : undefined}>{m.text}</div>
+          </div>
+        ))}
+        {rt.busy && <div className="eyebrow">Otto is working…</div>}
+      </div>
+
+      <div className="promptbar">
+        <div className={`promptbox${ready ? '' : ' promptbox--disabled'}`}>
+          <input
+            placeholder={ready ? 'Message Otto…' : 'Runtime not ready — see Settings'}
+            aria-label="Message Otto"
+            value={draft}
+            onChange={(e) => setDraft(e.target.value)}
+            onKeyDown={(e) => { if (e.key === 'Enter') submit(); }}
+            disabled={!ready || rt.busy}
+          />
+          <button className="btn btn--primary" disabled={!ready || rt.busy || !draft.trim()} onClick={submit}>{Icon.send}</button>
+        </div>
+        <div className="promptbar__meta">
+          <span>cli: {st?.cliResolved ? 'override' : 'bundled'}</span>
+          {st?.tools && <span>{st.tools.length} tools</span>}
+          <span className="faint">runtime: {ready ? 'connected' : 'not connected'}</span>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+/* ---------- PreviewChat (web preview, file-backed, not wired) ---------- */
+const PreviewChat: React.FC = () => (
   <div className="chat">
     <div className="chat__head">
       <span className="brand__mark" style={{ width: 28, height: 28, borderRadius: 8 }}>{Icon.owl}</span>
@@ -40,7 +123,6 @@ Ran 6 tests across 1 file. [43.00ms]</div>
         <div className="msg__body">AC1 is green. Next step pushes the branch to <code>otto-haus/otto</code> — that's a one-way door, so I'm stopping to ask.</div>
       </div>
 
-      {/* the ink moment — one critical state, inverted block (preview, unwired) */}
       <div className="inkblock">
         <div className="inkblock__eyebrow"><span className="dot dot--warn" /> approval required · one-way door</div>
         <div className="inkblock__title">Push branch to <code style={{ color: 'inherit' }}>otto-haus/otto</code></div>
@@ -80,8 +162,8 @@ Ran 6 tests across 1 file. [43.00ms]</div>
       )}
       <div className="promptbox promptbox--disabled">
         <input
-          placeholder={isReady ? 'Message Otto…' : 'Setup required — runtime not wired'}
-          aria-label="Chat input (disabled — setup required)"
+          placeholder="Chat is not wired to the Letta runtime in this preview"
+          aria-label="Chat input (disabled in preview)"
           disabled
           readOnly
         />

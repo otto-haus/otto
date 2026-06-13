@@ -5,9 +5,23 @@
   Receipts · Autonomy · Settings), a **chat-primary** central pane, and the house aesthetic
   (near-monochrome warm paper, Inter + IBM Plex Mono, hairline-first, one inverted "ink moment" for
   the one-way-door approval). `@otto-haus/desktop`; "cockpit" → "workspace". Old dashboard components removed.
+- **Electron runtime (ported into canonical `apps/desktop`):** `electron/{main,preload,ipc,letta-runner,
+  config-store,trace-writer}` — a single Otto session via `@letta-ai/letta-code-sdk`. `window.otto` IPC
+  bridge; `~/.otto/config.json` + traces under `~/.otto/runs`; **memfs off by default** (`OTTO_MEMFS=1`
+  to force); `OTTO_AGENT_ID` (no hardcoded agent); `LETTA_CLI_PATH` override else bundled.
+  **Conversation recovery:** a stale `conversationId` is cleared and the agent's default conversation is
+  resumed; `agent-not-found`/provider errors mark the runtime *not ready* with a clean reason — never a crash.
+  The renderer **LiveChat** enables Send only after `session.initialize()` succeeds; otherwise it shows
+  the diagnosis + a Retry. Vite reference `vinny-desktop` is now superseded (reference-only).
+  - **Wired + verified:** `bun run --cwd apps/desktop electron:typecheck` → exit 0; `electron:build` compiles
+    main + preload + renderer. Source typechecks against the real SDK + Electron types.
+  - **Needs Sebastian to prove (can't run headless here):** launch + a live turn —
+    `OTTO_AGENT_ID=<id> bun run --cwd apps/desktop electron:dev` (env `-u ELECTRON_RUN_AS_NODE` if inherited).
+    Chat works only against a reachable Letta agent + provider; the review confirmed the agent is reachable,
+    so this is expected to connect once `OTTO_AGENT_ID` is set.
 - **Demo:** `demo/out/otto-v01-desktop.mp4`
-- **Run command (verify app can run):** `bun run --cwd apps/desktop dev` → http://localhost:5173
-  (surfaces deep-link via `#chat`, `#practices`, `#curation`, …). Build: `bun run --cwd apps/desktop build`.
+- **Run command — web preview (file-backed, chat disabled):** `bun run --cwd apps/desktop dev`
+  → http://localhost:5173 (deep-link surfaces via `#chat`, `#practices`, …). Web build: `bun run --cwd apps/desktop build`.
 - **Test command/output:** `bun run --cwd apps/desktop typecheck` → exit 0. `… run build` → vite ok,
   23 modules, `dist/` ~220 kB; `gen:practices` wrote 5 specs. Ran headless Chrome against the dev
   server and screenshotted Chat / Practices / Curation — all render correctly.
