@@ -24,7 +24,7 @@ const META: Record<SurfaceId, { title: string; sub: string }> = {
   curation: { title: 'Curation', sub: 'What compounds. Consequential proposals become Approvals.' },
   receipts: { title: 'Receipts', sub: 'Runs and their proof. No artifact, no progress.' },
   autonomy: { title: 'Autonomy', sub: 'What Otto owns without a human in the loop — and what escalates.' },
-  settings: { title: 'Settings', sub: 'Runtime, agent, and Letta connection.' },
+  settings: { title: 'Settings', sub: 'Setup & readiness — what is configured vs missing.' },
 };
 
 function renderSurface(id: SurfaceId) {

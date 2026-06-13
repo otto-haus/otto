@@ -1,5 +1,6 @@
 import React from 'react';
 import { Icon } from './icons';
+import { isReady } from '../sampleData';
 
 export type SurfaceId =
   | 'chat'
@@ -79,11 +80,14 @@ export const Sidebar: React.FC<{
       >
         <span className="nav__icon">{Icon.settings}</span>
         <span>Settings</span>
+        {!isReady && active !== 'settings' && (
+          <span className="nav__badge" style={{ background: 'var(--warn-tint)', color: 'var(--warn)' }}>setup</span>
+        )}
       </button>
 
       <div className="sidebar__foot">
-        <div className="row"><span className="dot dot--ok" /> Otto · local backend</div>
-        <div className="row">~/.otto · MemFS on</div>
+        <div className="row"><span className={`dot ${isReady ? 'dot--ok' : 'dot--warn'}`} /> runtime: {isReady ? 'connected' : 'not connected'}</div>
+        <div className="row">{isReady ? '~/.otto' : 'setup required — see Settings'}</div>
       </div>
     </aside>
   );

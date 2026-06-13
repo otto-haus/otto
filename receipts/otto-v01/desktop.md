@@ -14,11 +14,19 @@
 - **What appears — interactive vs prototype:**
   - **Real / file-backed:** the **Practices** surface reads the generated `practices.json` (Charter
     `active` + 4 drafts, with invocations, guardrails, evidence standard, and the approval floor).
-  - **Prototype (sample data, read-only):** Chat thread + ink-moment approval gate; Charters,
-    Standards, Routines, Curation queue, Receipts, Autonomy zones, Settings. Sidebar navigation and
-    surface switching are interactive; action buttons (Approve / Deny / Send) are not yet wired.
+  - **Setup / Readiness surface (Settings):** a real readiness check — runtime · agent · model (BYOK) ·
+    memory/MemFS · workspace root · skills · MCP servers · functions · permissions — each with an honest
+    status pill (connected / configured / file-backed / missing / not-wired), source file path, and next
+    action. Verdict: **"Setup required — Otto is not ready to work"** (4 required items missing).
+  - **Honesty fixes:** Chat header reads `— no agent selected — · runtime not connected · sample data`
+    (no fake model/MemFS); a "sample session · not live" label; **chat input + Send disabled** with a
+    "Setup required" banner; the ink-moment **Approve/Deny buttons disabled + "preview — not wired"**;
+    sidebar shows a `setup` badge + "runtime: not connected".
+  - **Prototype (sample data, read-only):** Chat thread, ink-moment, Charters, Standards, Routines,
+    Curation queue, Receipts, Autonomy zones. Sidebar nav + surface switching are interactive; all
+    action buttons are intentionally disabled (no fake interactivity).
   - **Not built yet:** the live Letta runtime (streaming, real tools, real permission gates) — wires
-    through `@letta-ai/letta-code-sdk` in a later phase (see `_Meta/Veto OS Desktop Shell — Spec.md`).
-- **Known limitations:** Preview shell only; chat is not connected to the runtime; not Electron-packaged.
+    through `@letta-ai/letta-code-sdk` in a later phase (see `docs/desktop-convergence.md`).
+- **Known limitations:** Preview shell only; nothing is wired to a live runtime; not Electron-packaged.
   The demo video is a faithful re-enactment, not a live UI capture.
 - **Approval status:** ☐ pending Sebastian (Tried + Approved).

@@ -10,6 +10,10 @@ import {
   sampleRoutines,
   autonomyZones,
   agent,
+  readiness,
+  requiredMissing,
+  type ReadyItem,
+  type ReadyStatus,
 } from '../sampleData';
 import { Icon } from '../components/icons';
 
@@ -259,25 +263,66 @@ export const Autonomy: React.FC = () => (
   </div>
 );
 
-/* ---------- Settings ---------- */
-export const Settings: React.FC = () => (
-  <div className="grid" style={{ maxWidth: 720, gap: 16 }}>
-    <div className="panel">
-      <div className="eyebrow">runtime</div>
-      <div className="kv" style={{ marginTop: 12 }}>
-        <div><div className="k">runtime root</div><div className="v mono">~/.otto <span className="faint">(OTTO_HOME · falls back to VINNY_HOME)</span></div></div>
-        <div><div className="k">agent</div><div className="v mono">{agent.id} · {agent.backend} backend</div></div>
-        <div><div className="k">model</div><div className="v mono">{agent.model}</div></div>
-        <div><div className="k">memory</div><div className="v">MemFS enabled (Letta)</div></div>
-      </div>
+/* ---------- Settings (Setup + Readiness) ---------- */
+const readyPill = (s: ReadyStatus) => {
+  const map: Record<ReadyStatus, [string, string]> = {
+    connected: ['pill--ok', 'connected'],
+    configured: ['pill--ok', 'configured'],
+    file: ['pill', 'file-backed'],
+    missing: ['pill--warn', 'missing'],
+    'not-wired': ['pill', 'not wired'],
+  };
+  const [cls, label] = map[s];
+  return <span className={`pill ${cls}`}>{label}</span>;
+};
+
+const ReadyRow: React.FC<{ item: ReadyItem }> = ({ item }) => (
+  <div className="zone" style={{ gridTemplateColumns: '190px 1fr auto', gap: 16 }}>
+    <span style={{ fontWeight: 600, fontSize: 14 }}>
+      {item.label}
+      {item.required && <span className="faint" style={{ fontWeight: 400, fontSize: 12 }}> · required</span>}
+    </span>
+    <div>
+      <div className="muted" style={{ fontSize: 13.5 }}>{item.detail}</div>
+      {item.source && <span className="filechip" style={{ marginTop: 6 }}>{Icon.file} {item.source}</span>}
+      <div className="faint mono" style={{ fontSize: 11.5, marginTop: 6 }}>↳ {item.action}</div>
     </div>
-    <div className="panel">
-      <div className="eyebrow">letta connection</div>
-      <p className="muted" style={{ marginTop: 8 }}>
-        v0.1 preview reads file-backed state. Live runtime (stream, tools, permission gates) wires through
-        <code> @letta-ai/letta-code-sdk</code> in a later phase.
-      </p>
-      <span className="pill pill--info" style={{ marginTop: 10 }}>not yet connected</span>
-    </div>
+    {readyPill(item.status)}
   </div>
 );
+
+export const Settings: React.FC = () => {
+  const ready = requiredMissing.length === 0;
+  const group = (keys: string[]) => readiness.filter((r) => keys.includes(r.key));
+  return (
+    <div className="grid" style={{ maxWidth: 880, gap: 16 }}>
+      <div className="panel" style={ready ? undefined : { borderColor: '#e7dcc0', background: 'var(--warn-tint)' }}>
+        <div className="eyebrow">readiness</div>
+        <div className="h-sec" style={{ marginTop: 6 }}>
+          {ready ? 'Otto is ready to work' : 'Setup required — Otto is not ready to work'}
+        </div>
+        {!ready && (
+          <p className="muted" style={{ marginTop: 6 }}>
+            {requiredMissing.length} required {requiredMissing.length === 1 ? 'item' : 'items'} missing:{' '}
+            {requiredMissing.map((r) => r.label).join(' · ')}. Configure them below — until then, Chat is disabled.
+          </p>
+        )}
+      </div>
+      <div className="panel">
+        <div className="eyebrow">runtime &amp; identity</div>
+        <div style={{ marginTop: 4 }}>
+          {group(['runtime', 'agent', 'model', 'memory', 'workspace']).map((r) => <ReadyRow key={r.key} item={r} />)}
+        </div>
+      </div>
+      <div className="panel">
+        <div className="eyebrow">capabilities</div>
+        <div style={{ marginTop: 4 }}>
+          {group(['skills', 'mcp', 'functions', 'permissions']).map((r) => <ReadyRow key={r.key} item={r} />)}
+        </div>
+      </div>
+      <p className="faint mono" style={{ fontSize: 11.5 }}>
+        Preview: statuses reflect file-backed config only. Nothing is wired to a live Letta runtime in v0.1.
+      </p>
+    </div>
+  );
+};

@@ -91,11 +91,43 @@ export const autonomyZones: Zone[] = [
   { tag: 'RED', cls: 'r', label: 'Explicit approval', examples: 'send/publish, spend, deploy, merge to protected main, force-push, delete' },
 ];
 
+// Honest agent state: the preview is NOT connected to a live runtime.
 export const agent = {
   name: 'Otto',
-  id: 'agent-local-otto',
+  id: '— no agent selected —',
   backend: 'local',
-  model: 'claude-opus-4-8',
-  memfs: true,
+  model: 'unset',
+  connected: false,
   cwd: '~/Code/otto',
 };
+
+// Readiness / setup model. The preview is file-backed only; nothing is wired to a runtime,
+// so required runtime items honestly read "not wired" / "missing".
+export type ReadyStatus = 'connected' | 'configured' | 'file' | 'missing' | 'not-wired';
+
+export type ReadyItem = {
+  key: string;
+  label: string;
+  status: ReadyStatus;
+  detail: string;
+  source?: string;
+  action: string;
+  required: boolean;
+};
+
+export const readiness: ReadyItem[] = [
+  { key: 'runtime', label: 'Letta runtime', status: 'not-wired', required: true, detail: 'SDK session not connected in this preview', action: 'Wire @letta-ai/letta-code-sdk (deferred from v0.1)' },
+  { key: 'agent', label: 'Agent identity', status: 'missing', required: true, detail: 'No agent selected', action: 'Select or create an Otto agent' },
+  { key: 'model', label: 'Model provider (BYOK)', status: 'missing', required: true, detail: 'No provider or API key configured', action: 'Add a provider + key (via 1Password)' },
+  { key: 'memory', label: 'Memory / MemFS', status: 'not-wired', required: true, detail: 'Depends on a live runtime connection', source: '~/.otto', action: 'Available once the runtime connects' },
+  { key: 'workspace', label: 'Workspace root', status: 'file', required: false, detail: 'Default ~/.otto', source: '~/.otto (OTTO_HOME)', action: 'Override with OTTO_HOME' },
+  { key: 'skills', label: 'Skills', status: 'file', required: false, detail: 'Charter + Routine skill packages present', source: 'skill/SKILL.md · skill/routine/SKILL.md', action: 'Install into a live agent via scripts/install.sh' },
+  { key: 'mcp', label: 'MCP servers', status: 'missing', required: false, detail: 'None configured', action: 'Add MCP servers (not wired yet)' },
+  { key: 'functions', label: 'Functions', status: 'missing', required: false, detail: 'No local tools registered', action: 'Register local tools (not wired yet)' },
+  { key: 'permissions', label: 'Permissions / autonomy', status: 'file', required: false, detail: 'Three-zone policy defined; not runtime-enforced', source: 'docs/autonomy.md', action: 'Enforced once Curation + runtime land' },
+];
+
+export const requiredMissing = readiness.filter(
+  (r) => r.required && (r.status === 'missing' || r.status === 'not-wired'),
+);
+export const isReady = requiredMissing.length === 0;
