@@ -33,6 +33,18 @@ export const totalFrames = (lineCount: number) =>
 
 const L = (kind: Line["kind"], text?: string): Line => ({ kind, text });
 
+// v0.1 cutline (approved): which demos are ship candidates vs proposed vs deferred.
+export const v01Cutline: Record<string, "ship" | "proposed" | "deferred"> = {
+  OttoV01Charter: "proposed",
+  OttoV01Practices: "ship",
+  OttoV01Routines: "proposed",
+  OttoV01Skills: "ship",
+  OttoV01Standards: "proposed",
+  OttoV01Autonomy: "deferred",
+  OttoV01Desktop: "proposed",
+  OttoV01Knowledge: "deferred",
+};
+
 export const features: Feature[] = [
   {
     id: "OttoV01Charter",

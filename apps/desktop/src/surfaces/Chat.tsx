@@ -56,14 +56,18 @@ Ran 6 tests across 1 file. [43.00ms]</div>
     </div>
 
     <div className="promptbar">
-      <div className="promptbox">
-        <input placeholder="Message Otto…" aria-label="Message Otto" />
-        <button className="btn btn--primary">{Icon.send}</button>
+      <div className="promptbox promptbox--disabled">
+        <input
+          placeholder="Chat is not wired to the Letta runtime in this preview"
+          aria-label="Chat input (disabled in preview)"
+          disabled
+        />
+        <button className="btn btn--primary" disabled aria-disabled="true">{Icon.send}</button>
       </div>
       <div className="promptbar__meta">
         <span>cwd: {agent.cwd}</span>
         <span>backend: {agent.backend}</span>
-        <span className="notice"><span className="dot dot--warn" /> prototype — not yet wired to the Letta runtime</span>
+        <span className="notice"><span className="dot dot--warn" /> preview shell — chat is disabled; not wired to the Letta runtime</span>
       </div>
     </div>
   </div>

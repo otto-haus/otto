@@ -27,13 +27,18 @@ signs off. A demo never marks a feature Shipped.
 
 ## Index
 
-| # | Feature | Video | What it proves | What it does NOT prove | Approved |
-|---|---------|-------|----------------|------------------------|:--------:|
-| 1 | Charter | `out/otto-v01-charter.mp4` | Intent → contract → gated run → receipts; stops at one-way doors | That a live Sebastian-run session was captured | ☐ |
-| 2 | Practices | `out/otto-v01-practices.mp4` | 5 Practice specs validate; hard approval floor (real CLI output) | That the 4 draft practices are fully implemented | ☐ |
-| 3 | Routines | `out/otto-v01-routines.mp4` | Routines bundle Practices; recurring activation needs approval | That a recurring schedule has run in production | ☐ |
-| 4 | Skills | `out/otto-v01-skills.mp4` | Skills are loadable workflow + context packages | Coverage beyond the charter / routine skills | ☐ |
-| 5 | Standards | `out/otto-v01-standards.mp4` | Human-ratified canon + precedents can block fake done | That a review has blocked a real PR yet | ☐ |
-| 6 | Autonomy | `out/otto-v01-autonomy.mp4` | Three-zone model; Ticketcraft compiles bounded slices | A fully automated multi-worker run | ☐ |
-| 7 | Desktop | `out/otto-v01-desktop.mp4` | The workspace builds and reads state from files (real build log) | A production-complete UI | ☐ |
-| 8 | Knowledge | `out/otto-v01-knowledge.mp4` | A *proposed* AI-frontier Knowledge surface, clearly marked | Verified/benchmarked model ratings or active routing | ☐ |
+**These demos are NOT equally shippable.** Each video carries its own v0.1 status badge —
+**ship candidate** / **proposed** / **deferred (Built, not Shipped)** — on its title and status
+cards. The cutline is in [`../SPEC_COMPLIANCE.md`](../SPEC_COMPLIANCE.md). **Curation is cut from
+v0.1 and has no demo.** Tried + Approved stay unchecked until Sebastian signs off.
+
+| # | Feature | v0.1 | Video | What it proves | What it does NOT prove |
+|---|---------|:--:|-------|----------------|------------------------|
+| 1 | Practices | **ship** | `out/otto-v01-practices.mp4` | 5 Practice specs validate; hard approval floor (real CLI output) | That the 4 draft practices are fully implemented |
+| 2 | Skills | **ship** | `out/otto-v01-skills.mp4` | Skills are loadable workflow + context packages | Coverage beyond charter/routine; live `/reload` load |
+| 3 | Charter | proposed | `out/otto-v01-charter.mp4` | Intent → contract → gated run; **the permission gate is live** | Automated AC-by-AC auditing; a live-captured session |
+| 4 | Routines | proposed | `out/otto-v01-routines.mp4` | Routines bundle Practices; recurring activation needs approval | That a recurring scheduler runs (deferred) |
+| 5 | Standards | proposed | `out/otto-v01-standards.mp4` | Human-ratified canon + precedents; can block via review | Automated enforcement (manual review only) |
+| 6 | Desktop | proposed | `out/otto-v01-desktop.mp4` | The workspace shell + file-backed Practices | A wired chat or live runtime (preview only) |
+| 7 | Autonomy | **deferred** | `out/otto-v01-autonomy.mp4` | The three-zone model + Ticketcraft *spec* | That `/ticket` runs or workers are orchestrated |
+| 8 | Knowledge | **deferred** | `out/otto-v01-knowledge.mp4` | A *proposed* AI-frontier surface, clearly marked | Verified ratings or active routing |

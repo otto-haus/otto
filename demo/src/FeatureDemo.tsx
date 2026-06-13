@@ -12,6 +12,7 @@ import {
   bodyFrames,
   termStart,
   lineStep,
+  v01Cutline,
 } from "./features";
 
 const TerminalScene: React.FC<{ feature: Feature; lines: Required<Line>[] }> = ({
@@ -32,6 +33,7 @@ const TerminalScene: React.FC<{ feature: Feature; lines: Required<Line>[] }> = (
 
 export const FeatureDemo: React.FC<{ feature: Feature }> = ({ feature }) => {
   const body = bodyFrames(feature.lines.length);
+  const v01 = v01Cutline[feature.id] ?? "proposed";
   const lines: Required<Line>[] = feature.lines.map((l, i) => ({
     kind: l.kind,
     text: l.text ?? "",
@@ -47,13 +49,14 @@ export const FeatureDemo: React.FC<{ feature: Feature }> = ({ feature }) => {
             feature={feature.name}
             tagline={feature.tagline}
             kicker={feature.kicker}
+            v01={v01}
           />
         </Series.Sequence>
         <Series.Sequence durationInFrames={body}>
           <TerminalScene feature={feature} lines={lines} />
         </Series.Sequence>
         <Series.Sequence durationInFrames={outroFrames}>
-          <StatusCard feature={feature.name} status={feature.status} proves={feature.proves} />
+          <StatusCard feature={feature.name} status={feature.status} proves={feature.proves} v01={v01} />
         </Series.Sequence>
       </Series>
     </AbsoluteFill>

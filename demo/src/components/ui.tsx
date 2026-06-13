@@ -63,6 +63,42 @@ export const Pill: React.FC<{ children: React.ReactNode; delay?: number }> = ({ 
   );
 };
 
+/** v0.1 cutline badge — a status pill (status color only, house-compliant). */
+export const CutlineBadge: React.FC<{ v01: "ship" | "proposed" | "deferred"; delay?: number }> = ({
+  v01,
+  delay = 0,
+}) => {
+  const e = useEntrance(delay);
+  const map = {
+    ship: { label: "v0.1 · ship candidate", color: theme.green },
+    proposed: { label: "v0.1 · proposed", color: theme.amber },
+    deferred: { label: "v0.1 · deferred — built, not shipped", color: theme.textFaint },
+  } as const;
+  const m = map[v01];
+  return (
+    <span
+      style={{
+        opacity: e,
+        display: "inline-flex",
+        alignItems: "center",
+        gap: 9,
+        fontFamily: fonts.mono,
+        fontSize: 19,
+        textTransform: "uppercase",
+        letterSpacing: 1,
+        color: m.color,
+        border: `1px solid ${m.color}66`,
+        background: theme.panel,
+        padding: "6px 15px",
+        borderRadius: 999,
+      }}
+    >
+      <span style={{ width: 8, height: 8, borderRadius: 999, background: m.color }} />
+      {m.label}
+    </span>
+  );
+};
+
 export const Cursor: React.FC<{ color?: string }> = ({ color = theme.accent }) => {
   const frame = useCurrentFrame();
   const on = Math.floor(frame / 15) % 2 === 0;

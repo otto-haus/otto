@@ -1,7 +1,7 @@
 import React from "react";
 import { AbsoluteFill } from "remotion";
 import { theme, fonts } from "../theme";
-import { FadeUp, useEntrance } from "./ui";
+import { CutlineBadge, FadeUp, useEntrance } from "./ui";
 import { IconCheckBox, IconBoxHalf, IconBoxEmpty } from "./icons";
 
 export type Status = {
@@ -32,10 +32,11 @@ const Check: React.FC<{ label: string; value: boolean | "manual" | "build"; dela
   );
 };
 
-export const StatusCard: React.FC<{ feature: string; status: Status; proves: string }> = ({
+export const StatusCard: React.FC<{ feature: string; status: Status; proves: string; v01: "ship" | "proposed" | "deferred" }> = ({
   feature,
   status,
   proves,
+  v01,
 }) => {
   return (
     <AbsoluteFill style={{ flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 30 }}>
@@ -44,6 +45,7 @@ export const StatusCard: React.FC<{ feature: string; status: Status; proves: str
           {feature} — v0.1 status
         </div>
       </FadeUp>
+      <CutlineBadge v01={v01} delay={5} />
       <div
         style={{
           display: "flex",

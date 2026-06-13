@@ -1,14 +1,15 @@
 import React from "react";
 import { AbsoluteFill } from "remotion";
 import { theme, fonts } from "../theme";
-import { FadeUp, OttoMark, Pill, useFadeOut } from "./ui";
+import { CutlineBadge, FadeUp, OttoMark, useFadeOut } from "./ui";
 
 export const TitleCard: React.FC<{
   dur: number;
   feature: string;
   tagline: string;
   kicker: string;
-}> = ({ dur, feature, tagline, kicker }) => {
+  v01: "ship" | "proposed" | "deferred";
+}> = ({ dur, feature, tagline, kicker, v01 }) => {
   const out = useFadeOut(dur);
   return (
     <AbsoluteFill
@@ -31,7 +32,7 @@ export const TitleCard: React.FC<{
         </div>
       </FadeUp>
       <div style={{ height: 8 }} />
-      <Pill delay={34}>otto · v0.1</Pill>
+      <CutlineBadge v01={v01} delay={34} />
     </AbsoluteFill>
   );
 };
