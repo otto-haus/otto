@@ -40,17 +40,17 @@ Per-feature receipts: [`receipts/otto-v01/`](receipts/otto-v01/). Demos: [`demo/
 
 ## Rename / packaging sweep
 
-- `Vinny OS` / `Vinny` → `Otto`; `cockpit` → `workspace`; `TryVeto/vinny-os` → `otto-do/otto`.
-- Packages: `@vinny-os/*` → `@otto-do/*`; root → `otto`; bin `vinny-practices` → `otto-practices`.
+- `Vinny OS` / `Vinny` → `Otto`; `cockpit` → `workspace`; `TryVeto/vinny-os` → `otto-haus/otto`.
+- Packages: `@vinny-os/*` → `@otto-haus/*`; root → `otto`; bin `vinny-practices` → `otto-practices`.
 - Local repo renamed `~/Code/vinny-os` → `~/Code/otto` (nested worktrees repaired).
-- Lockfile regenerated; workspace resolution verified (`@otto-do/core|practices|desktop`).
+- Lockfile regenerated; workspace resolution verified (`@otto-haus/core|practices|desktop`).
 
 ### Remaining old-name hits (all intentional)
 
 | Hit | Where | Why kept |
 |---|---|---|
 | `VINNY_HOME` | `extension/routine.ts`, `skill/routine/SKILL.md` | Back-compat env fallback after `OTTO_HOME` |
-| `VINNY_OS_ROOT` | `packages/practices/src/cli.ts` | Back-compat env fallback after `OTTO_DO_ROOT` |
+| `VINNY_OS_ROOT` | `packages/practices/src/cli.ts` | Back-compat env fallback after `OTTO_ROOT` |
 | "Vinny OS" (1) | `README.md` Compatibility section | Documents the rename for migrating users |
 | `vinny-os` | `bun.lock` | Generated lockfile only — n/a (no hand-edit) |
 
@@ -59,15 +59,15 @@ in tracked files; the `VINNY_*` env tokens above are the allowed back-compat fal
 
 ## Compatibility notes
 
-- **Env vars:** `OTTO_HOME` preferred, `VINNY_HOME` fallback; `OTTO_DO_ROOT` preferred,
+- **Env vars:** `OTTO_HOME` preferred, `VINNY_HOME` fallback; `OTTO_ROOT` preferred,
   `VINNY_OS_ROOT` fallback. Default runtime root `~/.otto`.
 - **Bin alias:** the practices CLI is `otto-practices` (was `vinny-practices`).
 - **Historical:** the old GitHub remote `origin = TryVeto/vinny-os` is preserved untouched.
-- **Namespace is NOT final.** Sebastian owns the `otto-do`, `otto-haus`, and `otto-hq` GitHub orgs, and the `otto.haus` domain (`otto.do` was unavailable). `@otto-do` is only the current *local implementation* choice — the final public org, package scope, and domain are an approval ask before push.
+- **Namespace target: `otto-haus` (NOT final).** Target identity = org `otto-haus`, repo `otto-haus/otto`, scope `@otto-haus`, domain `otto.haus`, future dream `ot.to`. Also owned but non-canonical: `otto-do`, `otto-hq` (`otto.do` was unavailable, not owned). Implemented locally as `@otto-haus`; the final public namespace is an approval ask before push.
 
 ## GitHub metadata (prepared — NOT applied; push is Sebastian's call)
 
-- Owner / repo: `otto-do/otto` *(provisional — namespace pending approval)* · Description: `The behavior layer for persistent AI agents.`
+- Owner / repo: `otto-haus/otto` *(provisional — namespace pending approval)* · Description: `The behavior layer for persistent AI agents.`
 - Topics: `ai-agents` `agent-runtime` `autonomous-agents` `guardrails` `local-first` `letta` `routines` `practices`
 - Homepage: blank — Otto v0.1 does not depend on a website (`otto.haus` is the current domain asset)
 - Avatar: `~/Library/CloudStorage/Dropbox/This Cycle/otto/otto-pfp-github.png`
@@ -77,7 +77,7 @@ in tracked files; the `VINNY_*` env tokens above are the allowed back-compat fal
 - Demo terminals are faithful re-enactments, not live captures (see `demo/README.md`).
 - Charter, Routines, Skills, Standards, Autonomy have no automated unit tests yet (manual).
 - Knowledge is **proposed**; model-registry ratings are qualitative, routing unratified.
-- **Namespace is OPEN** — not yet decided. Orgs owned: `otto-do`, `otto-haus`, `otto-hq`. Domain asset: `otto.haus` (`otto.do` unavailable). `@otto-do` is the current local choice; final org / scope / domain is an approval ask before push.
+- **Namespace target `otto-haus` — not locked.** Implemented locally (org `otto-haus`, `@otto-haus`, `otto.haus`, future `ot.to`). Also owned, non-canonical: `otto-do`, `otto-hq`; `otto.do` unavailable. Final org / scope / domain is an approval ask before push.
 - Desktop chat is a prototype shell (file-backed panes work; the Letta runtime is not yet wired).
 
 ## Final gate — Sebastian approves before any push/tag
@@ -96,7 +96,7 @@ in tracked files; the `VINNY_*` env tokens above are the allowed back-compat fal
 | Demo videos (8, in `demo/out/`) | ☐ |
 | Test receipts | ☐ |
 | Remaining old-name hits (all intentional) | ☐ |
-| Namespace / org / package scope / domain (`otto-do` / `otto-haus` / `otto-hq`; `otto.haus`) | ☐ open — decide before push |
+| Namespace target `otto-haus` / `@otto-haus` / `otto.haus` (otto-do + otto-hq also owned) | ☐ confirm before push |
 | GitHub metadata (incl. avatar) — not applied yet | ☐ |
 | Release/tag name (`v0.1.0`) | ☐ |
 | **Push + tag** (Red — explicit, step 4) | ☐ |

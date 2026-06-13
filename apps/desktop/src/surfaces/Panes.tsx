@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import type { PracticeSpec } from '@otto-do/core';
+import type { PracticeSpec } from '@otto-haus/core';
 import practicesData from '../data/practices.json';
 import { mockRuns, mockApprovals } from '../mockData';
 import {

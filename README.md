@@ -66,7 +66,7 @@ Otto runs autonomous work *without* removing human authority.
 Requires [Bun](https://bun.sh).
 
 ```sh
-git clone https://github.com/otto-do/otto
+git clone https://github.com/otto-haus/otto
 cd otto
 bun install
 
@@ -136,7 +136,7 @@ Channels and Curation/Approvals are **deferred** from v0.1.
 Renamed from an internal project ("Vinny OS"). For migration, old names are honored where it
 is cheap and safe to do so:
 
-- **Env vars:** `OTTO_HOME` is preferred; `VINNY_HOME` still works. `OTTO_DO_ROOT` is
+- **Env vars:** `OTTO_HOME` is preferred; `VINNY_HOME` still works. `OTTO_ROOT` is
   preferred; `VINNY_OS_ROOT` still works. Default runtime root is `~/.otto`.
 - **Feature-scoped env vars** (`CHARTER_HOME`, `ROUTINE_HOME`, `CHARTER_GATES`,
   `ROUTINE_GATES`) are unchanged.

@@ -19,7 +19,7 @@ export const sampleCharters: Charter[] = [
     status: 'active',
     intent: 'Rename to Otto, prove every feature, demo it, keep it local until approved.',
     acceptance: [
-      { id: 'AC1', text: 'Rename + repackage to @otto-do; tests green', done: true },
+      { id: 'AC1', text: 'Rename + repackage to @otto-haus; tests green', done: true },
       { id: 'AC2', text: 'Public README + 8 feature demos + receipts', done: true },
       { id: 'AC3', text: 'Sebastian tries the demos and approves', done: false },
     ],

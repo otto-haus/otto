@@ -41,9 +41,9 @@ real commands/specs (Practices + Desktop embed actual captured output); not live
 - Charter, Routines, Skills, Standards, Autonomy have no automated unit tests yet (manually verifiable).
 - Knowledge is **proposed**; model ratings qualitative, routing unratified — Built, not Shipped.
 - Demo videos are re-enactments, not live screen recordings.
-- Namespace `otto-do` chosen per master ticket (over the older `otto-hq` in the Dropbox spec) — confirm.
+- Namespace target is `otto-haus` (org/repo `otto-haus/otto`, scope `@otto-haus`, domain `otto.haus`, future `ot.to`); `otto-do` + `otto-hq` also owned but non-canonical; `otto.do` unavailable — confirm before push.
 
 ## Sebastian approval
 
 See the **Final gate** table in [`../RELEASE_CHECKLIST.md`](../RELEASE_CHECKLIST.md). Push to
-`otto-do/otto`, tagging, and any npm publish are Red-zone and wait for explicit approval.
+`otto-haus/otto`, tagging, and any npm publish are Red-zone and wait for explicit approval.

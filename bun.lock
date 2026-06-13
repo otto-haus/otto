@@ -9,10 +9,10 @@
       },
     },
     "apps/desktop": {
-      "name": "@otto-do/desktop",
+      "name": "@otto-haus/desktop",
       "version": "0.0.0",
       "dependencies": {
-        "@otto-do/core": "workspace:*",
+        "@otto-haus/core": "workspace:*",
         "@vitejs/plugin-react": "latest",
         "react": "latest",
         "react-dom": "latest",
@@ -26,17 +26,17 @@
       },
     },
     "packages/core": {
-      "name": "@otto-do/core",
+      "name": "@otto-haus/core",
       "version": "0.0.0",
     },
     "packages/practices": {
-      "name": "@otto-do/practices",
+      "name": "@otto-haus/practices",
       "version": "0.0.0",
       "bin": {
         "otto-practices": "./src/cli.ts",
       },
       "dependencies": {
-        "@otto-do/core": "workspace:*",
+        "@otto-haus/core": "workspace:*",
         "yaml": "^2.9.0",
       },
       "devDependencies": {
@@ -53,11 +53,11 @@
 
     "@napi-rs/wasm-runtime": ["@napi-rs/wasm-runtime@1.1.5", "", { "dependencies": { "@tybys/wasm-util": "^0.10.2" }, "peerDependencies": { "@emnapi/core": "^1.7.1", "@emnapi/runtime": "^1.7.1" } }, "sha512-AWPoBRJ9tsnVhor4sjO7rkni+7p+2IAEFj6cx06UgP10jkQHqay/36uRV/bFkgrh18D9vb4cr8Q0Pthskgzy+Q=="],
 
-    "@otto-do/core": ["@otto-do/core@workspace:packages/core"],
+    "@otto-haus/core": ["@otto-haus/core@workspace:packages/core"],
 
-    "@otto-do/desktop": ["@otto-do/desktop@workspace:apps/desktop"],
+    "@otto-haus/desktop": ["@otto-haus/desktop@workspace:apps/desktop"],
 
-    "@otto-do/practices": ["@otto-do/practices@workspace:packages/practices"],
+    "@otto-haus/practices": ["@otto-haus/practices@workspace:packages/practices"],
 
     "@oxc-project/types": ["@oxc-project/types@0.133.0", "", {}, "sha512-KzkdCd6Uxqnf6l3HOw1xfatAlUURA0g14cvBYFyJ5SaNOQbOUvBr9PKArcPcrNIeRsBdgcUzOGrhKveVpvOIGA=="],
 
@@ -165,6 +165,6 @@
 
     "yaml": ["yaml@2.9.0", "", { "bin": { "yaml": "bin.mjs" } }, "sha512-2AvhNX3mb8zd6Zy7INTtSpl1F15HW6Wnqj0srWlkKLcpYl/gMIMJiyuGq2KeI2YFxUPjdlB+3Lc10seMLtL4cA=="],
 
-    "@otto-do/desktop/typescript": ["typescript@6.0.3", "", { "bin": { "tsc": "bin/tsc", "tsserver": "bin/tsserver" } }, "sha512-y2TvuxSZPDyQakkFRPZHKFm+KKVqIisdg9/CZwm9ftvKXLP8NRWj38/ODjNbr43SsoXqNuAisEf1GdCxqWcdBw=="],
+    "@otto-haus/desktop/typescript": ["typescript@6.0.3", "", { "bin": { "tsc": "bin/tsc", "tsserver": "bin/tsserver" } }, "sha512-y2TvuxSZPDyQakkFRPZHKFm+KKVqIisdg9/CZwm9ftvKXLP8NRWj38/ODjNbr43SsoXqNuAisEf1GdCxqWcdBw=="],
   }
 }

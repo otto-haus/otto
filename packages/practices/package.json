@@ -1,5 +1,5 @@
 {
-  "name": "@otto-do/practices",
+  "name": "@otto-haus/practices",
   "version": "0.0.0",
   "description": "Otto PracticeSpec loader, validator, and CLI.",
   "type": "module",
@@ -18,7 +18,7 @@
     "src"
   ],
   "dependencies": {
-    "@otto-do/core": "workspace:*",
+    "@otto-haus/core": "workspace:*",
     "yaml": "^2.9.0"
   },
   "devDependencies": {

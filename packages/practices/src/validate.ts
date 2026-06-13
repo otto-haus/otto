@@ -1,5 +1,5 @@
-import { APPROVAL_FLOOR } from '@otto-do/core';
-import type { ApprovalRequirement, PracticeSpec, PracticeStatus } from '@otto-do/core';
+import { APPROVAL_FLOOR } from '@otto-haus/core';
+import type { ApprovalRequirement, PracticeSpec, PracticeStatus } from '@otto-haus/core';
 
 export interface PracticeValidationResult {
   errors: string[];

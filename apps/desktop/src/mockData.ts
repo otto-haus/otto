@@ -1,4 +1,4 @@
-import type { Approval, Run } from '@otto-do/core';
+import type { Approval, Run } from '@otto-haus/core';
 
 export const mockRuns: Run[] = [
   {

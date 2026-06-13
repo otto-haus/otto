@@ -1,7 +1,7 @@
 import { describe, expect, test } from 'bun:test';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import type { PracticeSpec } from '@otto-do/core';
+import type { PracticeSpec } from '@otto-haus/core';
 import { loadPracticeSpec, normalizeApprovalRequirement, validatePracticeSpec } from '../src/index.js';
 
 // Repo root resolved from this test file — portable across clones, no hardcoded absolute path.

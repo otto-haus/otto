@@ -22,7 +22,7 @@ export const Chat: React.FC = () => (
       <div className="msg">
         <div className="msg__who"><span className="brand__mark" style={{ width: 16, height: 16, borderRadius: 5 }}>{Icon.owl}</span> Otto</div>
         <div className="msg__body">
-          Compiling that into a Charter. AC1 — rename to <code>@otto-do</code> and keep tests green.
+          Compiling that into a Charter. AC1 — rename to <code>@otto-haus</code> and keep tests green.
           AC2 — public README, eight feature demos, receipts. I'll gate the push behind your approval.
         </div>
       </div>
@@ -35,15 +35,15 @@ Ran 6 tests across 1 file. [43.00ms]</div>
 
       <div className="msg">
         <div className="msg__who"><span className="brand__mark" style={{ width: 16, height: 16, borderRadius: 5 }}>{Icon.owl}</span> Otto</div>
-        <div className="msg__body">AC1 is green. Next step pushes the branch to <code>otto-do/otto</code> — that's a one-way door, so I'm stopping to ask.</div>
+        <div className="msg__body">AC1 is green. Next step pushes the branch to <code>otto-haus/otto</code> — that's a one-way door, so I'm stopping to ask.</div>
       </div>
 
       {/* the ink moment — one critical state, inverted block */}
       <div className="inkblock">
         <div className="inkblock__eyebrow"><span className="dot dot--warn" /> approval required · one-way door</div>
-        <div className="inkblock__title">Push branch to <code style={{ color: 'inherit' }}>otto-do/otto</code></div>
+        <div className="inkblock__title">Push branch to <code style={{ color: 'inherit' }}>otto-haus/otto</code></div>
         <div className="inkblock__meta">
-          <span>scope: git:push:otto-do/otto:letta/otto-v01-integration</span>
+          <span>scope: git:push:otto-haus/otto:letta/otto-v01-integration</span>
           <span>requirement: external-side-effects · expires in 24h</span>
           <span>evidence: tests green · 8 demos rendered · RELEASE_CHECKLIST.md</span>
         </div>

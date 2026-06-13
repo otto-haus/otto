@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import type { PracticeSpec } from '@otto-do/core';
+import type { PracticeSpec } from '@otto-haus/core';
 import practicesData from './data/practices.json';
 import { mockApprovals, mockRuns } from './mockData';
 import { Sidebar, type SurfaceId } from './components/Sidebar';

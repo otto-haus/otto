@@ -1,5 +1,5 @@
 {
-  "name": "@otto-do/desktop",
+  "name": "@otto-haus/desktop",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -12,7 +12,7 @@
     "gen:practices": "node scripts/gen-practices.mjs"
   },
   "dependencies": {
-    "@otto-do/core": "workspace:*",
+    "@otto-haus/core": "workspace:*",
     "@vitejs/plugin-react": "latest",
     "vite": "latest",
     "typescript": "latest",

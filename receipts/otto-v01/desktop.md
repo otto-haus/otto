@@ -4,7 +4,7 @@
   sidebar of canonical surfaces (Chat · Charters · Standards · Practices · Routines · Curation ·
   Receipts · Autonomy · Settings), a **chat-primary** central pane, and the house aesthetic
   (near-monochrome warm paper, Inter + IBM Plex Mono, hairline-first, one inverted "ink moment" for
-  the one-way-door approval). `@otto-do/desktop`; "cockpit" → "workspace". Old dashboard components removed.
+  the one-way-door approval). `@otto-haus/desktop`; "cockpit" → "workspace". Old dashboard components removed.
 - **Demo:** `demo/out/otto-v01-desktop.mp4`
 - **Run command (verify app can run):** `bun --cwd apps/desktop run dev` → http://localhost:5173
   (surfaces deep-link via `#chat`, `#practices`, `#curation`, …). Build: `bun --cwd apps/desktop run build`.
