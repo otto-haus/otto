@@ -23,5 +23,16 @@ recommendation: <pass | fail | blocked>
 ## Cleanup notes
 - ...
 
+## Standards check
+Review enforces the **Quality / No Fake Done** Standard (`standards/standards/quality.md`):
+any UNMAPPED criterion => not done. Note other Standards in tension below.
+
+```txt
+Standard upheld:        quality (no-fake-done edge)
+Standard missed:        <slug + where, or none>
+Standards in tension:   <e.g. quality vs winning, or none>
+Lesson:                 <what changes next time>
+```
+
 ## Recommendation
 pass / fail / blocked — and why. Any UNMAPPED criterion => not done.

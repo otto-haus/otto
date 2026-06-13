@@ -6,6 +6,9 @@ status: proposed          # proposed | active | blocked | complete | cancelled
 why_now: <trigger / value>
 scope: <what is in>
 non_goals: <what is explicitly out>
+standards:                # Standards this charter is accountable to (slugs from standards/registry.yaml)
+  - quality               # Quality / No Fake Done — done means proven, not claimed
+  - judgment
 acceptance_criteria:
   - id: AC1
     text: <criterion>

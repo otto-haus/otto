@@ -1,0 +1,48 @@
+# Standard spec template. Copy into standards/standards/<slug>.md as a fenced
+# `yaml` block at the top of the file, then write prose below it.
+#
+# A Standard is a TESTABLE rule, not a virtue. If `under_pressure` is empty, it is a
+# poster, not a Standard.
+
+name: <Title Case Name>
+slug: <kebab-case-slug>          # matches the filename
+version: 0.1
+status: draft                    # draft | active | deprecated
+
+meaning: <one line. if it needs a paragraph, it is two Standards.>
+
+under_pressure:                  # the behavior that actually defines the Standard
+  do:
+    - <concrete action when this is inconvenient>
+  refuse:
+    - <concrete action we will not take>
+
+reward:                          # what earns reputation / compounds under this Standard
+  - <behavior we promote>
+
+failure_modes:                   # how this Standard goes wrong, incl. its overcorrection
+  - <failure shape>
+
+conflicts_with:                  # other Standards this one trades against under pressure
+  - <other-slug>                 # culture lives in the conflicts; name them
+tie_breakers:                    # how the conflict resolves by default (the rule, not a vibe)
+  - <default ruling; cite a precedent if one exists>
+
+related_practices:               # Practices that make this Standard executable
+  - <practice-slug>
+
+related_curation_rules:          # gates Curation enforces on this Standard's behalf
+  - <rule>
+
+evidence:                        # what proof in a Receipt shows this was upheld
+  - <artifact / check>
+
+related_anti_patterns:           # optional: anti-patterns/<slug> this Standard refuses
+  - <anti-pattern-slug>
+
+canon_refs:                      # optional: canon/<slug> supporting input (not authority)
+  - horowitz
+
+ratification:                    # LOCKED — Standards changes are human-ratified only
+  owner: Sebastian
+  standards_changes_require_human: true

@@ -10,8 +10,9 @@ outputs, durable state, guardrails, an evidence standard, and an improvement loo
 Slash commands are just the invocation layer. The Practice is the workflow behind it.
 
 ```
-Culture    = shared practices.
-Practices  = executable culture.
+Culture    = lived outcome (what the system does under pressure).
+Standards  = explicit canon (what we reward, refuse, and do under pressure).
+Practices  = executable Standards.
 Routines   = repeated bundles of Practices.
 ```
 
@@ -36,6 +37,24 @@ State          files / memory               (the durable record)
 
 Internal docs may still say "slash command." Product language says **Practice**.
 See [`docs/practices.md`](docs/practices.md).
+
+## Standards
+
+**Standards** are the explicit operating canon — what Vinny OS rewards, refuses, and does
+under pressure. Culture is the lived outcome; Standards are the deliberate choice we grade
+it against. A Practice exists only if it reinforces a Standard.
+
+```
+Sebastian → Standards → Curation → Practices / Routines / Charters / Channels / Memory
+```
+
+Sebastian ratifies Standards; Curation enforces them downstream and may propose changes
+but never ratifies them; Standards changes never auto-apply. Standards stay **contextual**
+(in Charter proposals, Reviews, Receipts, Curation cards, Routine audits), not a
+dashboard. When two Standards collide, we write a **Precedent** — the case law. v0 set:
+Quality / No Fake Done · Judgment · Candor + Kindness · Respect Attention · First-Principles
+Reasoning · Winning / Outcomes Over Motion. See
+[`standards/`](standards/) and [`docs/standards.md`](docs/standards.md).
 
 ## Practices
 
@@ -151,6 +170,10 @@ runs, pending proposals, metrics, and approval controls. See
 
 ```
 vinny-os/
+  standards/               the explicit canon
+    registry.yaml          index of Standards + conflict map (case law)
+    standards/             the v0 Standards (one file each)
+    canon/ precedents/ anti-patterns/ evaluations/
   practices/               the Practices
     charter/               practice.yaml + README   (wraps the extension/skill below)
     decision/ review/ field-note/ follow-up/        practice.yaml + README + templates
@@ -159,8 +182,9 @@ vinny-os/
   extension/routine.ts     Routine: Letta Code command + activation gate
   skill/SKILL.md           Charter: agent workflow
   skill/routine/SKILL.md   Routine: agent workflow
-  templates/               Charter artifacts + Practice/Routine schemas + proposals
-  docs/                    practices / routines / mining / autonomy / desktop / metrics
+  standards/               the v0 Standards (canon, precedents, anti-patterns)
+  templates/               Charter artifacts + Practice/Routine/Standard schemas + proposals
+  docs/                    standards / practices / routines / mining / autonomy / desktop / metrics
                            + architecture / runtime-spec / gates (Charter)
   examples/                a filled example charter
   scripts/install.sh       install into Letta Code
