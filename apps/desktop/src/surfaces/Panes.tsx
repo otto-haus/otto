@@ -57,7 +57,7 @@ export const Standards: React.FC = () => (
   <div className="grid" style={{ maxWidth: 920, gap: 16 }}>
     <div className="panel">
       <div className="eyebrow">authority stack</div>
-      <p className="mono" style={{ marginTop: 8, fontSize: 13, color: 'var(--ink-soft)' }}>
+      <p className="muted" style={{ marginTop: 8, fontSize: 14, color: 'var(--ink-soft)' }}>
         Sebastian → Standards → Curation → [Practices · Routines · Charters · Channels · Memory]
       </p>
       <p className="muted" style={{ marginTop: 8 }}>
