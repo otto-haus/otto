@@ -1,12 +1,11 @@
-# Contributing to Charter
+# Contributing to Otto
 
-Charter is a local-first goal operating system for long-running AI agents. Keep the
-core generic: org-specific doctrine, gates, and templates belong in a separate
-private repo, not here.
+Otto is the behavior layer for persistent AI agents. Keep the core generic:
+org-specific doctrine, gates, and templates belong in a separate private repo, not here.
 
 ## Principles
 
-- The human owns goal legitimacy; the agent owns goal operations.
+- The human owns legitimacy; the agent owns operations.
 - One-way doors require human approval — never weaken a gate silently.
 - Keep the charter contract compact; detail lives in `notes/`.
 - Completion requires evidence (receipts), not assertions.

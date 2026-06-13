@@ -1,198 +1,146 @@
 # Otto
 
-**An open-source system for turning repeated agent workflows into executable culture.**
+**Otto is the behavior layer for persistent AI agents.**
 
-> Practices are executable culture.
+Letta gives an agent memory.
+Otto gives an agent governed future behavior.
 
-Otto runs long, autonomous agent work safely by turning repeated high-value
-behaviors into **Practices** — deliberate workflows with a purpose, trigger, inputs,
-outputs, durable state, guardrails, an evidence standard, and an improvement loop.
-Slash commands are just the invocation layer. The Practice is the workflow behind it.
+It turns operating contracts, practices, routines, standards, approvals, receipts, and
+corrections into behavior an agent can repeat, audit, and improve.
 
-```
-Culture    = lived outcome (what the system does under pressure).
-Standards  = explicit canon (what we reward, refuse, and do under pressure).
-Practices  = executable Standards.
-Routines   = repeated bundles of Practices.
-```
-
-The flagship Practice, **Charter**, is fully implemented today: it takes messy human
-intent, compiles it into a compact operating contract, runs it autonomously with
-durable file-based state, gates the one-way doors behind human approval, and proves
-it's done with receipts.
-
-```
-The human owns legitimacy.
-The agent owns operations.
-```
-
-## The layer model
-
-```
-Practice       cultural / workflow ritual   (the product concept)
-Slash command  technical shortcut           (the invocation mechanism)
-Tool           action primitive             (the capability used)
-State          files / memory               (the durable record)
-```
-
-Internal docs may still say "slash command." Product language says **Practice**.
-See [`docs/practices.md`](docs/practices.md).
-
-## Standards
-
-**Standards** are the explicit operating canon — what Otto rewards, refuses, and does
-under pressure. Culture is the lived outcome; Standards are the deliberate choice we grade
-it against. A Practice exists only if it reinforces a Standard.
-
-```
-Sebastian → Standards → Curation → Practices / Routines / Charters / Channels / Memory
-```
-
-Sebastian ratifies Standards; Curation enforces them downstream and may propose changes
-but never ratifies them; Standards changes never auto-apply. Standards stay **contextual**
-(in Charter proposals, Reviews, Receipts, Curation cards, Routine audits), not a
-dashboard. When two Standards collide, we write a **Precedent** — the case law. v0 set:
-Quality / No Fake Done · Judgment · Candor + Kindness · Respect Attention · First-Principles
-Reasoning · Winning / Outcomes Over Motion. See
-[`standards/`](standards/) and [`docs/standards.md`](docs/standards.md).
-
-## Practices
-
-| Practice | Status | Purpose | Invoke |
-|----------|--------|---------|--------|
-| **Charter**   | `active` | Turn intent into evidence-checked autonomous work | `/charter` |
-| **Decision**  | `draft`  | Record first-principles decisions and grade them later | `/decision` |
-| **Review**    | `draft`  | Prevent fake done by mapping claims to evidence | `/review` |
-| **Field Note**| `draft`  | Capture messy customer/operator notes into durable state | `/field-note` |
-| **Follow-up** | `draft`  | Draft relationship follow-ups behind an approval gate | `/follow-up` |
-
-Each Practice lives in [`practices/<slug>/`](practices/) with a compact `practice.yaml`
-spec, a `README.md`, and artifact `templates/`. Charter is real code (extension +
-skill); the other four are draft specs that reuse Charter's primitives.
-
-## Routines
-
-Routines bundle canonical Practices into repeated sequences. They conform to the v0
-[`Routine` contract](docs/architecture/v0-contract.md): steps reference `charter`,
-`decision`, `review`, `field-note`, or `follow-up`; recurring activation requires
-human approval because attention is a one-way door. See [`docs/routines.md`](docs/routines.md)
-and [`routines/`](routines/).
+> A lesson is not culture until it changes future behavior.
 
 ---
 
-## Charter — the flagship Practice
+## What Otto is
 
-> Object model: **Intent → Charter → State → Receipt.**
+Memory lets an agent *remember*. Otto makes that memory *change what the agent does next*.
+
+Otto is an operating layer on top of a persistent agent runtime (Letta). It encodes the
+explicit canon, the repeatable workflows, the approval gates, and the proof trail that let
+an agent run long, autonomous work without drifting or faking progress.
 
 ```
-Compiler   messy intent -> compact contract (charter.md + charter.yaml)
-Runtime    charter.* / state.yaml / ledger.md / approvals / receipts / traces / notes
-Loop       Scout -> Judge -> Worker   (+ Auditor proves done, Recorder keeps files current)
-Gates      one-way doors require human approval
+Letta  = memory / runtime engine
+Otto   = the persistent agent + behavior system
 ```
 
-Substrate: **Files = truth, Memory = lessons, UI = workspace.** Active state lives in
-files (default `~/.charter/charters/`), never in agent memory. See
-[`docs/architecture.md`](docs/architecture.md),
-[`docs/runtime-spec.md`](docs/runtime-spec.md), and [`docs/gates.md`](docs/gates.md).
+## Why it exists
 
-### Install (Letta Code)
+Persistent agents accumulate memory, but memory alone doesn't govern behavior. Under
+pressure an agent reverts to whatever is easiest — not to what you decided it should do.
+Otto makes the intended behavior explicit, ratified, repeatable, and improvable: so
+corrections stick, one-way doors stay gated, and "done" means proven.
 
-Charter ships as a single-file [Letta Code](https://letta.com) extension plus a skill.
+## Core concepts
+
+| Concept | What it is |
+|---|---|
+| **Charter** | Operating contracts. Compiles messy intent into a compact contract, runs it with durable file state, gates one-way doors, and proves done with receipts. |
+| **Practices** | Executable Standards — repeatable workflows with a purpose, trigger, inputs, outputs, state, guardrails, evidence standard, and improvement loop. |
+| **Routines** | Repeated bundles of Practices. Recurring activation requires approval — attention is a one-way door. |
+| **Standards** | The explicit canon: what Otto rewards, refuses, and does under pressure. Precedents are the case law. |
+| **Autonomy / Ticketcraft** | What Otto may own without a human in the loop vs. what must escalate. Ticketcraft compiles bounded worker slices. |
+| **Skills** | Reusable capability/context packages an agent loads to do a kind of work. |
+| **Approvals** | First-class, scoped, time-bound records of human consent for consequential, one-way actions. |
+| **Receipts** | Proof. No artifact, no progress. Done requires mapped proof. |
+| **Desktop** | The workspace — reads files as truth and shows active work, runs, approvals, and receipts. |
+
+Substrate: **Files are truth. Memory is lessons. UI is the workspace.**
+
+## Safety model
+
+Otto runs autonomous work *without* removing human authority.
+
+- **Approve doors, not steps.** Reversible work runs freely; consequential one-way actions
+  (send/publish, spend, deploy, merge to protected main, force-push, delete, credential or
+  permission changes) stop and ask.
+- **Approval gates outrank logic.** A Practice or Routine that hits a one-way door blocks
+  and records a scoped, time-bound approval under `approvals/`.
+- **No fake done.** Two no-evidence loops force a block. Completion requires AC-by-AC proof
+  mapping. Standards can block a fake "done" in review.
+- **Files = truth.** Active state lives in files, never only in agent memory.
+
+## Install / dev setup
+
+Requires [Bun](https://bun.sh).
 
 ```sh
 git clone https://github.com/otto-do/otto
 cd otto
-./scripts/install.sh
+bun install
+
+bun run typecheck      # core types
+bun test               # unit tests
+bun run verify:v0      # core checks + shipped-status pointer
 ```
 
-Then run `/reload` in Letta Code. This:
+Otto Desktop — the workspace (preview):
 
-- symlinks `extension/charter.ts` and `extension/routine.ts` into `~/.letta/extensions/`
-- installs `skill/SKILL.md` into `skills/charter/` and `skill/routine/SKILL.md` into `skills/routine/`
-- scaffolds the runtime under `~/.charter/charters/` (override with `CHARTER_HOME`)
-
-### Commands
-
-```
-/charter propose <intent>   compile messy intent into a proposed charter
-/charter approve            activate it
-/charter status             where / changed / blocked / next / approvals
-/charter step               run ONE atomic loop: read state -> slice -> execute/block
-                            -> receipt -> update state
-/charter receipt <ref>      attach proof (mapped to an acceptance-criterion id)
-/charter resume             run steps until a gate or stop condition
-/charter complete           Auditor proves done AC-by-AC, then marks complete
+```sh
+bun --cwd apps/desktop run dev      # or: build / typecheck
 ```
 
-Also: `update`, `block`, `audit`, `sharpen`, `split`, `cancel`.
-`/goal` is a compatibility alias; prefer `/charter`.
+Charter ships as a single-file [Letta Code](https://letta.com) extension plus a skill:
 
-### Charter Gates
-
-A permission overlay forces an approval prompt — even in unrestricted mode — before
-send/post/publish, spend, deploy, merge to protected main, force-push, delete/destroy,
-credential/security changes, and other one-way doors. Approvals are recorded as
-scoped, time-bound files under `approvals/`. Disable with `CHARTER_GATES=off`.
-
-### Anti-fake-progress
-
-```
-No artifact, no progress.
-Two no-evidence loops force block/sharpen.
-Done requires AC-by-AC proof mapping.
+```sh
+./scripts/install.sh   # symlinks the extension + installs skills; then run /reload
 ```
 
----
+Runtime state lives under `~/.otto` (override with `OTTO_HOME`; `VINNY_HOME` is honored for
+backward compatibility — see [Compatibility](#compatibility)).
 
-## Practice Mining
-
-Practices can be mined from repeated work: observe a recurring behavior → propose a
-Practice → human approves → activate → measure → refine or deprecate. Proposals use
-[`templates/practice-proposal.md`](templates/practice-proposal.md). See
-[`docs/practice-mining.md`](docs/practice-mining.md).
-
-## Safety & autonomy
-
-Practices **cannot** bypass human approval. Every `practice.yaml` carries an
-`approval_required_for` floor (enabling globally, external side effects, permission
-expansion); communication Practices add a hard no-send gate. Approval gates outrank
-Practice logic — a Practice that hits a one-way door stops and asks. See
-[`docs/autonomy.md`](docs/autonomy.md).
-
-## Desktop
-
-Otto Desktop is a workspace over Practices: active Practices, invocations, recent
-runs, pending proposals, metrics, and approval controls. See
-[`docs/desktop.md`](docs/desktop.md).
-
-## Layout
+## Repo map
 
 ```
 otto/
-  standards/               the explicit canon
-    registry.yaml          index of Standards + conflict map (case law)
-    standards/             the v0 Standards (one file each)
-    canon/ precedents/ anti-patterns/ evaluations/
-  practices/               the Practices
-    charter/               practice.yaml + README   (wraps the extension/skill below)
-    decision/ review/ field-note/ follow-up/        practice.yaml + README + templates
-  routines/                repeated bundles of Practices
-  extension/charter.ts     Charter: Letta Code command + gates overlay
-  extension/routine.ts     Routine: Letta Code command + activation gate
-  skill/SKILL.md           Charter: agent workflow
-  skill/routine/SKILL.md   Routine: agent workflow
-  standards/               the v0 Standards (canon, precedents, anti-patterns)
-  templates/               Charter artifacts + Practice/Routine/Standard schemas + proposals
-  docs/                    standards / practices / routines / mining / autonomy / desktop / metrics
-                           + architecture / runtime-spec / gates (Charter)
-  examples/                a filled example charter
-  scripts/install.sh       install into Letta Code
+  packages/
+    core/         shared v0 contract — Practice, Routine, Channel, Run, Receipt, Approval, Charter
+    practices/    PracticeSpec loader, validator, CLI (otto-practices)
+  apps/
+    desktop/      Otto Desktop — the workspace (Vite + React, preview)
+  extension/      Letta Code commands: charter.ts (Charter + gates), routine.ts
+  skill/          agent workflows: SKILL.md (Charter), routine/SKILL.md
+  practices/      Practices: charter, decision, review, field-note, follow-up
+  routines/       repeated bundles of Practices
+  standards/      the explicit canon — standards, precedents, anti-patterns, registry
+  templates/      Charter artifacts + Practice/Routine/Standard schemas + worker/ticket packets
+  docs/           practices · routines · standards · autonomy · ticketcraft · desktop + architecture
+  examples/       a filled example charter
+  demo/           Remotion feature demos (demo/out/*.mp4)
+  scripts/        install.sh, verify-v0.sh
 ```
 
-Org-specific doctrine, gates, and templates should live in a separate private repo so
-this core stays generic.
+## Shipped feature status
+
+v0.1 status is honest and tracked in [`RELEASE_CHECKLIST.md`](RELEASE_CHECKLIST.md).
+**Nothing is marked Shipped until Sebastian reviews the demo and approves.**
+
+| Feature | Built | Tested | Demo | Notes |
+|---|:--:|:--:|:--:|---|
+| Charter | ✅ | manual | ▢ | core — operating contracts + gates |
+| Practices | ✅ | ✅ | ▢ | core — loader/validator + 6 unit tests |
+| Routines | ✅ | manual | ▢ | core — repeated bundles of Practices |
+| Skills | ✅ | manual | ▢ | capability layer |
+| Standards | ✅ | manual | ▢ | canon + precedents + anti-patterns |
+| Autonomy / Ticketcraft | ✅ | manual | ▢ | spec + worker/ticket templates |
+| Desktop | ✅ | build | ▢ | preview workspace (Vite + React) |
+| Knowledge | proposed | — | — | proposed; not integrated in v0.1 |
+
+Legend: ✅ automated · `manual` manually verifiable, no automated test · `build` build/typecheck
+passes · ▢ demo pending · "Shipped" requires Sebastian's approval.
+Channels and Curation/Approvals are **deferred** from v0.1.
+
+## Compatibility
+
+Renamed from an internal project ("Vinny OS"). For migration, old names are honored where it
+is cheap and safe to do so:
+
+- **Env vars:** `OTTO_HOME` is preferred; `VINNY_HOME` still works. `OTTO_DO_ROOT` is
+  preferred; `VINNY_OS_ROOT` still works. Default runtime root is `~/.otto`.
+- **Feature-scoped env vars** (`CHARTER_HOME`, `ROUTINE_HOME`, `CHARTER_GATES`,
+  `ROUTINE_GATES`) are unchanged.
 
 ## License
 
-Apache-2.0. See [`LICENSE`](LICENSE).
+[Apache-2.0](LICENSE).
