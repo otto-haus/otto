@@ -7,17 +7,17 @@ Otto Desktop is the workspace over all surfaces. It reads files as truth and sho
 ## Required file contract
 
 - [x] Canonical app lives in `apps/desktop`.
-  - Evidence: `/Users/seb/Code/otto/.letta/worktrees/otto-v01-integration/apps/desktop/` with package.json, src/, index.html, vite.config.ts
+  - Evidence: `apps/desktop/` with package.json, src/, index.html, vite.config.ts
 - [x] Any standalone Electron app is documented as reference-only or ported.
-  - Evidence: No Electron runtime found in apps/desktop/package.json; no electron:dev script defined; reference-only Electron app in /Users/seb/Code/vinny-desktop is external to this audit scope
+  - Evidence: No Electron runtime found in apps/desktop/package.json; no electron:dev script defined; reference-only Electron app in ~/Code/vinny-desktop is external to this audit scope
 - [~] Desktop convergence is documented in `docs/desktop-convergence.md`.
-  - Evidence: `/Users/seb/Code/otto/.letta/worktrees/otto-v01-integration/docs/desktop.md` exists and documents what surfaces should show; `/Users/seb/Code/otto/.letta/worktrees/otto-v01-integration/README.md` mentions Desktop as the workspace
+  - Evidence: `docs/desktop.md` exists and documents what surfaces should show; `README.md` mentions Desktop as the workspace
   - Gap: File `docs/desktop-convergence.md` does not exist; convergence strategy (how standalone app relates to runtime, if at all) is not documented
 
 ## Required UX
 
 - [x] Left sidebar surfaces: Chat, Charters, Standards, Practices, Routines, Curation, Receipts, Autonomy, Settings.
-  - Evidence: `/Users/seb/Code/otto/.letta/worktrees/otto-v01-integration/apps/desktop/src/components/Sidebar.tsx` line 4-13 defines `SurfaceId` type with all 9 surfaces; GROUPS array lines 17-36 renders navigation for all 9
+  - Evidence: `apps/desktop/src/components/Sidebar.tsx` line 4-13 defines `SurfaceId` type with all 9 surfaces; GROUPS array lines 17-36 renders navigation for all 9
 - [x] Chat/workspace is primary.
   - Evidence: App.tsx line 68 renders Chat as the default surface when active === 'chat'; location.hash initialization defaults to 'chat' (App.tsx line 46)
 - [x] No visible Vinny/Veto/Cockpit/.veto-os in normal UI.
@@ -32,7 +32,7 @@ Otto Desktop is the workspace over all surfaces. It reads files as truth and sho
 ## Required runtime behavior
 
 - [x] App launches locally.
-  - Evidence: apps/desktop/package.json lines 7-12 define "dev" script: "vite" (standard Vite dev server); /Users/seb/Code/otto/.letta/worktrees/otto-v01-integration/receipts/otto-v01/desktop.md line 9 confirms "bun --cwd apps/desktop run dev → http://localhost:5173"; dist/ directory present with assets, favicon, index.html
+  - Evidence: apps/desktop/package.json lines 7-12 define "dev" script: "vite" (standard Vite dev server); receipts/otto-v01/desktop.md line 9 confirms "bun --cwd apps/desktop run dev → http://localhost:5173"; dist/ directory present with assets, favicon, index.html
 - [x] Sidebar navigation works.
   - Evidence: Sidebar.tsx lines 44-52 bind onClick handlers to button elements; App.tsx lines 51-55 manage state and hash navigation; location.hash updates on surface selection per line 54
 - [x] Practices surface reads generated real `practices.json`.
@@ -54,17 +54,17 @@ bun --cwd apps/desktop run dev           # vite per line 8; includes predev gen:
 # Electron not applicable
 ```
 
-All commands defined in `/Users/seb/Code/otto/.letta/worktrees/otto-v01-integration/apps/desktop/package.json` lines 6-12. Build artifact at dist/ (~220 kB per receipt); typecheck passes (per baseline verification).
+All commands defined in `apps/desktop/package.json` lines 6-12. Build artifact at dist/ (~220 kB per receipt); typecheck passes (per baseline verification).
 
 ## Required receipt
 
 - [x] `receipts/otto-v01/desktop.md` states exact command, what appears, interactive vs read-only, runtime status, and broken/missing pieces.
-  - Evidence: `/Users/seb/Code/otto/.letta/worktrees/otto-v01-integration/receipts/otto-v01/desktop.md` exists (verified 25 lines); states run command line 9-10, explains what appears (real vs prototype) lines 14-21, explicitly lists "not yet wired" status line 21, lists "known limitations" line 22
+  - Evidence: `receipts/otto-v01/desktop.md` exists (verified 25 lines); states run command line 9-10, explains what appears (real vs prototype) lines 14-21, explicitly lists "not yet wired" status line 21, lists "known limitations" line 22
 
 ## Required demo
 
 - [x] `demo/out/otto-v01-desktop.mp4` reflects actual desktop status.
-  - Evidence: File exists at `/Users/seb/Code/otto/.letta/worktrees/otto-v01-integration/demo/out/otto-v01-desktop.mp4` (1.7 MB); `/Users/seb/Code/otto/.letta/worktrees/otto-v01-integration/demo/README.md` line 38 lists Desktop as feature #7 with "out/otto-v01-desktop.mp4" and description "The workspace builds and reads state from files (real build log)"
+  - Evidence: File exists at `demo/out/otto-v01-desktop.mp4` (1.7 MB); `demo/README.md` line 38 lists Desktop as feature #7 with "out/otto-v01-desktop.mp4" and description "The workspace builds and reads state from files (real build log)"
 - [x] If runtime is not wired, demo says preview shell / not live runtime.
   - Evidence: demo/README.md lines 22-26 state videos are "faithful re-enactments, not live screen captures"; each video ends with "Built / Tested / Tried / Approved" status card where Tried/Approved are unchecked (line 26); for Desktop specifically, the video proves "The workspace builds and reads state from files" not "Production-complete UI" (line 38)
 

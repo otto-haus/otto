@@ -6,12 +6,12 @@ Practices are repeated behaviors worth preserving. They make Standards executabl
 
 ## Required file contract
 
-- [x] Core type exists: `PracticeSpec` — `/Users/seb/Code/otto/.letta/worktrees/otto-v01-integration/packages/core/src/types.ts` lines 94-121
-- [x] Loader exists — `/Users/seb/Code/otto/.letta/worktrees/otto-v01-integration/packages/practices/src/load.ts`
-- [x] Validator exists — `/Users/seb/Code/otto/.letta/worktrees/otto-v01-integration/packages/practices/src/validate.ts`
-- [x] CLI exists: `otto-practices` — `/Users/seb/Code/otto/.letta/worktrees/otto-v01-integration/packages/practices/src/cli.ts`
+- [x] Core type exists: `PracticeSpec` — `packages/core/src/types.ts` lines 94-121
+- [x] Loader exists — `packages/practices/src/load.ts`
+- [x] Validator exists — `packages/practices/src/validate.ts`
+- [x] CLI exists: `otto-practices` — `packages/practices/src/cli.ts`
 - [x] Practice specs exist under `practices/*/practice.yaml` — charter, decision, field-note, follow-up, review
-- [x] Templates exist — `/Users/seb/Code/otto/.letta/worktrees/otto-v01-integration/templates/practice.yaml`
+- [x] Templates exist — `templates/practice.yaml`
 
 ## Required runtime behavior
 

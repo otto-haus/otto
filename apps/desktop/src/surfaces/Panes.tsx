@@ -317,7 +317,7 @@ export const Settings: React.FC = () => {
       <div className="panel">
         <div className="eyebrow">capabilities</div>
         <div style={{ marginTop: 4 }}>
-          {group(['skills', 'mcp', 'functions', 'permissions']).map((r) => <ReadyRow key={r.key} item={r} />)}
+          {group(['skills', 'practices', 'mcp', 'functions', 'permissions']).map((r) => <ReadyRow key={r.key} item={r} />)}
         </div>
       </div>
       <p className="faint mono" style={{ fontSize: 11.5 }}>

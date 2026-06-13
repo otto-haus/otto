@@ -7,19 +7,19 @@ Main Otto orchestrates ticket workers in worktrees. Workers own bounded executio
 ## Required file contract
 
 - [x] Worker packet template exists.
-  - Evidence: `/Users/seb/Code/otto/.letta/worktrees/otto-v01-integration/templates/worker-packet.md` — complete template with ticket, objective, owned/shared contracts, constraints, checks, stop conditions, approval gates, receipt requirement.
+  - Evidence: `templates/worker-packet.md` — complete template with ticket, objective, owned/shared contracts, constraints, checks, stop conditions, approval gates, receipt requirement.
 
 - [x] Ticket template exists.
-  - Evidence: `/Users/seb/Code/otto/.letta/worktrees/otto-v01-integration/templates/ticket.yaml` — machine source of truth with status, owner, model, worktree, branch, objective, owned/shared paths, acceptance criteria, checks, stop conditions, approval gates, receipt path, integration notes.
+  - Evidence: `templates/ticket.yaml` — machine source of truth with status, owner, model, worktree, branch, objective, owned/shared paths, acceptance criteria, checks, stop conditions, approval gates, receipt path, integration notes.
 
 - [x] Worktree policy exists.
-  - Evidence: `/Users/seb/Code/otto/.letta/worktrees/otto-v01-integration/docs/autonomy.md` §"Worktree policy" (lines 143–158) — every feature/ticket uses a worktree, layout convention, rules for isolation, one-per-ticket, owned-paths-only, shared-contract coordination, receipts before integration.
+  - Evidence: `docs/autonomy.md` §"Worktree policy" (lines 143–158) — every feature/ticket uses a worktree, layout convention, rules for isolation, one-per-ticket, owned-paths-only, shared-contract coordination, receipts before integration.
 
 - [x] Integration/merge policy exists.
-  - Evidence: `/Users/seb/Code/otto/.letta/worktrees/otto-v01-integration/docs/autonomy.md` §"Merge policy" (lines 122–141) — conservative start (autonomous PR opening, approval-required merge), future safe-auto-merge criteria documented (risk_class, owned_paths_only, tests_pass, no_secret_scan, no Standards changes, receipt_present, main protected policy).
+  - Evidence: `docs/autonomy.md` §"Merge policy" (lines 122–141) — conservative start (autonomous PR opening, approval-required merge), future safe-auto-merge criteria documented (risk_class, owned_paths_only, tests_pass, no_secret_scan, no Standards changes, receipt_present, main protected policy).
 
 - [x] Receipt requirement exists.
-  - Evidence: `/Users/seb/Code/otto/.letta/worktrees/otto-v01-integration/docs/autonomy.md` §"Receipts" (lines 209–214), `templates/autonomy-receipt.md`, and `templates/worker-packet.md` §"Receipt required" — every autonomous ticket run must write a receipt (ticket, worker, model, worktree, branch, time, objective, actions, checks, files changed, approvals needed, result, next action). "No receipt → no progress."
+  - Evidence: `docs/autonomy.md` §"Receipts" (lines 209–214), `templates/autonomy-receipt.md`, and `templates/worker-packet.md` §"Receipt required" — every autonomous ticket run must write a receipt (ticket, worker, model, worktree, branch, time, objective, actions, checks, files changed, approvals needed, result, next action). "No receipt → no progress."
 
 ## Required runtime behavior
 

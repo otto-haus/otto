@@ -7,7 +7,7 @@ Autonomy defines what Otto may own without Sebastian in the loop: ticket orchest
 ## Required file contract
 
 - [x] `docs/autonomy.md` exists.
-  - Evidence: `/Users/seb/Code/otto/.letta/worktrees/otto-v01-integration/docs/autonomy.md` (271 lines, complete doctrine + model)
+  - Evidence: `docs/autonomy.md` (271 lines, complete doctrine + model)
 
 - [x] Safe/unsafe action taxonomy exists.
   - Evidence: `docs/autonomy.md` lines 62–88 ("What Autonomy may do without asking" / "What must escalate to Approvals")
@@ -23,7 +23,7 @@ Autonomy defines what Otto may own without Sebastian in the loop: ticket orchest
   - Evidence: `docs/autonomy.md` lines 179–195; template shows `autonomy:` config with 10 knobs (worker_creation, safe_auto_merge, require_receipts, etc.)
 
 - [x] Autonomy receipt template exists.
-  - Evidence: `/Users/seb/Code/otto/.letta/worktrees/otto-v01-integration/templates/autonomy-receipt.md` (35 lines, covers ticket/worker/model/worktree/branch/time/objective/actions/checks/files/approvals/result/next-action)
+  - Evidence: `templates/autonomy-receipt.md` (35 lines, covers ticket/worker/model/worktree/branch/time/objective/actions/checks/files/approvals/result/next-action)
 
 ## Required runtime behavior
 
@@ -47,7 +47,7 @@ Autonomy defines what Otto may own without Sebastian in the loop: ticket orchest
 ## Required Desktop surface
 
 - [x] Desktop Autonomy surface shows ownership boundaries and escalation rules.
-  - Evidence: `/Users/seb/Code/otto/.letta/worktrees/otto-v01-integration/apps/desktop/src/surfaces/Panes.tsx` lines 236–260
+  - Evidence: `apps/desktop/src/surfaces/Panes.tsx` lines 236–260
   - Displays: "three-zone model" (GREEN/YELLOW/RED tabs with examples) + Ticketcraft description
   - Sample data: `sampleData.ts` lines 87–92 define autonomyZones with cls ('g'/'y'/'r'), label, and examples
   - Build verified: `bun run build` → vite ok (23 modules), typecheck → exit 0
@@ -55,14 +55,14 @@ Autonomy defines what Otto may own without Sebastian in the loop: ticket orchest
 ## Required demo
 
 - [x] `demo/out/otto-v01-autonomy-ticketcraft.mp4` shows ticket/worktree/receipt policy.
-  - Evidence: `/Users/seb/Code/otto/.letta/worktrees/otto-v01-integration/demo/out/otto-v01-autonomy.mp4` exists (1.7M, ISO Media MP4)
+  - Evidence: `demo/out/otto-v01-autonomy.mp4` exists (1.7M, ISO Media MP4)
   - Demo content (from `demo/src/features.tsx` lines 172–193): shows `cat docs/autonomy.md` (three zones), `/ticket compile`, Ticketcraft flow, and receipt proof model
   - Note: Demo is a Remotion-rendered animation showing the spec + workflow, not a live runtime execution
 
 ## Required receipt
 
 - [x] `receipts/otto-v01/autonomy.md` states docs/templates vs runtime status.
-  - Evidence: `/Users/seb/Code/otto/.letta/worktrees/otto-v01-integration/receipts/otto-v01/autonomy.md` (9 lines)
+  - Evidence: `receipts/otto-v01/autonomy.md` (9 lines)
   - States: docs/ticketcraft/worker-packet swept to Otto; demo exists; spec + templates complete; "/ticket compiler is spec + templates in v0.1; no end-to-end multi-worker orchestration captured"
   - Approval status: pending Sebastian
 

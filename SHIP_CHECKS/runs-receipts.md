@@ -7,7 +7,7 @@ Runs are executions. Receipts are proof. No artifact, no progress. Done requires
 ## Required file contract
 
 - [x] Run type exists in core.
-  - **Evidence:** `/Users/seb/Code/otto/.letta/worktrees/otto-v01-integration/packages/core/src/types.ts` lines 198–218 define `interface Run`
+  - **Evidence:** `packages/core/src/types.ts` lines 198–218 define `interface Run`
 
 - [x] Receipt type exists in core.
   - **Evidence:** `/packages/core/src/types.ts` lines 224–236 define `interface Receipt`

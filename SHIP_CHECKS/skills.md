@@ -7,11 +7,11 @@ Skills are reusable capability/context packages an agent loads to do a kind of w
 ## Required file contract
 
 - [x] Core Otto skill exists.
-  - Evidence: `/Users/seb/Code/otto/.letta/worktrees/otto-v01-integration/skill/SKILL.md` (217 lines)
+  - Evidence: `skill/SKILL.md` (217 lines)
   - Contents: Charter skill with full workflow, object model (Intent → Charter → State → Receipt), subcommands, gates, runtime structure, and operational rules.
 
 - [x] Routine skill exists if claimed.
-  - Evidence: `/Users/seb/Code/otto/.letta/worktrees/otto-v01-integration/skill/routine/SKILL.md` (105 lines)
+  - Evidence: `skill/routine/SKILL.md` (105 lines)
   - Contents: Routine spec, core rule, contract mapping to types.ts, subcommands, pruning test, gates overlay.
 
 - [x] Skill docs include triggers, workflow, constraints, and outputs.
@@ -24,7 +24,7 @@ Skills are reusable capability/context packages an agent loads to do a kind of w
     - Outputs specified: Charter (charter.md, charter.yaml, state.yaml, ledger.md, approvals, receipts, traces, notes); Routine (Runs, Receipts, routine.yaml).
 
 - [x] Install/load instructions exist.
-  - Evidence: `/Users/seb/Code/otto/.letta/worktrees/otto-v01-integration/scripts/install.sh` (45 lines)
+  - Evidence: `scripts/install.sh` (45 lines)
   - Contents: 
     - Step 1: Symlink extensions (charter.ts, routine.ts) into ~/.letta/extensions/
     - Step 2: Copy skills into agent memory dir if MEMORY_DIR set (skill/SKILL.md → memories/skills/charter/, skill/routine/SKILL.md → memories/skills/routine/)
@@ -35,28 +35,28 @@ Skills are reusable capability/context packages an agent loads to do a kind of w
 
 - [~] Skills can be installed or loaded in Letta Code.
   - Evidence: 
-    - Extensions exist and reference skill paths: `/Users/seb/Code/otto/.letta/worktrees/otto-v01-integration/extension/charter.ts` (line 7-8: "This single-file Letta Code extension provides: 1. Charter command (/charter, compat alias /goal) 2. Charter Gates")
+    - Extensions exist and reference skill paths: `extension/charter.ts` (line 7-8: "This single-file Letta Code extension provides: 1. Charter command (/charter, compat alias /goal) 2. Charter Gates")
     - Extension/routine.ts exists (line 12: "/routine command — a thin launcher for the `routine` skill workflow.")
     - Install script is executable and ready to symlink.
   - Gap: Skills are documented/designed for installation but NO EVIDENCE that they have been tested loading into a live Letta Code agent. The install script is a shell script (not integrated into bun build or CI). No test harness verifies that /reload in Letta Code actually picks up these skills or that /charter command works end-to-end with live agent memory.
 
 - [x] Skills point to real repo artifacts and current naming.
   - Evidence:
-    - Charter skill references live types in `/Users/seb/Code/otto/.letta/worktrees/otto-v01-integration/packages/core/src/types.ts` (defines PracticeSpec, Routine, Run, Receipt, Approval, Charter globals).
-    - Routine skill references canonical Practice slugs (charter, decision, review, field-note, follow-up) defined in `/Users/seb/Code/otto/.letta/worktrees/otto-v01-integration/practices/<slug>/practice.yaml`.
+    - Charter skill references live types in `packages/core/src/types.ts` (defines PracticeSpec, Routine, Run, Receipt, Approval, Charter globals).
+    - Routine skill references canonical Practice slugs (charter, decision, review, field-note, follow-up) defined in `practices/<slug>/practice.yaml`.
     - Runtime home variables are correct: Charter uses $CHARTER_HOME (default ~/.charter), Routine uses $ROUTINE_HOME → $OTTO_HOME → $VINNY_HOME → ~/.otto.
     - Naming locked (2026-06-13) in types.ts and v0-contract.md; skills match locked names.
 
 ## Required demo
 
 - [x] `demo/out/otto-v01-skills.mp4` shows actual skill files and what they enable.
-  - Evidence: `/Users/seb/Code/otto/.letta/worktrees/otto-v01-integration/demo/out/otto-v01-skills.mp4` exists, 1.6 MB, ISO Media MP4 format, created 2026-06-13.
+  - Evidence: `demo/out/otto-v01-skills.mp4` exists, 1.6 MB, ISO Media MP4 format, created 2026-06-13.
   - Limitation: File is a binary video; content cannot be verified in this read-only audit. Assumed to show skill files and charter/routine workflows based on filename and receipt note.
 
 ## Required receipt
 
 - [x] `receipts/otto-v01/skills.md` states manual vs automated verification.
-  - Evidence: `/Users/seb/Code/otto/.letta/worktrees/otto-v01-integration/receipts/otto-v01/skills.md` (9 lines)
+  - Evidence: `receipts/otto-v01/skills.md` (9 lines)
   - Contents:
     - What changed: skill/SKILL.md and skill/routine/SKILL.md swept to Otto; runtime docs updated.
     - Demo: demo/out/otto-v01-skills.mp4.

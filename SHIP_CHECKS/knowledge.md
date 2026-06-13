@@ -7,25 +7,25 @@ Knowledge is maintained external-world understanding. v1 focuses on AI Frontier 
 ## Required file contract
 
 - [x] `docs/knowledge.md` exists.
-  - Evidence: `/Users/seb/Code/otto/.letta/worktrees/otto-v01-integration/docs/knowledge.md` — 187 lines, covers Knowledge doctrine, separation from Memory, scope, sources, templates.
+  - Evidence: `docs/knowledge.md` — 187 lines, covers Knowledge doctrine, separation from Memory, scope, sources, templates.
 
 - [x] Model registry exists.
-  - Evidence: `/Users/seb/Code/otto/.letta/worktrees/otto-v01-integration/knowledge/ai-frontier/model-registry.yaml` — 130 lines, machine-readable model/provider capability + routing; status: proposed.
+  - Evidence: `knowledge/ai-frontier/model-registry.yaml` — 130 lines, machine-readable model/provider capability + routing; status: proposed.
 
 - [x] Capability notes exist.
-  - Evidence: `/Users/seb/Code/otto/.letta/worktrees/otto-v01-integration/knowledge/ai-frontier/capability-notes.md` — 59 lines, narrative on model strengths/weaknesses + trend watch.
+  - Evidence: `knowledge/ai-frontier/capability-notes.md` — 59 lines, narrative on model strengths/weaknesses + trend watch.
 
 - [x] Provider costs exist.
-  - Evidence: `/Users/seb/Code/otto/.letta/worktrees/otto-v01-integration/knowledge/ai-frontier/provider-costs.md` — 35 lines, cost posture template; pricing data left as TODO per No Fake Done.
+  - Evidence: `knowledge/ai-frontier/provider-costs.md` — 35 lines, cost posture template; pricing data left as TODO per No Fake Done.
 
 - [x] Observed performance template exists.
-  - Evidence: `/Users/seb/Code/otto/.letta/worktrees/otto-v01-integration/knowledge/_templates/observed-performance.md` — template with 8 observation kinds (ticket_outcome, worker_quality, routing_win, etc.).
+  - Evidence: `knowledge/_templates/observed-performance.md` — template with 8 observation kinds (ticket_outcome, worker_quality, routing_win, etc.).
 
 - [x] Knowledge update receipt template exists.
-  - Evidence: `/Users/seb/Code/otto/.letta/worktrees/otto-v01-integration/knowledge/_templates/knowledge-update-receipt.md` — 32 lines, proof-of-run template for AI Frontier Review Routine.
+  - Evidence: `knowledge/_templates/knowledge-update-receipt.md` — 32 lines, proof-of-run template for AI Frontier Review Routine.
 
 - [x] Curation proposal template exists.
-  - Evidence: `/Users/seb/Code/otto/.letta/worktrees/otto-v01-integration/knowledge/_templates/knowledge-curation-proposal.yaml` — 65 lines, conforms to shared Curation proposal shape for behavior-changing policy updates.
+  - Evidence: `knowledge/_templates/knowledge-curation-proposal.yaml` — 65 lines, conforms to shared Curation proposal shape for behavior-changing policy updates.
 
 ## Required runtime behavior
 
@@ -54,7 +54,7 @@ Knowledge is maintained external-world understanding. v1 focuses on AI Frontier 
 ## Required demo
 
 - [~] `demo/out/otto-v01-knowledge.mp4` clearly says Proposed if unratified.
-  - Evidence: File exists at `/Users/seb/Code/otto/.letta/worktrees/otto-v01-integration/demo/out/otto-v01-knowledge.mp4` (1.9 MB, ISO MP4 video). Video is a **Remotion re-enactment, not a live runtime capture** (per otto-v01-status.md line 37: "Terminal scenes are faithful re-enactments using real commands/specs").
+  - Evidence: File exists at `demo/out/otto-v01-knowledge.mp4` (1.9 MB, ISO MP4 video). Video is a **Remotion re-enactment, not a live runtime capture** (per otto-v01-status.md line 37: "Terminal scenes are faithful re-enactments using real commands/specs").
   - Gap: Cannot verify video content without playback. Presumed to state "Proposed" based on receipt + status doc consistency; cannot confirm without watching.
 
 ## Truth-level gaps (deferred, not Shipped)

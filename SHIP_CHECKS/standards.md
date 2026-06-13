@@ -6,22 +6,22 @@ Standards are the explicit canon: what Otto rewards, refuses, and does under pre
 
 ## Required file contract
 
-- [x] `standards/registry.yaml` exists. — `/Users/seb/Code/otto/.letta/worktrees/otto-v01-integration/standards/registry.yaml` declares authority stack (Sebastian → Standards → Curation), ratification rules (`standards_changes_require_human: true`, `auto_apply: false`), and 6 active standards.
-- [x] Active standard docs exist. — `/Users/seb/Code/otto/.letta/worktrees/otto-v01-integration/standards/standards/` contains quality.md, judgment.md, candor-kindness.md, respect-attention.md, first-principles.md, winning.md.
-- [x] Precedents exist. — `/Users/seb/Code/otto/.letta/worktrees/otto-v01-integration/standards/precedents/2026-06-13-candor-vs-kindness.md` is a real precedent from the Standards v0 build, complete with situation, decision, cost, outcome, and future rule.
-- [x] Anti-patterns exist. — `/Users/seb/Code/otto/.letta/worktrees/otto-v01-integration/standards/anti-patterns/` contains fake-progress.md, ceremony-without-signal.md, harsh-candor.md, vague-approval.md.
-- [x] Standard receipt template exists. — `/Users/seb/Code/otto/.letta/worktrees/otto-v01-integration/templates/standard-receipt.md` is a fragment for appending Standards context to Receipts.
-- [x] Standards review template exists. — `/Users/seb/Code/otto/.letta/worktrees/otto-v01-integration/templates/standard-precedent.md` is a template for writing new precedents.
+- [x] `standards/registry.yaml` exists. — `standards/registry.yaml` declares authority stack (Sebastian → Standards → Curation), ratification rules (`standards_changes_require_human: true`, `auto_apply: false`), and 6 active standards.
+- [x] Active standard docs exist. — `standards/standards/` contains quality.md, judgment.md, candor-kindness.md, respect-attention.md, first-principles.md, winning.md.
+- [x] Precedents exist. — `standards/precedents/2026-06-13-candor-vs-kindness.md` is a real precedent from the Standards v0 build, complete with situation, decision, cost, outcome, and future rule.
+- [x] Anti-patterns exist. — `standards/anti-patterns/` contains fake-progress.md, ceremony-without-signal.md, harsh-candor.md, vague-approval.md.
+- [x] Standard receipt template exists. — `templates/standard-receipt.md` is a fragment for appending Standards context to Receipts.
+- [x] Standards review template exists. — `templates/standard-precedent.md` is a template for writing new precedents.
 
 ## Required runtime behavior
 
-- [~] Standards are referenced by Reviews, Receipts, Curation, or completion checks. — Standards are documented in registry.yaml and referenced in evaluations/ (e.g., `/Users/seb/Code/otto/.letta/worktrees/otto-v01-integration/standards/evaluations/decision-grades/2026-06-13-no-fake-done-blocks-standards-v0.md` shows Quality/No-Fake-Done blocking the Standards v0 build). However, no automated enforcement harness exists yet. Curation (the enforcement layer that "enforces Standards downstream") is not implemented in v0.1, per the receipt and Curation ship check. Standards are doctrine, not yet runtime guards.
+- [~] Standards are referenced by Reviews, Receipts, Curation, or completion checks. — Standards are documented in registry.yaml and referenced in evaluations/ (e.g., `standards/evaluations/decision-grades/2026-06-13-no-fake-done-blocks-standards-v0.md` shows Quality/No-Fake-Done blocking the Standards v0 build). However, no automated enforcement harness exists yet. Curation (the enforcement layer that "enforces Standards downstream") is not implemented in v0.1, per the receipt and Curation ship check. Standards are doctrine, not yet runtime guards.
 - [x] No Fake Done / Quality can block or evaluate claimed completion. — Proven: the candor-vs-kindness precedent and the no-fake-done decision-grade both show the Quality Standard blocking premature "done" on this build. The decision-grade file is a real artifact proving the Standard redirected work. AC13 (one real loop proves a Standard can block) is satisfied by these files.
 - [x] Standards changes require Sebastian approval. — Documented in registry.yaml: `standards_changes_require_human: true`, `owner: Sebastian`, `auto_apply: false`. Authority stack makes clear "only Sebastian RATIFIES it, never auto-apply."
 
 ## Required Desktop surface
 
-- [x] Desktop Standards surface lists standards and status. — `/Users/seb/Code/otto/.letta/worktrees/otto-v01-integration/apps/desktop/src/surfaces/Panes.tsx` lines 56–95 render the Standards component, which displays authority stack, active canon (6 standards from sampleData.ts), precedents, and anti-patterns. Sidebar navigation (Sidebar.tsx line 23) wires "Standards" as a top-level surface.
+- [x] Desktop Standards surface lists standards and status. — `apps/desktop/src/surfaces/Panes.tsx` lines 56–95 render the Standards component, which displays authority stack, active canon (6 standards from sampleData.ts), precedents, and anti-patterns. Sidebar navigation (Sidebar.tsx line 23) wires "Standards" as a top-level surface.
 
 ## Required demo
 

@@ -7,15 +7,15 @@ Tickets are bounded worker slices. Charters define the bet; Tickets define the s
 ## Required file contract
 
 - [x] `templates/ticket.yaml` exists.
-  - **Evidence:** /Users/seb/Code/otto/.letta/worktrees/otto-v01-integration/templates/ticket.yaml
+  - **Evidence:** templates/ticket.yaml
   - **Content:** Machine contract with ticket_id, status (proposed|active|blocked|review|merged|cancelled), owner, model, worktree, branch, objective, why, owned_paths, shared_paths, acceptance_criteria with proof mapping, checks, stop_conditions, requires_approval_for, receipt_path.
 
 - [x] `templates/worker-packet.md` exists.
-  - **Evidence:** /Users/seb/Code/otto/.letta/worktrees/otto-v01-integration/templates/worker-packet.md
+  - **Evidence:** templates/worker-packet.md
   - **Content:** Worker-ready template with objective, why, owned/shared paths, constraints, checks, stop conditions, approval gates, receipt requirements.
 
 - [x] `docs/ticketcraft.md` exists.
-  - **Evidence:** /Users/seb/Code/otto/.letta/worktrees/otto-v01-integration/docs/ticketcraft.md
+  - **Evidence:** docs/ticketcraft.md
   - **Content:** Comprehensive spec covering compiler purpose, ticket structure, relationship to Charter, command surface (/ticket compile|assign|status|review|close), two faces (machine YAML + human markdown).
 
 - [x] Ticket state/lifecycle is documented.

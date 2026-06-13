@@ -9,7 +9,7 @@ Otto must not ship two competing desktop apps. This records the decision.
   Standards · Practices · Routines · Curation · Receipts · Autonomy · Settings), a
   chat-primary central pane, the house design system, and a real file-backed Practices
   surface (reads the generated `practices.json`). It typechecks and builds clean.
-- **Reference-only: `/Users/seb/Code/vinny-desktop`** — an Electron app on
+- **Reference-only: `~/Code/vinny-desktop`** — an Electron app on
   `@letta-ai/letta-code-sdk`. **Not part of v0.1.** It is the runtime reference, not a
   shipped product.
 

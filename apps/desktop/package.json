@@ -4,12 +4,13 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "predev": "bun run gen:practices",
+    "predev": "bun run gen:practices && bun run gen:readiness",
     "dev": "vite",
-    "prebuild": "bun run gen:practices",
+    "prebuild": "bun run gen:practices && bun run gen:readiness",
     "build": "tsc -b && vite build",
     "typecheck": "tsc --noEmit",
-    "gen:practices": "node scripts/gen-practices.mjs"
+    "gen:practices": "node scripts/gen-practices.mjs",
+    "gen:readiness": "node scripts/gen-readiness.mjs"
   },
   "dependencies": {
     "@otto-haus/core": "workspace:*",

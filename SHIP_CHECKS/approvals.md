@@ -7,11 +7,11 @@ Approvals are not a peer subsystem. Approval is the human-ratification record Cu
 ## Required file contract
 
 - [x] Approval type exists in core.
-  - Evidence: `/Users/seb/Code/otto/.letta/worktrees/otto-v01-integration/packages/core/src/types.ts` lines 247-259 define `Approval` interface with required fields: `id`, `requested_action`, `scope`, `requirement`, `evidence_required`, `requested_at`, `expires_at`, `status`, `decided_by`, `decided_at`.
+  - Evidence: `packages/core/src/types.ts` lines 247-259 define `Approval` interface with required fields: `id`, `requested_action`, `scope`, `requirement`, `evidence_required`, `requested_at`, `expires_at`, `status`, `decided_by`, `decided_at`.
   - ApprovalStatus enum defined at line 49: `'pending' | 'approved' | 'denied' | 'expired'`
 
 - [x] Approval template exists.
-  - Evidence: `/Users/seb/Code/otto/.letta/worktrees/otto-v01-integration/templates/approval.yaml` — canonical YAML template with all required fields.
+  - Evidence: `templates/approval.yaml` — canonical YAML template with all required fields.
 
 - [x] Fields include scope, requirement, evidence, status, expiration.
   - Evidence: Template and type definition both include: `scope`, `requirement` (ApprovalRequirement enum), `evidence_required`, `status` (lifecycle), `expires_at` (time-bound).
@@ -22,7 +22,7 @@ Approvals are not a peer subsystem. Approval is the human-ratification record Cu
 ## Required runtime behavior
 
 - [~] Gate checks approved/unexpired/in-scope before acting.
-  - Evidence: `/Users/seb/Code/otto/.letta/worktrees/otto-v01-integration/extension/charter.ts` lines 410–427 register a `charter-gates` permission overlay that fires on `phase: "approval"` and classifies one-way doors (publish, deploy, delete, send, merge, credential changes). When a gate is detected, it returns `{ decision: "ask", reason: ... }`. 
+  - Evidence: `extension/charter.ts` lines 410–427 register a `charter-gates` permission overlay that fires on `phase: "approval"` and classifies one-way doors (publish, deploy, delete, send, merge, credential changes). When a gate is detected, it returns `{ decision: "ask", reason: ... }`. 
   - **Gap:** The gate logic does NOT currently check approval records by id, scope, expiry, or status before blocking/allowing. It forces a prompt but does not read/validate actual persisted Approval objects. This is documented in `docs/gates.md` lines 23–40 as the design pattern (persist + check + act), but the check logic is not yet implemented in extension code.
 
 - [~] Chat approval alone is insufficient; approval is persisted.

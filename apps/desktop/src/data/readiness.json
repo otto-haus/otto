@@ -1,0 +1,96 @@
+{
+  "ready": false,
+  "configSource": null,
+  "items": [
+    {
+      "key": "runtime",
+      "label": "Letta runtime",
+      "required": true,
+      "status": "not-wired",
+      "detail": "SDK session not connected in this preview",
+      "source": null,
+      "action": "Wire @letta-ai/letta-code-sdk (deferred from v0.1)"
+    },
+    {
+      "key": "agent",
+      "label": "Agent identity",
+      "required": true,
+      "status": "missing",
+      "detail": "No agent selected",
+      "source": null,
+      "action": "Set agent.id in ~/.otto/config.json"
+    },
+    {
+      "key": "model",
+      "label": "Model provider (BYOK)",
+      "required": true,
+      "status": "missing",
+      "detail": "No provider configured",
+      "source": null,
+      "action": "Add model.provider in ~/.otto/config.json (key never stored)"
+    },
+    {
+      "key": "memory",
+      "label": "Memory / MemFS",
+      "required": true,
+      "status": "not-wired",
+      "detail": "Depends on a live runtime connection",
+      "source": "~/.otto",
+      "action": "Available once the runtime connects"
+    },
+    {
+      "key": "workspace",
+      "label": "Workspace root",
+      "required": false,
+      "status": "configured",
+      "detail": "Otto repo detected",
+      "source": "~/Code/otto/.letta/worktrees/otto-v01-integration",
+      "action": "Override with OTTO_HOME"
+    },
+    {
+      "key": "skills",
+      "label": "Skills",
+      "required": false,
+      "status": "file",
+      "detail": "SKILL.md · routine/SKILL.md",
+      "source": "skill/",
+      "action": "Install into a live agent via scripts/install.sh"
+    },
+    {
+      "key": "practices",
+      "label": "Practices",
+      "required": false,
+      "status": "configured",
+      "detail": "5 practice specs",
+      "source": "apps/desktop/src/data/practices.json",
+      "action": "validated via otto-practices"
+    },
+    {
+      "key": "mcp",
+      "label": "MCP servers",
+      "required": false,
+      "status": "missing",
+      "detail": "None configured",
+      "source": null,
+      "action": "Add mcpServers in ~/.otto/config.json"
+    },
+    {
+      "key": "functions",
+      "label": "Functions",
+      "required": false,
+      "status": "missing",
+      "detail": "No local tools registered",
+      "source": null,
+      "action": "Register functions in ~/.otto/config.json"
+    },
+    {
+      "key": "permissions",
+      "label": "Permissions / autonomy",
+      "required": false,
+      "status": "file",
+      "detail": "Three-zone policy defined; not runtime-enforced",
+      "source": "docs/autonomy.md",
+      "action": "Enforced once Curation + runtime land"
+    }
+  ]
+}
