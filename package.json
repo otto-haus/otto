@@ -31,6 +31,9 @@
     "packages/*",
     "apps/*"
   ],
+  "trustedDependencies": [
+    "electron"
+  ],
   "scripts": {
     "install-extension": "./scripts/install.sh",
     "typecheck": "tsc -p packages/core/tsconfig.json && tsc -p packages/practices/tsconfig.json",

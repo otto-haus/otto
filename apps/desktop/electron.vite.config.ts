@@ -15,9 +15,12 @@ export default defineConfig({
       lib: { entry: resolve(root, 'electron/main.ts'), formats: ['cjs'] },
       // `electron` is a devDependency, so externalizeDepsPlugin (which externalizes
       // `dependencies`) leaves it bundleable in lib mode — which inlines the npm stub's
-      // getElectronPath() and crashes the main process. Externalize it explicitly so the
-      // bundle does `require("electron")` and resolves Electron's built-in API at runtime.
-      rollupOptions: { external: ['electron'], output: { entryFileNames: 'index.cjs' } },
+      // getElectronPath() and crashes the main process. We externalize it explicitly. But in
+      // lib mode this explicit `external` array overrides the plugin's dependency list, so we
+      // must also re-externalize the Letta SDK here — otherwise it gets inlined into a chunk
+      // and resolves its bundled CLI from the wrong base dir. Keep both external so the bundle
+      // does `require("electron")` / `require("@letta-ai/...")` and loads them from node_modules.
+      rollupOptions: { external: ['electron', /^@letta-ai\//], output: { entryFileNames: 'index.cjs' } },
     },
   },
   preload: {
