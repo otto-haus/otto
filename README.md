@@ -12,6 +12,7 @@ Slash commands are just the invocation layer. The Practice is the workflow behin
 ```
 Culture    = shared practices.
 Practices  = executable culture.
+Routines   = repeated bundles of Practices.
 ```
 
 The flagship Practice, **Charter**, is fully implemented today: it takes messy human
@@ -50,6 +51,14 @@ Each Practice lives in [`practices/<slug>/`](practices/) with a compact `practic
 spec, a `README.md`, and artifact `templates/`. Charter is real code (extension +
 skill); the other four are draft specs that reuse Charter's primitives.
 
+## Routines
+
+Routines bundle canonical Practices into repeated sequences. They conform to the v0
+[`Routine` contract](docs/architecture/v0-contract.md): steps reference `charter`,
+`decision`, `review`, `field-note`, or `follow-up`; recurring activation requires
+human approval because attention is a one-way door. See [`docs/routines.md`](docs/routines.md)
+and [`routines/`](routines/).
+
 ---
 
 ## Charter — the flagship Practice
@@ -80,8 +89,8 @@ cd vinny-os
 
 Then run `/reload` in Letta Code. This:
 
-- symlinks `extension/charter.ts` into `~/.letta/extensions/`
-- installs `skill/SKILL.md` into your agent's `skills/charter/`
+- symlinks `extension/charter.ts` and `extension/routine.ts` into `~/.letta/extensions/`
+- installs `skill/SKILL.md` into `skills/charter/` and `skill/routine/SKILL.md` into `skills/routine/`
 - scaffolds the runtime under `~/.charter/charters/` (override with `CHARTER_HOME`)
 
 ### Commands
@@ -145,10 +154,13 @@ vinny-os/
   practices/               the Practices
     charter/               practice.yaml + README   (wraps the extension/skill below)
     decision/ review/ field-note/ follow-up/        practice.yaml + README + templates
+  routines/                repeated bundles of Practices
   extension/charter.ts     Charter: Letta Code command + gates overlay
+  extension/routine.ts     Routine: Letta Code command + activation gate
   skill/SKILL.md           Charter: agent workflow
-  templates/               Charter artifact templates + practice.yaml schema + proposal
-  docs/                    practices / mining / autonomy / desktop / metrics
+  skill/routine/SKILL.md   Routine: agent workflow
+  templates/               Charter artifacts + Practice/Routine schemas + proposals
+  docs/                    practices / routines / mining / autonomy / desktop / metrics
                            + architecture / runtime-spec / gates (Charter)
   examples/                a filled example charter
   scripts/install.sh       install into Letta Code

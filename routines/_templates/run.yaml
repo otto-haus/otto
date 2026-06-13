@@ -1,0 +1,13 @@
+# Run object template. One per Routine execution.
+# Conforms to Run in packages/core/src/types.ts.
+id: <opaque-id>
+practice: <practice-slug>
+routine: <routine-slug>
+invocation: /<practice> <verb>
+status: running              # running | blocked | success | aborted | failed
+inputs: {}
+receipts: []
+gate_decisions: []
+started_at: <iso-8601>
+ended_at: null
+summary: <human-facing summary>

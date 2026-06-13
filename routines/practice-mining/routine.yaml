@@ -1,0 +1,25 @@
+# Conforms to Routine in packages/core/src/types.ts
+id: routine_practice_mining_v0
+slug: practice-mining
+name: Practice Mining Routine
+status: proposed
+summary: Discover repeated workflows and propose Practice/Routine changes without activating them.
+steps:
+  - practice: review
+    invocation: /review runs
+    inputs:
+      focus: repeated behaviors, repeated blockers, and missing receipts
+  - practice: field-note
+    invocation: /field-note capture
+    inputs:
+      focus: observations that might become Practice proposals
+  - practice: review
+    invocation: /review proposals
+    inputs:
+      focus: merge, deprecate, or activate recommendations only
+schedule:
+  cron: "0 15 * * 5"
+  timezone: America/Los_Angeles
+attention_cost: low
+requires_approval_to_activate: true
+created_at: "2026-06-13T00:00:00Z"

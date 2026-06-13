@@ -1,0 +1,29 @@
+# Conforms to Routine in packages/core/src/types.ts
+id: routine_weekly_culture_v0
+slug: weekly-culture
+name: Weekly Culture Routine
+status: proposed
+summary: Improve execution culture by reviewing decisions, receipts, field notes, and candidate Practice/Routine changes.
+steps:
+  - practice: decision
+    invocation: /decision review
+    inputs:
+      window: previous week
+  - practice: review
+    invocation: /review receipts
+    inputs:
+      focus: missing proof, recurring failure patterns, and fake-done risk
+  - practice: field-note
+    invocation: /field-note summarize
+    inputs:
+      focus: lessons from customer/operator notes
+  - practice: review
+    invocation: /review routines
+    inputs:
+      focus: routine usefulness, overlap, and attention cost
+schedule:
+  cron: "0 16 * * 5"
+  timezone: America/Los_Angeles
+attention_cost: medium
+requires_approval_to_activate: true
+created_at: "2026-06-13T00:00:00Z"

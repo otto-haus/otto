@@ -1,0 +1,17 @@
+# Conforms to Routine in packages/core/src/types.ts
+id: <opaque-id>
+slug: <kebab-slug>
+name: <Display Name> Routine
+status: proposed              # proposed | trial | active | paused | retired
+summary: <one-line summary of the situational value this Routine produces>
+steps:
+  - practice: <canonical-practice-slug>   # charter | decision | review | field-note | follow-up
+    invocation: /<practice> <verb>
+    inputs:
+      <key>: <value>
+schedule:                    # omit for on-demand Routines
+  cron: "0 7 * * 1-5"        # or rrule: "FREQ=WEEKLY;BYDAY=FR"
+  timezone: America/Los_Angeles
+attention_cost: low           # none | low | medium | high
+requires_approval_to_activate: true
+created_at: <iso-8601>

@@ -8,6 +8,8 @@ decisions/
 reviews/
 field-notes/
 follow-ups/
+runs/
+receipts/
 .env
 .env.*
 

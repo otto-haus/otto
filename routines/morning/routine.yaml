@@ -1,0 +1,30 @@
+# Conforms to Routine in packages/core/src/types.ts
+id: routine_morning_v0
+slug: morning
+name: Morning Routine
+status: proposed
+summary: Start the day with active Charter context, pending gates, priorities, and follow-up drafts.
+steps:
+  - practice: charter
+    invocation: /charter status
+    inputs:
+      include_active_charters: true
+      include_pending_approvals: true
+  - practice: review
+    invocation: /review brief
+    inputs:
+      focus: calendar conflicts, missing data, stale receipts, and today's risks
+  - practice: decision
+    invocation: /decision frame
+    inputs:
+      focus: top priorities and tradeoffs for the day
+  - practice: follow-up
+    invocation: /follow-up draft
+    inputs:
+      focus: approval-gated follow-ups suggested by the brief
+schedule:
+  cron: "0 7 * * 1-5"
+  timezone: America/Los_Angeles
+attention_cost: medium
+requires_approval_to_activate: true
+created_at: "2026-06-13T00:00:00Z"
