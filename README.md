@@ -48,7 +48,7 @@ and [`docs/gates.md`](docs/gates.md).
 Charter ships as a single-file [Letta Code](https://letta.com) extension plus a skill.
 
 ```sh
-git clone https://github.com/seb-veto/vinny-os
+git clone https://github.com/TryVeto/vinny-os
 cd vinny-os
 ./scripts/install.sh
 ```
