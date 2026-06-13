@@ -1,8 +1,14 @@
 # Otto v0.1 — Status
 
 Snapshot of the v0.1 integration. **Source of truth for shipped status:**
-[`../RELEASE_CHECKLIST.md`](../RELEASE_CHECKLIST.md). Nothing is **Shipped** until Sebastian
-tries the demo and approves. Claude is execution lead; Sebastian is the only release approver.
+[`../RELEASE_CHECKLIST.md`](../RELEASE_CHECKLIST.md); per-surface spec compliance +
+ship/proposed/defer/cut cutline: [`../SPEC_COMPLIANCE.md`](../SPEC_COMPLIANCE.md). Nothing is
+**Shipped** until Sebastian tries the demo and approves. Claude is execution lead; Sebastian is
+the only release approver.
+
+> **v0.1 is local-first and file-backed — nothing is runtime-enforced.** Curation (the
+> proposal/ratification engine) is not built, so Standards/Approvals/Knowledge are manual
+> editorial judgment, not automated gates. The one live runtime hook is Charter's permission gate.
 
 ## Feature status
 

@@ -36,7 +36,7 @@ corrections stick, one-way doors stay gated, and "done" means proven.
 
 | Concept | What it is |
 |---|---|
-| **Charter** | Operating contracts. Compiles messy intent into a compact contract, runs it with durable file state, gates one-way doors, and proves done with receipts. |
+| **Charter** | Operating contracts. Compiles messy intent into a compact contract, runs it with durable file state, and **gates one-way doors (live)**. Designed to prove done with receipts — AC-by-AC auditing is manual in v0.1. |
 | **Practices** | Executable Standards — repeatable workflows with a purpose, trigger, inputs, outputs, state, guardrails, evidence standard, and improvement loop. |
 | **Routines** | Repeated bundles of Practices. Recurring activation requires approval — attention is a one-way door. |
 | **Standards** | The explicit canon: what Otto rewards, refuses, and does under pressure. Precedents are the case law. |
@@ -113,23 +113,29 @@ otto/
 
 ## Shipped feature status
 
-v0.1 status is honest and tracked in [`RELEASE_CHECKLIST.md`](RELEASE_CHECKLIST.md).
-**Nothing is marked Shipped until Sebastian reviews the demo and approves.**
+v0.1 is a **local-first, file-backed artifact**, not a runtime. **Nothing is automatically
+enforced** — the **Curation** engine that would gate Standards / Approvals / Knowledge is not
+built; the `/ticket` compiler and a live Letta runtime are not in v0.1. Charter's permission
+**gate is the one live runtime hook**. Full per-surface evidence + cutline:
+[`SPEC_COMPLIANCE.md`](SPEC_COMPLIANCE.md) · checks: [`SHIP_CHECKS/`](SHIP_CHECKS/). **Nothing is
+Shipped until Sebastian tries it and approves.**
 
-| Feature | Built | Tested | Demo | Notes |
-|---|:--:|:--:|:--:|---|
-| Charter | ✅ | manual | ✅ | core — operating contracts + gates |
-| Practices | ✅ | ✅ | ✅ | core — loader/validator + 6 unit tests |
-| Routines | ✅ | manual | ✅ | core — repeated bundles of Practices |
-| Skills | ✅ | manual | ✅ | capability layer |
-| Standards | ✅ | manual | ✅ | canon + precedents + anti-patterns |
-| Autonomy | ✅ | manual | ✅ | spec + worker/ticket templates |
-| Desktop | ✅ | build | ✅ | preview workspace shell — sidebar surfaces, chat-primary |
-| Knowledge | proposed | — | ✅ | proposed AI-frontier surface present; routing unratified |
+| Feature | Built | Tested | Demo | v0.1 |
+|---|:--:|:--:|:--:|:--:|
+| Practices | ✅ | ✅ | ✅ | **ship** |
+| Skills | ✅ | manual | ✅ | **ship** |
+| Charter | ✅ | manual | ✅ | proposed |
+| Routines | ✅ | manual | ✅ | proposed |
+| Standards | ✅ | manual | ✅ | proposed |
+| Desktop | ✅ | build | ✅ | proposed |
+| Autonomy | ✅ files | — | ✅ | defer |
+| Knowledge | proposed | — | ✅ | defer |
+| Approvals · Runs/Receipts · Worker orchestration · Channels | spec/types | — | — | defer |
+| Curation | — | — | — | **cut** |
 
-Legend: ✅ automated/done · `manual` manually verifiable, no automated test · `build` build/typecheck
-passes · Demo ✅ = a video exists in `demo/out/` · **Tried + Approved are Sebastian's** and pending.
-Channels and Curation/Approvals are **deferred** from v0.1.
+Legend: ✅ = real/automated · `✅ files`/`spec/types` = artifacts exist, no closing runtime · `manual`
+manually verifiable · `build` build passes · **v0.1** = ship / proposed (honest preview) / defer
+(Built, not Shipped) / cut. **Tried + Approved are Sebastian's — all pending.**
 
 ## Compatibility
 

@@ -7,23 +7,43 @@ approved by Sebastian**. Claude is execution lead; Sebastian is the only release
 Status as of the integration branch `letta/otto-v01-integration` (local only — no push, no
 tag, no release, no npm publish without explicit approval).
 
+## v0.1 honesty framing
+
+Otto v0.1 is a **local-first, file-backed artifact**, not a runtime. **Nothing here is
+automatically enforced.** The shared **Curation** proposal/ratification engine is **not built**
+(no schema, no queue, no lifecycle), so Standards, Approvals, and Knowledge "enforcement" is
+**manual editorial judgment**, not an automated gate. The `/ticket` compiler, worker
+orchestration, and a live Letta runtime are **not in v0.1**. The one genuinely live runtime
+hook is **Charter's permission gate** (asks before one-way doors). Per-surface evidence and the
+full cutline are in [`SPEC_COMPLIANCE.md`](SPEC_COMPLIANCE.md); Ship Checks in [`SHIP_CHECKS/`](SHIP_CHECKS/); claims classified in [`CLAIMS_AUDIT.md`](CLAIMS_AUDIT.md).
+
+**v0.1 cutline:** Ship — namespace · practices · skills. Proposed (honest preview) — desktop ·
+charter · routines · standards. Defer (Built, not Shipped) — approvals · autonomy · tickets ·
+knowledge · runs-receipts · worker-orchestration · channels. **Cut — curation** (engine not built).
+
 ## Release table
 
 | Feature | Built | Tested | Demo | Tried | Approved | Released | Notes |
 |---|:--:|:--:|:--:|:--:|:--:|:--:|---|
-| Charter | ✅ | manual | ✅ | ☐ | ☐ | ☐ | core — operating contracts + gates (extension + skill) |
-| Practices | ✅ | ✅ | ✅ | ☐ | ☐ | ☐ | loader/validator/CLI; 6 unit tests; 5 specs validate |
-| Routines | ✅ | manual | ✅ | ☐ | ☐ | ☐ | extension + specs; approval-gated activation |
-| Skills | ✅ | manual | ✅ | ☐ | ☐ | ☐ | charter + routine agent workflows |
-| Standards | ✅ | manual | ✅ | ☐ | ☐ | ☐ | registry, precedents, anti-patterns |
-| Autonomy | ✅ | manual | ✅ | ☐ | ☐ | ☐ | spec + worker/ticket templates |
-| Desktop | ✅ | build ✅ | ✅ | ☐ | ☐ | ☐ | preview workspace shell — sidebar surfaces, chat-primary (Vite + React) |
-| Knowledge | proposed | — | ✅ | ☐ | ☐ | ☐ | **Built, not Shipped** — proposed AI-frontier surface, routing unratified |
-| Channels | deferred | — | — | — | — | ☐ | deferred from v0.1 |
-| Curation / Approvals | deferred¹ | — | — | — | — | ☐ | deferred from v0.1 (¹Approval is a core type) |
+| Feature | Built | Tested | Demo | v0.1 | Notes |
+|---|:--:|:--:|:--:|:--:|---|
+| Practices | ✅ | ✅ | ✅ | **ship** | loader/validator/CLI; 6 unit tests; real `practices.json` on desktop |
+| Skills | ✅ | manual | ✅ | **ship** | charter + routine skill packages + install.sh; live `/reload` load unproven |
+| Charter | ✅ | manual | ✅ | proposed | operating contract; permission **gates are live**; AC-by-AC auditing is **manual** (Auditor not coded) |
+| Routines | ✅ | manual | ✅ | proposed | specs + one-off trials + approval gate; recurring Letta-cron scheduler **deferred** |
+| Standards | ✅ | manual | ✅ | proposed | canon + precedents; can block work **via review**; automated enforcement deferred (needs Curation) |
+| Desktop | ✅ | build ✅ | ✅ | proposed | preview workspace shell (Vite); chat is a **prototype**, not wired to the Letta runtime |
+| Autonomy | ✅ files | — | ✅ | defer | spec + worker/ticket templates; **`/ticket` compiler is not runtime**; single-worker only |
+| Knowledge | ✅ files | — | ✅ | defer | **Built, not Shipped** — proposed AI-frontier surface; routing unratified, no runtime |
+| Runs / Receipts | ✅ types | — | — | defer | Run/Receipt types + receipts exist; **no run engine** (runs not created at runtime) |
+| Approvals | ✅ type | — | — | defer | Approval is a core type; **cannot be emitted** (no Curation); gates don't read records by status/scope |
+| Worker orchestration | ✅ spec | — | — | defer | worker packets + worktree policy; **no orchestrator runtime** |
+| Channels | — | — | — | defer | no runtime / config / send pathway — fully deferred |
+| Curation | — | — | — | **cut** | engine not built (no schema/queue/lifecycle) — the missing spine; removed from v0.1 claims |
 
-Legend: ✅ done/automated · `manual` manually verifiable, no automated test · `build`
-build+typecheck passes · ☐ pending · "—" not applicable this release.
+Legend: ✅ done · `✅ files`/`✅ types`/`✅ spec` = artifacts exist, no closing runtime · `manual`
+manually verifiable, no automated test · `build` build/typecheck passes · v0.1 = ship / proposed /
+defer (Built, not Shipped) / cut · "—" not present. **Tried + Approved are Sebastian's and all pending.**
 
 ## Test receipts (this machine, bun 1.3.14)
 
