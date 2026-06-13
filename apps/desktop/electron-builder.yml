@@ -1,0 +1,18 @@
+appId: haus.otto.desktop
+productName: Otto
+directories:
+  output: dist-app
+# Ship the built main/preload/renderer + the manifest. electron-builder also copies the
+# production dependencies (the Letta SDK + its CLI) into the app.
+files:
+  - out/**/*
+  - package.json
+# asar OFF on purpose: the Letta SDK spawns its CLI (`node …/letta.js`) as a subprocess,
+# which is unreliable from inside an asar archive. Plain files keep the spawn working.
+asar: false
+mac:
+  target:
+    - dir
+  category: public.app-category.developer-tools
+  # Local/unsigned build — re-signed ad-hoc after packaging so it runs on Apple Silicon.
+  identity: null

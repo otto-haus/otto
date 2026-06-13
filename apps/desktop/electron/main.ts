@@ -1,6 +1,18 @@
 import { join } from 'node:path';
+import { homedir } from 'node:os';
 import { BrowserWindow, app } from 'electron';
 import { registerIpc } from './ipc';
+
+// A GUI-launched macOS app inherits a minimal PATH (no Homebrew/nvm/etc.). The Letta SDK
+// spawns `node` from PATH to run its CLI, so a packaged Otto would fail to find it and the
+// chat could never connect. Prepend the usual install locations before anything spawns.
+// No-op in dev, where the launching shell already provides a full PATH.
+function ensurePath() {
+  if (process.platform !== 'darwin' || !app.isPackaged) return;
+  const extra = ['/opt/homebrew/bin', '/usr/local/bin', join(homedir(), '.local/bin'), join(homedir(), '.bun/bin')];
+  const seen = new Set((process.env.PATH || '').split(':'));
+  process.env.PATH = [...extra.filter((p) => !seen.has(p)), process.env.PATH || ''].filter(Boolean).join(':');
+}
 
 function createWindow() {
   const win = new BrowserWindow({
@@ -32,6 +44,7 @@ function createWindow() {
 }
 
 app.whenReady().then(() => {
+  ensurePath();
   createWindow();
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow();
