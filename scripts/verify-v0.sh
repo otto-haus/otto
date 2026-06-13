@@ -41,7 +41,7 @@ if bun --cwd apps/desktop run typecheck >/tmp/otto_v0_desktop.log 2>&1; then ok 
 #    names on purpose (README compatibility note, release checklist, status doc, receipts).
 #    Env-var fallbacks VINNY_HOME / VINNY_OS_ROOT do not match these product-name patterns.
 say "[5/5] no accidental old names"
-allow_re='^(bun\.lock|README\.md|RELEASE_CHECKLIST\.md|docs/otto-v01-status\.md|receipts/otto-v01/)'
+allow_re='^(bun\.lock|README\.md|RELEASE_CHECKLIST\.md|docs/otto-v01-status\.md|receipts/otto-v01/|scripts/verify-v0\.sh)'
 hits="$(git ls-files | grep -vE "$allow_re" | xargs grep -InE 'Vinny OS|vinny-os|@vinny-os|TryVeto|cockpit' 2>/dev/null || true)"
 if [ -z "$hits" ]; then ok "no old product names in product/code"; else no "found old names:"; printf '%s\n' "$hits" | sed 's/^/      /'; fi
 

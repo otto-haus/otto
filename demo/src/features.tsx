@@ -46,7 +46,7 @@ export const features: Feature[] = [
       L("cmd", "/charter propose ship otto v0.1 to a public repo"),
       L("dim", "compiler · intent → compact contract …"),
       L("head", "Charter: Ship Otto v0.1"),
-      L("out", "AC1  rename Vinny OS → Otto, tests green"),
+      L("out", "AC1  rename to Otto + repackage, tests green"),
       L("out", "AC2  public README + feature demos + receipts"),
       L("out", "Approve this charter?  (approve / edit / cancel)"),
       L("cmd", "approve"),
