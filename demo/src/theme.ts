@@ -1,22 +1,30 @@
-// Otto demo palette — calm, dark, console-grade. No marketing gradients.
+import { loadFont as loadInter } from "@remotion/google-fonts/Inter";
+import { loadFont as loadMono } from "@remotion/google-fonts/IBMPlexMono";
+
+const inter = loadInter();
+const mono = loadMono();
+
+// Otto demo palette — the LIGHT house system (near-monochrome on cool neutrals,
+// hairline-first, status only on dots/pills, Action blue for commands only).
 export const theme = {
-  bg: "#0A0D13",
-  bg2: "#0E131C",
-  panel: "#0E141D",
-  panelBar: "#141B26",
-  border: "#1E2A38",
-  grid: "rgba(120, 150, 190, 0.05)",
+  bg: "#f2f5f4",        // Field — ground
+  bg2: "#fbfaf7",       // Paper
+  panel: "#ffffff",     // record surface
+  panelBar: "#f2f5f4",
+  border: "#d9ded9",    // Line
+  borderStrong: "#c7ccc7",
 
-  text: "#E8EEF6",
-  textDim: "#8A98AB",
-  textFaint: "#56657A",
+  text: "#101114",      // Ink
+  textDim: "#536173",   // Muted ink
+  textFaint: "#8b9099",
 
-  teal: "#4FD8C4",
-  blue: "#6AA6FF",
-  green: "#5BD6A0",
-  amber: "#F5C451",
-  red: "#FF6B6B",
-  violet: "#A78BFA",
+  accent: "#245cff",    // Action blue — commands only
+  green: "#2f7d52",
+  amber: "#9a6b1f",
+  red: "#b3261e",
+
+  greenTint: "#e6f1ea",
+  amberTint: "#f5eedd",
 
   tlRed: "#FF5F57",
   tlYellow: "#FEBC2E",
@@ -24,8 +32,6 @@ export const theme = {
 } as const;
 
 export const fonts = {
-  sans:
-    '-apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", system-ui, sans-serif',
-  mono:
-    '"SF Mono", "JetBrains Mono", "Menlo", "DejaVu Sans Mono", ui-monospace, monospace',
+  sans: `${inter.fontFamily}, system-ui, -apple-system, sans-serif`,
+  mono: `${mono.fontFamily}, ui-monospace, "SF Mono", Menlo, monospace`,
 } as const;

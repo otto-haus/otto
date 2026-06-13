@@ -6,6 +6,7 @@
       "name": "@otto-do/demo",
       "dependencies": {
         "@remotion/cli": "4.0.290",
+        "@remotion/google-fonts": "4.0.290",
         "react": "18.3.1",
         "react-dom": "18.3.1",
         "remotion": "4.0.290",
@@ -96,6 +97,8 @@
     "@remotion/compositor-linux-x64-musl": ["@remotion/compositor-linux-x64-musl@4.0.290", "", { "os": "linux", "cpu": "x64" }, "sha512-QN++ycuoeeeSLGrOA/MJ2onkqMRm0FaHh/6dh60dVK9wjWoMDrzZL1V8fPX075SyWVL01SN7bzTyotwaUJrMxg=="],
 
     "@remotion/compositor-win32-x64-msvc": ["@remotion/compositor-win32-x64-msvc@4.0.290", "", { "os": "win32", "cpu": "x64" }, "sha512-acRUOIeswQuJ74tKnuziwZIUcsQ6isQpwYUla0CiFrC9MVdbTFlt37eyvmkgXXkCartPWlFptfDYDv9li6mBmA=="],
+
+    "@remotion/google-fonts": ["@remotion/google-fonts@4.0.290", "", { "dependencies": { "remotion": "4.0.290" } }, "sha512-/bOAsxiCORmQLqjENuZytyYegb/Ih96dkHvaHU7t7zBoK77bVjP1HC6EwFIUfI7OBAyw6uCD9hc3ZAtLiDKa0g=="],
 
     "@remotion/media-parser": ["@remotion/media-parser@4.0.290", "", {}, "sha512-u3/nRI7ghf0Cnci2DrbHrdHLIW7GFCaV5qVNT6IzOqdpVmwiS9sz3jAM85r7wrMKfed2QqVbKsRaLSY3MGA0RQ=="],
 

@@ -22,7 +22,7 @@ const TerminalScene: React.FC<{ feature: Feature; lines: Required<Line>[] }> = (
     style={{ flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 22 }}
   >
     <FadeUp delay={2}>
-      <div style={{ fontFamily: fonts.mono, fontSize: 22, letterSpacing: 8, color: theme.teal }}>
+      <div style={{ fontFamily: fonts.mono, fontSize: 22, letterSpacing: 8, color: theme.textFaint }}>
         {feature.kicker.toUpperCase()}
       </div>
     </FadeUp>

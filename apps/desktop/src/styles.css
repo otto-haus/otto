@@ -5,26 +5,26 @@
    not shadows), Inter + IBM Plex Mono, status color only on dots/pills, one ink moment. */
 
 :root {
-  --bg: #faf8f2;        /* warm paper */
-  --bg-2: #f4f1e8;      /* sidebar */
-  --panel: #ffffff;
-  --ink: #1c1e1b;       /* near-black, faintly warm */
-  --ink-soft: #43463f;
-  --mut: #6b6f66;
-  --faint: #9a9d92;
-  --line: #e7e3d8;
-  --line-strong: #d8d3c4;
-  --teal: #2c6e6a;      /* the owl's cardigan */
-  --teal-tint: #e9f1ef;
-  --ok: #3f7d54;
-  --ok-tint: #e8f1ea;
+  --bg: #f2f5f4;        /* Field — workspace ground */
+  --bg-2: #eaeeea;      /* sidebar chrome */
+  --panel: #fbfaf7;     /* Paper — record surfaces */
+  --ink: #101114;       /* Ink */
+  --ink-soft: #2c2f33;
+  --mut: #536173;       /* Muted ink */
+  --faint: #8b9099;
+  --line: #d9ded9;      /* Line */
+  --line-strong: #c7ccc7;
+  --accent: #245cff;    /* Action blue — primary commands only */
+  --accent-tint: #e9f0ff;
+  --ok: #2f7d52;
+  --ok-tint: #e6f1ea;
   --warn: #9a6b1f;
   --warn-tint: #f5eedd;
-  --stop: #a23e33;
-  --stop-tint: #f5e6e2;
-  --dark: #1c1e1b;
+  --stop: #b3261e;
+  --stop-tint: #f6e6e3;
+  --dark: #101114;      /* ink moment block */
   --dark-tx: #f5f3ec;
-  --dark-mut: #aeb2a6;
+  --dark-mut: #9aa0a8;
   --radius: 10px;
   --radius-lg: 16px;
   --sans: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
@@ -79,7 +79,7 @@ h1, h2, h3, h4, p { margin: 0; }
 }
 .brand__mark {
   width: 34px; height: 34px; border-radius: 9px;
-  background: var(--teal); color: #fff;
+  background: transparent; color: var(--ink); border: 1px solid var(--line);
   display: grid; place-items: center; flex: none;
 }
 .brand__name { font-size: 18px; font-weight: 600; letter-spacing: -0.02em; }
@@ -142,8 +142,8 @@ h1, h2, h3, h4, p { margin: 0; }
 .list { margin: 8px 0 0; padding-left: 18px; color: var(--ink-soft); line-height: 1.7; }
 .kbd, code { font-family: var(--mono); font-size: 12.5px; }
 .filechip {
-  font-family: var(--mono); font-size: 12px; color: var(--teal);
-  background: var(--teal-tint); border: 1px solid #d4e6e2; border-radius: 7px; padding: 3px 8px;
+  font-family: var(--mono); font-size: 12px; color: var(--ink-soft);
+  background: var(--bg); border: 1px solid var(--line); border-radius: 7px; padding: 3px 8px;
   display: inline-flex; align-items: center; gap: 6px;
 }
 
@@ -205,7 +205,7 @@ h1, h2, h3, h4, p { margin: 0; }
 .inkblock__meta { font-family: var(--mono); font-size: 12px; color: var(--dark-mut); display: grid; gap: 4px; }
 .inkblock__actions { display: flex; gap: 10px; margin-top: 4px; }
 .btn { border: 1px solid var(--line-strong); background: var(--panel); color: var(--ink); border-radius: 8px; padding: 8px 16px; font-weight: 500; font-size: 13.5px; cursor: pointer; }
-.btn--primary { background: var(--ink); color: var(--dark-tx); border-color: var(--ink); }
+.btn--primary { background: var(--accent); color: #fff; border-color: var(--accent); }
 .btn--ghost-d { background: transparent; color: var(--dark-tx); border-color: rgba(255,255,255,0.25); }
 .btn--solid-d { background: var(--dark-tx); color: var(--ink); border-color: var(--dark-tx); }
 

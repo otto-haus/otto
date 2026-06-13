@@ -2,6 +2,7 @@ import React from "react";
 import { AbsoluteFill } from "remotion";
 import { theme, fonts } from "../theme";
 import { FadeUp, useEntrance } from "./ui";
+import { IconCheckBox, IconBoxHalf, IconBoxEmpty } from "./icons";
 
 export type Status = {
   built: boolean;
@@ -19,41 +20,28 @@ const Check: React.FC<{ label: string; value: boolean | "manual" | "build"; dela
   const on = value === true;
   const partial = value === "manual" || value === "build";
   const color = on ? theme.green : partial ? theme.amber : theme.textFaint;
-  const glyph = on ? "✓" : partial ? "◑" : "▢";
-  const note = value === "manual" ? " (manual)" : value === "build" ? " (build)" : "";
+  const note = value === "manual" ? "manual" : value === "build" ? "build" : "";
   return (
-    <div
-      style={{
-        opacity: e,
-        display: "flex",
-        alignItems: "center",
-        gap: 16,
-        fontFamily: fonts.mono,
-        fontSize: 34,
-        color,
-      }}
-    >
-      <span style={{ width: 38, textAlign: "center" }}>{glyph}</span>
-      <span style={{ color: on || partial ? theme.text : theme.textDim, minWidth: 220 }}>
-        {label}
+    <div style={{ opacity: e, display: "flex", alignItems: "center", gap: 16, fontFamily: fonts.mono, fontSize: 32 }}>
+      <span style={{ width: 30, display: "flex" }}>
+        {on ? <IconCheckBox size={28} /> : partial ? <IconBoxHalf size={28} /> : <IconBoxEmpty size={28} />}
       </span>
-      <span style={{ color, fontSize: 24 }}>{note}</span>
+      <span style={{ color: on || partial ? theme.text : theme.textDim, minWidth: 210 }}>{label}</span>
+      {note && <span style={{ color, fontSize: 22 }}>{note}</span>}
     </div>
   );
 };
 
-export const StatusCard: React.FC<{
-  feature: string;
-  status: Status;
-  proves: string;
-}> = ({ feature, status, proves }) => {
+export const StatusCard: React.FC<{ feature: string; status: Status; proves: string }> = ({
+  feature,
+  status,
+  proves,
+}) => {
   return (
-    <AbsoluteFill
-      style={{ flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 30 }}
-    >
+    <AbsoluteFill style={{ flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 30 }}>
       <FadeUp delay={2}>
-        <div style={{ fontFamily: fonts.mono, fontSize: 22, letterSpacing: 6, color: theme.teal }}>
-          {feature.toUpperCase()} — v0.1 STATUS
+        <div style={{ fontFamily: fonts.mono, fontSize: 21, letterSpacing: 5, color: theme.textFaint, textTransform: "uppercase" }}>
+          {feature} — v0.1 status
         </div>
       </FadeUp>
       <div
@@ -61,11 +49,11 @@ export const StatusCard: React.FC<{
           display: "flex",
           flexDirection: "column",
           gap: 18,
-          padding: "40px 56px",
-          borderRadius: 18,
+          padding: "38px 54px",
+          borderRadius: 16,
           background: theme.panel,
           border: `1px solid ${theme.border}`,
-          boxShadow: "0 30px 90px rgba(0,0,0,0.5)",
+          boxShadow: "0 24px 70px rgba(16,17,20,0.10)",
         }}
       >
         <Check label="Built" value={status.built} delay={8} />
@@ -74,21 +62,12 @@ export const StatusCard: React.FC<{
         <Check label="Approved" value={status.approved} delay={32} />
       </div>
       <FadeUp delay={40}>
-        <div
-          style={{
-            fontFamily: fonts.sans,
-            fontSize: 26,
-            color: theme.textDim,
-            maxWidth: 1100,
-            textAlign: "center",
-            lineHeight: 1.4,
-          }}
-        >
+        <div style={{ fontFamily: fonts.sans, fontSize: 26, color: theme.textDim, maxWidth: 1080, textAlign: "center", lineHeight: 1.45 }}>
           {proves}
         </div>
       </FadeUp>
       <FadeUp delay={48}>
-        <div style={{ fontFamily: fonts.mono, fontSize: 20, color: theme.textFaint }}>
+        <div style={{ fontFamily: fonts.mono, fontSize: 19, color: theme.textFaint }}>
           Approval is Sebastian's. Nothing ships until he tries it and signs off.
         </div>
       </FadeUp>
