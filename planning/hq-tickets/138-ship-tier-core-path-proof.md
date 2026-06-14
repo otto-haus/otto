@@ -89,9 +89,31 @@ NODE_PATH=$HOME/.codex/admin/node_modules \
 NODE_PATH=$HOME/.codex/admin/node_modules \
   node scripts/otto-staging-two-thread-smoke.cjs
 
+NODE_PATH=$HOME/.codex/admin/node_modules \
+  node scripts/otto-staging-076-bootstrap-proof.cjs
+
+# Hygiene bundle (049, 053–058) — sidebar panes + ticket orchestrate + practices charter
+NODE_PATH=$HOME/.codex/admin/node_modules \
+  OTTO_RECEIPT_DIR=$PWD/docs/receipts/staging \
+  node scripts/otto-staging-hygiene-proof.cjs
+
 bash scripts/embedded-letta-smoke.sh   # when OTTO_EMBEDDED_APP points at staging .app
 # follow docs/v1/demo-culture-ci.md
 ```
+
+## Staging proof log (2026-06-14)
+
+| Script | Result | Receipt |
+|--------|--------|---------|
+| `deploy-staging.sh` | pass | `/Applications/otto-staging.app`, CDP 9445, isolated profile |
+| `otto-staging-hygiene-proof.cjs` | pass (`ok: true`) | `docs/receipts/staging/staging-hygiene-proof-20260614143512.json` |
+| `release-gate.sh` + `verify:v0` | pass | 5/5, 186 unit tests |
+| `otto-staging-onboarding-smoke.cjs` | not re-run this session | prior receipts or run before 063 sign-off |
+| `otto-staging-rev8-proof.cjs` | not re-run this session | compile path covered in hygiene 049 |
+| `otto-staging-two-thread-smoke.cjs` | not re-run this session | 046 unit tests green in verify:v0 |
+| `demo-culture-ci.md` | not re-run this session | required before Shipped |
+
+**Note:** Kill stray `otto-staging.app` instances not using `--remote-debugging-port=9445` before CDP scripts — they break nav selectors.
 
 ## Blocker log
 

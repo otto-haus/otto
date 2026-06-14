@@ -191,3 +191,38 @@ Date: 2026-06-14
 Verdict: pending
 
 Awaiting implementer execution receipt and independent reviewer +1.
+
+## Execution receipt (rev11)
+
+Status: pass — Skills, Tickets, Channels panes on staging  
+Date: 2026-06-14  
+Lane: Cursor implementer
+
+### Artifacts
+
+- JSON: `docs/receipts/staging/staging-hygiene-proof-20260614143512.json` (`tickets.056.ok: true`)
+- PNG: `056-skills-`, `056-tickets-`, `056-channels-20260614143512.png`
+
+### Verification
+
+```sh
+NODE_PATH=$HOME/.codex/admin/node_modules \
+  OTTO_RECEIPT_DIR=$PWD/docs/receipts/staging \
+  node scripts/otto-staging-hygiene-proof.cjs
+```
+
+## Review rev11
+
+Reviewer: Independent Otto reviewer (Cursor)  
+Date: 2026-06-14  
+Verdict: +1  
+Move to _Done?: Yes
+
+### Checked against Done when
+
+- Skills / Tickets / Channels panes load: **Pass** — all three surfaces in hygiene JSON + PNGs
+- No fake Discord connected claims: **Pass** — copy shows deferred reachability
+
+### Finding
+
+Unit-only reopen closed with staging walkthrough proof.

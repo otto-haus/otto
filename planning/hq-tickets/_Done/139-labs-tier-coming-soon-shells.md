@@ -99,3 +99,32 @@ Leave blank unless blocked.
 
 **Reviewer:** implementer · **Verdict:** +1 (code + verify:v0)
 
+## Critique pass — 2026-06-14 Codex
+
+Feature reviewed: Labs Coming soon / blocked shell copy boundary.
+
+Design decisions:
+
+- Right: Labs has two distinct honest states: `coming-soon` for disabled features and `labs blocked` for enabled features whose dependencies are missing.
+- Right: primary copy avoids raw `OTTO_*` setup strings and routes the operator through Settings or a sidecar health action.
+- Wrong: `LabsBlockedShell` defaulted its `next` line to `labsCopy.comingSoonNext`, which tells the operator to turn on Labs even when the user is already in the enabled-but-blocked state.
+
+Rebuild:
+
+- Added `labsCopy.blockedNext`.
+- Changed `LabsBlockedShell` to use the blocked-state fallback instead of the Coming soon fallback.
+
+Verification:
+
+```sh
+bun run --cwd apps/desktop typecheck
+bun test ./apps/desktop/src/surface-tiers.test.ts ./apps/desktop/electron/labs-config.test.ts
+bun run --cwd apps/desktop electron:typecheck
+git diff --check -- apps/desktop/src/copy/surfaces.ts apps/desktop/src/labs/LabsBlockedShell.tsx planning/hq-tickets/_Done/139-labs-tier-coming-soon-shells.md
+```
+
+Result: typecheck, targeted Labs tests, Electron typecheck, and scoped diff check passed.
+
+Process finding:
+
+- This ticket is physically in `_Done`, but its Done-when checklist above is still unchecked and the existing review says `Reviewer: implementer`. That does not satisfy the ticket conveyor's independent-review rule. Treat final status as needing independent review despite folder location.

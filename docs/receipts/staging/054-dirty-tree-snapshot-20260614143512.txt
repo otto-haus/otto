@@ -1,0 +1,43 @@
+## ship/functional-labs...origin/ship/functional-labs [ahead 2]
+ M apps/desktop/scripts/deploy-staging.sh
+ M apps/desktop/scripts/trace-icons.mjs
+ M apps/desktop/src/Onboarding.tsx
+ M apps/desktop/src/chat/useChatThreads.ts
+ M apps/desktop/src/components/Sidebar.tsx
+ M apps/desktop/src/components/icons.tsx
+ M apps/desktop/src/components/ui/ThreadList.tsx
+ M apps/desktop/src/copy/surfaces.ts
+ M apps/desktop/src/data/readiness.json
+ M apps/desktop/src/labs/LabsBlockedShell.tsx
+ M apps/desktop/src/styles.css
+ M apps/desktop/src/surfaces/Chat.tsx
+ M apps/desktop/tsconfig.json
+ M docs/brand/checklist.md
+ M docs/goals/ship-otto-tickets/state.yaml
+ M docs/otto-icon-prompts.md
+ M docs/v1/PLAN.md
+ M knowledge/ai-frontier/capability-notes.md
+ M planning/README.md
+ M planning/hq-tickets/_Done/139-labs-tier-coming-soon-shells.md
+ M standards/standards/quality.md
+?? .worktrees/
+?? apps/desktop/src/chat/queue-storage.test.ts
+?? apps/desktop/src/chat/queue-storage.ts
+?? docs/design/
+?? docs/receipts/staging/049-orchestrate-20260614143512.png
+?? docs/receipts/staging/053-practices-charter-20260614143443.png
+?? docs/receipts/staging/053-practices-charter-20260614143512.png
+?? docs/receipts/staging/054-dirty-tree-snapshot-20260614143512.txt
+?? docs/receipts/staging/055-knowledge-20260614143443.png
+?? docs/receipts/staging/055-knowledge-20260614143512.png
+?? docs/receipts/staging/056-channels-20260614143443.png
+?? docs/receipts/staging/056-channels-20260614143512.png
+?? docs/receipts/staging/056-skills-20260614143443.png
+?? docs/receipts/staging/056-skills-20260614143512.png
+?? docs/receipts/staging/056-tickets-20260614143443.png
+?? docs/receipts/staging/056-tickets-20260614143512.png
+?? docs/receipts/staging/058-settings-20260614143443.png
+?? docs/receipts/staging/058-settings-20260614143512.png
+?? docs/receipts/staging/hygiene-staging-proof-20260614143512.md
+?? docs/receipts/staging/staging-hygiene-proof-20260614143512.json
+?? scripts/otto-staging-hygiene-proof.cjs

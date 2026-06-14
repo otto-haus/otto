@@ -1,8 +1,8 @@
 # 063 — Sebastian gate packet (v0.1.3 draft — hold)
 
-Date: 2026-06-14  
-Branch: `ship/functional-labs` @ `b3861d5` (integration codename — **not** product semver)  
-Tag: **`v0.1.3`** (GitHub pre-release on integration line). Sebastian gate sign-off still required before calling this **shipped**.
+Date: 2026-06-14 (updated 14:45 local)  
+Branch: `ship/functional-labs` @ `19a821c` (+ hygiene commits pending push)  
+Tag: **`v0.1.3`** (GitHub pre-release on integration line — **not tagged yet**). Sebastian gate sign-off still required before calling this **shipped**.
 
 ## What to try (staging only)
 
@@ -15,11 +15,36 @@ Tag: **`v0.1.3`** (GitHub pre-release on integration line). Sebastian gate sign-
 
 | Gate | Result |
 |------|--------|
-| `bun run verify:v0` | 5/5 pass (163 unit tests) |
-| `bash scripts/release-gate.sh` | pass |
-| Staging deploy | `bash apps/desktop/scripts/deploy-staging.sh` @ 0a07320 |
+| `bun run verify:v0` | 5/5 pass (186 unit tests) @ 2026-06-14 |
+| `bash scripts/release-gate.sh` | pass @ 2026-06-14 (typecheck + 186 pass / 1 skip) |
+| Staging deploy | `OTTO_STAGING_REFRESH=1 bash apps/desktop/scripts/deploy-staging.sh` — `/Applications/otto-staging.app`, CDP **9445**, profile `~/.codex/admin/otto-staging/profile` |
+| Hygiene staging proof | `scripts/otto-staging-hygiene-proof.cjs` → `staging-hygiene-proof-20260614143512.json` (054–058, 049, 053 all `ok: true`) |
 | Craft checklist | `docs/receipts/staging/craft-checklist-v03-20260614.md` |
 | Remotion | `demo/out/otto-v01-desktop-walkthrough.mp4` + `otto-v01-desktop.mp4` (local; attach to **`v0.1.3`** release when approved) |
+
+### Staging smoke commands (138 / hygiene)
+
+```sh
+cd /Users/seb/Code/otto
+OTTO_STAGING_REFRESH=1 bash apps/desktop/scripts/deploy-staging.sh
+
+# Hygiene tickets 049, 053–058 (requires CDP 9445 + isolated staging profile)
+NODE_PATH=$HOME/.codex/admin/node_modules \
+  OTTO_RECEIPT_DIR=$PWD/docs/receipts/staging \
+  node scripts/otto-staging-hygiene-proof.cjs
+
+# Core path (138 — run when Letta available; not all re-run this session)
+NODE_PATH=$HOME/.codex/admin/node_modules \
+  OTTO_RECEIPT_DIR=$PWD/docs/receipts/staging \
+  node scripts/otto-staging-onboarding-smoke.cjs
+NODE_PATH=$HOME/.codex/admin/node_modules \
+  node scripts/otto-staging-rev8-proof.cjs
+NODE_PATH=$HOME/.codex/admin/node_modules \
+  node scripts/otto-staging-two-thread-smoke.cjs
+NODE_PATH=$HOME/.codex/admin/node_modules \
+  node scripts/otto-staging-076-bootstrap-proof.cjs
+# Culture CI: docs/v1/demo-culture-ci.md
+```
 
 ## Honest gaps (not hidden)
 

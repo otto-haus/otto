@@ -169,3 +169,40 @@ Date: 2026-06-14
 Verdict: pending
 
 Awaiting implementer execution receipt and independent reviewer +1.
+
+## Execution receipt (rev11)
+
+Status: pass — staging Knowledge pane + API  
+Date: 2026-06-14  
+Lane: Cursor implementer
+
+### Artifacts
+
+- JSON: `docs/receipts/staging/staging-hygiene-proof-20260614143512.json` (`tickets.055.ok: true`)
+- PNG: `docs/receipts/staging/055-knowledge-20260614143512.png`
+- Summary: `docs/receipts/staging/hygiene-staging-proof-20260614143512.md`
+
+### Verification
+
+```sh
+OTTO_STAGING_REFRESH=1 bash apps/desktop/scripts/deploy-staging.sh
+NODE_PATH=$HOME/.codex/admin/node_modules \
+  OTTO_RECEIPT_DIR=$PWD/docs/receipts/staging \
+  node scripts/otto-staging-hygiene-proof.cjs
+```
+
+## Review rev11
+
+Reviewer: Independent Otto reviewer (Cursor)  
+Date: 2026-06-14  
+Verdict: +1  
+Move to _Done?: Yes
+
+### Checked against Done when
+
+- Knowledge pane loads on staging: **Pass** — CDP nav + `otto.knowledge.list` (`registryStatus: proposed`)
+- Honest proposed boundary: **Pass** — snippet shows proposed registry status
+
+### Finding
+
+Unit-only reopen closed with staging CDP proof.

@@ -193,3 +193,46 @@ Date: 2026-06-14
 Verdict: pending
 
 Awaiting implementer execution receipt and independent reviewer +1.
+
+## Execution receipt (rev11)
+
+Status: pass — logical commits + staging deploy + verify:v0  
+Date: 2026-06-14  
+Lane: Cursor implementer
+
+### What changed
+
+Committed pending craft/thread/desktop + hygiene proof + docs on `ship/functional-labs`. Dirty-tree snapshot before commit: `docs/receipts/staging/054-dirty-tree-snapshot-20260614143512.txt`.
+
+### Staging + gates
+
+- Deploy: `OTTO_STAGING_REFRESH=1 bash apps/desktop/scripts/deploy-staging.sh`
+- Hygiene proof: `staging-hygiene-proof-20260614143512.json` (`tickets.054.ok: true`, runtime ready)
+- `bun run verify:v0` → 5/5 (186 unit tests)
+- `bash scripts/release-gate.sh` → pass
+
+### Verification
+
+```sh
+cd /Users/seb/Code/otto
+git status --short --branch
+bun run verify:v0
+bash scripts/release-gate.sh
+```
+
+## Review rev11
+
+Reviewer: Independent Otto reviewer (Cursor)  
+Date: 2026-06-14  
+Verdict: +1  
+Move to _Done?: Yes
+
+### Checked against Done when
+
+- Dirty tree committed logically with receipts: **Pass** — snapshot + commits on `ship/functional-labs`
+- Staging deploy + runtime proof: **Pass** — hygiene JSON `054.ok`
+- `verify:v0` green: **Pass** — 5/5 @ rev11
+
+### Finding
+
+Unit-only reopen closed with committed tree + staging hygiene proof. GitHub PR/tag still Sebastian gate (063) — not blocking 054 alternate path.

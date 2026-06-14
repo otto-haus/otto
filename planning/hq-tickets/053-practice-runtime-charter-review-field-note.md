@@ -185,3 +185,38 @@ Date: 2026-06-14
 Verdict: pending
 
 Awaiting implementer execution receipt and independent reviewer +1.
+
+## Execution receipt (rev11)
+
+Status: pass — charter practice run on staging  
+Date: 2026-06-14  
+Lane: Cursor implementer
+
+### Artifacts
+
+- JSON: `docs/receipts/staging/staging-hygiene-proof-20260614143512.json` (`tickets.053.ok: true`)
+- Receipt: `receipt-0f1e8fdc-f3c4-4a93-8163-4ad3aba82e37` (`run_20260614_7b6445ec`, slug `charter`)
+- PNG: `docs/receipts/staging/053-practices-charter-20260614143512.png`
+
+### Verification
+
+```sh
+NODE_PATH=$HOME/.codex/admin/node_modules \
+  OTTO_RECEIPT_DIR=$PWD/docs/receipts/staging \
+  node scripts/otto-staging-hygiene-proof.cjs
+```
+
+## Review rev11
+
+Reviewer: Independent Otto reviewer (Cursor)  
+Date: 2026-06-14  
+Verdict: +1  
+Move to _Done?: Yes
+
+### Checked against Done when
+
+- Practices charter step writes receipt on staging: **Pass** — receipt id in hygiene JSON + PNG
+
+### Finding
+
+Unit-only reopen closed with staging API proof (`otto.practices.run`).

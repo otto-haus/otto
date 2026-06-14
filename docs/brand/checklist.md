@@ -1,6 +1,6 @@
 # Otto brand checklist (065 visual review)
 
-Source canon: `~/Library/CloudStorage/Dropbox/This Cycle/otto/Brand Style Guide.html`
+Source canon: `docs/design/brand-style-guide.html`
 
 Review against local marketing site at `site/` (staging receipt captures).
 

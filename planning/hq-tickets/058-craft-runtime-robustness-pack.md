@@ -180,3 +180,37 @@ Date: 2026-06-14
 Verdict: pending
 
 Awaiting implementer execution receipt and independent reviewer +1.
+
+## Execution receipt (rev11)
+
+Status: pass — Settings transport/status visible on staging  
+Date: 2026-06-14  
+Lane: Cursor implementer
+
+### Artifacts
+
+- JSON: `docs/receipts/staging/staging-hygiene-proof-20260614143512.json` (`tickets.058.ok: true`)
+- PNG: `docs/receipts/staging/058-settings-20260614143512.png`
+
+### Verification
+
+```sh
+NODE_PATH=$HOME/.codex/admin/node_modules \
+  OTTO_RECEIPT_DIR=$PWD/docs/receipts/staging \
+  node scripts/otto-staging-hygiene-proof.cjs
+```
+
+## Review rev11
+
+Reviewer: Independent Otto reviewer (Cursor)  
+Date: 2026-06-14  
+Verdict: +1  
+Move to _Done?: Yes
+
+### Checked against Done when
+
+- Settings shows transport/runtime status: **Pass** — `settingsLoaded` + `transportOrStatusVisible`
+
+### Finding
+
+Unit-only reopen closed with staging proof.

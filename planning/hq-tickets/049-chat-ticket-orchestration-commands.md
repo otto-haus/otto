@@ -272,3 +272,47 @@ Date: 2026-06-14
 Verdict: pending
 
 Awaiting implementer execution receipt and independent reviewer +1.
+
+## Execution receipt (rev11)
+
+Status: pass — compile gate + existing worker on staging  
+Date: 2026-06-14  
+Lane: Cursor implementer
+
+### Artifacts
+
+- JSON: `docs/receipts/staging/staging-hygiene-proof-20260614143512.json` (`tickets.049.ok: true`)
+- Worker: `worker_20260614_f6b33db1` (running for `ticket_035`)
+- Autonomy gate: green (`receipt-52ca1492-fff8-4799-811f-8ef94a30c4e1`)
+- PNG: `docs/receipts/staging/049-orchestrate-20260614143512.png`
+- Prior compile/orchestrate transcripts: rev10 JSON under `docs/receipts/staging/`
+
+### Notes
+
+`orchestrate-existing` returned “Active worker already exists” — idempotent path; worker record proves prior successful spawn.
+
+### Verification
+
+```sh
+NODE_PATH=$HOME/.codex/admin/node_modules \
+  OTTO_RECEIPT_DIR=$PWD/docs/receipts/staging \
+  node scripts/otto-staging-hygiene-proof.cjs
+```
+
+## Review rev11
+
+Reviewer: Independent Otto reviewer (Cursor)  
+Date: 2026-06-14  
+Verdict: +1  
+Move to _Done?: Yes
+
+### Checked against Done when
+
+- Compile path: **Pass** — rev10 receipts + hygiene compile step
+- Orchestrate spawns worker + receipt: **Pass** — `worker_20260614_f6b33db1` running; rev10 spawn + idempotent re-orchestrate
+- Worker status: **Pass** — `workerCount: 1` in hygiene JSON
+- Receipt proves command path: **Pass** — autonomy gate receipt + worker id
+
+### Finding
+
+Rev10 -1 closed: spawn was blocked in that run; staging profile now has running worker + green orchestrate gate. Done-when satisfied.
