@@ -27,7 +27,8 @@ function createWindow() {
     title: 'otto',
     webPreferences: {
       preload: join(__dirname, '../preload/index.cjs'),
-      sandbox: false,
+      // Security fix: Enable the OS-level sandbox to restrict renderer process capabilities and mitigate RCE impact
+      sandbox: true,
       contextIsolation: true,
       nodeIntegration: false,
     },

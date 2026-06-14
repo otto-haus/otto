@@ -23,8 +23,13 @@ say "desktop electron build"
 OTTO_READINESS_IGNORE_LOCAL_CONFIG=1 bun run --cwd apps/desktop electron:build
 
 say "regression checks"
-if grep -R "WebkitMask\|maskImage\|dangerouslySetInnerHTML" apps/desktop/src apps/desktop/electron >/tmp/otto_release_gate_grep.log 2>&1; then
-  cat /tmp/otto_release_gate_grep.log
+# Security fix: Use mktemp to create a secure, unpredictable temporary file 
+# and ensure cleanup via trap to prevent symlink/path traversal attacks.
+TMP_LOG=$(mktemp)
+trap 'rm -f "$TMP_LOG"' EXIT
+
+if grep -R "WebkitMask\|maskImage\|dangerouslySetInnerHTML" apps/desktop/src apps/desktop/electron >"$TMP_LOG" 2>&1; then
+  cat "$TMP_LOG"
   echo "release-gate: rejected broken icon/rendering mechanism" >&2
   exit 1
 fi
