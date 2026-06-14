@@ -1,0 +1,25 @@
+{
+  "pr": 178,
+  "generatedAt": "2026-06-14T21:39:41.676Z",
+  "codeRecommendation": "ready_for_sebastian_review",
+  "shipRecommendation": "ship_with_functional_labs_train",
+  "shipRecommendationReason": "Narrow local routine loader correctness fix. It restores intended fallback behavior for file-backed routines and does not justify a standalone release cut.",
+  "reviewDisposition": "No blocker found after base merge, targeted regression, full local gate, staging deploy, and backend data proof.",
+  "codexReviewChanges": [
+    "Added regression coverage for routine.yaml files with blank slug values so fallback behavior covers omitted and whitespace-only slugs.",
+    "Added backend proof receipt showing listResult() and get() resolve omitted/blank slug routines by directory slug without skipped records."
+  ],
+  "proof": [
+    "docs/receipts/staging/pr-178/codex-review-routine-slug-fallback.json",
+    "staging deploy log: /Users/seb/.codex/admin/otto-logs/staging-20260614T143846.deploy.log",
+    "staging app log: /Users/seb/.codex/admin/otto-logs/staging-20260614T143846.app.log"
+  ],
+  "verification": [
+    "bun install --frozen-lockfile",
+    "bun test apps/desktop/electron/routine-store.test.ts apps/desktop/electron/ai-frontier-review-executor.test.ts apps/desktop/electron/practice-mining.test.ts",
+    "bash scripts/ci-local-gate.sh",
+    "OTTO_STAGING_APP=/Applications/otto-pr-178-staging.app OTTO_STAGING_DISPLAY_NAME=otto pr 178 staging OTTO_STAGING_BUNDLE_ID=haus.otto.desktop.pr178staging OTTO_STAGING_ROOT=/tmp/otto-pr-178-proof-staging OTTO_STAGING_PORT=9463 OTTO_STAGING_WS_REMOTE_ENV=otto-pr178-proof-byor OTTO_STAGING_LOCK_DIR=/Users/seb/.codex/admin/otto-logs/desktop-deploy-pr178.lock OTTO_AGENT_ID=agent-00000000-0000-4000-8000-000000000000 LETTA_BASE_URL=http://127.0.0.1:9 OTTO_STAGING_LOG_CAPTURE_SECONDS=1 task staging",
+    "backend data proof script wrote codex-review-routine-slug-fallback.json with all assertions passing"
+  ],
+  "ciStatus": "pending_github_checks_after_push"
+}

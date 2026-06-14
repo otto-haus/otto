@@ -197,7 +197,7 @@ function normalizeRoutine(value: unknown, fallbackSlug: string): Routine {
 
   return {
     id: requiredString(value.id, 'id'),
-    slug: requiredString(value.slug, 'slug') || fallbackSlug,
+    slug: optionalString(value.slug) ?? fallbackSlug,
     name: requiredString(value.name, 'name'),
     status: routineStatus(value.status),
     summary: requiredString(value.summary, 'summary'),
@@ -251,6 +251,11 @@ function attentionCost(value: unknown): Routine['attention_cost'] {
 function requiredString(value: unknown, label: string): string {
   if (typeof value === 'string' && value.trim()) return value.trim();
   throw new Error(`Missing ${label}`);
+}
+
+function optionalString(value: unknown): string | null {
+  if (typeof value === 'string' && value.trim()) return value.trim();
+  return null;
 }
 
 function arrayOfRecords(value: unknown): Record<string, unknown>[] {
