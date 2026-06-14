@@ -819,7 +819,6 @@ const LiveChat: React.FC<{
         return;
       }
       setQueue((items) => [...items, createQueueItem(text, 'queued', rt.activeThreadId)]);
-      if (rt.busy) void rt.abort();
       setDraft('');
       setAttachments([]);
     })();

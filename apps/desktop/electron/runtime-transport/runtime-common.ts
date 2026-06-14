@@ -165,7 +165,7 @@ export function friendly(code: StatusCode, reason: string): string {
     case 'no-agent':
       return `Can't find a default local Letta agent — open Letta once or choose an Agent ID override in Settings. (${reason})`;
     case 'stale':
-      return `Saved Letta agent or conversation was stale — choose a valid Agent ID override in Settings or clear the override. (${reason})`;
+      return `Saved Letta conversation was stale — retry will start a fresh conversation for this sidebar row. (${reason})`;
     default:
       return reason;
   }
@@ -180,7 +180,7 @@ export function nextActionFor(code: StatusCode): string {
     case 'no-agent':
       return 'Open Letta once or choose an Agent ID override in Settings.';
     case 'stale':
-      return 'Clear the stale override or choose a valid Agent ID in Settings.';
+      return 'Retry to revive this sidebar row with a fresh Letta conversation.';
     case 'sdk-missing':
       return 'Install or repair the Letta Code SDK dependency.';
     default:

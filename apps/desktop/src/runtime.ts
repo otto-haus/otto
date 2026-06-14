@@ -622,17 +622,22 @@ export function useRuntime() {
   const archiveThread = async (threadId: string) => {
     if (!api) return;
     if (busy) await abort();
-    await api.threads.archive(threadId);
-    const result = await api.threads.list();
-    const nextThreadId = result.activeThreadId;
-    if (nextThreadId) {
-      applyThreadView(nextThreadId, { persistLeaving: false });
-      setStatus(await api.runtime.init());
-      return;
+    const wasActive = activeThreadRef.current === threadId;
+    if (wasActive && activeThreadRef.current) {
+      threadMessagesCache.current.set(activeThreadRef.current, messagesRef.current);
+      flushMessages(activeThreadRef.current, messagesRef.current);
+      setStatus((current) => ({
+        ...(current ?? { cliPath: '', cliResolved: false }),
+        ready: false,
+        code: 'error',
+        reason: 'Switching conversation…',
+      }));
     }
-    const { thread, status: next } = await api.threads.create();
-    applyThreadView(thread.id, { persistLeaving: false });
-    setStatus(next);
+    const { thread, status: next } = await api.threads.archive(threadId);
+    if (wasActive) {
+      applyThreadView(thread.id, { persistLeaving: false });
+      setStatus(next);
+    }
   };
 
   const refreshThreads = async () => {

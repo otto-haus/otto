@@ -45,6 +45,9 @@ type PendingPermission = {
 type SDK = typeof import('@letta-ai/letta-code-sdk');
 type Session = import('@letta-ai/letta-code-sdk').Session;
 type CreateSessionOptions = import('@letta-ai/letta-code-sdk').CreateSessionOptions;
+type SessionTarget =
+  | { kind: 'conversation'; conversationId: string }
+  | { kind: 'agent'; agentId: string | null };
 
 /** SDK/subprocess path — existing Letta Code session via @letta-ai/letta-code-sdk. */
 export class SdkSubprocessTransport implements OttoRuntimeTransport {
@@ -132,8 +135,6 @@ export class SdkSubprocessTransport implements OttoRuntimeTransport {
   private applyConnectionEnv(baseUrl: string | null) {
     const cli = resolveCli(this.config.connectionMode());
     if (cli.cliResolved && !process.env.LETTA_CLI_PATH) process.env.LETTA_CLI_PATH = cli.cliPath;
-    // Otto launch should not repair or mutate a global Letta Code npm install.
-    if (!process.env.DISABLE_AUTOUPDATER) process.env.DISABLE_AUTOUPDATER = '1';
     if (this.config.connectionMode() === 'embedded' && !process.env.OTTO_LETTA_SETTINGS_PATH) {
       const lettaDir = this.config.ensureLettaStateDir();
       process.env.OTTO_LETTA_SETTINGS_PATH = join(lettaDir, 'settings.json');
@@ -191,11 +192,18 @@ export class SdkSubprocessTransport implements OttoRuntimeTransport {
     }
 
     const fresh = !!opts?.freshConversation;
-    const tryOnce = async (resumeId: string | null, modelAttempt?: ModelInitAttempt) => {
+    const savedConversationId = this.config.get().conversationId?.trim() || null;
+    const storedConversationId = !fresh && !SMOKE_MODE && savedConversationId !== 'default' ? savedConversationId : null;
+    if (!fresh && !SMOKE_MODE && savedConversationId === 'default') {
+      this.config.update({ conversationId: null });
+    }
+    const tryOnce = async (target: SessionTarget, modelAttempt?: ModelInitAttempt) => {
       this.session?.close();
       const sessionOpts = this.options(modelAttempt);
-      const session = resumeId
-        ? (fresh || SMOKE_MODE ? sdk.createSession(resumeId, sessionOpts) : sdk.resumeSession(resumeId, sessionOpts))
+      const session = target.kind === 'conversation'
+        ? sdk.createSession(undefined, { ...sessionOpts, conversationId: target.conversationId } as CreateSessionOptions & { conversationId: string })
+        : target.agentId
+          ? (fresh || SMOKE_MODE ? sdk.createSession(target.agentId, sessionOpts) : sdk.resumeSession(target.agentId, sessionOpts))
         : sdk.createSession(undefined, sessionOpts);
       const init = await session.initialize();
       if (SMOKE_MODE && init.conversationId === 'default') {
@@ -205,13 +213,13 @@ export class SdkSubprocessTransport implements OttoRuntimeTransport {
       return { session, init, modelAttempt };
     };
 
-    const tryWithModelFallback = async (resumeId: string | null) => {
+    const tryWithModelFallback = async (target: SessionTarget) => {
       const attempts = modelInitAttempts(this.config.modelHandle(), this.config.effort());
-      if (attempts.length === 0) return tryOnce(resumeId);
+      if (attempts.length === 0) return tryOnce(target);
       let lastModelError: unknown = null;
       for (const attempt of attempts) {
         try {
-          return await tryOnce(resumeId, attempt);
+          return await tryOnce(target, attempt);
         } catch (e) {
           if (isInvalidModelError(e)) {
             lastModelError = e;
@@ -226,13 +234,15 @@ export class SdkSubprocessTransport implements OttoRuntimeTransport {
     try {
       let r: Awaited<ReturnType<typeof tryOnce>> | null = null;
       let lastAgentError: unknown = null;
+      if (storedConversationId) {
+        // Letta local conversation ids are `local-conv-*`. The SDK's resumeSession()
+        // only recognizes `conv-*`; use the CLI conversation option explicitly.
+        r = await tryWithModelFallback({ kind: 'conversation', conversationId: storedConversationId });
+      }
       const candidates = fresh && primaryAgentId ? [primaryAgentId] : agentCandidates;
-      for (const candidate of candidates) {
+      for (const candidate of r ? [] : candidates) {
         try {
-          // resumeSession's id is the AGENT id (maps to --agent); the conversation is the agent's
-          // default. A stored conversationId is NOT a valid resume id — passing it would send
-          // `--agent <conversationId>` and fail — so always resume with the agent id.
-          r = await tryWithModelFallback(candidate);
+          r = await tryWithModelFallback({ kind: 'agent', agentId: candidate });
           break;
         } catch (e) {
           lastAgentError = e;
@@ -240,7 +250,7 @@ export class SdkSubprocessTransport implements OttoRuntimeTransport {
         }
       }
       if (!r && !SMOKE_MODE && !process.env.OTTO_AGENT_ID) {
-        r = await tryWithModelFallback(null);
+        r = await tryWithModelFallback({ kind: 'agent', agentId: null });
       }
       if (!r) throw lastAgentError ?? new Error(context.reason ?? 'No local Letta agent candidate was available.');
       this.session = r.session;

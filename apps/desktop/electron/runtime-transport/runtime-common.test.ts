@@ -108,7 +108,7 @@ describe('runtime-common status mapping', () => {
   test('friendly and nextActionFor align with StatusCode', () => {
     expect(friendly('unreachable', 'ECONNREFUSED')).toMatch(/Can't reach the Letta backend/i);
     expect(nextActionFor('no-agent')).toMatch(/Agent ID/i);
-    expect(nextActionFor('stale')).toMatch(/stale override/i);
+    expect(nextActionFor('stale')).toMatch(/revive this sidebar row/i);
   });
 });
 

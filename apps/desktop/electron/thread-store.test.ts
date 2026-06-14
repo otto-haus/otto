@@ -220,6 +220,43 @@ describe('ThreadStore', () => {
     }
   });
 
+  test('hides inactive empty New chat placeholders from default recents', () => {
+    const tmp = mkdtempSync(join(tmpdir(), 'otto-thread-test-'));
+    try {
+      const config = mockConfig(tmp);
+      const store = new ThreadStore(config);
+      const emptyFirst = store.create({ title: 'New chat' });
+      const activeEmpty = store.create({ title: 'New chat' });
+
+      const list = store.list();
+
+      expect(list.activeThreadId).toBe(activeEmpty.id);
+      expect(list.threads.map((thread) => thread.id)).toEqual([activeEmpty.id]);
+      expect(store.list(true).threads.some((thread) => thread.id === emptyFirst.id)).toBe(true);
+    } finally {
+      rmSync(tmp, { recursive: true, force: true });
+      delete process.env.OTTO_HOME;
+    }
+  });
+
+  test('keeps New chat rows once they have a Letta conversation id', () => {
+    const tmp = mkdtempSync(join(tmpdir(), 'otto-thread-test-'));
+    try {
+      const config = mockConfig(tmp);
+      const store = new ThreadStore(config);
+      const thread = store.create({ title: 'New chat' });
+      store.update(thread.id, { lettaConversationId: 'local-conv-abc' });
+      store.create({ title: 'Other' });
+
+      const list = store.list();
+
+      expect(list.threads.some((item) => item.id === thread.id)).toBe(true);
+    } finally {
+      rmSync(tmp, { recursive: true, force: true });
+      delete process.env.OTTO_HOME;
+    }
+  });
+
   test('touchActive does not spawn a new thread when active id is missing from index', () => {
     const tmp = mkdtempSync(join(tmpdir(), 'otto-thread-test-'));
     try {
