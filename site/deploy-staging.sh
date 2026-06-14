@@ -19,7 +19,7 @@ cleanup() {
 }
 trap cleanup EXIT
 
-for f in index.html pricing.html style.css; do
+for f in index.html pricing.html style.css owl.png og.png CNAME; do
   [[ -f "$SITE/$f" ]] || { echo "missing $SITE/$f" >&2; exit 1; }
 done
 
@@ -53,7 +53,7 @@ check_body() {
   done
 }
 
-check_body "index" "$INDEX_BODY" "Letta remembers" "pricing.html"
+check_body "index" "$INDEX_BODY" "CI for agent behavior" "docs.otto.haus" "Install with an agent"
 check_body "pricing" "$PRICING_BODY" "Managed private pilot" "Letta" "Request pilot"
 
 META_OK="false"
@@ -62,7 +62,7 @@ if grep -qi 'viewport' <<<"$INDEX_BODY" && grep -qi 'charset' <<<"$INDEX_BODY"; 
 fi
 
 FORBIDDEN_OK="true"
-for bad in "autonomous SaaS" "sign up" "free trial workspace"; do
+for bad in "Start free trial" "Sign up now" "Create workspace"; do
   if grep -qi "$bad" <<<"$PRICING_BODY"; then
     FORBIDDEN_OK="false"
     echo "WARN: pricing contains forbidden phrase: $bad" >&2
