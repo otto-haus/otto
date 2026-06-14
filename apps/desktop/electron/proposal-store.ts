@@ -253,6 +253,7 @@ export class ProposalStore {
       canonApply = applyAcceptedProposal(existing, now);
       canonApplied = canonApply.applied;
       if (requiresCanonWrite && !canonApplied) {
+        const blocker = canonApplyBlocker(canonApply);
         const receipt = this.receipts.write({
           status: 'blocked',
           subject: { type: 'proposal', id },
@@ -272,10 +273,10 @@ export class ProposalStore {
             note: entry.note,
           })),
           blocker: {
-            code: 'canon_apply_missing_target',
-            message: 'Canon-impact proposal needs an existing target path before it can be accepted.',
+            code: blocker.code,
+            message: blocker.message,
             recoverable: true,
-            next_action: 'Add an existing target path to the proposal before accepting it.',
+            next_action: blocker.next_action,
           },
         });
         return { proposal: existing, receipt, blocked: true };
@@ -471,6 +472,21 @@ function requiresCanonApply(target: ProposalTarget): boolean {
   return target.kind === 'standard' || target.kind === 'practice' || target.kind === 'routine' || target.kind === 'knowledge';
 }
 
+function canonApplyBlocker(canonApply: CanonApplyResult): { code: string; message: string; next_action: string } {
+  if (canonApply.reason === 'missing_target') {
+    return {
+      code: 'canon_apply_missing_target',
+      message: 'Canon-impact proposal needs an existing target path before it can be accepted.',
+      next_action: 'Add an existing target path to the proposal before accepting it.',
+    };
+  }
+  return {
+    code: 'canon_apply_unsupported_target',
+    message: 'Canon-impact proposal target could not be parsed or is not a supported canon file.',
+    next_action: 'Fix the target file or choose a supported YAML or Markdown canon file before accepting it.',
+  };
+}
+
 /** Apply ratified proposal content to file-backed canon when target.path is set. */
 export function applyAcceptedProposal(proposal: CurationProposalRecord, appliedAt: string): CanonApplyResult {
   const { target } = proposal;
@@ -480,7 +496,14 @@ export function applyAcceptedProposal(proposal: CurationProposalRecord, appliedA
 
   if (target.path.endsWith('.yaml') || target.path.endsWith('.yml')) {
     const raw = readFileSync(target.path, 'utf8');
-    const doc = parse(raw) as Record<string, unknown>;
+    let doc: Record<string, unknown>;
+    try {
+      const parsed = parse(raw) as unknown;
+      if (!isRecord(parsed)) return { applied: false, changed: false, reason: 'unsupported_target' };
+      doc = parsed;
+    } catch {
+      return { applied: false, changed: false, reason: 'unsupported_target' };
+    }
     const ratifiedEntry = {
       proposal_id: proposal.id,
       applied_at: appliedAt,
