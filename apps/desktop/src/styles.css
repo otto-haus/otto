@@ -315,8 +315,9 @@ h1, h2, h3, h4, p { margin: 0; }
   display: inline-flex; align-items: center; gap: 6px;
   max-width: 100%;
   min-width: 0;
-  white-space: normal;
-  overflow-wrap: anywhere;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /* pills */
