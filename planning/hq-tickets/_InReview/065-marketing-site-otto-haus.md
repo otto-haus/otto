@@ -90,3 +90,38 @@ cd /Users/seb/Code/otto
 ## Blocker log
 
 Leave blank unless blocked.
+
+## Execution receipt
+
+**Branch:** `ship/v0.3-integration` · **Date:** 2026-06-13
+
+| Done when | Proof |
+|-----------|-------|
+| Static site, no mock backend | `site/index.html`, `site/style.css`, `site/brand/*` — static files only |
+| Local dev command | `site/dev.sh` (executable; `bunx serve` on `OTTO_SITE_PORT` default 4321) |
+| Deploy + update runbook | `docs/marketing-site.md` |
+| Brand / boundary copy | Hero + loop in `site/index.html` (Letta remembers · Otto improves · files are truth) |
+| Staging URL / Lighthouse / screenshots | **Not done** — requires DNS deploy + manual visual review (out of quick pass) |
+| README links site status | **Partial** — runbook documents update checklist; apex deploy pending Sebastian DNS |
+
+**Verified:** `./site/dev.sh` script present and executable; `docs/marketing-site.md` added.
+
+**Next:** Deploy to staging subdomain; screenshot + Lighthouse pass; link from `README.md` / `RELEASE_CHECKLIST.md`.
+
+## Review
+
+**Reviewer:** Independent · **Date:** 2026-06-13
+
+**Verdict:** Partial — static site artifact + runbook land in repo; deploy, visual review, and Lighthouse not done.
+
+| Done when | Status | Evidence |
+|-----------|--------|----------|
+| Static site, zero mock backend | Proven | `site/index.html`, `style.css`, `brand/*`, `dev.sh` — files only |
+| Visual review vs Brand Style Guide | Not proven | No screenshot diff or checklist attached |
+| Lighthouse basic pass | Not proven | Not run |
+| Staging URL loads on phone width | Not proven | No deploy URL; local `dev.sh` only documented |
+| README / RELEASE_CHECKLIST honest status | Partial | `README.md` links `otto.haus` badge; no *preview* qualifier; `RELEASE_CHECKLIST` not updated per receipt |
+
+**Content spot-check:** Hero carries boundary pill, loop diagram, Letta/files-truth copy, GitHub CTA; desktop preview labeled; claim boundary respected in `index.html` header.
+
+**+1:** No — majority of Done-when items require deploy + manual visual/Lighthouse proof.

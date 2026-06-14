@@ -136,12 +136,12 @@ Keep types thin; no Cognee SDK in renderer.
 
 ## Done when
 
-- `docs/cognee.md` exists and passes a hostile read: no path lets Cognee mutate canon or Letta memory.
-- `docs/knowledge.md` and `docs/v3/README.md` updated; no contradiction with Letta/Otto split.
-- Adapter seam doc mentions Cognee with the same proposal-only write path as other adapters.
-- Core types for health/capture receipt exist (or documented JSON schema if types deferred with justification).
-- `SHIP_CHECKS/cognee.md` exists with honest **Ship as Proposed** and links to 041–044.
-- Execution receipt lists doc paths and reviewer can trace every forbidden mutation to an explicit rule.
+- [x] `docs/cognee.md` exists and passes a hostile read: no path lets Cognee mutate canon or Letta memory.
+- [x] `docs/knowledge.md` and `docs/v3/README.md` updated; no contradiction with Letta/Otto split.
+- [x] Adapter seam doc mentions Cognee with the same proposal-only write path as other adapters.
+- [x] Core types for health/capture receipt exist (or documented JSON schema if types deferred with justification).
+- [x] `SHIP_CHECKS/cognee.md` exists with honest **Ship as Proposed** and links to 041–044.
+- [x] Execution receipt lists doc paths and reviewer can trace every forbidden mutation to an explicit rule.
 
 ## Verification
 
@@ -156,3 +156,76 @@ rg -n "Cognee|cognee" docs/knowledge.md docs/cognee.md docs/v3/README.md docs/v1
 ## Blocker log
 
 Leave blank unless blocked.
+
+## Execution receipt
+
+Status: pass
+Date: 2026-06-13
+
+### What changed
+
+Created Cognee contract doc, updated Knowledge + v3 status, extended adapter seam with Cognee exemplar, added `@otto-haus/core` types (`CogneeHealth`, `CogneeCaptureReceipt`), added `SHIP_CHECKS/cognee.md` (Ship as Proposed).
+
+### Files changed
+
+- `docs/cognee.md` (new)
+- `docs/knowledge.md`
+- `docs/v3/README.md`
+- `docs/v1/contracts/adapter-seam.md`
+- `packages/core/src/types.ts`
+- `SHIP_CHECKS/cognee.md` (new)
+
+### Forbidden mutation trace
+
+| Forbidden | Rule |
+|-----------|------|
+| Canon mutation | `docs/cognee.md` MUST NOT; `adapter-seam.md` ratification path |
+| Letta memory write | `docs/cognee.md` authority stack |
+| Knowledge canon replace | `docs/cognee.md` data classes |
+| Cloud auto-enable | `docs/cognee.md` policy flags |
+
+### Verification run
+
+```sh
+cd /Users/seb/Code/otto
+bun run typecheck   # exit 0
+rg -n "Cognee|cognee" docs/knowledge.md docs/cognee.md docs/v3/README.md docs/v1/contracts/adapter-seam.md
+test -f SHIP_CHECKS/cognee.md && rg -n "Ship as Proposed" SHIP_CHECKS/cognee.md
+```
+
+### Known limitations
+
+- No runtime (**041–044**). `model-registry.yaml` `deferred: cognee` unchanged. Reviewer +1 pending.
+
+Reviewer verdict: pending
+
+## Review
+
+**Reviewer:** independent (Cursor)  
+**Date:** 2026-06-13  
+**Verdict:** **Pass — Ship as Proposed**
+
+### Done when
+
+| Criterion | Result |
+|-----------|--------|
+| `docs/cognee.md` hostile read (no canon/Letta mutation path) | Pass — MAY/MUST NOT tables, hostile-read rule, adapter ratification path |
+| `docs/knowledge.md` + `docs/v3/README.md` aligned with Letta/Otto split | Pass — wave **041–044**; v3 status updated |
+| Adapter seam Cognee exemplar, proposal-only writes | Pass — `adapter-seam.md` §Exemplar |
+| Core types for health/capture receipt | Pass — `@otto-haus/core` `CogneeHealth`, `CogneeCaptureReceipt`, `CogneeConnectionStatus` |
+| `SHIP_CHECKS/cognee.md` Ship as Proposed + **041–044** links | Pass |
+| Forbidden mutation trace | Pass — doc + SHIP_CHECK tables |
+
+### Verification
+
+```sh
+bun run typecheck   # exit 0 (2026-06-13)
+rg -n "Cognee|cognee" docs/knowledge.md docs/cognee.md docs/v3/README.md docs/v1/contracts/adapter-seam.md
+rg -n "Ship as Proposed" SHIP_CHECKS/cognee.md
+```
+
+### Notes
+
+- Types live in `packages/core` only (no desktop duplicate) — within scope (“if needed”).
+- `model-registry.yaml` `deferred: cognee` correctly unchanged until **041**.
+- No runtime; honest **Ship as Proposed** stands.

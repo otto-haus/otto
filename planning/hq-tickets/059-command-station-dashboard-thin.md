@@ -35,6 +35,10 @@ Desktop one-pager test Partial: panes exist separately; no unified command view.
 - Screenshot in receipt
 - Links drill to Tickets/Curation/Receipts panes
 
+## Relationship to **127**
+
+**059** ships the ops dashboard shell. **127** adds culture-home cards (Constitution, Changelog, latest proof). Both may land in one PR; **127** tracks culture-home acceptance.
+
 ## Verification
 
 ```sh

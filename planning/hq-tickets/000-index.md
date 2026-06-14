@@ -35,7 +35,7 @@ Default to Cursor unless the hardest irreducible part is Codex-grade reasoning o
 
 ## Active queue
 
-**Current head:** **033–038** → **076** → **045–048** + **123** + **126** → **054–056** → **122**/**124**/**128** → **131–135 Culture CI** → **063** → wedge **121**/**125**/**127**; **129** after **054**; **130** parked.
+**Current head:** **058** → **059** → **122**/**124**/**128** → **131–135 Culture CI** → **063** → wedge **121**/**125**/**127**; **129** after **054** (_InReview); **130** parked. **054–056** → `_InReview/`.
 
 Work the lowest-numbered dependency-safe wave in root.
 
@@ -105,9 +105,9 @@ See `_Done/` folder. Craft 026–032 complete.
 
 | # | Ticket | Owner | Depends on | Proof |
 |---:|---|---|---|---|
-| 054 | Repo Hygiene: Commit & Split PRs | Cursor | 033-038 | PR stack ready |
-| 055 | Knowledge Baseline Ship | Cursor | 054, 017 | ship check evidence |
-| 056 | System Surfaces Ship (Skills/Tickets/Channels) | Cursor | 054, 055 | per-surface smoke |
+| 054 | Repo Hygiene: Commit & Split PRs | Cursor | 033-038 | `_InReview/` — `docs/v1/runbooks/pr-stack-ship-v03.md` |
+| 055 | Knowledge Baseline Ship | Cursor | 054, 017 | `_InReview/` — `docs/v1/SHIP_CHECKS/knowledge.md` |
+| 056 | System Surfaces Ship (Skills/Tickets/Channels) | Cursor | 054, 055 | `_InReview/` — per-surface receipts |
 | 058 | Craft: Runtime Robustness Pack | Cursor | 045, 039 | punchlist P1 |
 | 059 | Command Station Dashboard (Thin) | Claude | 049, 056, 045 | unified status cards |
 
