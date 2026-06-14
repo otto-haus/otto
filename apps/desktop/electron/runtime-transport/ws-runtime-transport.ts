@@ -21,11 +21,18 @@ import {
   resolveCli,
   safeWebContentsSend,
 } from './runtime-common';
-import { isDeviceOnline, isLoopIdle, normalizeWsEvent, type WsRuntimeEvent } from './ws-protocol';
+import {
+  DEFAULT_CONNECT_TIMEOUT_MS,
+  isDeviceOnline,
+  isLoopIdle,
+  normalizeWsEvent,
+  turnIdleTimeoutMs,
+  type WsRuntimeEvent,
+} from './ws-protocol';
 import { permissionSessionStore } from '../permission-session-store';
 import type { OttoRuntimeTransport } from './types';
 
-const CONNECT_TIMEOUT_MS = 45_000;
+const CONNECT_TIMEOUT_MS = DEFAULT_CONNECT_TIMEOUT_MS;
 const REMOTE_SHUTDOWN_TIMEOUT_MS = 3_000;
 const REMOTE_ENV = process.env.OTTO_WS_REMOTE_ENV ?? 'otto-byor';
 const DEFAULT_WS_MODEL_FALLBACKS = ['openai/gpt-5.5', 'letta/auto'];
@@ -306,7 +313,25 @@ export class WsRuntimeTransport implements OttoRuntimeTransport {
         },
       });
 
-      await this.waitForTurnComplete(CONNECT_TIMEOUT_MS, () => this.aborted || this.turnIdle);
+      const turnTimeoutMs = turnIdleTimeoutMs(text, CONNECT_TIMEOUT_MS);
+      try {
+        await this.waitForTurnComplete(turnTimeoutMs, () => this.aborted || this.turnIdle);
+      } catch (e) {
+        const idleTimeout = msg(e).includes('Timed out waiting for runtime idle');
+        if (idleTimeout && sawAssistant) {
+          writeReceipt('success', 'Chat turn completed without idle confirmation.', null);
+        } else if (idleTimeout) {
+          writeReceipt('failed', 'Chat turn timed out before the runtime became idle.', {
+            code: 'idle_timeout',
+            message: 'The runtime did not confirm idle in time. You can wait, send a follow-up, or reconnect.',
+            recoverable: true,
+            next_action: nextActionFor('error'),
+          });
+          this.emitError('Timed out waiting for the runtime to finish. Try again or reconnect if the turn looks stuck.');
+        } else {
+          throw e;
+        }
+      }
       if (!receiptWritten) {
         writeReceipt(this.aborted ? 'blocked' : sawAssistant ? 'success' : 'failed', this.aborted ? 'Chat turn was aborted.' : sawAssistant ? 'Chat turn completed.' : 'Chat turn ended without idle signal.', this.aborted ? {
           code: 'aborted',
@@ -316,16 +341,20 @@ export class WsRuntimeTransport implements OttoRuntimeTransport {
       }
     } catch (e) {
       trace.write('error', { message: msg(e) });
-      this.markNotReady(msg(e));
-      this.writeChatReceipt({
-        text,
-        status: 'failed',
-        summary: 'Chat turn failed.',
-        blocker: { code: 'error', message: msg(e), recoverable: true, next_action: nextActionFor('error') },
-        startedStatus,
-        tracePath: trace.path,
-      });
-      this.emitError(msg(e));
+      const errorMessage = msg(e);
+      const idleTimeout = errorMessage.includes('Timed out waiting for runtime idle');
+      if (!idleTimeout) this.markNotReady(errorMessage);
+      if (!idleTimeout) {
+        this.writeChatReceipt({
+          text,
+          status: 'failed',
+          summary: 'Chat turn failed.',
+          blocker: { code: 'error', message: errorMessage, recoverable: true, next_action: nextActionFor('error') },
+          startedStatus,
+          tracePath: trace.path,
+        });
+        this.emitError(errorMessage);
+      }
     } finally {
       detachRuntimeHandler();
       trace.close();

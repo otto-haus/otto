@@ -1,0 +1,8 @@
+{
+  "at": "2026-06-14T22:04:34Z",
+  "project": "otto-haus",
+  "production_deploy": "https://2ddf6591.otto-haus.pages.dev",
+  "pages_dev": "https://otto-haus.pages.dev",
+  "apex_status": "otto.haus still on Worker otto (Hello world) — move custom domain to Pages",
+  "deploy_command": "bash site/deploy-pages.sh"
+}

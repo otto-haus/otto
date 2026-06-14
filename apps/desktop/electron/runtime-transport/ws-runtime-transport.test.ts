@@ -412,4 +412,48 @@ describe('WsRuntimeTransport', () => {
     process.env.OTTO_SMOKE = '0';
     expect(smokeMode()).toBe(false);
   });
+
+  test('idle timeout without assistant keeps transport ready', async () => {
+    const prevTimeout = process.env.OTTO_WS_TURN_IDLE_TIMEOUT_MS;
+    process.env.OTTO_WS_TURN_IDLE_TIMEOUT_MS = '80';
+    const { win, sent } = mockWindow();
+    const transport = new WsRuntimeTransport(win, mockConfig());
+    (transport as unknown as { spawnRemote: () => Promise<void> }).spawnRemote = async () => {};
+
+    const initPromise = transport.init({ freshConversation: true });
+    const { port, token } = await waitForListener(transport);
+    const socket = new WebSocket(`ws://127.0.0.1:${port}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    socket.on('message', (raw) => {
+      let cmd: Record<string, unknown>;
+      try {
+        cmd = JSON.parse(String(raw)) as Record<string, unknown>;
+      } catch {
+        return;
+      }
+      if (cmd.type === 'sync') {
+        socket.send(JSON.stringify(syncResponse('conv-ws-idle')));
+        socket.send(JSON.stringify(deviceOnline()));
+        socket.send(JSON.stringify(loopIdle()));
+      }
+      if (cmd.type === 'input') {
+        // Deliberately omit assistant + idle to force idle timeout.
+      }
+    });
+    await new Promise<void>((resolve, reject) => {
+      socket.once('open', () => resolve());
+      socket.once('error', reject);
+    });
+    await initPromise;
+
+    await transport.send('wait forever');
+    expect(transport.getStatus().ready).toBe(true);
+    expect(sent.some((e) => e.channel === 'otto:event' && (e.payload as { message?: { type?: string } }).message?.type === 'error')).toBe(true);
+
+    if (prevTimeout === undefined) Reflect.deleteProperty(process.env, 'OTTO_WS_TURN_IDLE_TIMEOUT_MS');
+    else process.env.OTTO_WS_TURN_IDLE_TIMEOUT_MS = prevTimeout;
+    socket.close();
+    await transport.close();
+  });
 });

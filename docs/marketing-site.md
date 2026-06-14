@@ -36,14 +36,17 @@ bash site/deploy-staging.sh   # curl + copy checks; receipt in docs/receipts/sta
 ./site/dev.sh                 # interactive preview on :4321
 ```
 
-Pick one host for public preview; apex `otto.haus` requires Sebastian DNS approval.
+**Cloudflare Pages (project `otto-haus`, account joinnova):**
 
-**Cloudflare Pages**
+```sh
+bash site/deploy-pages.sh              # production branch main
+OTTO_PAGES_BRANCH=ship/functional-labs bash site/deploy-pages.sh   # preview branch only
+```
 
-1. Project root: `site/` (or build output = repo `site/`)
-2. No build command (static files)
-3. Preview URL → verify mobile width + contrast
-4. Point `staging.otto.haus` CNAME when ready
+- Static root: `site/` — no build command
+- Default URL: `https://otto-haus.pages.dev`
+- **Apex `otto.haus`:** attach custom domain on **Pages → otto-haus**, not on Worker `otto` (empty Worker shows “Hello world” and steals the apex)
+- Optional staging subdomain: `staging.otto.haus` when approved
 
 **GitHub Pages / Render static**
 
