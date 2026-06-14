@@ -1,6 +1,16 @@
 import type { SurfaceId } from '../components/Sidebar';
 
-/** Canonical UI copy — builder wires data; UX owns strings. */
+/**
+ * Canonical UI copy — builder wires data; UX owns strings.
+ *
+ * Tier lexicon (Ship / Labs / Cut): docs/v1/ship-tier-matrix.md · docs/v1/labs.md
+ * Design canon: docs/design/ (brand-style-guide.html, onboarding.md)
+ * Labs shells: labsCopy · checks eyebrow = "culture ci" (Checks surface)
+ *
+ * Forbidden product words: beta, experimental, early access, unlock premium,
+ * autonomous, guaranteed, fully handled, learned automatically, set it and forget it.
+ * Loading: prefer thinking… over "working" theater.
+ */
 export type WebPreviewEmpty = {
   eyebrow: string;
   title: string;
@@ -341,16 +351,59 @@ export const channelsCopy = {
   metaLabel: 'Channel config',
 } as const;
 
+export const labsCopy = {
+  eyebrow: 'labs',
+  title: 'Labs features',
+  lede: 'Experimental paths stay off until you turn Labs on. Ship-tier surfaces work without Labs.',
+  masterLabel: 'Enable Labs',
+  masterWarning: 'Labs may break or change without notice. Use on a workspace you can reset.',
+  masterHint: 'When off, Labs-tier nav items show coming soon.',
+  featureEnableLabel: 'Enable feature',
+  matrixLink: 'See docs/v1/ship-tier-matrix.md for tier mapping.',
+  shippedBadge: 'Shipped',
+  previewBadge: 'Coming soon',
+  enableLabel: 'Enable in this workspace',
+  comingSoonEyebrow: 'coming soon',
+  comingSoonTitle: (label: string) => `${label} is not enabled yet`,
+  comingSoonNext: 'Turn on Labs and this feature in Settings → Labs when you are ready to try it.',
+  openLabs: 'Open Labs settings',
+} as const;
+
 export const settingsCopy = {
-  eyebrow: 'workspace',
-  title: 'Own the workspace. Keep Letta.',
-  lede: 'Connection, readiness, and culture export — the app is a workspace, not the engine.',
-  inkLead: 'Letta makes Otto remember.',
-  inkMuted: 'Otto makes Otto improve.',
-  inkSub: 'The app is a workspace, not the engine.',
+  eyebrow: 'settings',
+  title: 'General',
+  lede: 'How otto connects to Letta, what is ready, and workspace defaults.',
+  inkLead: 'Connection truth lives here.',
+  inkMuted: 'Not in chat claims.',
+  inkSub: 'Readiness gates Chat and irreversible actions until required items are configured.',
   statRuntime: 'Runtime',
   statRequired: 'Required gaps',
   metaReadiness: 'Readiness detail',
+  tabGeneral: 'General',
+  tabProviders: 'Model providers',
+  tabMemory: 'Memory',
+  tabCulture: 'Culture',
+  tabLabs: 'Labs',
+  sectionLabsLede: 'Enable preview surfaces one at a time. Nothing here affects receipt records.',
+  generalTitle: 'General',
+  generalLede: 'How otto connects to Letta, what is ready, and workspace defaults.',
+  connectionTitle: 'Connection',
+  connectionLede: 'otto discovers Letta Desktop and your default agent automatically. Override only when discovery picks the wrong runtime.',
+  optionalRecallTitle: 'Optional recall',
+  optionalRecallLede: 'Derived recall sidecars. Off by default — files and Letta memory remain canon.',
+  onboardingTitle: 'Onboarding',
+  onboardingLede: 'Replay the first-run walkthrough on next launch.',
+  onboardingReset: 'Reset onboarding',
+  readinessTitle: 'Readiness',
+  readinessLede: 'What must be true before Chat and irreversible actions unlock.',
+  readinessDetail: 'Show readiness detail',
+  readinessConnected: 'Connected — live Letta session',
+  readinessNotReady: 'Setup required — Chat stays disabled until required items are configured.',
+  providersTitle: 'Model providers',
+  providersLede: 'Provider auth lives in Letta. otto mirrors status and accepts a write-only key — never reads keys back.',
+  memoryTitle: 'Memory observatory',
+  memoryLede: 'Read-only view of Letta core-memory blocks. Writeback goes through Curation.',
+  labsWarn: 'These change how the app behaves and may change or disappear. Nothing here affects receipt records.',
   primaryAgentLabel: 'Primary agent',
   primaryAgentHint: 'One default agent per workspace — memory continuity is the product.',
   connectionModeLabel: 'Connection mode',

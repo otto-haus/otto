@@ -21,23 +21,11 @@ import {
 } from './surfaces/Panes';
 import { ChecksSurfaceShell } from './surfaces/ChecksSurfaceShell';
 import { Onboarding } from './Onboarding';
-
-const META: Record<SurfaceId, { title: string; sub: string }> = {
-  chat: { title: 'Chat', sub: '' },
-  charters: { title: 'Charters', sub: 'Operating contracts — bets, acceptance criteria, linked runs and receipts.' },
-  standards: { title: 'Standards', sub: 'Explicit canon — what we reward, refuse, and do under pressure.' },
-  practices: { title: 'Practices', sub: 'Executable Standards with guardrails and receipt requirements.' },
-  routines: { title: 'Routines', sub: 'Repeated bundles of Practices; recurring activation is approval-gated.' },
-  curation: { title: 'Curation', sub: 'Proposal-and-ratification queue; Approvals are decision receipts emitted here.' },
-  receipts: { title: 'Receipts', sub: 'Proof of work — receipts and run summaries from ~/.otto.' },
-  checks: { title: 'Checks', sub: 'Culture CI — compiled regressions from Standards; blocks surface in Chat.' },
-  autonomy: { title: 'Autonomy', sub: 'Policy zones, doors, and Knowledge-informed model routing.' },
-  skills: { title: 'Skills', sub: 'Reusable capability packages loaded from skill/**/SKILL.md.' },
-  knowledge: { title: 'Knowledge', sub: 'AI Frontier model registry — routing Autonomy and ticket workers.' },
-  tickets: { title: 'Tickets', sub: 'Bounded worker slices — compile, orchestrate in worktrees, track workers.' },
-  channels: { title: 'Channels', sub: 'Reachability surfaces; outbound sends are approval-gated.' },
-  settings: { title: 'Settings', sub: 'Setup & readiness — what is configured vs missing.' },
-};
+import { LabsProvider, useLabs } from './labs/LabsContext';
+import { ComingSoonSurface } from './labs/ComingSoonSurface';
+import { labsSurfaceGate } from './surface-tiers';
+import { EmptyState } from './components/ui';
+import { META, VALID_SURFACES } from './surface-meta';
 
 function renderSurface(id: SurfaceId) {
   switch (id) {
@@ -58,7 +46,7 @@ function renderSurface(id: SurfaceId) {
   }
 }
 
-const VALID: SurfaceId[] = ['chat', 'charters', 'standards', 'practices', 'routines', 'curation', 'receipts', 'checks', 'autonomy', 'skills', 'knowledge', 'tickets', 'channels', 'settings'];
+const VALID = VALID_SURFACES;
 const initialSurface = (): SurfaceId => {
   const h = typeof location !== 'undefined' ? (location.hash.slice(1) as SurfaceId) : 'chat';
   return VALID.includes(h) ? h : 'chat';
@@ -86,7 +74,9 @@ export function App() {
   return (
     <RuntimeProvider>
       <ToastProvider>
-        <AppShell />
+        <LabsProvider>
+          <AppShell />
+        </LabsProvider>
       </ToastProvider>
     </RuntimeProvider>
   );
@@ -94,6 +84,7 @@ export function App() {
 
 function AppShell() {
   const rt = useRuntimeContext();
+  const labs = useLabs();
   const { threads, refresh: refreshThreads } = useChatThreads(rt.activeThreadId);
   const [active, setActiveState] = useState<SurfaceId>(initialSurface());
   const [sidebarHidden, setSidebarHidden] = useState(false);
@@ -125,7 +116,15 @@ function AppShell() {
   const counts: Partial<Record<SurfaceId, number>> = {};
   const meta = META[active];
 
+  const openLabsSettings = () => {
+    try {
+      sessionStorage.setItem('otto.settings.section', 'labs');
+    } catch { /* best effort */ }
+    setActive('settings');
+  };
+
   const sourcePill = () => {
+    if (labs.isComingSoon(active)) return <span className="pill">coming soon</span>;
     if (active === 'settings' && rt.electron) {
       if (rt.status?.ready) return <span className="pill pill--ok">live runtime</span>;
       if (rt.status) return <span className="pill pill--warn">runtime setup</span>;
@@ -138,6 +137,24 @@ function AppShell() {
     if (DATA_SOURCE[active] === 'file') return <span className="pill">file-backed</span>;
     if (DATA_SOURCE[active] === 'coming-soon') return <span className="pill">coming soon</span>;
     return null;
+  };
+
+  const surfaceContent = () => {
+    const gate = labsSurfaceGate(active, labs.labs, labs.hydrated);
+    // #region agent log
+    fetch('http://127.0.0.1:7262/ingest/27e77873-c4b9-4cec-8448-3989be566278',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'5134c1'},body:JSON.stringify({sessionId:'5134c1',location:'App.tsx:surfaceContent',message:'render surface branch',data:{active,gate,labsHydrated:labs.hydrated,runtimeReady:!!rt.status?.ready,runtimeCode:rt.status?.code??null,electron:rt.electron},timestamp:Date.now(),hypothesisId:'H2',runId:'post-fix'})}).catch(()=>{});
+    // #endregion
+    if (gate === 'loading') {
+      return (
+        <div className="comingSoonShell" aria-busy="true">
+          <EmptyState eyebrow="labs" title="Loading workspace features…" body="Reading Labs settings from this profile." />
+        </div>
+      );
+    }
+    if (gate === 'coming-soon') {
+      return <ComingSoonSurface id={active} onOpenLabs={openLabsSettings} />;
+    }
+    return renderSurface(active);
   };
 
   return (
@@ -158,6 +175,7 @@ function AppShell() {
             onSelectThread={(thread) => {
               void rt.switchThread(thread.id).then(() => refreshThreads());
             }}
+            isComingSoon={labs.isComingSoon}
           />
         )}
         <main className="main">
@@ -166,6 +184,7 @@ function AppShell() {
               <Chat
                 onOpenSettings={() => setActive('settings')}
                 onNavigate={setActive}
+                isSurfaceEnabled={labs.isEnabled}
                 sidebarHidden={sidebarHidden}
                 onToggleSidebar={() => setSidebarHidden(false)}
               />
@@ -189,7 +208,7 @@ function AppShell() {
                   {sourcePill()}
                 </div>
               </header>
-              <div className="content">{renderSurface(active)}</div>
+              <div className="content">{surfaceContent()}</div>
             </>
           )}
         </main>
