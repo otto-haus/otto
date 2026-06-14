@@ -1,0 +1,37 @@
+{
+  "pr": 190,
+  "reviewedBy": "codex",
+  "capturedAt": "2026-06-14T21:00:37Z",
+  "baseBranch": "ship/functional-labs",
+  "reviewBranch": "bugfix/behavior-changelog-otto-home",
+  "reviewHeadBeforeProofCommit": "a5d24e187bd3a5c36e972b34127eb675b198f049",
+  "codeRecommendation": "ready",
+  "shipRecommendation": "ship_with_functional_labs_train",
+  "shipRecommendationReason": "This is a narrow runtime-home isolation fix for local behavior changelog data. It does not create a standalone release reason, but I see no higher-level blocker to shipping it with the functional-labs train once Sebastian approves that train.",
+  "bugsFixedByCodexReview": [
+    "Fixed default BehaviorChangelog stores so they are built from runtime defaultOttoDir() instead of import-time OTTO_DIR-backed store defaults.",
+    "Added a default-constructor regression proving BehaviorChangelog reads an applied proposal from runtime OTTO_HOME, not just reports the runtime dir metadata."
+  ],
+  "proof": {
+    "dataReceipt": "docs/receipts/staging/pr-190/codex-review-runtime-home-changelog.json",
+    "nativeStaging": {
+      "command": "OTTO_STAGING_ROOT=/tmp/otto-pr-190-proof-staging OTTO_STAGING_PORT=9458 OTTO_STAGING_WS_REMOTE_ENV=otto-pr190-proof-byor OTTO_AGENT_ID=agent-00000000-0000-4000-8000-000000000000 LETTA_BASE_URL=http://127.0.0.1:9 OTTO_STAGING_LOG_CAPTURE_SECONDS=1 task staging",
+      "deployLog": "/Users/seb/.codex/admin/otto-logs/staging-20260614T135436.deploy.log",
+      "appLog": "/Users/seb/.codex/admin/otto-logs/staging-20260614T135436.app.log",
+      "result": "passed; installed and launched /Applications/otto-staging.app"
+    }
+  },
+  "verification": [
+    "bun install --frozen-lockfile",
+    "bun test apps/desktop/electron/behavior-changelog.test.ts -> 3 pass, 0 fail, 7 expect calls",
+    "bash scripts/ci-local-gate.sh -> pass",
+    "bun test inside local gate -> 261 pass, 1 skip, 0 fail, 901 expect calls",
+    "bun run verify:v0 inside local gate -> 5 passed, 0 failed",
+    "devex mint validate inside local gate -> pass",
+    "devex broken-links inside local gate -> pass",
+    "electron-vite build inside local gate -> pass",
+    "bun audit inside local gate -> No vulnerabilities found",
+    "task staging -> pass, installed and launched /Applications/otto-staging.app"
+  ],
+  "proofBoundary": "This is a backend/local-data change, so the attached evidence is fixture data and observed changelog output rather than screenshots. No live Letta connection was claimed."
+}

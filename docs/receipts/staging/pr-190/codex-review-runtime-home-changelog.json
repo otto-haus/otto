@@ -1,0 +1,15 @@
+{
+  "pr": 190,
+  "capturedAt": "2026-06-14T21:00:37Z",
+  "surface": "BehaviorChangelog default runtime home resolution",
+  "runtimeOttoHome": "/var/folders/22/fzs3nrw505z_m71cghqjc7j80000gn/T/otto-pr-190-proof-hFosI6",
+  "resultDir": "/var/folders/22/fzs3nrw505z_m71cghqjc7j80000gn/T/otto-pr-190-proof-hFosI6",
+  "expectedReceiptId": "receipt-a5a7bd19-a6b2-466d-abf9-e9b4bf007eea",
+  "observedEntryReceiptIds": [
+    "receipt-a5a7bd19-a6b2-466d-abf9-e9b4bf007eea"
+  ],
+  "assertions": {
+    "resultDirMatchesRuntimeOttoHome": true,
+    "defaultChangelogReadRuntimeProposal": true
+  }
+}

@@ -1,0 +1,39 @@
+{
+  "pr": 154,
+  "reviewer": "Codex PR review agent",
+  "target": "README repo map bundled canon directory accuracy",
+  "repo_map_entries_verified": [
+    "autonomy/",
+    "knowledge/"
+  ],
+  "directories_exist": {
+    "standards": true,
+    "practices": true,
+    "routines": true,
+    "autonomy": true,
+    "knowledge": true,
+    "skill": true
+  },
+  "electron_builder_extra_resources": [
+    "standards",
+    "practices",
+    "routines",
+    "autonomy",
+    "knowledge",
+    "skill"
+  ],
+  "readme_alignment_columns": [
+    18
+  ],
+  "review_fix": "Ticket wording clarified that channels/ and checks/ are bundled runtime resources but outside this canon-directory README map change.",
+  "verification": {
+    "readme_alignment": "awk over README repo map returned single column 18",
+    "git_diff_check": "pass",
+    "typecheck": "pass",
+    "desktop_typecheck": "pass",
+    "electron_typecheck": "pass",
+    "full_tests": "221 pass, 1 skip, 0 fail, 738 expect() calls",
+    "verify_v0": "5 passed, 0 failed"
+  },
+  "known_gaps": []
+}

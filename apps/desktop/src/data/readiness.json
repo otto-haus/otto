@@ -44,7 +44,7 @@
       "required": false,
       "status": "configured",
       "detail": "Otto repo detected",
-      "source": "~/Code/otto",
+      "source": "repo root",
       "action": "Override with OTTO_HOME"
     },
     {
@@ -82,6 +82,15 @@
       "detail": "No local tools registered",
       "source": null,
       "action": "Register functions in ~/.otto/config.json"
+    },
+    {
+      "key": "labs",
+      "label": "Labs master",
+      "required": false,
+      "status": "missing",
+      "detail": "Labs gate not in local config snapshot",
+      "source": null,
+      "action": "Toggle in Settings → Labs or window.otto.labs.set"
     },
     {
       "key": "permissions",

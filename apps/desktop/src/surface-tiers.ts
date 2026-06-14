@@ -69,7 +69,7 @@ export const LAB_FEATURE_META: Record<LabFeatureId, LabFeatureMeta> = {
   },
   command_station_full: {
     label: 'Command Station dashboard',
-    blurb: 'Dedicated culture home dashboard — strip in Chat stays Ship.',
+    blurb: 'Dedicated culture dashboard — parked behind Labs.',
   },
 };
 
@@ -103,6 +103,8 @@ export const WORKSPACE_PREVIEW_SURFACES: ReadonlySet<SurfaceId> = new Set([
   'autonomy',
   'skills',
   'tickets',
+  'knowledge',
+  'channels',
 ]);
 
 export function isSurfaceComingSoon(id: SurfaceId, labs: LabsConfig): boolean {
