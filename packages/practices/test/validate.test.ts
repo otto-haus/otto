@@ -1,5 +1,7 @@
 import { describe, expect, test } from 'bun:test';
-import { dirname, resolve } from 'node:path';
+import { mkdtemp, rm, writeFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import type { PracticeSpec } from '@otto-haus/core';
 import { loadPracticeSpec, normalizeApprovalRequirement, validatePracticeSpec } from '../src/index.js';
@@ -50,6 +52,24 @@ describe('validatePracticeSpec', () => {
 
     expect(result.errors).toContain('evidence_standard must be a non-empty array of strings');
   });
+
+  test('reports missing required scalar fields', () => {
+    const result = validatePracticeSpec(
+      {
+        ...validSpec,
+        name: '',
+        version: '',
+        summary: '',
+        owner: '',
+      },
+      'example',
+    );
+
+    expect(result.errors).toContain('name must be present and non-empty');
+    expect(result.errors).toContain('version must be present and non-empty');
+    expect(result.errors).toContain('summary must be present and non-empty');
+    expect(result.errors).toContain('owner must be present and non-empty');
+  });
 });
 
 describe('loadPracticeSpec', () => {
@@ -66,5 +86,49 @@ describe('loadPracticeSpec', () => {
 
   test('maps outbound send wording to send-or-publish', () => {
     expect(normalizeApprovalRequirement('ANY send / post / publish / outbound touch')).toBe('send-or-publish');
+  });
+
+  test('keeps missing version invalid instead of stringifying it', async () => {
+    const tempDir = await mkdtemp(join(tmpdir(), 'otto-practice-spec-'));
+    const specPath = join(tempDir, 'practice.yaml');
+
+    try {
+      await writeFile(
+        specPath,
+        `name: Example
+slug: example
+status: draft
+summary: Example practice.
+invocations:
+  - /example run
+triggers:
+  - example trigger
+inputs:
+  - input
+outputs:
+  - output
+state_paths:
+  - examples/
+guardrails:
+  - guardrail
+evidence_standard:
+  - evidence
+metrics:
+  - uses
+owner: Otto
+approval_required_for:
+  - enabling globally
+  - external side effects
+  - permission expansion
+`,
+      );
+
+      const spec = await loadPracticeSpec(specPath);
+
+      expect((spec as Partial<PracticeSpec>).version).toBeUndefined();
+      expect(validatePracticeSpec(spec, 'example').errors).toContain('version must be present and non-empty');
+    } finally {
+      await rm(tempDir, { force: true, recursive: true });
+    }
   });
 });

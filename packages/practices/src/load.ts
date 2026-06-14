@@ -50,6 +50,14 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
+function normalizeVersion(value: unknown): unknown {
+  if (typeof value === 'string' || typeof value === 'number') {
+    return String(value);
+  }
+
+  return value;
+}
+
 export async function loadPracticeSpec(filePath: string): Promise<PracticeSpec> {
   const source = await readFile(filePath, 'utf8');
   const parsed = parse(source) as unknown;
@@ -64,7 +72,7 @@ export async function loadPracticeSpec(filePath: string): Promise<PracticeSpec> 
 
   return {
     ...parsed,
-    version: String(parsed.version),
+    version: normalizeVersion(parsed.version),
     approval_required_for: approvalRequiredFor,
   } as PracticeSpec;
 }
