@@ -1,6 +1,6 @@
 import { chmodSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
-import { homedir } from 'node:os';
 import { join } from 'node:path';
+import { defaultOttoDir } from './config-store';
 
 // Local secret store for Otto Desktop. Values live in ~/.otto/secrets.env, owner-only
 // (0600), one KEY=VALUE per line — kept out of config.json and out of the repo. The Letta
@@ -8,13 +8,15 @@ import { join } from 'node:path';
 // spawn environment. (A macOS Keychain backend is the planned hardening; this is the v0.1
 // fallback the file's perms make safe enough for a single-user local app.)
 
-const OTTO_DIR = join(homedir(), '.otto');
-const SECRETS_FILE = join(OTTO_DIR, 'secrets.env');
+export function secretStorePath(): string {
+  return join(defaultOttoDir(), 'secrets.env');
+}
 
 function readAll(): Record<string, string> {
-  if (!existsSync(SECRETS_FILE)) return {};
+  const file = secretStorePath();
+  if (!existsSync(file)) return {};
   const out: Record<string, string> = {};
-  for (const line of readFileSync(SECRETS_FILE, 'utf8').split('\n')) {
+  for (const line of readFileSync(file, 'utf8').split('\n')) {
     const t = line.trim();
     if (!t || t.startsWith('#')) continue;
     const eq = t.indexOf('=');
@@ -25,14 +27,16 @@ function readAll(): Record<string, string> {
 }
 
 function writeAll(map: Record<string, string>): void {
-  mkdirSync(OTTO_DIR, { recursive: true });
+  const ottoDir = defaultOttoDir();
+  const file = join(ottoDir, 'secrets.env');
+  mkdirSync(ottoDir, { recursive: true });
   const body = Object.entries(map)
     .filter(([, v]) => v != null && v !== '')
     .map(([k, v]) => `${k}=${v}`)
     .join('\n');
-  writeFileSync(SECRETS_FILE, body ? `${body}\n` : '', { mode: 0o600 });
+  writeFileSync(file, body ? `${body}\n` : '', { mode: 0o600 });
   try {
-    chmodSync(SECRETS_FILE, 0o600); // enforce perms even if the file already existed
+    chmodSync(file, 0o600); // enforce perms even if the file already existed
   } catch {
     // best effort
   }
