@@ -28,6 +28,7 @@ import type { OttoRuntimeTransport } from './types';
 const CONNECT_TIMEOUT_MS = 45_000;
 const REMOTE_ENV = process.env.OTTO_WS_REMOTE_ENV ?? 'otto-byor';
 const DEFAULT_WS_MODEL_FALLBACKS = ['openai/gpt-5.5', 'letta/auto'];
+const REGISTRATION_CONNECT_TIMEOUT = /registration endpoint|waiting for Letta Code server/i;
 
 type PendingControl = {
   requestId: string;
@@ -86,7 +87,7 @@ export class WsRuntimeTransport implements OttoRuntimeTransport {
     }
   }
 
-  async init(opts?: { freshConversation?: boolean }): Promise<RuntimeStatus> {
+  async init(opts?: { freshConversation?: boolean; registrationRetry?: boolean }): Promise<RuntimeStatus> {
     await this.close();
     const cli = resolveCli(this.config.connectionMode());
     const context = discoverLocalLettaContext(this.config);
@@ -160,6 +161,10 @@ export class WsRuntimeTransport implements OttoRuntimeTransport {
     } catch (e) {
       await this.close();
       const reason = msg(e);
+      if (!opts?.registrationRetry && REGISTRATION_CONNECT_TIMEOUT.test(reason)) {
+        await new Promise((resolve) => setTimeout(resolve, 750));
+        return this.init({ freshConversation: opts?.freshConversation, registrationRetry: true });
+      }
       const code = classify(reason, this.hasApiKey());
       return this.fail(context, code, friendly(code, reason), cli, agentId);
     }
@@ -236,20 +241,7 @@ export class WsRuntimeTransport implements OttoRuntimeTransport {
 
       detachRuntimeHandler = this.attachRuntimeHandler(onRuntimeEvent);
 
-      this.sendCommand({
-        type: 'input',
-        runtime: {
-          agent_id: this.status.agentId,
-          conversation_id: this.status.conversationId,
-          model: this.status.modelHandle ?? undefined,
-          reasoning_effort: this.status.effort,
-        },
-        payload: {
-          kind: 'create_message',
-          messages: [{ role: 'user', content: promptWithRuntimeContext(text, this.status), client_message_id: randomUUID() }],
-          supports_control_response: true,
-        },
-      });
+      this.sendInput(text);
 
       await this.waitForTurnComplete(CONNECT_TIMEOUT_MS, () => this.aborted || this.turnIdle);
       if (!receiptWritten) {
@@ -275,6 +267,14 @@ export class WsRuntimeTransport implements OttoRuntimeTransport {
       detachRuntimeHandler();
       trace.close();
     }
+  }
+
+  async steer(text: string): Promise<void> {
+    if (!this.status.ready || !this.runtimeSocket || this.runtimeSocket.readyState !== WebSocket.OPEN) {
+      this.emitError('Runtime not ready — WebSocket transport disconnected.');
+      return;
+    }
+    this.sendInput(text);
   }
 
   async abort(): Promise<void> {
@@ -587,6 +587,23 @@ export class WsRuntimeTransport implements OttoRuntimeTransport {
       throw new Error('Letta runtime is not connected');
     }
     this.runtimeSocket.send(JSON.stringify(command));
+  }
+
+  private sendInput(text: string): void {
+    this.sendCommand({
+      type: 'input',
+      runtime: {
+        agent_id: this.status.agentId,
+        conversation_id: this.status.conversationId,
+        model: this.status.modelHandle ?? undefined,
+        reasoning_effort: this.status.effort,
+      },
+      payload: {
+        kind: 'create_message',
+        messages: [{ role: 'user', content: promptWithRuntimeContext(text, this.status), client_message_id: randomUUID() }],
+        supports_control_response: true,
+      },
+    });
   }
 
   private modelInitAttempts(preferredModelHandle?: string | null): (string | null)[] {

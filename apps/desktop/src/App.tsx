@@ -86,7 +86,7 @@ export function App() {
 function AppShell() {
   const rt = useRuntimeContext();
   const labs = useLabs();
-  const { threads, refresh: refreshThreads, pinThread, archiveThread, renameThread, moveThread } = useChatThreads(rt.activeThreadId);
+  const { threads, refresh: refreshThreads, pinThread, archiveThread, restoreThread, renameThread, moveThread } = useChatThreads(rt.activeThreadId);
   const [active, setActiveState] = useState<SurfaceId>(initialSurface());
   const [sidebarHidden, setSidebarHidden] = useState(false);
   const [sidebarCompact, setSidebarCompact] = useState(
@@ -182,6 +182,9 @@ function AppShell() {
                 else await archiveThread(thread.id);
                 await refreshThreads();
               })();
+            }}
+            onRestoreThread={(thread) => {
+              void restoreThread(thread.id);
             }}
             onRenameThread={(thread, title) => {
               void renameThread(thread.id, title);

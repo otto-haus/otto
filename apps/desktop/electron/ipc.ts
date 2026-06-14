@@ -98,6 +98,7 @@ export function registerIpc(win: BrowserWindow) {
   });
   ipcMain.handle('otto:status', () => runner.getStatus());
   ipcMain.handle('otto:send', (_e, text: string) => runner.send(text));
+  ipcMain.handle('otto:steer', (_e, text: string) => runner.steer(text));
   ipcMain.handle('otto:abort', () => runner.abort());
   ipcMain.handle('otto:configure', async (_e, input: RuntimePreferences) => {
     const status = await runner.configure(input);
@@ -297,6 +298,7 @@ export function registerIpc(win: BrowserWindow) {
     }
     return archived;
   });
+  ipcMain.handle('otto:threads:restore', (_e, threadId: string) => threads.restore(threadId));
   ipcMain.handle('otto:threads:pin', (_e, threadId: string, pinned: boolean) => threads.pin(threadId, pinned));
   ipcMain.handle('otto:threads:rename', (_e, threadId: string, title: string) => threads.rename(threadId, title));
   ipcMain.handle('otto:threads:move', (_e, threadId: string, targetId: string) => threads.move(threadId, targetId));

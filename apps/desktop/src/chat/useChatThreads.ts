@@ -18,6 +18,7 @@ function mapThread(thread: {
     updatedAt: Date.parse(thread.updatedAt) || Date.now(),
     sortOrder: typeof thread.sortOrder === 'number' ? thread.sortOrder : null,
     pinned: !!thread.pinned,
+    archived: !!thread.archived,
   };
 }
 
@@ -31,7 +32,7 @@ export function useChatThreads(activeThreadId?: string | null) {
       setThreads([]);
       return;
     }
-    const result = await api.threads.list(showArchived);
+    const result = await api.threads.list(true);
     const seen = new Set<string>();
     const unique = result.threads.filter((thread) => {
       if (seen.has(thread.id)) return false;
@@ -59,6 +60,13 @@ export function useChatThreads(activeThreadId?: string | null) {
     await refresh();
   }, [refresh]);
 
+  const restoreThread = useCallback(async (threadId: string) => {
+    const api = ottoApi();
+    if (!api || !isElectron()) return;
+    await api.threads.restore(threadId);
+    await refresh();
+  }, [refresh]);
+
   const renameThread = useCallback(async (threadId: string, title: string) => {
     const api = ottoApi();
     if (!api || !isElectron()) return;
@@ -73,5 +81,5 @@ export function useChatThreads(activeThreadId?: string | null) {
     await refresh();
   }, [refresh]);
 
-  return { threads, showArchived, setShowArchived, refresh, pinThread, archiveThread, renameThread, moveThread };
+  return { threads, showArchived, setShowArchived, refresh, pinThread, archiveThread, restoreThread, renameThread, moveThread };
 }

@@ -192,6 +192,10 @@ export class ThreadStore {
     return archived;
   }
 
+  restore(threadId: string): ChatThreadRecord {
+    return this.update(threadId, { archived: false, pinned: false });
+  }
+
   pin(threadId: string, pinned: boolean): ChatThreadRecord {
     return this.update(threadId, { pinned });
   }

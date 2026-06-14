@@ -287,12 +287,14 @@ export const permissionCopy = {
 export const threadCopy = {
   pinnedLabel: 'Pinned',
   recentsLabel: 'Recents',
+  archivedLabel: 'Archived',
   empty: 'No conversations yet.',
   pinnedEmpty: 'Pin a conversation to keep it here.',
   pin: 'Pin conversation',
   unpin: 'Unpin conversation',
   archive: 'Archive conversation',
   archiveConfirm: 'Confirm archive',
+  restore: 'Restore conversation',
   rename: 'Rename conversation',
 } as const;
 

@@ -9,6 +9,7 @@ export type ThreadSummary = {
   updatedAt: number;
   sortOrder?: number | null;
   pinned?: boolean;
+  archived?: boolean;
 };
 
 /** Keep sidebar labels human — hide smoke IDs and raw local keys. */
@@ -43,12 +44,13 @@ function writeSectionOpen(key: string, open: boolean) {
 const ConversationRow: React.FC<{
   thread: ThreadSummary;
   active: boolean;
-  variant: 'pinned' | 'recent';
+  variant: 'pinned' | 'recent' | 'archived';
   editing: boolean;
   confirmingArchive: boolean;
   onSelect?: (thread: ThreadSummary) => void;
   onPin?: (thread: ThreadSummary, pinned: boolean) => void;
   onArchive?: (thread: ThreadSummary) => void;
+  onRestore?: (thread: ThreadSummary) => void;
   onStartRename: (thread: ThreadSummary) => void;
   onCommitRename: (thread: ThreadSummary, title: string) => void;
   onCancelRename: () => void;
@@ -66,6 +68,7 @@ const ConversationRow: React.FC<{
   onSelect,
   onPin,
   onArchive,
+  onRestore,
   onStartRename,
   onCommitRename,
   onCancelRename,
@@ -123,7 +126,7 @@ const ConversationRow: React.FC<{
       }}
       onDragEnd={onDragThreadEnd}
     >
-    {onPin ? (
+    {onPin && !thread.archived ? (
       <button
         type="button"
         className={`sidebarConv__pin${thread.pinned ? ' is-on' : ''}`}
@@ -169,14 +172,27 @@ const ConversationRow: React.FC<{
           event.preventDefault();
           onStartRename(thread);
         }}
-        disabled={!onSelect}
+        disabled={!onSelect || thread.archived}
         aria-current={active ? 'true' : undefined}
       >
         {variant === 'recent' ? <span className="sidebarConv__icon">{Icon.clock}</span> : null}
         <span className="sidebarConv__label">{displayThreadTitle(thread.title)}</span>
       </button>
     )}
-    {onArchive ? (
+    {thread.archived && onRestore ? (
+      <button
+        type="button"
+        className="sidebarConv__archive"
+        aria-label={threadCopy.restore}
+        title={threadCopy.restore}
+        onClick={(event) => {
+          event.stopPropagation();
+          onRestore(thread);
+        }}
+      >
+        {Icon.archive}
+      </button>
+    ) : onArchive ? (
       <button
         type="button"
         className={`sidebarConv__archive${confirmingArchive ? ' is-confirming' : ''}`}
@@ -227,14 +243,16 @@ export const ThreadList: React.FC<{
   onSelect?: (thread: ThreadSummary) => void;
   onPin?: (thread: ThreadSummary, pinned: boolean) => void;
   onArchive?: (thread: ThreadSummary) => void;
+  onRestore?: (thread: ThreadSummary) => void;
   onRename?: (thread: ThreadSummary, title: string) => void;
   onMove?: (thread: ThreadSummary, target: ThreadSummary) => void;
-}> = ({ threads, activeThreadId, activeConversationId, onSelect, onPin, onArchive, onRename, onMove }) => {
+}> = ({ threads, activeThreadId, activeConversationId, onSelect, onPin, onArchive, onRestore, onRename, onMove }) => {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [confirmingArchiveId, setConfirmingArchiveId] = useState<string | null>(null);
   const [draggingId, setDraggingId] = useState<string | null>(null);
-  const pinned = threads.filter((t) => t.pinned);
-  const recents = threads.filter((t) => !t.pinned);
+  const pinned = threads.filter((t) => !t.archived && t.pinned);
+  const recents = threads.filter((t) => !t.archived && !t.pinned);
+  const archived = threads.filter((t) => t.archived);
 
   if (!threads.length) {
     return (
@@ -283,6 +301,7 @@ export const ThreadList: React.FC<{
               onSelect={onSelect}
               onPin={onPin}
               onArchive={onArchive}
+              onRestore={onRestore}
               onStartRename={startRename}
               onCommitRename={commitRename}
               onCancelRename={() => setEditingId(null)}
@@ -310,11 +329,38 @@ export const ThreadList: React.FC<{
               onSelect={onSelect}
               onPin={onPin}
               onArchive={onArchive}
+              onRestore={onRestore}
               onStartRename={startRename}
               onCommitRename={commitRename}
               onCancelRename={() => setEditingId(null)}
               onRequestArchive={requestArchive}
               onMove={onMove ? moveThread : undefined}
+              draggingId={draggingId}
+              onDragThreadStart={setDraggingId}
+              onDragThreadEnd={() => setDraggingId(null)}
+            />
+          ))}
+        </Section>
+      ) : null}
+      {archived.length > 0 ? (
+        <Section label={threadCopy.archivedLabel} storageKey="otto.sidebar.archived" defaultOpen={false}>
+          {archived.map((thread) => (
+            <ConversationRow
+              key={thread.id}
+              thread={thread}
+              active={false}
+              variant="archived"
+              editing={editingId === thread.id}
+              confirmingArchive={false}
+              onSelect={undefined}
+              onPin={undefined}
+              onArchive={undefined}
+              onRestore={onRestore}
+              onStartRename={startRename}
+              onCommitRename={commitRename}
+              onCancelRename={() => setEditingId(null)}
+              onRequestArchive={requestArchive}
+              onMove={undefined}
               draggingId={draggingId}
               onDragThreadStart={setDraggingId}
               onDragThreadEnd={() => setDraggingId(null)}

@@ -8,6 +8,7 @@ export interface OttoRuntimeTransport {
   newChat(): Promise<RuntimeStatus>;
   configure(input: RuntimePreferences): Promise<RuntimeStatus>;
   send(text: string): Promise<void>;
+  steer(text: string): Promise<void>;
   abort(): Promise<void>;
   resolvePermission(requestId: string, response: PermissionResponse): void;
   close(): Promise<void>;

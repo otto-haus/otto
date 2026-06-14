@@ -70,9 +70,27 @@ export function resolveHttpBaseUrl(configured?: string | null): string | null {
 export async function listLocalLettaModels(config: ConfigStore): Promise<LettaModelOption[]> {
   const base = resolveHttpBaseUrl(config.baseUrl());
   if (!base) return [];
-  const res = await fetch(`${base}/v1/models/`);
-  if (!res.ok) throw new Error(`Could not list Letta models (${res.status})`);
-  const raw = await res.json() as unknown;
+  let raw: unknown = null;
+  let lastStatus: number | null = null;
+  let lastError: unknown = null;
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    try {
+      const res = await fetch(`${base}/v1/models/`);
+      lastStatus = res.status;
+      if (res.ok) {
+        raw = await res.json() as unknown;
+        break;
+      }
+      if (res.status < 500) throw new Error(`Could not list Letta models (${res.status})`);
+    } catch (e) {
+      lastError = e;
+    }
+    if (attempt < 2) await new Promise((resolve) => setTimeout(resolve, 750 * (attempt + 1)));
+  }
+  if (!raw) {
+    if (lastError instanceof Error) throw lastError;
+    throw new Error(`Could not list Letta models (${lastStatus ?? 'unknown'})`);
+  }
   const rows = modelRows(raw);
   const seen = new Set<string>();
   const out: LettaModelOption[] = [];

@@ -117,6 +117,7 @@ const api = {
     newChat: (): Promise<RuntimeStatus> => ipcRenderer.invoke('otto:new-chat'),
     status: (): Promise<RuntimeStatus> => ipcRenderer.invoke('otto:status'),
     send: (text: string): Promise<void> => ipcRenderer.invoke('otto:send', text),
+    steer: (text: string): Promise<void> => ipcRenderer.invoke('otto:steer', text),
     abort: (): Promise<void> => ipcRenderer.invoke('otto:abort'),
     configure: (input: RuntimePreferences): Promise<RuntimeStatus> => ipcRenderer.invoke('otto:configure', input),
     openLetta: (): Promise<string> => ipcRenderer.invoke('otto:open-letta'),
@@ -310,6 +311,8 @@ const api = {
       ipcRenderer.invoke('otto:threads:switch', threadId),
     archive: (threadId: string): Promise<ChatThreadRecord> =>
       ipcRenderer.invoke('otto:threads:archive', threadId),
+    restore: (threadId: string): Promise<ChatThreadRecord> =>
+      ipcRenderer.invoke('otto:threads:restore', threadId),
     pin: (threadId: string, pinned: boolean): Promise<ChatThreadRecord> =>
       ipcRenderer.invoke('otto:threads:pin', threadId, pinned),
     rename: (threadId: string, title: string): Promise<ChatThreadRecord> =>

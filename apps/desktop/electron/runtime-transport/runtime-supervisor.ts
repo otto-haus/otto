@@ -76,6 +76,10 @@ export class RuntimeSupervisor implements OttoRuntimeTransport {
     return this.active.send(text);
   }
 
+  async steer(text: string): Promise<void> {
+    return this.active.steer(text);
+  }
+
   async abort(): Promise<void> {
     return this.active.abort();
   }

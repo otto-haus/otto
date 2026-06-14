@@ -71,6 +71,7 @@ export const Sidebar: React.FC<{
   onSelectThread?: (thread: ThreadSummary) => void;
   onPinThread?: (thread: ThreadSummary, pinned: boolean) => void;
   onArchiveThread?: (thread: ThreadSummary) => void;
+  onRestoreThread?: (thread: ThreadSummary) => void;
   onRenameThread?: (thread: ThreadSummary, title: string) => void;
   onMoveThread?: (thread: ThreadSummary, target: ThreadSummary) => void;
   isComingSoon?: (id: SurfaceId) => boolean;
@@ -87,6 +88,7 @@ export const Sidebar: React.FC<{
   onSelectThread,
   onPinThread,
   onArchiveThread,
+  onRestoreThread,
   onRenameThread,
   onMoveThread,
   isComingSoon,
@@ -206,6 +208,7 @@ export const Sidebar: React.FC<{
         onSelect={onSelectThread}
         onPin={onPinThread}
         onArchive={onArchiveThread}
+        onRestore={onRestoreThread}
         onRename={onRenameThread}
         onMove={onMoveThread}
       />

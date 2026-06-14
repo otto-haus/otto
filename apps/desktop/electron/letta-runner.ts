@@ -39,6 +39,10 @@ export class LettaRunner {
     return this.supervisor.send(text);
   }
 
+  steer(text: string): Promise<void> {
+    return this.supervisor.steer(text);
+  }
+
   abort(): Promise<void> {
     return this.supervisor.abort();
   }

@@ -484,6 +484,10 @@ export class SdkSubprocessTransport implements OttoRuntimeTransport {
     }
   }
 
+  async steer(text: string): Promise<void> {
+    return this.send(text);
+  }
+
   async abort(): Promise<void> {
     this.aborted = true;
     this.rejectPendingPermissions('Chat turn was aborted.');

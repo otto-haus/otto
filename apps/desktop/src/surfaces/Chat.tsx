@@ -767,11 +767,20 @@ const LiveChat: React.FC<{
         return;
       }
       setQueue((items) => appendQueueItem(items, text, rt.activeThreadId));
-      if (rt.busy) void rt.abort();
       setDraft('');
       setAttachments([]);
       focusComposer();
     })();
+  };
+
+  const steerCurrentReply = () => {
+    const t = draft.trim();
+    if ((!t && attachments.length === 0) || !ready || !api || !rt.busy) return;
+    const text = withAttachments(t, attachments);
+    void rt.steer(text);
+    setDraft('');
+    setAttachments([]);
+    focusComposer();
   };
 
   useEffect(() => {
@@ -1043,7 +1052,7 @@ const LiveChat: React.FC<{
               ref={textareaRef}
               placeholder={
                 ready
-                  ? (rt.busy ? 'Steer this reply…' : 'Message otto…')
+                  ? (rt.busy ? 'Queue next message…' : 'Message otto…')
                   : st
                     ? 'Runtime not ready — finish setup above'
                     : 'Connecting to Letta…'
@@ -1060,6 +1069,10 @@ const LiveChat: React.FC<{
               onKeyDown={(e) => {
                 if (e.key === 'Enter' && !e.shiftKey) {
                   e.preventDefault();
+                  if ((e.metaKey || e.ctrlKey) && rt.busy) {
+                    steerCurrentReply();
+                    return;
+                  }
                   submit();
                 }
                 else if (e.key === 'Escape') { setDraft(''); }
@@ -1067,6 +1080,18 @@ const LiveChat: React.FC<{
               disabled={!ready}
               rows={1}
             />
+            {rt.busy && (
+              <button
+                type="button"
+                className="btn btn--ghost-d promptbox__steer"
+                aria-label="Steer current reply"
+                title="Steer current reply (⌘Enter)"
+                disabled={!ready || (!draft.trim() && attachments.length === 0)}
+                onClick={steerCurrentReply}
+              >
+                Steer
+              </button>
+            )}
             {rt.busy && (
               <button type="button" className="btn btn--icon promptbox__stop" aria-label="Abort current run" onClick={rt.abort}>{Icon.stop}</button>
             )}

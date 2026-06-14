@@ -123,6 +123,30 @@ kill_orphan_live_servers() {
   fi
 }
 
+verify_renderer_assets() {
+  local bundle="$1"
+  local label="$2"
+  local index="$bundle/Contents/Resources/app/out/renderer/index.html"
+  local renderer_root
+  local refs
+
+  renderer_root="$(dirname "$index")"
+  refs="$(perl -ne 'while (/(?:src|href)="\.\/(assets\/[^"]+)"/g) { print "$1\n" }' "$index" | sort -u)"
+
+  if [[ -z "$refs" ]]; then
+    echo "$label renderer index has no bundled asset references: $index" >&2
+    exit 1
+  fi
+
+  while IFS= read -r ref; do
+    [[ -z "$ref" ]] && continue
+    if [[ ! -f "$renderer_root/$ref" ]]; then
+      echo "$label renderer index references missing asset: $ref" >&2
+      exit 1
+    fi
+  done <<< "$refs"
+}
+
 verify_app_bundle() {
   local bundle="$1"
   local label="$2"
@@ -141,6 +165,8 @@ verify_app_bundle() {
       exit 1
     fi
   done
+
+  verify_renderer_assets "$bundle" "$label"
 }
 
 compare_app_bundle_outputs() {

@@ -1080,6 +1080,7 @@ h1, h2, h3, h4, p { margin: 0; }
 .promptbox__stop { color: var(--mut); border-color: transparent; background: transparent; }
 .promptbox__attach:hover:not(:disabled),
 .promptbox__stop:hover:not(:disabled) { background: var(--accent-tint); border-color: var(--line); color: var(--ink); }
+.promptbox__steer { height: 36px; align-self: center; padding: 0 12px; border-radius: 10px; font-size: 12px; white-space: nowrap; }
 .promptbox__send { width: 40px; height: 40px; border-radius: 12px; }
 .promptbar__hint {
   font-family: var(--mono);

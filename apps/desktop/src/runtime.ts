@@ -559,6 +559,20 @@ export function useRuntime() {
     }
   }, [api, status, busy]);
 
+  const steer = useCallback(async (text: string) => {
+    if (!api) throw new Error('Chat is unavailable outside the desktop app.');
+    if (!status?.ready) throw new Error(status?.reason ?? 'Runtime not ready — finish setup in Settings.');
+    const sendThreadId = activeThreadRef.current;
+    if (!sendThreadId) throw new Error('No active conversation thread yet.');
+    const prev = loadThreadMessages(sendThreadId, threadMessagesCache.current);
+    const next: ChatMsg[] = [...prev, { id: `user-${Date.now()}`, who: 'user', text }];
+    threadMessagesCache.current.set(sendThreadId, next);
+    flushMessages(sendThreadId, next);
+    messagesRef.current = next;
+    setMessages(next);
+    await api.runtime.steer(text);
+  }, [api, status]);
+
   const abort = async () => {
     if (!api) return;
     await api.runtime.abort();
@@ -664,6 +678,7 @@ export function useRuntime() {
     busy,
     activeThreadId,
     send,
+    steer,
     abort,
     retry,
     newChat,
