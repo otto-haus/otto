@@ -1,6 +1,6 @@
 {
   "name": "otto",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Otto \u2014 the behavior layer for persistent AI agents. Turns operating contracts, practices, routines, standards, approvals, receipts, and corrections into governed future behavior.",
   "type": "module",
   "license": "MIT",
