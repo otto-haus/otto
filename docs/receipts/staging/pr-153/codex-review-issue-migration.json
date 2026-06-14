@@ -1,0 +1,78 @@
+{
+  "pr": 153,
+  "reviewer": "codex",
+  "reviewedAt": "2026-06-14",
+  "changeType": "backend-workflow",
+  "fixApplied": {
+    "summary": "Dry-run migrations now write to an OS temp file by default instead of dirtying the committed migration map. Migration prose now describes the final map as synced evidence.",
+    "files": [
+      "scripts/migrate-hq-tickets-to-github-issues.mjs",
+      "planning/hq-tickets/github-issue-migration.md"
+    ]
+  },
+  "dryRunProof": {
+    "command": "node scripts/migrate-hq-tickets-to-github-issues.mjs --source planning/hq-tickets --repo otto-haus/otto --limit 1",
+    "exitCode": 0,
+    "stdout": [
+      "summary {\"total\":1,\"skipped\":1}",
+      "wrote /var/folders/22/fzs3nrw505z_m71cghqjc7j80000gn/T/otto-issue-migration-dry-run.json"
+    ],
+    "trackedMigrationMapStatus": "clean"
+  },
+  "migrationMapProof": {
+    "path": "planning/hq-tickets/github-issue-migration.json",
+    "summary": {
+      "total": 90,
+      "updated": 90
+    },
+    "firstIssue": {
+      "ticketId": "019",
+      "issueNumber": 59,
+      "source": "planning/hq-tickets/_Parked/019-intake-manual-import.md",
+      "action": "updated"
+    },
+    "lastIssue": {
+      "ticketId": "159",
+      "issueNumber": 149,
+      "source": "planning/hq-tickets/159-chat-core-working-loop-ws.md",
+      "action": "updated"
+    }
+  },
+  "liveIssueSpotChecks": [
+    {
+      "issue": 59,
+      "state": "OPEN",
+      "title": "[otto-ticket:019] Intake: Manual Import",
+      "bodyContains": "planning/hq-tickets/_Parked/019-intake-manual-import.md"
+    },
+    {
+      "issue": 149,
+      "state": "OPEN",
+      "title": "[otto-ticket:159] Chat Core Working Loop: WS Letta + Conversations",
+      "bodyContains": "planning/hq-tickets/159-chat-core-working-loop-ws.md"
+    }
+  ],
+  "verification": {
+    "passed": [
+      "bun install --frozen-lockfile",
+      "node --check scripts/migrate-hq-tickets-to-github-issues.mjs",
+      "ruby -e 'require \"yaml\"; YAML.load_file(\".github/ISSUE_TEMPLATE/config.yml\"); YAML.load_file(\".github/ISSUE_TEMPLATE/otto-ticket.yml\")'",
+      "node -e 'const fs=require(\"fs\"); const j=JSON.parse(fs.readFileSync(\"planning/hq-tickets/github-issue-migration.json\",\"utf8\")); if (j.summary.total!==90 || j.summary.updated!==90 || j.issues[0].issueNumber!==59 || j.issues.at(-1).issueNumber!==149) process.exit(1)'",
+      "gh issue view 59 --repo otto-haus/otto --json number,title,state,body,url",
+      "gh issue view 149 --repo otto-haus/otto --json number,title,state,body,url",
+      "git diff --check",
+      "bun run typecheck",
+      "bun run --cwd apps/desktop typecheck",
+      "bun run --cwd apps/desktop electron:typecheck",
+      "bun test",
+      "bun run verify:v0",
+      "bun run --cwd apps/desktop electron:build"
+    ],
+    "knownNonBlocking": [
+      "bun audit exits 1 on pre-existing electron <35.7.5 and esbuild <=0.24.2 advisories; this PR does not touch dependency manifests or lockfiles."
+    ],
+    "notRun": [
+      "task staging: not run because this PR does not implement apps/desktop behavior."
+    ]
+  }
+}

@@ -1,0 +1,8 @@
+{
+  "pr": 153,
+  "status": "ready_for_review_after_codex_fixes",
+  "evidenceType": "backend-data",
+  "primaryReceipt": "docs/receipts/staging/pr-153/codex-review-issue-migration.json",
+  "reviewFinding": "Original dry-run behavior could dirty the committed migration map; fixed by moving default dry-run output to the OS temp directory while preserving write-mode migration-map output.",
+  "readyForSebastian": true
+}

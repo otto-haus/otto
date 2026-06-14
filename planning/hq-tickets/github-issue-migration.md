@@ -20,9 +20,11 @@ Date: 2026-06-14
 ```sh
 node scripts/migrate-hq-tickets-to-github-issues.mjs \
   --source <live-otto-checkout>/planning/hq-tickets \
-  --repo otto-haus/otto \
-  --out planning/hq-tickets/github-issue-migration.json
+  --repo otto-haus/otto
 ```
+
+Dry runs write to an OS temp file by default so local smoke checks do not dirty
+the committed migration map.
 
 ```sh
 node scripts/migrate-hq-tickets-to-github-issues.mjs \
@@ -43,7 +45,7 @@ node scripts/migrate-hq-tickets-to-github-issues.mjs \
 
 ## Result
 
-- Created issues: `https://github.com/otto-haus/otto/issues/59` through `https://github.com/otto-haus/otto/issues/149`, with non-contiguous numbering where GitHub already had activity.
+- Migration map covers synced issues: `https://github.com/otto-haus/otto/issues/59` through `https://github.com/otto-haus/otto/issues/149`, with non-contiguous numbering where GitHub already had activity.
 - Spot-checked issue bodies after sync:
   - `#59` uses `planning/hq-tickets/_Parked/019-intake-manual-import.md`
   - `#149` uses `planning/hq-tickets/159-chat-core-working-loop-ws.md`

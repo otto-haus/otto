@@ -25,12 +25,21 @@ function hasFlag(name) {
   return true;
 }
 
+const source = path.resolve(takeFlag("--source", "planning/hq-tickets"));
+const repo = takeFlag("--repo", "otto-haus/otto");
+const outFlag = takeFlag("--out");
+const date = takeFlag("--date", new Date().toISOString().slice(0, 10));
+const write = hasFlag("--write");
+const defaultOut = write
+  ? "planning/hq-tickets/github-issue-migration.json"
+  : path.join(os.tmpdir(), "otto-issue-migration-dry-run.json");
+
 const options = {
-  source: path.resolve(takeFlag("--source", "planning/hq-tickets")),
-  repo: takeFlag("--repo", "otto-haus/otto"),
-  out: takeFlag("--out", "planning/hq-tickets/github-issue-migration.json"),
-  date: takeFlag("--date", new Date().toISOString().slice(0, 10)),
-  write: hasFlag("--write"),
+  source,
+  repo,
+  out: path.resolve(outFlag ?? defaultOut),
+  date,
+  write,
   syncExisting: hasFlag("--sync-existing"),
   includeDone: hasFlag("--include-done"),
   includeZero: hasFlag("--include-zero"),
