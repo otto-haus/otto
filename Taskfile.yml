@@ -24,7 +24,9 @@ tasks:
   electron:
     desc: Desktop — Electron app wired to the live Letta runtime
     dir: '{{.DESKTOP}}'
-    cmds: [env -u ELECTRON_RUN_AS_NODE bun run electron:dev]
+    cmds:
+      - node ../../scripts/ensure-electron-ready.mjs
+      - env -u ELECTRON_RUN_AS_NODE bun run electron:dev
 
   gen:
     desc: Regenerate file-backed data (practices.json, readiness.json)

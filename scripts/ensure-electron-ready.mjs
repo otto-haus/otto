@@ -1,0 +1,220 @@
+#!/usr/bin/env node
+
+import { spawnSync } from "node:child_process";
+import {
+  existsSync,
+  lstatSync,
+  mkdirSync,
+  readdirSync,
+  readFileSync,
+  rmSync,
+  statSync,
+  writeFileSync,
+} from "node:fs";
+import os from "node:os";
+import { createRequire } from "node:module";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+
+const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+const desktopDir = path.join(repoRoot, "apps", "desktop");
+const requireFromDesktop = createRequire(path.join(desktopDir, "package.json"));
+const electronPackagePath = requireFromDesktop.resolve("electron/package.json");
+const electronDir = path.dirname(electronPackagePath);
+const electronPackage = JSON.parse(readFileSync(electronPackagePath, "utf8"));
+const distDir = path.join(electronDir, "dist");
+const pathFile = path.join(electronDir, "path.txt");
+const platformPath = getPlatformPath();
+
+if (electronReady()) {
+  process.exit(0);
+}
+
+if (process.platform !== "darwin") {
+  runElectronInstall();
+  if (electronReady()) {
+    process.exit(0);
+  }
+  fail(
+    "Electron is not ready. Try deleting node_modules and rerunning `bun install`, then retry `task electron`.",
+  );
+}
+
+let zipPath = findElectronZip();
+if (!zipPath) {
+  runElectronInstall();
+  zipPath = findElectronZip();
+}
+
+if (!zipPath) {
+  fail(
+    "Electron binary cache was not found. Rerun `bun install` with network access, then retry `task electron`.",
+  );
+}
+
+repairMacElectronFromZip(zipPath);
+
+if (!electronReady()) {
+  fail(
+    "Electron repair did not produce a runnable macOS bundle. Delete node_modules and rerun `bun install`.",
+  );
+}
+
+console.log("repaired Electron macOS bundle from Bun cache");
+
+function electronReady() {
+  try {
+    const electronPath = requireFromDesktop("electron");
+    if (!existsSync(electronPath)) {
+      return false;
+    }
+    if (process.platform !== "darwin") {
+      return true;
+    }
+    return macBundleReady();
+  } catch {
+    return false;
+  }
+}
+
+function macBundleReady() {
+  const frameworkLink = path.join(
+    distDir,
+    "Electron.app",
+    "Contents",
+    "Frameworks",
+    "Electron Framework.framework",
+    "Electron Framework",
+  );
+  const frameworkBinary = path.join(
+    distDir,
+    "Electron.app",
+    "Contents",
+    "Frameworks",
+    "Electron Framework.framework",
+    "Versions",
+    "A",
+    "Electron Framework",
+  );
+  try {
+    return lstatSync(frameworkLink).isSymbolicLink() && existsSync(frameworkBinary);
+  } catch {
+    return false;
+  }
+}
+
+function runElectronInstall() {
+  const result = spawnSync(process.execPath, [path.join(electronDir, "install.js")], {
+    cwd: repoRoot,
+    env: process.env,
+    stdio: "inherit",
+  });
+  if (result.status !== 0) {
+    fail("Electron install script failed before `task electron` could start.");
+  }
+}
+
+function repairMacElectronFromZip(zipPath) {
+  const unzip = "/usr/bin/unzip";
+  if (!existsSync(unzip)) {
+    fail("macOS unzip was not found at /usr/bin/unzip; cannot repair Electron.");
+  }
+
+  rmSync(distDir, { force: true, recursive: true });
+  rmSync(pathFile, { force: true });
+  mkdirSync(distDir, { recursive: true });
+
+  const result = spawnSync(unzip, ["-q", zipPath, "-d", distDir], {
+    cwd: repoRoot,
+    stdio: "inherit",
+  });
+  if (result.status !== 0) {
+    fail("Could not unzip the cached Electron macOS bundle.");
+  }
+
+  writeFileSync(pathFile, platformPath);
+}
+
+function findElectronZip() {
+  const roots = [
+    process.env.electron_config_cache,
+    process.env.npm_config_electron_cache,
+    process.env.HOME ? path.join(process.env.HOME, "Library", "Caches", "electron") : undefined,
+    process.env.XDG_CACHE_HOME ? path.join(process.env.XDG_CACHE_HOME, "electron") : undefined,
+    path.join(os.homedir(), "Library", "Caches", "electron"),
+  ].filter(Boolean);
+
+  const preferredName = `electron-v${electronPackage.version}-${process.platform}-${process.arch}.zip`;
+  const fallbackPrefix = `electron-v${electronPackage.version}-${process.platform}-`;
+
+  for (const root of roots) {
+    const matches = findFiles(root, (name) => name === preferredName);
+    if (matches.length > 0) {
+      return matches[0];
+    }
+  }
+  for (const root of roots) {
+    const matches = findFiles(
+      root,
+      (name) => name.startsWith(fallbackPrefix) && name.endsWith(".zip"),
+    );
+    if (matches.length > 0) {
+      return matches[0];
+    }
+  }
+  return undefined;
+}
+
+function findFiles(root, predicate) {
+  if (!root || !existsSync(root)) {
+    return [];
+  }
+  const results = [];
+  const stack = [root];
+  while (stack.length > 0) {
+    const current = stack.pop();
+    let entries;
+    try {
+      entries = readdirSync(current, { withFileTypes: true });
+    } catch {
+      continue;
+    }
+    for (const entry of entries) {
+      const entryPath = path.join(current, entry.name);
+      if (entry.isDirectory()) {
+        stack.push(entryPath);
+      } else if (entry.isFile() && predicate(entry.name)) {
+        results.push(entryPath);
+      } else if (!entry.isDirectory()) {
+        try {
+          if (statSync(entryPath).isFile() && predicate(entry.name)) {
+            results.push(entryPath);
+          }
+        } catch {
+          // Ignore unreadable cache entries.
+        }
+      }
+    }
+  }
+  return results.sort();
+}
+
+function getPlatformPath() {
+  switch (process.platform) {
+    case "darwin":
+      return "Electron.app/Contents/MacOS/Electron";
+    case "linux":
+    case "freebsd":
+    case "openbsd":
+      return "electron";
+    case "win32":
+      return "electron.exe";
+    default:
+      fail(`Electron builds are not available on platform: ${process.platform}`);
+  }
+}
+
+function fail(message) {
+  console.error(message);
+  process.exit(1);
+}

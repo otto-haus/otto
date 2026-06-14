@@ -61,10 +61,11 @@ bun run --cwd apps/desktop dev
 Development Electron:
 
 ```sh
-bun run --cwd apps/desktop electron:dev
+task electron
 ```
 
-This opens a development app from the repo. It does not install `/Applications/otto.app`.
+This opens a development app from the repo and runs the Electron install preflight first.
+It does not install `/Applications/otto.app`.
 Do not report the installed app as tested unless you deliberately ran the installed-app path
 (`task refresh`), which writes `/Applications/otto.app`.
 

@@ -228,6 +228,10 @@ task electron
 task staging
 ```
 
+`task electron` runs an Electron install preflight first. On macOS, it can repair
+Bun's partial Electron bundle extraction from the local Electron cache before opening
+the development app.
+
 Canonical app boundary:
 
 - `/Applications/otto.app` is the user-facing canonical app.
