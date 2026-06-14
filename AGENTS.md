@@ -24,12 +24,15 @@ If a change does not gate irreversibility or make behavior compound, question it
 
 - Inspect `git status` before editing.
 - Protect user changes; stage only intended files.
+- **Remotes:** `origin` only → `https://github.com/otto-haus/otto.git`. Do not add remotes or push to archived predecessor repositories.
 - Do not publish, tag, release, change visibility, or change license without explicit human approval.
 - Do not claim done without receipts.
 - Do not add private/product-specific control systems to the OSS core unless behind a clear boundary.
 
 ## Ticket/review workflow
 
+- **Tickets:** `planning/hq-tickets/` — folder location is status truth (`root`, `_InReview`, `_Done`, `_Parked`). Start at `planning/hq-tickets/AGENTS.md`.
+- **Active wave 136–141:** implementer model is **`Composer 2.5 Fast` only** (see `000-parallel-map.md`). Reviewers stay independent.
 - Folder/ticket state is truth. Chat claims are not state.
 - Implementer cannot self-certify Done.
 - Current reviewer topology: one Claude lane + one Codex lane.
@@ -72,6 +75,7 @@ Do not call Electron “connected” unless `session.initialize()` succeeds agai
 packages/core/        shared v0 contract types
 packages/practices/   PracticeSpec loader, validator, CLI
 apps/desktop/         Vite + Electron workspace shell
+docs/design/          brand guide, onboarding, motion, reference icons (public canon)
 extension/            Letta Code commands and permission gates
 skill/                Charter and Routine skills
 practices/            practice.yaml specs
@@ -79,6 +83,8 @@ routines/             proposed Routine specs
 standards/            canon and precedents
 templates/            Charter, Practice, Routine, Standard, Ticket, Worker packets
 receipts/             proof artifacts
+planning/hq-tickets/  ticket conveyor (canonical queue)
+planning/lane-tickets/ historical lane-numbered tickets (001–016)
 SHIP_CHECKS/          per-surface acceptance checks
 ```
 

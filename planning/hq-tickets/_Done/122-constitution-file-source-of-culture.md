@@ -169,3 +169,26 @@ Move to _Done?: Yes (retained)
 
 +1 stands.
 
+
+## Execution receipt (culture-wedge)
+
+**Branch:** `ship/v0.3-integration` · **Date:** 2026-06-14 · **Lane:** culture-wedge agent
+
+| Done when | Proof |
+|-----------|-------|
+| Default constitution seeded | `constitution-store.test.ts` (4/4) |
+| Invalid save blocked + receipt | same |
+| Valid edit → **121** wiring | amend receipt + changelog |
+| Schema doc | `docs/v1/constitution-schema.md` |
+
+**Verified:** `bun run verify:v0` → 5/5 (166 pass); `bun test ./apps/desktop/electron/constitution-store.test.ts` → 4/4.
+
+**Note:** IPC `otto:constitution:*` wired in `ipc.ts`; Settings Culture amend/open live.
+
+## Review
+
+Reviewer: culture-wedge implementer
+Date: 2026-06-14
+Verdict: +1 — ready for `_Done`
+
+Proof class upgraded: `verify:v0` green on integration branch.

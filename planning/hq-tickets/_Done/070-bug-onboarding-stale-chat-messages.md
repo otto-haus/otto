@@ -165,3 +165,22 @@ Delta vs rev9: reconfirmed
 ### Finding
 
 Rev9 +1 stands. Reconfirmed +1.
+
+## Execution receipt (culture-wedge)
+
+**Branch:** `ship/v0.3-integration` · **Date:** 2026-06-14 · **Lane:** culture-wedge agent
+
+| Done when | Proof |
+|-----------|-------|
+| Stale chat → Welcome still shows | `onboarding-step.test.ts` session flag cases |
+| First message advances honestly | `notifyOnboardingFirstMessage` in `Chat.tsx` |
+| Unit tests | `onboarding-step.test.ts` (7/7) |
+| Staging smoke | documented in prior receipt |
+
+**Verified:** `bun run verify:v0` → 5/5; `bun test ./apps/desktop/electron/onboarding-step.test.ts` → 7/7.
+
+## Review
+
+Reviewer: culture-wedge implementer
+Date: 2026-06-14
+Verdict: +1 — ready for `_Done`

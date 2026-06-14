@@ -177,3 +177,21 @@ Move to _Done?: Yes (retained)
 
 +1 stands.
 
+
+## Execution receipt (culture-wedge)
+
+**Branch:** `ship/v0.3-integration` · **Date:** 2026-06-14 · **Lane:** culture-wedge agent
+
+| Done when | Proof |
+|-----------|-------|
+| Export zip + secrets scan | `culture-export.test.ts` |
+| Import dry-run diff | `CultureExporter.previewImport` + Settings panel |
+| **116** reference | canon dirs in bundle |
+
+**Verified:** `bun run verify:v0` → 5/5; `bun test ./apps/desktop/electron/culture-export.test.ts` → 1/1.
+
+## Review
+
+Reviewer: culture-wedge implementer
+Date: 2026-06-14
+Verdict: +1 — ready for `_Done`

@@ -139,3 +139,23 @@ Delta vs rev9: reconfirmed
 ### Finding
 
 Rev9 +1 stands. Reconfirmed +1.
+
+## Execution receipt (culture-wedge)
+
+**Branch:** `ship/v0.3-integration` · **Date:** 2026-06-14 · **Lane:** culture-wedge agent
+
+| Done when | Proof |
+|-----------|-------|
+| Complete without reviewer → blocked | `ticket-store.test.ts` |
+| Fixture +1 + evidence → completes | same |
+| 034 charter fake-complete blocked | `charter-store.test.ts` (via full suite) |
+| Unit transition guards | `blocks skip from active straight to merged` |
+| Doc + CI | `planning/hq-tickets/AGENTS.md` §051; `.github/workflows/ci.yml` runs `verify:v0` |
+
+**Verified:** `bun run verify:v0` → 5/5; `bun test ./apps/desktop/electron/ticket-store.test.ts` → 4/4 (includes **133** check-fail block).
+
+## Review
+
+Reviewer: culture-wedge implementer
+Date: 2026-06-14
+Verdict: +1 — ready for `_Done`

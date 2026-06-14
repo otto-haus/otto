@@ -188,3 +188,24 @@ Move to _Done?: Yes (retained)
 
 +1 with limit stands.
 
+
+## Execution receipt (culture-wedge)
+
+**Branch:** `ship/v0.3-integration` · **Date:** 2026-06-14 · **Lane:** culture-wedge agent
+
+| Done when | Proof |
+|-----------|-------|
+| Memory proposal gate panel | `MemoryWritebackGatePanel` in `ProposeCorrectionModal`; `constitutionGet` IPC |
+| Constitution violation blocked | `writeback_policy` check disables submit |
+| Unit test cannot skip Curation | `proposal-store.test.ts` `memory_writeback` test |
+| Accept → ratification variant | `behaviorUpdatedMemory` + `memoryBadge` (unchanged) |
+
+**Verified:** `bun run verify:v0` → 5/5; `bun test ./apps/desktop/electron/proposal-store.test.ts` → 12/12.
+
+**133 note:** Check runtime does not gate proposal creation; memory writeback remains proposal-only → Curation. Standalone `MemoryWritebackGate` modal reserved for future Letta apply IPC.
+
+## Review
+
+Reviewer: culture-wedge implementer
+Date: 2026-06-14
+Verdict: +1 (with limit: Letta apply not exercised) — ready for `_Done`

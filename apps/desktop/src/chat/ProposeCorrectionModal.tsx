@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import type { ConstitutionResult, ProposalCanonImpact, ProposalClassification, ProposalTarget } from '@otto-haus/core';
+import { MemoryWritebackGatePanel } from '../components/ui/MemoryWritebackGate';
 import { Modal } from '../components/ui/Modal';
-import { chatCopy, cultureSettingsCopy, memoryWritebackCopy } from '../copy/surfaces';
+import { chatCopy, cultureSettingsCopy } from '../copy/surfaces';
 
 const TARGET_OPTIONS: Array<{ kind: ProposalCanonImpact | 'task'; label: string }> = [
   { kind: 'standard', label: 'Standard' },
@@ -118,20 +119,13 @@ export const ProposeCorrectionModal: React.FC<{
             </div>
           ) : null}
           {memoryTarget ? (
-            <div className="proposeModal__writebackGate panel">
-              <div className="eyebrow">{memoryWritebackCopy.eyebrow}</div>
-              <p className="muted" style={{ marginTop: 8 }}>{memoryWritebackCopy.lede}</p>
-              <p className="faint" style={{ marginTop: 8 }}>{writebackReason}</p>
-              {context ? (
-                <p className="muted" style={{ marginTop: 8 }}>
-                  <strong>Evidence:</strong> {context.messageText.slice(0, 280)}
-                  {context.messageText.length > 280 ? '…' : ''}
-                </p>
-              ) : null}
-              {!writebackAllowed ? (
-                <p className="notice notice--warn" style={{ marginTop: 10 }}>{writebackReason}</p>
-              ) : null}
-            </div>
+            <MemoryWritebackGatePanel
+              targetLabel="Memory writeback proposal"
+              summary={correction.trim() || 'Summary pending — describe the future behavior above.'}
+              policyNote={writebackReason}
+              blocked={!writebackAllowed}
+              evidence={context ? truncateEvidence(context.messageText, 280) : undefined}
+            />
           ) : null}
           <div className="proposeModal__actions">
             <button type="button" className="btn btn--ghost-d" disabled={busy} onClick={onClose}>Cancel</button>
@@ -153,4 +147,9 @@ export const ProposeCorrectionModal: React.FC<{
 function targetForKind(kind: ProposalCanonImpact | 'task'): ProposalTarget {
   if (kind === 'task') return { kind: 'none' };
   return { kind, action: 'update' };
+}
+
+function truncateEvidence(text: string, max: number): string {
+  if (text.length <= max) return text;
+  return `${text.slice(0, max)}…`;
 }
