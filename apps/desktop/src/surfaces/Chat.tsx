@@ -227,9 +227,6 @@ const dedupeQueue = (items: Array<QueueItem | null>): QueueItem[] => {
   return out;
 };
 
-const queueTextKey = (text: string, threadId: string | null | undefined) =>
-  `${threadId ?? 'legacy'}:${text.trim().replace(/\s+/g, ' ')}`;
-
 const userMessageSentAt = (message: ChatMsg): number | null => {
   if (message.who !== 'user') return null;
   const match = /^user-(\d+)$/.exec(message.id);
@@ -250,9 +247,7 @@ const queueItemAlreadyDelivered = (item: QueueItem, messages: ChatMsg[]): boolea
   });
 };
 
-const appendQueueItemOnce = (items: QueueItem[], text: string, threadId: string | null | undefined): QueueItem[] => {
-  const key = queueTextKey(text, threadId);
-  if (items.some((item) => item.state !== 'failed' && queueTextKey(item.text, item.threadId) === key)) return items;
+const appendQueueItem = (items: QueueItem[], text: string, threadId: string | null | undefined): QueueItem[] => {
   return [...items, createQueueItem(text, 'queued', threadId ?? null)];
 };
 
@@ -543,7 +538,6 @@ const LiveChat: React.FC<{
   const [proposeBusy, setProposeBusy] = useState(false);
   const [cmdMessages, setCmdMessages] = useState<ChatMsg[]>([]);
   const draining = useRef(false);
-  const sendingQueueKeys = useRef(new Set<string>());
   const fileInput = useRef<HTMLInputElement | null>(null);
   const pickerRef = useRef<HTMLDivElement | null>(null);
   const streamRef = useRef<HTMLDivElement | null>(null);
@@ -608,7 +602,7 @@ const LiveChat: React.FC<{
       const text = detail?.text?.trim();
       if (!text || !ready || !api) return;
       if (detail?.send) {
-        setQueue((items) => appendQueueItemOnce(items, text, rt.activeThreadId));
+        setQueue((items) => appendQueueItem(items, text, rt.activeThreadId));
         return;
       }
       setDraft(text);
@@ -763,7 +757,7 @@ const LiveChat: React.FC<{
         focusComposer();
         return;
       }
-      setQueue((items) => appendQueueItemOnce(items, text, rt.activeThreadId));
+      setQueue((items) => appendQueueItem(items, text, rt.activeThreadId));
       if (rt.busy) void rt.abort();
       setDraft('');
       setAttachments([]);
@@ -776,7 +770,7 @@ const LiveChat: React.FC<{
     const deliveredPruned = queue.filter(
       (item) =>
         !(
-          item.state === 'queued' &&
+          queue.length === 1 &&
           Date.now() - item.createdAt >= QUEUE_DELIVERED_PRUNE_AGE_MS &&
           queueMatchesThread(item, rt.activeThreadId) &&
           queueItemAlreadyDelivered(item, rt.messages)
@@ -789,13 +783,7 @@ const LiveChat: React.FC<{
     if (rt.busy || draining.current) return;
     const next = nextQueueItemForThread(queue, rt.activeThreadId);
     if (!next) return;
-    const sendingKey = queueTextKey(next.text, rt.activeThreadId);
-    if (sendingQueueKeys.current.has(sendingKey)) {
-      setQueue((items) => items.filter((item) => item.id !== next.id));
-      return;
-    }
     draining.current = true;
-    sendingQueueKeys.current.add(sendingKey);
     persistInFlight({ ...next, state: 'sending' });
     setQueue((items) => items.filter((item) => item.id !== next.id));
     void rt.send(next.text)
@@ -808,7 +796,6 @@ const LiveChat: React.FC<{
         setQueue((items) => dedupeQueue([{ ...next, state: 'failed' }, ...items]));
       })
       .finally(() => {
-        sendingQueueKeys.current.delete(sendingKey);
         draining.current = false;
       });
   }, [queue, ready, rt.activeThreadId, rt.busy, rt.messages, rt.send]);
