@@ -1,1 +1,12 @@
 * @seb-veto
+
+# CI/CD and contributor tooling remain explicitly owned even if the
+# repository-wide default owner changes later. GitHub uses the last matching
+# CODEOWNERS pattern, so these entries intentionally follow the default.
+/.github/ @seb-veto
+/scripts/ @seb-veto
+/apps/desktop/scripts/ @seb-veto
+/Taskfile.yml @seb-veto
+/package.json @seb-veto
+/bun.lock @seb-veto
+/.bun-version @seb-veto
