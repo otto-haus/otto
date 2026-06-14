@@ -14,7 +14,7 @@ export type ThreadSummary = {
 export function displayThreadTitle(title: string): string {
   const t = title.trim();
   if (!t || /^new chat$/i.test(t)) return 'New chat';
-  if (/^local_/i.test(t)) return 'New chat';
+  if (/^local[-_]/i.test(t)) return 'New chat';
   if (/^\d{3}-/.test(t) && /thread/i.test(t)) return 'Chat session';
   if (t.length > 42) return `${t.slice(0, 39)}…`;
   return t;
