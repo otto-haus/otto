@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'bun:test';
-import { mkdtempSync, mkdirSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdtempSync, mkdirSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import {
@@ -23,6 +23,12 @@ class ReadyPgvectorStore extends PgvectorStore {
       note: 'ready',
       error: null,
     };
+  }
+}
+
+class UnexpectedHealthPgvectorStore extends PgvectorStore {
+  override async healthCheck() {
+    throw new Error('healthCheck should not run before source path validation');
   }
 }
 
@@ -94,7 +100,7 @@ describe('PgvectorStore status', () => {
     process.env.OTTO_PGVECTOR_URL = 'postgresql://nobody:nobody@127.0.0.1:15999/none';
     const dir = mkdtempSync(join(tmpdir(), 'otto-pgvector-path-'));
     try {
-      const store = new ReadyPgvectorStore();
+      const store = new UnexpectedHealthPgvectorStore();
       let message = '';
       try {
         await store.indexSource('../outside.md', 'fixture', { root: dir, text: 'outside' });
@@ -105,6 +111,38 @@ describe('PgvectorStore status', () => {
       await store.disconnect();
     } finally {
       rmSync(dir, { recursive: true, force: true });
+      if (prevPg !== undefined) process.env.OTTO_PGVECTOR = prevPg;
+      else Reflect.deleteProperty(process.env, 'OTTO_PGVECTOR');
+      if (prevUrl !== undefined) process.env.OTTO_PGVECTOR_URL = prevUrl;
+      else Reflect.deleteProperty(process.env, 'OTTO_PGVECTOR_URL');
+    }
+  });
+
+  test('indexSource rejects symlinked source paths that resolve outside the repo root before connecting', async () => {
+    const prevPg = process.env.OTTO_PGVECTOR;
+    const prevUrl = process.env.OTTO_PGVECTOR_URL;
+    process.env.OTTO_PGVECTOR = '1';
+    process.env.OTTO_PGVECTOR_URL = 'postgresql://nobody:nobody@127.0.0.1:15999/none';
+    const dir = mkdtempSync(join(tmpdir(), 'otto-pgvector-symlink-root-'));
+    const outside = mkdtempSync(join(tmpdir(), 'otto-pgvector-symlink-outside-'));
+    try {
+      mkdirSync(join(dir, 'fixture'), { recursive: true });
+      const outsidePath = join(outside, 'secret.md');
+      writeFileSync(outsidePath, 'outside root', 'utf8');
+      symlinkSync(outsidePath, join(dir, 'fixture', 'secret.md'));
+
+      const store = new UnexpectedHealthPgvectorStore();
+      let message = '';
+      try {
+        await store.indexSource('fixture/secret.md', 'fixture', { root: dir });
+      } catch (error) {
+        message = error instanceof Error ? error.message : String(error);
+      }
+      expect(message).toMatch(/sourcePath must stay within root/i);
+      await store.disconnect();
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+      rmSync(outside, { recursive: true, force: true });
       if (prevPg !== undefined) process.env.OTTO_PGVECTOR = prevPg;
       else Reflect.deleteProperty(process.env, 'OTTO_PGVECTOR');
       if (prevUrl !== undefined) process.env.OTTO_PGVECTOR_URL = prevUrl;
