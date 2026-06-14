@@ -97,9 +97,19 @@ export const SurfacePage: React.FC<{ children: React.ReactNode; className?: stri
   className = '',
 }) => <div className={`standardsSurface surfacePage${className ? ` ${className}` : ''}`}>{children}</div>;
 
-export const SplitLayout: React.FC<{ list: React.ReactNode; detail: React.ReactNode }> = ({ list, detail }) => (
+export const SplitLayout: React.FC<{
+  list: React.ReactNode;
+  detail: React.ReactNode;
+  listClassName?: string;
+  listAriaLabel?: string;
+}> = ({ list, detail, listClassName = '', listAriaLabel }) => (
   <div className="split">
-    <div className="cards">{list}</div>
+    <div
+      className={`cards${listClassName ? ` ${listClassName}` : ''}`}
+      {...(listAriaLabel ? { role: 'group' as const, 'aria-label': listAriaLabel } : {})}
+    >
+      {list}
+    </div>
     {detail}
   </div>
 );

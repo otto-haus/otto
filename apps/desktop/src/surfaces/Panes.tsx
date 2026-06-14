@@ -306,6 +306,8 @@ export const Charters: React.FC = () => {
       </div>
 
       <SplitLayout
+        listClassName="charterList"
+        listAriaLabel="Charters list"
         list={
           <>
             {charters.map((charter) => (
@@ -1774,6 +1776,8 @@ export const Receipts: React.FC = () => {
       )}
 
       <SplitLayout
+        listClassName="receiptList"
+        listAriaLabel="Receipts list"
         list={
           <>
             {filtered.map((receipt) => (
