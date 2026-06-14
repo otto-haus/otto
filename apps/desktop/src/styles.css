@@ -312,13 +312,14 @@ h1, h2, h3, h4, p { margin: 0; }
 .filechip {
   font-family: var(--mono); font-size: 12px; color: var(--ink-soft);
   background: var(--bg); border: 1px solid var(--line); border-radius: 7px; padding: 3px 8px;
-  display: inline-flex; align-items: center; gap: 6px;
+  display: inline-block; vertical-align: middle;
   max-width: 100%;
   min-width: 0;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
+.filechip svg { margin-right: 6px; vertical-align: -3px; }
 
 /* pills */
 .pill {

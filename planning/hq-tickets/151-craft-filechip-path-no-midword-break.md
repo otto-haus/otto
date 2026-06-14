@@ -68,3 +68,20 @@ Visual: `#settings` General → RUNTIME & IDENTITY path renders one line;
 ## Blocker log
 
 Leave blank unless blocked.
+
+## Execution receipt
+
+- Replaced arbitrary path wrapping with single-line overflow behavior on
+  `.filechip`.
+- Reviewer proof found `text-overflow` did not visibly ellipsize while the chip
+  was `inline-flex` with an icon and raw text; changed the chip to an inline
+  text formatting context and aligned nested SVG icons separately.
+- Proof artifacts: `docs/receipts/staging/pr-27/`.
+- Verification:
+  - `bun run --cwd apps/desktop typecheck`
+  - `bun run typecheck`
+  - `bun test` -> 35 pass / 0 fail
+  - `bun run verify:v0` -> 5 pass / 0 fail
+  - `git diff --check`
+  - Playwright screenshots for Settings constrained chips and Charters roomy
+    chip.
