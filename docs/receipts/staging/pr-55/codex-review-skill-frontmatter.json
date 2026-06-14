@@ -1,0 +1,79 @@
+{
+  "schema": "otto.codex_pr_review.v1",
+  "pr": 55,
+  "reviewedAt": "2026-06-14T22:08:22Z",
+  "headBranch": "feat/skill-store-validation",
+  "baseBranch": "ship/functional-labs",
+  "reviewBranch": "codex/pr-55-review",
+  "surface": "apps/desktop/electron/skill-store.ts",
+  "proofType": "data",
+  "codeRecommendation": "ready_for_sebastian_review",
+  "shipRecommendation": "ship_with_ship_functional_labs_train",
+  "findings": [
+    {
+      "severity": "low",
+      "status": "fixed",
+      "summary": "Added adversarial coverage for malformed YAML frontmatter so the parser failure mode remains isolated to the bad skill."
+    }
+  ],
+  "assertions": [
+    {
+      "name": "quoted scalar skill name",
+      "expected": "quoted skill",
+      "observed": "quoted skill",
+      "passed": true
+    },
+    {
+      "name": "block scalar description",
+      "expected": "First line.\\nSecond line.\\n",
+      "observed": "First line.\\nSecond line.\\n",
+      "passed": true
+    },
+    {
+      "name": "slash trigger retained from markdown body",
+      "expected": "/quoted-skill",
+      "observed": "/quoted-skill",
+      "passed": true
+    },
+    {
+      "name": "malformed root YAML is skipped",
+      "expected": "otto absent from loaded skills and present in skipped",
+      "observed": "otto absent from loaded skills and present in skipped",
+      "passed": true
+    },
+    {
+      "name": "neighboring valid skill still loads",
+      "expected": "valid skill present",
+      "observed": "valid skill present",
+      "passed": true
+    }
+  ],
+  "verification": [
+    {
+      "command": "bun install --frozen-lockfile",
+      "status": "passed"
+    },
+    {
+      "command": "bun test apps/desktop/electron/skill-store.test.ts",
+      "status": "passed",
+      "result": "4 pass, 0 fail, 13 expect"
+    },
+    {
+      "command": "bun test apps/desktop/electron/skill-store.test.ts apps/desktop/electron/standard-store.test.ts apps/desktop/electron/practice-store.test.ts",
+      "status": "passed",
+      "result": "12 pass, 0 fail, 49 expect"
+    },
+    {
+      "command": "bash scripts/ci-local-gate.sh",
+      "status": "passed_after_codex_review_commit",
+      "result": "298 pass, 1 skip, 0 fail, 1004 expect; verify:v0 5/5; docs validate and broken-links passed; electron build passed; bun audit found no vulnerabilities; git diff checks clean."
+    },
+    {
+      "command": "OTTO_STAGING_APP=/Applications/otto-pr-55-staging.app OTTO_STAGING_HOME=/tmp/otto-pr-55-staging-home OTTO_STAGING_LOG_DIR=/Users/seb/.codex/admin/otto-logs task staging",
+      "status": "passed",
+      "deployLog": "/Users/seb/.codex/admin/otto-logs/staging-20260614T150744.deploy.log",
+      "appLog": "/Users/seb/.codex/admin/otto-logs/staging-20260614T150744.app.log",
+      "stagingApp": "/Applications/otto-pr-55-staging.app"
+    }
+  ]
+}
