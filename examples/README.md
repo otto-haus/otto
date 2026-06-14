@@ -9,10 +9,12 @@ A frozen snapshot of a **Charter** — one of otto's [core concepts](../README.m
 an operating contract for long-running work, with an objective, acceptance criteria, a plan,
 one-way-door gates, and receipts.
 
-This particular charter is the one otto used to ship its own v0.1 (an agent dogfooding the
-system on itself), so it doubles as a worked example. It is a **static illustration**, not a
-runnable demo — there is nothing to install or execute here. Read it to see the shape of the
-files otto writes when it runs a charter.
+This one was written during otto's own v0.1 work — the operating contract for shipping otto
+itself — so it doubles as a worked example. Read it as an illustration of the *form*, not a
+claim about what's automated today: Charter is an early surface, and this charter's own
+[`state.yaml`](example-charter/state.yaml) shows the run still mid-flight (the dogfood step is
+open). It is a **static illustration**, not a runnable demo — there is nothing to install or
+execute here.
 
 | File | Role |
 |---|---|
