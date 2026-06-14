@@ -1509,7 +1509,7 @@ h1, h2, h3, h4, p { margin: 0; }
 .nav__item--soon:not(.is-active) { color: var(--mut); }
 .nav__badge--soon { background: var(--warn-tint); color: var(--warn); }
 
-.comingSoonShell { display: grid; gap: 16px; max-width: 640px; }
+.comingSoonShell { display: grid; gap: 16px; max-width: 640px; margin: auto; }
 .comingSoonShell__actions { padding-left: 2px; }
 .labsBlockedShell { display: grid; gap: 16px; max-width: 640px; margin-top: 12px; }
 .labsBlockedShell__actions { display: flex; flex-wrap: wrap; gap: 8px; padding-left: 2px; }
