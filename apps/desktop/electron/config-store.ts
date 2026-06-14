@@ -1,7 +1,7 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { join } from 'node:path';
-import type { OttoConfig } from './shared/types';
+import type { EffortLevel, OttoConfig } from './shared/types';
 
 export const OTTO_DIR = join(homedir(), '.otto');
 const CONFIG_FILE = join(OTTO_DIR, 'config.json');
@@ -40,4 +40,19 @@ export class ConfigStore {
   baseUrl(): string | null {
     return process.env.LETTA_BASE_URL || this.cfg.baseUrl || null;
   }
+
+  /** Model handle passed through to Letta Code's `-m`/SDK model option. */
+  modelHandle(): string | null {
+    return process.env.OTTO_MODEL || this.cfg.modelHandle || this.cfg.model?.model || null;
+  }
+
+  /** UI-level reasoning effort preference. Public SDK support is version-gated. */
+  effort(): EffortLevel {
+    return normalizeEffort(process.env.OTTO_EFFORT || this.cfg.effort) ?? 'max';
+  }
+}
+
+function normalizeEffort(value: unknown): EffortLevel | null {
+  if (value === 'off' || value === 'low' || value === 'medium' || value === 'high' || value === 'max') return value;
+  return null;
 }

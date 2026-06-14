@@ -82,15 +82,17 @@ tasks:
       - ps aux | grep -E '[M]acOS/otto|[o]tto Helper|[l]etta-code/letta.js --output-format stream-json' | sed -n '1,160p'
 
   smoke:cli:
-    desc: Direct Letta CLI smoke against the configured local agent
+    desc: Direct Letta CLI smoke against the configured local agent in a disposable conversation
     cmds:
       - |
-        node {{.LETTA_CLI}} --agent "$${LETTA_AGENT_ID:?set LETTA_AGENT_ID}" --conversation default --no-memfs --no-skills --no-system-info-reminder -p 'Reply exactly: OTTO_SMOKE_OK' --output-format json
+        node {{.LETTA_CLI}} --agent "${LETTA_AGENT_ID:?set LETTA_AGENT_ID}" --new --no-memfs --no-skills --no-system-info-reminder -p 'Reply exactly: OTTO_SMOKE_OK' --output-format json
 
   smoke:desktop:
-    desc: Open installed app and verify the process stays alive
+    desc: Launch installed app in smoke mode and verify the process stays alive
     cmds:
-      - task: open
+      - task: quit
+      - |
+        OTTO_SMOKE=1 env -u ELECTRON_RUN_AS_NODE {{.OTTO_APP}}/Contents/MacOS/otto >/tmp/otto_desktop_smoke.log 2>&1 &
       - sleep 3
       - pgrep -f '/Applications/otto.app/Contents/MacOS/otto' >/dev/null
       - task: ps

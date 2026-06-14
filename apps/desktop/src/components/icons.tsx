@@ -32,6 +32,8 @@ export const Icon = {
   clock: <S><circle cx="12" cy="12" r="8.5" /><path d="M12 7.5v5l3.2 1.9" /></S>,
   owl: <S><path d="M4.8 9.2c0-3.2 2.3-5.7 5.1-5.7 1 0 1.7.3 2.1.8.4-.5 1.1-.8 2.1-.8 2.8 0 5.1 2.5 5.1 5.7v3.2c0 4.1-3 7.1-7.2 8.1-4.2-1-7.2-4-7.2-8.1z" /><circle cx="9.4" cy="10.2" r="1.45" /><circle cx="14.6" cy="10.2" r="1.45" /><path d="m10.9 13 1.1 1.2 1.1-1.2" /><path d="M7 5.2 4 3.8M17 5.2l3-1.4" /></S>,
   send: <S><path d="M4 12l16-7-7 16-2-7z" /></S>,
+  stop: <S><rect x="7" y="7" width="10" height="10" rx="1.8" /></S>,
+  x: <S><path d="M7 7l10 10M17 7 7 17" /></S>,
   check: <S><path d="M5 12l5 5 9-11" /></S>,
   lock: <S><rect x="5" y="11" width="14" height="9" rx="2" /><path d="M8 11V8a4 4 0 0 1 8 0v3" /></S>,
   file: <S><path d="M7 3h7l4 4v14H7z" /><path d="M13 3v5h5" /></S>,

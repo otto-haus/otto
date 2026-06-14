@@ -2,7 +2,7 @@ import { execFileSync } from 'node:child_process';
 import { randomUUID } from 'node:crypto';
 import { existsSync } from 'node:fs';
 import type { BrowserWindow } from 'electron';
-import type { PermissionRequest, PermissionResponse, RuntimeStatus, StatusCode } from './shared/types';
+import type { PermissionRequest, PermissionResponse, RuntimePreferences, RuntimeStatus, StatusCode } from './shared/types';
 import { ConfigStore } from './config-store';
 import { getSecret, hasSecret } from './secret-store';
 import { TraceWriter } from './trace-writer';
@@ -14,6 +14,7 @@ type CreateSessionOptions = import('@letta-ai/letta-code-sdk').CreateSessionOpti
 // Git-backed memfs is server/cloud-only — the local backend rejects it. Default OFF.
 // Set OTTO_MEMFS=1 to force it on for backends that support it.
 const WANT_MEMFS = process.env.OTTO_MEMFS === '1' || process.env.OTTO_MEMFS === 'true';
+const SMOKE_MODE = process.env.OTTO_SMOKE === '1' || process.env.OTTO_SMOKE === 'true';
 
 const LETTA_DESKTOP_CLI = '/Applications/Letta.app/Contents/Resources/app.asar.unpacked/node_modules/@letta-ai/letta-code/letta.js';
 
@@ -73,6 +74,12 @@ export class LettaRunner {
       includePartialMessages: false,
       canUseTool: this.canUseTool(),
     };
+    const model = this.config.modelHandle();
+    const effort = this.config.effort();
+    if (model) o.model = modelSelectionForCli(model, effort);
+    // Newer SDKs may expose this directly. Current CLI builds also apply effort when `model`
+    // is a preset id (see modelSelectionForCli), so this is only a forward-compatible hint.
+    if (effort !== 'off') (o as CreateSessionOptions & { reasoningEffort?: string }).reasoningEffort = effort;
     if (WANT_MEMFS) {
       o.memfs = true;
       o.memfsStartup = 'background';
@@ -110,6 +117,9 @@ export class LettaRunner {
         ready: false,
         code: 'no-agent',
         reason: 'No agent selected — add one in Settings → Connect Letta.',
+        modelHandle: this.config.modelHandle(),
+        effort: this.config.effort(),
+        sessionMode: SMOKE_MODE ? 'smoke' : 'default',
         ...cli,
       };
       return this.status;
@@ -119,12 +129,22 @@ export class LettaRunner {
     try {
       sdk = await this.loadSdk();
     } catch (e) {
-      this.status = { ready: false, code: 'sdk-missing', reason: `Letta SDK unavailable: ${msg(e)}`, agentId, ...cli };
+      this.status = {
+        ready: false,
+        code: 'sdk-missing',
+        reason: `Letta SDK unavailable: ${msg(e)}`,
+        agentId,
+        modelHandle: this.config.modelHandle(),
+        effort: this.config.effort(),
+        sessionMode: SMOKE_MODE ? 'smoke' : 'default',
+        ...cli,
+      };
       return this.status;
     }
 
     const tryOnce = async (resumeId: string) => {
-      const session = sdk.resumeSession(resumeId, this.options());
+      this.session?.close();
+      const session = SMOKE_MODE ? sdk.createSession(resumeId, this.options()) : sdk.resumeSession(resumeId, this.options());
       const init = await session.initialize();
       return { session, init };
     };
@@ -135,13 +155,16 @@ export class LettaRunner {
       // `--agent <conversationId>` and fail — so always resume with the agent id.
       const r = await tryOnce(agentId);
       this.session = r.session;
-      this.config.update({ agentId: r.init.agentId ?? agentId, conversationId: r.init.conversationId ?? null });
+      if (!SMOKE_MODE) this.config.update({ agentId: r.init.agentId ?? agentId, conversationId: r.init.conversationId ?? null });
       this.status = {
         ready: true,
         code: 'ready',
         agentId: r.init.agentId,
         conversationId: r.init.conversationId,
         model: r.init.model,
+        modelHandle: this.config.modelHandle(),
+        effort: this.config.effort(),
+        sessionMode: SMOKE_MODE ? 'smoke' : 'default',
         memfsEnabled: r.init.memfsEnabled,
         tools: r.init.tools,
         ...cli,
@@ -150,9 +173,28 @@ export class LettaRunner {
       // agent-not-found / auth / provider / unreachable — diagnose cleanly, do not crash.
       const reason = msg(e);
       const code = classify(reason, this.hasApiKey());
-      this.status = { ready: false, code, reason: friendly(code, reason), agentId, ...cli };
+      this.status = {
+        ready: false,
+        code,
+        reason: friendly(code, reason),
+        agentId,
+        modelHandle: this.config.modelHandle(),
+        effort: this.config.effort(),
+        sessionMode: SMOKE_MODE ? 'smoke' : 'default',
+        ...cli,
+      };
     }
     return this.status;
+  }
+
+  async configure(input: RuntimePreferences): Promise<RuntimeStatus> {
+    this.config.update({
+      ...(input.modelHandle !== undefined ? { modelHandle: input.modelHandle || null } : {}),
+      ...(input.effort !== undefined ? { effort: input.effort } : {}),
+    });
+    this.session?.close();
+    this.session = null;
+    return this.init();
   }
 
   private publishStatus(): void {
@@ -166,6 +208,9 @@ export class LettaRunner {
       ready: false,
       code,
       reason: friendly(code, reason),
+      modelHandle: this.config.modelHandle(),
+      effort: this.config.effort(),
+      sessionMode: SMOKE_MODE ? 'smoke' : 'default',
     };
     if (code === 'stale') this.config.update({ conversationId: null });
     this.publishStatus();
@@ -300,4 +345,31 @@ function friendly(code: StatusCode, reason: string): string {
     default:
       return reason;
   }
+}
+
+function modelSelectionForCli(modelHandle: string, effort: string): string {
+  const e = effort === 'max' ? 'xhigh' : effort;
+  const presets: Record<string, Partial<Record<string, string>>> = {
+    'chatgpt-plus-pro/gpt-5.5': {
+      off: 'gpt-5.5-plus-pro-none',
+      low: 'gpt-5.5-plus-pro-low',
+      medium: 'gpt-5.5-plus-pro-medium',
+      high: 'gpt-5.5-plus-pro-high',
+      xhigh: 'gpt-5.5-plus-pro-xhigh',
+    },
+    'anthropic/claude-opus-4-8': {
+      low: 'opus-4.8-low',
+      medium: 'opus-4.8-medium',
+      high: 'opus-4.8-high',
+      xhigh: 'opus-4.8-max',
+    },
+    'anthropic/claude-sonnet-4-6': {
+      off: 'sonnet-4.6-no-reasoning',
+      low: 'sonnet-4.6-low',
+      medium: 'sonnet-4.6-medium',
+      high: 'sonnet',
+      xhigh: 'sonnet-4.6-xhigh',
+    },
+  };
+  return presets[modelHandle]?.[e] ?? modelHandle;
 }

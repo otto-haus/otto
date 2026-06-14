@@ -19,14 +19,19 @@ export type RuntimeStatus = {
   agentId?: string | null;
   conversationId?: string | null;
   model?: string;
+  modelHandle?: string | null;
+  effort?: EffortLevel;
+  sessionMode?: 'default' | 'smoke';
   memfsEnabled?: boolean;
   tools?: string[];
   cliPath: string;
   cliResolved: boolean;
 };
 
-export type ConnectionInfo = { baseUrl: string | null; agentId: string | null; hasApiKey: boolean };
-export type ConnectionInput = { baseUrl?: string | null; agentId?: string | null; apiKey?: string | null };
+export type ConnectionInfo = { baseUrl: string | null; agentId: string | null };
+export type ConnectionInput = { baseUrl?: string | null; agentId?: string | null };
+export type EffortLevel = 'off' | 'low' | 'medium' | 'high' | 'max';
+export type RuntimePreferences = { modelHandle?: string | null; effort?: EffortLevel };
 
 export type OttoEvent =
   | { message: { type: string; [k: string]: unknown } }
@@ -38,6 +43,7 @@ type OttoApi = {
     status(): Promise<RuntimeStatus>;
     send(text: string): Promise<void>;
     abort(): Promise<void>;
+    configure(input: RuntimePreferences): Promise<RuntimeStatus>;
   };
   config: { get(): Promise<unknown>; set(patch: unknown): Promise<unknown> };
   connection: {
@@ -135,5 +141,19 @@ export function useRuntime() {
     await api.runtime.send(text);
   };
 
-  return { electron: !!api, status, messages, busy, send, retry, updateStatus };
+  const abort = async () => {
+    if (!api) return;
+    await api.runtime.abort();
+    activeAssistantStream.current = null;
+    setBusy(false);
+  };
+
+  const configure = async (input: RuntimePreferences) => {
+    if (!api || busy) return status;
+    const next = await api.runtime.configure(input);
+    setStatus(next);
+    return next;
+  };
+
+  return { electron: !!api, status, messages, busy, send, abort, retry, updateStatus, configure };
 }

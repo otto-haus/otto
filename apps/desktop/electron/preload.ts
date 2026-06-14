@@ -6,6 +6,7 @@ import type {
   OttoEvent,
   PermissionRequest,
   PermissionResponse,
+  RuntimePreferences,
   RuntimeStatus,
 } from './shared/types';
 
@@ -15,6 +16,7 @@ const api = {
     status: (): Promise<RuntimeStatus> => ipcRenderer.invoke('otto:status'),
     send: (text: string): Promise<void> => ipcRenderer.invoke('otto:send', text),
     abort: (): Promise<void> => ipcRenderer.invoke('otto:abort'),
+    configure: (input: RuntimePreferences): Promise<RuntimeStatus> => ipcRenderer.invoke('otto:configure', input),
   },
   config: {
     get: (): Promise<OttoConfig> => ipcRenderer.invoke('otto:config:get'),

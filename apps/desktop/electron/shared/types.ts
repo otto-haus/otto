@@ -32,24 +32,32 @@ export interface RuntimeStatus {
   agentId?: string | null;
   conversationId?: string | null;
   model?: string;
+  modelHandle?: string | null;
+  effort?: EffortLevel;
+  sessionMode?: 'default' | 'smoke';
   memfsEnabled?: boolean;
   tools?: string[];
   cliPath: string;
   cliResolved: boolean;
 }
 
-/** What the Settings "Connect Letta" card reads (never includes the API key value). */
+/** What the Settings "Connect Letta" card reads. v1 is local-only; provider auth lives in Letta. */
 export interface ConnectionInfo {
   baseUrl: string | null;
   agentId: string | null;
-  hasApiKey: boolean;
 }
 
-/** What the card sends on save. apiKey is present only when the user enters/changes it. */
+/** What the card sends on save. */
 export interface ConnectionInput {
   baseUrl?: string | null;
   agentId?: string | null;
-  apiKey?: string | null;
+}
+
+export type EffortLevel = 'off' | 'low' | 'medium' | 'high' | 'max';
+
+export interface RuntimePreferences {
+  modelHandle?: string | null;
+  effort?: EffortLevel;
 }
 
 /** A loosely-typed SDK message forwarded straight to the renderer. */
@@ -68,8 +76,11 @@ export type OttoEvent = OttoMessageEvent | OttoStatusEvent;
 export interface OttoConfig {
   agentId?: string | null;
   conversationId?: string | null;
+  modelHandle?: string | null;
+  effort?: EffortLevel;
   /** Letta base URL for local / self-hosted backends (cloud uses the default). */
   baseUrl?: string | null;
+  /** Legacy / generated readiness shape; modelHandle is the v1 desktop control. */
   model?: { provider?: string; model?: string };
   mcpServers?: unknown[];
   functions?: unknown[];
