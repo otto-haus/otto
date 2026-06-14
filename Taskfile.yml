@@ -150,7 +150,13 @@ tasks:
           printf '%s\n' 'OTTO_AGENT_ID or LETTA_AGENT_ID: set one target Letta agent id'
           exit 1
         fi
-        node "${LETTA_CLI_PATH:-{{.LETTA_CLI}}}" --agent "$AGENT_ID" --new --no-memfs --no-skills --no-system-info-reminder -p 'Reply exactly: OTTO_SMOKE_OK' --output-format json
+        CLI_PATH="${LETTA_CLI_PATH:-{{.LETTA_CLI}}}"
+        if [ ! -f "$CLI_PATH" ]; then
+          printf '%s\n' "Letta CLI not found at $CLI_PATH"
+          printf '%s\n' 'Install or repair Letta Desktop / Letta Code, or set LETTA_CLI_PATH=/path/to/letta.js.'
+          exit 1
+        fi
+        node "$CLI_PATH" --agent "$AGENT_ID" --new --no-memfs --no-skills --no-system-info-reminder -p 'Reply exactly: OTTO_SMOKE_OK' --output-format json
 
   smoke:desktop:
     desc: Non-destructive desktop smoke — launches a temporary second instance, leaves live otto.app alone
