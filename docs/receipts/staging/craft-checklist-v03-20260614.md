@@ -38,6 +38,27 @@ Live app still shows legacy chrome:
 
 That is expected until Sebastian approves promoting staging to live. **Do not deploy to live without explicit approval.**
 
+## Design pass (2026-06-14)
+
+Closure on `ship/functional-labs`. Receipt: [`design-pass-20260614/design-pass-receipt.md`](design-pass-20260614/design-pass-receipt.md).
+
+| Check | Status |
+|-------|--------|
+| Slim topbar (no duplicate page title) | pass |
+| Single SurfaceProof footer per surface | pass |
+| Command Station on Chat when ready | pass |
+| Settings: no agent id in readiness banner | pass |
+| Settings: no agent id in connection status line | pass (2026-06-14) |
+| Settings: single test footer | pass |
+| Charters create form above split | pass |
+| Channels list/detail split | pass |
+| Onboarding dock clears prompt | pass |
+| `verify:v0` green | pass (214 tests, 2026-06-14) |
+| Staging redeploy | pass (`deploy-staging.sh`, pid logged in receipt) |
+| Full-route screenshot bundle | pending (CDP capture timeout) |
+
+Prior pass: [`design-pass-20260613/design-pass-receipt.md`](design-pass-20260613/design-pass-receipt.md).
+
 ## Design pass (2026-06-13)
 
 Staging-only craft pass on `fix/windows-install` branch. Receipt: [`design-pass-20260613/design-pass-receipt.md`](design-pass-20260613/design-pass-receipt.md).

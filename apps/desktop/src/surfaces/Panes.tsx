@@ -3055,43 +3055,42 @@ const ConnectLetta: React.FC = () => {
         <p className="faint" style={{ margin: 0 }}>↳ {displayStatus.reason}</p>
       )}
       {connectError && (
-        <p className="faint" style={{ margin: 0, color: 'var(--warn)' }}>↳ Connection failed: {connectError}</p>
+        <p className="faint" style={{ margin: 0, color: 'var(--warn)' }}>
+          ↳ {settingsCopy.connectionFailedPrefix} {connectError}
+        </p>
       )}
       <div className="settingsField">
         <label>
-          <span>Local Letta URL · advanced override</span>
+          <span>{settingsCopy.connectionLocalUrlLabel}</span>
           <input
             style={inputStyle}
             value={baseUrl}
             onChange={(e) => setBaseUrl(e.target.value)}
-            placeholder="Auto-detect local runtime"
+            placeholder={settingsCopy.connectionLocalUrlPlaceholder}
             spellCheck={false}
           />
         </label>
       </div>
       <div className="settingsField">
         <label>
-          <span>Agent ID · advanced override</span>
+          <span>{settingsCopy.connectionAgentIdLabel}</span>
           <input
             className="mono"
             style={inputStyle}
             value={agentId}
             onChange={(e) => setAgentId(e.target.value)}
-            placeholder="Auto-detect current/default agent"
+            placeholder={settingsCopy.connectionAgentIdPlaceholder}
             spellCheck={false}
           />
         </label>
       </div>
       <div className="row" style={{ gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
         <button type="button" className="btn btn--primary" onClick={connect} disabled={busy}>
-          {busy ? 'Connecting…' : 'Save overrides & reconnect'}
+          {busy ? settingsCopy.connectionSaveBusy : settingsCopy.connectionSaveIdle}
         </button>
         {displayStatus?.ready && (
           <span className="muted" style={{ fontSize: 13 }}>
-            {displayStatus.agentId}
-            {displayStatus.baseUrl ? ` · ${displayStatus.baseUrl}` : ''}
-            {displayStatus.model ? ` · ${displayStatus.model}` : ''}
-            {displayStatus.effectiveTransport ? ` · ${displayStatus.effectiveTransport}` : ''}
+            {`${settingsCopy.readinessConnected}${displayStatus.model ? ` · ${displayStatus.model}` : ''}${displayStatus.effectiveTransport ? ` · ${displayStatus.effectiveTransport}` : ''}`}
           </span>
         )}
       </div>
