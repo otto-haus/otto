@@ -1,0 +1,30 @@
+{
+  "pr": 182,
+  "title": "fix(desktop): validate practice metrics slugs",
+  "reviewAgent": "codex",
+  "generatedAt": "2026-06-14T21:26:45Z",
+  "baseRef": "ship/functional-labs",
+  "baseOidAtReview": "98501e254e22315b01f15d733fbd6e9071e36e05",
+  "localReviewHeadBeforeProofCommit": "b034274e6f437664073055e7d4ca13debe4dd1ab",
+  "observed": {
+    "runtimeDir": "/var/folders/22/fzs3nrw505z_m71cghqjc7j80000gn/T/otto-pr-182-proof-csdY0b",
+    "traversalRejected": true,
+    "outsideFileExists": false,
+    "normalizedReturnSlug": "field-note",
+    "storedSlug": "field-note",
+    "listedSlugs": ["field-note"],
+    "malformedFilesPresent": [".json", "..json", "bad\\name.json"]
+  },
+  "assertions": {
+    "traversalRejected": true,
+    "noOutsideWrite": true,
+    "returnSlugCanonical": true,
+    "storedSlugCanonical": true,
+    "listSkippedMalformedFiles": true
+  },
+  "bugsFixedByCodexReview": [
+    "The original slug validator made list() throw when a malformed local filename such as .json, ..json, or bad\\name.json existed in the metrics directory.",
+    "Accepted slugs with surrounding whitespace were written under the trimmed filename but returned/stored with the untrimmed slug."
+  ],
+  "boundary": "Backend/local filesystem behavior; no screenshot is needed."
+}

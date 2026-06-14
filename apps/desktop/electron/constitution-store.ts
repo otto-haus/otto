@@ -1,6 +1,6 @@
 import { createHash } from 'node:crypto';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { dirname, join } from 'node:path';
 import { parse, stringify } from 'yaml';
 import type { ConstitutionAmendResult, ConstitutionDocument, ConstitutionResult } from '@otto-haus/core';
 import { OTTO_DIR } from './config-store';
@@ -52,7 +52,8 @@ export class ConstitutionStore {
   ) {}
 
   load(): ConstitutionResult {
-    mkdirSync(OTTO_DIR, { recursive: true });
+    const dir = dirname(this.yamlPath);
+    mkdirSync(dir, { recursive: true });
     if (!existsSync(this.yamlPath)) {
       this.writeFiles(DEFAULT_CONSTITUTION);
     }
@@ -62,7 +63,7 @@ export class ConstitutionStore {
       throw new Error(`Invalid constitution: ${validated.errors.join('; ')}`);
     }
     return {
-      dir: OTTO_DIR,
+      dir,
       yamlPath: this.yamlPath,
       mdPath: this.mdPath,
       document: validated.document,
@@ -155,6 +156,8 @@ export class ConstitutionStore {
   }
 
   private writeFiles(document: ConstitutionDocument): void {
+    mkdirSync(dirname(this.yamlPath), { recursive: true });
+    mkdirSync(dirname(this.mdPath), { recursive: true });
     writeFileSync(this.yamlPath, stringify(document));
     writeFileSync(this.mdPath, renderMarkdown(document));
   }

@@ -9,12 +9,14 @@ function mapThread(thread: {
   updatedAt: string;
   pinned?: boolean;
   archived?: boolean;
+  sortOrder?: number | null;
 }): ThreadSummary {
   return {
     id: thread.id,
     conversationId: thread.lettaConversationId,
     title: thread.title,
     updatedAt: Date.parse(thread.updatedAt) || Date.now(),
+    sortOrder: typeof thread.sortOrder === 'number' ? thread.sortOrder : null,
     pinned: !!thread.pinned,
   };
 }
@@ -57,5 +59,19 @@ export function useChatThreads(activeThreadId?: string | null) {
     await refresh();
   }, [refresh]);
 
-  return { threads, showArchived, setShowArchived, refresh, pinThread, archiveThread };
+  const renameThread = useCallback(async (threadId: string, title: string) => {
+    const api = ottoApi();
+    if (!api || !isElectron()) return;
+    await api.threads.rename(threadId, title);
+    await refresh();
+  }, [refresh]);
+
+  const moveThread = useCallback(async (threadId: string, targetId: string) => {
+    const api = ottoApi();
+    if (!api || !isElectron()) return;
+    await api.threads.move(threadId, targetId);
+    await refresh();
+  }, [refresh]);
+
+  return { threads, showArchived, setShowArchived, refresh, pinThread, archiveThread, renameThread, moveThread };
 }

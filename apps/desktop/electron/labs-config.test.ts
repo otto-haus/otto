@@ -53,6 +53,21 @@ describe('labs-config', () => {
     expect(migrated.features.channels_outbound).toBeUndefined();
   });
 
+  test('normalizes corrupted labs booleans from persisted config', () => {
+    const normalized = normalizeLabsConfig({
+      enabled: 'yes',
+      features: {
+        knowledge_cognee: 'true',
+        channels_outbound: true,
+        bogus_feature: true,
+      },
+    } as never);
+    expect(normalized).toEqual({
+      enabled: false,
+      features: { channels_outbound: true },
+    });
+  });
+
   test('IPC set enables knowledge_cognee (Settings-equivalent persist path)', () => {
     const tmp = mkdtempSync(join(tmpdir(), 'otto-labs-ipc-test-'));
     try {
@@ -71,6 +86,37 @@ describe('labs-config', () => {
 
       const reloaded = new ConfigStore();
       expect(getLabsConfig(reloaded.get())).toEqual(next);
+    } finally {
+      rmSync(tmp, { recursive: true, force: true });
+      delete process.env.OTTO_HOME;
+    }
+  });
+
+  test('IPC set ignores malformed labs patch values before persisting', () => {
+    const tmp = mkdtempSync(join(tmpdir(), 'otto-labs-ipc-test-'));
+    try {
+      process.env.OTTO_HOME = tmp;
+      const store = new ConfigStore();
+      persistLabsIpcSet(store, {
+        enabled: true,
+        features: { knowledge_cognee: true, channels_outbound: false },
+      });
+
+      const next = persistLabsIpcSet(store, {
+        enabled: 'yes',
+        features: {
+          knowledge_cognee: 'false',
+          channels_outbound: true,
+          bogus_feature: true,
+        },
+      } as never);
+
+      expect(next).toEqual({
+        enabled: true,
+        features: { knowledge_cognee: true, channels_outbound: true },
+      });
+      const onDisk = JSON.parse(readFileSync(join(tmp, 'config.json'), 'utf8'));
+      expect(onDisk.labs).toEqual(next);
     } finally {
       rmSync(tmp, { recursive: true, force: true });
       delete process.env.OTTO_HOME;

@@ -11,6 +11,8 @@ import { ConstitutionStore } from './constitution-store';
 describe('BehaviorChangelog', () => {
   test('empty week returns honest empty message', () => {
     const tmp = mkdtempSync(join(tmpdir(), 'otto-changelog-'));
+    const originalOttoHome = process.env.OTTO_HOME;
+    process.env.OTTO_HOME = tmp;
     try {
       const proposalsDir = join(tmp, 'curation', 'proposals');
       const receiptsDir = join(tmp, 'receipts');
@@ -24,7 +26,44 @@ describe('BehaviorChangelog', () => {
       const result = changelog.list();
       expect(result.entries).toHaveLength(0);
       expect(result.empty_message).toBe('No behavior changes this week.');
+      expect(result.dir).toBe(tmp);
     } finally {
+      if (originalOttoHome === undefined) {
+        delete process.env.OTTO_HOME;
+      } else {
+        process.env.OTTO_HOME = originalOttoHome;
+      }
+      rmSync(tmp, { recursive: true, force: true });
+    }
+  });
+
+  test('default stores honor runtime OTTO_HOME', () => {
+    const tmp = mkdtempSync(join(tmpdir(), 'otto-changelog-runtime-'));
+    const originalOttoHome = process.env.OTTO_HOME;
+    process.env.OTTO_HOME = tmp;
+    try {
+      const proposalsDir = join(tmp, 'curation', 'proposals');
+      const receiptsDir = join(tmp, 'receipts');
+      const canonPath = join(tmp, 'practice.yaml');
+      writeFileSync(canonPath, 'slug: demo\nname: Demo\nguardrails: []\n');
+      const store = new ProposalStore(proposalsDir, new ReceiptWriter(receiptsDir), new ReceiptStore(receiptsDir));
+      const created = store.createFromCorrection({
+        correction: 'Always cite receipts when changing canon.',
+        rationale: 'Missing proof on last change.',
+        target: { kind: 'practice', id: 'demo', path: canonPath, action: 'update' },
+      });
+      const accepted = store.decide(created.proposal.id, { decision: 'accept' });
+
+      const result = new BehaviorChangelog().list();
+
+      expect(result.dir).toBe(tmp);
+      expect(result.entries.some((e) => e.receipt_id === accepted.receipt.id)).toBe(true);
+    } finally {
+      if (originalOttoHome === undefined) {
+        delete process.env.OTTO_HOME;
+      } else {
+        process.env.OTTO_HOME = originalOttoHome;
+      }
       rmSync(tmp, { recursive: true, force: true });
     }
   });

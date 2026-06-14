@@ -97,17 +97,17 @@ export async function runTicketCommand(api: OttoBridge, text: string): Promise<T
   if (parsed.kind === 'compile') {
     const ticketId = ticketIdForSlug(parsed.slug);
     const existing = await api.tickets.get(ticketId);
-    if (existing && !parsed.objective) {
+    if (existing) {
       return {
         handled: true,
         lines: [
           `${ticketId} already exists (${existing.status}).`,
           `Objective: ${existing.objective}`,
-          `Use \`orchestrate ticket ${parsed.slug}\` to spawn a worker, or \`compile ticket ${parsed.slug} <new objective>\` to overwrite via re-compile.`,
+          `Use \`orchestrate ticket ${parsed.slug}\` to spawn a worker, or choose a new ticket slug for new work.`,
         ],
       };
     }
-    const objective = parsed.objective ?? existing?.objective;
+    const objective = parsed.objective;
     if (!objective?.trim()) {
       return {
         handled: true,

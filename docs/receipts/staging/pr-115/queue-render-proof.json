@@ -1,0 +1,47 @@
+{
+  "route": "http://127.0.0.1:5192/index.html",
+  "viewport": {
+    "width": 1280,
+    "height": 760
+  },
+  "compact": {
+    "summary": "2 waiting · 1 failed · next: First queued message for this conversation.",
+    "isExpanded": false,
+    "visibleItems": [],
+    "hasOtherThreadText": false
+  },
+  "expanded": {
+    "summary": "2 waiting · 1 failed · next: First queued message for this conversation.",
+    "isExpanded": true,
+    "pills": [
+      "failed",
+      "next",
+      "waiting"
+    ],
+    "rows": [
+      "Earlier failed follow-up for this conversation.",
+      "First queued message for this conversation.",
+      "Legacy queued item applies to every conversation."
+    ],
+    "hasOtherThreadText": false
+  },
+  "consoleMessages": [
+    {
+      "type": "info",
+      "text": "%cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold"
+    }
+  ],
+  "assertions": {
+    "compactStartsCollapsed": true,
+    "compactNamesNextItem": true,
+    "compactHidesExpandedRows": true,
+    "expandedShowsExpectedPills": true,
+    "expandedShowsOnlyActiveAndLegacyRows": true,
+    "otherThreadHidden": true,
+    "noConsoleErrors": true
+  },
+  "screenshots": [
+    "docs/receipts/staging/pr-115/queue-compact-next-summary.png",
+    "docs/receipts/staging/pr-115/queue-expanded-next-pill.png"
+  ]
+}

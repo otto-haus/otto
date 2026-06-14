@@ -29,7 +29,7 @@ export class ConfigStore {
     mkdirSync(ottoDir, { recursive: true });
     if (existsSync(this.configFile)) {
       try {
-        this.cfg = JSON.parse(readFileSync(this.configFile, 'utf8')) as OttoConfig;
+        this.cfg = normalizeConfig(JSON.parse(readFileSync(this.configFile, 'utf8')) as OttoConfig);
       } catch {
         this.cfg = {};
       }
@@ -41,7 +41,7 @@ export class ConfigStore {
   }
 
   update(patch: Partial<OttoConfig>): OttoConfig {
-    this.cfg = { ...this.cfg, ...patch };
+    this.cfg = normalizeConfig({ ...this.cfg, ...patch });
     writeFileSync(this.configFile, `${JSON.stringify(this.cfg, null, 2)}\n`);
     return this.cfg;
   }
@@ -73,7 +73,7 @@ export class ConfigStore {
   }
 
   connectionMode(): NonNullable<OttoConfig['connectionMode']> {
-    return this.cfg.connectionMode ?? 'existing';
+    return normalizeConnectionMode(this.cfg.connectionMode) ?? 'existing';
   }
 
   /** Isolated Letta settings root for embedded mode (076) — under ~/.otto/letta by default. */
@@ -128,5 +128,21 @@ function unique(values: Array<string | null | undefined>): string[] {
 
 function normalizeEffort(value: unknown): EffortLevel | null {
   if (value === 'off' || value === 'low' || value === 'medium' || value === 'high' || value === 'max') return value;
+  return null;
+}
+
+function normalizeConfig(config: OttoConfig): OttoConfig {
+  const next = { ...config };
+  const connectionMode = normalizeConnectionMode((config as { connectionMode?: unknown }).connectionMode);
+  if (connectionMode) {
+    next.connectionMode = connectionMode;
+  } else if ('connectionMode' in config) {
+    next.connectionMode = 'existing';
+  }
+  return next;
+}
+
+function normalizeConnectionMode(value: unknown): NonNullable<OttoConfig['connectionMode']> | null {
+  if (value === 'embedded' || value === 'existing' || value === 'cloud') return value;
   return null;
 }

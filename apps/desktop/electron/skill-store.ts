@@ -1,5 +1,6 @@
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
+import { parse } from 'yaml';
 import type { SkillListResult, SkillRecord } from '@otto-haus/core';
 
 export class SkillStore {
@@ -70,20 +71,14 @@ function readSkill(file: string, slug: string): SkillRecord {
 }
 
 function parseFrontmatter(raw: string): { name?: string; description?: string } {
-  if (!raw.startsWith('---')) return {};
-  const end = raw.indexOf('---', 3);
-  if (end < 0) return {};
-  const block = raw.slice(3, end).trim();
-  const result: { name?: string; description?: string } = {};
-  for (const line of block.split('\n')) {
-    const match = line.match(/^([a-z_]+):\s*(.+)$/i);
-    if (!match) continue;
-    const key = match[1].toLowerCase();
-    const value = match[2].trim();
-    if (key === 'name') result.name = value;
-    if (key === 'description') result.description = value;
-  }
-  return result;
+  const match = raw.match(/^---\r?\n([\s\S]*?)\r?\n---(?:\r?\n|$)/);
+  if (!match) return {};
+  const parsed = parse(match[1]) as unknown;
+  if (!isRecord(parsed)) return {};
+  return {
+    name: optionalString(parsed.name),
+    description: optionalString(parsed.description),
+  };
 }
 
 function extractTriggers(raw: string, description: string): string[] {
@@ -98,4 +93,12 @@ function extractTriggers(raw: string, description: string): string[] {
     triggers.add(match[1]);
   }
   return [...triggers].slice(0, 8);
+}
+
+function optionalString(value: unknown): string | undefined {
+  return typeof value === 'string' && value.trim() ? value : undefined;
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return !!value && typeof value === 'object' && !Array.isArray(value);
 }

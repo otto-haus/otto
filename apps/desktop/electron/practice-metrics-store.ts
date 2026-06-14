@@ -16,21 +16,28 @@ export class PracticeMetricsStore {
   constructor(private dir = PRACTICE_METRICS_DIR) {}
 
   get(slug: string): PracticeMetricsRecord {
-    const path = join(this.dir, `${slug}.json`);
-    if (!existsSync(path)) return emptyMetrics(slug);
+    const normalizedSlug = normalizeMetricSlug(slug);
+    const path = this.metricsPath(normalizedSlug);
+    if (!existsSync(path)) return emptyMetrics(normalizedSlug);
     try {
       const raw = JSON.parse(readFileSync(path, 'utf8')) as PracticeMetricsRecord;
-      return { ...emptyMetrics(slug), ...raw, slug };
+      return { ...emptyMetrics(normalizedSlug), ...raw, slug: normalizedSlug };
     } catch {
-      return emptyMetrics(slug);
+      return emptyMetrics(normalizedSlug);
     }
   }
 
   list(): PracticeMetricsRecord[] {
     if (!existsSync(this.dir)) return [];
-    return readdirSync(this.dir)
-      .filter((name) => name.endsWith('.json'))
-      .map((name) => this.get(name.replace(/\.json$/, '')));
+    const records: PracticeMetricsRecord[] = [];
+    for (const name of readdirSync(this.dir).filter((entry) => entry.endsWith('.json'))) {
+      try {
+        records.push(this.get(name.replace(/\.json$/, '')));
+      } catch {
+        // Ignore malformed legacy/local filenames without hiding valid metrics.
+      }
+    }
+    return records;
   }
 
   recordRun(input: {
@@ -42,11 +49,12 @@ export class PracticeMetricsStore {
     at?: string;
   }): PracticeMetricsRecord {
     mkdirSync(this.dir, { recursive: true });
+    const slug = normalizeMetricSlug(input.slug);
     const at = input.at ?? new Date().toISOString();
-    const current = this.get(input.slug);
+    const current = this.get(slug);
     const next: PracticeMetricsRecord = {
       ...current,
-      slug: input.slug,
+      slug,
       uses: current.uses + 1,
       last_used_at: at,
       last_run_id: input.runId,
@@ -55,16 +63,29 @@ export class PracticeMetricsStore {
       successful_runs: current.successful_runs + (input.status === 'success' ? 1 : 0),
       blocked_runs: current.blocked_runs + (input.status === 'blocked' ? 1 : 0),
     };
-    writeFileSync(join(this.dir, `${input.slug}.json`), `${JSON.stringify(next, null, 2)}\n`);
+    writeFileSync(this.metricsPath(slug), `${JSON.stringify(next, null, 2)}\n`);
     return next;
   }
 
   patch(slug: string, patch: Partial<PracticeMetricsRecord>): PracticeMetricsRecord {
     mkdirSync(this.dir, { recursive: true });
-    const next = { ...this.get(slug), ...patch, slug };
-    writeFileSync(join(this.dir, `${slug}.json`), `${JSON.stringify(next, null, 2)}\n`);
+    const normalizedSlug = normalizeMetricSlug(slug);
+    const next = { ...this.get(normalizedSlug), ...patch, slug: normalizedSlug };
+    writeFileSync(this.metricsPath(normalizedSlug), `${JSON.stringify(next, null, 2)}\n`);
     return next;
   }
+
+  private metricsPath(slug: string): string {
+    return join(this.dir, `${normalizeMetricSlug(slug)}.json`);
+  }
+}
+
+function normalizeMetricSlug(slug: string): string {
+  const trimmed = slug.trim();
+  if (!trimmed || /[/\\]/.test(trimmed) || trimmed === '.' || trimmed === '..') {
+    throw new Error('Practice metric slug must be a single path segment');
+  }
+  return trimmed;
 }
 
 function emptyMetrics(slug: string): PracticeMetricsRecord {

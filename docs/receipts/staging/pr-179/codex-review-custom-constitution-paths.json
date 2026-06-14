@@ -1,0 +1,28 @@
+{
+  "pr": 179,
+  "title": "fix(desktop): seed custom constitution paths",
+  "reviewAgent": "codex",
+  "generatedAt": "2026-06-14T21:31:48Z",
+  "baseRef": "ship/functional-labs",
+  "baseOidAtReview": "98501e254e22315b01f15d733fbd6e9071e36e05",
+  "localReviewHeadBeforeProofCommit": "f545d77563ac137c2b774d512e8a1bb4bd0ad2c2",
+  "observed": {
+    "runtimeDir": "/var/folders/22/fzs3nrw505z_m71cghqjc7j80000gn/T/otto-pr-179-proof-WsOgpP",
+    "yamlPath": "/var/folders/22/fzs3nrw505z_m71cghqjc7j80000gn/T/otto-pr-179-proof-WsOgpP/yaml/nested/constitution.yaml",
+    "mdPath": "/var/folders/22/fzs3nrw505z_m71cghqjc7j80000gn/T/otto-pr-179-proof-WsOgpP/md/nested/constitution.md",
+    "resultDir": "/var/folders/22/fzs3nrw505z_m71cghqjc7j80000gn/T/otto-pr-179-proof-WsOgpP/yaml/nested",
+    "yamlExists": true,
+    "mdExists": true,
+    "schema": "otto.constitution.v1",
+    "markdownContainsWritebackPolicy": true
+  },
+  "assertions": {
+    "resultDirIsYamlParent": true,
+    "yamlSeededInNestedDir": true,
+    "markdownSeededInSeparateNestedDir": true,
+    "defaultDocumentValid": true,
+    "markdownRendered": true
+  },
+  "codexReviewChange": "Added split custom YAML/Markdown path coverage so the behavior is proved when the two files live in different nested parent directories.",
+  "boundary": "Backend/local filesystem behavior; no screenshot is needed."
+}

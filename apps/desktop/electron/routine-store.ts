@@ -10,6 +10,7 @@ import type {
   Schedule,
 } from '@otto-haus/core';
 import { AiFrontierReviewExecutor } from './ai-frontier-review-executor';
+import { KnowledgeStore } from './knowledge-store';
 import { PracticeMiningLoop } from './practice-mining';
 import { RECEIPTS_DIR, ReceiptWriter, type WrittenReceipt } from './receipt-writer';
 
@@ -40,6 +41,7 @@ export class RoutineStore {
   constructor(
     private dir = resolveRoutinesDir(),
     private receipts = new ReceiptWriter(),
+    private knowledge = new KnowledgeStore(),
   ) {}
 
   listResult(): RoutineListResult {
@@ -115,7 +117,7 @@ export class RoutineStore {
     const evidence: WrittenReceipt['evidence'] = [{ kind: 'file', ref: routine.file, note: 'Canonical routine.yaml' }];
 
     if (slug === 'ai-frontier-review') {
-      const frontier = new AiFrontierReviewExecutor(undefined, this.receipts);
+      const frontier = new AiFrontierReviewExecutor(this.knowledge, this.receipts);
       const run = frontier.run();
       knowledgeReceiptId = run.receipt.id;
       evidence.push({ kind: 'log', ref: run.receipt.id, note: 'knowledge.frontier_review.manual' });
@@ -195,7 +197,7 @@ function normalizeRoutine(value: unknown, fallbackSlug: string): Routine {
 
   return {
     id: requiredString(value.id, 'id'),
-    slug: requiredString(value.slug, 'slug') || fallbackSlug,
+    slug: optionalString(value.slug) ?? fallbackSlug,
     name: requiredString(value.name, 'name'),
     status: routineStatus(value.status),
     summary: requiredString(value.summary, 'summary'),
@@ -249,6 +251,11 @@ function attentionCost(value: unknown): Routine['attention_cost'] {
 function requiredString(value: unknown, label: string): string {
   if (typeof value === 'string' && value.trim()) return value.trim();
   throw new Error(`Missing ${label}`);
+}
+
+function optionalString(value: unknown): string | null {
+  if (typeof value === 'string' && value.trim()) return value.trim();
+  return null;
 }
 
 function arrayOfRecords(value: unknown): Record<string, unknown>[] {

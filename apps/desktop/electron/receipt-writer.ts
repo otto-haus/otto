@@ -35,7 +35,7 @@ export class ReceiptWriter {
       routine: input.routine ?? null,
       blocker: input.blocker,
     };
-    const filename = `${timestamp.replace(/[:.]/g, '-')}-${safeId(id)}.json`;
+    const filename = `${safeTimestamp(timestamp)}-${safeId(id)}.json`;
     const path = join(this.dir, filename);
     writeFileSync(path, `${JSON.stringify(receipt, null, 2)}\n`);
     return { ...receipt, path };
@@ -44,4 +44,13 @@ export class ReceiptWriter {
 
 function safeId(value: string): string {
   return value.replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 64) || 'receipt';
+}
+
+function safeTimestamp(value: string): string {
+  const safe = value
+    .replace(/[:.]/g, '-')
+    .replace(/[^a-zA-Z0-9_-]/g, '')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 64);
+  return safe || 'timestamp';
 }

@@ -39,6 +39,18 @@ describe('CharterStore', () => {
     expect(result.receipt.action).toBe('charter.created');
   });
 
+  it('rejects invalid create status values before writing a charter', () => {
+    const s = store();
+
+    expect(() => s.create({
+      slug: 'bad-status',
+      objective: 'Do not persist invalid statuses.',
+      status: 'done' as never,
+      acceptanceCriteria: [{ id: 'AC1', text: 'Invalid status is rejected.' }],
+    })).toThrow('Invalid charter status');
+    expect(existsSync(join(tmp!, 'charters', 'bad-status', 'charter.json'))).toBe(false);
+  });
+
   it('links run and receipt ids to a charter and records the change receipt', () => {
     const s = store();
     s.create({
@@ -79,6 +91,21 @@ describe('CharterStore', () => {
     expect(result.receipt.input.toStatus).toBe('blocked');
     expect(persisted.changes.at(-1).kind).toBe('status-changed');
     expect(persisted.changes.at(-1).receipt_id).toBe(result.receipt.id);
+  });
+
+  it('rejects invalid update status values without rewriting the charter', () => {
+    const s = store();
+    const created = s.create({
+      slug: 'ship-receipts',
+      objective: 'Ship the receipts surface.',
+      status: 'active',
+      acceptanceCriteria: [{ id: 'AC1', text: 'Receipts are visible.' }],
+    });
+
+    expect(() => s.updateStatus('ship-receipts', 'done' as never)).toThrow('Invalid charter status');
+    const persisted = JSON.parse(readFileSync(created.path, 'utf8'));
+    expect(persisted.status).toBe('active');
+    expect(persisted.changes).toHaveLength(1);
   });
 
   it('blocks complete when acceptance criteria lack receipt proof', () => {

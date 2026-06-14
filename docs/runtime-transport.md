@@ -4,10 +4,10 @@ Canonical contract for how Otto Desktop connects to the Letta runtime. Code live
 
 Cross-links:
 
-- WS transport ticket: [`planning/hq-tickets/039-cathedral-ws-runtime-transport.md`](planning/hq-tickets/039-cathedral-ws-runtime-transport.md)
-- Embedded engine: [`planning/hq-tickets/076-embedded-letta-one-app-distribution.md`](planning/hq-tickets/076-embedded-letta-one-app-distribution.md)
-- Cloud remote (parked): [`planning/hq-tickets/_Parked/077-letta-cloud-remote-mode.md`](planning/hq-tickets/_Parked/077-letta-cloud-remote-mode.md)
-- Adapter seam: [`docs/v1/contracts/adapter-seam.md`](docs/v1/contracts/adapter-seam.md)
+- WS transport ticket: [`planning/hq-tickets/039-cathedral-ws-runtime-transport.md`](../planning/hq-tickets/039-cathedral-ws-runtime-transport.md)
+- Embedded engine: [`planning/hq-tickets/076-embedded-letta-one-app-distribution.md`](../planning/hq-tickets/076-embedded-letta-one-app-distribution.md)
+- Cloud remote (parked): [`planning/hq-tickets/_Parked/077-letta-cloud-remote-mode.md`](../planning/hq-tickets/_Parked/077-letta-cloud-remote-mode.md)
+- Adapter seam: [`docs/v1/contracts/adapter-seam.md`](v1/contracts/adapter-seam.md)
 
 ## Architecture
 
@@ -180,4 +180,4 @@ cd apps/desktop && bun test electron/runtime-transport/transport-mode.test.ts
 OTTO_RUNTIME_TRANSPORT=auto bun -e "console.log(require('./electron/runtime-transport/transport-mode.ts'))"
 ```
 
-Staging-only runtime proof: see [`docs/v1/runbooks/live-vs-staging.md`](docs/v1/runbooks/live-vs-staging.md).
+Staging-only runtime proof: see [`docs/v1/runbooks/live-vs-staging.md`](v1/runbooks/live-vs-staging.md).

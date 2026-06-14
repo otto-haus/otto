@@ -1,8 +1,10 @@
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { homedir } from 'node:os';
-import { BrowserWindow, app } from 'electron';
+import { BrowserWindow, Menu, app, type MenuItemConstructorOptions } from 'electron';
 import { registerIpc } from './ipc';
+import { resolveDevRendererUrl } from './main-security';
+import { openOttoLogs } from './logs';
 
 let mainWindow: BrowserWindow | null = null;
 
@@ -23,22 +25,40 @@ function createWindow() {
     height: 720,
     minWidth: 680,
     minHeight: 480,
-    backgroundColor: '#fbfaf7',
+    // Match CSS --bg (warm paper field) so there's no flash/seam before the renderer paints.
+    backgroundColor: '#f8f7f2',
     titleBarStyle: 'hiddenInset',
     title: 'otto',
     webPreferences: {
       preload: join(__dirname, '../preload/index.cjs'),
-      sandbox: false,
+      sandbox: true,
       contextIsolation: true,
       nodeIntegration: false,
     },
   });
 
   registerIpc(win);
+  win.webContents.on('context-menu', (_event, params) => {
+    const template: MenuItemConstructorOptions[] = [
+      {
+        label: 'View Logs',
+        click: () => {
+          void openOttoLogs().catch((err) => console.error('[otto] failed to open logs:', err));
+        },
+      },
+    ];
+    if (params.isEditable) {
+      template.push({ type: 'separator' }, { role: 'cut' }, { role: 'copy' }, { role: 'paste' }, { role: 'selectAll' });
+    } else if (params.selectionText.trim()) {
+      template.push({ type: 'separator' }, { role: 'copy' });
+    }
+    Menu.buildFromTemplate(template).popup({ window: win });
+  });
 
   // Dev: load the running Vite renderer; Prod: load the built renderer.
-  if (process.env.ELECTRON_RENDERER_URL) {
-    win.loadURL(process.env.ELECTRON_RENDERER_URL);
+  const devRendererUrl = resolveDevRendererUrl(process.env.ELECTRON_RENDERER_URL, app.isPackaged);
+  if (devRendererUrl) {
+    win.loadURL(devRendererUrl);
   } else {
     win.loadFile(join(__dirname, '../renderer/index.html'));
   }

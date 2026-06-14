@@ -1,5 +1,6 @@
 export type QueueState = 'queued' | 'sending' | 'failed';
 export type QueueItem = { id: string; text: string; createdAt: number; state: QueueState; threadId?: string | null };
+export type QueueDisplayItem = QueueItem & { isNext: boolean; sendPosition: number | null };
 
 export const QUEUE_KEY = 'otto.chat.queue.v3';
 export const LEGACY_QUEUE_V2_KEY = 'otto.chat.queue.v2';
@@ -21,6 +22,27 @@ export const previewQueueText = (text: string): string => {
   return trimmed.length > 96 ? `${trimmed.slice(0, 96)}…` : trimmed;
 };
 
+export const normalizeQueueText = (text: string): string => text.trim().replace(/\s+/g, ' ');
+
+export const hasDuplicateQueueText = (
+  items: QueueItem[],
+  threadId: string | null | undefined,
+  text: string,
+  inFlight: QueueItem | null = readInFlight(),
+): boolean => {
+  const key = normalizeQueueText(text);
+  if (!key) return true;
+  if (inFlight && queueMatchesThread(inFlight, threadId) && normalizeQueueText(inFlight.text) === key) {
+    return true;
+  }
+  return items.some(
+    (item) =>
+      queueMatchesThread(item, threadId)
+      && (item.state === 'queued' || item.state === 'sending')
+      && normalizeQueueText(item.text) === key,
+  );
+};
+
 export const createQueueItem = (text: string, state: QueueState = 'queued', threadId: string | null = null): QueueItem => {
   const id = globalThis.crypto?.randomUUID?.() ?? `queue-${Date.now()}-${fallbackQueueIdSequence += 1}`;
   return { id, text, createdAt: Date.now(), state, threadId };
@@ -33,6 +55,40 @@ export const nextQueueItemForThread = (
   items: QueueItem[],
   threadId: string | null | undefined,
 ): QueueItem | undefined => items.find((item) => item.state === 'queued' && queueMatchesThread(item, threadId));
+
+export const queueDisplayItemsForThread = (
+  items: QueueItem[],
+  threadId: string | null | undefined,
+): QueueDisplayItem[] => {
+  let sendPosition = 0;
+  return items
+    .filter((item) => queueMatchesThread(item, threadId))
+    .map((item) => {
+      if (item.state !== 'queued') return { ...item, isNext: false, sendPosition: null };
+      sendPosition += 1;
+      return { ...item, isNext: sendPosition === 1, sendPosition };
+    });
+};
+
+export const retryFailedQueueItemsForThread = (
+  items: QueueItem[],
+  threadId: string | null | undefined,
+  id?: string,
+): QueueItem[] => {
+  const kept: QueueItem[] = [];
+  const retried: QueueItem[] = [];
+
+  for (const item of items) {
+    const shouldRetry = item.state === 'failed'
+      && queueMatchesThread(item, threadId)
+      && (!id || item.id === id);
+
+    if (shouldRetry) retried.push({ ...item, state: 'queued' });
+    else kept.push(item);
+  }
+
+  return [...kept, ...retried];
+};
 
 const dedupeQueue = (items: Array<QueueItem | null>): QueueItem[] => {
   const out: QueueItem[] = [];
@@ -69,7 +125,13 @@ export const readInFlight = (): QueueItem | null => {
       localStorage.removeItem(INFLIGHT_KEY);
       return null;
     }
-    return { id: item.id, text: item.text, createdAt, state: 'queued' };
+    return {
+      id: item.id,
+      text: item.text,
+      createdAt,
+      state: 'queued',
+      threadId: typeof item.threadId === 'string' ? item.threadId : null,
+    };
   } catch {
     return null;
   }
@@ -104,9 +166,9 @@ export const readQueue = (): QueueItem[] => {
     const legacy = parseStoredQueue(legacyRaw);
     const items = sanitizeQueue(
       dedupeQueue([
-        readInFlight(),
         ...current,
         ...legacy,
+        readInFlight(),
       ]),
     );
 

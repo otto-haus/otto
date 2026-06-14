@@ -1,0 +1,21 @@
+{
+  "schema": "otto.codex_pr_review_summary.v1",
+  "pr": 55,
+  "status": "ready_after_codex_review_regression",
+  "codeRecommendation": "ready_for_sebastian_review",
+  "shipRecommendation": "ship_with_ship_functional_labs_train",
+  "proof": "docs/receipts/staging/pr-55/codex-review-skill-frontmatter.json",
+  "summary": "The PR correctly parses skill frontmatter with the repo's existing YAML dependency. Codex added coverage for malformed YAML isolation and verified the desktop staging package.",
+  "screenshots": [],
+  "dataProof": [
+    "quoted scalar frontmatter name parsed without quote leakage",
+    "block scalar description preserved",
+    "markdown slash trigger retained",
+    "malformed root frontmatter skipped without blocking a valid sibling skill"
+  ],
+  "shipNotes": [
+    "This changes local skill metadata loading only.",
+    "No mock operational data or provider-secret behavior is introduced.",
+    "Ship with the ship/functional-labs train once Sebastian accepts the PR."
+  ]
+}

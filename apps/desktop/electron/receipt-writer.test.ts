@@ -1,4 +1,4 @@
-import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
+import { existsSync, mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, describe, expect, it } from 'bun:test';
@@ -79,5 +79,50 @@ describe('ReceiptWriter', () => {
     expect(persisted.blocker.code).toBe('runtime-not-ready');
     expect(persisted.blocker.recoverable).toBe(true);
     expect(persisted.evidence[0].kind).toBe('status');
+  });
+
+  it('sanitizes caller-provided timestamp for filename only', () => {
+    const root = mkdtempSync(join(tmpdir(), 'otto-receipt-root-'));
+    tmp = root;
+    const receiptsDir = join(root, 'receipts');
+    const receipt = new ReceiptWriter(receiptsDir).write({
+      id: 'receipt-path-test',
+      timestamp: '../escaped-receipt',
+      status: 'success',
+      subject: { type: 'task', id: 'filename-safety' },
+      action: 'receipt.write',
+      input: {},
+      result: { summary: 'Receipt written.' },
+      evidence: [],
+      blocker: null,
+    });
+
+    expect(receipt.timestamp).toBe('../escaped-receipt');
+    expect(receipt.path).toBe(join(receiptsDir, 'escaped-receipt-receipt-path-test.json'));
+    expect(existsSync(receipt.path)).toBe(true);
+    expect(existsSync(join(root, 'escaped-receipt-receipt-path-test.json'))).toBe(false);
+    const persisted = JSON.parse(readFileSync(receipt.path, 'utf8'));
+    expect(persisted.timestamp).toBe('../escaped-receipt');
+  });
+
+  it('falls back to a safe timestamp segment when separators erase the timestamp', () => {
+    const root = mkdtempSync(join(tmpdir(), 'otto-receipt-root-'));
+    tmp = root;
+    const receiptsDir = join(root, 'receipts');
+    const receipt = new ReceiptWriter(receiptsDir).write({
+      id: '../id\\escape',
+      timestamp: '../..\\..',
+      status: 'success',
+      subject: { type: 'task', id: 'filename-safety' },
+      action: 'receipt.write',
+      input: {},
+      result: { summary: 'Receipt written.' },
+      evidence: [],
+      blocker: null,
+    });
+
+    expect(receipt.path).toBe(join(receiptsDir, 'timestamp-idescape.json'));
+    expect(existsSync(receipt.path)).toBe(true);
+    expect(existsSync(join(root, 'timestamp-idescape.json'))).toBe(false);
   });
 });

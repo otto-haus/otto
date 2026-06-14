@@ -1,0 +1,31 @@
+{
+  "pr": 174,
+  "generatedAt": "2026-06-14T21:49:55.891Z",
+  "codeRecommendation": "ready_for_sebastian_review",
+  "shipRecommendation": "ship_with_functional_labs_train",
+  "shipRecommendationReason": "Security-sensitive local path-boundary hardening for optional pgvector recall. The repaired branch closes the symlink escape found during Codex review and is appropriate for the functional-labs train, not a standalone release cut.",
+  "reviewDisposition": "Codex found and fixed one additional bug: in-root symlinks could resolve outside the pgvector source root before disk reads.",
+  "bugsFixedByCodexReview": [
+    {
+      "bug": "Lexical source-path validation did not resolve symlinks, so an in-root symlink could point indexSource() at a file outside the allowed root.",
+      "fix": "Added realpath containment validation before healthCheck() and readFileSync() when PgvectorStore reads source files from disk.",
+      "regression": "apps/desktop/electron/pgvector-store.test.ts covers lexical traversal and symlink traversal, both before healthCheck()."
+    }
+  ],
+  "proof": [
+    "docs/receipts/staging/pr-174/codex-review-pgvector-source-paths.json",
+    "security report markdown: /tmp/codex-security-scans/otto/0848fba7d33510f775d30928675057d7f7cc5a03_20260614T214630Z/report.md",
+    "security report html: /tmp/codex-security-scans/otto/0848fba7d33510f775d30928675057d7f7cc5a03_20260614T214630Z/report.html",
+    "staging deploy log: /Users/seb/.codex/admin/otto-logs/staging-20260614T144852.deploy.log",
+    "staging app log: /Users/seb/.codex/admin/otto-logs/staging-20260614T144852.app.log"
+  ],
+  "verification": [
+    "bun install --frozen-lockfile",
+    "bun test apps/desktop/electron/pgvector-store.test.ts",
+    "Codex Security diff scan report validation and HTML render",
+    "bash scripts/ci-local-gate.sh",
+    "OTTO_STAGING_APP=/Applications/otto-pr-174-staging.app OTTO_STAGING_DISPLAY_NAME=otto pr 174 staging OTTO_STAGING_BUNDLE_ID=haus.otto.desktop.pr174staging OTTO_STAGING_ROOT=/tmp/otto-pr-174-proof-staging OTTO_STAGING_PORT=9464 OTTO_STAGING_WS_REMOTE_ENV=otto-pr174-proof-byor OTTO_STAGING_LOCK_DIR=/Users/seb/.codex/admin/otto-logs/desktop-deploy-pr174.lock OTTO_AGENT_ID=agent-00000000-0000-4000-8000-000000000000 LETTA_BASE_URL=http://127.0.0.1:9 OTTO_STAGING_LOG_CAPTURE_SECONDS=1 task staging",
+    "backend security data proof script wrote codex-review-pgvector-source-paths.json with all assertions passing"
+  ],
+  "ciStatus": "pending_github_checks_after_push"
+}

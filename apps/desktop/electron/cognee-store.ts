@@ -155,16 +155,16 @@ export class CogneeStore {
   latestCapture(): CogneeCaptureReceipt | null {
     const dir = join(resolveCogneeReceiptsDir(), 'capture');
     if (!existsSync(dir)) return null;
-    const files = readdirSync(dir)
+    const captures = readdirSync(dir)
       .filter((f) => f.endsWith('.json'))
-      .sort()
-      .reverse();
-    if (!files.length) return null;
-    try {
-      return JSON.parse(readFileSync(join(dir, files[0]!), 'utf8')) as CogneeCaptureReceipt;
-    } catch {
-      return null;
-    }
+      .map((file) => readCapture(join(dir, file), file))
+      .filter((entry): entry is { file: string; receipt: CogneeCaptureReceipt } => !!entry);
+    captures.sort((a, b) => {
+      const byTime = captureTimestampMs(b.receipt) - captureTimestampMs(a.receipt);
+      if (byTime !== 0) return byTime;
+      return b.file.localeCompare(a.file);
+    });
+    return captures[0]?.receipt ?? null;
   }
 
   captureDryRun(): { paths: string[]; count: number } {
@@ -237,7 +237,7 @@ export class CogneeStore {
       .slice(0, 5)
       .map((r) => ({
         path: r.path,
-        snippet: `Indexed in capture ${latest.id} (${latest.capturedAt})`,
+        snippet: `Indexed in capture ${latest.id} (${captureTimestamp(latest) || 'unknown time'})`,
       }));
 
     const result = {
@@ -249,6 +249,27 @@ export class CogneeStore {
     if (result.ok) writeCogneeRecallReceipt(result);
     return result;
   }
+}
+
+function readCapture(path: string, file: string): { file: string; receipt: CogneeCaptureReceipt } | null {
+  try {
+    return { file, receipt: JSON.parse(readFileSync(path, 'utf8')) as CogneeCaptureReceipt };
+  } catch {
+    return null;
+  }
+}
+
+function captureTimestampMs(receipt: CogneeCaptureReceipt): number {
+  const timestamp = captureTimestamp(receipt);
+  const ms = Date.parse(timestamp);
+  return Number.isFinite(ms) ? ms : 0;
+}
+
+function captureTimestamp(receipt: CogneeCaptureReceipt): string {
+  if (typeof receipt.capturedAt === 'string' && Number.isFinite(Date.parse(receipt.capturedAt))) {
+    return receipt.capturedAt;
+  }
+  return typeof receipt.at === 'string' ? receipt.at : '';
 }
 
 function resolveCogneeScript(): string {

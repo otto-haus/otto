@@ -1,0 +1,17 @@
+{
+  "pr": 44,
+  "status": "ready_after_codex_repair",
+  "summary": "Codex resolved the merge conflict by preserving both run status validation and safe filename coverage, then verified focused tests, scoped consumer tests, full local gate, and disposable desktop app proof.",
+  "codeRecommendation": "ready_for_sebastian_review",
+  "shipRecommendation": "ship_with_functional_labs_train",
+  "proof": [
+    "docs/receipts/staging/pr-44/codex-review-run-status-validation.json",
+    "/Users/seb/.codex/admin/otto-logs/staging-20260614T153537.deploy.log",
+    "/Users/seb/.codex/admin/otto-logs/staging-20260614T153537.app.log"
+  ],
+  "officialAppBoundary": {
+    "mutatedApplicationsOttoApp": false,
+    "mutatedApplicationsOttoStagingApp": false,
+    "usedDisposableAppAndProfile": true
+  }
+}

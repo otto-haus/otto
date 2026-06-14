@@ -1,4 +1,4 @@
-import { existsSync, mkdtempSync, readFileSync, rmSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { afterEach, describe, expect, test } from 'bun:test';
@@ -33,4 +33,56 @@ describe('CultureExporter', () => {
     const bundleText = readFileSync(join(stagingDir, 'manifest.json'), 'utf8');
     expect(/\b(api[_-]?key|secret|token|password|bearer)\b/i.test(bundleText)).toBe(false);
   });
+
+  test('previewImport rejects manifest include paths that escape the workspace', () => {
+    ottoDir = mkdtempSync(join(tmpdir(), 'otto-culture-import-'));
+    const unsafeIncludes: unknown[][] = [
+      ['../outside.md'],
+      ['..\\outside.md'],
+      ['/tmp/outside.md'],
+      ['C:\\outside.md'],
+      ['C:outside.md'],
+      [''],
+      ['.'],
+      [null],
+      ['constitution.yaml', 7],
+    ];
+
+    unsafeIncludes.forEach((includes, index) => {
+      const bundleDir = join(ottoDir, `bundle-${index}`);
+      mkdirSync(bundleDir, { recursive: true });
+      writeManifest(bundleDir, includes);
+
+      const preview = new CultureExporter(ottoDir).previewImport(bundleDir);
+
+      expect(preview.valid).toBe(false);
+      expect(preview.blocked_reason).toMatch(/unsafe/i);
+      expect(preview.diff).toEqual([]);
+    });
+  });
+
+  test('previewImport rejects manifest includes that are not arrays', () => {
+    ottoDir = mkdtempSync(join(tmpdir(), 'otto-culture-import-'));
+    const bundleDir = join(ottoDir, 'bundle');
+    mkdirSync(bundleDir, { recursive: true });
+    writeManifest(bundleDir, 'constitution.yaml');
+
+    const preview = new CultureExporter(ottoDir).previewImport(bundleDir);
+
+    expect(preview.valid).toBe(false);
+    expect(preview.blocked_reason).toMatch(/includes must be an array/i);
+    expect(preview.diff).toEqual([]);
+  });
 });
+
+function writeManifest(bundleDir: string, includes: unknown): void {
+  writeFileSync(join(bundleDir, 'manifest.json'), `${JSON.stringify({
+    schema: 'otto.culture-export.v1',
+    exported_at: '2026-06-14T00:00:00.000Z',
+    workspace: 'test',
+    includes,
+    excludes: [],
+    receipt_index_count: 0,
+    constitution_hash: null,
+  }, null, 2)}\n`);
+}

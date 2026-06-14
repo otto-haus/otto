@@ -55,8 +55,8 @@ export function normalizeLabsConfig(raw: OttoConfig['labs'] | undefined): LabsCo
 
   const nested = raw as LabsConfig;
   return {
-    enabled: nested.enabled ?? false,
-    features: { ...(nested.features ?? {}) },
+    enabled: nested.enabled === true,
+    features: normalizeFeatureFlags(nested.features),
   };
 }
 
@@ -66,9 +66,11 @@ export function getLabsConfig(cfg: OttoConfig): LabsConfig {
 
 export function patchLabsConfig(cfg: OttoConfig, patch: Partial<LabsConfig>): LabsConfig {
   const current = normalizeLabsConfig(cfg.labs);
+  const patchEnabled = (patch as { enabled?: unknown }).enabled;
+  const patchFeatures = normalizeFeatureFlags((patch as { features?: LabsConfig['features'] }).features);
   const next: LabsConfig = {
-    enabled: patch.enabled ?? current.enabled,
-    features: { ...current.features, ...(patch.features ?? {}) },
+    enabled: typeof patchEnabled === 'boolean' ? patchEnabled : current.enabled,
+    features: { ...current.features, ...patchFeatures },
   };
   return next;
 }
@@ -80,4 +82,14 @@ export function labsConfigToOttoPatch(next: LabsConfig): Pick<OttoConfig, 'labs'
 /** Same merge + persist steps as `otto:labs:set` IPC (Settings uses preload → this path). */
 export function applyLabsConfigPatch(cfg: OttoConfig, patch: Partial<LabsConfig>): LabsConfig {
   return patchLabsConfig(cfg, patch);
+}
+
+function normalizeFeatureFlags(raw: LabsConfig['features'] | undefined): Partial<Record<LabFeatureId, boolean>> {
+  const features: Partial<Record<LabFeatureId, boolean>> = {};
+  if (!raw || typeof raw !== 'object') return features;
+  for (const id of LAB_FEATURE_IDS) {
+    if (raw[id] === true) features[id] = true;
+    if (raw[id] === false) features[id] = false;
+  }
+  return features;
 }

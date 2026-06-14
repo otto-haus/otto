@@ -1,0 +1,29 @@
+---
+title: "Local CI gate"
+description: "The local command that should match GitHub CI."
+---
+
+Use the shared local gate before opening a PR:
+
+```sh
+task ci
+```
+
+`task ci` calls `scripts/ci-local-gate.sh`, which currently runs:
+
+```sh
+bun run typecheck
+bun run --cwd apps/desktop typecheck
+bun run --cwd apps/desktop electron:typecheck
+bun test
+bun run verify:v0
+bun run docs:validate
+bun run docs:links
+OTTO_READINESS_IGNORE_LOCAL_CONFIG=1 bun run --cwd apps/desktop electron:build
+bun audit
+git diff --check
+git diff --exit-code
+```
+
+The final diff check is intentional. If a generator writes tracked files, either commit
+the intended output or restore generated noise before claiming the gate passed.
