@@ -63,6 +63,10 @@ tasks:
     desc: Syntax-check tracked shell scripts
     cmds: [bun run check:shell]
 
+  doctor:
+    desc: Check local tool availability and Bun pin
+    cmds: [bun run doctor]
+
   verify:
     desc: v0 release gate (scripts/verify-v0.mjs)
     cmds: [bun run verify:v0]
