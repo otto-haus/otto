@@ -8,8 +8,7 @@ Release bucket: later-generated
 ## Outcome
 
 All 14 `docs/onepagers/*.html` documents declare `<html lang="en">`, so
-assistive tech pronounces them in the right language and the generated PDFs
-carry a correct language tag.
+assistive tech and print/PDF export paths have an explicit page-language source.
 
 ## Why this matters
 
@@ -19,7 +18,7 @@ read by screen readers and exported to PDF. Every one of them opened with a bare
 `<html>` and no language, so:
 
 - screen readers fall back to the user's default voice/pronunciation rules,
-- the PDF export inherits no document language,
+- the PDF export has no explicit document-language source to preserve,
 
 across the whole set (`approvals`, `autonomy`, `channels`, `charters`, `checks`,
 `curation`, `desktop`, `knowledge`, `otto-v1`, `practices`, `receipts`,
@@ -39,16 +38,37 @@ across the whole set (`approvals`, `autonomy`, `channels`, `charters`, `checks`,
 ## Done when
 
 - Every `docs/onepagers/*.html` opens with `<html lang="en">`
-- Diff is +14/−14 (one line each); no other change
+- The `docs/onepagers/*.html` diff is one opening-tag attribute per file; no
+  content/style change
 
 ## Verification
 
 ```sh
 git status --short --branch
-git diff --stat   # 14 files, 1 line each
+git diff --stat -- docs/onepagers/*.html   # 14 files, 1 line each
 for f in docs/onepagers/*.html; do head -c 60 "$f" | grep -oE '<html[^>]*>'; done | sort | uniq -c
 # expect: 14  <html lang="en">
 ```
+
+## Execution receipt
+
+2026-06-14 Codex review/repair:
+
+- Confirmed all 14 `docs/onepagers/*.html` files open with
+  `<!DOCTYPE html><html lang="en"><head><meta charset="utf-8">`.
+- Confirmed the one-pager diff against `origin/ship/functional-labs` is 14
+  files changed, 14 insertions, 14 deletions.
+- Moved this ticket to `_InReview` and narrowed outcome wording to the source
+  HTML language declaration. PDF export metadata was not inspected in this PR.
+- Checked open PR file overlap: no currently open PR overlaps this branch's
+  changed files.
+- Checked `git merge-tree $(git merge-base HEAD origin/ship/functional-labs) HEAD origin/ship/functional-labs`:
+  no conflicts.
+- Verification passed: `bun install --frozen-lockfile`; `bun run typecheck`;
+  `bun run --cwd apps/desktop typecheck`; `bun run --cwd apps/desktop electron:typecheck`;
+  `bun test` (221 pass, 1 skip, 0 fail); `bun run verify:v0` (5 passed, 0
+  failed); `git diff --check`.
+- Screenshots: N/A, static docs-only invisible `lang` attribute change.
 
 ## Blocker log
 
