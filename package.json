@@ -49,6 +49,7 @@
   "scripts": {
     "ci": "bash scripts/ci-local-gate.sh",
     "install-extension": "bun scripts/install.mjs",
+    "check:package-manager": "bun scripts/check-package-manager-pin.mjs",
     "typecheck": "tsc -p packages/core/tsconfig.json && tsc -p packages/practices/tsconfig.json",
     "test": "bun test",
     "verify:v0": "bun scripts/verify-v0.mjs",
