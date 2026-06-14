@@ -1275,6 +1275,8 @@ h1, h2, h3, h4, p { margin: 0; }
 }
 
 .notice { font-family: var(--mono); font-size: 11.5px; color: var(--warn); background: var(--warn-tint); border: 1px solid #e7dcc0; border-radius: 8px; padding: 7px 11px; display: inline-flex; gap: 8px; align-items: center; }
+/* In centered empty/coming-soon surfaces the notice text inherited text-align:center, floating it away from its left-pinned dot; keep the copy left-read and top-align the dot to the first line. */
+.emptySurface .notice { text-align: left; align-items: flex-start; }
 
 .toast-stack {
   position: fixed;
