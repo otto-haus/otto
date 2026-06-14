@@ -40,10 +40,10 @@ const EmptySurface: React.FC<{
 export const Charters: React.FC = () => (
   <EmptySurface
     eyebrow="charters"
-    title="No live Charter store is wired yet."
-    body="This pane will read durable operating contracts from Otto's file/runtime store. It is intentionally empty until that loader exists."
+    title="Charters are not shipped in the desktop yet."
+    body="No example contracts are shown here. This pane will stay empty until Otto can read real Charter records from the file/runtime store."
     path="~/.otto/charters/"
-    next="Wire real Charter records; do not show example contracts."
+    next="Wire real Charter records before calling this surface done."
   />
 );
 
@@ -181,6 +181,7 @@ const inputStyle: React.CSSProperties = {
 
 const ConnectLetta: React.FC = () => {
   const api = ottoApi();
+  const rt = useRuntimeContext();
   const [status, setStatus] = useState<RuntimeStatus | null>(null);
   const [baseUrl, setBaseUrl] = useState('');
   const [agentId, setAgentId] = useState('');
@@ -216,12 +217,14 @@ Local Letta URL and Agent ID are set here in the desktop app — this is the web
         agentId: agentId.trim() || null,
       });
       setStatus(next);
+      rt.updateStatus(next);
     } finally {
       setBusy(false);
     }
   };
 
-  const code: StatusCode = status?.ready ? 'ready' : status?.code ?? 'error';
+  const displayStatus = rt.status ?? status;
+  const code: StatusCode = displayStatus?.ready ? 'ready' : displayStatus?.code ?? 'error';
   const [cls, label] = codePill[code] ?? ['pill--warn', 'not connected'];
 
   return (
@@ -234,8 +237,8 @@ Local Letta URL and Agent ID are set here in the desktop app — this is the web
       <p className="muted" style={{ marginTop: 4 }}>
         Point Otto at your local Letta runtime and agent. Local Letta owns provider auth; Otto does not ask for an API key in v1.
       </p>
-      {status && !status.ready && status.reason && (
-        <p className="faint" style={{ marginTop: 6 }}>↳ {status.reason}</p>
+      {displayStatus && !displayStatus.ready && displayStatus.reason && (
+        <p className="faint" style={{ marginTop: 6 }}>↳ {displayStatus.reason}</p>
       )}
       <div className="grid" style={{ gap: 12, marginTop: 12 }}>
         <label>
@@ -264,10 +267,10 @@ Local Letta URL and Agent ID are set here in the desktop app — this is the web
         <button className="btn btn--primary" onClick={connect} disabled={busy}>
           {busy ? 'Connecting…' : 'Save & Connect'}
         </button>
-        {status?.ready && (
+        {displayStatus?.ready && (
           <span className="muted" style={{ fontSize: 13 }}>
-            {status.agentId}
-            {status.model ? ` · ${status.model}` : ''}
+            {displayStatus.agentId}
+            {displayStatus.model ? ` · ${displayStatus.model}` : ''}
           </span>
         )}
       </div>
@@ -303,53 +306,141 @@ const ReadyRow: React.FC<{ item: ReadyItem }> = ({ item }) => (
   </div>
 );
 
+type ProviderKind = 'local' | 'cloud';
+const MODEL_PROVIDERS: Array<{
+  kind: ProviderKind;
+  name: string;
+  detail: string;
+  matches: string[];
+}> = [
+  { kind: 'local', name: 'ChatGPT Plus/Pro (Codex Subscription)', detail: 'Subscription auth and Codex/GPT handles managed by Letta.', matches: ['chatgpt-plus-pro', 'openai-codex'] },
+  { kind: 'local', name: 'Anthropic', detail: 'Claude API keys managed by Letta.', matches: ['anthropic/claude'] },
+  { kind: 'local', name: 'Anthropic (Claude Pro/Max)', detail: 'Subscription auth managed by Letta.', matches: ['claude-pro-max'] },
+  { kind: 'local', name: 'OpenAI', detail: 'OpenAI API keys managed by Letta.', matches: ['openai/'] },
+  { kind: 'cloud', name: 'Amazon Bedrock', detail: 'AWS Bedrock credentials live in Letta.', matches: ['bedrock/', 'amazon-bedrock'] },
+  { kind: 'cloud', name: 'Azure OpenAI Responses', detail: 'Azure endpoint and key live in Letta.', matches: ['azure-openai'] },
+  { kind: 'cloud', name: 'Cloudflare AI Gateway', detail: 'Cloudflare gateway credentials live in Letta.', matches: ['cloudflare'] },
+  { kind: 'cloud', name: 'DeepSeek', detail: 'DeepSeek API key lives in Letta.', matches: ['deepseek'] },
+  { kind: 'cloud', name: 'Cerebras', detail: 'Cerebras API key lives in Letta.', matches: ['cerebras'] },
+  { kind: 'cloud', name: 'Fireworks', detail: 'Fireworks API key lives in Letta.', matches: ['fireworks'] },
+];
+
+const ModelProviders: React.FC = () => {
+  const api = ottoApi();
+  const rt = useRuntimeContext();
+  const [tab, setTab] = useState<ProviderKind>('local');
+  const activeModel = `${rt.status?.modelHandle ?? ''} ${rt.status?.model ?? ''}`.toLowerCase();
+  const openLetta = () => void api?.runtime.openLetta();
+  const rows = MODEL_PROVIDERS.filter((p) => p.kind === tab);
+
+  return (
+    <div className="providersScreen">
+      <div className="panel providersHero">
+        <div>
+          <div className="eyebrow">model providers</div>
+          <div className="h-sec" style={{ marginTop: 6 }}>Managed in Letta, selected in otto</div>
+          <p className="muted" style={{ marginTop: 6 }}>
+            otto does not collect provider keys. Connect providers in Letta, then choose model and effort from the chat composer.
+          </p>
+        </div>
+        <button className="btn btn--primary" onClick={openLetta}>Open Letta</button>
+      </div>
+
+      <div className="segmented" role="tablist" aria-label="Provider type">
+        <button className={tab === 'local' ? 'is-active' : ''} onClick={() => setTab('local')}>Local</button>
+        <button className={tab === 'cloud' ? 'is-active' : ''} onClick={() => setTab('cloud')}>Cloud</button>
+      </div>
+
+      <div className="providerList">
+        {rows.map((provider) => {
+          const active = provider.matches.some((m) => activeModel.includes(m));
+          return (
+            <div className="providerRow" key={provider.name}>
+              <div className="providerRow__glyph">{active ? <span className="dot dot--ok" /> : Icon.lock}</div>
+              <div>
+                <div className="row" style={{ gap: 8, alignItems: 'center' }}>
+                  <strong>{provider.name}</strong>
+                  <span className={`pill ${active ? 'pill--ok' : ''}`}>{active ? 'active model' : 'managed in Letta'}</span>
+                </div>
+                <p className="muted" style={{ marginTop: 4 }}>{provider.detail}</p>
+              </div>
+              <button className="btn" onClick={openLetta}>{active ? 'Manage' : 'Connect'}</button>
+            </div>
+          );
+        })}
+      </div>
+
+      <p className="faint mono" style={{ fontSize: 11.5 }}>
+        Current model: {rt.status?.model ?? rt.status?.modelHandle ?? 'not connected'} · Provider connection status is intentionally not guessed.
+      </p>
+    </div>
+  );
+};
+
 export const Settings: React.FC = () => {
   const rt = useRuntimeContext();
+  const [section, setSection] = useState<'general' | 'providers'>('general');
   // Live runtime is the source of truth in Electron; the file-backed checklist describes local
   // config only. Never let the readiness panel say "Setup required" while the runtime is connected.
   const liveConnected = rt.electron && !!rt.status?.ready;
   const ready = liveConnected || requiredMissing.length === 0;
   const group = (keys: string[]) => readiness.filter((r) => keys.includes(r.key));
+
   return (
-    <div className="grid" style={{ maxWidth: 880, gap: 16 }}>
-      <ConnectLetta />
-      <div className="panel" style={ready ? undefined : { borderColor: '#e7dcc0', background: 'var(--warn-tint)' }}>
-        <div className="eyebrow">readiness</div>
-        <div className="h-sec" style={{ marginTop: 6 }}>
-          {liveConnected
-            ? `Connected — ${rt.status?.agentId ?? 'agent'}${rt.status?.model ? ` · ${rt.status.model}` : ''}`
-            : ready
-              ? 'Otto is ready to work'
-              : 'Setup required — Otto is not ready to work'}
-        </div>
-        {liveConnected ? (
-          <p className="muted" style={{ marginTop: 6 }}>
-            Live Letta runtime connected. The file-backed checks below describe local config only.
+    <div className="settingsShell">
+      <aside className="settingsNav" aria-label="Settings sections">
+        <button className={section === 'general' ? 'is-active' : ''} onClick={() => setSection('general')}>
+          {Icon.settings}<span>General</span>
+        </button>
+        <button className={section === 'providers' ? 'is-active' : ''} onClick={() => setSection('providers')}>
+          {Icon.lock}<span>Model providers</span>
+        </button>
+      </aside>
+
+      {section === 'providers' ? (
+        <ModelProviders />
+      ) : (
+        <div className="grid" style={{ maxWidth: 880, gap: 16 }}>
+          <ConnectLetta />
+          <div className="panel" style={ready ? undefined : { borderColor: '#e7dcc0', background: 'var(--warn-tint)' }}>
+            <div className="eyebrow">readiness</div>
+            <div className="h-sec" style={{ marginTop: 6 }}>
+              {liveConnected
+                ? `Connected — ${rt.status?.agentId ?? 'agent'}${rt.status?.model ? ` · ${rt.status.model}` : ''}`
+                : ready
+                  ? 'otto is ready to work'
+                  : 'Setup required — otto is not ready to work'}
+            </div>
+            {liveConnected ? (
+              <p className="muted" style={{ marginTop: 6 }}>
+                Live Letta runtime connected. The file-backed checks below describe local config only.
+              </p>
+            ) : (
+              !ready && (
+                <p className="muted" style={{ marginTop: 6 }}>
+                  {requiredMissing.length} required {requiredMissing.length === 1 ? 'item' : 'items'} missing:{' '}
+                  {requiredMissing.map((r) => r.label).join(' · ')}. Configure them below — until then, Chat is disabled.
+                </p>
+              )
+            )}
+          </div>
+          <div className="panel">
+            <div className="eyebrow">runtime &amp; identity</div>
+            <div style={{ marginTop: 4 }}>
+              {group(['runtime', 'agent', 'model', 'memory', 'workspace']).map((r) => <ReadyRow key={r.key} item={r} />)}
+            </div>
+          </div>
+          <div className="panel">
+            <div className="eyebrow">capabilities</div>
+            <div style={{ marginTop: 4 }}>
+              {group(['skills', 'practices', 'mcp', 'functions', 'permissions']).map((r) => <ReadyRow key={r.key} item={r} />)}
+            </div>
+          </div>
+          <p className="faint mono" style={{ fontSize: 11.5 }}>
+            v1 is local-only: otto connects to a local Letta runtime. Cloud/self-host auth can come later as an advanced path.
           </p>
-        ) : (
-          !ready && (
-            <p className="muted" style={{ marginTop: 6 }}>
-              {requiredMissing.length} required {requiredMissing.length === 1 ? 'item' : 'items'} missing:{' '}
-              {requiredMissing.map((r) => r.label).join(' · ')}. Configure them below — until then, Chat is disabled.
-            </p>
-          )
-        )}
-      </div>
-      <div className="panel">
-        <div className="eyebrow">runtime &amp; identity</div>
-        <div style={{ marginTop: 4 }}>
-          {group(['runtime', 'agent', 'model', 'memory', 'workspace']).map((r) => <ReadyRow key={r.key} item={r} />)}
         </div>
-      </div>
-      <div className="panel">
-        <div className="eyebrow">capabilities</div>
-        <div style={{ marginTop: 4 }}>
-          {group(['skills', 'practices', 'mcp', 'functions', 'permissions']).map((r) => <ReadyRow key={r.key} item={r} />)}
-        </div>
-      </div>
-      <p className="faint mono" style={{ fontSize: 11.5 }}>
-        v1 is local-only: Otto connects to a local Letta runtime. Cloud/self-host auth can come later as an advanced path.
-      </p>
+      )}
     </div>
   );
 };

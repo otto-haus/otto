@@ -17,6 +17,7 @@ const api = {
     send: (text: string): Promise<void> => ipcRenderer.invoke('otto:send', text),
     abort: (): Promise<void> => ipcRenderer.invoke('otto:abort'),
     configure: (input: RuntimePreferences): Promise<RuntimeStatus> => ipcRenderer.invoke('otto:configure', input),
+    openLetta: (): Promise<string> => ipcRenderer.invoke('otto:open-letta'),
   },
   config: {
     get: (): Promise<OttoConfig> => ipcRenderer.invoke('otto:config:get'),

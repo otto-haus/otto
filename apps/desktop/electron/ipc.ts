@@ -1,4 +1,4 @@
-import { type BrowserWindow, ipcMain } from 'electron';
+import { type BrowserWindow, ipcMain, shell } from 'electron';
 import type { ConnectionInfo, ConnectionInput, OttoConfig, PermissionResponse, RuntimePreferences } from './shared/types';
 import { ConfigStore } from './config-store';
 import { LettaRunner } from './letta-runner';
@@ -12,6 +12,7 @@ export function registerIpc(win: BrowserWindow) {
   ipcMain.handle('otto:send', (_e, text: string) => runner.send(text));
   ipcMain.handle('otto:abort', () => runner.abort());
   ipcMain.handle('otto:configure', (_e, input: RuntimePreferences) => runner.configure(input));
+  ipcMain.handle('otto:open-letta', () => shell.openPath('/Applications/Letta.app'));
 
   ipcMain.handle('otto:config:get', () => config.get());
   ipcMain.handle('otto:config:set', (_e, patch: Partial<OttoConfig>) => config.update(patch));

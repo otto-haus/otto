@@ -44,6 +44,7 @@ type OttoApi = {
     send(text: string): Promise<void>;
     abort(): Promise<void>;
     configure(input: RuntimePreferences): Promise<RuntimeStatus>;
+    openLetta(): Promise<string>;
   };
   config: { get(): Promise<unknown>; set(patch: unknown): Promise<unknown> };
   connection: {

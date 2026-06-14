@@ -1,6 +1,7 @@
 import React from 'react';
 import { Icon } from './icons';
 import { useRuntimeContext } from '../RuntimeContext';
+import ottoAvatar from '../assets/otto-avatar.png';
 
 export type SurfaceId =
   | 'chat'
@@ -64,7 +65,7 @@ export const Sidebar: React.FC<{
   return (
     <aside className={`sidebar${collapsed ? ' is-collapsed' : ''}`}>
       <div className="brand">
-        <span className="brand__mark brand__mark--owl">{Icon.owl}</span>
+        <span className="brand__mark brand__mark--avatar"><img src={ottoAvatar} alt="" /></span>
         <span className="brand__text">
           <div className="brand__name">otto</div>
         </span>

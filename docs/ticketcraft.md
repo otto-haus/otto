@@ -19,7 +19,8 @@ Main Otto own orchestration while workers execute.
 Sebastian gives intent.
 Otto compiles tickets.
 Workers execute.
-Otto reviews / integrates.
+Workers launch unbiased review subagents.
+Otto integrates only after review proof.
 Sebastian sees only doors.
 ```
 
@@ -82,5 +83,24 @@ Receipts prove the slice.
 /ticket close     mark merged|cancelled, clean stale worktree
 ```
 
-`compile`, `assign`, `status`, and `review` are autonomous; integration that crosses a
-gate (protected-main merge, external side effect) escalates to Approvals.
+`compile`, `assign`, `status`, and review-request creation are autonomous; integration
+that crosses a gate (protected-main merge, external side effect) escalates to Approvals.
+
+## Current review topology
+
+The v1 workflow uses two standing implementation lanes: one Claude lane and one Codex
+lane. They are peers with different strengths; do not force a standing Claude -> Codex
+or Codex -> Claude review hop.
+
+Instead, whichever lane implements a ticket must manually launch a fresh, unbiased
+reviewer subagent and give it:
+
+- the ticket packet
+- the diff / changed files
+- the Done-when acceptance criteria
+- the claimed receipts/checks
+- explicit instruction to grade AC-by-AC and withhold `+1` when proof is missing
+
+The implementer cannot self-certify. A ticket only advances when the unbiased review maps
+proof to each acceptance criterion. If a proof artifact is missing, the result is `needs
+work`, not “probably done.”

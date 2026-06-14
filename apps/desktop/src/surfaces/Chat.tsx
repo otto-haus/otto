@@ -3,6 +3,7 @@ import { Icon } from '../components/icons';
 import { requiredMissing, isReady } from '../readiness';
 import { isElectron, type EffortLevel } from '../runtime';
 import { useRuntimeContext } from '../RuntimeContext';
+import ottoAvatar from '../assets/otto-avatar.png';
 
 // In Electron (window.otto present) → the runtime-wired LiveChat.
 // In the web preview → the file-backed PreviewChat (unchanged).
@@ -30,6 +31,108 @@ const EFFORT_OPTIONS: Array<{ label: string; value: EffortLevel }> = [
 
 const labelForModel = (value?: string | null) => MODEL_OPTIONS.find((m) => m.value === value)?.label ?? value ?? 'Agent default';
 const labelForEffort = (value?: EffortLevel) => EFFORT_OPTIONS.find((e) => e.value === value)?.label ?? 'Max';
+
+const renderInline = (text: string): React.ReactNode[] => {
+  const nodes: React.ReactNode[] = [];
+  const pattern = /(\*\*[^*]+\*\*|`[^`]+`|\[[^\]]+\]\([^)]+\))/g;
+  let last = 0;
+  for (const match of text.matchAll(pattern)) {
+    const raw = match[0];
+    const index = match.index ?? 0;
+    if (index > last) nodes.push(text.slice(last, index));
+    if (raw.startsWith('**')) {
+      nodes.push(<strong key={`${index}-b`}>{raw.slice(2, -2)}</strong>);
+    } else if (raw.startsWith('`')) {
+      nodes.push(<code key={`${index}-c`}>{raw.slice(1, -1)}</code>);
+    } else {
+      const link = raw.match(/^\[([^\]]+)\]\(([^)]+)\)$/);
+      nodes.push(link ? <a key={`${index}-a`} href={link[2]}>{link[1]}</a> : raw);
+    }
+    last = index + raw.length;
+  }
+  if (last < text.length) nodes.push(text.slice(last));
+  return nodes;
+};
+
+const MarkdownText: React.FC<{ text: string }> = ({ text }) => {
+  const blocks: React.ReactNode[] = [];
+  const parts = text.split(/(```[\s\S]*?```)/g).filter(Boolean);
+
+  parts.forEach((part, partIndex) => {
+    if (part.startsWith('```')) {
+      const code = part.replace(/^```[^\n]*\n?/, '').replace(/```$/, '').trimEnd();
+      blocks.push(<pre className="md__pre" key={`code-${partIndex}`}><code>{code}</code></pre>);
+      return;
+    }
+
+    const lines = part.split('\n');
+    let i = 0;
+    while (i < lines.length) {
+      const line = lines[i];
+      if (!line.trim()) { i += 1; continue; }
+
+      const heading = line.match(/^(#{1,3})\s+(.+)$/);
+      if (heading) {
+        const children = renderInline(heading[2]);
+        blocks.push(heading[1].length === 1
+          ? <h3 className="md__heading" key={`h-${partIndex}-${i}`}>{children}</h3>
+          : heading[1].length === 2
+            ? <h4 className="md__heading" key={`h-${partIndex}-${i}`}>{children}</h4>
+            : <h5 className="md__heading" key={`h-${partIndex}-${i}`}>{children}</h5>);
+        i += 1;
+        continue;
+      }
+
+      const quote = line.match(/^>\s+(.+)$/);
+      if (quote) {
+        const quoted: string[] = [];
+        while (i < lines.length) {
+          const q = lines[i].match(/^>\s?(.+)$/);
+          if (!q) break;
+          quoted.push(q[1]);
+          i += 1;
+        }
+        blocks.push(<blockquote className="md__quote" key={`q-${partIndex}-${i}`}>{quoted.map((q, qi) => <p key={qi}>{renderInline(q)}</p>)}</blockquote>);
+        continue;
+      }
+
+      const bullet = line.match(/^\s*[-*]\s+(.+)$/);
+      if (bullet) {
+        const items: string[] = [];
+        while (i < lines.length) {
+          const b = lines[i].match(/^\s*[-*]\s+(.+)$/);
+          if (!b) break;
+          items.push(b[1]);
+          i += 1;
+        }
+        blocks.push(<ul className="md__list" key={`ul-${partIndex}-${i}`}>{items.map((item, ii) => <li key={ii}>{renderInline(item)}</li>)}</ul>);
+        continue;
+      }
+
+      const numbered = line.match(/^\s*\d+[.)]\s+(.+)$/);
+      if (numbered) {
+        const items: string[] = [];
+        while (i < lines.length) {
+          const n = lines[i].match(/^\s*\d+[.)]\s+(.+)$/);
+          if (!n) break;
+          items.push(n[1]);
+          i += 1;
+        }
+        blocks.push(<ol className="md__list" key={`ol-${partIndex}-${i}`}>{items.map((item, ii) => <li key={ii}>{renderInline(item)}</li>)}</ol>);
+        continue;
+      }
+
+      const para: string[] = [];
+      while (i < lines.length && lines[i].trim() && !/^(#{1,3})\s+/.test(lines[i]) && !/^\s*[-*]\s+/.test(lines[i]) && !/^\s*\d+[.)]\s+/.test(lines[i]) && !/^>\s+/.test(lines[i])) {
+        para.push(lines[i].trim());
+        i += 1;
+      }
+      blocks.push(<p className="md__p" key={`p-${partIndex}-${i}`}>{renderInline(para.join(' '))}</p>);
+    }
+  });
+
+  return <div className="md">{blocks}</div>;
+};
 
 const LiveChat: React.FC<{ onOpenSettings?: () => void }> = ({ onOpenSettings }) => {
   const rt = useRuntimeContext();
@@ -77,7 +180,7 @@ const LiveChat: React.FC<{ onOpenSettings?: () => void }> = ({ onOpenSettings })
   return (
     <div className="chat">
       <div className="chat__head">
-        <span className="brand__mark" style={{ width: 28, height: 28, borderRadius: 8 }}>{Icon.owl}</span>
+        <span className="brand__mark brand__mark--avatar" style={{ width: 28, height: 28, borderRadius: 8 }}><img src={ottoAvatar} alt="" /></span>
         <div>
           <div style={{ fontWeight: 600 }}>otto</div>
           <div className="chat__id">
@@ -114,7 +217,7 @@ const LiveChat: React.FC<{ onOpenSettings?: () => void }> = ({ onOpenSettings })
         {rt.messages.map((m, i) => (
           <div key={i} className={`msg${m.who === 'user' ? ' msg--user' : ''}`}>
             <div className="msg__who">{m.who === 'user' ? 'You' : m.who === 'error' ? 'error' : 'otto'}</div>
-            <div className="msg__body" style={m.who === 'error' ? { color: 'var(--stop)' } : undefined}>{m.text}</div>
+            <div className="msg__body" style={m.who === 'error' ? { color: 'var(--stop)' } : undefined}><MarkdownText text={m.text} /></div>
           </div>
         ))}
         {rt.busy && <div className="eyebrow">otto is working…</div>}
@@ -232,7 +335,7 @@ const LiveChat: React.FC<{ onOpenSettings?: () => void }> = ({ onOpenSettings })
 const PreviewChat: React.FC = () => (
   <div className="chat">
     <div className="chat__head">
-      <span className="brand__mark" style={{ width: 28, height: 28, borderRadius: 8 }}>{Icon.owl}</span>
+      <span className="brand__mark brand__mark--avatar" style={{ width: 28, height: 28, borderRadius: 8 }}><img src={ottoAvatar} alt="" /></span>
       <div>
         <div style={{ fontWeight: 600 }}>otto</div>
         <div className="chat__id">runtime not connected · desktop bridge unavailable</div>
