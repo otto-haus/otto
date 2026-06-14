@@ -5,7 +5,14 @@ import type { WorkerListResult, WorkerRecord, WorkerStatus } from '@otto-haus/co
 import { OTTO_DIR } from './config-store';
 
 export const WORKERS_DIR = join(OTTO_DIR, 'workers');
-const WORKER_STATUSES = new Set<WorkerStatus>(['draft', 'running', 'blocked', 'review', 'done', 'failed']);
+const WORKER_STATUSES: Record<WorkerStatus, true> = {
+  draft: true,
+  running: true,
+  blocked: true,
+  review: true,
+  done: true,
+  failed: true,
+};
 
 export class WorkerStore {
   constructor(private dir = WORKERS_DIR) {}
@@ -81,7 +88,7 @@ function timestampMs(value: string): number {
 }
 
 function normalizeStatus(value: unknown): WorkerStatus {
-  if (typeof value === 'string' && WORKER_STATUSES.has(value as WorkerStatus)) {
+  if (typeof value === 'string' && value in WORKER_STATUSES) {
     return value as WorkerStatus;
   }
   throw new Error(`Invalid worker status: ${String(value)}`);
