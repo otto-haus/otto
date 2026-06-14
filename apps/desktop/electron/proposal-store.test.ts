@@ -46,6 +46,15 @@ describe('ProposalStore', () => {
     }
   });
 
+  test('classify preview matches IPC handler contract', () => {
+    const classification = classifyProposal(
+      { kind: 'memory', action: 'update' },
+      'Remember to always write a receipt after manual routine runs.',
+    );
+    expect(classification.route).toBe('ask');
+    expect(classification.required_gate).toBe('human_ratification');
+  });
+
   test('classifies standards changes as high-risk ratification', () => {
     const classification = classifyProposal(
       { kind: 'standard', id: 'quality', action: 'update' },

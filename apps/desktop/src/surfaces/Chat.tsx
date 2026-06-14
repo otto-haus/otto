@@ -18,6 +18,10 @@ import {
   wasFirstMessageDuringOnboarding,
   wasOnboarded,
 } from '../onboarding-storage';
+import { ProposeCorrectionModal, type ProposeCorrectionContext } from '../chat/ProposeCorrectionModal';
+import { runTicketCommand } from '../chat/ticket-commands';
+import type { ProposalTarget } from '@otto-haus/core';
+import type { ChatMsg } from '../runtime';
 
 // In Electron (window.otto present) → the runtime-wired LiveChat.
 // In the web preview → the file-backed PreviewChat (unchanged).
@@ -304,7 +308,9 @@ const LiveChat: React.FC<{
   const [effortOpen, setEffortOpen] = useState(false);
   const [permission, setPermission] = useState<PermissionRequestView | null>(null);
   const [permissionBusy, setPermissionBusy] = useState(false);
-  const [correctBusy, setCorrectBusy] = useState<string | null>(null);
+  const [proposeContext, setProposeContext] = useState<ProposeCorrectionContext | null>(null);
+  const [proposeBusy, setProposeBusy] = useState(false);
+  const [cmdMessages, setCmdMessages] = useState<ChatMsg[]>([]);
   const [onboardingDismissed, setOnboardingDismissed] = useState(wasOnboarded);
   const [onboardingFirstMessage, setOnboardingFirstMessage] = useState(wasFirstMessageDuringOnboarding);
   const draining = useRef(false);
@@ -325,12 +331,14 @@ const LiveChat: React.FC<{
   const showRunOnboardingHint = ready
     && !onboardingDismissed
     && !onboardingFirstMessage
-    && !permission;
+    && !permission
+    && !proposeContext;
 
   const showReceiptOnboardingHint = ready
     && !onboardingDismissed
     && onboardingFirstMessage
-    && !permission;
+    && !permission
+    && !proposeContext;
 
   const respondPermission = (decision: PermissionDecision, denyMessage?: string) => {
     if (!api || !permission) return;
@@ -345,20 +353,27 @@ const LiveChat: React.FC<{
     setPermissionBusy(false);
   };
 
-  const correctThis = async (messageText: string, messageId: string) => {
-    if (!api || correctBusy) return;
-    setCorrectBusy(messageId);
+  const submitProposal = async (input: { correction: string; target: ProposalTarget; rationale: string }) => {
+    if (!api || !proposeContext || proposeBusy) return;
+    setProposeBusy(true);
     try {
       const result = await api.curation.proposals.createFromCorrection({
-        correction: chatCopy.correctionDefault,
-        rationale: messageText.slice(0, 2000),
-        target: { kind: 'standard' },
+        correction: input.correction,
+        rationale: input.rationale,
+        target: input.target,
+        evidence: [{ kind: 'message', ref: proposeContext.messageId, note: proposeContext.messageText.slice(0, 500) }],
       });
+      setProposeContext(null);
       toast.push({
         title: toastCopy.proposalCreated,
-        body: `${result.proposal.summary} · ${toastCopy.openCuration}`,
+        body: `${result.proposal.id} · ${result.proposal.classification.route} · ${toastCopy.openCuration}`,
         tone: 'ok',
       });
+      setCmdMessages((items) => [...items, {
+        id: `proposal-${result.proposal.id}`,
+        who: 'otto',
+        text: `Proposal **${result.proposal.id}** recorded (${result.proposal.status}).\n\n${result.proposal.summary}\n\nReceipt: \`${result.receipt.id}\`. Ratify in Curation — canon unchanged until accept.`,
+      }]);
       onNavigate?.('curation');
     } catch (e) {
       toast.push({
@@ -367,9 +382,11 @@ const LiveChat: React.FC<{
         tone: 'warn',
       });
     } finally {
-      setCorrectBusy(null);
+      setProposeBusy(false);
     }
   };
+
+  const streamMessages = [...rt.messages, ...cmdMessages];
 
   useEffect(() => {
     try { localStorage.setItem(DRAFT_KEY, draft); } catch { /* best effort */ }
@@ -400,11 +417,24 @@ const LiveChat: React.FC<{
 
   const submit = () => {
     const t = draft.trim();
-    if ((!t && attachments.length === 0) || !ready) return;
+    if ((!t && attachments.length === 0) || !ready || !api) return;
     const text = withAttachments(t, attachments);
-    setQueue((items) => [...items, { id: `${Date.now()}-${items.length}`, text, createdAt: Date.now(), state: 'queued' }]);
-    setDraft('');
-    setAttachments([]);
+    void (async () => {
+      const cmd = await runTicketCommand(api, text);
+      if (cmd?.handled) {
+        setCmdMessages((items) => [...items, {
+          id: `cmd-${Date.now()}`,
+          who: 'otto',
+          text: cmd.lines.join('\n'),
+        }]);
+        setDraft('');
+        setAttachments([]);
+        return;
+      }
+      setQueue((items) => [...items, { id: `${Date.now()}-${items.length}`, text, createdAt: Date.now(), state: 'queued' }]);
+      setDraft('');
+      setAttachments([]);
+    })();
   };
 
   useEffect(() => {
@@ -484,24 +514,26 @@ const LiveChat: React.FC<{
             </div>
           </div>
         )}
-        {ready && rt.messages.length === 0 && (
+        {ready && streamMessages.length === 0 && (
           <div className="emptySurface emptySurface--chat">
             <div className="eyebrow">{chatCopy.sessionEyebrow}</div>
             <h2>{chatCopy.sessionTitle}</h2>
             <p>{chatCopy.sessionBody}</p>
+            <p className="muted">{chatCopy.ticketCommandHint}</p>
           </div>
         )}
-        {rt.messages.map((m, i) => {
-          const showWho = i === 0 || rt.messages[i - 1].who !== m.who;
-          const canCorrect = m.who === 'otto' && !!m.text.trim();
+        {streamMessages.map((m, i) => {
+          const showWho = i === 0 || streamMessages[i - 1].who !== m.who;
+          const canPropose = !!m.text.trim() && (m.who === 'otto' || m.who === 'user');
           return (
             <div key={m.id} className={`msg${m.who === 'user' ? ' msg--user' : ''}${showWho ? '' : ' msg--cont'}`}>
               {showWho && <div className="msg__who">{m.who === 'user' ? 'You' : m.who === 'error' ? 'error' : 'otto'}</div>}
               <div className="msg__body" style={m.who === 'error' ? { color: 'var(--stop)' } : undefined}><MarkdownText text={m.text} /></div>
-              {canCorrect ? (
+              {canPropose ? (
                 <MessageActions
-                  disabled={!!correctBusy && correctBusy !== m.id}
-                  onCorrectThis={() => { void correctThis(m.text, m.id); }}
+                  disabled={proposeBusy}
+                  onPropose={() => setProposeContext({ messageId: m.id, messageText: m.text, who: m.who === 'user' ? 'user' : 'otto' })}
+                  onCorrectThis={m.who === 'otto' ? () => setProposeContext({ messageId: m.id, messageText: m.text, who: 'otto' }) : undefined}
                 />
               ) : null}
             </div>
@@ -690,6 +722,15 @@ const LiveChat: React.FC<{
           <PermissionCard request={permission} busy={permissionBusy} onDecide={respondPermission} />
         ) : null}
       </Modal>
+
+      <ProposeCorrectionModal
+        open={!!proposeContext}
+        context={proposeContext}
+        busy={proposeBusy}
+        onClose={() => { if (!proposeBusy) setProposeContext(null); }}
+        onSubmit={(input) => { void submitProposal(input); }}
+        classify={api ? (input) => api.curation.proposals.classify(input) : undefined}
+      />
     </div>
   );
 };

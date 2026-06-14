@@ -15,6 +15,8 @@ import type {
   CurationProposalRecord,
   CreateProposalFromCorrectionInput,
   DecideProposalInput,
+  ProposalClassification,
+  ProposalTarget,
 } from '@otto-haus/core';
 
 export type { CharterStatus };
@@ -197,7 +199,7 @@ export interface RoutineManualRunResult {
   receipt: Receipt & { path: string };
 }
 
-export type { RoutineRecord, RoutineReference, CurationProposalRecord, CreateProposalFromCorrectionInput, DecideProposalInput };
+export type { RoutineRecord, RoutineReference, CurationProposalRecord, CreateProposalFromCorrectionInput, DecideProposalInput, ProposalClassification, ProposalTarget };
 
 export interface ProposalListResult {
   dir: string;

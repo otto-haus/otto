@@ -33,6 +33,8 @@ import type {
   DecideProposalResult,
   ProposalListResult,
   CurationProposalRecord,
+  ProposalTarget,
+  ProposalClassification,
   AutonomyPolicyResult,
   EvaluateAutonomyActionResult,
   KnowledgeListResult,
@@ -107,6 +109,8 @@ const api = {
       get: (id: string): Promise<CurationProposalRecord | null> => ipcRenderer.invoke('otto:curation:proposals:get', id),
       createFromCorrection: (input: CreateProposalFromCorrectionInput): Promise<CreateProposalResult> =>
         ipcRenderer.invoke('otto:curation:proposals:create-from-correction', input),
+      classify: (input: { target: ProposalTarget; correction: string }): Promise<ProposalClassification> =>
+        ipcRenderer.invoke('otto:curation:proposals:classify', input),
       decide: (id: string, input: DecideProposalInput): Promise<DecideProposalResult> =>
         ipcRenderer.invoke('otto:curation:proposals:decide', id, input),
     },

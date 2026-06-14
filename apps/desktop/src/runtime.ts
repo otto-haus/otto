@@ -10,6 +10,8 @@ import type {
   CurationProposalRecord,
   CreateProposalFromCorrectionInput,
   DecideProposalInput,
+  ProposalClassification,
+  ProposalTarget,
   AutonomyPolicy,
   AutonomyPolicyResult,
   AutonomyActionEvaluation,
@@ -194,6 +196,8 @@ export type {
   CurationProposalRecord,
   CreateProposalFromCorrectionInput,
   DecideProposalInput,
+  ProposalClassification,
+  ProposalTarget,
   AutonomyPolicy,
   AutonomyPolicyResult,
   AutonomyActionEvaluation,
@@ -270,6 +274,7 @@ type OttoApi = {
       list(): Promise<ProposalListResult>;
       get(id: string): Promise<CurationProposalRecord | null>;
       createFromCorrection(input: CreateProposalFromCorrectionInput): Promise<CreateProposalResult>;
+      classify(input: { correction: string; target: ProposalTarget }): Promise<ProposalClassification>;
       decide(id: string, input: DecideProposalInput): Promise<DecideProposalResult>;
     };
     approvals: {
@@ -330,6 +335,8 @@ declare global {
     otto?: OttoApi;
   }
 }
+
+export type OttoBridge = OttoApi;
 
 export const ottoApi = (): OttoApi | null =>
   typeof window !== 'undefined' && window.otto ? window.otto : null;

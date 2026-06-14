@@ -1,5 +1,5 @@
 import { type BrowserWindow, ipcMain, shell } from 'electron';
-import type { ConnectionInfo, ConnectionInput, CreateProposalFromCorrectionInput, DecideProposalInput, OttoConfig, PermissionResponse, RuntimePreferences } from './shared/types';
+import type { ConnectionInfo, ConnectionInput, CreateProposalFromCorrectionInput, DecideProposalInput, OttoConfig, PermissionResponse, ProposalClassification, ProposalTarget, RuntimePreferences } from './shared/types';
 import type { CharterCreateInput, CharterStatus } from './shared/types';
 import type { AttachmentInput } from './shared/types';
 import { saveAttachment } from './attachments';
@@ -9,7 +9,7 @@ import { discoverLocalLettaContext, LettaRunner } from './letta-runner';
 import { ReceiptStore } from './receipt-store';
 import { StandardStore } from './standard-store';
 import { PracticeStore } from './practice-store';
-import { ProposalStore } from './proposal-store';
+import { ProposalStore, classifyProposal } from './proposal-store';
 import { RoutineStore } from './routine-store';
 import { AutonomyStore } from './autonomy-store';
 import { ChannelStore } from './channel-store';
@@ -101,6 +101,11 @@ export function registerIpc(win: BrowserWindow) {
   ipcMain.handle('otto:curation:proposals:get', (_e, id: string) => proposals.get(id));
   ipcMain.handle('otto:curation:proposals:create-from-correction', (_e, input: CreateProposalFromCorrectionInput) =>
     proposals.createFromCorrection(input),
+  );
+  ipcMain.handle(
+    'otto:curation:proposals:classify',
+    (_e, input: { target: ProposalTarget; correction: string }): ProposalClassification =>
+      classifyProposal(input.target, input.correction),
   );
   ipcMain.handle('otto:curation:proposals:decide', (_e, id: string, input: DecideProposalInput) =>
     proposals.decide(id, input),
