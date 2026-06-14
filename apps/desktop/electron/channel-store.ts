@@ -26,9 +26,20 @@ export class ChannelStore {
       return { dir: this.dir, configPath, channels: DEFAULT_CHANNELS, skipped: [], storage: 'default' };
     }
 
-    const raw = parse(readFileSync(configPath, 'utf8')) as unknown;
-    const channelsRaw = isRecord(raw) && Array.isArray(raw.channels) ? raw.channels : [];
     const skipped: ChannelSkip[] = [];
+    let raw: unknown;
+    try {
+      raw = parse(readFileSync(configPath, 'utf8')) as unknown;
+    } catch (error) {
+      skipped.push({
+        index: 0,
+        file: configPath,
+        reason: `channels.yaml could not be parsed: ${error instanceof Error ? error.message : String(error)}`,
+      });
+      return { dir: this.dir, configPath, channels: [], skipped, storage: 'files' };
+    }
+
+    const channelsRaw = isRecord(raw) && Array.isArray(raw.channels) ? raw.channels : [];
     const channels: ChannelRecord[] = channelsRaw.flatMap((entry, index) => {
       const channel = normalizeChannel(entry, configPath, index, skipped);
       return channel ? [channel] : [];
