@@ -24,6 +24,7 @@ export class RunStore {
     mkdirSync(this.dir, { recursive: true });
     const now = new Date().toISOString();
     const id = input.id ?? `run_${now.slice(0, 10).replace(/-/g, '')}_${randomUUID().slice(0, 8)}`;
+    const filenameId = safeFilenameId(id);
     const run: RunSummary = {
       id,
       practice: input.practice,
@@ -34,7 +35,7 @@ export class RunStore {
       ended_at: null,
       summary: input.summary,
       receipt_count: 0,
-      path: join(this.dir, `${id}.json`),
+      path: join(this.dir, `${filenameId}.json`),
     };
     writeFileSync(run.path, JSON.stringify({ ...run, worker_id: input.worker_id, ticket_id: input.ticket_id }, null, 2), 'utf8');
     return run;
@@ -91,6 +92,10 @@ function status(value: unknown): RunStatus {
 
 function optionalString(value: unknown): string | undefined {
   return typeof value === 'string' && value.trim() ? value.trim() : undefined;
+}
+
+function safeFilenameId(value: string): string {
+  return value.replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 96) || 'run';
 }
 
 function timestampMs(value: string): number {
