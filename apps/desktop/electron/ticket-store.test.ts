@@ -29,23 +29,44 @@ describe('TicketStore', () => {
     }
   });
 
-  test('list skips ticket files missing ticket_id', () => {
+  test('list skips ticket files with invalid ticket_id', () => {
     const tmp = mkdtempSync(join(tmpdir(), 'otto-ticket-test-'));
-    const ticketDir = join(tmp, 'tickets', 'missing-id');
     try {
-      mkdirSync(ticketDir, { recursive: true });
-      writeFileSync(
-        join(ticketDir, 'ticket.yaml'),
-        `status: active
+      const fixtures = [
+        {
+          name: 'missing-id',
+          body: `status: active
 objective: Missing id should not become a blank ticket.
 updated_at: "2026-06-14T00:00:00.000Z"
 `,
-      );
+        },
+        {
+          name: 'blank-id',
+          body: `ticket_id: "   "
+status: active
+objective: Blank id should not become a blank ticket.
+updated_at: "2026-06-14T00:00:00.000Z"
+`,
+        },
+        {
+          name: 'number-id',
+          body: `ticket_id: 123
+status: active
+objective: Non-string id should not become a ticket.
+updated_at: "2026-06-14T00:00:00.000Z"
+`,
+        },
+      ];
+      for (const fixture of fixtures) {
+        const ticketDir = join(tmp, 'tickets', fixture.name);
+        mkdirSync(ticketDir, { recursive: true });
+        writeFileSync(join(ticketDir, 'ticket.yaml'), fixture.body);
+      }
 
       const result = new TicketStore(join(tmp, 'tickets')).list();
 
       expect(result.tickets).toHaveLength(0);
-      expect(result.skipped).toBe(1);
+      expect(result.skipped).toBe(fixtures.length);
     } finally {
       rmSync(tmp, { recursive: true, force: true });
     }
