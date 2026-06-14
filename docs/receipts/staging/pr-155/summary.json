@@ -1,0 +1,29 @@
+{
+  "pr": 155,
+  "title": "fix(desktop): isolate provider secret mirror audit",
+  "reviewer": "Codex PR review agent",
+  "branch": "fix/issue-96-provider-mirror-audit",
+  "base": "ship/functional-labs",
+  "status": "ready_for_sebastian_review",
+  "review_result": "Production fix is correct. Codex added a 0600 permission assertion and recorded no-leak proof without printing the submitted fake key value.",
+  "changed_files": [
+    "apps/desktop/electron/secret-store.ts",
+    "apps/desktop/electron/provider-mirror.test.ts",
+    "docs/receipts/staging/pr-155/codex-review-provider-secret-boundary.json",
+    "docs/receipts/staging/pr-155/summary.json"
+  ],
+  "data_receipt": "docs/receipts/staging/pr-155/codex-review-provider-secret-boundary.json",
+  "verification": [
+    "bun install --frozen-lockfile",
+    "bun test apps/desktop/electron/provider-mirror.test.ts",
+    "bun run --cwd apps/desktop typecheck",
+    "bun run --cwd apps/desktop electron:typecheck",
+    "bun run typecheck",
+    "git diff --check",
+    "bun test",
+    "bun run verify:v0",
+    "task staging",
+    "rg -l secret patterns over isolated staging profile/home/logs"
+  ],
+  "known_gaps": []
+}

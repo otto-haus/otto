@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'bun:test';
-import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
+import { mkdtempSync, readFileSync, rmSync, statSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { ConfigStore } from './config-store';
@@ -40,6 +40,7 @@ describe('buildProviderMirror', () => {
       expect(mirror.hasApiKey).toBe(true);
       expect(hasSecret('LETTA_API_KEY')).toBe(true);
       expect(readFileSync(secretStorePath(), 'utf8')).toContain(submittedKey);
+      expect(statSync(secretStorePath()).mode & 0o777).toBe(0o600);
 
       const configDump = readFileSync(join(tmp, 'config.json'), 'utf8');
       const ipcTrace = JSON.stringify({
