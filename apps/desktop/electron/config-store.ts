@@ -1,9 +1,9 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { homedir } from 'node:os';
-import { join } from 'node:path';
+import { join, resolve } from 'node:path';
 import type { EffortLevel, OttoConfig } from './shared/types';
 
-export const OTTO_DIR = join(homedir(), '.otto');
+export const OTTO_DIR = process.env.OTTO_HOME?.trim() ? resolve(process.env.OTTO_HOME.trim()) : join(homedir(), '.otto');
 const CONFIG_FILE = join(OTTO_DIR, 'config.json');
 const LETTA_SETTINGS_LOCAL = join(homedir(), '.letta', 'settings.local.json');
 const LETTA_SETTINGS = join(homedir(), '.letta', 'settings.json');
