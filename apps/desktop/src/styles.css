@@ -291,12 +291,12 @@ h1, h2, h3, h4, p { margin: 0; }
 .topbar__sub { color: var(--mut); font-size: 14px; margin-top: 4px; }
 .topbar__right { display: flex; align-items: center; gap: 10px; }
 
-.content { overflow-y: auto; padding: 26px 32px 60px; animation: surfaceIn 180ms var(--ease) both; display: flex; flex-direction: column; }
+.content { overflow-y: auto; overflow-x: hidden; padding: 26px 32px 60px; animation: surfaceIn 180ms var(--ease) both; display: flex; flex-direction: column; }
 .content > * { min-width: 0; max-width: 100%; }
 .content--chat { padding: 0; display: flex; flex-direction: column; min-height: 0; flex: 1; overflow: hidden; }
 
 /* ---------- generic primitives ---------- */
-.panel { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 20px; }
+.panel { min-width: 0; background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 20px; }
 .panel + .panel { margin-top: 16px; }
 .grid { display: grid; gap: 16px; }
 .grid--2 { grid-template-columns: repeat(2, minmax(0,1fr)); }
@@ -313,6 +313,10 @@ h1, h2, h3, h4, p { margin: 0; }
   font-family: var(--mono); font-size: 12px; color: var(--ink-soft);
   background: var(--bg); border: 1px solid var(--line); border-radius: 7px; padding: 3px 8px;
   display: inline-flex; align-items: center; gap: 6px;
+  max-width: 100%;
+  min-width: 0;
+  white-space: normal;
+  overflow-wrap: anywhere;
 }
 
 /* pills */
@@ -330,6 +334,7 @@ h1, h2, h3, h4, p { margin: 0; }
 /* item cards (lists of practices/charters/routines) */
 .cards { display: grid; gap: 10px; }
 .card {
+  min-width: 0;
   display: grid; gap: 8px; width: 100%; text-align: left; cursor: pointer;
   background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 14px 16px;
 }
@@ -338,12 +343,114 @@ h1, h2, h3, h4, p { margin: 0; }
 .card__title { font-weight: 600; font-size: 15px; }
 .card__sub { color: var(--mut); font-size: 13.5px; line-height: 1.5; }
 
-.split { display: grid; grid-template-columns: 340px minmax(0,1fr); gap: 20px; align-items: start; }
-.detail { display: grid; gap: 16px; }
+.split { min-width: 0; max-width: 100%; display: grid; grid-template-columns: 340px minmax(0,1fr); gap: 20px; align-items: start; }
+.detail { min-width: 0; display: grid; gap: 16px; }
 .kv { display: grid; gap: 12px; }
 .kv > div { display: grid; gap: 3px; }
 .kv dt, .kv .k { font-family: var(--mono); font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--faint); }
 .kv dd, .kv .v { margin: 0; color: var(--ink-soft); font-size: 14px; line-height: 1.5; }
+
+/* ---------- charters ---------- */
+.charterSurface { display: grid; gap: 18px; }
+.charterCreate {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  align-items: end;
+  gap: 12px;
+}
+.charterCreate .btn { justify-self: start; }
+.charterField { display: grid; gap: 5px; min-width: 0; }
+.charterField span {
+  font-family: var(--mono);
+  font-size: 10.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--faint);
+}
+.charterInput {
+  width: 100%;
+  min-height: 38px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 8px 10px;
+  background: var(--bg);
+  color: var(--ink);
+  font-size: 13.5px;
+}
+.charterInput:focus { outline: 0; border-color: var(--accent); }
+.charterList { align-content: start; }
+.charterEmptyList { min-height: 128px; display: grid; align-content: center; }
+.charterDetail { min-width: 0; }
+.charterKv {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin-top: 16px;
+}
+.charterKv > div { min-width: 0; }
+.charterKv dd { overflow-wrap: anywhere; }
+.charterAction { display: grid; gap: 10px; align-content: start; }
+.charterChanges { margin-top: 8px; }
+.charterChangeRow { grid-template-columns: 132px minmax(0, 1fr); }
+
+/* ---------- receipts ---------- */
+.receiptsSurface { display: grid; gap: 18px; }
+.receiptsToolbar {
+  display: grid;
+  grid-template-columns: 1fr;
+  align-items: start;
+  gap: 14px;
+}
+.receiptControls { display: flex; align-items: center; justify-content: flex-start; gap: 10px; flex-wrap: wrap; }
+.receiptSearch {
+  width: 230px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 8px 10px;
+  background: var(--bg);
+  color: var(--ink);
+  font-size: 13.5px;
+}
+.receiptSearch:focus { outline: 0; border-color: var(--accent); }
+.receiptsSplit { grid-template-columns: minmax(280px, 360px) minmax(0, 1fr); }
+.receiptList { align-content: start; }
+.receiptCard__meta {
+  color: var(--faint);
+  font-size: 11.5px;
+  line-height: 1.4;
+}
+.receiptDetail { min-width: 0; }
+.receiptKv {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin-top: 16px;
+}
+.receiptKv > div { min-width: 0; }
+.receiptKv dd {
+  overflow-wrap: anywhere;
+}
+.receiptBlocker {
+  border-color: #e7dcc0;
+  background: var(--warn-tint);
+}
+.receiptJson {
+  margin: 10px 0 0;
+  max-height: 320px;
+  overflow: auto;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--bg);
+  padding: 12px;
+  color: var(--ink-soft);
+  font-size: 12px;
+  line-height: 1.55;
+}
+.receiptEvidence { margin-top: 8px; }
+.receiptEvidenceRow { grid-template-columns: 96px minmax(0, 1fr); }
+.receiptEvidenceRef {
+  color: var(--ink-soft);
+  font-size: 12.5px;
+  overflow-wrap: anywhere;
+}
 
 /* ---------- chat surface ---------- */
 .chat { display: flex; flex-direction: column; min-height: 0; height: 100%; flex: 1; position: relative; }

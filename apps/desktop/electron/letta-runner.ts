@@ -6,7 +6,10 @@ import { join } from 'node:path';
 import type { BrowserWindow } from 'electron';
 import type { PermissionRequest, PermissionResponse, RuntimePreferences, RuntimeStatus, StatusCode } from './shared/types';
 import type { ConfigStore } from './config-store';
+import { ReceiptWriter } from './receipt-writer';
 import { getSecret, hasSecret } from './secret-store';
+import { StandardStore } from './standard-store';
+import { PracticeStore } from './practice-store';
 import { TraceWriter } from './trace-writer';
 
 type SDK = typeof import('@letta-ai/letta-code-sdk');
@@ -41,6 +44,9 @@ export class LettaRunner {
   private session: Session | null = null;
   private status: RuntimeStatus = { ready: false, reason: 'not initialized', ...resolveCli() };
   private pending = new Map<string, (r: PermissionResponse) => void>();
+  private receipts = new ReceiptWriter();
+  private standards = new StandardStore();
+  private practices = new PracticeStore();
   private aborted = false;
 
   constructor(
@@ -229,16 +235,51 @@ export class LettaRunner {
 
   async send(text: string): Promise<void> {
     if (!this.session || !this.status.ready) {
-      this.emitError('Runtime not ready — open Settings and connect before sending.');
+      const reason = 'Runtime not ready — open Settings and connect before sending.';
+      this.writeChatReceipt({
+        text,
+        status: 'blocked',
+        summary: 'Chat turn blocked before send.',
+        blocker: {
+          code: this.status.code ?? 'runtime-not-ready',
+          message: this.status.reason ?? reason,
+          recoverable: true,
+          next_action: 'Open Settings and connect Letta.',
+        },
+        evidence: [{ kind: 'status', ref: 'runtime.status', data: this.status }],
+      });
+      this.emitError(reason);
       return;
     }
     const trace = new TraceWriter(this.status.conversationId || 'new');
+    const startedStatus = { ...this.status };
     this.aborted = false;
     trace.write('prompt', { text, agentId: this.status.agentId, conversationId: this.status.conversationId });
     try {
       let turnError: string | null = null;
       let sawResult = false;
       let markedNotReady = false;
+      let receiptWritten = false;
+      const writeReceipt = (status: 'success' | 'blocked' | 'failed', summary: string, blocker: Parameters<typeof this.writeChatReceipt>[0]['blocker']) => {
+        if (receiptWritten) return;
+        receiptWritten = true;
+        this.writeChatReceipt({
+          text,
+          status,
+          summary,
+          blocker,
+          startedStatus,
+          resultData: {
+            agentId: this.status.agentId,
+            conversationId: this.status.conversationId,
+            model: this.status.model,
+            modelHandle: this.status.modelHandle,
+            effort: this.status.effort,
+            sessionMode: this.status.sessionMode,
+          },
+          evidence: [{ kind: 'log', ref: trace.path, note: 'Raw chat trace JSONL' }],
+        });
+      };
       await this.session.send(text);
       for await (const message of this.session.stream()) {
         trace.write('event', message);
@@ -267,21 +308,69 @@ export class LettaRunner {
           }
           if (m.success === false) {
             const reason = turnError ?? String(m.error ?? m.reason ?? 'Adapter call failed.');
-            if (!markedNotReady) this.markNotReady(reason, classify(reason, this.hasApiKey()));
+            const code = classify(reason, this.hasApiKey());
+            if (!markedNotReady) this.markNotReady(reason, code);
+            writeReceipt(code === 'error' ? 'failed' : 'blocked', 'Chat turn did not complete.', {
+              code,
+              message: reason,
+              recoverable: code !== 'error',
+              next_action: nextActionFor(code),
+            });
+          } else {
+            writeReceipt('success', 'Chat turn completed.', null);
           }
           break;
         }
         if (this.aborted) break;
       }
-      if (turnError && !sawResult && !markedNotReady) {
-        this.markNotReady(turnError, classify(turnError, this.hasApiKey()));
+      if (turnError && !sawResult) {
+        const code = classify(turnError, this.hasApiKey());
+        if (!markedNotReady) this.markNotReady(turnError, code);
+        writeReceipt(code === 'error' ? 'failed' : 'blocked', 'Chat turn ended without a result.', {
+          code,
+          message: turnError,
+          recoverable: code !== 'error',
+          next_action: nextActionFor(code),
+        });
+      }
+      if (!receiptWritten) {
+        writeReceipt(this.aborted ? 'blocked' : 'failed', this.aborted ? 'Chat turn was aborted.' : 'Chat turn ended without a terminal result.', {
+          code: this.aborted ? 'aborted' : 'missing-result',
+          message: this.aborted ? 'The chat turn was aborted before completion.' : 'The runtime stream ended without a result or error event.',
+          recoverable: true,
+          next_action: 'Retry the message if the runtime is still connected.',
+        });
       }
     } catch (e) {
-      trace.write('error', { message: msg(e) });
+      const reason = msg(e);
+      trace.write('error', { message: reason });
       if (isNotFound(e)) {
-        this.markNotReady(msg(e), 'stale');
+        // Mid-send recovery: mark not-ready + clear conversation so the next init recreates it.
+        this.markNotReady(reason, 'stale');
       }
-      this.emitError(msg(e));
+      const code = classify(reason, this.hasApiKey());
+      this.writeChatReceipt({
+        text,
+        status: code === 'error' ? 'failed' : 'blocked',
+        summary: 'Chat turn failed.',
+        blocker: {
+          code,
+          message: reason,
+          recoverable: code !== 'error',
+          next_action: nextActionFor(code),
+        },
+        startedStatus,
+        resultData: {
+          agentId: this.status.agentId,
+          conversationId: this.status.conversationId,
+          model: this.status.model,
+          modelHandle: this.status.modelHandle,
+          effort: this.status.effort,
+          sessionMode: this.status.sessionMode,
+        },
+        evidence: [{ kind: 'log', ref: trace.path, note: 'Raw chat trace JSONL' }],
+      });
+      this.emitError(reason);
     } finally {
       trace.close();
     }
@@ -305,6 +394,61 @@ export class LettaRunner {
     this.win.webContents.send('otto:event', {
       message: { type: 'error', message, uuid: randomUUID() },
     });
+  }
+
+  private writeChatReceipt(input: {
+    text: string;
+    status: 'success' | 'blocked' | 'failed';
+    summary: string;
+    blocker: {
+      code: string;
+      message: string;
+      recoverable: boolean;
+      next_action?: string;
+    } | null;
+    startedStatus?: RuntimeStatus;
+    resultData?: Record<string, unknown>;
+    evidence: Array<{ kind: 'log' | 'status'; ref: string; note?: string; data?: unknown }>;
+  }): void {
+    const runtime = input.startedStatus ?? this.status;
+    this.receipts.write({
+      status: input.status,
+      subject: { type: 'chat', id: runtime.conversationId ?? null },
+      action: 'chat.send',
+      input: {
+        text: input.text,
+        agentId: runtime.agentId ?? null,
+        conversationId: runtime.conversationId ?? null,
+        model: runtime.model ?? null,
+        modelHandle: runtime.modelHandle ?? null,
+        effort: runtime.effort ?? null,
+        sessionMode: runtime.sessionMode ?? (SMOKE_MODE ? 'smoke' : 'default'),
+      },
+      result: {
+        summary: input.summary,
+        data: input.resultData,
+      },
+      evidence: input.evidence,
+      standards: this.standardCitationsFor(input.text),
+      practice: this.practiceFor(input.text),
+      blocker: input.blocker,
+    });
+  }
+
+  private standardCitationsFor(text: string) {
+    try {
+      return this.standards.citationsForText(text);
+    } catch {
+      return [];
+    }
+  }
+
+  private practiceFor(text: string) {
+    try {
+      return this.practices.resolveForText(text);
+    } catch {
+      return null;
+    }
   }
 }
 
@@ -438,7 +582,13 @@ function classify(reason: string, hasKey: boolean): StatusCode {
   void hasKey;
   if (r.includes('letta_api_key') || r.includes('api key') || r.includes('unauthorized') || r.includes('401'))
     return 'no-api-key';
-  if (r.includes('no agent') || r.includes('agent selector') || r.includes('agent-not-found') || r.includes('profile'))
+  if (
+    r.includes('no agent') ||
+    r.includes('agent candidate') ||
+    r.includes('agent selector') ||
+    r.includes('agent-not-found') ||
+    r.includes('profile')
+  )
     return 'no-agent';
   if (r.includes('not found') || r.includes('not-found')) return 'stale';
   if (
@@ -465,6 +615,23 @@ function friendly(code: StatusCode, reason: string): string {
       return `Saved Letta agent or conversation was stale — choose a valid Agent ID override in Settings or clear the override. (${reason})`;
     default:
       return reason;
+  }
+}
+
+function nextActionFor(code: StatusCode): string {
+  switch (code) {
+    case 'no-api-key':
+      return 'Configure provider auth inside Letta for local v1.';
+    case 'unreachable':
+      return 'Check the local Letta runtime and URL override in Settings.';
+    case 'no-agent':
+      return 'Open Letta once or choose an Agent ID override in Settings.';
+    case 'stale':
+      return 'Clear the stale override or choose a valid Agent ID in Settings.';
+    case 'sdk-missing':
+      return 'Install or repair the Letta Code SDK dependency.';
+    default:
+      return 'Review the trace and retry after fixing the runtime error.';
   }
 }
 

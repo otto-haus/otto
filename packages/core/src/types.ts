@@ -52,6 +52,8 @@ export type RoutineStatus = 'proposed' | 'trial' | 'active' | 'paused' | 'retire
 
 export type ChannelKind = 'discord' | 'imessage' | 'slack' | 'email' | 'desktop' | 'cli';
 
+export type StandardStatus = 'draft' | 'active' | 'deprecated';
+
 /**
  * The standing approval floor. Every Practice MUST require approval for at least
  * these. A Practice may ADD more, but may never remove one of these.
@@ -118,6 +120,23 @@ export interface PracticeSpec {
   owner: string;
   /** MUST be a superset of APPROVAL_FLOOR. */
   approval_required_for: ApprovalRequirement[];
+}
+
+/** File-backed Practice loaded from `practices/<slug>/practice.yaml`. */
+export interface PracticeRecord extends PracticeSpec {
+  file: string;
+}
+
+/** Practice identity attached to a Run or Receipt. */
+export interface PracticeReference {
+  slug: Slug;
+  name: string;
+  version: SemVer;
+  status: PracticeStatus;
+  /** Matched invocation, e.g. `/charter step`. */
+  invocation: string;
+  /** Absolute path to the canonical practice.yaml. */
+  ref: string;
 }
 
 /** Runtime metrics for a Practice. Durable state, not memory. */
@@ -191,6 +210,89 @@ export interface Channel {
 }
 
 // ---------------------------------------------------------------------------
+// Standard — file-backed canon
+// ---------------------------------------------------------------------------
+
+export interface StandardRatification {
+  owner: string;
+  standards_changes_require_human: boolean;
+  auto_apply?: boolean;
+}
+
+export interface StandardPressure {
+  do: string[];
+  refuse: string[];
+}
+
+/**
+ * Machine-readable Standard spec. Mirrors the fenced YAML block at the top of
+ * `standards/standards/<slug>.md`; Markdown prose remains the human-readable canon.
+ */
+export interface StandardSpec {
+  name: string;
+  slug: Slug;
+  version: SemVer;
+  status: StandardStatus;
+  meaning: string;
+  under_pressure: StandardPressure;
+  reward: string[];
+  failure_modes: string[];
+  conflicts_with: Slug[];
+  tie_breakers: string[];
+  related_practices: Slug[];
+  related_curation_rules: string[];
+  evidence: string[];
+  related_anti_patterns?: Slug[];
+  canon_refs?: Slug[];
+  ratification: StandardRatification;
+}
+
+export interface StandardRef {
+  slug: Slug;
+  name: string;
+  version: SemVer;
+  status: StandardStatus;
+  file: string;
+  meaning: string;
+}
+
+export interface StandardConflict {
+  between: Slug[];
+  tie_breaker: string;
+  precedent: string | null;
+}
+
+export interface StandardsRegistry {
+  version: SemVer;
+  status: StandardStatus;
+  authority_stack: unknown[];
+  ratification: StandardRatification;
+  standards: StandardRef[];
+  conflicts: StandardConflict[];
+  anti_patterns: Slug[];
+  canon: Array<{ slug: Slug; file: string; role: string }>;
+}
+
+export interface StandardRecord extends StandardSpec {
+  schema: 'otto.standard.v1';
+  /** Absolute or stable path to the Markdown file that owns the Standard. */
+  file: string;
+  /** Path to the registry that listed this Standard. */
+  registry_file: string;
+  /** Human-readable Markdown body below the YAML block. */
+  markdown: string;
+}
+
+/** Runtime proof path: Runs/Receipts cite Standards by slug plus file reference. */
+export interface StandardCitation {
+  slug: Slug;
+  name: string;
+  ref: string;
+  reason: string;
+  evidence?: string[];
+}
+
+// ---------------------------------------------------------------------------
 // Run — an execution record
 // ---------------------------------------------------------------------------
 
@@ -199,6 +301,8 @@ export interface Run {
   id: Id;
   /** The Practice that ran. */
   practice: Slug;
+  /** Optional operating contract this run is executing against. */
+  charter?: Slug;
   /** Set when this Run is part of a Routine execution. */
   routine?: Slug;
   /** The exact invocation used, e.g. "/charter step". */
@@ -207,6 +311,8 @@ export interface Run {
   inputs: Record<string, unknown>;
   /** Receipts produced by this Run. */
   receipts: Receipt[];
+  /** Standards this Run claims to uphold or is accountable to. */
+  standards?: StandardCitation[];
   /** Gate decisions encountered (approve/deny/pending). */
   gate_decisions: GateDecision[];
   /** Channel a result was delivered to, if any. */
@@ -221,18 +327,260 @@ export interface Run {
 // Receipt — proof
 // ---------------------------------------------------------------------------
 
-export type ReceiptKind = 'file' | 'link' | 'log' | 'screenshot' | 'commit' | 'message';
+export type ReceiptStatus = 'success' | 'blocked' | 'failed';
 
-/** A proof artifact. Maps to acceptance criteria where applicable (Charter/Review). */
-export interface Receipt {
-  id: Id;
-  kind: ReceiptKind;
-  /** Path, URL, or reference to the proof. */
+export type ReceiptSubjectType =
+  | 'chat'
+  | 'run'
+  | 'practice'
+  | 'routine'
+  | 'charter'
+  | 'standard'
+  | 'proposal'
+  | 'autonomy'
+  | 'task';
+
+export type ReceiptEvidenceKind = 'file' | 'link' | 'log' | 'screenshot' | 'commit' | 'message' | 'status';
+
+/** A proof artifact or status snapshot. Maps to acceptance criteria where applicable. */
+export interface ReceiptEvidence {
+  kind: ReceiptEvidenceKind;
+  /** Path, URL, message id, status key, or other stable reference. */
   ref: string;
-  /** Acceptance-criterion ids this receipt proves, e.g. ["AC1"]. */
+  /** Acceptance-criterion ids this evidence proves, e.g. ["AC1"]. */
   proves?: string[];
-  created_at: ISO8601;
   note?: string;
+  data?: unknown;
+}
+
+export interface ReceiptBlocker {
+  code: string;
+  message: string;
+  recoverable: boolean;
+  next_action?: string;
+}
+
+export interface ReceiptResult {
+  summary: string;
+  data?: Record<string, unknown>;
+}
+
+/** Durable proof record for a completed, blocked, or failed action/run. */
+export interface Receipt {
+  schema: 'otto.receipt.v1';
+  id: Id;
+  timestamp: ISO8601;
+  status: ReceiptStatus;
+  subject: {
+    type: ReceiptSubjectType;
+    id?: Id | null;
+  };
+  action: string;
+  input: Record<string, unknown>;
+  result: ReceiptResult;
+  evidence: ReceiptEvidence[];
+  /** File-backed Standards cited by this proof record. */
+  standards?: StandardCitation[];
+  /** Practice invoked for this action/run, when detectable from canon. */
+  practice?: PracticeReference | null;
+  /** Routine invoked for manual/scheduled runs. */
+  routine?: RoutineReference | null;
+  blocker: ReceiptBlocker | null;
+}
+
+/** Routine identity attached to a Run or Receipt. */
+export interface RoutineReference {
+  id: Id;
+  slug: Slug;
+  name: string;
+  /** `manual` for explicit operator runs; `scheduled` reserved for future activation. */
+  mode: 'manual' | 'scheduled';
+  /** Absolute path to routine.yaml. */
+  ref: string;
+}
+
+/** File-backed Routine loaded from `routines/<slug>/routine.yaml`. */
+export interface RoutineRecord extends Routine {
+  file: string;
+}
+
+// ---------------------------------------------------------------------------
+// Curation — proposals & classification (no silent canon mutation)
+// ---------------------------------------------------------------------------
+
+export type ProposalSource =
+  | 'user_correction'
+  | 'receipt_failure'
+  | 'intake'
+  | 'run_review'
+  | 'paperclip_event'
+  | 'manual';
+
+export type ProposalKind =
+  | 'standard'
+  | 'practice'
+  | 'routine'
+  | 'approval'
+  | 'memory_writeback'
+  | 'task'
+  | 'receipt_requirement'
+  | 'knowledge';
+
+export type ProposalStatus =
+  | 'proposed'
+  | 'needs_approval'
+  | 'deferred'
+  | 'accepted'
+  | 'rejected'
+  | 'blocked'
+  | 'applied';
+
+export type ProposalCanonImpact = 'none' | 'memory' | 'standard' | 'practice' | 'routine' | 'knowledge';
+
+export type ProposalReversibility = 'reversible' | 'hard_to_reverse' | 'irreversible';
+
+export type ProposalScope = 'internal' | 'external' | 'public' | 'customer' | 'security' | 'spend' | 'legal';
+
+export type ProposalRisk = 'low' | 'medium' | 'high';
+
+export type ProposalRequiredGate = 'none' | 'human_ratification' | 'explicit_approval';
+
+export type ProposalRoute = 'auto_apply' | 'ask' | 'block' | 'reject';
+
+export interface ProposalEvidenceRef {
+  kind: 'receipt' | 'run' | 'file' | 'message' | 'url' | 'other';
+  ref: string;
+  note?: string;
+}
+
+export interface ProposalTarget {
+  kind: ProposalCanonImpact;
+  /** Slug or id of the canon object this would touch if ratified. */
+  id?: string;
+  path?: string;
+  action?: 'create' | 'update' | 'deprecate' | 'activate' | 'pause';
+}
+
+/** Consequence classification — routing decision for a Proposal. */
+export interface ProposalClassification {
+  reversibility: ProposalReversibility;
+  scope: ProposalScope;
+  canon_impact: ProposalCanonImpact;
+  risk: ProposalRisk;
+  required_gate: ProposalRequiredGate;
+  route: ProposalRoute;
+  reason: string;
+}
+
+/** A proposed durable change. Proposals never apply themselves. */
+export interface CurationProposal {
+  schema: 'otto.proposal.v1';
+  id: Id;
+  source: ProposalSource;
+  kind: ProposalKind;
+  summary: string;
+  rationale: string;
+  evidence: ProposalEvidenceRef[];
+  target: ProposalTarget;
+  classification: ProposalClassification;
+  status: ProposalStatus;
+  created_at: ISO8601;
+  updated_at: ISO8601;
+  created_by: 'user' | 'otto' | 'adapter';
+  receipt_id?: Id;
+  /** Receipt written when a human accepts/rejects/defers the proposal. */
+  decision_receipt_id?: Id;
+  applied_at?: ISO8601;
+  decision_note?: string;
+}
+
+/** Proposal loaded from ~/.otto/curation/proposals/. */
+export interface CurationProposalRecord extends CurationProposal {
+  path: string;
+}
+
+export interface CreateProposalFromCorrectionInput {
+  correction: string;
+  rationale?: string;
+  target: ProposalTarget;
+  evidence?: ProposalEvidenceRef[];
+  sourceReceiptId?: string;
+  created_by?: CurationProposal['created_by'];
+}
+
+export type ProposalDecisionKind = 'accept' | 'reject' | 'defer';
+
+export interface DecideProposalInput {
+  decision: ProposalDecisionKind;
+  note?: string;
+  decided_by?: 'user' | 'otto';
+}
+
+// ---------------------------------------------------------------------------
+// Autonomy — visible policy & action classification
+// ---------------------------------------------------------------------------
+
+export type AutonomyZoneId = 'green' | 'yellow' | 'red';
+
+export interface AutonomyZone {
+  id: AutonomyZoneId;
+  label: string;
+  requires_approval: boolean;
+  prompt_kind?: 'none' | 'confirm_once' | 'explicit_approval';
+  summary: string;
+  examples: string[];
+}
+
+export interface AutonomyDoor {
+  id: string;
+  label: string;
+  zone: AutonomyZoneId;
+  requirement: ApprovalRequirement;
+}
+
+export interface AutonomyPolicySettings {
+  worker_creation: 'allowed' | 'disabled';
+  worktree_creation: 'allowed' | 'disabled';
+  pr_creation: 'allowed' | 'disabled';
+  safe_auto_merge: 'allowed' | 'disabled';
+  require_receipts: boolean;
+  max_parallel_workers: number;
+}
+
+/** File-backed autonomy policy loaded from `autonomy/policy.yaml`. */
+export interface AutonomyPolicy {
+  schema: 'otto.autonomy.policy.v1';
+  version: SemVer;
+  file: string;
+  summary: string;
+  doctrine: string;
+  zones: AutonomyZone[];
+  doors: AutonomyDoor[];
+  settings: AutonomyPolicySettings;
+  /** Honest scope limits — what this policy does NOT claim to automate. */
+  limitations: string[];
+}
+
+export interface AutonomyPolicyResult {
+  dir: string;
+  policyPath: string;
+  policy: AutonomyPolicy;
+  storage: 'files' | 'default';
+}
+
+export interface EvaluateAutonomyActionInput {
+  action: string;
+  context?: string;
+}
+
+export interface AutonomyActionEvaluation {
+  action: string;
+  zone: AutonomyZoneId;
+  door_id: string | null;
+  requires_approval: boolean;
+  allowed_without_approval: boolean;
+  reason: string;
+  policy_path: string;
 }
 
 // ---------------------------------------------------------------------------
@@ -270,7 +618,7 @@ export interface GateDecision {
 // Charter — the flagship Practice (light references)
 // ---------------------------------------------------------------------------
 
-export type CharterStatus = 'draft' | 'active' | 'blocked' | 'complete' | 'cancelled';
+export type CharterStatus = 'proposed' | 'draft' | 'active' | 'blocked' | 'complete' | 'cancelled';
 
 export interface AcceptanceCriterion {
   /** Stable id, e.g. "AC1". charter.yaml is the source of truth for these. */
@@ -280,16 +628,53 @@ export interface AcceptanceCriterion {
   receipts: Receipt['id'][];
 }
 
+export type CharterChangeKind = 'created' | 'status-changed' | 'references-linked' | 'updated';
+
+export interface CharterChange {
+  id: Id;
+  at: ISO8601;
+  kind: CharterChangeKind;
+  summary: string;
+  from_status?: CharterStatus;
+  to_status?: CharterStatus;
+  run_ids?: Run['id'][];
+  receipt_ids?: Receipt['id'][];
+  approval_id?: Approval['id'] | null;
+  receipt_id: Receipt['id'];
+}
+
+/** File-backed operating contract for a goal/run. */
+export interface Charter {
+  schema: 'otto.charter.v1';
+  id: Id;
+  slug: Slug;
+  title: string;
+  objective: string;
+  status: CharterStatus;
+  created_at: ISO8601;
+  updated_at: ISO8601;
+  acceptance_criteria: AcceptanceCriterion[];
+  run_ids: Run['id'][];
+  receipt_ids: Receipt['id'][];
+  change_receipt_ids: Receipt['id'][];
+  /** Charter mutation is explicit and auditable; risky activation still gates through approvals. */
+  approval_required_for_changes: ApprovalRequirement[];
+  changes: CharterChange[];
+}
+
 /**
  * A pointer to a Charter run on disk. Charter's full runtime is file-based under
  * $CHARTER_HOME/charters/<slug>/ (OUTSIDE memory); this is just the typed handle.
  */
 export interface CharterRef {
+  id: Id;
   slug: Slug;
   status: CharterStatus;
   /** Filesystem root for this charter's runtime. */
   root: string;
   acceptance_criteria: AcceptanceCriterion[];
+  run_ids: Run['id'][];
+  receipt_ids: Receipt['id'][];
 }
 
 // ---------------------------------------------------------------------------

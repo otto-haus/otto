@@ -1,0 +1,49 @@
+# Otto v1 — Adapter seam
+
+External systems (Intake, Discord, Paperclip, etc.) connect **below** Otto's authority model. They may supply inputs; only Otto ratifies future behavior.
+
+## What adapters may return
+
+```txt
+context        — read-only background (notes, exports, task state, channel messages)
+work_state     — external task/run status snapshots (non-authoritative)
+artifacts      — files, links, screenshots, structured payloads
+proposals      — candidate Curation proposals (never applied directly)
+```
+
+Adapters must not write Standards, Practices, Routines, or Letta memory directly.
+
+## What Otto alone decides
+
+```txt
+what becomes future behavior
+```
+
+Ratification path:
+
+```txt
+adapter/user/otto → CurationProposal (status: proposed)
+                 → classify (reversibility, scope, required_gate)
+                 → decide (accept | reject | defer) + decision receipt
+                 → accept → canon apply (otto_ratified guardrail)
+```
+
+Implementation anchors:
+
+- `CurationProposal.created_by`: `user | otto | adapter`
+- `ProposalStore.decide()` — sole canon mutation path for proposals
+- `AutonomyPolicy` + `evaluateAction()` — consequential doors require approval
+- Receipt writer — success, blocked, and failed runs are durable
+
+## Connector rules (v1)
+
+- No adapter required for first launch.
+- Missing adapter state is graceful (no fake connected).
+- Read-only import first; scoped writes require config + receipts.
+- Parked HQ tickets (`019`–`022`) implement connectors; they do not change this seam.
+
+## Done test for new adapters
+
+> Can this system import context and emit proposals without bypassing curation, autonomy, or receipts?
+
+If yes, the adapter fits the seam.

@@ -54,7 +54,7 @@ function latestCount(text, pattern) {
 }
 
 function validateOldNames() {
-  const allow = /^(bun\.lock|README\.md|RELEASE_CHECKLIST\.md|SPEC_COMPLIANCE\.md|CLAIMS_AUDIT\.md|SHIP_CHECKS\/|docs\/otto-v01-status\.md|docs\/desktop-convergence\.md|receipts\/otto-v01\/|scripts\/verify-v0\.(sh|mjs))/;
+  const allow = /^(bun\.lock|README\.md|RELEASE_CHECKLIST\.md|SPEC_COMPLIANCE\.md|CLAIMS_AUDIT\.md|SHIP_CHECKS\/|docs\/v1\/|docs\/otto-v01-status\.md|docs\/desktop-convergence\.md|planning\/|receipts\/otto-v01\/|scripts\/verify-v0\.(sh|mjs))/;
   const blocked = /Vinny OS|vinny-os|@vinny-os|TryVeto|cockpit/;
   const listed = spawnSync("git", ["ls-files", "--cached", "--others", "--exclude-standard"], {
     cwd: root,

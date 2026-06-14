@@ -48,15 +48,15 @@ const initialSurface = (): SurfaceId => {
 };
 
 // Honest per-surface status: only Settings is live in v0.1; workspace panes are placeholders.
-const DATA_SOURCE: Partial<Record<SurfaceId, 'live' | 'coming-soon'>> = {
+const DATA_SOURCE: Partial<Record<SurfaceId, 'live' | 'coming-soon' | 'file'>> = {
   settings: 'live',
-  charters: 'coming-soon',
-  standards: 'coming-soon',
-  practices: 'coming-soon',
-  routines: 'coming-soon',
-  curation: 'coming-soon',
-  receipts: 'coming-soon',
-  autonomy: 'coming-soon',
+  charters: 'file',
+  standards: 'file',
+  practices: 'file',
+  routines: 'file',
+  curation: 'file',
+  receipts: 'file',
+  autonomy: 'file',
 };
 
 export function App() {
@@ -85,6 +85,7 @@ function AppShell() {
       return <span className="pill">connecting runtime</span>;
     }
     if (DATA_SOURCE[active] === 'live') return <span className="pill pill--ok">live runtime</span>;
+    if (DATA_SOURCE[active] === 'file') return <span className="pill">file-backed</span>;
     if (DATA_SOURCE[active] === 'coming-soon') return <span className="pill">coming soon</span>;
     return null;
   };
