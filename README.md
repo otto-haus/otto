@@ -290,6 +290,8 @@ otto/
   practices/      practice.yaml specs
   routines/       proposed Routine specs
   standards/      canon, precedents, anti-patterns, registry
+  autonomy/       policy.yaml: zones, doors, action classification
+  knowledge/      AI Frontier model registry + corpus (Labs)
   templates/      Charter, Practice, Routine, Standard, Ticket, Worker packets
   docs/           architecture, install, runtime, autonomy, desktop, practices, routines
   AGENTS.md       operating notes for AI coding agents
