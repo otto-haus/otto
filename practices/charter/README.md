@@ -19,7 +19,7 @@ Charter is **not** just a spec — it ships as a Letta Code extension + skill:
 - `templates/` — `charter.md`, `charter.yaml`, `state.yaml`, `ledger.md`,
   `approval.yaml`, `delegation-packet.md`
 - `examples/example-charter/` — a filled example
-- `scripts/install.sh` — installs into Letta Code
+- `scripts/install.mjs` — installs into Letta Code
 
 This Practice **wraps** those artifacts; it does not duplicate them.
 

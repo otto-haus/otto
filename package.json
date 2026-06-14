@@ -1,6 +1,6 @@
 {
   "name": "otto",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Otto \u2014 the behavior layer for persistent AI agents. Turns operating contracts, practices, routines, standards, approvals, receipts, and corrections into governed future behavior.",
   "type": "module",
   "license": "MIT",
@@ -35,10 +35,10 @@
     "electron"
   ],
   "scripts": {
-    "install-extension": "./scripts/install.sh",
+    "install-extension": "bun scripts/install.mjs",
     "typecheck": "tsc -p packages/core/tsconfig.json && tsc -p packages/practices/tsconfig.json",
     "test": "bun test",
-    "verify:v0": "bash scripts/verify-v0.sh",
+    "verify:v0": "bun scripts/verify-v0.mjs",
     "desktop:refresh": "bash scripts/refresh-otto-app.sh"
   },
   "devDependencies": {
