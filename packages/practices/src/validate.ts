@@ -19,6 +19,13 @@ const VALID_APPROVAL_REQUIREMENTS = new Set<ApprovalRequirement>([
   'credential-or-security-change',
 ]);
 
+const REQUIRED_NON_EMPTY_STRINGS = [
+  'name',
+  'version',
+  'summary',
+  'owner',
+] as const satisfies readonly (keyof PracticeSpec)[];
+
 const REQUIRED_NON_EMPTY_ARRAYS = [
   'invocations',
   'triggers',
@@ -53,6 +60,12 @@ export function validatePracticeSpec(
 
   if (!isNonEmptyString(spec.status) || !VALID_STATUSES.has(spec.status as PracticeStatus)) {
     errors.push('status must be one of: draft, active, deprecated');
+  }
+
+  for (const field of REQUIRED_NON_EMPTY_STRINGS) {
+    if (!isNonEmptyString(spec[field])) {
+      errors.push(`${field} must be present and non-empty`);
+    }
   }
 
   for (const field of REQUIRED_NON_EMPTY_ARRAYS) {
