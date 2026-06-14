@@ -70,8 +70,15 @@ export class CheckStore {
 
   save(check: Check): Check {
     mkdirSync(this.dir, { recursive: true });
-    const path = join(this.dir, `${check.id}.yaml`);
+    const path = checkFilePath(this.dir, check.id);
     writeFileSync(path, stringify(check), 'utf8');
     return check;
   }
+}
+
+function checkFilePath(dir: string, id: string): string {
+  if (!id.trim() || id.includes('/') || id.includes('\\')) {
+    throw new Error(`Invalid check id: ${id}`);
+  }
+  return join(dir, `${id}.yaml`);
 }

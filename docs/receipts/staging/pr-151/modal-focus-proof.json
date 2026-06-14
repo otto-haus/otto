@@ -1,0 +1,37 @@
+{
+  "route": "http://127.0.0.1:5191/index.html",
+  "viewport": {
+    "width": 1280,
+    "height": 760
+  },
+  "before": {
+    "activeId": "trigger"
+  },
+  "afterOpen": {
+    "activeTag": "DIV",
+    "activeId": "",
+    "activeClass": "modal__dialog",
+    "activeRole": "dialog",
+    "activeTabIndex": "-1",
+    "labelledBy": "_r_0_-title",
+    "titleText": "Permission required"
+  },
+  "afterClose": {
+    "activeId": "trigger"
+  },
+  "consoleMessages": [
+    {
+      "type": "info",
+      "text": "%cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold"
+    }
+  ],
+  "assertions": {
+    "focusStartedOnTrigger": true,
+    "focusMovedToDialog": true,
+    "dialogIsProgrammaticallyFocusable": true,
+    "dialogTitleAnnounceable": true,
+    "focusRestoredToTrigger": true,
+    "noConsoleErrors": true
+  },
+  "screenshot": "docs/receipts/staging/pr-151/modal-focus-open.png"
+}

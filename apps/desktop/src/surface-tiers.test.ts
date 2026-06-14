@@ -54,7 +54,9 @@ describe('surface-tiers', () => {
 
     const on = { enabled: true, features: { knowledge_cognee: true } };
     expect(isSurfaceAccessible('knowledge', on)).toBe(true);
-    expect(isSurfaceComingSoon('knowledge', on)).toBe(false);
+    expect(isSurfaceComingSoon('knowledge', on)).toBe(true);
+    expect(surfaceGate('knowledge', on, true)).toBe('coming-soon');
+    expect(surfaceGate('channels', { enabled: true, features: { channels_outbound: true } }, true)).toBe('coming-soon');
   });
 
   test('labsSurfaceGate waits for hydration before coming soon', () => {

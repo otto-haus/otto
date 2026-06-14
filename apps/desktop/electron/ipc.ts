@@ -72,9 +72,23 @@ export function registerIpc(win: BrowserWindow) {
     });
   };
 
+  const bindStatusToThread = (
+    threadId: string,
+    status: RuntimeStatus,
+    fallback: { agentId?: string | null; lettaConversationId?: string | null },
+  ) => {
+    if (!status.ready) return threads.get(threadId);
+    return threads.update(threadId, {
+      agentId: status.agentId ?? fallback.agentId ?? null,
+      lettaConversationId: status.conversationId ?? fallback.lettaConversationId ?? null,
+    });
+  };
+
   const initWithStaleRecovery = async (opts?: { freshConversation?: boolean }): Promise<RuntimeStatus> => {
     const status = await runner.init(opts);
-    if (status.ready || status.code !== 'stale' || !config.get().conversationId) {
+    const activeThread = config.get().activeThreadId ? threads.get(config.get().activeThreadId!) : null;
+    const staleConversationId = config.get().conversationId ?? activeThread?.lettaConversationId ?? null;
+    if (status.ready || status.code !== 'stale' || !staleConversationId) {
       bindStatusToActiveThread(status);
       return status;
     }
@@ -268,34 +282,79 @@ export function registerIpc(win: BrowserWindow) {
   ipcMain.handle('otto:threads:create', async (_e, input?: { title?: string; agentId?: string | null }) => {
     permissionSessionStore.clear();
     const thread = threads.create(input);
+    safeWebContentsSend(win, 'otto:threads:active', {
+      threadId: thread.id,
+      status: {
+        ...runner.getStatus(),
+        ready: false,
+        code: 'error',
+        reason: 'Starting a new conversation…',
+      },
+    });
     const status = await initWithStaleRecovery({ freshConversation: true });
-    const updatedThread = threads.touchActive({
-      agentId: status.agentId ?? thread.agentId,
-      lettaConversationId: status.conversationId ?? null,
+    const updatedThread = bindStatusToThread(thread.id, status, {
+      agentId: thread.agentId,
+      lettaConversationId: null,
     }) ?? thread;
     safeWebContentsSend(win, 'otto:threads:active', { threadId: thread.id, status });
     return { thread: updatedThread, status };
   });
   ipcMain.handle('otto:threads:switch', async (_e, threadId: string) => {
     const thread = threads.switch(threadId);
-    const status = await initWithStaleRecovery();
-    const updatedThread = threads.touchActive({
-      agentId: status.agentId ?? thread.agentId,
-      lettaConversationId: status.conversationId ?? thread.lettaConversationId,
+    safeWebContentsSend(win, 'otto:threads:active', {
+      threadId: thread.id,
+      status: {
+        ...runner.getStatus(),
+        ready: false,
+        code: 'error',
+        reason: 'Switching conversation…',
+      },
+    });
+    const status = await initWithStaleRecovery({ freshConversation: !thread.lettaConversationId });
+    const updatedThread = bindStatusToThread(thread.id, status, {
+      agentId: thread.agentId,
+      lettaConversationId: thread.lettaConversationId,
     }) ?? thread;
     safeWebContentsSend(win, 'otto:threads:active', { threadId: thread.id, status });
     return { thread: updatedThread, status };
   });
   ipcMain.handle('otto:threads:archive', async (_e, threadId: string) => {
-    const archived = threads.archive(threadId);
-    const activeThreadId = config.get().activeThreadId ?? null;
-    if (activeThreadId && activeThreadId !== threadId) {
-      const status = await initWithStaleRecovery();
-      safeWebContentsSend(win, 'otto:threads:active', { threadId: activeThreadId, status });
+    const wasActive = config.get().activeThreadId === threadId;
+    threads.archive(threadId);
+
+    if (!wasActive) {
+      const activeId = config.get().activeThreadId;
+      const activeThread = activeId ? threads.get(activeId) : null;
+      if (!activeThread) throw new Error(`Active thread missing after archive: ${threadId}`);
+      return { thread: activeThread, status: runner.getStatus() };
     }
-    return archived;
+
+    let nextThread = config.get().activeThreadId ? threads.get(config.get().activeThreadId!) : null;
+    if (!nextThread) {
+      permissionSessionStore.clear();
+      nextThread = threads.create();
+    }
+
+    safeWebContentsSend(win, 'otto:threads:active', {
+      threadId: nextThread.id,
+      status: {
+        ...runner.getStatus(),
+        ready: false,
+        code: 'error',
+        reason: 'Switching conversation…',
+      },
+    });
+    const status = await initWithStaleRecovery({ freshConversation: !nextThread.lettaConversationId });
+    const updatedThread = bindStatusToThread(nextThread.id, status, {
+      agentId: nextThread.agentId,
+      lettaConversationId: nextThread.lettaConversationId,
+    }) ?? nextThread;
+    safeWebContentsSend(win, 'otto:threads:active', { threadId: nextThread.id, status });
+    return { thread: updatedThread, status };
   });
   ipcMain.handle('otto:threads:pin', (_e, threadId: string, pinned: boolean) => threads.pin(threadId, pinned));
+  ipcMain.handle('otto:threads:rename', (_e, threadId: string, title: string) => threads.rename(threadId, title));
+  ipcMain.handle('otto:threads:move', (_e, threadId: string, targetId: string) => threads.move(threadId, targetId));
   ipcMain.handle(
     'otto:threads:touch',
     (_e, input: { title?: string; lettaConversationId?: string | null; agentId?: string | null }) =>

@@ -308,10 +308,14 @@ const api = {
       ipcRenderer.invoke('otto:threads:create', input),
     switch: (threadId: string): Promise<ThreadSwitchResult> =>
       ipcRenderer.invoke('otto:threads:switch', threadId),
-    archive: (threadId: string): Promise<ChatThreadRecord> =>
+    archive: (threadId: string): Promise<ThreadSwitchResult> =>
       ipcRenderer.invoke('otto:threads:archive', threadId),
     pin: (threadId: string, pinned: boolean): Promise<ChatThreadRecord> =>
       ipcRenderer.invoke('otto:threads:pin', threadId, pinned),
+    rename: (threadId: string, title: string): Promise<ChatThreadRecord> =>
+      ipcRenderer.invoke('otto:threads:rename', threadId, title),
+    move: (threadId: string, targetId: string): Promise<ThreadListResult> =>
+      ipcRenderer.invoke('otto:threads:move', threadId, targetId),
     touch: (input: { title?: string; lettaConversationId?: string | null; agentId?: string | null }): Promise<ChatThreadRecord | null> =>
       ipcRenderer.invoke('otto:threads:touch', input),
   },

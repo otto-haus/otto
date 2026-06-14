@@ -30,7 +30,7 @@ export class RuntimeSupervisor implements OttoRuntimeTransport {
     this.ws.resolvePermission(requestId, response);
   }
 
-  async init(opts?: { freshConversation?: boolean }): Promise<RuntimeStatus> {
+  async init(opts?: { freshConversation?: boolean; strictModelHandle?: string | null }): Promise<RuntimeStatus> {
     if (this.mode === 'sdk') {
       this.active = this.sdk;
       await this.ws.close().catch(() => {});

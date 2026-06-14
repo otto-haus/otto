@@ -1,0 +1,49 @@
+{
+  "pr": 215,
+  "reviewedBy": "codex",
+  "capturedAt": "2026-06-14T20:37:46.460Z",
+  "baseBranch": "ship/functional-labs",
+  "reviewBranch": "codex/ws-refresh-logs-20260614",
+  "reviewFixHeadBeforeProofCommit": "65d3f1544ae939d294b82d599d9cfe365801ba60",
+  "codeRecommendation": "ready",
+  "shipRecommendation": "hold",
+  "shipRecommendationReason": "The implementation and proof are ready for Sebastian review, but this PR changes the default desktop runtime path to WebSocket mode and is stacked on the ship/functional-labs v0.1.3 release gate. Ship only if Sebastian explicitly wants that runtime cutover and release gate now.",
+  "bugsFixedByCodexReview": [
+    "Detached per-turn WebSocket runtime handlers after each send so stale handlers cannot process future turns or duplicate assistant/result events.",
+    "Stopped deriving duplicate-suppression chunk ids from assistant text so legitimate repeated chunks are not dropped.",
+    "Hardened WebSocket runtime transport shutdown so open clients cannot hang close().",
+    "Corrected runtime prompt context so transport_mode records the actual transport mode instead of the session mode.",
+    "Changed otto log targeting to choose the newest available log file and made the Electron shell dependency lazy for pure selector tests.",
+    "Made refresh orphan cleanup honor OTTO_WS_REMOTE_ENV instead of always using otto-byor.",
+    "Redacted token-like remote process output before surfacing runtime sync failures in UI status."
+  ],
+  "proof": {
+    "screenshots": [
+      "docs/receipts/staging/pr-215/preview-desktop-chat.png",
+      "docs/receipts/staging/pr-215/preview-desktop-settings.png",
+      "docs/receipts/staging/pr-215/preview-mobile-chat.png",
+      "docs/receipts/staging/pr-215/preview-mobile-settings.png"
+    ],
+    "dataReceipt": "docs/receipts/staging/pr-215/preview-ui-proof.json",
+    "nativeStaging": {
+      "command": "OTTO_STAGING_ROOT=/tmp/otto-pr-215-proof-staging OTTO_STAGING_PORT=9455 OTTO_STAGING_WS_REMOTE_ENV=otto-pr215-proof-byor OTTO_AGENT_ID=agent-00000000-0000-4000-8000-000000000000 LETTA_BASE_URL=http://127.0.0.1:9 OTTO_STAGING_LOG_CAPTURE_SECONDS=1 task staging",
+      "deployLog": "/Users/seb/.codex/admin/otto-logs/staging-20260614T133430.deploy.log",
+      "appLog": "/Users/seb/.codex/admin/otto-logs/staging-20260614T133430.app.log",
+      "result": "passed; installed and launched /Applications/otto-staging.app"
+    }
+  },
+  "verification": [
+    "bun install --frozen-lockfile",
+    "git diff --check",
+    "bun run typecheck",
+    "bun run --cwd apps/desktop typecheck",
+    "bun run --cwd apps/desktop electron:typecheck",
+    "bun test -> 271 pass, 1 skip, 0 fail, 926 expect calls",
+    "bun run verify:v0 -> 5 passed, 0 failed",
+    "OTTO_READINESS_IGNORE_LOCAL_CONFIG=1 bun run --cwd apps/desktop electron:build",
+    "bash scripts/ci-local-gate.sh -> pass",
+    "task staging -> pass, installed and launched /Applications/otto-staging.app",
+    "bun audit -> No vulnerabilities found"
+  ],
+  "proofBoundary": "The browser screenshots use a safe renderer preview and intentionally do not expose local Electron data or claim a live Letta connection. Native staging proof separately installed and launched the packaged staging app."
+}

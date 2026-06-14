@@ -1,0 +1,50 @@
+{
+  "pr": 179,
+  "title": "fix(desktop): seed custom constitution paths",
+  "reviewAgent": "codex",
+  "generatedAt": "2026-06-14T21:31:48Z",
+  "status": "ready_for_sebastian_review_after_ci",
+  "codeRecommendation": {
+    "value": "ready",
+    "reason": "The implementation now creates parent directories for custom constitution YAML and Markdown paths, and review coverage proves same-directory and split-directory custom paths."
+  },
+  "shipRecommendation": {
+    "value": "ship_with_functional_labs_train",
+    "reason": "This is a narrow local filesystem correctness fix for custom constitution storage. It should ship with the functional-labs train once Sebastian accepts the PR, but it does not require a standalone release cut."
+  },
+  "bugsFixedByCodexReview": [],
+  "reviewCoverageAddedByCodex": [
+    "Added regression coverage for custom YAML and Markdown paths in separate nested parent directories."
+  ],
+  "proof": {
+    "dataReceipt": "docs/receipts/staging/pr-179/codex-review-custom-constitution-paths.json",
+    "screenshots": [],
+    "screenshotReason": "Backend/local filesystem behavior; data proof is the relevant evaluation artifact."
+  },
+  "verification": [
+    {
+      "command": "bun install --frozen-lockfile",
+      "result": "pass"
+    },
+    {
+      "command": "bun test apps/desktop/electron/constitution-store.test.ts apps/desktop/electron/behavior-changelog.test.ts",
+      "result": "pass",
+      "details": "9 pass, 0 fail, 25 expect calls"
+    },
+    {
+      "command": "bash scripts/ci-local-gate.sh",
+      "result": "pass",
+      "details": "root typecheck pass; desktop/electron typecheck pass; bun test 277 pass, 1 skip, 0 fail, 948 expect calls; verify:v0 5 passed, 0 failed; devex mint validate pass; devex broken-links pass; electron build pass; bun audit no vulnerabilities"
+    },
+    {
+      "command": "OTTO_STAGING_APP=/Applications/otto-pr-179-staging.app OTTO_STAGING_DISPLAY_NAME=\"otto pr 179 staging\" OTTO_STAGING_BUNDLE_ID=haus.otto.desktop.pr179staging OTTO_STAGING_ROOT=/tmp/otto-pr-179-proof-staging OTTO_STAGING_PORT=9462 OTTO_STAGING_WS_REMOTE_ENV=otto-pr179-proof-byor OTTO_STAGING_LOCK_DIR=/Users/seb/.codex/admin/otto-logs/desktop-deploy-pr179.lock OTTO_AGENT_ID=agent-00000000-0000-4000-8000-000000000000 LETTA_BASE_URL=http://127.0.0.1:9 OTTO_STAGING_LOG_CAPTURE_SECONDS=1 task staging",
+      "result": "pass",
+      "details": "Built, packaged, signed, installed, and launched /Applications/otto-pr-179-staging.app with isolated runtime root. Default /Applications/otto-staging.app was left untouched because it was already running."
+    }
+  ],
+  "stagingLogs": [
+    "/Users/seb/.codex/admin/otto-logs/staging-20260614T143156.deploy.log",
+    "/Users/seb/.codex/admin/otto-logs/staging-20260614T143156.app.log"
+  ],
+  "boundary": "No live Letta connection claimed."
+}

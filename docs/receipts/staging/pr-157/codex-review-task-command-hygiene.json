@@ -1,0 +1,48 @@
+{
+  "pr": 157,
+  "reviewer": "Codex PR review agent",
+  "target": "Taskfile live refresh guard and readiness-clean build/package path",
+  "reviewed_head_before_receipt_commit": "0b0ab4ceb633d6adea3ec2472e489b3b47a152b7",
+  "command_proof": {
+    "task_refresh_without_opt_in": {
+      "exit_code": 201,
+      "result": "refused before build/install",
+      "message_contains": "Refusing to replace /Applications/otto.app"
+    },
+    "direct_refresh_script_without_opt_in": {
+      "exit_code": 2,
+      "result": "refused before build/install",
+      "message_contains": "Refusing to replace /Applications/otto.app without OTTO_ALLOW_LIVE_REFRESH=1"
+    },
+    "task_list": {
+      "staging": "Safe deploy — build + package + install/open isolated /Applications/otto-staging.app",
+      "staging_alias": "deploy",
+      "refresh": "LIVE app update — requires OTTO_ALLOW_LIVE_REFRESH=1"
+    },
+    "task_build": {
+      "exit_code": 0,
+      "readiness_json_dirty": false
+    },
+    "task_package": {
+      "exit_code": 0,
+      "readiness_json_dirty": false,
+      "removed_warnings": [
+        "description is missed in the package.json",
+        "author is missed in the package.json",
+        "packageManager not detected by file"
+      ],
+      "remaining_known_notice": "asar usage is disabled"
+    }
+  },
+  "verification": {
+    "bun_install_frozen_lockfile": "pass",
+    "typecheck": "pass",
+    "desktop_typecheck": "pass",
+    "electron_typecheck": "pass",
+    "bun_test": "35 pass, 0 fail, 160 expect() calls",
+    "verify_v0": "5 passed, 0 failed",
+    "bun_audit": "No vulnerabilities found",
+    "task_ci": "pass"
+  },
+  "known_gaps": []
+}

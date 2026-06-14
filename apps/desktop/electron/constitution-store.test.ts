@@ -23,6 +23,38 @@ describe('ConstitutionStore', () => {
     }
   });
 
+  test('seeds custom nested constitution directory on first load', () => {
+    const tmp = mkdtempSync(join(tmpdir(), 'otto-constitution-nested-'));
+    const dir = join(tmp, 'custom', 'constitution');
+    const yamlPath = join(dir, 'constitution.yaml');
+    const mdPath = join(dir, 'constitution.md');
+    try {
+      const store = new ConstitutionStore(yamlPath, mdPath, new ReceiptWriter(join(tmp, 'receipts')));
+      const result = store.load();
+      expect(result.dir).toBe(dir);
+      expect(existsSync(yamlPath)).toBe(true);
+      expect(existsSync(mdPath)).toBe(true);
+    } finally {
+      rmSync(tmp, { recursive: true, force: true });
+    }
+  });
+
+  test('seeds custom yaml and markdown paths in separate nested directories', () => {
+    const tmp = mkdtempSync(join(tmpdir(), 'otto-constitution-split-'));
+    const yamlPath = join(tmp, 'yaml', 'nested', 'constitution.yaml');
+    const mdPath = join(tmp, 'md', 'nested', 'constitution.md');
+    try {
+      const store = new ConstitutionStore(yamlPath, mdPath, new ReceiptWriter(join(tmp, 'receipts')));
+      const result = store.load();
+      expect(result.dir).toBe(join(tmp, 'yaml', 'nested'));
+      expect(existsSync(yamlPath)).toBe(true);
+      expect(existsSync(mdPath)).toBe(true);
+      expect(readFileSync(mdPath, 'utf8')).toContain('Memory writeback policy');
+    } finally {
+      rmSync(tmp, { recursive: true, force: true });
+    }
+  });
+
   test('invalid amend is blocked with receipt', () => {
     const tmp = mkdtempSync(join(tmpdir(), 'otto-constitution-'));
     const yamlPath = join(tmp, 'constitution.yaml');
