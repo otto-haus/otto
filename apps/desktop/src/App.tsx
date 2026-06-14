@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import type { PracticeSpec } from '@otto-haus/core';
 import practicesData from './data/practices.json';
-import { mockApprovals, mockRuns } from './mockData';
+import { RuntimeProvider } from './RuntimeContext';
 import { Sidebar, type SurfaceId } from './components/Sidebar';
 import { Chat } from './surfaces/Chat';
 import {
@@ -47,37 +47,43 @@ const initialSurface = (): SurfaceId => {
   return VALID.includes(h) ? h : 'chat';
 };
 
-// Honest per-surface data source: which panes read real files vs sample/prototype data.
-const DATA_SOURCE: Partial<Record<SurfaceId, 'file' | 'sample'>> = {
+// Honest per-surface data source: a pane is either file-backed/live or not wired.
+const DATA_SOURCE: Partial<Record<SurfaceId, 'file' | 'live' | 'not-wired'>> = {
   practices: 'file',
-  settings: 'file',
-  charters: 'sample',
-  standards: 'sample',
-  routines: 'sample',
-  curation: 'sample',
-  receipts: 'sample',
-  autonomy: 'sample',
+  settings: 'live',
+  charters: 'not-wired',
+  standards: 'not-wired',
+  routines: 'not-wired',
+  curation: 'not-wired',
+  receipts: 'not-wired',
+  autonomy: 'not-wired',
 };
 
 export function App() {
   const [active, setActiveState] = useState<SurfaceId>(initialSurface());
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const setActive = (id: SurfaceId) => {
     setActiveState(id);
     if (typeof location !== 'undefined') location.hash = id;
   };
   const counts: Partial<Record<SurfaceId, number>> = {
     practices: (practicesData as PracticeSpec[]).length,
-    curation: mockApprovals.filter((a) => a.status === 'pending').length,
-    receipts: mockRuns.length,
   };
   const meta = META[active];
 
   return (
-    <div className="app">
-      <Sidebar active={active} onSelect={setActive} counts={counts} />
+    <RuntimeProvider>
+    <div className={`app${sidebarCollapsed ? ' app--sidebar-collapsed' : ''}`}>
+      <Sidebar
+        active={active}
+        onSelect={setActive}
+        counts={counts}
+        collapsed={sidebarCollapsed}
+        onToggleCollapsed={() => setSidebarCollapsed((x) => !x)}
+      />
       <main className="main">
         {active === 'chat' ? (
-          <div className="content content--chat"><Chat /></div>
+          <div className="content content--chat"><Chat onOpenSettings={() => setActive('settings')} /></div>
         ) : (
           <>
             <header className="topbar">
@@ -88,8 +94,8 @@ export function App() {
               </div>
               <div className="topbar__right">
                 {DATA_SOURCE[active] === 'file' && <span className="pill pill--ok">file-backed</span>}
-                {DATA_SOURCE[active] === 'sample' && <span className="pill">sample data</span>}
-                <span className="pill pill--info">v0.1 preview</span>
+                {DATA_SOURCE[active] === 'live' && <span className="pill pill--ok">live runtime</span>}
+                {DATA_SOURCE[active] === 'not-wired' && <span className="pill">not wired</span>}
               </div>
             </header>
             <div className="content">{renderSurface(active)}</div>
@@ -97,5 +103,6 @@ export function App() {
         )}
       </main>
     </div>
+    </RuntimeProvider>
   );
 }

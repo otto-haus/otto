@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 // Renderer-side view of the window.otto bridge exposed by electron/preload.ts.
 // In the web preview window.otto is undefined → the app stays a file-backed shell.
@@ -28,7 +28,9 @@ export type RuntimeStatus = {
 export type ConnectionInfo = { baseUrl: string | null; agentId: string | null; hasApiKey: boolean };
 export type ConnectionInput = { baseUrl?: string | null; agentId?: string | null; apiKey?: string | null };
 
-export type OttoEvent = { message: { type: string; [k: string]: unknown } };
+export type OttoEvent =
+  | { message: { type: string; [k: string]: unknown } }
+  | { status: RuntimeStatus };
 
 type OttoApi = {
   runtime: {
@@ -57,7 +59,7 @@ export const ottoApi = (): OttoApi | null =>
   typeof window !== 'undefined' && window.otto ? window.otto : null;
 export const isElectron = (): boolean => ottoApi() !== null;
 
-export type ChatMsg = { who: 'user' | 'otto' | 'error'; text: string };
+export type ChatMsg = { who: 'user' | 'otto' | 'error'; text: string; streamId?: string };
 
 // Best-effort text extraction from a loosely-typed SDK assistant message.
 function assistantText(m: Record<string, unknown>): string | null {
@@ -78,6 +80,7 @@ export function useRuntime() {
   const [status, setStatus] = useState<RuntimeStatus | null>(null);
   const [messages, setMessages] = useState<ChatMsg[]>([]);
   const [busy, setBusy] = useState(false);
+  const activeAssistantStream = useRef<string | null>(null);
 
   useEffect(() => {
     if (!api) return;
@@ -86,14 +89,30 @@ export function useRuntime() {
       .then(setStatus)
       .catch((e) => setStatus({ ready: false, reason: String(e), cliPath: '', cliResolved: false }));
     const off = api.onEvent((e) => {
+      if ('status' in e) {
+        setStatus(e.status);
+        return;
+      }
       const m = e.message;
       if (m.type === 'assistant') {
         const t = assistantText(m);
-        if (t) setMessages((x) => [...x, { who: 'otto', text: t }]);
+        if (t) {
+          const streamId = String(m.uuid ?? m.runId ?? 'assistant');
+          setMessages((x) => {
+            const last = x[x.length - 1];
+            if (activeAssistantStream.current === streamId && last?.who === 'otto') {
+              return [...x.slice(0, -1), { ...last, text: `${last.text}${t}` }];
+            }
+            activeAssistantStream.current = streamId;
+            return [...x, { who: 'otto', text: t, streamId }];
+          });
+        }
       } else if (m.type === 'error') {
+        activeAssistantStream.current = null;
         setMessages((x) => [...x, { who: 'error', text: String((m as { message?: unknown }).message ?? 'error') }]);
         setBusy(false);
       } else if (m.type === 'result') {
+        activeAssistantStream.current = null;
         setBusy(false);
       }
     });
@@ -104,12 +123,17 @@ export function useRuntime() {
     if (api) setStatus(await api.runtime.init());
   };
 
+  const updateStatus = (next: RuntimeStatus) => {
+    setStatus(next);
+  };
+
   const send = async (text: string) => {
     if (!api || !status?.ready || busy) return;
+    activeAssistantStream.current = null;
     setMessages((x) => [...x, { who: 'user', text }]);
     setBusy(true);
     await api.runtime.send(text);
   };
 
-  return { electron: !!api, status, messages, busy, send, retry };
+  return { electron: !!api, status, messages, busy, send, retry, updateStatus };
 }

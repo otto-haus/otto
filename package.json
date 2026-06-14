@@ -38,7 +38,8 @@
     "install-extension": "./scripts/install.sh",
     "typecheck": "tsc -p packages/core/tsconfig.json && tsc -p packages/practices/tsconfig.json",
     "test": "bun test",
-    "verify:v0": "bash scripts/verify-v0.sh"
+    "verify:v0": "bash scripts/verify-v0.sh",
+    "desktop:refresh": "bash scripts/refresh-otto-app.sh"
   },
   "devDependencies": {
     "typescript": "^5.6.3"

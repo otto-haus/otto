@@ -1,5 +1,5 @@
 appId: haus.otto.desktop
-productName: Otto
+productName: otto
 directories:
   output: dist-app
 # Ship the built main/preload/renderer + the manifest. electron-builder also copies the
@@ -14,6 +14,6 @@ mac:
   target:
     - dir
   category: public.app-category.developer-tools
-  icon: build/icon.icns # the Otto owl, generated from .github/assets/otto-avatar.png
+  icon: build/icon.icns # the otto owl, generated from .github/assets/otto-avatar.png
   # Local/unsigned build — re-signed ad-hoc after packaging so it runs on Apple Silicon.
   identity: null

@@ -53,9 +53,16 @@ export interface ConnectionInput {
 }
 
 /** A loosely-typed SDK message forwarded straight to the renderer. */
-export interface OttoEvent {
+export interface OttoMessageEvent {
   message: { type: string; [k: string]: unknown };
 }
+
+/** Runtime status change pushed after reconnects or failed turns. */
+export interface OttoStatusEvent {
+  status: RuntimeStatus;
+}
+
+export type OttoEvent = OttoMessageEvent | OttoStatusEvent;
 
 /** Local-first config at ~/.otto/config.json (shared with gen-readiness.mjs). */
 export interface OttoConfig {

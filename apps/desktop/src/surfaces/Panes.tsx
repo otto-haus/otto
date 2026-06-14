@@ -1,22 +1,15 @@
 import React, { useEffect, useState } from 'react';
 import type { PracticeSpec } from '@otto-haus/core';
 import practicesData from '../data/practices.json';
-import { mockRuns, mockApprovals } from '../mockData';
 import {
-  sampleCharters,
-  standards,
-  precedents,
-  antiPatterns,
-  sampleRoutines,
-  autonomyZones,
-  agent,
   readiness,
   requiredMissing,
   type ReadyItem,
   type ReadyStatus,
-} from '../sampleData';
+} from '../readiness';
 import { Icon } from '../components/icons';
-import { ottoApi, type ConnectionInfo, type RuntimeStatus, type StatusCode } from '../runtime';
+import { ottoApi, type RuntimeStatus, type StatusCode } from '../runtime';
+import { useRuntimeContext } from '../RuntimeContext';
 
 const practices = practicesData as PracticeSpec[];
 
@@ -27,76 +20,42 @@ const statusPill = (s: string) => {
   return <span className={`pill ${cls}`}>{s}</span>;
 };
 
+const EmptySurface: React.FC<{
+  eyebrow: string;
+  title: string;
+  body: string;
+  path?: string;
+  next?: string;
+}> = ({ eyebrow, title, body, path, next }) => (
+  <div className="emptySurface">
+    <div className="eyebrow">{eyebrow}</div>
+    <h2>{title}</h2>
+    <p>{body}</p>
+    {path && <span className="filechip">{Icon.file} {path}</span>}
+    {next && <div className="notice"><span className="dot dot--idle" /> {next}</div>}
+  </div>
+);
+
 /* ---------- Charters ---------- */
 export const Charters: React.FC = () => (
-  <div className="cards" style={{ maxWidth: 820 }}>
-    {sampleCharters.map((c) => (
-      <div className="panel" key={c.slug}>
-        <div className="between">
-          <div className="h-sec">{c.title}</div>
-          {statusPill(c.status)}
-        </div>
-        <p className="lede" style={{ marginTop: 6 }}>{c.intent}</p>
-        <div className="grid" style={{ marginTop: 14, gap: 8 }}>
-          {c.acceptance.map((ac) => (
-            <div className="row" key={ac.id}>
-              <span style={{ color: ac.done ? 'var(--ok)' : 'var(--faint)' }}>
-                {ac.done ? Icon.check : Icon.lock}
-              </span>
-              <span className="mono faint" style={{ fontSize: 12 }}>{ac.id}</span>
-              <span style={{ color: ac.done ? 'var(--ink)' : 'var(--mut)' }}>{ac.text}</span>
-            </div>
-          ))}
-        </div>
-        <div className="row" style={{ marginTop: 14, gap: 10 }}>
-          <span className="filechip">{Icon.file} {c.root}</span>
-          <span className="pill">{c.receipts} receipts</span>
-        </div>
-      </div>
-    ))}
-  </div>
+  <EmptySurface
+    eyebrow="charters"
+    title="No live Charter store is wired yet."
+    body="This pane will read durable operating contracts from Otto's file/runtime store. It is intentionally empty until that loader exists."
+    path="~/.otto/charters/"
+    next="Wire real Charter records; do not show example contracts."
+  />
 );
 
 /* ---------- Standards ---------- */
 export const Standards: React.FC = () => (
-  <div className="grid" style={{ maxWidth: 920, gap: 16 }}>
-    <div className="panel">
-      <div className="eyebrow">authority stack</div>
-      <p className="muted" style={{ marginTop: 8, fontSize: 14, color: 'var(--ink-soft)' }}>
-        Sebastian → Standards → Curation → [Practices · Routines · Charters · Channels · Memory]
-      </p>
-      <p className="muted" style={{ marginTop: 8 }}>
-        Standards changes require a human. <code>auto_apply: false</code> — Curation may propose, only Sebastian ratifies.
-      </p>
-    </div>
-    <div className="panel">
-      <div className="h-sec">The v0 canon</div>
-      <div className="cards" style={{ marginTop: 12 }}>
-        {standards.map((s) => (
-          <div className="card" key={s.slug} style={{ cursor: 'default' }}>
-            <div className="between">
-              <span className="card__title">{s.name}</span>
-              <span className="filechip">{Icon.file} standards/{s.slug}.md</span>
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-    <div className="grid grid--2">
-      <div className="panel">
-        <div className="eyebrow">precedents · case law</div>
-        {precedents.map((p) => (
-          <div className="filechip" key={p.slug} style={{ marginTop: 10 }}>{Icon.file} {p.name}</div>
-        ))}
-      </div>
-      <div className="panel">
-        <div className="eyebrow">anti-patterns</div>
-        <div className="row" style={{ flexWrap: 'wrap', gap: 8, marginTop: 10 }}>
-          {antiPatterns.map((a) => <span className="pill pill--stop" key={a}>{a}</span>)}
-        </div>
-      </div>
-    </div>
-  </div>
+  <EmptySurface
+    eyebrow="standards"
+    title="Standards exist in repo canon, but this pane has no loader yet."
+    body="The desktop should show real Markdown/YAML Standards from the repo/runtime, not a recreated list. Until then this stays empty."
+    path="standards/*.md"
+    next="Add a generated standards.json or v2 runtime view export."
+  />
 );
 
 /* ---------- Practices (real data) ---------- */
@@ -156,118 +115,52 @@ export const Practices: React.FC = () => {
 
 /* ---------- Routines ---------- */
 export const Routines: React.FC = () => (
-  <div className="cards" style={{ maxWidth: 820 }}>
-    {sampleRoutines.map((r) => (
-      <div className="panel" key={r.slug}>
-        <div className="between">
-          <div className="h-sec">{r.name}</div>
-          {statusPill(r.status)}
-        </div>
-        <div className="grid" style={{ marginTop: 12, gap: 8 }}>
-          {r.steps.map((s, i) => (
-            <div className="row" key={i} style={{ gap: 12 }}>
-              <span className="mono faint" style={{ fontSize: 12, minWidth: 18 }}>{i + 1}</span>
-              <span className="filechip">{s.invocation}</span>
-              <span className="muted" style={{ fontSize: 13 }}>{s.note}</span>
-            </div>
-          ))}
-        </div>
-        {r.recurring && (
-          <div className="notice" style={{ marginTop: 14 }}>
-            <span className="dot dot--warn" /> recurring activation is a standing claim on attention — requires approval
-          </div>
-        )}
-      </div>
-    ))}
-  </div>
+  <EmptySurface
+    eyebrow="routines"
+    title="No live Routines are wired yet."
+    body="This pane will show repeatable bundles only after Otto can read real routine files."
+    path="routines/"
+    next="Wire routine.yaml loading; no sample morning routine."
+  />
 );
 
 /* ---------- Curation (proposals + approvals) ---------- */
 export const Curation: React.FC = () => (
-  <div className="grid" style={{ maxWidth: 820, gap: 14 }}>
-    <p className="lede">Curation decides what compounds. Consequential proposals become Approvals — human-ratification records. {mockApprovals.length} pending.</p>
-    {mockApprovals.map((a) => (
-      <div className="panel" key={a.id}>
-        <div className="between">
-          <div className="h-sec" style={{ fontSize: 15 }}>{a.requested_action}</div>
-          {statusPill(a.status)}
-        </div>
-        <div className="kv" style={{ marginTop: 12, gridTemplateColumns: 'repeat(2,1fr)', display: 'grid', gap: 12 }}>
-          <div><div className="k">scope</div><div className="v mono" style={{ fontSize: 12.5 }}>{a.scope}</div></div>
-          <div><div className="k">requirement</div><div className="v mono" style={{ fontSize: 12.5 }}>{a.requirement}</div></div>
-          <div style={{ gridColumn: '1 / -1' }}><div className="k">evidence required</div><div className="v">{a.evidence_required}</div></div>
-        </div>
-        <div className="row" style={{ gap: 10, marginTop: 14 }}>
-          <button className="btn btn--primary" disabled aria-disabled="true">Approve</button>
-          <button className="btn" disabled aria-disabled="true">Deny</button>
-          <span className="pill" style={{ marginLeft: 'auto' }}>preview — not wired · expires {new Date(a.expires_at).toLocaleDateString()}</span>
-        </div>
-      </div>
-    ))}
-  </div>
+  <EmptySurface
+    eyebrow="curation"
+    title="No live proposals or approvals are wired yet."
+    body="Curation should display real Proposal / Classification / Approval records from the runtime, not fabricated pending gates."
+    path="~/.otto/curation/"
+    next="Bind to v2 export-view or runtime JSON store after the human ink moment is designed."
+  />
 );
 
 /* ---------- Receipts (runs + proof) ---------- */
 export const Receipts: React.FC = () => (
-  <div className="grid" style={{ maxWidth: 820, gap: 12 }}>
-    <p className="lede">Runs and their proof. No artifact, no progress.</p>
-    {mockRuns.map((r) => (
-      <div className="panel" key={r.id}>
-        <div className="between">
-          <div className="row" style={{ gap: 10 }}>
-            <span className="filechip">{r.invocation}</span>
-            <span className="mono faint" style={{ fontSize: 12 }}>{r.id}</span>
-          </div>
-          {statusPill(r.status)}
-        </div>
-        <p className="muted" style={{ marginTop: 10, fontSize: 14 }}>{r.summary}</p>
-        {r.receipts.length > 0 && (
-          <div className="row" style={{ gap: 8, marginTop: 10, flexWrap: 'wrap' }}>
-            {r.receipts.map((rc) => (
-              <span className="filechip" key={rc.id}>{Icon.file} {rc.ref} → {(rc.proves ?? []).join(', ')}</span>
-            ))}
-          </div>
-        )}
-        {r.gate_decisions.length > 0 && (
-          <div className="notice" style={{ marginTop: 10 }}>
-            <span className="dot dot--warn" /> gated: {r.gate_decisions[0].requirement} → {r.gate_decisions[0].status}
-          </div>
-        )}
-      </div>
-    ))}
-  </div>
+  <EmptySurface
+    eyebrow="receipts"
+    title="No live receipts are wired yet."
+    body="Runs and receipts should come from real JSONL/runtime records. Empty is more honest than a fake proof trail."
+    path="~/.otto/runs/"
+    next="Parse real trace files or consume v2 ReceiptRecord exports."
+  />
 );
 
 /* ---------- Autonomy ---------- */
 export const Autonomy: React.FC = () => (
-  <div className="grid" style={{ maxWidth: 820, gap: 16 }}>
-    <div className="panel">
-      <div className="eyebrow">three-zone model</div>
-      <div style={{ marginTop: 6 }}>
-        {autonomyZones.map((z) => (
-          <div className="zone" key={z.tag}>
-            <span className={`zone__tag zone__tag--${z.cls}`}>{z.tag}</span>
-            <div>
-              <div style={{ fontWeight: 600 }}>{z.label}</div>
-              <div className="muted" style={{ fontSize: 13.5, marginTop: 2 }}>{z.examples}</div>
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-    <div className="panel">
-      <div className="eyebrow">ticketcraft</div>
-      <p className="muted" style={{ marginTop: 8 }}>
-        <code>/ticket</code> compiles messy work into a bounded packet: allowed files, acceptance, a verify command, and the one-way doors that must escalate. Main Otto orchestrates; workers execute; receipts prove it.
-      </p>
-    </div>
-  </div>
+  <EmptySurface
+    eyebrow="autonomy"
+    title="No live autonomy policy is wired yet."
+    body="This pane should read explicit policy from Standards/Curation, not show hardcoded green/yellow/red examples."
+    path="standards/ · ~/.otto/curation/"
+    next="Wire policy from canonical files after Standards loading exists."
+  />
 );
 
 /* ---------- Connect Letta (live setup) ---------- */
 const codePill: Record<StatusCode, [string, string]> = {
   ready: ['pill--ok', 'connected'],
-  'no-api-key': ['pill--warn', 'needs API key'],
+  'no-api-key': ['pill--warn', 'auth needed'],
   'no-agent': ['pill--warn', 'needs agent'],
   unreachable: ['pill--warn', 'unreachable'],
   'sdk-missing': ['pill--warn', 'SDK missing'],
@@ -280,7 +173,7 @@ const inputStyle: React.CSSProperties = {
   borderRadius: 8,
   padding: '8px 10px',
   fontSize: 13.5,
-  background: '#fff',
+  background: 'var(--panel)',
   color: 'var(--ink)',
   width: '100%',
   marginTop: 4,
@@ -288,17 +181,14 @@ const inputStyle: React.CSSProperties = {
 
 const ConnectLetta: React.FC = () => {
   const api = ottoApi();
-  const [info, setInfo] = useState<ConnectionInfo | null>(null);
   const [status, setStatus] = useState<RuntimeStatus | null>(null);
   const [baseUrl, setBaseUrl] = useState('');
   const [agentId, setAgentId] = useState('');
-  const [apiKey, setApiKey] = useState('');
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
     if (!api) return;
     api.connection.get().then((c) => {
-      setInfo(c);
       setBaseUrl(c.baseUrl ?? '');
       setAgentId(c.agentId ?? '');
     });
@@ -311,8 +201,8 @@ const ConnectLetta: React.FC = () => {
         <div className="eyebrow">connect letta</div>
         <div className="h-sec" style={{ marginTop: 6 }}>Connect Letta</div>
         <p className="muted" style={{ marginTop: 6 }}>
-          Base URL, API key, and agent are set here in the desktop app — this is the web preview.
-          Open Otto Desktop to connect a live Letta agent.
+Local Letta URL and Agent ID are set here in the desktop app — this is the web preview.
+          For v1, Otto connects to a local Letta runtime. Model/provider keys stay in Letta.
         </p>
       </div>
     );
@@ -324,11 +214,8 @@ const ConnectLetta: React.FC = () => {
       const next = await api.connection.save({
         baseUrl: baseUrl.trim() || null,
         agentId: agentId.trim() || null,
-        apiKey: apiKey ? apiKey : undefined, // send only when entered; blank keeps the stored key
       });
       setStatus(next);
-      setApiKey(''); // never retain the key in renderer state
-      setInfo(await api.connection.get());
     } finally {
       setBusy(false);
     }
@@ -343,39 +230,22 @@ const ConnectLetta: React.FC = () => {
         <div className="eyebrow">connect letta</div>
         <span className={`pill ${cls}`}>{label}</span>
       </div>
-      <div className="h-sec" style={{ marginTop: 6 }}>Connect Letta</div>
+      <div className="h-sec" style={{ marginTop: 6 }}>Connect local Letta</div>
       <p className="muted" style={{ marginTop: 4 }}>
-        Point Otto at your Letta agent. The key is stored locally in{' '}
-        <span className="mono">~/.otto/secrets.env</span> (0600) and never leaves your machine.
+        Point Otto at your local Letta runtime and agent. Local Letta owns provider auth; Otto does not ask for an API key in v1.
       </p>
       {status && !status.ready && status.reason && (
         <p className="faint" style={{ marginTop: 6 }}>↳ {status.reason}</p>
       )}
       <div className="grid" style={{ gap: 12, marginTop: 12 }}>
         <label>
-          <span className="faint" style={{ fontSize: 12 }}>Base URL · local / self-hosted (blank = Letta Cloud)</span>
+          <span className="faint" style={{ fontSize: 12 }}>Local Letta URL</span>
           <input
             style={inputStyle}
             value={baseUrl}
             onChange={(e) => setBaseUrl(e.target.value)}
-            placeholder="http://localhost:8283"
+            placeholder="http://127.0.0.1:51087"
             spellCheck={false}
-          />
-        </label>
-        <label>
-          <span className="faint" style={{ fontSize: 12 }}>
-            API key{' '}
-            {info?.hasApiKey && <span className="pill pill--ok" style={{ marginLeft: 4 }}>stored</span>}
-          </span>
-          <input
-            className="mono"
-            style={inputStyle}
-            type="password"
-            value={apiKey}
-            onChange={(e) => setApiKey(e.target.value)}
-            placeholder={info?.hasApiKey ? '•••••••• — leave blank to keep current' : 'paste your Letta API key'}
-            spellCheck={false}
-            autoComplete="off"
           />
         </label>
         <label>
@@ -434,7 +304,11 @@ const ReadyRow: React.FC<{ item: ReadyItem }> = ({ item }) => (
 );
 
 export const Settings: React.FC = () => {
-  const ready = requiredMissing.length === 0;
+  const rt = useRuntimeContext();
+  // Live runtime is the source of truth in Electron; the file-backed checklist describes local
+  // config only. Never let the readiness panel say "Setup required" while the runtime is connected.
+  const liveConnected = rt.electron && !!rt.status?.ready;
+  const ready = liveConnected || requiredMissing.length === 0;
   const group = (keys: string[]) => readiness.filter((r) => keys.includes(r.key));
   return (
     <div className="grid" style={{ maxWidth: 880, gap: 16 }}>
@@ -442,13 +316,23 @@ export const Settings: React.FC = () => {
       <div className="panel" style={ready ? undefined : { borderColor: '#e7dcc0', background: 'var(--warn-tint)' }}>
         <div className="eyebrow">readiness</div>
         <div className="h-sec" style={{ marginTop: 6 }}>
-          {ready ? 'Otto is ready to work' : 'Setup required — Otto is not ready to work'}
+          {liveConnected
+            ? `Connected — ${rt.status?.agentId ?? 'agent'}${rt.status?.model ? ` · ${rt.status.model}` : ''}`
+            : ready
+              ? 'Otto is ready to work'
+              : 'Setup required — Otto is not ready to work'}
         </div>
-        {!ready && (
+        {liveConnected ? (
           <p className="muted" style={{ marginTop: 6 }}>
-            {requiredMissing.length} required {requiredMissing.length === 1 ? 'item' : 'items'} missing:{' '}
-            {requiredMissing.map((r) => r.label).join(' · ')}. Configure them below — until then, Chat is disabled.
+            Live Letta runtime connected. The file-backed checks below describe local config only.
           </p>
+        ) : (
+          !ready && (
+            <p className="muted" style={{ marginTop: 6 }}>
+              {requiredMissing.length} required {requiredMissing.length === 1 ? 'item' : 'items'} missing:{' '}
+              {requiredMissing.map((r) => r.label).join(' · ')}. Configure them below — until then, Chat is disabled.
+            </p>
+          )
         )}
       </div>
       <div className="panel">
@@ -464,7 +348,7 @@ export const Settings: React.FC = () => {
         </div>
       </div>
       <p className="faint mono" style={{ fontSize: 11.5 }}>
-        Preview: statuses reflect file-backed config only. Nothing is wired to a live Letta runtime in v0.1.
+        v1 is local-only: Otto connects to a local Letta runtime. Cloud/self-host auth can come later as an advanced path.
       </p>
     </div>
   );

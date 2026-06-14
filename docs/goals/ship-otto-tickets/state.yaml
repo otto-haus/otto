@@ -1,0 +1,172 @@
+# GoalBuddy v2 state.yaml — board truth. goal.md is the charter; notes/ holds long receipts.
+
+version: 2
+
+goal:
+  title: "Ship every active Otto ticket"
+  slug: "ship-otto-tickets"
+  kind: existing_plan # specific | open_ended | existing_plan | recovery | audit
+  tranche: "Ship the active queue 001..018 in order, each through implement -> prove -> independent review -> _Done, until every active ticket is in _Done or blocked-with-reason in root."
+  status: active # active | blocked | done
+  oracle:
+    signal: "Per ticket: every 'Done when' item satisfied with real implementer proof, routed through _InReview, and an independent reviewer +1 against the ticket + spec; the ticket file then physically in _Done. No proof, no +1, no _Done."
+    cadence: "after each ticket's Worker package and at final audit"
+    final_proof: "Every active root ticket 001..018 is in _Done (Done-when proven + reviewer +1 receipts) or in root with an exact written blocker; _Parked untouched; no fake state."
+  intake:
+    original_request: "Ship every active ticket in '/Users/seb/Library/CloudStorage/Dropbox/HQ/Otto Tickets' using 000-canonical.md as the operating contract; lowest-numbered first; prove every Done-when; move to _Done only when proven; blocked stay in root with exact blocker; do not touch _Parked."
+    interpreted_outcome: "Each active root ticket 001..018 is implemented, proven, independently reviewed +1, and moved to _Done — or left in root with an exact blocker."
+    input_shape: existing_plan
+    audience: "Sebastian / Otto users"
+    authority: approved
+    proof_type: review # test | demo | artifact | metric | review | source_backed_answer | decision
+    completion_proof: "Every active ticket is in _Done with reviewer +1, or in root with an exact blocker; _Parked untouched."
+    likely_misfire: "Marking a ticket Done on implementer say-so without the independent reviewer +1; faking connected/receipt/readiness state; implementing more than one ticket; touching _Parked."
+    blind_spots_considered:
+      - "Known bug: chat turn returns 429 agent-not-found (lsof discovery hits the wrong Letta server) — fold into the ticket whose Done-when needs a real turn, else record as that ticket's blocker."
+      - "Tickets live in Dropbox; implementation in the otto-v01-integration worktree — two roots."
+    existing_plan_facts:
+      - "Active root tickets: 001..018, lowest-numbered first, dependency-gated."
+      - "Review gate: Claude implements; an INDEPENDENT agent reviews +1/-1/blocked. Claude may not certify its own ticket."
+      - "Done = every Done-when proven + implementer proof + routed through _InReview + reviewer +1 + no fake state + file moved to _Done."
+      - "Blocked -> leave in root with the exact blocker. Do not touch _Parked."
+
+rules:
+  pm_owns_state: true
+  one_active_task: true
+  max_write_workers: 1
+  no_implementation_without_worker_or_pm_task: true
+  no_completion_without_judge_or_pm_audit: true
+  planning_is_not_completion: true
+  queued_required_worker_blocks_completion: true
+  continuous_until_full_outcome: true
+  missing_input_or_credentials_do_not_stop_goal: true
+  preserve_and_validate_existing_plan: true
+  intake_misfire_must_be_audited: true
+  goal_pressure_requires_oracle: true
+  no_completion_on_weak_proof: true
+  slice_policy:
+    max_consecutive_tiny_tasks: 2
+    prefer_vertical_slices: true
+    judge_picks_largest_safe_slice: true
+    worker_completes_whole_slice: true
+
+agents:
+  scout: installed
+  worker: installed
+  judge: installed
+
+visual_board:
+  selected: local # none | local | unknown
+  local:
+    status: live # not_requested | starting | live | generated | blocked
+    url: "http://goalbuddy.localhost:41737/ship-otto-tickets/"
+    command: "npx goalbuddy board /Users/seb/Code/otto/.letta/worktrees/otto-v01-integration/docs/goals/ship-otto-tickets"
+
+active_task: T001
+
+# One ticket at a time. The PM re-seeds this implement -> prove -> review -> _Done cycle for each
+# successive lowest-numbered dependency-safe ticket until every active ticket is _Done or blocked.
+tasks:
+  - id: T001
+    type: scout
+    assignee: Scout
+    status: active
+    reasoning_hint: default
+    objective: "Read 000-canonical.md + 000-workflow.md + 000-index.md; enumerate active root tickets 001..018; confirm the lowest-numbered dependency-satisfied ticket (expected 001) and read it fully (Outcome + every Done-when + the mapped section of docs/otto-v1-surface-contracts.md)."
+    inputs:
+      - "/Users/seb/Library/CloudStorage/Dropbox/HQ/Otto Tickets/000-canonical.md"
+      - "/Users/seb/Library/CloudStorage/Dropbox/HQ/Otto Tickets/000-workflow.md"
+      - "/Users/seb/Library/CloudStorage/Dropbox/HQ/Otto Tickets/001-settings-letta-readiness.md"
+    constraints:
+      - "Read-only. Do not implement. Do not touch _Parked."
+    expected_output:
+      - "Confirmed next ticket id + absolute path"
+      - "Its Done-when items, verbatim"
+      - "The mapped spec/contract section"
+      - "Dependencies satisfied? yes/no + why"
+    receipt: null
+
+  - id: T002
+    type: worker
+    assignee: Worker
+    status: queued
+    reasoning_hint: medium
+    objective: "Implement ONLY the confirmed lowest-numbered ticket (expected 001 settings-letta-readiness) so every Done-when item is genuinely satisfied. No scope creep, no fake readiness/connected state."
+    allowed_files:
+      - "/Users/seb/Code/otto/.letta/worktrees/otto-v01-integration/apps/desktop/**"
+    verify:
+      - "bun run --cwd apps/desktop electron:typecheck"
+      - "bun run --cwd apps/desktop typecheck"
+      - "bun run verify:v0"
+    stop_if:
+      - "A Done-when item needs files outside apps/desktop."
+      - "A Done-when item requires a real Letta turn but the 429/agent-not-found bug blocks it -> record exact blocker, do not fake it."
+      - "Verification fails twice."
+    receipt: null
+
+  - id: T003
+    type: worker
+    assignee: Worker
+    status: queued
+    reasoning_hint: default
+    objective: "Write the implementer proof block into the ticket (each Done-when -> concrete evidence: command output, file:line, screenshot path), then move the ticket file from root to _InReview."
+    allowed_files:
+      - "/Users/seb/Library/CloudStorage/Dropbox/HQ/Otto Tickets/**"
+    verify:
+      - "test -f '/Users/seb/Library/CloudStorage/Dropbox/HQ/Otto Tickets/_InReview/001-settings-letta-readiness.md'"
+    stop_if:
+      - "Any Done-when lacks real proof -> leave in root, record blocker."
+    receipt: null
+
+  - id: T004
+    type: judge
+    assignee: Judge
+    status: queued
+    reasoning_hint: high
+    objective: "INDEPENDENT review of the _InReview ticket against its Outcome + every Done-when + the spec + ACTUAL code behavior + the proof. Verdict +1 / -1 / blocked. Do NOT accept implementer say-so; check fake-state and scope-creep explicitly."
+    inputs:
+      - "The ticket in _InReview"
+      - "docs/otto-v1-surface-contracts.md (mapped section)"
+      - "The implementer proof + the actual changed files"
+    constraints:
+      - "Read-only. Independent of the implementer."
+    expected_output:
+      - "verdict: +1 | -1 | blocked"
+      - "per Done-when: pass/fail + the evidence I personally checked"
+      - "fake-state / scope-creep findings"
+      - "exact fixes if -1; exact blocker if blocked"
+    receipt: null
+
+  - id: T005
+    type: pm
+    assignee: PM
+    status: queued
+    reasoning_hint: medium
+    objective: "Apply the verdict. +1 -> move the ticket file to _Done. -1 -> move back to root + queue a bounded fix Worker. blocked -> leave in root with the exact blocker written in the ticket. Then select the next lowest-numbered dependency-safe ticket and re-seed its implement -> prove -> review -> _Done cycle. Never touch _Parked."
+    receipt: null
+
+  - id: T999
+    type: judge
+    assignee: Judge
+    status: queued
+    reasoning_hint: high
+    objective: "Final audit: every active root ticket 001..018 is either in _Done (every Done-when proven + reviewer +1) or in root with an exact blocker; _Parked untouched; no fake state used anywhere."
+    inputs:
+      - "All ticket files' final folders"
+      - "All done-task receipts"
+      - "Last verification run"
+    constraints:
+      - "Do not implement. Reject completion if any required ticket is unshipped without an exact blocker."
+    expected_output:
+      - "complete | not_complete"
+      - "full_outcome_complete: true | false"
+      - "per-ticket: _Done | blocked(reason)"
+      - "next task if not complete"
+    receipt: null
+
+checks:
+  dirty_fingerprint: unknown
+  last_verification:
+    result: unknown
+    task: null
+    commands: []

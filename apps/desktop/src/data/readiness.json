@@ -18,16 +18,16 @@
       "status": "missing",
       "detail": "No agent selected",
       "source": null,
-      "action": "Set agent.id in ~/.otto/config.json"
+      "action": "Set the agent in Settings → Connect Letta"
     },
     {
       "key": "model",
-      "label": "Model provider (BYOK)",
-      "required": true,
-      "status": "missing",
-      "detail": "No provider configured",
+      "label": "Model provider",
+      "required": false,
+      "status": "not-wired",
+      "detail": "Provider auth lives in Letta, not Otto",
       "source": null,
-      "action": "Add model.provider in ~/.otto/config.json (key never stored)"
+      "action": "Configure providers in Letta Desktop / Letta local runtime"
     },
     {
       "key": "memory",

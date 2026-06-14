@@ -1,33 +1,47 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Icon } from '../components/icons';
-import { agent, requiredMissing, isReady } from '../sampleData';
-import { isElectron, useRuntime } from '../runtime';
+import { requiredMissing, isReady } from '../readiness';
+import { isElectron } from '../runtime';
+import { useRuntimeContext } from '../RuntimeContext';
 
 // In Electron (window.otto present) → the runtime-wired LiveChat.
 // In the web preview → the file-backed PreviewChat (unchanged).
-export const Chat: React.FC = () => (isElectron() ? <LiveChat /> : <PreviewChat />);
+export const Chat: React.FC<{ onOpenSettings?: () => void }> = ({ onOpenSettings }) =>
+  isElectron() ? <LiveChat onOpenSettings={onOpenSettings} /> : <PreviewChat />;
 
 /* ---------- LiveChat (Electron, wired to the Letta runtime) ---------- */
-const LiveChat: React.FC = () => {
-  const rt = useRuntime();
+const LiveChat: React.FC<{ onOpenSettings?: () => void }> = ({ onOpenSettings }) => {
+  const rt = useRuntimeContext();
   const [draft, setDraft] = useState('');
+  const lastSent = useRef('');
   const st = rt.status;
   const ready = !!st?.ready;
 
   const submit = () => {
     const t = draft.trim();
     if (t && ready && !rt.busy) {
+      lastSent.current = t;
       rt.send(t);
       setDraft('');
     }
   };
+
+  // Error state preserves the user's input: if the last event is an error, restore the draft.
+  const lastMsg = rt.messages[rt.messages.length - 1];
+  useEffect(() => {
+    if (lastMsg?.who === 'error' && lastSent.current && !draft) {
+      setDraft(lastSent.current);
+      lastSent.current = '';
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lastMsg]);
 
   return (
     <div className="chat">
       <div className="chat__head">
         <span className="brand__mark" style={{ width: 28, height: 28, borderRadius: 8 }}>{Icon.owl}</span>
         <div>
-          <div style={{ fontWeight: 600 }}>Otto</div>
+          <div style={{ fontWeight: 600 }}>otto</div>
           <div className="chat__id">
             {st
               ? `${st.agentId ?? 'no agent'} · ${st.model ?? 'model unset'}${st.memfsEnabled ? ' · MemFS on' : ''}`
@@ -50,12 +64,18 @@ const LiveChat: React.FC = () => {
             </div>
             <div className="inkblock__actions">
               <button className="btn btn--solid-d" onClick={rt.retry}>Retry</button>
+              {onOpenSettings && <button className="btn btn--ghost-d" onClick={onOpenSettings}>Open Settings</button>}
             </div>
+          </div>
+        )}
+        {ready && rt.messages.length === 0 && (
+          <div className="eyebrow" style={{ textAlign: 'center', marginTop: 48 }}>
+            Connected to {st?.agentId ?? 'Otto'} — message Otto to start a session.
           </div>
         )}
         {rt.messages.map((m, i) => (
           <div key={i} className={`msg${m.who === 'user' ? ' msg--user' : ''}`}>
-            <div className="msg__who">{m.who === 'user' ? 'Sebastian' : m.who === 'error' ? 'error' : 'Otto'}</div>
+            <div className="msg__who">{m.who === 'user' ? 'You' : m.who === 'error' ? 'error' : 'otto'}</div>
             <div className="msg__body" style={m.who === 'error' ? { color: 'var(--stop)' } : undefined}>{m.text}</div>
           </div>
         ))}
@@ -69,10 +89,13 @@ const LiveChat: React.FC = () => {
             aria-label="Message Otto"
             value={draft}
             onChange={(e) => setDraft(e.target.value)}
-            onKeyDown={(e) => { if (e.key === 'Enter') submit(); }}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') submit();
+              else if (e.key === 'Escape') { setDraft(''); e.currentTarget.blur(); }
+            }}
             disabled={!ready || rt.busy}
           />
-          <button className="btn btn--primary" disabled={!ready || rt.busy || !draft.trim()} onClick={submit}>{Icon.send}</button>
+          <button className="btn btn--primary" aria-label="Send message" disabled={!ready || rt.busy || !draft.trim()} onClick={submit}>{Icon.send}</button>
         </div>
         <div className="promptbar__meta">
           <span>cli: {st?.cliResolved ? 'override' : 'bundled'}</span>
@@ -90,52 +113,17 @@ const PreviewChat: React.FC = () => (
     <div className="chat__head">
       <span className="brand__mark" style={{ width: 28, height: 28, borderRadius: 8 }}>{Icon.owl}</span>
       <div>
-        <div style={{ fontWeight: 600 }}>{agent.name}</div>
-        <div className="chat__id">{agent.id} · runtime not connected · sample data</div>
+        <div style={{ fontWeight: 600 }}>otto</div>
+        <div className="chat__id">runtime not connected · desktop bridge unavailable</div>
       </div>
       <span className="pill pill--warn" style={{ marginLeft: 'auto' }}>preview · not connected</span>
     </div>
 
     <div className="chat__stream">
-      <div className="eyebrow" style={{ textAlign: 'center' }}>sample session · not live</div>
-
-      <div className="msg msg--user">
-        <div className="msg__who">Sebastian</div>
-        <div className="msg__body">Ship Otto v0.1 — rename, prove every feature, demo it. Stay local until I approve.</div>
-      </div>
-
-      <div className="msg">
-        <div className="msg__who"><span className="brand__mark" style={{ width: 16, height: 16, borderRadius: 5 }}>{Icon.owl}</span> Otto</div>
-        <div className="msg__body">
-          Compiling that into a Charter. AC1 — rename to <code>@otto-haus</code> and keep tests green.
-          AC2 — public README, eight feature demos, receipts. I'll gate the push behind your approval.
-        </div>
-      </div>
-
-      <div className="toolcard">
-        <div className="toolcard__top"><span className="dot dot--ok" /> tool · <strong>bun test</strong> <span className="faint">— packages/practices</span></div>
-        <div className="toolcard__out">6 pass · 0 fail · 7 expect() calls
-Ran 6 tests across 1 file. [43.00ms]</div>
-      </div>
-
-      <div className="msg">
-        <div className="msg__who"><span className="brand__mark" style={{ width: 16, height: 16, borderRadius: 5 }}>{Icon.owl}</span> Otto</div>
-        <div className="msg__body">AC1 is green. Next step pushes the branch to <code>otto-haus/otto</code> — that's a one-way door, so I'm stopping to ask.</div>
-      </div>
-
-      <div className="inkblock">
-        <div className="inkblock__eyebrow"><span className="dot dot--warn" /> approval required · one-way door</div>
-        <div className="inkblock__title">Push branch to <code style={{ color: 'inherit' }}>otto-haus/otto</code></div>
-        <div className="inkblock__meta">
-          <span>scope: git:push:otto-haus/otto:letta/otto-v01-integration</span>
-          <span>requirement: external-side-effects · expires in 24h</span>
-          <span>evidence: tests green · 8 demos rendered · RELEASE_CHECKLIST.md</span>
-        </div>
-        <div className="inkblock__actions">
-          <button className="btn btn--solid-d" disabled aria-disabled="true">Approve push</button>
-          <button className="btn btn--ghost-d" disabled aria-disabled="true">Deny</button>
-          <span className="mono" style={{ color: 'var(--dark-mut)', fontSize: 12, alignSelf: 'center' }}>preview — not wired</span>
-        </div>
+      <div className="emptySurface emptySurface--chat">
+        <div className="eyebrow">chat</div>
+        <h2>No live session in web preview.</h2>
+        <p>Open the packaged desktop app to connect to local Letta. This preview does not show fake messages.</p>
       </div>
     </div>
 
@@ -167,11 +155,10 @@ Ran 6 tests across 1 file. [43.00ms]</div>
           disabled
           readOnly
         />
-        <button className="btn btn--primary" disabled aria-disabled="true">{Icon.send}</button>
+        <button className="btn btn--primary" aria-label="Send message" disabled aria-disabled="true">{Icon.send}</button>
       </div>
       <div className="promptbar__meta">
-        <span>cwd: {agent.cwd}</span>
-        <span>backend: {agent.backend}</span>
+        <span>desktop bridge unavailable</span>
         <span className="faint">runtime: not connected</span>
       </div>
     </div>

@@ -1,5 +1,6 @@
 import { execFileSync } from 'node:child_process';
 import { randomUUID } from 'node:crypto';
+import { existsSync } from 'node:fs';
 import type { BrowserWindow } from 'electron';
 import type { PermissionRequest, PermissionResponse, RuntimeStatus, StatusCode } from './shared/types';
 import { ConfigStore } from './config-store';
@@ -14,11 +15,13 @@ type CreateSessionOptions = import('@letta-ai/letta-code-sdk').CreateSessionOpti
 // Set OTTO_MEMFS=1 to force it on for backends that support it.
 const WANT_MEMFS = process.env.OTTO_MEMFS === '1' || process.env.OTTO_MEMFS === 'true';
 
+const LETTA_DESKTOP_CLI = '/Applications/Letta.app/Contents/Resources/app.asar.unpacked/node_modules/@letta-ai/letta-code/letta.js';
+
 function resolveCli(): { cliPath: string; cliResolved: boolean } {
-  const p = process.env.LETTA_CLI_PATH;
-  return p
-    ? { cliPath: p, cliResolved: true }
-    : { cliPath: '(bundled @letta-ai/letta-code)', cliResolved: false };
+  const explicit = process.env.LETTA_CLI_PATH;
+  if (explicit) return { cliPath: explicit, cliResolved: true };
+  if (existsSync(LETTA_DESKTOP_CLI)) return { cliPath: LETTA_DESKTOP_CLI, cliResolved: true };
+  return { cliPath: '(bundled @letta-ai/letta-code)', cliResolved: false };
 }
 
 const isNotFound = (e: unknown) => {
@@ -79,6 +82,10 @@ export class LettaRunner {
 
   /** Inject the stored Letta key + base URL into the env the SDK hands the spawned CLI. */
   private applyConnectionEnv() {
+    const cli = resolveCli();
+    // The SDK can otherwise resolve a stale cached @letta-ai/letta-code package. Prefer the
+    // installed Letta Desktop CLI, which is the live local-backend runtime Sebastian is using.
+    if (cli.cliResolved && !process.env.LETTA_CLI_PATH) process.env.LETTA_CLI_PATH = cli.cliPath;
     const key = getSecret('LETTA_API_KEY');
     if (key && !process.env.LETTA_API_KEY) process.env.LETTA_API_KEY = key;
     // Base URL: explicit config/env wins; otherwise auto-discover a running local Letta
@@ -116,7 +123,6 @@ export class LettaRunner {
       return this.status;
     }
 
-    const cfg = this.config.get();
     const tryOnce = async (resumeId: string) => {
       const session = sdk.resumeSession(resumeId, this.options());
       const init = await session.initialize();
@@ -124,18 +130,10 @@ export class LettaRunner {
     };
 
     try {
-      let r: { session: Session; init: Awaited<ReturnType<Session['initialize']>> };
-      try {
-        // Prefer a stored conversation; fall back to the agent's default conversation.
-        r = await tryOnce(cfg.conversationId || agentId);
-      } catch (e) {
-        if (isNotFound(e) && cfg.conversationId) {
-          this.config.update({ conversationId: null }); // clear the stale id
-          r = await tryOnce(agentId); // recover on the agent's default conversation
-        } else {
-          throw e;
-        }
-      }
+      // resumeSession's id is the AGENT id (maps to --agent); the conversation is the agent's
+      // default. A stored conversationId is NOT a valid resume id — passing it would send
+      // `--agent <conversationId>` and fail — so always resume with the agent id.
+      const r = await tryOnce(agentId);
       this.session = r.session;
       this.config.update({ agentId: r.init.agentId ?? agentId, conversationId: r.init.conversationId ?? null });
       this.status = {
@@ -157,6 +155,22 @@ export class LettaRunner {
     return this.status;
   }
 
+  private publishStatus(): void {
+    this.win.webContents.send('otto:event', { status: this.status });
+  }
+
+  private markNotReady(reason: string, code: StatusCode = 'error'): void {
+    this.session = null;
+    this.status = {
+      ...this.status,
+      ready: false,
+      code,
+      reason: friendly(code, reason),
+    };
+    if (code === 'stale') this.config.update({ conversationId: null });
+    this.publishStatus();
+  }
+
   async send(text: string): Promise<void> {
     if (!this.session || !this.status.ready) {
       this.emitError('Runtime not ready — open Settings and connect before sending.');
@@ -166,15 +180,30 @@ export class LettaRunner {
     this.aborted = false;
     trace.write('prompt', { text, agentId: this.status.agentId, conversationId: this.status.conversationId });
     try {
+      let turnError: string | null = null;
       await this.session.send(text);
       for await (const message of this.session.stream()) {
         trace.write('event', message);
         this.win.webContents.send('otto:event', { message });
-        const m = message as { type: string; conversationId?: string };
+        const m = message as {
+          type: string;
+          conversationId?: string;
+          message?: unknown;
+          error?: unknown;
+          reason?: unknown;
+          success?: boolean;
+        };
+        if (m.type === 'error') {
+          turnError = String(m.message ?? m.error ?? m.reason ?? 'Adapter call failed.');
+        }
         if (m.type === 'result') {
           if (m.conversationId && m.conversationId !== this.status.conversationId) {
             this.status.conversationId = m.conversationId;
             this.config.update({ conversationId: m.conversationId });
+          }
+          if (m.success === false) {
+            const reason = turnError ?? String(m.error ?? m.reason ?? 'Adapter call failed.');
+            this.markNotReady(reason, classify(reason, this.hasApiKey()));
           }
           break;
         }
@@ -184,8 +213,7 @@ export class LettaRunner {
       trace.write('error', { message: msg(e) });
       if (isNotFound(e)) {
         // Mid-send recovery: mark not-ready + clear conversation so the next init recreates it.
-        this.status = { ...this.status, ready: false, reason: msg(e) };
-        this.config.update({ conversationId: null });
+        this.markNotReady(msg(e), 'stale');
       }
       this.emitError(msg(e));
     } finally {
@@ -245,7 +273,8 @@ function discoverLocalLettaUrl(): string | null {
 /** Map a raw connect error to a diagnosis category for the Settings UI. */
 function classify(reason: string, hasKey: boolean): StatusCode {
   const r = reason.toLowerCase();
-  if (!hasKey || r.includes('letta_api_key') || r.includes('api key') || r.includes('unauthorized') || r.includes('401'))
+  void hasKey;
+  if (r.includes('letta_api_key') || r.includes('api key') || r.includes('unauthorized') || r.includes('401'))
     return 'no-api-key';
   if (r.includes('not found') || r.includes('not-found')) return 'stale';
   if (
@@ -263,7 +292,7 @@ function classify(reason: string, hasKey: boolean): StatusCode {
 function friendly(code: StatusCode, reason: string): string {
   switch (code) {
     case 'no-api-key':
-      return 'No Letta API key. Add it in Settings → Connect Letta to authenticate.';
+      return `Letta auth failed. For local v1, configure provider auth inside Letta; Otto does not need its own API key. (${reason})`;
     case 'unreachable':
       return `Can't reach the Letta backend — check the base URL in Settings. (${reason})`;
     case 'stale':

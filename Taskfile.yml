@@ -1,0 +1,119 @@
+version: '3'
+
+# Otto dev tasks. Run `task` (or `task --list`) to see everything; `task <name>` to run one.
+# go-task is installed (brew install go-task). Most tasks wrap the existing package scripts so
+# there is one obvious command per job.
+
+silent: true
+
+vars:
+  DESKTOP: apps/desktop
+  OTTO_APP: /Applications/otto.app
+  LETTA_CLI: /Applications/Letta.app/Contents/Resources/app.asar.unpacked/node_modules/@letta-ai/letta-code/letta.js
+
+tasks:
+  default:
+    desc: List available tasks
+    cmds: [task --list]
+
+  dev:
+    desc: Desktop — web preview (Vite, http://localhost:5173)
+    dir: '{{.DESKTOP}}'
+    cmds: [bun run dev]
+
+  electron:
+    desc: Desktop — Electron app wired to the live Letta runtime
+    dir: '{{.DESKTOP}}'
+    cmds: [env -u ELECTRON_RUN_AS_NODE bun run electron:dev]
+
+  gen:
+    desc: Regenerate file-backed data (practices.json, readiness.json)
+    dir: '{{.DESKTOP}}'
+    cmds:
+      - bun run gen:practices
+      - bun run gen:readiness
+
+  typecheck:
+    desc: Typecheck everything (core + practices + desktop renderer + electron)
+    cmds:
+      - bun run typecheck
+      - bun run --cwd {{.DESKTOP}} typecheck
+      - bun run --cwd {{.DESKTOP}} electron:typecheck
+
+  test:
+    desc: Unit tests
+    cmds: [bun test]
+
+  verify:
+    desc: v0 release gate (scripts/verify-v0.sh)
+    cmds: [bun run verify:v0]
+
+  build:
+    desc: Build the desktop app (main + preload + renderer)
+    dir: '{{.DESKTOP}}'
+    cmds: [bun run electron:build]
+
+  package:
+    desc: Package the macOS .app (electron-builder, arm64)
+    dir: '{{.DESKTOP}}'
+    cmds:
+      - bun run electron:build
+      - bunx electron-builder --mac dir --arm64
+
+  refresh:
+    aliases: [deploy]
+    desc: Build + package + install to /Applications/otto.app + open
+    cmds: [bash scripts/refresh-otto-app.sh]
+
+  open:
+    desc: Open installed /Applications/otto.app without the Electron-as-Node footgun
+    cmds:
+      - env -u ELECTRON_RUN_AS_NODE open {{.OTTO_APP}}
+
+  quit:
+    desc: Quit installed otto app
+    cmds:
+      - osascript -e 'tell application "otto" to quit' >/dev/null 2>&1 || true
+      - pkill -f '/Applications/otto.app/Contents/MacOS/otto' 2>/dev/null || true
+
+  ps:
+    desc: Show live otto + spawned Letta CLI processes
+    cmds:
+      - ps aux | grep -E '[M]acOS/otto|[o]tto Helper|[l]etta-code/letta.js --output-format stream-json' | sed -n '1,160p'
+
+  smoke:cli:
+    desc: Direct Letta CLI smoke against the configured local agent
+    cmds:
+      - |
+        node {{.LETTA_CLI}} --agent "$${LETTA_AGENT_ID:?set LETTA_AGENT_ID}" --conversation default --no-memfs --no-skills --no-system-info-reminder -p 'Reply exactly: OTTO_SMOKE_OK' --output-format json
+
+  smoke:desktop:
+    desc: Open installed app and verify the process stays alive
+    cmds:
+      - task: open
+      - sleep 3
+      - pgrep -f '/Applications/otto.app/Contents/MacOS/otto' >/dev/null
+      - task: ps
+
+  lint:
+    desc: Lint with Biome (no install — via bunx)
+    cmds:
+      - bunx --bun @biomejs/biome lint {{.DESKTOP}}/src {{.DESKTOP}}/electron packages
+
+  format:
+    desc: Format with Biome (writes changes)
+    cmds:
+      - bunx --bun @biomejs/biome format --write {{.DESKTOP}}/src {{.DESKTOP}}/electron packages
+
+  check:
+    aliases: [ci]
+    desc: Full local gate — typecheck + test + verify
+    cmds:
+      - task: typecheck
+      - task: test
+      - task: verify
+
+  clean:
+    desc: Remove build artifacts (out/, dist/, dist-app/)
+    cmds:
+      - rm -rf {{.DESKTOP}}/out {{.DESKTOP}}/dist {{.DESKTOP}}/dist-app

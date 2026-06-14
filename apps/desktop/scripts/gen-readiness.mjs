@@ -2,13 +2,14 @@
 //
 // Checks are file-backed and low-risk only — this never wires the Letta runtime/chat.
 // Repo state (workspace, skills, practices, permissions) is read directly. Runtime/agent/
-// model/MCP/functions come from an OPTIONAL machine-local config that is NOT committed:
+// MCP/functions come from an OPTIONAL machine-local config that is NOT committed:
 //
-//     ~/.otto/config.json   { agent?: {id}, model?: {provider, model}, runtime?: {connected},
+//     ~/.otto/config.json   { agent?: {id}, runtime?: {connected},
 //                             mcpServers?: [...], functions?: [...] }
 //
-// We do NOT read API keys from the environment — only the config file — so the committed
-// readiness.json is a deterministic fresh-clone baseline (no secrets, no machine leakage).
+// v1 is local-only: Otto does not store model provider keys. Letta owns provider auth.
+// Set OTTO_READINESS_IGNORE_LOCAL_CONFIG=1 to regenerate the committed preview baseline
+// without reading machine-local config. We never read API keys here.
 import { existsSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -26,7 +27,8 @@ const tilde = (p) => (p && p.startsWith(homedir()) ? '~' + p.slice(homedir().len
 // optional, machine-local, never committed
 let cfg = {};
 const configPath = join(homedir(), '.otto', 'config.json');
-const hasConfig = existsSync(configPath);
+const ignoreLocalConfig = process.env.OTTO_READINESS_IGNORE_LOCAL_CONFIG === '1';
+const hasConfig = !ignoreLocalConfig && existsSync(configPath);
 if (hasConfig) {
   try { cfg = JSON.parse(readFileSync(configPath, 'utf8')); } catch { cfg = {}; }
 }
@@ -53,8 +55,7 @@ const permissionsDoc = has(repoRoot, 'docs', 'autonomy.md');
 
 // --- config-derived (absent in a fresh clone → honestly missing/not-wired) ---
 const runtimeConnected = cfg.runtime?.connected === true;
-const agentId = cfg.agent?.id;
-const modelProvider = cfg.model?.provider || cfg.model?.model;
+const agentId = cfg.agentId ?? cfg.agent?.id; // ConfigStore writes flat agentId; accept nested too
 const mcpCount = Array.isArray(cfg.mcpServers) ? cfg.mcpServers.length : 0;
 const fnCount = Array.isArray(cfg.functions) ? cfg.functions.length : 0;
 const cfgSrc = hasConfig ? '~/.otto/config.json' : null;
@@ -67,11 +68,11 @@ const items = [
   { key: 'agent', label: 'Agent identity', required: true,
     status: agentId ? 'configured' : 'missing',
     detail: agentId ? `agent ${agentId}` : 'No agent selected',
-    source: agentId ? cfgSrc : null, action: 'Set agent.id in ~/.otto/config.json' },
-  { key: 'model', label: 'Model provider (BYOK)', required: true,
-    status: modelProvider ? 'configured' : 'missing',
-    detail: modelProvider ? `provider: ${cfg.model.provider ?? 'set'}` : 'No provider configured',
-    source: modelProvider ? cfgSrc : null, action: 'Add model.provider in ~/.otto/config.json (key never stored)' },
+    source: agentId ? cfgSrc : null, action: 'Set the agent in Settings → Connect Letta' },
+  { key: 'model', label: 'Model provider', required: false,
+    status: runtimeConnected ? 'connected' : 'not-wired',
+    detail: runtimeConnected ? 'owned by local Letta runtime' : 'Provider auth lives in Letta, not Otto',
+    source: cfgSrc, action: 'Configure providers in Letta Desktop / Letta local runtime' },
   { key: 'memory', label: 'Memory / MemFS', required: true,
     status: runtimeConnected ? 'connected' : 'not-wired',
     detail: 'Depends on a live runtime connection', source: '~/.otto',

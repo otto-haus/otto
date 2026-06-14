@@ -14,7 +14,8 @@
     "electron:build": "bun run gen:readiness && electron-vite build",
     "electron:dev": "electron-vite dev",
     "gen:practices": "node scripts/gen-practices.mjs",
-    "gen:readiness": "node scripts/gen-readiness.mjs"
+    "gen:readiness": "node scripts/gen-readiness.mjs",
+    "app:dir": "bun run electron:build && electron-builder --mac dir --arm64"
   },
   "dependencies": {
     "@letta-ai/letta-code-sdk": "^0.1.14",

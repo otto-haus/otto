@@ -3,6 +3,8 @@ import { homedir } from 'node:os';
 import { BrowserWindow, app } from 'electron';
 import { registerIpc } from './ipc';
 
+let mainWindow: BrowserWindow | null = null;
+
 // A GUI-launched macOS app inherits a minimal PATH (no Homebrew/nvm/etc.). The Letta SDK
 // spawns `node` from PATH to run its CLI, so a packaged Otto would fail to find it and the
 // chat could never connect. Prepend the usual install locations before anything spawns.
@@ -16,13 +18,13 @@ function ensurePath() {
 
 function createWindow() {
   const win = new BrowserWindow({
-    width: 1240,
-    height: 840,
-    minWidth: 980,
-    minHeight: 640,
-    backgroundColor: '#f2f5f4',
+    width: 1040,
+    height: 720,
+    minWidth: 680,
+    minHeight: 480,
+    backgroundColor: '#fbfaf7',
     titleBarStyle: 'hiddenInset',
-    title: 'Otto',
+    title: 'otto',
     webPreferences: {
       preload: join(__dirname, '../preload/index.cjs'),
       sandbox: false,
@@ -40,6 +42,10 @@ function createWindow() {
     win.loadFile(join(__dirname, '../renderer/index.html'));
   }
 
+  win.on('closed', () => {
+    if (mainWindow === win) mainWindow = null;
+  });
+  mainWindow = win;
   return win;
 }
 
