@@ -50,7 +50,7 @@ None yet.
 
 ## Execution receipt
 
-Worktree: `/tmp/otto-ci-gate-parity`
+Worktree: `/Users/seb/Code/otto-pr-47`
 Branch: `ci/gate-parity`
 
 Changed:
@@ -60,6 +60,8 @@ Changed:
 - Updated `task ci` to call the shared gate.
 - Updated `.github/workflows/ci.yml` to use the pinned Bun version, least-privilege read permissions, concurrency cancellation, a timeout, frozen install lockfile check, and the shared gate.
 - Updated the desktop build toolchain to Electron `^42.4.0` with an `esbuild` override so `bun audit` is clean.
+- Codex repair: forced the shared gate's Electron build to ignore machine-local readiness config and added a final `git diff --exit-code` dirty-worktree check.
+- Codex repair: moved this implemented ticket to `_InReview`; folder location is status truth.
 
 Proof:
 
@@ -72,10 +74,11 @@ git diff --check
 
 Result:
 
-- `task ci` passed: core/practices typecheck, desktop typecheck, Electron typecheck, 35 tests, `verify:v0`, Electron build, `bun audit` with no vulnerabilities, and diff whitespace check.
+- Initial `task ci` passed but left `apps/desktop/src/data/readiness.json` dirty by reading machine-local `~/.otto/config.json`; Codex repaired the shared gate to use the committed preview baseline and fail on any tracked diff.
+- Re-run `task ci` passed: core/practices typecheck, desktop typecheck, Electron typecheck, 35 tests, `verify:v0`, Electron build, `bun audit` with no vulnerabilities, `git diff --check`, and final `git diff --exit-code`.
 - `actionlint .github/workflows/ci.yml` passed.
 - Generated readiness writeback was restored before commit.
 
-PR proof still required:
+PR proof gate:
 
-- The changed `pull_request` workflow must run green on GitHub before this can be treated as workflow-proven.
+- The changed `pull_request` workflow must run green on GitHub before the PR is labeled ready; current run evidence lives in the PR thread.
