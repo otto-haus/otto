@@ -22,6 +22,7 @@ type AttachmentDraft = SavedAttachment & { previewUrl: string };
 
 const DRAFT_KEY = 'otto.chat.draft.v1';
 const QUEUE_KEY = 'otto.chat.queue.v1';
+const INFLIGHT_KEY = 'otto.chat.inflight.v1';
 const ATTACHMENTS_KEY = 'otto.chat.attachments.v1';
 
 const MODEL_OPTIONS = [
@@ -79,18 +80,31 @@ const readDraft = (): string => {
   try { return localStorage.getItem(DRAFT_KEY) ?? ''; } catch { return ''; }
 };
 
+const readInFlight = (): QueueItem | null => {
+  try {
+    const item = JSON.parse(localStorage.getItem(INFLIGHT_KEY) ?? 'null') as QueueItem | null;
+    if (!item || typeof item.id !== 'string' || typeof item.text !== 'string') return null;
+    return { id: item.id, text: item.text, createdAt: typeof item.createdAt === 'number' ? item.createdAt : Date.now(), state: 'queued' };
+  } catch {
+    return null;
+  }
+};
+
 const readQueue = (): QueueItem[] => {
   try {
     const parsed = JSON.parse(localStorage.getItem(QUEUE_KEY) ?? '[]') as QueueItem[];
-    if (!Array.isArray(parsed)) return [];
-    return parsed
-      .filter((item) => typeof item?.id === 'string' && typeof item.text === 'string')
+    const stored = Array.isArray(parsed) ? parsed : [];
+    return dedupeQueue([readInFlight(), ...stored]
+      .filter((item): item is QueueItem => typeof item?.id === 'string' && typeof item.text === 'string')
+      // Old builds persisted visible `sending` rows in the queue. Those were already handed
+      // to the runtime and caused the stuck badge in #6; new builds use INFLIGHT_KEY instead.
+      .filter((item) => item.state !== 'sending')
       .map((item) => ({
         id: item.id,
         text: item.text,
         createdAt: typeof item.createdAt === 'number' ? item.createdAt : Date.now(),
-        state: item.state === 'failed' ? 'failed' : 'queued', // a crashed in-flight send becomes queued again.
-      }));
+        state: item.state === 'failed' ? 'failed' : 'queued',
+      })));
   } catch {
     return [];
   }
@@ -110,6 +124,28 @@ const readAttachments = (): AttachmentDraft[] => {
 
 const persist = (key: string, value: unknown) => {
   try { localStorage.setItem(key, JSON.stringify(value)); } catch { /* best effort */ }
+};
+
+const persistInFlight = (item: QueueItem | null) => {
+  try {
+    if (item) localStorage.setItem(INFLIGHT_KEY, JSON.stringify(item));
+    else localStorage.removeItem(INFLIGHT_KEY);
+  } catch { /* best effort */ }
+};
+
+const clearInFlight = (id: string) => {
+  try {
+    const item = JSON.parse(localStorage.getItem(INFLIGHT_KEY) ?? 'null') as QueueItem | null;
+    if (item?.id === id) localStorage.removeItem(INFLIGHT_KEY);
+  } catch { /* best effort */ }
+};
+
+const dedupeQueue = (items: Array<QueueItem | null>): QueueItem[] => {
+  const out: QueueItem[] = [];
+  for (const item of items) {
+    if (item && !out.some((x) => x.id === item.id)) out.push(item);
+  }
+  return out;
 };
 
 const renderInline = (text: string): React.ReactNode[] => {
@@ -280,13 +316,15 @@ const LiveChat: React.FC<{ onOpenSettings?: () => void; sidebarHidden: boolean; 
     const next = queue.find((item) => item.state === 'queued');
     if (!next) return;
     draining.current = true;
-    setQueue((items) => items.map((item) => item.id === next.id ? { ...item, state: 'sending' } : item));
+    persistInFlight({ ...next, state: 'sending' });
+    setQueue((items) => items.filter((item) => item.id !== next.id));
     void rt.send(next.text)
       .then(() => {
-        setQueue((items) => items.filter((item) => item.id !== next.id));
+        clearInFlight(next.id);
       })
       .catch(() => {
-        setQueue((items) => items.map((item) => item.id === next.id ? { ...item, state: 'failed' } : item));
+        clearInFlight(next.id);
+        setQueue((items) => dedupeQueue([{ ...next, state: 'failed' }, ...items]));
       })
       .finally(() => {
         draining.current = false;

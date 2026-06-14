@@ -726,6 +726,35 @@ h1, h2, h3, h4, p { margin: 0; }
   to { opacity: 1; transform: translateY(0); }
 }
 
+/* ---------- tasteful motion + hover (§09: calm · ease-out · no spring) ---------- */
+/* interactive elements settle into hover/active instead of snapping. */
+.nav__item,
+.sidebar__primary,
+.thread,
+.settingsNav button,
+.segmented button,
+.providerRow,
+.sidebar__toggle,
+.topbar__sidebarButton,
+.filechip,
+.pill,
+input,
+textarea {
+  transition: background 130ms var(--ease), color 130ms var(--ease),
+    border-color 130ms var(--ease), transform 130ms var(--ease), box-shadow 130ms var(--ease);
+}
+.nav__icon,
+.sidebar__primaryIcon,
+.thread__icon { transition: color 130ms var(--ease); }
+
+/* calm keyboard focus — a soft ring (weight over travel, no jump). */
+input:focus-visible,
+textarea:focus-visible {
+  outline: none;
+  border-color: var(--ink-soft);
+  box-shadow: 0 0 0 3px rgba(20, 22, 26, 0.06);
+}
+
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     animation-duration: 1ms !important;
