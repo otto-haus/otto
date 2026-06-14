@@ -104,4 +104,25 @@ describe('ReceiptWriter', () => {
     const persisted = JSON.parse(readFileSync(receipt.path, 'utf8'));
     expect(persisted.timestamp).toBe('../escaped-receipt');
   });
+
+  it('falls back to a safe timestamp segment when separators erase the timestamp', () => {
+    const root = mkdtempSync(join(tmpdir(), 'otto-receipt-root-'));
+    tmp = root;
+    const receiptsDir = join(root, 'receipts');
+    const receipt = new ReceiptWriter(receiptsDir).write({
+      id: '../id\\escape',
+      timestamp: '../..\\..',
+      status: 'success',
+      subject: { type: 'task', id: 'filename-safety' },
+      action: 'receipt.write',
+      input: {},
+      result: { summary: 'Receipt written.' },
+      evidence: [],
+      blocker: null,
+    });
+
+    expect(receipt.path).toBe(join(receiptsDir, 'timestamp-idescape.json'));
+    expect(existsSync(receipt.path)).toBe(true);
+    expect(existsSync(join(root, 'timestamp-idescape.json'))).toBe(false);
+  });
 });
