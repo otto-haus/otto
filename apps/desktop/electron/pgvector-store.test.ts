@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'bun:test';
-import { mkdtempSync, mkdirSync, writeFileSync } from 'node:fs';
+import { mkdtempSync, mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import {
@@ -10,6 +10,21 @@ import {
   pgvectorEnabled,
   sha256Text,
 } from './pgvector-store';
+
+class ReadyPgvectorStore extends PgvectorStore {
+  override async healthCheck() {
+    return {
+      enabled: true,
+      available: true,
+      state: 'ready' as const,
+      connectionHint: 'postgresql://nobody:nobody@127.0.0.1:15999/none',
+      lastCheckedAt: new Date(0).toISOString(),
+      lastIndexedAt: null,
+      note: 'ready',
+      error: null,
+    };
+  }
+}
 
 describe('PgvectorStore helpers', () => {
   test('disabled by default', () => {
@@ -70,6 +85,31 @@ describe('PgvectorStore status', () => {
     else Reflect.deleteProperty(process.env, 'OTTO_PGVECTOR');
     if (prevUrl !== undefined) process.env.OTTO_PGVECTOR_URL = prevUrl;
     else Reflect.deleteProperty(process.env, 'OTTO_PGVECTOR_URL');
+  });
+
+  test('indexSource rejects source paths outside the repo root before connecting', async () => {
+    const prevPg = process.env.OTTO_PGVECTOR;
+    const prevUrl = process.env.OTTO_PGVECTOR_URL;
+    process.env.OTTO_PGVECTOR = '1';
+    process.env.OTTO_PGVECTOR_URL = 'postgresql://nobody:nobody@127.0.0.1:15999/none';
+    const dir = mkdtempSync(join(tmpdir(), 'otto-pgvector-path-'));
+    try {
+      const store = new ReadyPgvectorStore();
+      let message = '';
+      try {
+        await store.indexSource('../outside.md', 'fixture', { root: dir, text: 'outside' });
+      } catch (error) {
+        message = error instanceof Error ? error.message : String(error);
+      }
+      expect(message).toMatch(/sourcePath must stay within root/i);
+      await store.disconnect();
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+      if (prevPg !== undefined) process.env.OTTO_PGVECTOR = prevPg;
+      else Reflect.deleteProperty(process.env, 'OTTO_PGVECTOR');
+      if (prevUrl !== undefined) process.env.OTTO_PGVECTOR_URL = prevUrl;
+      else Reflect.deleteProperty(process.env, 'OTTO_PGVECTOR_URL');
+    }
   });
 });
 
