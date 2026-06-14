@@ -21,4 +21,21 @@ describe('RunStore', () => {
       rmSync(root, { recursive: true, force: true });
     }
   });
+
+  test('record falls back to a safe filename when separators erase the id', () => {
+    const root = mkdtempSync(join(tmpdir(), 'otto-run-store-'));
+    try {
+      const runsDir = join(root, 'runs');
+      const store = new RunStore(runsDir);
+      const run = store.record({ id: '../..\\..', practice: 'ticketcraft' });
+
+      expect(run.id).toBe('../..\\..');
+      expect(run.path).toBe(join(runsDir, 'run.json'));
+      expect(existsSync(run.path)).toBe(true);
+      expect(existsSync(join(root, 'run.json'))).toBe(false);
+      expect(store.list().runs.map((entry) => entry.id)).toEqual(['../..\\..']);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
 });
