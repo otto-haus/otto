@@ -28,6 +28,7 @@ import {
 } from '../copy/surfaces';
 import { SURFACE_TESTS } from '../canon-briefs';
 import { resetOnboardingForReplay } from '../onboarding-storage';
+import { LabsBlockedShell } from '../labs/LabsBlockedShell';
 import {
   getSampleReceiptDetail,
   isSampleReceiptPreview,
@@ -1199,10 +1200,12 @@ export const Curation: React.FC<{ initialPanel?: CurationMainPanel }> = ({ initi
               ? toastCopy.behaviorUpdatedMemory
               : toastCopy.behaviorUpdated,
             body: [
-              `${targetLabel}: ${selected.summary} · receipt ${outcome.receipt.id}`,
+              toastCopy.behaviorUpdatedBody(targetLabel, selected.summary, outcome.receipt.id),
               outcome.compiledCheckId ? `${toastCopy.checkActive}: ${outcome.compiledCheckId}` : null,
             ].filter(Boolean).join('\n'),
             tone: 'ok',
+            actionLabel: toastCopy.openReceipt,
+            onAction: () => { if (typeof location !== 'undefined') location.hash = 'receipts'; },
           });
         } else {
           pushToast({
@@ -1515,6 +1518,26 @@ const ProposalDetail: React.FC<{
 
 /* ---------- Receipts (runs + proof) ---------- */
 const RECEIPT_FILTERS: Array<'all' | ReceiptStatus> = ['all', 'success', 'blocked', 'failed'];
+type ReceiptAuthorityFilter = 'all' | 'human' | 'autonomy' | 'runtime';
+const RECEIPT_AUTHORITY_FILTERS: ReceiptAuthorityFilter[] = ['all', 'human', 'autonomy', 'runtime'];
+
+function receiptAuthorityBucket(receipt: ReceiptSummary): Exclude<ReceiptAuthorityFilter, 'all'> {
+  if (
+    receipt.action.startsWith('curation.')
+    || receipt.subjectType === 'proposal'
+    || receipt.action.startsWith('permission:')
+    || receipt.action.startsWith('constitution.')
+  ) return 'human';
+  if (receipt.action.startsWith('autonomy:') || receipt.action.startsWith('autonomy.')) return 'autonomy';
+  return 'runtime';
+}
+
+function receiptAuthorityFilterLabel(filter: ReceiptAuthorityFilter): string {
+  if (filter === 'all') return receiptsCopy.filterAuthorityAll;
+  if (filter === 'human') return receiptsCopy.filterAuthorityHuman;
+  if (filter === 'autonomy') return receiptsCopy.filterAuthorityAutonomy;
+  return receiptsCopy.filterAuthorityRuntime;
+}
 
 export const Receipts: React.FC = () => {
   const api = ottoApi();
@@ -1524,6 +1547,7 @@ export const Receipts: React.FC = () => {
   const [detail, setDetail] = useState<ReceiptDetail | null>(null);
   const [query, setQuery] = useState('');
   const [filter, setFilter] = useState<'all' | ReceiptStatus>('all');
+  const [authorityFilter, setAuthorityFilter] = useState<ReceiptAuthorityFilter>('all');
   const [loading, setLoading] = useState(!!api);
   const [error, setError] = useState<string | null>(null);
 
@@ -1578,6 +1602,7 @@ export const Receipts: React.FC = () => {
     const needle = query.trim().toLowerCase();
     return receipts.filter((receipt) => {
       if (filter !== 'all' && receipt.status !== filter) return false;
+      if (authorityFilter !== 'all' && receiptAuthorityBucket(receipt) !== authorityFilter) return false;
       if (!needle) return true;
       return [
         receipt.id,
@@ -1590,7 +1615,7 @@ export const Receipts: React.FC = () => {
         receipt.path,
       ].some((value) => value.toLowerCase().includes(needle));
     });
-  }, [filter, query, receipts]);
+  }, [authorityFilter, filter, query, receipts]);
   const selectedSummary = receipts.find((receipt) => receipt.id === selectedId) ?? null;
   const statusCounts = useMemo(() => ({
     success: receipts.filter((r) => r.status === 'success').length,
@@ -1704,6 +1729,14 @@ export const Receipts: React.FC = () => {
             }))}
             active={filter}
             onSelect={(key) => setFilter(key as typeof filter)}
+          />
+          <FilterBar
+            options={RECEIPT_AUTHORITY_FILTERS.map((item) => ({
+              key: item,
+              label: receiptAuthorityFilterLabel(item),
+            }))}
+            active={authorityFilter}
+            onSelect={(key) => setAuthorityFilter(key as ReceiptAuthorityFilter)}
           />
         </div>
       </div>
@@ -2242,9 +2275,11 @@ const CogneeKnowledgePanel: React.FC = () => {
         {health ? statusPill(health.status) : null}
       </div>
       {health?.status === 'disabled' && (
-        <InlineEmpty
-          title="Cognee graph recall is off"
-          body="Set OTTO_COGNEE_ENABLED=1 and start the local sidecar. See docs/cognee.md — no mock graph rows."
+        <LabsBlockedShell
+          title={labsCopy.cogneeBlockedTitle}
+          body={labsCopy.cogneeBlockedBody}
+          onAction={() => void reload()}
+          actionLabel={labsCopy.startSidecar}
         />
       )}
       {health && health.status !== 'disabled' && (
@@ -2343,7 +2378,10 @@ const PgvectorKnowledgePanel: React.FC = () => {
         )}
       </div>
       {!status.enabled && (
-        <InlineEmpty title="Semantic recall off" body={status.note} />
+        <LabsBlockedShell
+          title={labsCopy.pgvectorBlockedTitle}
+          body={labsCopy.pgvectorBlockedBody}
+        />
       )}
       {status.enabled && status.state !== 'ready' && (
         <div className="notice" style={{ marginTop: 12 }}>
@@ -2801,6 +2839,13 @@ export const Channels: React.FC = () => {
         ]}
       />
       {error && <div className="notice"><span className="dot dot--warn" /> {error}</div>}
+      {result && enabledCount === 0 && channels.length > 0 && (
+        <LabsBlockedShell
+          title={labsCopy.channelsBlockedTitle}
+          body={labsCopy.channelsBlockedBody}
+          next={labsCopy.channelsBlockedNext}
+        />
+      )}
       {!result && !error && (
         <div className="panel">
           <div className="h-sec">Loading channels…</div>
@@ -3031,7 +3076,7 @@ const ConnectPgvector: React.FC = () => {
         <StatusPill status={healthCode} />
       </div>
       <p className="settingsOptionalBlock__lede">
-        Local Postgres + pgvector for derived recall. Disabled unless <code>OTTO_PGVECTOR=1</code>. Files remain canon.
+        {labsCopy.pgvectorBlockedBody} Advanced env toggles live in docs/pgvector.md.
       </p>
       {status && (
         <p className="faint" style={{ marginTop: 8, fontSize: 12 }}>
@@ -3110,7 +3155,7 @@ const ConnectCognee: React.FC = () => {
             checked={enabled}
             onChange={(e) => setEnabled(e.target.checked)}
           />
-          <span style={{ fontSize: 13.5 }}>Enable Cognee (`OTTO_COGNEE_ENABLED`)</span>
+          <span style={{ fontSize: 13.5 }}>{labsCopy.featureEnableLabel}: Knowledge (Cognee)</span>
         </label>
         <label>
           <span className="faint" style={{ fontSize: 12 }}>Base URL (loopback only)</span>

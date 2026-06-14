@@ -7,6 +7,8 @@ export type ToastInput = {
   body?: string;
   tone?: ToastTone;
   durationMs?: number;
+  actionLabel?: string;
+  onAction?: () => void;
 };
 
 type ToastItem = ToastInput & { id: string };
@@ -45,6 +47,11 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
           <div key={t.id} className={`toast toast--${t.tone ?? 'info'}`} role="status">
             <div className="toast__title">{t.title}</div>
             {t.body ? <div className="toast__body">{t.body}</div> : null}
+            {t.actionLabel && t.onAction ? (
+              <button type="button" className="toast__action btn btn--ghost-d" onClick={t.onAction}>
+                {t.actionLabel}
+              </button>
+            ) : null}
           </div>
         ))}
       </div>

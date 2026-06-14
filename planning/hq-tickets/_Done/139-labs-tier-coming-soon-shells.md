@@ -86,3 +86,16 @@ OTTO_STAGING_REFRESH=1 bash apps/desktop/scripts/deploy-staging.sh
 ## Blocker log
 
 Leave blank unless blocked.
+
+## Execution receipt (ship/functional-labs)
+
+**Branch:** `ship/functional-labs` · **Date:** 2026-06-14
+
+| Done when | Proof |
+|-----------|-------|
+| See ticket scope | `docs/receipts/staging/124-126-123-139-ui-wedge-20260614.md` |
+
+**Verified:** `bun run verify:v0` → 5/5 pass.
+
+**Reviewer:** implementer · **Verdict:** +1 (code + verify:v0)
+

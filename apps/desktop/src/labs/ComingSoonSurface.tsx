@@ -13,7 +13,7 @@ export const ComingSoonSurface: React.FC<{
   const label = meta?.title ?? surfaceLabel(id);
   const blurb = meta?.sub ?? labsCopy.comingSoonNext;
   return (
-    <div className="comingSoonShell">
+    <div className="comingSoonShell" data-surface={id}>
       <EmptyState
         eyebrow={labsCopy.comingSoonEyebrow}
         title={labsCopy.comingSoonTitle(label)}

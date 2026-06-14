@@ -91,20 +91,20 @@ export const ProposeCorrectionModal: React.FC<{
   const submitDisabled = busy || !correction.trim() || (memoryTarget && !writebackAllowed);
 
   return (
-    <Modal open={open} title="Propose from correction" onClose={() => { if (!busy) onClose(); }}>
+    <Modal open={open} title={chatCopy.correctThisModalTitle} onClose={() => { if (!busy) onClose(); }}>
       {context ? (
         <div className="proposeModal">
           <p className="muted">{chatCopy.proposeFromCorrectionHint}</p>
           <label className="proposeModal__field">
-            <span>Future behavior</span>
+            <span>{chatCopy.futureBehavior}</span>
             <textarea rows={3} value={correction} onChange={(e) => setCorrection(e.target.value)} disabled={busy} />
           </label>
           <label className="proposeModal__field">
-            <span>Evidence / context</span>
+            <span>{chatCopy.evidenceContext}</span>
             <textarea rows={2} value={rationale} onChange={(e) => setRationale(e.target.value)} disabled={busy} />
           </label>
           <label className="proposeModal__field">
-            <span>Target</span>
+            <span>{chatCopy.targetLabel}</span>
             <select value={targetKind} onChange={(e) => setTargetKind(e.target.value as ProposalCanonImpact | 'task')} disabled={busy}>
               {TARGET_OPTIONS.map((o) => (
                 <option key={o.kind} value={o.kind}>{o.label}</option>
@@ -113,7 +113,7 @@ export const ProposeCorrectionModal: React.FC<{
           </label>
           {preview ? (
             <div className="proposeModal__preview panel">
-              <div className="eyebrow">classification preview</div>
+              <div className="eyebrow">{chatCopy.classificationPreview}</div>
               <div><strong>{preview.route}</strong> · gate {preview.required_gate} · risk {preview.risk}</div>
               <p className="muted">{preview.reason}</p>
             </div>
@@ -128,14 +128,14 @@ export const ProposeCorrectionModal: React.FC<{
             />
           ) : null}
           <div className="proposeModal__actions">
-            <button type="button" className="btn btn--ghost-d" disabled={busy} onClick={onClose}>Cancel</button>
+            <button type="button" className="btn btn--ghost-d" disabled={busy} onClick={onClose}>{chatCopy.cancel}</button>
             <button
               type="button"
               className="btn btn--solid-d"
               disabled={submitDisabled}
               onClick={() => onSubmit({ correction: correction.trim(), target, rationale: rationale.trim() || correction.trim() })}
             >
-              Create proposal
+              {chatCopy.createProposal}
             </button>
           </div>
         </div>

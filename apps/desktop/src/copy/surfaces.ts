@@ -157,19 +157,22 @@ export const listEmpty: Partial<Record<SurfaceId, ListEmpty>> = {
 export const toastCopy = {
   behaviorUpdated: 'Behavior updated',
   behaviorUpdatedMemory: 'Behavior updated · memory writeback',
+  behaviorUpdatedBody: (target: string, summary: string, receiptId: string) =>
+    `${target}: ${summary} · receipt ${receiptId}`,
   proposalAccepted: 'Proposal accepted',
   proposalRejected: 'Proposal rejected',
   proposalDeferred: 'Proposal deferred',
   decisionBlocked: 'Decision blocked',
   proposalCreated: 'Proposal created',
   openCuration: 'Open in Curation',
+  openReceipt: 'Open receipt',
   checkActive: 'Check active',
 } as const;
 
 export const chatCopy = {
-  sessionEyebrow: 'Session',
-  sessionTitle: 'Ready when you are.',
-  sessionBody: 'Message otto to start a session. Corrections become proposals you ratify.',
+  sessionEyebrow: 'Chat',
+  sessionTitle: 'What should we work on?',
+  sessionBody: 'Pick a model above, start typing, or open a recent thread from the sidebar.',
   runtimeNotReadyEyebrow: 'runtime not ready',
   runtimeNotReadyTitle: "otto can't connect yet",
   runtimeNotReadyBody: 'Check Settings for Letta connection and required setup.',
@@ -180,6 +183,12 @@ export const chatCopy = {
   proposeFromCorrection: 'Propose from correction',
   proposeFromCorrectionHint: 'Describe the behavior you want next time. Canon stays unchanged until you ratify in Curation.',
   correctThisModalTitle: 'Correct this',
+  createProposal: 'Create proposal',
+  cancel: 'Cancel',
+  futureBehavior: 'Future behavior',
+  evidenceContext: 'Evidence / context',
+  targetLabel: 'Target',
+  classificationPreview: 'classification preview',
   ticketCommandHint: 'Commands: compile ticket <slug> <objective> · orchestrate ticket <slug> · check ticket <slug> · merge ticket <slug> · status workers',
   onboardingHint: 'Send your first message — otto writes a Receipt when work completes with proof.',
   onboardingReceiptHint: 'First turn recorded — open Receipts to inspect the proof record.',
@@ -241,8 +250,9 @@ export const permissionCopy = {
 } as const;
 
 export const threadCopy = {
-  groupLabel: 'Recent',
-  empty: 'No prior chats yet.',
+  pinnedLabel: 'Pinned',
+  recentsLabel: 'Recents',
+  empty: 'No conversations yet.',
 } as const;
 
 export const curationCopy = {
@@ -408,6 +418,19 @@ export const labsCopy = {
   comingSoonTitle: (label: string) => `${label} is not enabled yet`,
   comingSoonNext: 'Turn on Labs and this feature in Settings → Labs when you are ready to try it.',
   openLabs: 'Open Labs settings',
+  loadingTitle: 'Loading workspace features…',
+  loadingBody: 'Reading Labs settings from this profile.',
+  blockedEyebrow: 'labs blocked',
+  blockedTitle: (label: string) => `${label} needs setup`,
+  openSettings: 'Open Settings',
+  startSidecar: 'Check sidecar health',
+  cogneeBlockedTitle: 'Graph recall is off',
+  cogneeBlockedBody: 'Enable Knowledge (Cognee) in Settings → Labs, then start the local sidecar. See docs/cognee.md — no mock graph rows.',
+  pgvectorBlockedTitle: 'Vector recall is off',
+  pgvectorBlockedBody: 'Enable pgvector recall in Settings → Labs and start local Postgres. Files remain canon.',
+  channelsBlockedTitle: 'Outbound sends are contract-only',
+  channelsBlockedBody: 'Channel definitions load from files. Live bot sends stay off until outbound is configured and approved.',
+  channelsBlockedNext: 'Review channel config and enable outbound in Settings → Labs when ready.',
 } as const;
 
 export const settingsCopy = {
@@ -480,6 +503,12 @@ export const receiptsCopy = {
   evidenceEyebrow: 'evidence',
   recordMeta: 'Receipt record',
   debugMeta: 'Raw contract (debug)',
+  inlineLabel: 'Receipt',
+  openInReceipts: 'Open in Receipts',
+  filterAuthorityAll: 'All authority',
+  filterAuthorityHuman: 'Human',
+  filterAuthorityAutonomy: 'Autonomy',
+  filterAuthorityRuntime: 'Runtime',
 } as const;
 
 /** Culture CI checks surface — list via checks.list IPC. */

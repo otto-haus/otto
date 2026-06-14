@@ -8,17 +8,11 @@ import { useRuntimeContext } from '../RuntimeContext';
 import ottoAvatar from '../assets/otto-avatar.png';
 
 import type { SurfaceId } from '../components/Sidebar';
-import { CommandStationStrip, CheckBlockBanner, MessageActions, Modal, PermissionCard, ReceiptInlineCard, type CommandStationCounts, type PermissionDecision, type PermissionRequestView } from '../components/ui';
+import { CheckBlockBanner, Modal, PermissionCard, ReceiptInlineCard, type PermissionDecision, type PermissionRequestView } from '../components/ui';
+import { displayThreadTitle } from '../components/ui/ThreadList';
 import { chatCopy, permissionCopy, toastCopy } from '../copy/surfaces';
 import { useChatThreads } from '../chat/useChatThreads';
-import {
-  dismissOnboarding,
-  notifyOnboardingFirstMessage,
-  onOnboardingDismiss,
-  onOnboardingFirstMessage,
-  wasFirstMessageDuringOnboarding,
-  wasOnboarded,
-} from '../onboarding-storage';
+import { notifyOnboardingFirstMessage } from '../onboarding-storage';
 import { ProposeCorrectionModal, type ProposeCorrectionContext } from '../chat/ProposeCorrectionModal';
 import { runTicketCommand } from '../chat/ticket-commands';
 import type { ProposalTarget } from '@otto-haus/core';
@@ -29,18 +23,16 @@ import type { ChatMsg } from '../runtime';
 export const Chat: React.FC<{
   onOpenSettings?: () => void;
   onNavigate?: (id: SurfaceId) => void;
-  isSurfaceEnabled?: (id: SurfaceId) => boolean;
   sidebarHidden?: boolean;
   onToggleSidebar?: () => void;
 }> = ({
   onOpenSettings,
   onNavigate,
-  isSurfaceEnabled,
   sidebarHidden = false,
   onToggleSidebar,
 }) =>
   isElectron()
-    ? <LiveChat onOpenSettings={onOpenSettings} onNavigate={onNavigate} isSurfaceEnabled={isSurfaceEnabled} sidebarHidden={sidebarHidden} onToggleSidebar={onToggleSidebar} />
+    ? <LiveChat onOpenSettings={onOpenSettings} onNavigate={onNavigate} sidebarHidden={sidebarHidden} onToggleSidebar={onToggleSidebar} />
     : <PreviewChat />;
 
 /* ---------- LiveChat (Electron, wired to the Letta runtime) ---------- */
@@ -71,6 +63,92 @@ const EFFORT_OPTIONS: Array<{ label: string; value: EffortLevel }> = [
 
 const labelForModel = (value?: string | null) => MODEL_OPTIONS.find((m) => m.value === value)?.label ?? value ?? 'Agent default';
 const labelForEffort = (value?: EffortLevel) => EFFORT_OPTIONS.find((e) => e.value === value)?.label ?? 'Max';
+
+const ModelEffortPickers: React.FC<{
+  busy: boolean;
+  selectedModel: string | null;
+  selectedEffort: EffortLevel;
+  modelOpen: boolean;
+  effortOpen: boolean;
+  onToggleModel: () => void;
+  onToggleEffort: () => void;
+  onClose: () => void;
+  onSelectModel: (value: string) => void;
+  onSelectEffort: (value: EffortLevel) => void;
+  compact?: boolean;
+}> = ({
+  busy,
+  selectedModel,
+  selectedEffort,
+  modelOpen,
+  effortOpen,
+  onToggleModel,
+  onToggleEffort,
+  onClose,
+  onSelectModel,
+  onSelectEffort,
+  compact = false,
+}) => (
+  <div className={`promptControls${compact ? ' promptControls--head' : ''}`} onClick={(e) => e.stopPropagation()}>
+    <div className="picker" data-open={modelOpen ? 'true' : 'false'}>
+      <button type="button" className="picker__button" onClick={onToggleModel} disabled={busy} aria-expanded={modelOpen}>
+        <span>{labelForModel(selectedModel)}</span>
+        <span className="picker__chev">›</span>
+      </button>
+      {modelOpen && (
+        <div className="picker__menu picker__menu--model">
+          <div className="picker__title">Select model</div>
+          {MODEL_OPTIONS.map((m) => (
+            <button
+              type="button"
+              key={m.value}
+              className={`picker__option${selectedModel === m.value ? ' is-selected' : ''}`}
+              onClick={() => {
+                onClose();
+                onSelectModel(m.value);
+              }}
+            >
+              <span>{m.label}</span>
+              <span className="mono faint">{m.value}</span>
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+    <div className="picker" data-open={effortOpen ? 'true' : 'false'}>
+      <button type="button" className="picker__button picker__button--effort" onClick={onToggleEffort} disabled={busy} aria-expanded={effortOpen}>
+        <span>{labelForEffort(selectedEffort)}</span>
+        <span className="effortDots" aria-hidden="true">
+          {EFFORT_OPTIONS.slice(1).map((e) => (
+            <i
+              key={e.value}
+              data-on={EFFORT_OPTIONS.findIndex((x) => x.value === e.value) <= EFFORT_OPTIONS.findIndex((x) => x.value === selectedEffort) ? 'true' : 'false'}
+            />
+          ))}
+        </span>
+        <span className="picker__chev">›</span>
+      </button>
+      {effortOpen && (
+        <div className="picker__menu picker__menu--effort">
+          <div className="picker__title">Reasoning</div>
+          {EFFORT_OPTIONS.map((e) => (
+            <button
+              type="button"
+              key={e.value}
+              className={`picker__option${selectedEffort === e.value ? ' is-selected' : ''}`}
+              onClick={() => {
+                onClose();
+                onSelectEffort(e.value);
+              }}
+            >
+              <span>{e.label}</span>
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  </div>
+);
 
 const imageFiles = (files: FileList | File[]): File[] =>
   Array.from(files).filter((file) => file.type.startsWith('image/'));
@@ -285,13 +363,11 @@ const MarkdownText: React.FC<{ text: string }> = ({ text }) => {
 const LiveChat: React.FC<{
   onOpenSettings?: () => void;
   onNavigate?: (id: SurfaceId) => void;
-  isSurfaceEnabled?: (id: SurfaceId) => boolean;
   sidebarHidden: boolean;
   onToggleSidebar?: () => void;
 }> = ({
   onOpenSettings,
   onNavigate,
-  isSurfaceEnabled,
   sidebarHidden,
   onToggleSidebar,
 }) => {
@@ -299,7 +375,6 @@ const LiveChat: React.FC<{
   const rt = useRuntimeContext();
   const { threads } = useChatThreads(rt.activeThreadId);
   const toast = useToast();
-  const [stationCounts, setStationCounts] = useState<CommandStationCounts>({});
   const [draft, setDraft] = useState(readDraft);
   const [attachments, setAttachments] = useState<AttachmentDraft[]>(readAttachments);
   const [attachmentError, setAttachmentError] = useState<string | null>(null);
@@ -312,50 +387,31 @@ const LiveChat: React.FC<{
   const [proposeContext, setProposeContext] = useState<ProposeCorrectionContext | null>(null);
   const [proposeBusy, setProposeBusy] = useState(false);
   const [cmdMessages, setCmdMessages] = useState<ChatMsg[]>([]);
-  const [onboardingDismissed, setOnboardingDismissed] = useState(wasOnboarded);
-  const [onboardingFirstMessage, setOnboardingFirstMessage] = useState(wasFirstMessageDuringOnboarding);
   const draining = useRef(false);
   const fileInput = useRef<HTMLInputElement | null>(null);
+  const pickerRef = useRef<HTMLDivElement | null>(null);
   const st = rt.status;
   const ready = !!st?.ready;
   const selectedModel = st?.modelHandle ?? st?.model ?? null;
   const selectedEffort = st?.effort ?? 'max';
   const activeThreadTitle = threads.find((t) => t.id === rt.activeThreadId)?.title;
+  const headTitle = displayThreadTitle(activeThreadTitle ?? 'New chat');
 
   useEffect(() => {
-    if (!api || !ready) {
-      setStationCounts({});
-      return;
-    }
-    let cancelled = false;
-    void Promise.all([
-      api.curation.proposals.list(),
-      api.receipts.list(),
-      api.tickets.list(),
-      api.curation.approvals.list(),
-    ]).then(([proposals, receipts, tickets, approvals]) => {
-      if (cancelled) return;
-      const pending = proposals.proposals.filter((p) => p.status === 'proposed' || p.status === 'needs_approval').length;
-      const openTickets = tickets.tickets.filter((t) => t.status !== 'merged' && t.status !== 'cancelled').length;
-      setStationCounts({
-        curationPending: pending || undefined,
-        recentReceipts: receipts.receipts.length ? Math.min(receipts.receipts.length, 3) : undefined,
-        openTickets: openTickets || undefined,
-        autonomyDoors: approvals.approvals.length || undefined,
-      });
-    });
-    return () => {
-      cancelled = true;
+    if (!modelOpen && !effortOpen) return;
+    const onPointerDown = (event: MouseEvent) => {
+      if (pickerRef.current?.contains(event.target as Node)) return;
+      setModelOpen(false);
+      setEffortOpen(false);
     };
-  }, [api, ready, rt.busy]);
+    document.addEventListener('mousedown', onPointerDown);
+    return () => document.removeEventListener('mousedown', onPointerDown);
+  }, [modelOpen, effortOpen]);
 
   useEffect(() => {
     if (!api) return;
     return api.onPermission((req) => setPermission(req as PermissionRequestView));
   }, [api]);
-
-  useEffect(() => onOnboardingDismiss(() => setOnboardingDismissed(true)), []);
-  useEffect(() => onOnboardingFirstMessage(() => setOnboardingFirstMessage(true)), []);
 
   useEffect(() => {
     const onStarter = (event: Event) => {
@@ -371,17 +427,6 @@ const LiveChat: React.FC<{
     window.addEventListener('otto-onboarding-starter', onStarter);
     return () => window.removeEventListener('otto-onboarding-starter', onStarter);
   }, [api, ready]);
-
-  const showRunOnboardingHint = ready
-    && !onboardingDismissed
-    && !onboardingFirstMessage
-    && !permission
-    && !proposeContext;
-
-  const showReceiptOnboardingHint = ready
-    && onboardingFirstMessage
-    && !permission
-    && !proposeContext;
 
   const respondPermission = async (decision: PermissionDecision, denyMessage?: string) => {
     if (!api || !permission) return;
@@ -565,22 +610,36 @@ const LiveChat: React.FC<{
         )}
         <span className="brand__mark brand__mark--avatar chat__avatar"><img src={ottoAvatar} alt="" /></span>
         <div className="chat__titleBlock">
-          <div className="chat__title">otto</div>
+          <div className="chat__title">{headTitle}</div>
           <div className="chat__id">
             {st ? (
               <>
                 <span className={`dot ${ready ? 'dot--ok' : 'dot--warn'}`} aria-hidden="true" />
-                {activeThreadTitle ?? (ready ? 'New chat' : st.reason ?? 'connecting…')}
+                {ready ? labelForModel(selectedModel) : st.reason ?? 'connecting…'}
               </>
             ) : 'connecting…'}
           </div>
         </div>
+        {ready ? (
+          <div className="chat__headActions" ref={pickerRef}>
+            <ModelEffortPickers
+              compact
+              busy={rt.busy}
+              selectedModel={selectedModel}
+              selectedEffort={selectedEffort}
+              modelOpen={modelOpen}
+              effortOpen={effortOpen}
+              onToggleModel={() => { setModelOpen((x) => !x); setEffortOpen(false); }}
+              onToggleEffort={() => { setEffortOpen((x) => !x); setModelOpen(false); }}
+              onClose={() => { setModelOpen(false); setEffortOpen(false); }}
+              onSelectModel={(value) => { void rt.configure({ modelHandle: value }); }}
+              onSelectEffort={(value) => { void rt.configure({ effort: value }); }}
+            />
+          </div>
+        ) : null}
       </div>
 
       <div className="chat__stream">
-        {ready && onNavigate ? (
-          <CommandStationStrip onNavigate={onNavigate} counts={stationCounts} isSurfaceEnabled={isSurfaceEnabled} />
-        ) : null}
         {!ready && st && (
           <div className="inkblock" style={{ maxWidth: 760 }}>
             <div className="inkblock__eyebrow"><span className="dot dot--warn" /> {chatCopy.runtimeNotReadyEyebrow}</div>
@@ -599,12 +658,10 @@ const LiveChat: React.FC<{
             <div className="eyebrow">{chatCopy.sessionEyebrow}</div>
             <h2>{chatCopy.sessionTitle}</h2>
             <p>{chatCopy.sessionBody}</p>
-            <p className="muted">{chatCopy.ticketCommandHint}</p>
           </div>
         )}
         {streamMessages.map((m, i) => {
           const showWho = i === 0 || streamMessages[i - 1].who !== m.who;
-          const canPropose = !!m.text.trim() && (m.who === 'otto' || m.who === 'user');
           return (
             <div key={m.id} className={`msg${m.who === 'user' ? ' msg--user' : ''}${showWho ? '' : ' msg--cont'}`}>
               {showWho && <div className="msg__who">{m.who === 'user' ? 'You' : m.who === 'error' ? 'error' : 'otto'}</div>}
@@ -631,13 +688,6 @@ const LiveChat: React.FC<{
               <div className="msg__body" style={m.who === 'error' ? { color: 'var(--stop)' } : undefined}>
                 {m.text ? <MarkdownText text={m.text} /> : null}
               </div>
-              {canPropose ? (
-                <MessageActions
-                  disabled={proposeBusy}
-                  onPropose={() => setProposeContext({ messageId: m.id, messageText: m.text, who: m.who === 'user' ? 'user' : 'otto' })}
-                  onCorrectThis={m.who === 'otto' ? () => setProposeContext({ messageId: m.id, messageText: m.text, who: 'otto' }) : undefined}
-                />
-              ) : null}
             </div>
           );
         })}
@@ -694,80 +744,7 @@ const LiveChat: React.FC<{
           </div>
         )}
         {attachmentError && <div className="attachmentError">{attachmentError}</div>}
-        {showRunOnboardingHint && (
-          <div className="onboardInlineHint" role="status">
-            <span>{chatCopy.onboardingHint}</span>
-            <button type="button" className="onboardInlineHint__skip" onClick={() => dismissOnboarding()}>
-              {chatCopy.onboardingSkip}
-            </button>
-          </div>
-        )}
-        {showReceiptOnboardingHint && (
-          <div className="onboardInlineHint" role="status">
-            <span>{chatCopy.onboardingReceiptHint}</span>
-            <div className="onboardInlineHint__actions">
-              <button type="button" className="onboardInlineHint__link" onClick={() => onNavigate?.('receipts')}>
-                {chatCopy.onboardingViewReceipts}
-              </button>
-              <button type="button" className="onboardInlineHint__skip" onClick={() => dismissOnboarding()}>
-                {chatCopy.onboardingSkip}
-              </button>
-            </div>
-          </div>
-        )}
         <div className="promptCompose">
-          <div className="promptControls">
-            <div className="picker" data-open={modelOpen ? 'true' : 'false'}>
-              <button type="button" className="picker__button" onClick={() => { setModelOpen((x) => !x); setEffortOpen(false); }} disabled={rt.busy}>
-                <span>{labelForModel(selectedModel)}</span>
-                <span className="picker__chev">›</span>
-              </button>
-              {modelOpen && (
-                <div className="picker__menu picker__menu--model">
-                  <div className="picker__title">Select model</div>
-                  {MODEL_OPTIONS.map((m) => (
-                    <button type="button"
-                      key={m.value}
-                      className={`picker__option${selectedModel === m.value ? ' is-selected' : ''}`}
-                      onClick={() => {
-                        setModelOpen(false);
-                        void rt.configure({ modelHandle: m.value });
-                      }}
-                    >
-                      <span>{m.label}</span>
-                      <span className="mono faint">{m.value}</span>
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-            <div className="picker" data-open={effortOpen ? 'true' : 'false'}>
-              <button type="button" className="picker__button picker__button--effort" onClick={() => { setEffortOpen((x) => !x); setModelOpen(false); }} disabled={rt.busy}>
-                <span>{labelForEffort(selectedEffort)}</span>
-                <span className="effortDots" aria-hidden="true">
-                  {EFFORT_OPTIONS.slice(1).map((e) => <i key={e.value} data-on={EFFORT_OPTIONS.findIndex((x) => x.value === e.value) <= EFFORT_OPTIONS.findIndex((x) => x.value === selectedEffort) ? 'true' : 'false'} />)}
-                </span>
-                <span className="picker__chev">›</span>
-              </button>
-              {effortOpen && (
-                <div className="picker__menu picker__menu--effort">
-                  <div className="picker__title">Reasoning</div>
-                  {EFFORT_OPTIONS.map((e) => (
-                    <button type="button"
-                      key={e.value}
-                      className={`picker__option${selectedEffort === e.value ? ' is-selected' : ''}`}
-                      onClick={() => {
-                        setEffortOpen(false);
-                        void rt.configure({ effort: e.value });
-                      }}
-                    >
-                      <span>{e.label}</span>
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
           <div className={`promptbox${ready ? '' : ' promptbox--disabled'}`}>
             <input
               ref={fileInput}

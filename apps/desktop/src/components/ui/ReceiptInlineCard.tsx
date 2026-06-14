@@ -1,4 +1,5 @@
 import React from 'react';
+import { receiptsCopy } from '../../copy/surfaces';
 
 export type ReceiptInlineCardProps = {
   id: string;
@@ -19,7 +20,7 @@ export const ReceiptInlineCard: React.FC<ReceiptInlineCardProps> = ({
 }) => (
   <div className={`receiptInline panel receiptInline--${status}`}>
     <div className="between">
-      <div className="eyebrow">Receipt</div>
+      <div className="eyebrow">{receiptsCopy.inlineLabel}</div>
       <span className={`pill${status === 'success' ? ' pill--ok' : status === 'blocked' ? ' pill--warn' : ' pill--stop'}`}>
         {status}
       </span>
@@ -32,7 +33,7 @@ export const ReceiptInlineCard: React.FC<ReceiptInlineCardProps> = ({
     </dl>
     {onOpenReceipts ? (
       <button type="button" className="btn btn--ghost-d" style={{ marginTop: 10 }} onClick={onOpenReceipts}>
-        Open in Receipts
+        {receiptsCopy.openInReceipts}
       </button>
     ) : null}
   </div>

@@ -26,6 +26,7 @@ import { ComingSoonSurface } from './labs/ComingSoonSurface';
 import { labsSurfaceGate } from './surface-tiers';
 import { EmptyState } from './components/ui';
 import { META, VALID_SURFACES } from './surface-meta';
+import { labsCopy } from './copy/surfaces';
 
 function renderSurface(id: SurfaceId) {
   switch (id) {
@@ -144,7 +145,7 @@ function AppShell() {
     if (gate === 'loading') {
       return (
         <div className="comingSoonShell" aria-busy="true">
-          <EmptyState eyebrow="labs" title="Loading workspace features…" body="Reading Labs settings from this profile." />
+          <EmptyState eyebrow={labsCopy.eyebrow} title={labsCopy.loadingTitle} body={labsCopy.loadingBody} />
         </div>
       );
     }
@@ -181,7 +182,6 @@ function AppShell() {
               <Chat
                 onOpenSettings={() => setActive('settings')}
                 onNavigate={setActive}
-                isSurfaceEnabled={labs.isEnabled}
                 sidebarHidden={sidebarHidden}
                 onToggleSidebar={() => setSidebarHidden(false)}
               />

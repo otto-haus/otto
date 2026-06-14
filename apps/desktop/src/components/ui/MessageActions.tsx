@@ -9,7 +9,18 @@ export const MessageActions: React.FC<{
   if (!onPropose && !onCorrectThis) return null;
   return (
     <div className="msgActions">
-      {onPropose ? (
+      {onCorrectThis ? (
+        <button
+          type="button"
+          className="msgActions__btn msgActions__btn--primary"
+          disabled={disabled}
+          title={chatCopy.correctThisHint}
+          onClick={onCorrectThis}
+        >
+          {chatCopy.correctThis}
+        </button>
+      ) : null}
+      {onPropose && !onCorrectThis ? (
         <button
           type="button"
           className="msgActions__btn"
@@ -18,17 +29,6 @@ export const MessageActions: React.FC<{
           onClick={onPropose}
         >
           {chatCopy.proposeFromCorrection}
-        </button>
-      ) : null}
-      {onCorrectThis ? (
-        <button
-          type="button"
-          className="msgActions__btn"
-          disabled={disabled}
-          title={chatCopy.correctThisHint}
-          onClick={onCorrectThis}
-        >
-          {chatCopy.correctThis}
         </button>
       ) : null}
     </div>
