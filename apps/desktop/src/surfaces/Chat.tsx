@@ -17,6 +17,7 @@ import { runTicketCommand } from '../chat/ticket-commands';
 import {
   clearInFlight,
   createQueueItem,
+  hasDuplicateQueueText,
   nextQueueItemForThread,
   persistInFlight,
   previewQueueText,
@@ -251,6 +252,7 @@ const queueItemAlreadyDelivered = (item: QueueItem, messages: ChatMsg[]): boolea
 };
 
 const appendQueueItem = (items: QueueItem[], text: string, threadId: string | null | undefined): QueueItem[] => {
+  if (hasDuplicateQueueText(items, threadId, text)) return items;
   return [...items, createQueueItem(text, 'queued', threadId ?? null)];
 };
 

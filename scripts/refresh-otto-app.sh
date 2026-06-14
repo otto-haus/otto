@@ -102,15 +102,19 @@ register_bundle() {
 }
 
 quit_live_app() {
-  if pgrep -f "$TARGET_APP/Contents/MacOS/otto" >/dev/null 2>&1; then
-    pkill -f "$TARGET_APP/Contents/MacOS/otto" || true
-    for _ in {1..50}; do
-      pgrep -f "$TARGET_APP/Contents/MacOS/otto" >/dev/null 2>&1 || return 0
-      sleep 0.2
-    done
-    echo "otto.app is still running after quit request: $TARGET_APP" >&2
-    return 1
-  fi
+  for app in "$TARGET_APP" "/Applications/Otto.app"; do
+    if pgrep -f "$app/Contents/MacOS/otto" >/dev/null 2>&1; then
+      pkill -f "$app/Contents/MacOS/otto" || true
+      for _ in {1..50}; do
+        pgrep -f "$app/Contents/MacOS/otto" >/dev/null 2>&1 || break
+        sleep 0.2
+      done
+      if pgrep -f "$app/Contents/MacOS/otto" >/dev/null 2>&1; then
+        echo "otto app is still running after quit request: $app" >&2
+        return 1
+      fi
+    fi
+  done
 }
 
 kill_orphan_live_servers() {

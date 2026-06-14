@@ -437,19 +437,6 @@ export function useRuntime() {
       cliPath: '',
       cliResolved: false,
     });
-    const patchInflightMessages = (updater: (msgs: ChatMsg[]) => ChatMsg[]) => {
-      const threadId = inflightThreadRef.current ?? activeThreadRef.current;
-      if (!threadId) return;
-      const prev = loadThreadMessages(threadId, threadMessagesCache.current);
-      const next = updater(prev);
-      threadMessagesCache.current.set(threadId, next);
-      flushMessages(threadId, next);
-      if (activeThreadRef.current === threadId) {
-        messagesRef.current = next;
-        setMessages(next);
-      }
-    };
-
     api.runtime
       .init()
       .then(async (nextStatus) => {
@@ -470,6 +457,23 @@ export function useRuntime() {
         }
       })
       .catch((e) => setStatus({ ready: false, reason: String(e), cliPath: '', cliResolved: false }));
+  }, [api]);
+
+  useEffect(() => {
+    if (!api) return;
+    const patchInflightMessages = (updater: (msgs: ChatMsg[]) => ChatMsg[]) => {
+      const threadId = inflightThreadRef.current ?? activeThreadRef.current;
+      if (!threadId) return;
+      const prev = loadThreadMessages(threadId, threadMessagesCache.current);
+      const next = updater(prev);
+      threadMessagesCache.current.set(threadId, next);
+      flushMessages(threadId, next);
+      if (activeThreadRef.current === threadId) {
+        messagesRef.current = next;
+        setMessages(next);
+      }
+    };
+
     const off = api.onEvent((e) => {
       if ('status' in e) {
         setStatus(e.status);

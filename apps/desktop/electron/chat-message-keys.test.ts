@@ -46,4 +46,32 @@ describe('chat message storage keys (046)', () => {
     expect(readStoredMessages('thread_b').map((m) => m.text)).toEqual([]);
     expect(readStoredMessages('thread_a').map((m) => m.text)).toEqual(['only a']);
   });
+
+  test('73k thread history restores instead of startup suppression warning', () => {
+    installStorage();
+    const threadId = 'thread_large';
+    const messages = Array.from({ length: 80 }, (_, index) => ({
+      id: `m-${index}`,
+      who: 'user' as const,
+      text: 'x'.repeat(900),
+    }));
+    const raw = JSON.stringify(messages);
+    expect(raw.length).toBeGreaterThan(50_000);
+    expect(raw.length).toBeLessThan(1_000_000);
+    localStorage.setItem(messagesKey(threadId), raw);
+
+    const restored = readStoredMessages(threadId);
+    expect(restored.length).toBeGreaterThan(0);
+    expect(restored.some((m) => m.text.includes('hidden because it is too large'))).toBe(false);
+  });
+
+  test('pathological multi-megabyte history stays suppressed', () => {
+    installStorage();
+    const threadId = 'thread_huge';
+    localStorage.setItem(messagesKey(threadId), `[${' '.repeat(1_000_001)}]`);
+
+    const restored = readStoredMessages(threadId);
+    expect(restored).toHaveLength(1);
+    expect(restored[0]?.text).toContain('hidden because it is too large');
+  });
 });

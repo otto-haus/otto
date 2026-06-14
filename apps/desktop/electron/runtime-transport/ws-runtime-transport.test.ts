@@ -219,6 +219,7 @@ describe('WsRuntimeTransport', () => {
     (transport as unknown as { controlByUpstream: Map<string, string> }).controlByUpstream.set('upstream-1', 'otto-req-1');
     (transport as unknown as { pendingControls: Map<string, unknown> }).pendingControls.set('otto-req-1', {
       requestId: 'otto-req-1',
+      upstreamId: 'upstream-1',
       resolve: () => {},
     });
 
@@ -226,8 +227,39 @@ describe('WsRuntimeTransport', () => {
     expect(outbound).toBeTruthy();
     const frame = JSON.parse(outbound!);
     expect(frame.type).toBe('control_response');
+    expect(frame.request_id).toBe('upstream-1');
     expect(frame.approved).toBe(true);
     expect(sent.length).toBe(0);
+  });
+
+  test('resolvePermission uses stored upstream id after pending cleanup', async () => {
+    const { win } = mockWindow();
+    const transport = new WsRuntimeTransport(win, mockConfig());
+    let outbound: string | null = null;
+    (transport as unknown as { runtimeSocket: WebSocket | null }).runtimeSocket = {
+      readyState: WebSocket.OPEN,
+      send(payload: string) {
+        outbound = payload;
+      },
+    } as unknown as WebSocket;
+
+    const upstreamId = 'upstream-race-1';
+    const requestId = 'otto-req-race';
+    (transport as unknown as { controlByUpstream: Map<string, string> }).controlByUpstream.set(upstreamId, requestId);
+    (transport as unknown as { pendingControls: Map<string, unknown> }).pendingControls.set(requestId, {
+      requestId,
+      upstreamId,
+      toolName: 'run_shell',
+      resolve: () => {
+        (transport as unknown as { controlByUpstream: Map<string, string> }).controlByUpstream.delete(upstreamId);
+      },
+    });
+
+    transport.resolvePermission(requestId, { behavior: 'deny', message: 'nope' });
+    expect(outbound).toBeTruthy();
+    const frame = JSON.parse(outbound!);
+    expect(frame.request_id).toBe(upstreamId);
+    expect(frame.approved).toBe(false);
   });
 
   test('smokeMode() reads OTTO_SMOKE at call time', () => {
