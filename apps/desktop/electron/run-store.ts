@@ -1,5 +1,5 @@
 import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
-import { randomUUID } from 'node:crypto';
+import { createHash, randomUUID } from 'node:crypto';
 import { join } from 'node:path';
 import type { RunListResult, RunStatus, RunSummary } from '@otto-haus/core';
 import { OTTO_DIR } from './config-store';
@@ -95,7 +95,11 @@ function optionalString(value: unknown): string | undefined {
 }
 
 function safeFilenameId(value: string): string {
-  return value.replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 96) || 'run';
+  const safe = value.replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 96);
+  if (safe && safe === value) return safe;
+  const prefix = safe || 'run';
+  const digest = createHash('sha256').update(value).digest('hex').slice(0, 10);
+  return `${prefix}-${digest}`;
 }
 
 function timestampMs(value: string): number {
