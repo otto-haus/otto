@@ -1,0 +1,1209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>otto — Brand &amp; Design Style Guide</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='24' fill='%2314161A'/%3E%3Cpath d='M30 34 L50 68 L70 34' fill='none' stroke='%23fff' stroke-width='9' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E" />
+<style>
+:root{
+  /* ink */
+  --ink: oklch(0.18 0.005 270);
+  --ink-soft: oklch(0.30 0.005 270);
+  --mut: oklch(0.46 0.005 270);
+  --faint: oklch(0.62 0.006 270);
+  /* surfaces & hairline */
+  --line: oklch(0.92 0.003 270);
+  --line-2: oklch(0.95 0.003 270);
+  --bg: oklch(1 0 0);
+  --bg-2: oklch(0.985 0.002 270);
+  --bg-3: oklch(0.965 0.003 270);
+  /* dark band */
+  --dark: oklch(0.175 0.008 270);
+  --dark-2: oklch(0.22 0.008 270);
+  --dark-line: oklch(0.30 0.008 270);
+  --dark-tx: oklch(0.97 0.002 270);
+  --dark-mut: oklch(0.70 0.006 270);
+  /* status */
+  --ok: oklch(0.48 0.10 155); --ok-bg: oklch(0.965 0.04 155); --ok-ln: oklch(0.88 0.06 155);
+  --warn: oklch(0.52 0.11 60); --warn-bg: oklch(0.97 0.035 80); --warn-ln: oklch(0.88 0.06 75);
+  --stop: oklch(0.55 0.18 27); --stop-bg: oklch(0.97 0.04 27); --stop-ln: oklch(0.88 0.07 27);
+  /* metrics */
+  --maxw: 1140px;
+  --radius: 10px; --radius-sm: 8px; --radius-lg: 24px;
+  --f-sans: "Inter", ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --f-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, monospace;
+}
+*{ box-sizing: border-box; }
+html{ -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; text-rendering: optimizeLegibility; scroll-behavior: smooth; font-feature-settings: "cv11","ss01","ss03"; }
+body{
+  margin:0; font-family: var(--f-sans); color: var(--ink); background: var(--bg);
+  font-size:17px; line-height:1.6; font-feature-settings:"cv11","ss01","ss03";
+}
+::selection{ background: var(--ink); color:#fff; }
+a{ color: inherit; text-decoration: none; }
+h1,h2,h3,h4,p{ margin:0; }
+
+/* ---- shared atoms ---- */
+.eyebrow{ font-family: var(--f-mono); font-size:12px; font-weight:500; letter-spacing:0.09em; text-transform:uppercase; color: var(--mut); }
+.eyebrow.faint{ color: var(--faint); }
+.eyebrow.on-dark{ color: var(--dark-mut); }
+.wrap{ max-width: var(--maxw); margin:0 auto; padding:0 40px; }
+.mono{ font-family: var(--f-mono); }
+
+/* ---- top bar (sticky guide nav, pill) ---- */
+.topbar{ position: sticky; top:0; z-index:60; background: rgba(255,255,255,0.82); backdrop-filter: saturate(180%) blur(14px); border-bottom:1px solid var(--line); }
+.topbar-inner{ max-width: var(--maxw); margin:0 auto; padding:14px 40px; display:flex; align-items:center; justify-content:space-between; gap:24px; }
+.brand{ display:flex; align-items:center; gap:11px; }
+.brand .logo{ height:20px; width:auto; display:block; color: var(--ink); }
+.wordmark{ font-size:22px; line-height:1; font-weight:700; letter-spacing:-0.045em; color: var(--ink); text-transform:lowercase; }
+.wordmark.xl{ font-size:64px; letter-spacing:-0.055em; }
+.owlmark{ width:36px; height:36px; border:1px solid var(--line); border-radius:12px; display:inline-grid; place-items:center; color:var(--ink); background:var(--bg-2); }
+.owlmark svg{ width:22px; height:22px; }
+
+.brand .tag{ font-family: var(--f-mono); font-size:10px; letter-spacing:0.1em; text-transform:uppercase; color: var(--faint); border:1px solid var(--line); border-radius:999px; padding:3px 10px; }
+.toc{ display:flex; gap:4px; }
+.toc a{ font-size:13px; color: var(--mut); padding:7px 13px; border-radius:999px; transition: background .15s, color .15s; }
+.toc a:hover{ background: var(--bg-3); color: var(--ink); }
+
+/* ---- masthead ---- */
+.masthead{ padding:100px 0 76px; border-bottom:1px solid var(--line); }
+.masthead .lockup{ display:flex; align-items:center; gap:18px; }
+.masthead .logo-xl{ height:60px; color: var(--ink); }
+.masthead h1{ font-size:60px; letter-spacing:-0.032em; line-height:1.02; margin-top:46px; max-width:18ch; }
+.masthead .deck{ font-size:21px; line-height:1.55; color: var(--mut); margin-top:24px; max-width:54ch; }
+.boundary{ display:inline-flex; align-items:center; gap:14px; margin-top:40px; background: var(--ink); color:#fff; border-radius:999px; padding:12px 22px 12px 16px; }
+.boundary .b-dot{ width:8px; height:8px; border-radius:50%; background:#fff; flex-shrink:0; }
+.boundary .b-tx{ font-size:15px; font-weight:500; letter-spacing:-0.005em; }
+.masthead .meta{ display:flex; gap:34px; margin-top:48px; flex-wrap:wrap; }
+.masthead .meta div{ }
+.masthead .meta .mk{ font-family: var(--f-mono); font-size:11px; letter-spacing:0.08em; text-transform:uppercase; color: var(--faint); }
+.masthead .meta .mv{ font-size:15px; margin-top:6px; color: var(--ink-soft); }
+
+/* ---- section frame ---- */
+section.guide{ padding:96px 0; border-bottom:1px solid var(--line); }
+.sec-head{ display:flex; align-items:baseline; gap:18px; margin-bottom:48px; }
+.sec-num{ font-family: var(--f-mono); font-size:13px; color: var(--faint); padding-top:3px; }
+.sec-title h2{ font-size:34px; letter-spacing:-0.024em; }
+.sec-title p{ font-size:17px; color: var(--mut); margin-top:12px; max-width:62ch; }
+
+/* ---- voice ---- */
+.principles{ display:grid; grid-template-columns: repeat(2,1fr); gap:1px; background: var(--line); border:1px solid var(--line); border-radius: var(--radius); overflow:hidden; }
+.principle{ background:#fff; padding:30px 32px; display:flex; gap:18px; }
+.principle .pn{ font-family: var(--f-mono); font-size:13px; color: var(--ink); font-weight:600; padding-top:3px; flex-shrink:0; }
+.principle h4{ font-size:18px; letter-spacing:-0.012em; }
+.principle p{ font-size:14.5px; color: var(--mut); margin-top:8px; line-height:1.5; }
+
+.dodont{ display:grid; grid-template-columns:1fr 1fr; gap:20px; margin-top:34px; }
+.dd-col{ border:1px solid var(--line); border-radius: var(--radius); overflow:hidden; background:#fff; }
+.dd-head{ display:flex; align-items:center; gap:9px; padding:16px 24px; border-bottom:1px solid var(--line); font-family: var(--f-mono); font-size:12px; letter-spacing:0.08em; text-transform:uppercase; }
+.dd-head.do{ color: var(--ok); }
+.dd-head.dont{ color: var(--stop); }
+.dd-head .dotx{ width:8px; height:8px; border-radius:50%; }
+.dd-head.do .dotx{ background: var(--ok); }
+.dd-head.dont .dotx{ background: var(--stop); }
+.dd-row{ padding:20px 24px; border-bottom:1px solid var(--line-2); }
+.dd-row:last-child{ border-bottom:none; }
+.dd-row .quote{ font-size:17px; letter-spacing:-0.01em; line-height:1.4; }
+.dd-col.dont .dd-row .quote{ color: var(--mut); }
+.dd-row .why{ font-size:13px; color: var(--faint); margin-top:8px; line-height:1.45; }
+.dd-row .why b{ font-weight:500; color: var(--mut); }
+
+.cta-rules{ display:flex; gap:16px; margin-top:34px; flex-wrap:wrap; align-items:stretch; }
+.cta-rule{ flex:1; min-width:240px; border:1px solid var(--line); border-radius: var(--radius); padding:24px 26px; background:#fff; }
+.cta-rule .crk{ font-family: var(--f-mono); font-size:11px; letter-spacing:0.08em; text-transform:uppercase; color: var(--faint); }
+.cta-rule .crv{ font-size:18px; font-weight:600; letter-spacing:-0.015em; margin-top:12px; }
+.cta-rule.banned .crv{ color: var(--faint); text-decoration:line-through; text-decoration-color: var(--stop); }
+
+/* lexicon */
+.lexicon{ border:1px solid var(--line); border-radius: var(--radius); overflow:hidden; margin-top:22px; background:#fff; }
+.lex-row{ display:grid; grid-template-columns: 0.95fr 1.5fr 0.85fr; gap:26px; padding:20px 26px; border-bottom:1px solid var(--line-2); align-items:baseline; }
+.lex-row:last-child{ border-bottom:none; }
+.lex-row.head{ font-family: var(--f-mono); font-size:10.5px; letter-spacing:0.08em; text-transform:uppercase; color: var(--faint); padding:13px 26px; background: var(--bg-2); }
+.lex-term{ font-weight:600; font-size:15.5px; letter-spacing:-0.01em; }
+.lex-term .lex-tag{ display:block; font-family: var(--f-mono); font-size:10.5px; font-weight:400; letter-spacing:0.06em; color: var(--faint); margin-top:5px; }
+.lex-def{ font-size:14px; color: var(--mut); line-height:1.5; }
+.lex-never{ font-family: var(--f-mono); font-size:12.5px; color: var(--stop); line-height:1.4; }
+.lex-never .x{ margin-right:6px; }
+.lex-never.none{ color: var(--faint); }
+.block-title{ font-family: var(--f-mono); font-size:12px; letter-spacing:0.08em; text-transform:uppercase; color: var(--faint); margin:40px 0 0; }
+
+/* numerals & data formatting */
+.numerals{ display:grid; grid-template-columns: repeat(3,1fr); gap:1px; background: var(--line); border:1px solid var(--line); border-radius: var(--radius); overflow:hidden; margin-top:38px; }
+.num-cell{ background:#fff; padding:24px 26px; }
+.num-cell .nl{ font-family: var(--f-mono); font-size:10.5px; letter-spacing:0.08em; text-transform:uppercase; color: var(--faint); }
+.num-cell .nv{ font-family: var(--f-mono); font-size:21px; font-weight:500; margin-top:13px; font-variant-numeric: tabular-nums; letter-spacing:-0.01em; color: var(--ink); }
+.num-cell .nn{ font-size:12.5px; color: var(--mut); margin-top:10px; line-height:1.45; }
+
+/* ---- color ---- */
+.swatch-grid{ display:grid; grid-template-columns: repeat(4,1fr); gap:16px; }
+.swatch{ border:1px solid var(--line); border-radius: var(--radius); overflow:hidden; background:#fff; }
+.swatch .chip{ height:96px; border-bottom:1px solid var(--line); }
+.swatch .info{ padding:14px 15px 16px; }
+.swatch .tok{ font-family: var(--f-mono); font-size:12.5px; font-weight:500; color: var(--ink); }
+.swatch .val{ font-family: var(--f-mono); font-size:11px; color: var(--mut); margin-top:6px; line-height:1.55; }
+.swatch .role{ font-size:12px; color: var(--faint); margin-top:8px; line-height:1.4; }
+.color-block-title{ font-family: var(--f-mono); font-size:12px; letter-spacing:0.08em; text-transform:uppercase; color: var(--faint); margin:38px 0 18px; }
+.color-block-title:first-child{ margin-top:0; }
+
+.status-demo{ margin-top:38px; border:1px solid var(--line); border-radius: var(--radius); padding:30px 32px; background: var(--bg-2); }
+.status-demo .sd-note{ font-size:14px; color: var(--mut); max-width:64ch; margin-bottom:22px; line-height:1.5; }
+.pill-row{ display:flex; gap:12px; flex-wrap:wrap; }
+.pill{ font-family: var(--f-mono); font-size:11.5px; font-weight:500; padding:6px 12px; border-radius:999px; white-space:nowrap; display:inline-flex; align-items:center; gap:7px; }
+.pill .dotx{ width:6px; height:6px; border-radius:50%; }
+.pill.cur{ color: var(--ok); background: var(--ok-bg); border:1px solid var(--ok-ln); }
+.pill.cur .dotx{ background: var(--ok); }
+.pill.exc{ color: var(--warn); background: var(--warn-bg); border:1px solid var(--warn-ln); }
+.pill.exc .dotx{ background: var(--warn); }
+.pill.stop{ color: var(--stop); background: var(--stop-bg); border:1px solid var(--stop-ln); }
+.pill.stop .dotx{ background: var(--stop); }
+.pill.blk{ color: var(--mut); background: var(--bg-3); border:1px solid var(--line); }
+.pill.blk .dotx{ background: var(--mut); }
+
+/* ---- typography ---- */
+.type-row{ display:grid; grid-template-columns: 150px 1fr; gap:34px; padding:26px 0; border-bottom:1px solid var(--line-2); align-items:baseline; }
+.type-row:last-child{ border-bottom:none; }
+.type-meta{ font-family: var(--f-mono); font-size:11.5px; color: var(--mut); line-height:1.7; padding-top:6px; }
+.type-meta .tm-name{ color: var(--ink); font-weight:500; display:block; }
+.type-spec{ color: var(--ink); }
+.ts-display{ font-size:60px; letter-spacing:-0.03em; line-height:1.02; font-weight:600; }
+.ts-h1{ font-size:46px; letter-spacing:-0.028em; line-height:1.05; font-weight:600; }
+.ts-h2{ font-size:34px; letter-spacing:-0.024em; font-weight:600; }
+.ts-lead{ font-size:21px; line-height:1.5; color: var(--mut); font-weight:400; }
+.ts-body{ font-size:17px; line-height:1.6; }
+.ts-cap{ font-size:13.5px; color: var(--mut); }
+.ts-mono{ font-family: var(--f-mono); font-size:15px; }
+
+.font-cards{ display:grid; grid-template-columns:1fr 1fr; gap:20px; margin-bottom:44px; }
+.font-card{ border:1px solid var(--line); border-radius: var(--radius); padding:28px 30px; background:#fff; }
+.font-card .fc-big{ font-size:48px; letter-spacing:-0.02em; line-height:1; }
+.font-card.mono .fc-big{ font-family: var(--f-mono); font-weight:500; letter-spacing:0; }
+.font-card .fc-name{ font-family: var(--f-mono); font-size:12px; letter-spacing:0.06em; text-transform:uppercase; color: var(--ink); margin-top:22px; font-weight:500; }
+.font-card .fc-use{ font-size:14px; color: var(--mut); margin-top:8px; line-height:1.5; }
+.font-card .fc-set{ font-family: var(--f-mono); font-size:11.5px; color: var(--faint); margin-top:14px; padding-top:14px; border-top:1px solid var(--line-2); }
+.glyphline{ font-family: var(--f-mono); font-size:18px; color: var(--ink-soft); letter-spacing:0.04em; margin-top:8px; }
+
+/* ---- layout / elevation ---- */
+.spec-grid{ display:grid; grid-template-columns: repeat(3,1fr); gap:20px; }
+.spec-card{ border:1px solid var(--line); border-radius: var(--radius); padding:28px 28px 30px; background:#fff; }
+.spec-card .sc-lab{ font-family: var(--f-mono); font-size:11px; letter-spacing:0.08em; text-transform:uppercase; color: var(--faint); }
+.spec-card h4{ font-size:18px; letter-spacing:-0.012em; margin-top:10px; }
+.spec-card p{ font-size:14px; color: var(--mut); margin-top:10px; line-height:1.5; }
+.radius-demo{ display:flex; gap:14px; margin-top:22px; align-items:flex-end; }
+.radius-demo div{ background: var(--bg-3); border:1px solid var(--line); }
+.rd-sm{ width:54px; height:54px; border-radius:8px; }
+.rd-md{ width:64px; height:64px; border-radius:10px; }
+.rd-lg{ width:74px; height:74px; border-radius:24px; }
+.rd-pill{ width:90px; height:40px; border-radius:999px; }
+.radius-cap{ font-family: var(--f-mono); font-size:10px; color: var(--faint); text-align:center; margin-top:7px; display:block; }
+.hairline-demo{ margin-top:22px; }
+.hairline-demo .hl{ height:1px; background: var(--line); margin:14px 0; }
+.elev-demo{ display:flex; gap:20px; margin-top:24px; }
+.elev-card{ flex:1; height:96px; border-radius: var(--radius); display:grid; place-items:center; font-family: var(--f-mono); font-size:11px; color: var(--faint); }
+.elev-flat{ background:#fff; border:1px solid var(--line); }
+.elev-float{ background:#fff; border:1px solid var(--line); box-shadow: 0 30px 70px -34px rgba(20,34,62,0.30), 0 3px 10px -4px rgba(0,0,0,0.05); }
+.space-scale{ display:flex; gap:0; margin-top:24px; align-items:flex-end; }
+.space-scale .ss{ background: var(--ink); margin-right:14px; }
+.space-cap{ font-family: var(--f-mono); font-size:10px; color: var(--faint); text-align:center; margin-top:8px; display:block; }
+
+/* ---- components ---- */
+.comp-block{ border:1px solid var(--line); border-radius: var(--radius); background:#fff; margin-bottom:20px; overflow:hidden; }
+.comp-head{ display:flex; align-items:center; justify-content:space-between; padding:14px 22px; border-bottom:1px solid var(--line); }
+.comp-head .ch-name{ font-size:14px; font-weight:600; }
+.comp-head .ch-tag{ font-family: var(--f-mono); font-size:10.5px; letter-spacing:0.08em; text-transform:uppercase; color: var(--faint); }
+.comp-body{ padding:34px; background: var(--bg-2); display:flex; flex-wrap:wrap; gap:18px; align-items:center; }
+
+/* pill nav specimen */
+.pillnav{ display:inline-flex; align-items:center; gap:6px; background: rgba(255,255,255,0.9); border:1px solid var(--line); border-radius:999px; padding:7px 8px 7px 18px; box-shadow: 0 16px 40px -26px rgba(20,34,62,0.4); }
+.pillnav .pn-brand{ display:flex; align-items:center; gap:9px; padding-right:8px; }
+.pillnav .pn-brand .logo{ height:16px; color: var(--ink); }
+.pillnav .pn-links{ display:flex; gap:2px; }
+.pillnav .pn-links a{ font-size:13.5px; color: var(--mut); padding:7px 13px; border-radius:999px; }
+.pillnav .pn-links a.active{ color: var(--ink); background: var(--bg-3); }
+.pillnav .pn-cta{ background: var(--ink); color:#fff; font-size:13.5px; font-weight:500; padding:8px 16px; border-radius:999px; }
+
+/* buttons */
+.btn{ display:inline-flex; align-items:center; gap:9px; font-family: var(--f-sans); font-size:16px; font-weight:500; padding:13px 22px; border-radius:9px; border:1px solid transparent; cursor:pointer; transition: background .15s, border-color .15s, transform .15s; white-space:nowrap; }
+.btn-primary{ background: var(--ink); color:#fff; }
+.btn-primary:hover{ background: oklch(0.30 0.006 270); }
+.btn-ghost{ background:transparent; color: var(--ink); border-color: var(--line); }
+.btn-ghost:hover{ border-color: var(--ink); }
+.btn-text{ color: var(--ink); padding:13px 4px; }
+.btn-text .arr{ transition: transform .15s; }
+.btn-text:hover .arr{ transform: translateX(3px); }
+
+/* soft floating card specimen */
+.float-card{ width:300px; background:#fff; border:1px solid var(--line); border-radius: var(--radius); box-shadow: 0 30px 70px -34px rgba(20,34,62,0.30), 0 3px 10px -4px rgba(0,0,0,0.05); overflow:hidden; }
+.fc-top{ display:flex; align-items:center; justify-content:space-between; padding:15px 18px; border-bottom:1px solid var(--line); }
+.fc-kick{ font-family: var(--f-mono); font-size:11px; letter-spacing:0.1em; text-transform:uppercase; color: var(--mut); }
+.fc-rows{ padding:6px 18px 16px; }
+.fc-line{ display:flex; align-items:center; gap:10px; padding:11px 0; border-bottom:1px solid var(--line-2); font-size:13.5px; }
+.fc-line:last-child{ border-bottom:none; }
+.fc-line .dot{ width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+.fc-line .dot.ok{ background: var(--ok); }
+.fc-line .dot.warn{ background: var(--warn); }
+.fc-line .src{ margin-left:auto; font-family: var(--f-mono); font-size:11px; color: var(--faint); }
+
+/* eyebrow specimen */
+.eyebrow-demo{ display:flex; gap:14px; flex-wrap:wrap; }
+.eyebrow-demo span{ font-family: var(--f-mono); font-size:12px; font-weight:500; letter-spacing:0.09em; text-transform:uppercase; color: var(--mut); border:1px dashed var(--line); border-radius:6px; padding:7px 13px; }
+
+/* register table specimen */
+.reg{ width:100%; border:1px solid var(--line); border-radius: var(--radius); overflow:hidden; background:#fff; }
+.reg-top{ display:flex; align-items:center; justify-content:space-between; padding:15px 22px; border-bottom:1px solid var(--line); gap:14px; flex-wrap:wrap; }
+.reg-title{ font-size:14.5px; font-weight:600; display:flex; align-items:center; gap:10px; }
+.reg-title .rid{ font-family: var(--f-mono); font-size:11px; color: var(--mut); font-weight:400; letter-spacing:0.06em; }
+.reg-tabs{ display:flex; gap:3px; }
+.reg-tabs span{ font-size:12.5px; color: var(--mut); padding:5px 11px; border-radius:7px; }
+.reg-tabs span.on{ color: var(--ink); background: var(--bg-3); }
+.reg-grid{ display:grid; grid-template-columns: 1.5fr 1fr 1fr auto; align-items:center; gap:18px; padding:14px 22px; border-bottom:1px solid var(--line-2); font-size:13.5px; }
+.reg-grid:last-child{ border-bottom:none; }
+.reg-grid.head{ font-family: var(--f-mono); font-size:10.5px; letter-spacing:0.08em; text-transform:uppercase; color: var(--faint); padding:11px 22px; }
+.reg-grid .r-prop{ font-weight:600; }
+.reg-grid .r-file{ font-family: var(--f-mono); font-size:12px; color: var(--mut); }
+.reg-grid .r-party{ color: var(--mut); }
+
+/* source row with visible limitation */
+.srcblock{ border:1px solid var(--line); border-radius: var(--radius); overflow:hidden; background:#fff; width:100%; }
+.srcrow{ display:flex; align-items:flex-start; gap:14px; padding:18px 22px; border-bottom:1px solid var(--line-2); }
+.srcrow:last-child{ border-bottom:none; }
+.srcrow .s-dot{ width:8px; height:8px; border-radius:50%; margin-top:6px; flex-shrink:0; }
+.srcrow .s-dot.ok{ background: var(--ok); }
+.srcrow .s-dot.warn{ background: var(--warn); }
+.srcrow .s-main{ flex:1; min-width:0; }
+.srcrow .s-name{ font-size:15px; font-weight:600; letter-spacing:-0.01em; }
+.srcrow .s-name .s-via{ font-family: var(--f-mono); font-size:11px; font-weight:400; color: var(--faint); margin-left:9px; letter-spacing:0.04em; }
+.srcrow .s-lim{ font-size:13px; color: var(--mut); margin-top:6px; line-height:1.45; }
+.srcrow .s-lim b{ color: var(--warn); font-weight:600; }
+.srcrow .s-meta{ font-family: var(--f-mono); font-size:11px; color: var(--faint); text-align:right; flex-shrink:0; padding-top:3px; }
+
+/* status pill anatomy */
+.anatomy{ display:grid; grid-template-columns: repeat(3,1fr); gap:1px; background: var(--line); border:1px solid var(--line); border-radius: var(--radius); overflow:hidden; margin-top:22px; }
+.ana-cell{ background:#fff; padding:24px 26px; }
+.ana-cell .ana-pill{ margin-bottom:18px; }
+.ana-cell .ana-tok{ display:flex; align-items:center; gap:10px; font-family: var(--f-mono); font-size:11.5px; color: var(--mut); padding:7px 0; border-bottom:1px solid var(--line-2); }
+.ana-cell .ana-tok:last-child{ border-bottom:none; }
+.ana-cell .ana-tok .sw{ width:16px; height:16px; border-radius:4px; border:1px solid var(--line); flex-shrink:0; }
+.ana-cell .ana-tok .role{ margin-left:auto; color: var(--faint); }
+
+/* ---- inverted ink motif ---- */
+.motif{ }
+.flow-steps{ display:grid; grid-template-columns: repeat(4,1fr); gap:14px; align-items:stretch; }
+.flow-step{ border:1px solid var(--line); border-radius:12px; padding:24px 22px; background:#fff; }
+.flow-step .fs-lab{ font-family: var(--f-mono); font-size:11px; letter-spacing:0.1em; text-transform:uppercase; color: var(--faint); }
+.flow-step .fs-main{ font-size:17px; font-weight:600; letter-spacing:-0.015em; margin-top:10px; line-height:1.25; }
+.flow-step .fs-desc{ font-size:13px; color: var(--mut); margin-top:9px; line-height:1.45; }
+.flow-step.climax{ background: var(--ink); border-color: var(--ink); box-shadow: 0 30px 70px -34px rgba(20,34,62,0.5); }
+.flow-step.climax .fs-lab{ color: var(--dark-mut); }
+.flow-step.climax .fs-main{ color:#fff; }
+.flow-step.climax .fs-desc{ color: var(--dark-mut); }
+.motif-note{ display:flex; gap:24px; margin-top:30px; flex-wrap:wrap; }
+.motif-note .mn{ flex:1; min-width:240px; font-size:14.5px; color: var(--mut); line-height:1.55; }
+.motif-note .mn b{ color: var(--ink); font-weight:600; }
+
+/* ---- imagery ---- */
+.img-grid{ display:grid; grid-template-columns: 1.4fr 1fr; gap:20px; align-items:stretch; }
+.img-ph{ border-radius: var(--radius-lg); overflow:hidden; border:1px solid var(--line); position:relative; min-height:300px;
+  background-color: oklch(0.93 0.012 70);
+  background-image: repeating-linear-gradient(135deg, oklch(0.90 0.014 65) 0 2px, transparent 2px 16px); }
+.img-ph .ph-tag{ position:absolute; left:22px; bottom:22px; display:inline-flex; align-items:center; gap:8px; font-family: var(--f-mono); font-size:11px; letter-spacing:0.06em; text-transform:uppercase; color: var(--ink-soft); background: rgba(255,255,255,0.82); backdrop-filter: blur(4px); border:1px solid var(--line); border-radius:999px; padding:7px 14px; }
+.img-ph .ph-tag .dotx{ width:6px; height:6px; border-radius:50%; background: var(--warn); }
+.img-rules{ border:1px solid var(--line); border-radius: var(--radius); background:#fff; padding:28px 30px; }
+.img-rules .ir-h{ font-family: var(--f-mono); font-size:11px; letter-spacing:0.08em; text-transform:uppercase; color: var(--faint); margin-bottom:16px; }
+.img-rules ul{ list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:13px; }
+.img-rules li{ font-size:14.5px; color: var(--ink-soft); display:flex; gap:11px; line-height:1.45; }
+.img-rules li .g{ color: var(--faint); flex-shrink:0; }
+.prompt-card{ margin-top:20px; border:1px solid var(--line); border-radius: var(--radius); overflow:hidden; }
+.prompt-card .pc-h{ display:flex; align-items:center; justify-content:space-between; padding:13px 20px; background: var(--bg-3); border-bottom:1px solid var(--line); font-family: var(--f-mono); font-size:11px; letter-spacing:0.08em; text-transform:uppercase; color: var(--mut); }
+.prompt-card .pc-body{ padding:22px 24px; font-family: var(--f-mono); font-size:13.5px; line-height:1.7; color: var(--ink-soft); background:#fff; }
+.prompt-card .pc-body em{ font-style:normal; color: var(--faint); }
+
+/* ---- logo & don'ts ---- */
+.logo-board{ display:grid; grid-template-columns: 1fr 1fr; gap:20px; }
+.logo-cell{ border:1px solid var(--line); border-radius: var(--radius); padding:46px 40px; display:flex; align-items:center; justify-content:center; min-height:150px; }
+.logo-cell.on-paper{ background:#fff; }
+.logo-cell.on-paper .logo{ height:34px; color: var(--ink); }
+.logo-cell.on-dark{ background: var(--dark); }
+.logo-cell.on-dark .logo{ height:34px; color:#fff; }
+.logo-cell.fav{ background: var(--bg-2); gap:22px; }
+.logo-cell.clear{ background: var(--bg-2); }
+.logo-cell .fav-tile{ width:64px; height:64px; border-radius:16px; background: var(--dark); display:grid; place-items:center; }
+.logo-cell .fav-tile svg{ width:34px; height:34px; }
+.logo-cap{ font-family: var(--f-mono); font-size:10.5px; letter-spacing:0.06em; text-transform:uppercase; color: var(--faint); margin-top:10px; text-align:center; }
+.clearzone{ position:relative; padding:26px; border:1px dashed var(--line); border-radius:10px; }
+.clearzone .logo{ height:30px; color: var(--ink); display:block; }
+
+/* logo sizing strip */
+.sizerow{ display:flex; align-items:flex-end; gap:40px; flex-wrap:wrap; border:1px solid var(--line); border-radius: var(--radius); padding:36px 34px; background:#fff; margin-top:22px; }
+.sizeitem{ display:flex; flex-direction:column; align-items:flex-start; gap:16px; }
+.sizeitem .logo{ color: var(--ink); display:block; }
+.sizeitem .sz-cap{ font-family: var(--f-mono); font-size:10.5px; letter-spacing:0.06em; text-transform:uppercase; color: var(--faint); line-height:1.5; }
+.sizeitem .sz-cap b{ display:block; color: var(--ink); font-size:12.5px; font-weight:500; margin-bottom:2px; }
+.size-note{ display:grid; grid-template-columns: repeat(3,1fr); gap:1px; background: var(--line); border:1px solid var(--line); border-radius: var(--radius); overflow:hidden; margin-top:16px; }
+.size-note > div{ background:#fff; padding:20px 24px; }
+.size-note .snl{ font-family: var(--f-mono); font-size:10.5px; letter-spacing:0.08em; text-transform:uppercase; color: var(--faint); }
+.size-note .snv{ font-size:15px; margin-top:9px; color: var(--ink-soft); line-height:1.45; }
+.size-note .snv b{ font-weight:600; color: var(--ink); }
+
+.donts{ display:grid; grid-template-columns: repeat(2,1fr); gap:1px; background: var(--line); border:1px solid var(--line); border-radius: var(--radius); overflow:hidden; margin-top:34px; }
+.dont-item{ background:#fff; padding:22px 26px; display:flex; gap:14px; align-items:flex-start; }
+.dont-item .dx{ font-family: var(--f-mono); color: var(--stop); font-size:15px; flex-shrink:0; line-height:1.4; }
+.dont-item p{ font-size:14.5px; color: var(--ink-soft); line-height:1.45; }
+
+/* ---- footer ---- */
+.guide-foot{ padding:70px 0 90px; }
+.guide-foot .gf-line{ font-size:15px; color: var(--mut); }
+.guide-foot .gf-big{ font-size:24px; font-weight:600; letter-spacing:-0.02em; margin-top:14px; max-width:40ch; }
+
+@media (max-width: 920px){
+  .toc{ display:none; }
+  .swatch-grid{ grid-template-columns: repeat(2,1fr); }
+  .spec-grid{ grid-template-columns:1fr; }
+  .flow-steps{ grid-template-columns:1fr 1fr; }
+  .dodont, .font-cards, .img-grid, .logo-board, .donts{ grid-template-columns:1fr; }
+  .principles{ grid-template-columns:1fr; }
+  .type-row{ grid-template-columns:1fr; gap:14px; }
+  .masthead h1{ font-size:42px; }
+  .ts-display{ font-size:42px; } .ts-h1{ font-size:36px; }
+}
+@media (max-width: 560px){
+  .wrap, .topbar-inner, .masthead .lockup{ padding-left:22px; padding-right:22px; }
+  .swatch-grid{ grid-template-columns:1fr 1fr; }
+  .flow-steps{ grid-template-columns:1fr; }
+}
+
+/* anchor offset under sticky bar + active TOC */
+section.guide, header.masthead{ scroll-margin-top: 66px; }
+.toc a.active{ background: var(--bg-3); color: var(--ink); }
+
+/* approved pairings */
+.pairs{ display:grid; grid-template-columns: repeat(3,1fr); gap:16px; margin-top:22px; }
+.pair{ border:1px solid var(--line); border-radius: var(--radius); overflow:hidden; }
+.pair .pswatch{ padding:26px 24px; }
+.pair .pt-big{ font-size:19px; font-weight:600; letter-spacing:-0.015em; }
+.pair .pt-cap{ font-size:13px; margin-top:6px; }
+.pair .pfoot{ padding:13px 18px; border-top:1px solid var(--line); background:#fff; display:flex; align-items:center; justify-content:space-between; }
+.pair .pfoot.dk{ background: var(--dark); border-top-color: var(--dark-line); }
+.pair .ptok{ font-family: var(--f-mono); font-size:11px; color: var(--mut); }
+.pair .pfoot.dk .ptok{ color: var(--dark-mut); }
+.pair .pratio{ font-family: var(--f-mono); font-size:10.5px; color: var(--faint); }
+
+/* print / PDF */
+@media print{
+  @page{ margin: 16mm 14mm; }
+  html, body{ background:#fff; }
+  *{ -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .topbar{ display:none !important; }
+  header.masthead{ padding:8mm 0 12mm; break-after: page; }
+  section.guide{ break-before: page; border-bottom:none; padding:10mm 0; }
+  section#voice{ break-before: avoid; }
+  .guide-foot{ break-before: page; padding:10mm 0; }
+  .float-card, .elev-float, .reg, .mock, .flow-step.climax{ box-shadow:none !important; }
+  .sec-head, .principles, .lexicon, .dodont, .numerals, .swatch-grid, .anatomy,
+  .spec-grid, .comp-block, .flow-steps, .img-grid, .logo-board, .donts, .pairs{ break-inside: avoid; }
+  a[href]{ color: inherit; text-decoration: none; }
+}
+</style>
+</head>
+<body>
+
+<!-- LOGO SYMBOL (currentColor) -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <g id="otto-logo">
+    <g fill="currentColor" transform="translate(0 238) scale(.1 -.1)">
+      <path d="M1770 1450l0-70-34 0c-30 0-35-4-50-43-9-23-16-46-16-50 0-4 22-7 49-7l50 0 3-157c3-177 11-202 68-241 29-20 44-22 110-20l75 3 3 51 3 51-48-4c-39-4-53-1-75 17l-28 21 0 139 0 139 78 3 77 3 0 45 0 45-77 3-78 3 0 69 0 70-55 0-55 0 0-70z"></path>
+      <path d="M1271 1364c-147-74-186-292-75-423 68-81 218-107 322-55 51 25 92 65 92 89 0 7-18 20-40 30-40 18-41 18-63-3-68-63-192-53-237 20-36 59-37 58 165 58 212 0 212 0 199 88-11 74-33 119-80 160-77 68-189 82-283 36zm203-99c13-9 31-30 39-48 15-29 15-33-1-39-9-4-72-7-139-6-111 0-123 2-123 18 0 25 38 70 74 86 38 17 115 12 150-11z"></path>
+      <path d="M2240 1369c-89-40-147-119-157-214-17-165 96-295 255-295 85 0 133 15 183 59 116 99 120 311 8 405-80 68-198 86-289 45zm189-107c46-34 65-69 68-129 5-70-23-126-77-154-125-67-260 53-221 197 12 45 54 91 97 104 39 12 104 3 133-18z"></path>
+      <path d="M590 1372c0-4 44-118 98-253l99-244 64-3 64-3 98 243c53 134 97 249 97 256 0 8-17 12-54 12l-54 0-47-122c-96-247-103-263-109-248-4 8-37 94-74 190l-68 175-57 3c-31 2-57-1-57-6z"></path>
+    </g>
+  </g>
+</svg>
+
+<!-- TOP BAR -->
+<div class="topbar">
+  <div class="topbar-inner">
+    <div class="brand">
+      <span class="wordmark">otto</span>
+      <span class="tag">Style Guide</span>
+    </div>
+    <nav class="toc">
+      <a href="#voice">Voice</a>
+      <a href="#color">Color</a>
+      <a href="#type">Type</a>
+      <a href="#layout">Layout</a>
+      <a href="#components">Components</a>
+      <a href="#motif">Motif</a>
+      <a href="#imagery">Imagery</a>
+      <a href="#logo">Logo</a>
+      <a href="#motion">Motion</a>
+      <a href="#preview-labs">Preview &amp; Labs</a>
+    </nav>
+  </div>
+</div>
+
+<!-- MASTHEAD -->
+<header class="masthead">
+  <div class="wrap">
+    <div class="lockup">
+      <span class="wordmark xl">otto</span>
+    </div>
+    <h1>Brand &amp; design style guide</h1>
+    <p class="deck">The behavior layer for persistent agents. A warm-monochrome, hairline-first system for compounding corrections into future behavior — calm, exact, and engineered against fake done.</p>
+    <div class="boundary">
+      <span class="b-dot"></span>
+      <span class="b-tx">The human ratifies. otto records the proof.</span>
+    </div>
+    <div class="meta">
+      <div><div class="mk">Typefaces</div><div class="mv">Inter · IBM Plex Mono</div></div>
+      <div><div class="mk">Color model</div><div class="mv">oklch · warm neutral hue</div></div>
+      <div><div class="mk">Register</div><div class="mv">Restrained, editorial</div></div>
+      <div><div class="mk">Version</div><div class="mv">June 2026</div></div>
+    </div>
+  </div>
+</header>
+
+<!-- 01 VOICE -->
+<section class="guide" id="voice">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="sec-num">01</div>
+      <div class="sec-title">
+        <h2>Brand voice</h2>
+        <p>Agent users trust proof, not theater. We state what happened, name what is missing, and keep the load-bearing terms intact.</p>
+      </div>
+    </div>
+
+    <div class="principles">
+      <div class="principle"><div class="pn">01</div><div><h4>Calm &amp; exact</h4><p>State what is true and name the limit in the same breath. Never imply otto finished, learned, remembered, approved, or changed behavior unless a receipt/proposal/review proves it.</p></div></div>
+      <div class="principle"><div class="pn">02</div><div><h4>Plain language for smart operators</h4><p>Keep the terms that carry meaning — Receipt, Curation, Standard, Practice, Approval — and translate the rest. Say "changed the next run," not "updated behavioral substrate."</p></div></div>
+      <div class="principle"><div class="pn">03</div><div><h4>Authority discipline, everywhere</h4><p>"The human ratifies. otto records the proof." This line anchors the product. The file shows what the workspace relied on before it acted — nothing more is promised.</p></div></div>
+      <div class="principle"><div class="pn">04</div><div><h4>One idea per section</h4><p>Sentences over fragments where it aids clarity. One strong idea, carried cleanly. Cut filler, qualifiers, and adjectives that don't earn their place.</p></div></div>
+    </div>
+
+    <div class="dodont">
+      <div class="dd-col do">
+        <div class="dd-head do"><span class="dotx"></span>Write it this way</div>
+        <div class="dd-row"><div class="quote">"The receipt should show what changed and why."</div><div class="why">Records the proof; makes no unsupported claim about completion.</div></div>
+        <div class="dd-row"><div class="quote">"Consequential behavior changes require Curation or approval."</div><div class="why">Precise, gate-led, names the artifact.</div></div>
+        <div class="dd-row"><div class="quote">"A suggestion is never canon."</div><div class="why">Sets the boundary in the operator's own language.</div></div>
+      </div>
+      <div class="dd-col dont">
+        <div class="dd-head dont"><span class="dotx"></span>Never write</div>
+        <div class="dd-row"><div class="quote">"otto fixed it and learned automatically."</div><div class="why"><b>Forbidden:</b> fixed, learned — implies behavior changed without proof.</div></div>
+        <div class="dd-row"><div class="quote">"Autonomous, guaranteed, fully handled."</div><div class="why"><b>Forbidden:</b> autonomous, guaranteed, fully handled, magic memory.</div></div>
+        <div class="dd-row"><div class="quote">"Set it and forget it."</div><div class="why"><b>Forbidden:</b> autopilot fantasy. Wrong register entirely.</div></div>
+      </div>
+    </div>
+
+    <div class="cta-rules">
+      <div class="cta-rule"><div class="crk">Primary CTA</div><div class="crv">Run one behavior loop</div></div>
+      <div class="cta-rule"><div class="crk">Secondary CTA</div><div class="crv">Inspect a sample Receipt</div></div>
+      <div class="cta-rule banned"><div class="crk">Never use</div><div class="crv">Set it and forget it</div></div>
+    </div>
+
+    <div class="block-title">The lexicon — load-bearing terms</div>
+    <div class="lexicon">
+      <div class="lex-row head"><span>Canonical term</span><span>What it is</span><span>Never call it</span></div>
+      <div class="lex-row">
+        <div class="lex-term">Receipt<span class="lex-tag">precise: Settlement Funds Receipt</span></div>
+        <div class="lex-def">The proof artifact. The record of what happened, what evidence exists, and what remains blocked.</div>
+        <div class="lex-never"><span class="x">✕</span>"Proof"</div>
+      </div>
+      <div class="lex-row">
+        <div class="lex-term">Curation Inbox</div>
+        <div class="lex-def">The decision surface — proposed changes, evidence, consequence, and ratification state.</div>
+        <div class="lex-never"><span class="x">✕</span>"dashboard"</div>
+      </div>
+      <div class="lex-row">
+        <div class="lex-term">Consequential proposal<span class="lex-tag">internal: approval_required</span></div>
+        <div class="lex-def">An action that requires a Receipt or an owner-approved exception before behavior compounds.</div>
+        <div class="lex-never"><span class="x">✕</span>"task"</div>
+      </div>
+      <div class="lex-row">
+        <div class="lex-term">otto Standard<span class="lex-tag">canon</span></div>
+        <div class="lex-def">The explicit behavior canon otto uses to decide what to reward, refuse, or escalate.</div>
+        <div class="lex-never"><span class="x">✕</span>"preference"</div>
+      </div>
+      <div class="lex-row">
+        <div class="lex-term">The human ratifies. otto records the proof.</div>
+        <div class="lex-def">The authority line. The fixed division of responsibility, stated everywhere.</div>
+        <div class="lex-never none">— never paraphrase</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 02 COLOR -->
+<section class="guide" id="color">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="sec-num">02</div>
+      <div class="sec-title">
+        <h2>Color</h2>
+        <p>Warm monochrome on paper. The primary accent is ink, not blue. Status hue appears only on small dots and pills — never as decoration.</p>
+      </div>
+    </div>
+
+    <div class="color-block-title">Ink — text, primary buttons, emphasis</div>
+    <div class="swatch-grid">
+      <div class="swatch"><div class="chip" style="background: var(--ink)"></div><div class="info"><div class="tok">--ink</div><div class="val">oklch(0.18 0.005 270)<br>#111114</div><div class="role">Primary text &amp; buttons</div></div></div>
+      <div class="swatch"><div class="chip" style="background: var(--ink-soft)"></div><div class="info"><div class="tok">--ink-soft</div><div class="val">oklch(0.30 0.005 270)<br>#2D2E30</div><div class="role">Strong secondary text</div></div></div>
+      <div class="swatch"><div class="chip" style="background: var(--mut)"></div><div class="info"><div class="tok">--mut</div><div class="val">oklch(0.46 0.005 270)<br>#57585B</div><div class="role">Muted / supporting copy</div></div></div>
+      <div class="swatch"><div class="chip" style="background: var(--faint)"></div><div class="info"><div class="tok">--faint</div><div class="val">oklch(0.62 0.006 270)<br>#85868A</div><div class="role">Captions, eyebrows</div></div></div>
+    </div>
+
+    <div class="color-block-title">Surfaces &amp; hairlines</div>
+    <div class="swatch-grid">
+      <div class="swatch"><div class="chip" style="background: var(--bg)"></div><div class="info"><div class="tok">--bg</div><div class="val">oklch(1 0 0)<br>#FFFFFF</div><div class="role">Page / card base</div></div></div>
+      <div class="swatch"><div class="chip" style="background: var(--bg-2)"></div><div class="info"><div class="tok">--bg-2</div><div class="val">oklch(0.985 0.002 270)<br>#F9FAFB</div><div class="role">Surface tint</div></div></div>
+      <div class="swatch"><div class="chip" style="background: var(--bg-3)"></div><div class="info"><div class="tok">--bg-3</div><div class="val">oklch(0.965 0.003 270)<br>#F2F3F5</div><div class="role">Surface-2 / frame</div></div></div>
+      <div class="swatch"><div class="chip" style="background: var(--line)"></div><div class="info"><div class="tok">--line</div><div class="val">oklch(0.92 0.003 270)<br>#E4E4E7</div><div class="role">Hairline border (1px)</div></div></div>
+    </div>
+    <div class="motif-note" style="margin-top:18px">
+      <div class="mn"><b>Desktop shell vs marketing.</b> Swatches above are the clinical web token set (<span class="mono">#FFFFFF</span> base). The packaged desktop app uses warm paper (<span class="mono">#f8f7f2</span> / <span class="mono">#efeee8</span>) for long-session comfort — same ink, hairlines, and status rules.</div>
+    </div>
+
+    <div class="color-block-title">Dark band — inverted ink</div>
+    <div class="swatch-grid">
+      <div class="swatch"><div class="chip" style="background: var(--dark)"></div><div class="info"><div class="tok">--dark</div><div class="val">oklch(0.175 0.008 270)<br>#0F1014</div><div class="role">Inverted block / footer</div></div></div>
+      <div class="swatch"><div class="chip" style="background: var(--dark-line)"></div><div class="info"><div class="tok">--dark-line</div><div class="val">oklch(0.30 0.008 270)<br>#2C2E32</div><div class="role">Hairline on dark</div></div></div>
+      <div class="swatch"><div class="chip" style="background: var(--dark-mut)"></div><div class="info"><div class="tok">--dark-mut</div><div class="val">oklch(0.70 0.006 270)<br>#9D9EA2</div><div class="role">Muted text on dark</div></div></div>
+      <div class="swatch"><div class="chip" style="background: var(--dark-tx)"></div><div class="info"><div class="tok">--dark-tx</div><div class="val">oklch(0.97 0.002 270)<br>#F4F4F5</div><div class="role">Primary text on dark</div></div></div>
+    </div>
+
+    <div class="color-block-title">Status — dots &amp; pills only</div>
+    <div class="swatch-grid">
+      <div class="swatch"><div class="chip" style="background: var(--ok)"></div><div class="info"><div class="tok">--ok</div><div class="val">oklch(0.48 0.10 155)<br>#236E44</div><div class="role">Current / recorded</div></div></div>
+      <div class="swatch"><div class="chip" style="background: var(--warn)"></div><div class="info"><div class="tok">--warn</div><div class="val">oklch(0.52 0.11 60)<br>#965719</div><div class="role">Stale / exception</div></div></div>
+      <div class="swatch"><div class="chip" style="background: var(--stop)"></div><div class="info"><div class="tok">--stop</div><div class="val">oklch(0.55 0.18 27)<br>#C53732</div><div class="role">Blocked / incident</div></div></div>
+      <div class="swatch"><div class="chip" style="background: var(--bg-3); border-bottom-color: var(--line)"></div><div class="info"><div class="tok">--bg-3 / --mut</div><div class="val">neutral pill<br>blocked state</div><div class="role">Neutral status (no hue)</div></div></div>
+    </div>
+
+    <div class="status-demo">
+      <div class="sd-note">Status color is rationed. It lives on a 6–8px dot or a thin pill against a tinted background — never on large surfaces, headings, or as a brand accent. The hue carries one job: signal a file's state at a glance.</div>
+      <div class="pill-row">
+        <span class="pill cur"><span class="dotx"></span>Current</span>
+        <span class="pill exc"><span class="dotx"></span>Stale</span>
+        <span class="pill exc"><span class="dotx"></span>Exception</span>
+        <span class="pill stop"><span class="dotx"></span>Blocked</span>
+        <span class="pill blk"><span class="dotx"></span>Not configured</span>
+      </div>
+    </div>
+
+    <div class="color-block-title">Pill anatomy — base · tint · line</div>
+    <div class="anatomy">
+      <div class="ana-cell">
+        <div class="ana-pill"><span class="pill cur"><span class="dotx"></span>Current</span></div>
+        <div class="ana-tok"><span class="sw" style="background: var(--ok)"></span>--ok<span class="role">text · dot</span></div>
+        <div class="ana-tok"><span class="sw" style="background: var(--ok-bg)"></span>--ok-bg<span class="role">fill</span></div>
+        <div class="ana-tok"><span class="sw" style="background: var(--ok-ln)"></span>--ok-ln<span class="role">border</span></div>
+      </div>
+      <div class="ana-cell">
+        <div class="ana-pill"><span class="pill exc"><span class="dotx"></span>Exception</span></div>
+        <div class="ana-tok"><span class="sw" style="background: var(--warn)"></span>--warn<span class="role">text · dot</span></div>
+        <div class="ana-tok"><span class="sw" style="background: var(--warn-bg)"></span>--warn-bg<span class="role">fill</span></div>
+        <div class="ana-tok"><span class="sw" style="background: var(--warn-ln)"></span>--warn-ln<span class="role">border</span></div>
+      </div>
+      <div class="ana-cell">
+        <div class="ana-pill"><span class="pill stop"><span class="dotx"></span>Blocked</span></div>
+        <div class="ana-tok"><span class="sw" style="background: var(--stop)"></span>--stop<span class="role">text · dot</span></div>
+        <div class="ana-tok"><span class="sw" style="background: var(--stop-bg)"></span>--stop-bg<span class="role">fill</span></div>
+        <div class="ana-tok"><span class="sw" style="background: var(--stop-ln)"></span>--stop-ln<span class="role">border</span></div>
+      </div>
+    </div>
+
+    <div class="block-title">Approved text · surface pairings</div>
+    <div class="pairs">
+      <div class="pair">
+        <div class="pswatch" style="background:#fff">
+          <div class="pt-big" style="color: var(--ink)">Ink on paper</div>
+          <div class="pt-cap" style="color: var(--mut)">Body &amp; muted copy on white</div>
+        </div>
+        <div class="pfoot"><span class="ptok">--ink · --mut on --bg</span><span class="pratio">AAA</span></div>
+      </div>
+      <div class="pair">
+        <div class="pswatch" style="background: var(--bg-3)">
+          <div class="pt-big" style="color: var(--ink)">Ink on surface</div>
+          <div class="pt-cap" style="color: var(--mut)">Cards &amp; tinted panels</div>
+        </div>
+        <div class="pfoot"><span class="ptok">--ink on --bg-3</span><span class="pratio">AAA</span></div>
+      </div>
+      <div class="pair">
+        <div class="pswatch" style="background: var(--dark)">
+          <div class="pt-big" style="color:#fff">Paper on ink</div>
+          <div class="pt-cap" style="color: var(--dark-mut)">The inverted block</div>
+        </div>
+        <div class="pfoot dk"><span class="ptok">--dark-tx · --dark-mut on --dark</span><span class="pratio">AAA</span></div>
+      </div>
+    </div>
+    <p style="font-size:13px; color: var(--faint); margin-top:14px; max-width:60ch; line-height:1.5;">Faint (<span class="mono" style="font-size:12px;">--faint</span>) is reserved for captions and eyebrows at small sizes — never for running body. Status hues never carry text on large surfaces.</p>
+  </div>
+</section>
+
+<!-- 03 TYPOGRAPHY -->
+<section class="guide" id="type">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="sec-num">03</div>
+      <div class="sec-title">
+        <h2>Typography</h2>
+        <p>Two families, no serif, no third face. Inter does all UI, headings, and body. IBM Plex Mono carries numbers, IDs, eyebrow labels, file refs, and data.</p>
+      </div>
+    </div>
+
+    <div class="font-cards">
+      <div class="font-card">
+        <div class="fc-big">Inter</div>
+        <div class="fc-name">Inter — UI · Headings · Body</div>
+        <div class="fc-use">Every interface and editorial surface. Tight tracking on display sizes; <code>text-wrap: pretty</code> on headlines.</div>
+        <div class="fc-set">font-feature-settings: "cv11", "ss01", "ss03"</div>
+      </div>
+      <div class="font-card mono">
+        <div class="fc-big">0123 ID</div>
+        <div class="fc-name">IBM Plex Mono — Numbers · Labels · IDs</div>
+        <div class="fc-use">Eyebrows, file references, tabular figures, data. Never used for body copy.</div>
+        <div class="glyphline">SP-0214 · PO-0318 · $1,284,500.00</div>
+      </div>
+    </div>
+
+    <div class="type-row">
+      <div class="type-meta"><span class="tm-name">Display</span>Inter 600<br>60px / -0.03em</div>
+      <div class="type-spec"><div class="ts-display">Before behavior compounds</div></div>
+    </div>
+    <div class="type-row">
+      <div class="type-meta"><span class="tm-name">Heading 1</span>Inter 600<br>46px / -0.028em</div>
+      <div class="type-spec"><div class="ts-h1">The human ratifies</div></div>
+    </div>
+    <div class="type-row">
+      <div class="type-meta"><span class="tm-name">Heading 2</span>Inter 600<br>34px / -0.024em</div>
+      <div class="type-spec"><div class="ts-h2">otto records the proof</div></div>
+    </div>
+    <div class="type-row">
+      <div class="type-meta"><span class="tm-name">Lead</span>Inter 400<br>21px / 1.5</div>
+      <div class="type-spec"><div class="ts-lead">A Receipt shows what the workspace relied on before it acted — sources, changes, and the review signature.</div></div>
+    </div>
+    <div class="type-row">
+      <div class="type-meta"><span class="tm-name">Body</span>Inter 400<br>17px / 1.6</div>
+      <div class="type-spec"><div class="ts-body">Covered instructions require a Receipt or an owner-approved exception. The record names its own limits in plain language, so the workspace can see exactly what was — and was not — relied upon at the moment of action.</div></div>
+    </div>
+    <div class="type-row">
+      <div class="type-meta"><span class="tm-name">Caption</span>Inter 400<br>13.5px / 1.5</div>
+      <div class="type-spec"><div class="ts-cap">Captions and secondary notes sit quiet, in muted ink, beneath the content they support.</div></div>
+    </div>
+    <div class="type-row">
+      <div class="type-meta"><span class="tm-name">Eyebrow</span>Plex Mono 500<br>12px / 0.09em · uppercase</div>
+      <div class="type-spec"><div class="eyebrow">Settlement Funds · Receipt</div></div>
+    </div>
+    <div class="type-row">
+      <div class="type-meta"><span class="tm-name">Mono data</span>Plex Mono 400/500<br>15px · tabular</div>
+      <div class="type-spec"><div class="ts-mono">SP-0214 · M. Lane · Recorded 2026-06-08 · $842,150.00</div></div>
+    </div>
+
+    <div class="block-title" style="margin-top:46px">Numerals &amp; data formatting</div>
+    <p style="font-size:14.5px; color: var(--mut); margin-top:10px; max-width:64ch; line-height:1.5;">Figures, IDs, timestamps, handles, and file paths are set in IBM Plex Mono with <span class="mono" style="font-size:13px;">tabular-nums</span> so columns align. Dates are ISO; receipt IDs and file IDs are never abbreviated inside a record.</p>
+    <div class="numerals">
+      <div class="num-cell"><div class="nl">Currency</div><div class="nv">$1,284,500.00</div><div class="nn">Cents always shown · tabular figures</div></div>
+      <div class="num-cell"><div class="nl">Date</div><div class="nv">2026-06-08</div><div class="nn">ISO 8601 · never "6/8/26"</div></div>
+      <div class="num-cell"><div class="nl">Time</div><div class="nv">14:20 PT</div><div class="nn">24-hour · timezone on records</div></div>
+      <div class="num-cell"><div class="nl">File ID</div><div class="nv">SP-0214</div><div class="nn">Prefix + four digits · SP / BF / PO</div></div>
+      <div class="num-cell"><div class="nl">Account mask</div><div class="nv">acct ··6014</div><div class="nn">Last four only · never full digits</div></div>
+      <div class="num-cell"><div class="nl">Canon ref</div><div class="nv">STD-04</div><div class="nn">Standard / Practice / Receipt</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- 04 LAYOUT & ELEVATION -->
+<section class="guide" id="layout">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="sec-num">04</div>
+      <div class="sec-title">
+        <h2>Layout &amp; elevation</h2>
+        <p>Structure is drawn with hairlines, not shadows. Soft elevation is reserved for floating "stage" cards. Spacing is generous and set with flex/grid <code>gap</code> — never inline flow.</p>
+      </div>
+    </div>
+
+    <div class="spec-grid">
+      <div class="spec-card">
+        <div class="sc-lab">Radii</div>
+        <h4>10 → 24 → 999</h4>
+        <p>Cards at ~10px, frames and stages up to ~24px, pills and buttons fully round at 999px.</p>
+        <div class="radius-demo">
+          <div><div class="rd-sm"></div><span class="radius-cap">8</span></div>
+          <div><div class="rd-md"></div><span class="radius-cap">10</span></div>
+          <div><div class="rd-lg"></div><span class="radius-cap">24</span></div>
+          <div><div class="rd-pill"></div><span class="radius-cap">999</span></div>
+        </div>
+      </div>
+      <div class="spec-card">
+        <div class="sc-lab">Hairlines</div>
+        <h4>1px defines structure</h4>
+        <p>A single <code>--line</code> border separates surfaces. Dividers and grid gutters are 1px hairlines, not gaps of color.</p>
+        <div class="hairline-demo">
+          <div class="hl"></div><div class="hl"></div><div class="hl"></div><div class="hl"></div>
+        </div>
+      </div>
+      <div class="spec-card">
+        <div class="sc-lab">Elevation</div>
+        <h4>Flat, then floating</h4>
+        <p>Most surfaces are flat hairline cards. Only stage cards lift, with a soft, cool, far-cast shadow.</p>
+        <div class="elev-demo">
+          <div class="elev-card elev-flat">flat</div>
+          <div class="elev-card elev-float">stage</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="spec-card" style="margin-top:20px">
+      <div class="sc-lab">Spacing rhythm</div>
+      <h4>Generous whitespace · 8px base</h4>
+      <p>Sections breathe at ~96–120px. Component spacing steps along an 8px-ish scale, applied through <code>gap</code> so groups survive reflow and reorder.</p>
+      <div class="space-scale">
+        <div><div class="ss" style="width:8px;height:8px"></div><span class="space-cap">8</span></div>
+        <div><div class="ss" style="width:16px;height:16px"></div><span class="space-cap">16</span></div>
+        <div><div class="ss" style="width:24px;height:24px"></div><span class="space-cap">24</span></div>
+        <div><div class="ss" style="width:40px;height:40px"></div><span class="space-cap">40</span></div>
+        <div><div class="ss" style="width:64px;height:64px"></div><span class="space-cap">64</span></div>
+        <div><div class="ss" style="width:96px;height:96px"></div><span class="space-cap">96</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 05 COMPONENTS -->
+<section class="guide" id="components">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="sec-num">05</div>
+      <div class="sec-title">
+        <h2>Components</h2>
+        <p>A small, disciplined kit. Product surfaces are shown, not described — Receipt cards, status pills, source rows with visible limitations.</p>
+      </div>
+    </div>
+
+    <div class="comp-block">
+      <div class="comp-head"><span class="ch-name">Pill navigation</span><span class="ch-tag">floating · blurred</span></div>
+      <div class="comp-body" style="justify-content:center; background: oklch(0.965 0.012 70)">
+        <div class="pillnav">
+          <div class="pn-brand"><span class="wordmark">otto</span></div>
+          <div class="pn-links"><a class="active">Product</a><a>Standard</a><a>Security</a><a>Company</a></div>
+          <a class="pn-cta">Run a control test</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="comp-block">
+      <div class="comp-head"><span class="ch-name">Buttons</span><span class="ch-tag">solid ink · outline · text</span></div>
+      <div class="comp-body">
+        <button class="btn btn-primary">Run one behavior loop</button>
+        <button class="btn btn-ghost">Inspect a sample Receipt</button>
+        <button class="btn btn-text">Read the otto Standard <span class="arr">→</span></button>
+      </div>
+    </div>
+
+    <div class="comp-block">
+      <div class="comp-head"><span class="ch-name">Status pills</span><span class="ch-tag">file state</span></div>
+      <div class="comp-body">
+        <span class="pill cur"><span class="dotx"></span>Current</span>
+        <span class="pill exc"><span class="dotx"></span>Stale</span>
+        <span class="pill exc"><span class="dotx"></span>Exception</span>
+        <span class="pill stop"><span class="dotx"></span>Blocked</span>
+        <span class="pill blk"><span class="dotx"></span>Not configured</span>
+      </div>
+    </div>
+
+    <div class="comp-block">
+      <div class="comp-head"><span class="ch-name">Eyebrows</span><span class="ch-tag">mono · uppercase · 1–3 words</span></div>
+      <div class="comp-body">
+        <div class="eyebrow-demo">
+          <span>Receipt</span>
+          <span>Settlement Funds</span>
+          <span>otto Standard</span>
+          <span>Covered Instructions</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="comp-block">
+      <div class="comp-head"><span class="ch-name">Soft floating card</span><span class="ch-tag">stage elevation</span></div>
+      <div class="comp-body" style="justify-content:center; background: oklch(0.965 0.012 70)">
+        <div class="float-card">
+          <div class="fc-top">
+            <span class="fc-kick">Receipt</span>
+            <span class="pill cur"><span class="dotx"></span>Current</span>
+          </div>
+          <div class="fc-rows">
+            <div class="fc-line"><span class="dot ok"></span>Seller proceeds wire<span class="src">SP-0214</span></div>
+            <div class="fc-line"><span class="dot ok"></span>Payoff demand<span class="src">PO-0318</span></div>
+            <div class="fc-line"><span class="dot warn"></span>Wire instructions<span class="src">changed · 2d ago</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="comp-block">
+      <div class="comp-head"><span class="ch-name">Curation Inbox</span><span class="ch-tag">owner surface · the human ratifies</span></div>
+      <div class="comp-body" style="padding:24px; background: var(--bg-2)">
+        <div class="reg">
+          <div class="reg-top">
+            <div class="reg-title">Curation Inbox<span class="rid">Pacific Coast Escrow · CA-ESCROW-0042118</span></div>
+            <div class="reg-tabs"><span class="on">Covered</span><span>Exceptions</span><span>All files</span></div>
+          </div>
+          <div class="reg-grid head"><span>Property · file</span><span>Party</span><span>Officer</span><span>Status</span></div>
+          <div class="reg-grid"><span><span class="r-prop">17133 Santa Lucia St</span> <span class="r-file">· SP-0214</span></span><span class="r-party">Priya Mehta</span><span class="r-file">M. Lane</span><span class="pill cur"><span class="dotx"></span>Recorded</span></div>
+          <div class="reg-grid"><span><span class="r-prop">85 Linden Pl #4</span> <span class="r-file">· BF-0318</span></span><span class="r-party">D. Okafor</span><span class="r-file">M. Lane</span><span class="pill exc"><span class="dotx"></span>Stale</span></div>
+          <div class="reg-grid"><span><span class="r-prop">2204 Cliff Dr</span> <span class="r-file">· PO-0301</span></span><span class="r-party">R. Castellano</span><span class="r-file">M. Lane</span><span class="pill stop"><span class="dotx"></span>Blocked</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="comp-block">
+      <div class="comp-head"><span class="ch-name">Source rows</span><span class="ch-tag">limitation always visible</span></div>
+      <div class="comp-body" style="padding:24px; background: var(--bg-2)">
+        <div class="srcblock">
+          <div class="srcrow">
+            <span class="s-dot ok"></span>
+            <div class="s-main">
+              <div class="s-name">Payoff demand<span class="s-via">via ValidiFI</span></div>
+              <div class="s-lim">Balance as of 2026-06-05. <b>Not a payoff guarantee</b> — per-diem accrues until funds are received.</div>
+            </div>
+            <div class="s-meta">PO-0318</div>
+          </div>
+          <div class="srcrow">
+            <span class="s-dot ok"></span>
+            <div class="s-main">
+              <div class="s-name">Bank account<span class="s-via">via Plaid</span></div>
+              <div class="s-lim">Ownership name matched. <b>Does not confirm the account can receive this wire.</b></div>
+            </div>
+            <div class="s-meta">acct ··6014</div>
+          </div>
+          <div class="srcrow">
+            <span class="s-dot warn"></span>
+            <div class="s-main">
+              <div class="s-name">Wire instructions<span class="s-via">callback</span></div>
+              <div class="s-lim">Verbally confirmed with a known contact. <b>A callback is evidence, never permission.</b></div>
+            </div>
+            <div class="s-meta">06-06 · 14:20</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 06 SIGNATURE MOTIF -->
+<section class="guide" id="motif">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="sec-num">06</div>
+      <div class="sec-title">
+        <h2>Signature motif — the inverted ink block</h2>
+        <p>The climax of a section is rendered as a near-black filled card with white text. The lead-up steps stay flat and quiet, so the ratification moment lands with weight.</p>
+      </div>
+    </div>
+
+    <div class="motif">
+      <div class="flow-steps">
+        <div class="flow-step">
+          <div class="fs-lab">Step 01</div>
+          <div class="fs-main">A covered instruction arrives</div>
+          <div class="fs-desc">A correction enters Curation before behavior can compound.</div>
+        </div>
+        <div class="flow-step">
+          <div class="fs-lab">Step 02</div>
+          <div class="fs-main">Sources are gathered</div>
+          <div class="fs-desc">Payoff, instructions, and changes are pulled with their limits noted.</div>
+        </div>
+        <div class="flow-step">
+          <div class="fs-lab">Step 03</div>
+          <div class="fs-main">The workspace reviews</div>
+          <div class="fs-desc">A person reads what was relied on and signs with a passkey.</div>
+        </div>
+        <div class="flow-step climax">
+          <div class="fs-lab">The ratification moment</div>
+          <div class="fs-main">A Receipt is written</div>
+          <div class="fs-desc">The file now shows what the workspace relied on before it acted.</div>
+        </div>
+      </div>
+      <div class="motif-note">
+        <div class="mn"><b>Use it once per section.</b> The inverted block is a payoff, not a texture. One climax per arc; if everything is bold, nothing is.</div>
+        <div class="mn"><b>Quiet the lead-in.</b> Steps before the climax stay on white with hairline borders, so the ink block is the only filled element in view.</div>
+        <div class="mn"><b>Reserved for the authority boundary.</b> It carries the load-bearing line — the moment otto records proof and the human ratifies.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 07 IMAGERY -->
+<section class="guide" id="imagery">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="sec-num">07</div>
+      <div class="sec-title">
+        <h2>Imagery</h2>
+        <p>Warm but desaturated, calm, institutional — a real closing workspace at golden hour. No people, faces, text, logos, or screens. Generous negative space for overlays.</p>
+      </div>
+    </div>
+
+    <div class="img-grid">
+      <div class="img-ph">
+        <span class="ph-tag"><span class="dotx"></span>Calm institutional · desaturated · no people</span>
+      </div>
+      <div class="img-rules">
+        <div class="ir-h">Direction</div>
+        <ul>
+          <li><span class="g">—</span>Warm light, low saturation. A quiet, ordered workspace.</li>
+          <li><span class="g">—</span>Never people, faces, text, logos, or device screens.</li>
+          <li><span class="g">—</span>Leave open negative space for cards and copy to float over.</li>
+          <li><span class="g">—</span>Compress to JPEG, ~80–150KB. No banding, no heavy grain.</li>
+        </ul>
+        <div class="prompt-card">
+          <div class="pc-h"><span>Generation prompt template</span></div>
+          <div class="pc-body">A quiet local-first workspace at golden hour: desk, paper, terminal glow, notebook, or owl object. Warm but <em>desaturated</em> tones, soft natural light, ordered surfaces. <em>No people, no faces, no text, no logos, no busy screens.</em> Generous negative space on the [left / upper] third for overlays. Editorial, restrained, documentary realism. Subtle film grain, 3:2.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 08 LOGO & DON'TS -->
+<section class="guide" id="logo">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="sec-num">08</div>
+      <div class="sec-title">
+        <h2>Logo &amp; don'ts</h2>
+        <p>The lowercase <span class="mono">otto</span> wordmark is primary. The owl is the avatar/mark. Both render in <span class="mono">currentColor</span>, inheriting ink on paper and white on dark.</p>
+      </div>
+    </div>
+
+    <div class="logo-board">
+      <div class="logo-cell on-paper">
+        <div style="text-align:center">
+          <span class="wordmark">otto</span>
+          <div class="logo-cap">Primary — ink on paper</div>
+        </div>
+      </div>
+      <div class="logo-cell on-dark">
+        <div style="text-align:center">
+          <span class="wordmark">otto</span>
+          <div class="logo-cap" style="color: var(--dark-mut)">Reversed — paper on ink</div>
+        </div>
+      </div>
+      <div class="logo-cell clear">
+        <div style="text-align:center">
+          <div class="clearzone"><span class="wordmark">otto</span></div>
+          <div class="logo-cap">Clear space — keep clear on all sides</div>
+        </div>
+      </div>
+      <div class="logo-cell fav">
+        <div style="text-align:center">
+          <div class="fav-tile">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 9a7 7 0 0 1 14 0v4a7 7 0 0 1-14 0z"/><circle cx="9.4" cy="10" r="1.5"/><circle cx="14.6" cy="10" r="1.5"/><path d="M11 12.6h2l-1 1.6z"/><path d="M5 9 3 6M19 9l2-3"/></svg>
+          </div>
+          <div class="logo-cap">Favicon — owl tile</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="block-title">Sizing</div>
+    <div class="sizerow">
+      <div class="sizeitem"><span class="wordmark" style="font-size:16px">otto</span><div class="sz-cap"><b>16px</b>minimum · digital</div></div>
+      <div class="sizeitem"><span class="wordmark" style="font-size:20px">otto</span><div class="sz-cap"><b>20px</b>nav bar</div></div>
+      <div class="sizeitem"><span class="wordmark" style="font-size:28px">otto</span><div class="sz-cap"><b>28px</b>footer</div></div>
+      <div class="sizeitem"><span class="wordmark" style="font-size:44px">otto</span><div class="sz-cap"><b>44px +</b>hero · cover</div></div>
+    </div>
+    <div class="size-note">
+      <div><div class="snl">Minimum size</div><div class="snv"><b>16px</b> tall on screen, <b>6mm</b> in print. Below this, use the owl avatar instead of the wordmark.</div></div>
+      <div><div class="snl">Clear space</div><div class="snv">Keep clear on all sides by at least the <b>cap-height of the mark</b> — never crowd it with type or edges.</div></div>
+      <div><div class="snl">Aspect</div><div class="snv">Use the lowercase wordmark as text or fixed artwork. Scale proportionally; never stretch, condense, or re-space.</div></div>
+    </div>
+
+    <div class="donts">
+      <div class="dont-item"><span class="dx">✕</span><p>No stretching, condensing, or re-spacing the wordmark.</p></div>
+      <div class="dont-item"><span class="dx">✕</span><p>No recoloring the logo. It is <span class="mono">currentColor</span> — ink or white, nothing else.</p></div>
+      <div class="dont-item"><span class="dx">✕</span><p>No gradients as decoration. Color does not carry brand — ink and hairlines do.</p></div>
+      <div class="dont-item"><span class="dx">✕</span><p>No emoji as brand. The owl mark is drawn, not emoji.</p></div>
+      <div class="dont-item"><span class="dx">✕</span><p>No rounded-corner cards with a left-accent color border.</p></div>
+      <div class="dont-item"><span class="dx">✕</span><p>No full-sentence eyebrows. One to three mono-uppercase words only.</p></div>
+      <div class="dont-item"><span class="dx">✕</span><p>No fabricated logos or testimonials. Use sourced stats instead.</p></div>
+      <div class="dont-item"><span class="dx">✕</span><p>No status hue on large surfaces — dots and pills only.</p></div>
+      <div class="dont-item"><span class="dx">✕</span><p>No jargon on marketing surfaces. Plain language for smart operators.</p></div>
+      <div class="dont-item"><span class="dx">✕</span><p>Never the forbidden claims: autonomous, guaranteed, fully handled, learned automatically, done without proof.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- 09 MOTION -->
+<section class="guide" id="motion">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="sec-num">09</div>
+      <div class="sec-title">
+        <h2>Motion</h2>
+        <p>Motion is the behavior layer made visible. It is calm, fast, and exact — things resolve into place, they never perform. The same discipline as the rest of the system: rationed, load-bearing, never decoration.</p>
+      </div>
+    </div>
+
+    <div class="principles">
+      <div class="principle"><div class="pn">01</div><div><h4>Calm over kinetic</h4><p>Animation states what changed; it does not entertain. If a transition draws attention to itself, cut it. Motion is the quietest way to say a thing moved.</p></div></div>
+      <div class="principle"><div class="pn">02</div><div><h4>Resolve, never bounce</h4><p>Standard ease-out, no spring, no overshoot. Springy, magical motion is the autopilot fantasy the brand refuses — the same reason "set it and forget it" is banned.</p></div></div>
+      <div class="principle"><div class="pn">03</div><div><h4>Opacity &amp; weight over travel</h4><p>Prefer a fade or a hairline/weight shift to a slide. When something must move, it travels 4–8px — a settle, not a flight.</p></div></div>
+      <div class="principle"><div class="pn">04</div><div><h4>One emphasis per view</h4><p>Like the inverted ink block, motion emphasis is spent once. The ratification moment may land with a little weight; everything around it stays still.</p></div></div>
+    </div>
+
+    <div class="block-title" style="margin-top:46px">Duration &amp; easing tokens</div>
+    <p style="font-size:14.5px; color: var(--mut); margin-top:10px; max-width:64ch; line-height:1.5;">A short scale, mono-set like every other token. Durations climb with the size of the change; nothing exceeds a quarter-second. Easing is shared — one ease-out for everything, no spring anywhere.</p>
+    <div class="numerals">
+      <div class="num-cell"><div class="nl">Instant</div><div class="nv">0ms</div><div class="nn">Reduced-motion · state that must not animate</div></div>
+      <div class="num-cell"><div class="nl">Micro</div><div class="nv">120ms</div><div class="nn">Hover, press, dot hue cross-fade</div></div>
+      <div class="num-cell"><div class="nl">State</div><div class="nv">180ms</div><div class="nn">Show / hide, expand, pill change</div></div>
+      <div class="num-cell"><div class="nl">Enter</div><div class="nv">240ms</div><div class="nn">Stage card / panel reveal · max duration</div></div>
+      <div class="num-cell"><div class="nl">Ease</div><div class="nv">0.2, 0, 0, 1</div><div class="nn">cubic-bezier · ease-out · no spring</div></div>
+    </div>
+
+    <div class="spec-grid" style="margin-top:38px">
+      <div class="spec-card">
+        <div class="sc-lab">Status</div>
+        <h4>Cross-fade, never blink</h4>
+        <p>A file changing state cross-fades its dot and pill hue over 120ms. Status never pulses, flashes, or blinks — a blinking dot is alarm theater, and otto states, it does not perform.</p>
+      </div>
+      <div class="spec-card">
+        <div class="sc-lab">Stage cards</div>
+        <h4>Lift, don't fly</h4>
+        <p>Floating "stage" cards enter at 240ms: opacity 0→1 with a 6px rise and the soft far-cast shadow fading in. The lift mirrors their elevation; the lead-in surfaces stay flat and still.</p>
+      </div>
+      <div class="spec-card">
+        <div class="sc-lab">The ratification moment</div>
+        <h4>Where motion is spent</h4>
+        <p>The inverted ink block is the one place motion carries weight: a 240ms fade with a slight scale settle (0.98→1) as the Receipt is written. Used once per arc — if everything moves, nothing matters.</p>
+      </div>
+    </div>
+
+    <div class="spec-grid" style="margin-top:20px">
+      <div class="spec-card">
+        <div class="sc-lab">Icons</div>
+        <h4>Single-stroke draw-on</h4>
+        <p>If an icon animates, its hairline draws on once in ≤200ms (standard ease), consistent with the line language. No spin, no morph, no looping idle.</p>
+      </div>
+      <div class="spec-card">
+        <div class="sc-lab">Accessibility</div>
+        <h4>Honor reduced motion</h4>
+        <p>Under <code>prefers-reduced-motion</code>, every duration collapses to <span class="mono" style="font-size:12px;">0ms</span> and transitions become instant state swaps. Calm and exact includes respecting a person who asked for stillness.</p>
+      </div>
+      <div class="spec-card">
+        <div class="sc-lab">Loading</div>
+        <h4>Indeterminate, not anxious</h4>
+        <p>Waiting is a quiet hairline shimmer or a single slow sweep — never a fast spinner. The system is working, not racing; the wait should read as composure.</p>
+      </div>
+    </div>
+
+    <div class="dodont">
+      <div class="dd-col do">
+        <div class="dd-head do"><span class="dotx"></span>Move it this way</div>
+        <div class="dd-row"><div class="quote">Fade the pill from Stale to Current over 120ms.</div><div class="why">Cross-fade signals the state change without drawing the eye away.</div></div>
+        <div class="dd-row"><div class="quote">Stage card enters: opacity 0→1, rise 6px, 240ms ease-out.</div><div class="why">A settle that matches its elevation. Resolves, doesn't bounce.</div></div>
+        <div class="dd-row"><div class="quote">Reduce all motion to instant under prefers-reduced-motion.</div><div class="why">Stillness on request. Calm and exact, all the way down.</div></div>
+      </div>
+      <div class="dd-col dont">
+        <div class="dd-head dont"><span class="dotx"></span>Never</div>
+        <div class="dd-row"><div class="quote">Springy, bouncing, or elastic entrances.</div><div class="why"><b>Forbidden:</b> overshoot. It reads as the autopilot fantasy the brand bans.</div></div>
+        <div class="dd-row"><div class="quote">Blinking or pulsing status dots.</div><div class="why"><b>Forbidden:</b> alarm theater. Status states, it does not flash.</div></div>
+        <div class="dd-row"><div class="quote">Parallax, looping idle animation, decorative motion.</div><div class="why"><b>Forbidden:</b> motion as texture. If it isn't load-bearing, it's still.</div></div>
+      </div>
+    </div>
+
+    <div class="motif-note" style="margin-top:30px">
+      <div class="mn"><b>Motion is rationed like status hue.</b> It appears on small, meaningful changes — never as ambient life across a surface.</div>
+      <div class="mn"><b>Nothing exceeds 240ms.</b> If a transition needs longer to feel right, the change itself is too big — split it.</div>
+      <div class="mn"><b>The human ratifies. otto records the proof.</b> Motion confirms a change happened; it never implies one that has no receipt.</div>
+    </div>
+  </div>
+</section>
+
+<!-- 10 PREVIEW & LABS -->
+<section class="guide" id="preview-labs">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="sec-num">10</div>
+      <div class="sec-title">
+        <h2>Preview &amp; Labs</h2>
+        <p>Labs is a labeled preview lane — not a second product. Ship-tier surfaces must work without Labs. Preview surfaces stay visible in nav with honest limits.</p>
+      </div>
+    </div>
+
+    <div class="principles">
+      <div class="principle"><div class="pn">01</div><div><h4>Coming soon, not broken</h4><p>When a surface is off, show the EmptyState anatomy: mono eyebrow <span class="mono">coming soon</span> → title → body → one CTA to Settings → Labs. Never a half-wired pane or raw env var string in primary copy.</p></div></div>
+      <div class="principle"><div class="pn">02</div><div><h4>Neutral badges</h4><p>Sidebar badge: faint mono <span class="mono">soon</span> or <span class="mono">labs</span> on <span class="mono">--bg-3</span>. No pulsing dot. Warn hue only when deps are missing after the user opted in (Labs blocked).</p></div></div>
+      <div class="principle"><div class="pn">03</div><div><h4>Checks = Culture CI</h4><p>Eyebrow <span class="mono">culture ci</span> · title <span class="mono">Checks</span>. Compiled regressions from Standards — not a generic test dashboard.</p></div></div>
+    </div>
+
+    <div class="dodont" style="margin-top:34px">
+      <div class="dd-col do">
+        <div class="dd-head do"><span class="dotx"></span>Say it this way</div>
+        <div class="dd-row"><div class="quote">Coming soon · enable in Settings → Labs</div><div class="why">Names the limit and the recovery path.</div></div>
+        <div class="dd-row"><div class="quote">Shipped · preview · Coming soon (toggle badges)</div><div class="why">Mono pills in Settings — not green success for toggles.</div></div>
+        <div class="dd-row"><div class="quote">thinking… (loading)</div><div class="why">Calm wait — static idle dot, no pulse.</div></div>
+      </div>
+      <div class="dd-col dont">
+        <div class="dd-head dont"><span class="dotx"></span>Never</div>
+        <div class="dd-row"><div class="quote">beta · experimental · early access · unlock premium</div><div class="why"><b>Forbidden:</b> hype lane language.</div></div>
+        <div class="dd-row"><div class="quote">OTTO_* env names in body copy</div><div class="why">Dev detail belongs in Settings advanced or docs.</div></div>
+        <div class="dd-row"><div class="quote">otto is working…</div><div class="why"><b>Forbidden:</b> working theater — use thinking…</div></div>
+      </div>
+    </div>
+
+    <div class="motif-note" style="margin-top:30px">
+      <div class="mn"><b>Repo canon:</b> <span class="mono">docs/v1/ship-tier-matrix.md</span> · <span class="mono">apps/desktop/src/copy/surfaces.ts</span> (<span class="mono">labsCopy</span>).</div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer class="guide-foot">
+  <div class="wrap">
+    <div class="brand" style="margin-bottom:18px">
+      <span class="wordmark">otto</span>
+    </div>
+    <div class="gf-line mono" style="font-size:12px; letter-spacing:0.08em; text-transform:uppercase; color: var(--faint)">otto brand &amp; design style guide · June 2026</div>
+    <div class="gf-big">The human ratifies. otto records the proof.</div>
+  </div>
+</footer>
+
+<script>
+(function(){
+  var links = Array.prototype.slice.call(document.querySelectorAll('.toc a'));
+  var entries = links.map(function(a){
+    return { a: a, el: document.getElementById(a.getAttribute('href').slice(1)) };
+  }).filter(function(e){ return e.el; });
+  if(!entries.length) return;
+  var current = null;
+  function update(){
+    var probe = window.scrollY + (window.innerHeight * 0.28);
+    var active = entries[0];
+    for(var i=0;i<entries.length;i++){
+      if(entries[i].el.offsetTop <= probe) active = entries[i];
+    }
+    if(active.a !== current){
+      links.forEach(function(l){ l.classList.remove('active'); });
+      active.a.classList.add('active');
+      current = active.a;
+    }
+  }
+  var ticking = false;
+  function onScroll(){
+    if(ticking) return;
+    ticking = true;
+    requestAnimationFrame(function(){ update(); ticking = false; });
+  }
+  window.addEventListener('scroll', onScroll, { passive: true });
+  window.addEventListener('resize', onScroll);
+  update();
+})();
+</script>
+
+</body>
+</html>

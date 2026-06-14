@@ -15,6 +15,14 @@ import { useChatThreads } from '../chat/useChatThreads';
 import { notifyOnboardingFirstMessage } from '../onboarding-storage';
 import { ProposeCorrectionModal, type ProposeCorrectionContext } from '../chat/ProposeCorrectionModal';
 import { runTicketCommand } from '../chat/ticket-commands';
+import {
+  clearInFlight,
+  persistInFlight,
+  previewQueueText,
+  QUEUE_KEY,
+  readQueue,
+  type QueueItem,
+} from '../chat/queue-storage';
 import type { ProposalTarget } from '@otto-haus/core';
 import type { ChatMsg } from '../runtime';
 
@@ -36,13 +44,9 @@ export const Chat: React.FC<{
     : <PreviewChat />;
 
 /* ---------- LiveChat (Electron, wired to the Letta runtime) ---------- */
-type QueueState = 'queued' | 'sending' | 'failed';
-type QueueItem = { id: string; text: string; createdAt: number; state: QueueState };
 type AttachmentDraft = SavedAttachment & { previewUrl: string };
 
 const DRAFT_KEY = 'otto.chat.draft.v1';
-const QUEUE_KEY = 'otto.chat.queue.v1';
-const INFLIGHT_KEY = 'otto.chat.inflight.v1';
 const ATTACHMENTS_KEY = 'otto.chat.attachments.v1';
 
 const MODEL_OPTIONS = [
@@ -76,6 +80,7 @@ const ModelEffortPickers: React.FC<{
   onSelectModel: (value: string) => void;
   onSelectEffort: (value: EffortLevel) => void;
   compact?: boolean;
+  menuPlacement?: 'up' | 'down';
 }> = ({
   busy,
   selectedModel,
@@ -88,6 +93,7 @@ const ModelEffortPickers: React.FC<{
   onSelectModel,
   onSelectEffort,
   compact = false,
+  menuPlacement = 'up',
 }) => (
   <div className={`promptControls${compact ? ' promptControls--head' : ''}`} onClick={(e) => e.stopPropagation()}>
     <div className="picker" data-open={modelOpen ? 'true' : 'false'}>
@@ -96,7 +102,7 @@ const ModelEffortPickers: React.FC<{
         <span className="picker__chev">›</span>
       </button>
       {modelOpen && (
-        <div className="picker__menu picker__menu--model">
+        <div className={`picker__menu picker__menu--model${menuPlacement === 'down' ? ' picker__menu--down' : ''}`}>
           <div className="picker__title">Select model</div>
           {MODEL_OPTIONS.map((m) => (
             <button
@@ -129,7 +135,7 @@ const ModelEffortPickers: React.FC<{
         <span className="picker__chev">›</span>
       </button>
       {effortOpen && (
-        <div className="picker__menu picker__menu--effort">
+        <div className={`picker__menu picker__menu--effort${menuPlacement === 'down' ? ' picker__menu--down' : ''}`}>
           <div className="picker__title">Reasoning</div>
           {EFFORT_OPTIONS.map((e) => (
             <button
@@ -186,36 +192,6 @@ const readDraft = (): string => {
   try { return localStorage.getItem(DRAFT_KEY) ?? ''; } catch { return ''; }
 };
 
-const readInFlight = (): QueueItem | null => {
-  try {
-    const item = JSON.parse(localStorage.getItem(INFLIGHT_KEY) ?? 'null') as QueueItem | null;
-    if (!item || typeof item.id !== 'string' || typeof item.text !== 'string') return null;
-    return { id: item.id, text: item.text, createdAt: typeof item.createdAt === 'number' ? item.createdAt : Date.now(), state: 'queued' };
-  } catch {
-    return null;
-  }
-};
-
-const readQueue = (): QueueItem[] => {
-  try {
-    const parsed = JSON.parse(localStorage.getItem(QUEUE_KEY) ?? '[]') as QueueItem[];
-    const stored = Array.isArray(parsed) ? parsed : [];
-    return dedupeQueue([readInFlight(), ...stored]
-      .filter((item): item is QueueItem => typeof item?.id === 'string' && typeof item.text === 'string')
-      // Old builds persisted visible `sending` rows in the queue. Those were already handed
-      // to the runtime and caused the stuck badge in #6; new builds use INFLIGHT_KEY instead.
-      .filter((item) => item.state !== 'sending')
-      .map((item) => ({
-        id: item.id,
-        text: item.text,
-        createdAt: typeof item.createdAt === 'number' ? item.createdAt : Date.now(),
-        state: item.state === 'failed' ? 'failed' : 'queued',
-      })));
-  } catch {
-    return [];
-  }
-};
-
 const readAttachments = (): AttachmentDraft[] => {
   try {
     const parsed = JSON.parse(localStorage.getItem(ATTACHMENTS_KEY) ?? '[]') as SavedAttachment[];
@@ -232,26 +208,78 @@ const persist = (key: string, value: unknown) => {
   try { localStorage.setItem(key, JSON.stringify(value)); } catch { /* best effort */ }
 };
 
-const persistInFlight = (item: QueueItem | null) => {
-  try {
-    if (item) localStorage.setItem(INFLIGHT_KEY, JSON.stringify(item));
-    else localStorage.removeItem(INFLIGHT_KEY);
-  } catch { /* best effort */ }
-};
-
-const clearInFlight = (id: string) => {
-  try {
-    const item = JSON.parse(localStorage.getItem(INFLIGHT_KEY) ?? 'null') as QueueItem | null;
-    if (item?.id === id) localStorage.removeItem(INFLIGHT_KEY);
-  } catch { /* best effort */ }
-};
-
 const dedupeQueue = (items: Array<QueueItem | null>): QueueItem[] => {
   const out: QueueItem[] = [];
   for (const item of items) {
     if (item && !out.some((x) => x.id === item.id)) out.push(item);
   }
   return out;
+};
+
+const QueueStrip: React.FC<{
+  queue: QueueItem[];
+  onClear: () => void;
+  onRetryAll: () => void;
+  onRetryOne: (id: string) => void;
+  onRemove: (id: string) => void;
+}> = ({ queue, onClear, onRetryAll, onRetryOne, onRemove }) => {
+  const failedCount = queue.filter((item) => item.state === 'failed').length;
+  const pendingCount = queue.length - failedCount;
+  const summary = failedCount && pendingCount
+    ? chatCopy.queueMixed(pendingCount, failedCount)
+    : failedCount
+      ? chatCopy.queueFailed(failedCount)
+      : chatCopy.queuePending(pendingCount);
+  const [expanded, setExpanded] = useState(queue.length <= 2 && failedCount === 0);
+
+  return (
+    <div className={`queuebar${failedCount ? ' queuebar--warn' : ''}${expanded ? ' queuebar--expanded' : ' queuebar--compact'}`} aria-label="Unsent messages">
+      <div className="queuebar__head">
+        <span className={`dot ${failedCount ? 'dot--warn' : 'dot--idle'}`} aria-hidden="true" />
+        <span className="queuebar__summary">{summary}</span>
+        <div className="queuebar__actions">
+          {failedCount > 0 && (
+            <button type="button" className="queuebar__action queuebar__action--primary" onClick={onRetryAll}>
+              {chatCopy.queueRetryAll}
+            </button>
+          )}
+          {queue.length > 2 && (
+            <button type="button" className="queuebar__action" onClick={() => setExpanded((x) => !x)}>
+              {expanded ? chatCopy.queueHide : chatCopy.queueShow}
+            </button>
+          )}
+          <button type="button" className="queuebar__action" onClick={onClear}>
+            {chatCopy.queueClearAll}
+          </button>
+        </div>
+      </div>
+      {expanded && (
+        <div className="queuebar__items">
+          {queue.map((item) => (
+            <div className="queueitem" key={item.id}>
+              <span className={`queueitem__pill queueitem__pill--${item.state}`}>
+                {item.state === 'failed' ? 'failed' : 'waiting'}
+              </span>
+              <span className="queueitem__text">{previewQueueText(item.text)}</span>
+              {item.state === 'failed' && (
+                <button type="button" className="queueitem__retry" onClick={() => onRetryOne(item.id)}>
+                  {chatCopy.queueRetryOne}
+                </button>
+              )}
+              <button
+                type="button"
+                className="queueitem__remove"
+                aria-label="Remove unsent message"
+                onClick={() => onRemove(item.id)}
+              >
+                {Icon.x}
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
 };
 
 const renderInline = (text: string): React.ReactNode[] => {
@@ -390,6 +418,9 @@ const LiveChat: React.FC<{
   const draining = useRef(false);
   const fileInput = useRef<HTMLInputElement | null>(null);
   const pickerRef = useRef<HTMLDivElement | null>(null);
+  const streamRef = useRef<HTMLDivElement | null>(null);
+  const tailRef = useRef<HTMLDivElement | null>(null);
+  const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const st = rt.status;
   const ready = !!st?.ready;
   const selectedModel = st?.modelHandle ?? st?.model ?? null;
@@ -524,6 +555,17 @@ const LiveChat: React.FC<{
     persist(ATTACHMENTS_KEY, attachments.map(({ previewUrl: _previewUrl, ...rest }) => rest));
   }, [attachments]);
 
+  useEffect(() => {
+    const el = textareaRef.current;
+    if (!el) return;
+    el.style.height = 'auto';
+    el.style.height = `${Math.min(el.scrollHeight, 200)}px`;
+  }, [draft]);
+
+  useEffect(() => {
+    tailRef.current?.scrollIntoView({ behavior: streamMessages.length > 1 ? 'smooth' : 'auto', block: 'end' });
+  }, [streamMessages.length, rt.busy, queue.length]);
+
   const attachImages = async (files: File[]) => {
     if (!api || !files.length) return;
     setAttachmentError(null);
@@ -624,6 +666,7 @@ const LiveChat: React.FC<{
           <div className="chat__headActions" ref={pickerRef}>
             <ModelEffortPickers
               compact
+              menuPlacement="down"
               busy={rt.busy}
               selectedModel={selectedModel}
               selectedEffort={selectedEffort}
@@ -639,93 +682,111 @@ const LiveChat: React.FC<{
         ) : null}
       </div>
 
-      <div className="chat__stream">
-        {!ready && st && (
-          <div className="inkblock" style={{ maxWidth: 760 }}>
-            <div className="inkblock__eyebrow"><span className="dot dot--warn" /> {chatCopy.runtimeNotReadyEyebrow}</div>
-            <div className="inkblock__title">{chatCopy.runtimeNotReadyTitle}</div>
-            <div className="inkblock__meta">
-              <span>{st.reason ?? chatCopy.runtimeNotReadyBody}</span>
-            </div>
-            <div className="inkblock__actions">
-              <button type="button" className="btn btn--solid-d" onClick={rt.retry}>Retry</button>
-              {onOpenSettings && <button type="button" className="btn btn--ghost-d" onClick={onOpenSettings}>Open Settings</button>}
-            </div>
-          </div>
-        )}
-        {ready && streamMessages.length === 0 && (
-          <div className="emptySurface emptySurface--chat">
-            <div className="eyebrow">{chatCopy.sessionEyebrow}</div>
-            <h2>{chatCopy.sessionTitle}</h2>
-            <p>{chatCopy.sessionBody}</p>
-          </div>
-        )}
-        {streamMessages.map((m, i) => {
-          const showWho = i === 0 || streamMessages[i - 1].who !== m.who;
-          return (
-            <div key={m.id} className={`msg${m.who === 'user' ? ' msg--user' : ''}${showWho ? '' : ' msg--cont'}`}>
-              {showWho && <div className="msg__who">{m.who === 'user' ? 'You' : m.who === 'error' ? 'error' : 'otto'}</div>}
-              {m.checkBlock && onNavigate ? (
-                <CheckBlockBanner
-                  checkName={m.checkBlock.checkName}
-                  message={m.checkBlock.message}
-                  receiptId={m.checkBlock.receiptId}
-                  standardId={m.checkBlock.standardId}
-                  onOpenReceipt={m.checkBlock.receiptId ? () => onNavigate('receipts') : undefined}
-                  onOpenStandard={m.checkBlock.standardId ? () => onNavigate('standards') : undefined}
-                />
-              ) : null}
-              {m.receiptInline ? (
-                <ReceiptInlineCard
-                  id={m.receiptInline.id}
-                  status={m.receiptInline.status}
-                  action={m.receiptInline.action}
-                  summary={m.receiptInline.summary}
-                  authority={m.receiptInline.authority}
-                  onOpenReceipts={onNavigate ? () => onNavigate('receipts') : undefined}
-                />
-              ) : null}
-              <div className="msg__body" style={m.who === 'error' ? { color: 'var(--stop)' } : undefined}>
-                {m.text ? <MarkdownText text={m.text} /> : null}
+      <div className="chat__stream" ref={streamRef}>
+        <div className="chat__streamInner">
+          {!ready && st && (
+            <div className="inkblock chat__setup">
+              <div className="inkblock__eyebrow"><span className="dot dot--warn" /> {chatCopy.runtimeNotReadyEyebrow}</div>
+              <div className="inkblock__title">{chatCopy.runtimeNotReadyTitle}</div>
+              <div className="inkblock__meta">
+                <span>{st.reason ?? chatCopy.runtimeNotReadyBody}</span>
+              </div>
+              <div className="inkblock__actions">
+                <button type="button" className="btn btn--solid-d" onClick={rt.retry}>Retry</button>
+                {onOpenSettings && <button type="button" className="btn btn--ghost-d" onClick={onOpenSettings}>Open Settings</button>}
               </div>
             </div>
-          );
-        })}
-        {rt.busy && <div className="chat__thinking"><span className="dot dot--idle" aria-hidden="true" /> {chatCopy.workingPulse}</div>}
+          )}
+          {ready && streamMessages.length === 0 && (
+            <div className="chatEmpty">
+              <div className="chatEmpty__mark" aria-hidden="true">
+                <img src={ottoAvatar} alt="" />
+              </div>
+              <div className="eyebrow">{chatCopy.sessionEyebrow}</div>
+              <h2 className="chatEmpty__title">{chatCopy.sessionTitle}</h2>
+              <p className="chatEmpty__lede">{chatCopy.sessionBody}</p>
+              <div className="chatStarters" aria-label="Starter prompts">
+                {chatCopy.starterPrompts.map((prompt) => (
+                  <button
+                    key={prompt}
+                    type="button"
+                    className="chatStarter"
+                    onClick={() => setDraft(prompt)}
+                  >
+                    {prompt}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+          {streamMessages.map((m, i) => {
+            const showWho = i === 0 || streamMessages[i - 1].who !== m.who;
+            const isUser = m.who === 'user';
+            const isError = m.who === 'error';
+            const whoLabel = isUser ? 'You' : isError ? 'Error' : 'otto';
+            return (
+              <div
+                key={m.id}
+                className={`msgRow${isUser ? ' msgRow--user' : ''}${isError ? ' msgRow--error' : ''}${showWho ? '' : ' msgRow--cont'}`}
+              >
+                {!isUser && showWho ? (
+                  <span className="msgRow__avatar" aria-hidden="true">
+                    <img src={ottoAvatar} alt="" />
+                  </span>
+                ) : !isUser ? <span className="msgRow__avatar msgRow__avatar--spacer" aria-hidden="true" /> : null}
+                <div className={`msg${isUser ? ' msg--user' : ''}${showWho ? '' : ' msg--cont'}`}>
+                  <span className="srOnly">{whoLabel}</span>
+                  {m.checkBlock && onNavigate ? (
+                    <CheckBlockBanner
+                      checkName={m.checkBlock.checkName}
+                      message={m.checkBlock.message}
+                      receiptId={m.checkBlock.receiptId}
+                      standardId={m.checkBlock.standardId}
+                      onOpenReceipt={m.checkBlock.receiptId ? () => onNavigate('receipts') : undefined}
+                      onOpenStandard={m.checkBlock.standardId ? () => onNavigate('standards') : undefined}
+                    />
+                  ) : null}
+                  {m.receiptInline ? (
+                    <ReceiptInlineCard
+                      id={m.receiptInline.id}
+                      status={m.receiptInline.status}
+                      action={m.receiptInline.action}
+                      summary={m.receiptInline.summary}
+                      authority={m.receiptInline.authority}
+                      onOpenReceipts={onNavigate ? () => onNavigate('receipts') : undefined}
+                    />
+                  ) : null}
+                  <div className="msg__body" style={isError ? { color: 'var(--stop)' } : undefined}>
+                    {m.text ? <MarkdownText text={m.text} /> : null}
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+          {rt.busy && (
+            <div className="msgRow">
+              <span className="msgRow__avatar" aria-hidden="true"><img src={ottoAvatar} alt="" /></span>
+              <div className="chat__thinking" aria-live="polite">
+                <span className="chat__thinkingDots" aria-hidden="true">
+                  <i /><i /><i />
+                </span>
+                {chatCopy.workingPulse}
+              </div>
+            </div>
+          )}
+          <div ref={tailRef} className="chat__tail" aria-hidden="true" />
+        </div>
       </div>
 
       <div className="promptbar">
         {queue.length > 0 && (
-          <div className="queuebar" aria-label="Queued messages">
-            <div className="queuebar__head">
-              <span className="dot dot--idle" />
-              <span>{queue.length} saved</span>
-              <button type="button" className="queuebar__clear" onClick={() => setQueue([])}>Clear</button>
-            </div>
-            <div className="queuebar__items">
-              {queue.map((item, index) => (
-                <div className="queueitem" key={item.id}>
-                  <span className="mono faint">{index + 1}</span>
-                  <span className="queueitem__text">
-                    <span className={`queueitem__state queueitem__state--${item.state}`}>{item.state}</span>
-                    {item.text}
-                  </span>
-                  {item.state === 'failed' && (
-                    <button type="button" className="queueitem__retry" onClick={() => setQueue((items) => items.map((x) => x.id === item.id ? { ...x, state: 'queued' } : x))}>
-                      Retry
-                    </button>
-                  )}
-                  <button type="button"
-                    className="queueitem__remove"
-                    aria-label="Remove queued message"
-                    onClick={() => setQueue((items) => items.filter((x) => x.id !== item.id))}
-                  >
-                    {Icon.x}
-                  </button>
-                </div>
-              ))}
-            </div>
-          </div>
+          <QueueStrip
+            queue={queue}
+            onClear={() => setQueue([])}
+            onRetryAll={() => setQueue((items) => items.map((item) => (item.state === 'failed' ? { ...item, state: 'queued' } : item)))}
+            onRetryOne={(id) => setQueue((items) => items.map((item) => (item.id === id ? { ...item, state: 'queued' } : item)))}
+            onRemove={(id) => setQueue((items) => items.filter((item) => item.id !== id))}
+          />
         )}
         {attachments.length > 0 && (
           <div className="attachmentTray" aria-label="Image attachments">
@@ -757,10 +818,11 @@ const LiveChat: React.FC<{
                 e.currentTarget.value = '';
               }}
             />
-            <button type="button" className="btn btn--icon" aria-label="Attach image" disabled={!ready} onClick={() => fileInput.current?.click()}>
+            <button type="button" className="btn btn--icon promptbox__attach" aria-label="Attach image" disabled={!ready} onClick={() => fileInput.current?.click()}>
               {Icon.image}
             </button>
             <textarea
+              ref={textareaRef}
               placeholder={ready ? (rt.busy ? 'Queue a follow-up…' : 'Message otto…') : 'Runtime not ready — see Settings'}
               aria-label="Message Otto"
               value={draft}
@@ -779,13 +841,22 @@ const LiveChat: React.FC<{
                 else if (e.key === 'Escape') { setDraft(''); e.currentTarget.blur(); }
               }}
               disabled={!ready}
-              rows={2}
+              rows={1}
             />
             {rt.busy && (
-              <button type="button" className="btn btn--icon" aria-label="Abort current run" onClick={rt.abort}>{Icon.stop}</button>
+              <button type="button" className="btn btn--icon promptbox__stop" aria-label="Abort current run" onClick={rt.abort}>{Icon.stop}</button>
             )}
-            <button type="button" className="btn btn--primary btn--icon" aria-label={rt.busy ? 'Queue message' : 'Send message'} disabled={!ready || (!draft.trim() && attachments.length === 0)} onClick={submit}>{Icon.send}</button>
+            <button
+              type="button"
+              className="btn btn--primary btn--icon promptbox__send"
+              aria-label={rt.busy ? 'Queue message' : 'Send message'}
+              disabled={!ready || (!draft.trim() && attachments.length === 0)}
+              onClick={submit}
+            >
+              {Icon.send}
+            </button>
           </div>
+          {ready ? <div className="promptbar__hint">{chatCopy.composerHint}</div> : null}
         </div>
       </div>
 

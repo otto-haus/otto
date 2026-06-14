@@ -1,6 +1,6 @@
 {
   "ready": false,
-  "configSource": null,
+  "configSource": "~/.otto/config.json",
   "items": [
     {
       "key": "runtime",
@@ -8,16 +8,16 @@
       "required": true,
       "status": "not-wired",
       "detail": "SDK session not connected in this preview",
-      "source": null,
+      "source": "~/.otto/config.json",
       "action": "Connect Letta in Settings → General"
     },
     {
       "key": "agent",
       "label": "Agent identity",
       "required": true,
-      "status": "missing",
-      "detail": "No agent selected",
-      "source": null,
+      "status": "configured",
+      "detail": "agent agent-local-d8e35a2a-a89f-45dd-b117-5eae5df8c8f2",
+      "source": "~/.otto/config.json",
       "action": "Set the agent in Settings → Connect Letta"
     },
     {
@@ -26,7 +26,7 @@
       "required": false,
       "status": "not-wired",
       "detail": "Provider auth lives in Letta, not Otto",
-      "source": null,
+      "source": "~/.otto/config.json",
       "action": "Configure providers in Letta Desktop / Letta local runtime"
     },
     {

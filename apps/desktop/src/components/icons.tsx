@@ -41,6 +41,8 @@ export const Icon = {
   stop: <S><rect x="7" y="7" width="10" height="10" rx="1.8" /></S>,
   x: <S><path d="M7 7l10 10M17 7 7 17" /></S>,
   check: <S><path d="M5 12l5 5 9-11" /></S>,
+  chevronRight: <S w={1.65}><path d="M9 6.5 13 12 9 17.5" /></S>,
+  chevronDown: <S w={1.65}><path d="M6.5 9 12 13 17.5 9" /></S>,
   lock: <S><rect x="5" y="11" width="14" height="9" rx="2" /><path d="M8 11V8a4 4 0 0 1 8 0v3" /></S>,
   file: <S><path d="M7 3h7l4 4v14H7z" /><path d="M13 3v5h5" /></S>,
 } as const;

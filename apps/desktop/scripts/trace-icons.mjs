@@ -10,8 +10,12 @@ import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const ICON_DIR = process.env.OTTO_ICON_DIR
-  ?? '/Users/seb/Library/CloudStorage/Dropbox/This Cycle/otto/iconography';
+/** Raw PNG masters are local-only — set OTTO_ICON_DIR to your iconography folder. */
+const ICON_DIR = process.env.OTTO_ICON_DIR;
+if (!ICON_DIR) {
+  console.error('Set OTTO_ICON_DIR to the directory containing approved icon PNGs (local only; not in public repo).');
+  process.exit(1);
+}
 const OUT = join(__dirname, '../src/components/icon-art.ts');
 
 /** UUID prefix → Icon key (14 approved PNGs). */

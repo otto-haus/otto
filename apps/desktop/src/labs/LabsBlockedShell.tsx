@@ -15,7 +15,7 @@ export const LabsBlockedShell: React.FC<{
       eyebrow={labsCopy.blockedEyebrow}
       title={title}
       body={body}
-      next={next ?? labsCopy.comingSoonNext}
+      next={next ?? labsCopy.blockedNext}
     />
     {(onOpenSettings || onAction) ? (
       <div className="labsBlockedShell__actions">

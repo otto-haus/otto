@@ -1,0 +1,97 @@
+<!-- ============================================================
+     otto Brand Style Guide — §09 MOTION  (drop-in section)
+     Paste this <section> after §08 LOGO, before <footer>.
+     Reuses existing classes + CSS vars only — no new CSS required.
+     TOC: add  <a href="#motion">Motion</a>  to nav.toc
+     ============================================================ -->
+
+<section class="guide" id="motion">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="sec-num">09</div>
+      <div class="sec-title">
+        <h2>Motion</h2>
+        <p>Motion is the behavior layer made visible. It is calm, fast, and exact — things resolve into place, they never perform. The same discipline as the rest of the system: rationed, load-bearing, never decoration.</p>
+      </div>
+    </div>
+
+    <!-- principles -->
+    <div class="principles">
+      <div class="principle"><div class="pn">01</div><div><h4>Calm over kinetic</h4><p>Animation states what changed; it does not entertain. If a transition draws attention to itself, cut it. Motion is the quietest way to say a thing moved.</p></div></div>
+      <div class="principle"><div class="pn">02</div><div><h4>Resolve, never bounce</h4><p>Standard ease-out, no spring, no overshoot. Springy, magical motion is the autopilot fantasy the brand refuses — the same reason "set it and forget it" is banned.</p></div></div>
+      <div class="principle"><div class="pn">03</div><div><h4>Opacity &amp; weight over travel</h4><p>Prefer a fade or a hairline/weight shift to a slide. When something must move, it travels 4–8px — a settle, not a flight.</p></div></div>
+      <div class="principle"><div class="pn">04</div><div><h4>One emphasis per view</h4><p>Like the inverted ink block, motion emphasis is spent once. The ratification moment may land with a little weight; everything around it stays still.</p></div></div>
+    </div>
+
+    <!-- duration & easing tokens -->
+    <div class="block-title" style="margin-top:46px">Duration &amp; easing tokens</div>
+    <p style="font-size:14.5px; color: var(--mut); margin-top:10px; max-width:64ch; line-height:1.5;">A short scale, mono-set like every other token. Durations climb with the size of the change; nothing exceeds a quarter-second. Easing is shared — one ease-out for everything, no spring anywhere.</p>
+    <div class="numerals">
+      <div class="num-cell"><div class="nl">Instant</div><div class="nv">0ms</div><div class="nn">Reduced-motion · state that must not animate</div></div>
+      <div class="num-cell"><div class="nl">Micro</div><div class="nv">120ms</div><div class="nn">Hover, press, dot hue cross-fade</div></div>
+      <div class="num-cell"><div class="nl">State</div><div class="nv">180ms</div><div class="nn">Show / hide, expand, pill change</div></div>
+      <div class="num-cell"><div class="nl">Enter</div><div class="nv">240ms</div><div class="nn">Stage card / panel reveal · max duration</div></div>
+      <div class="num-cell"><div class="nl">Ease</div><div class="nv">0.2, 0, 0, 1</div><div class="nn">cubic-bezier · ease-out · no spring</div></div>
+    </div>
+
+    <!-- applied specs -->
+    <div class="spec-grid" style="margin-top:38px">
+      <div class="spec-card">
+        <div class="sc-lab">Status</div>
+        <h4>Cross-fade, never blink</h4>
+        <p>A file changing state cross-fades its dot and pill hue over 120ms. Status never pulses, flashes, or blinks — a blinking dot is alarm theater, and otto states, it does not perform.</p>
+      </div>
+      <div class="spec-card">
+        <div class="sc-lab">Stage cards</div>
+        <h4>Lift, don't fly</h4>
+        <p>Floating "stage" cards enter at 240ms: opacity 0→1 with a 6px rise and the soft far-cast shadow fading in. The lift mirrors their elevation; the lead-in surfaces stay flat and still.</p>
+      </div>
+      <div class="spec-card">
+        <div class="sc-lab">The ratification moment</div>
+        <h4>Where motion is spent</h4>
+        <p>The inverted ink block is the one place motion carries weight: a 240ms fade with a slight scale settle (0.98→1) as the Receipt is written. Used once per arc — if everything moves, nothing matters.</p>
+      </div>
+    </div>
+
+    <!-- icon motion + reduced motion -->
+    <div class="spec-grid" style="margin-top:20px">
+      <div class="spec-card">
+        <div class="sc-lab">Icons</div>
+        <h4>Single-stroke draw-on</h4>
+        <p>If an icon animates, its hairline draws on once in ≤200ms (standard ease), consistent with the line language. No spin, no morph, no looping idle.</p>
+      </div>
+      <div class="spec-card">
+        <div class="sc-lab">Accessibility</div>
+        <h4>Honor reduced motion</h4>
+        <p>Under <code>prefers-reduced-motion</code>, every duration collapses to <span class="mono" style="font-size:12px;">0ms</span> and transitions become instant state swaps. Calm and exact includes respecting a person who asked for stillness.</p>
+      </div>
+      <div class="spec-card">
+        <div class="sc-lab">Loading</div>
+        <h4>Indeterminate, not anxious</h4>
+        <p>Waiting is a quiet hairline shimmer or a single slow sweep — never a fast spinner. The system is working, not racing; the wait should read as composure.</p>
+      </div>
+    </div>
+
+    <!-- do / don't -->
+    <div class="dodont">
+      <div class="dd-col do">
+        <div class="dd-head do"><span class="dotx"></span>Move it this way</div>
+        <div class="dd-row"><div class="quote">Fade the pill from Stale to Current over 120ms.</div><div class="why">Cross-fade signals the state change without drawing the eye away.</div></div>
+        <div class="dd-row"><div class="quote">Stage card enters: opacity 0→1, rise 6px, 240ms ease-out.</div><div class="why">A settle that matches its elevation. Resolves, doesn't bounce.</div></div>
+        <div class="dd-row"><div class="quote">Reduce all motion to instant under prefers-reduced-motion.</div><div class="why">Stillness on request. Calm and exact, all the way down.</div></div>
+      </div>
+      <div class="dd-col dont">
+        <div class="dd-head dont"><span class="dotx"></span>Never</div>
+        <div class="dd-row"><div class="quote">Springy, bouncing, or elastic entrances.</div><div class="why"><b>Forbidden:</b> overshoot. It reads as the autopilot fantasy the brand bans.</div></div>
+        <div class="dd-row"><div class="quote">Blinking or pulsing status dots.</div><div class="why"><b>Forbidden:</b> alarm theater. Status states, it does not flash.</div></div>
+        <div class="dd-row"><div class="quote">Parallax, looping idle animation, decorative motion.</div><div class="why"><b>Forbidden:</b> motion as texture. If it isn't load-bearing, it's still.</div></div>
+      </div>
+    </div>
+
+    <div class="motif-note" style="margin-top:30px">
+      <div class="mn"><b>Motion is rationed like status hue.</b> It appears on small, meaningful changes — never as ambient life across a surface.</div>
+      <div class="mn"><b>Nothing exceeds 240ms.</b> If a transition needs longer to feel right, the change itself is too big — split it.</div>
+      <div class="mn"><b>The human ratifies. otto records the proof.</b> Motion confirms a change happened; it never implies one that has no receipt.</div>
+    </div>
+  </div>
+</section>

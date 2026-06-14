@@ -69,9 +69,16 @@ export const Onboarding: React.FC<{ onNavigate: (id: SurfaceId) => void; activeS
     setHydrated(true);
   }, [rt.electron, rt.status]);
 
-  if (!rt.electron || dismissed || !hydrated) return null;
-
   const connected = !!rt.status?.ready;
+
+  // Chat-first: connected operators skip the onboarding theater.
+  useEffect(() => {
+    if (!connected || dismissed || started) return;
+    dismissOnboarding();
+    setDismissed(true);
+  }, [connected, dismissed, started]);
+
+  if (!rt.electron || dismissed || !hydrated) return null;
   const step = resolveOnboardingStep({
     started,
     intent,

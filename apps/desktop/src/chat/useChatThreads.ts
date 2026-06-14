@@ -15,6 +15,7 @@ function mapThread(thread: {
     conversationId: thread.lettaConversationId,
     title: thread.title,
     updatedAt: Date.parse(thread.updatedAt) || Date.now(),
+    pinned: !!thread.pinned,
   };
 }
 
