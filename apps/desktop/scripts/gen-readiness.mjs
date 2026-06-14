@@ -21,7 +21,7 @@ const repoRoot = resolve(appRoot, '../..');
 const outputPath = join(appRoot, 'src/data/readiness.json');
 
 const has = (...p) => existsSync(join(...p));
-// Home-relativize so the committed readiness.json never leaks an absolute /Users/... path.
+// Home-relativize so local readiness output never leaks an absolute /Users/... path.
 const tilde = (p) => (p && p.startsWith(homedir()) ? '~' + p.slice(homedir().length) : p);
 
 // optional, machine-local, never committed
@@ -32,6 +32,7 @@ const hasConfig = !ignoreLocalConfig && existsSync(configPath);
 if (hasConfig) {
   try { cfg = JSON.parse(readFileSync(configPath, 'utf8')); } catch { cfg = {}; }
 }
+const repoSource = ignoreLocalConfig ? 'repo root' : tilde(repoRoot);
 
 // --- real repo checks ---
 let isOttoRepo = false;
@@ -69,7 +70,7 @@ const items = [
     action: 'Available once the runtime connects' },
   { key: 'workspace', label: 'Workspace root', required: false,
     status: isOttoRepo ? 'configured' : (existsSync(repoRoot) ? 'file' : 'missing'),
-    detail: isOttoRepo ? 'Otto repo detected' : 'repo root', source: tilde(repoRoot),
+    detail: isOttoRepo ? 'Otto repo detected' : 'repo root', source: repoSource,
     action: 'Override with OTTO_HOME' },
   { key: 'skills', label: 'Skills', required: false,
     status: skillsPresent.length ? 'file' : 'missing',
