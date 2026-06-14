@@ -152,7 +152,7 @@ tasks:
         AGENT_ID="${OTTO_AGENT_ID:-${LETTA_AGENT_ID:-}}"
         if [ -z "$AGENT_ID" ]; then
           printf '%s\n' 'SKIP task smoke:cli: OTTO_AGENT_ID or LETTA_AGENT_ID is not set.'
-          printf '%s\n' 'Run OTTO_AGENT_ID=<agent-id> task smoke:cli after you have a real local Letta agent.'
+          printf '%s\n' 'Run OTTO_AGENT_ID=<agent-id> (or LETTA_AGENT_ID=<agent-id>) task smoke:cli after you have a real local Letta agent.'
           exit 0
         fi
         CLI_PATH="${LETTA_CLI_PATH:-{{.LETTA_CLI}}}"

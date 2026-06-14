@@ -1,0 +1,30 @@
+{
+  "pr": 23,
+  "checks": [
+    {
+      "name": "task smoke:cli skip behavior",
+      "command": "task smoke:cli",
+      "result": "pass",
+      "reason": "No agent env -> exits 0 with explicit SKIP guidance."
+    },
+    {
+      "name": "task smoke:cli missing CLI path",
+      "command": "OTTO_AGENT_ID=fake LETTA_CLI_PATH=/tmp/missing-letta.js task smoke:cli",
+      "result": "pass",
+      "reason": "Exits 1 with actionable missing-CLI guidance."
+    },
+    {
+      "name": "task smoke:cli LETTA_AGENT_ID path",
+      "command": "LETTA_AGENT_ID=fake LETTA_CLI_PATH=/tmp/missing-letta.js task smoke:cli",
+      "result": "pass",
+      "reason": "Behavior matches OTTO_AGENT_ID path (LETTA_ID accepted)."
+    }
+  ],
+  "artifacts": [
+    "desktop-home.png",
+    "desktop-settings.png"
+  ],
+  "notes": [
+    "Smoke task now documents OTTO_AGENT_ID or LETTA_AGENT_ID for real agent runs."
+  ]
+}
