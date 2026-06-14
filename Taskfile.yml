@@ -259,6 +259,10 @@ tasks:
     cmds:
       - bunx --bun @biomejs/biome@1.9.4 lint {{.DESKTOP}}/src {{.DESKTOP}}/electron packages
 
+  lint:changed:
+    desc: Lint changed app/package files with Biome
+    cmds: [bun run lint:changed]
+
   lint:workflows:
     desc: Lint GitHub Actions workflows (actionlint, YAML parse fallback)
     cmds: [bash scripts/lint-workflows.sh]
