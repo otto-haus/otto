@@ -51,16 +51,22 @@ If `MEMORY_DIR` is not set, `WARN: MEMORY_DIR not set; skipping skill install.` 
 
 ## Optional desktop check
 
+Web preview only:
+
 ```sh
 bun run --cwd apps/desktop typecheck
 bun run --cwd apps/desktop dev
 ```
 
-For Electron:
+Development Electron:
 
 ```sh
 bun run --cwd apps/desktop electron:dev
 ```
+
+This opens a development app from the repo. It does not install `/Applications/otto.app`.
+Do not report the installed app as tested unless you deliberately ran the installed-app path
+(`task refresh`), which writes `/Applications/otto.app`.
 
 The desktop is honest by design: chat must stay blocked until a real Letta session initializes.
 

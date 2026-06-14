@@ -218,12 +218,11 @@ MEMORY_DIR=/path/to/agent/memory bun run install-extension
 If `MEMORY_DIR` is not set, the command still installs the Letta Code command files and
 prints the manual copy paths for `skill/SKILL.md` and `skill/routine/SKILL.md`.
 
-Local desktop app:
+Choose one desktop launch path:
 
 ```sh
-# development Electron app; does not update the canonical installed app
+# development Electron app; keeps otto running from this terminal
 task electron
-
 
 # safe packaged app, isolated from the live profile
 task staging
@@ -239,7 +238,7 @@ Connect the desktop app to Letta:
 
 A fresh clone does not include a hosted agent. Live chat requires a local Letta runtime, provider auth configured in Letta, and a target Letta agent.
 
-1. Install/open the latest published GitHub Release build at `/Applications/otto.app`.
+1. Use the window from your launch path: `task electron` opens the development app; `task staging` opens an isolated `/Applications/otto-staging.app`. For the canonical app, install/open the latest published GitHub Release build at `/Applications/otto.app`.
 2. otto tries to discover Letta Desktop and your current local agent automatically.
 3. Use **Settings → General** only for advanced runtime/agent overrides.
 4. Provider/model credentials stay in Letta. otto does not ask for provider API keys in v1.
