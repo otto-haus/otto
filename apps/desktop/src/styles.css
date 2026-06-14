@@ -1571,7 +1571,20 @@ h1, h2, h3, h4, p { margin: 0; }
 .labsRow__toggle {
   display: grid; gap: 6px; justify-items: end; font-size: 12px; white-space: nowrap;
 }
-.labsRow__toggle input { width: 18px; height: 18px; accent-color: var(--accent); }
+.labsRow__toggle input {
+  appearance: none; -webkit-appearance: none;
+  width: 18px; height: 18px; margin: 0;
+  border: 1.5px solid var(--mut); border-radius: 5px; background: var(--bg);
+  display: grid; place-content: center; cursor: pointer;
+  transition: background 0.12s ease, border-color 0.12s ease;
+}
+.labsRow__toggle input:checked { background: var(--accent); border-color: var(--accent); }
+.labsRow__toggle input:checked::after {
+  content: ""; width: 5px; height: 9px;
+  border: solid var(--bg); border-width: 0 2px 2px 0;
+  transform: translateY(-1px) rotate(45deg);
+}
+.labsRow__toggle input:disabled { opacity: 0.45; cursor: not-allowed; }
 
 /* ---------- onboarding (first-run) ---------- */
 .onboardOverlay {
