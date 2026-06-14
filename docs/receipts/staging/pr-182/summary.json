@@ -1,0 +1,51 @@
+{
+  "pr": 182,
+  "title": "fix(desktop): validate practice metrics slugs",
+  "reviewAgent": "codex",
+  "generatedAt": "2026-06-14T21:26:45Z",
+  "status": "ready_for_sebastian_review_after_ci",
+  "codeRecommendation": {
+    "value": "ready",
+    "reason": "The metrics store now rejects path-separator traversal slugs, canonicalizes accepted slugs before return/storage, and skips malformed local metric filenames without breaking valid metrics."
+  },
+  "shipRecommendation": {
+    "value": "ship_with_functional_labs_train",
+    "reason": "This is a narrow local-data integrity and filesystem-boundary fix. It should ship with the functional-labs train once Sebastian accepts the PR, but it does not require a standalone release cut."
+  },
+  "bugsFixedByCodexReview": [
+    "PracticeMetricsStore.list() could throw on malformed local filenames after the original validator was added.",
+    "Whitespace-padded accepted slugs were not consistently canonicalized in returned and stored metric records.",
+    "Regression coverage now proves traversal rejection, canonical accepted slugs, and malformed local-file skip behavior."
+  ],
+  "proof": {
+    "dataReceipt": "docs/receipts/staging/pr-182/codex-review-practice-metrics-slugs.json",
+    "screenshots": [],
+    "screenshotReason": "Backend/local filesystem behavior; data proof is the relevant evaluation artifact."
+  },
+  "verification": [
+    {
+      "command": "bun install --frozen-lockfile",
+      "result": "pass"
+    },
+    {
+      "command": "bun test apps/desktop/electron/practice-runner.test.ts apps/desktop/electron/practice-metrics-store.test.ts",
+      "result": "pass",
+      "details": "9 pass, 0 fail, 31 expect calls"
+    },
+    {
+      "command": "bash scripts/ci-local-gate.sh",
+      "result": "pass",
+      "details": "root typecheck pass; desktop/electron typecheck pass; bun test 278 pass, 1 skip, 0 fail, 946 expect calls; verify:v0 5 passed, 0 failed; devex mint validate pass; devex broken-links pass; electron build pass; bun audit no vulnerabilities"
+    },
+    {
+      "command": "OTTO_STAGING_APP=/Applications/otto-pr-182-staging.app OTTO_STAGING_DISPLAY_NAME=\"otto pr 182 staging\" OTTO_STAGING_BUNDLE_ID=haus.otto.desktop.pr182staging OTTO_STAGING_ROOT=/tmp/otto-pr-182-proof-staging OTTO_STAGING_PORT=9461 OTTO_STAGING_WS_REMOTE_ENV=otto-pr182-proof-byor OTTO_STAGING_LOCK_DIR=/Users/seb/.codex/admin/otto-logs/desktop-deploy-pr182.lock OTTO_AGENT_ID=agent-00000000-0000-4000-8000-000000000000 LETTA_BASE_URL=http://127.0.0.1:9 OTTO_STAGING_LOG_CAPTURE_SECONDS=1 task staging",
+      "result": "pass",
+      "details": "Built, packaged, signed, installed, and launched /Applications/otto-pr-182-staging.app with isolated runtime root. Default /Applications/otto-staging.app was left untouched because it was already running."
+    }
+  ],
+  "stagingLogs": [
+    "/Users/seb/.codex/admin/otto-logs/staging-20260614T142626.deploy.log",
+    "/Users/seb/.codex/admin/otto-logs/staging-20260614T142626.app.log"
+  ],
+  "boundary": "No live Letta connection claimed."
+}
