@@ -1,0 +1,21 @@
+{
+  "schema": "otto.codex_pr_review_summary.v1",
+  "pr": 312,
+  "status": "ready_after_codex_repairs_pending_full_gate",
+  "codeRecommendation": "ready_after_codex_repairs",
+  "shipRecommendation": "ship_runtime_fix_hold_apex_custom_domain_move",
+  "proof": "docs/receipts/staging/pr-312/codex-review-ws-idle-pages-deploy.json",
+  "summary": "Codex repaired the unsafe production-default Pages helper, added the missing WS terminal-result event on assistant-without-idle fallback, and corrected unverified apex language.",
+  "screenshots": [],
+  "dataProof": [
+    "WS targeted tests: 20 pass, 60 expects",
+    "Pages deploy helper dry-run proves preview command without remote deploy",
+    "Unapproved main deploy is blocked",
+    "otto-haus.pages.dev read-only check returned HTTP 200",
+    "otto.haus read-only check returned DNS no-answer from this environment"
+  ],
+  "shipNotes": [
+    "Ship runtime fix and safe deploy helper.",
+    "Hold apex/custom-domain move until Sebastian explicitly approves it."
+  ]
+}

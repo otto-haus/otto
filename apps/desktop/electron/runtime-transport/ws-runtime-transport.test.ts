@@ -456,4 +456,57 @@ describe('WsRuntimeTransport', () => {
     socket.close();
     await transport.close();
   });
+
+  test('assistant response without idle emits terminal result and keeps transport ready', async () => {
+    const prevTimeout = process.env.OTTO_WS_TURN_IDLE_TIMEOUT_MS;
+    process.env.OTTO_WS_TURN_IDLE_TIMEOUT_MS = '80';
+    const { win, sent } = mockWindow();
+    const transport = new WsRuntimeTransport(win, mockConfig());
+    (transport as unknown as { spawnRemote: () => Promise<void> }).spawnRemote = async () => {};
+
+    const initPromise = transport.init({ freshConversation: true });
+    const { port, token } = await waitForListener(transport);
+    const socket = new WebSocket(`ws://127.0.0.1:${port}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    socket.on('message', (raw) => {
+      let cmd: Record<string, unknown>;
+      try {
+        cmd = JSON.parse(String(raw)) as Record<string, unknown>;
+      } catch {
+        return;
+      }
+      if (cmd.type === 'sync') {
+        socket.send(JSON.stringify(syncResponse('conv-ws-assistant-no-idle')));
+        socket.send(JSON.stringify(deviceOnline()));
+        socket.send(JSON.stringify(loopIdle()));
+      }
+      if (cmd.type === 'input') {
+        socket.send(JSON.stringify({
+          type: 'stream_delta',
+          delta: { message_type: 'assistant_message', content: [{ text: 'partial ok' }] },
+        }));
+      }
+    });
+    await new Promise<void>((resolve, reject) => {
+      socket.once('open', () => resolve());
+      socket.once('error', reject);
+    });
+    await initPromise;
+
+    await transport.send('attachment-heavy turn');
+
+    expect(transport.getStatus().ready).toBe(true);
+    expect(sent.some((e) => e.channel === 'otto:event' && (e.payload as { message?: { type?: string } }).message?.type === 'assistant')).toBe(true);
+    expect(sent.some((e) => {
+      const message = (e.payload as { message?: { type?: string; success?: boolean } }).message;
+      return e.channel === 'otto:event' && message?.type === 'result' && message.success === true;
+    })).toBe(true);
+    expect(sent.some((e) => e.channel === 'otto:event' && (e.payload as { message?: { type?: string } }).message?.type === 'error')).toBe(false);
+
+    if (prevTimeout === undefined) Reflect.deleteProperty(process.env, 'OTTO_WS_TURN_IDLE_TIMEOUT_MS');
+    else process.env.OTTO_WS_TURN_IDLE_TIMEOUT_MS = prevTimeout;
+    socket.close();
+    await transport.close();
+  });
 });

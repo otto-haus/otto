@@ -3,6 +3,6 @@
   "project": "otto-haus",
   "production_deploy": "https://2ddf6591.otto-haus.pages.dev",
   "pages_dev": "https://otto-haus.pages.dev",
-  "apex_status": "otto.haus still on Worker otto (Hello world) — move custom domain to Pages",
+  "apex_status": "otto.haus not verified live on Pages; Codex review at 2026-06-14T22:17:09Z saw DNS no-answer for otto.haus; attach custom domain only after Sebastian approves the DNS/custom-domain move",
   "deploy_command": "bash site/deploy-pages.sh"
 }

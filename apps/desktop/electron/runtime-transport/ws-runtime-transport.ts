@@ -268,6 +268,11 @@ export class WsRuntimeTransport implements OttoRuntimeTransport {
         receiptWritten = true;
         this.writeChatReceipt({ text, status, summary, blocker, startedStatus, tracePath: trace.path });
       };
+      const emitResult = (success: boolean) => {
+        safeWebContentsSend(this.win, 'otto:event', {
+          message: { type: 'result', success, conversationId: this.status.conversationId, uuid: randomUUID() },
+        });
+      };
 
       const onRuntimeEvent = (event: WsRuntimeEvent) => {
         trace.write('event', event);
@@ -284,9 +289,7 @@ export class WsRuntimeTransport implements OttoRuntimeTransport {
         }
         if (isLoopIdle(event)) {
           this.turnIdle = true;
-          safeWebContentsSend(this.win, 'otto:event', {
-            message: { type: 'result', success: !turnError, conversationId: this.status.conversationId, uuid: randomUUID() },
-          });
+          emitResult(!turnError);
           writeReceipt(turnError ? 'failed' : 'success', turnError ? 'Chat turn failed.' : 'Chat turn completed.', turnError ? {
             code: 'error',
             message: turnError,
@@ -319,6 +322,7 @@ export class WsRuntimeTransport implements OttoRuntimeTransport {
       } catch (e) {
         const idleTimeout = msg(e).includes('Timed out waiting for runtime idle');
         if (idleTimeout && sawAssistant) {
+          emitResult(true);
           writeReceipt('success', 'Chat turn completed without idle confirmation.', null);
         } else if (idleTimeout) {
           writeReceipt('failed', 'Chat turn timed out before the runtime became idle.', {

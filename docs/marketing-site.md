@@ -39,13 +39,15 @@ bash site/deploy-staging.sh   # curl + copy checks; receipt in docs/receipts/sta
 **Cloudflare Pages (project `otto-haus`, account joinnova):**
 
 ```sh
-bash site/deploy-pages.sh              # production branch main
-OTTO_PAGES_BRANCH=ship/functional-labs bash site/deploy-pages.sh   # preview branch only
+bash site/deploy-pages.sh              # preview for current git branch
+OTTO_PAGES_DRY_RUN=1 bash site/deploy-pages.sh       # print command without deploying
+OTTO_PAGES_BRANCH=main OTTO_PAGES_ALLOW_PRODUCTION=1 bash site/deploy-pages.sh
 ```
 
 - Static root: `site/` — no build command
 - Default URL: `https://otto-haus.pages.dev`
-- **Apex `otto.haus`:** attach custom domain on **Pages → otto-haus**, not on Worker `otto` (empty Worker shows “Hello world” and steals the apex)
+- Production deploys require `OTTO_PAGES_ALLOW_PRODUCTION=1` and Sebastian approval in the moment.
+- **Apex `otto.haus`:** not verified live on Pages; attach custom domain on **Pages → otto-haus** only after Sebastian approves the DNS/custom-domain move.
 - Optional staging subdomain: `staging.otto.haus` when approved
 
 **GitHub Pages / Render static**

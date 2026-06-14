@@ -1,0 +1,73 @@
+{
+  "schema": "otto.codex_pr_review.v1",
+  "pr": 312,
+  "reviewedAt": "2026-06-14T22:19:02Z",
+  "headBranch": "bugfix/265-idle-timeout-pages-deploy",
+  "baseBranch": "ship/functional-labs",
+  "reviewBranch": "codex/pr-312-review",
+  "proofType": "data",
+  "codeRecommendation": "ready_after_codex_repairs",
+  "shipRecommendation": "ship_runtime_fix_hold_apex_custom_domain_move",
+  "findings": [
+    {
+      "severity": "high",
+      "status": "fixed",
+      "summary": "Cloudflare Pages deploy helper defaulted to branch=main, making production deploy the default remote mutation. The helper now defaults to the current git branch, blocks main unless OTTO_PAGES_ALLOW_PRODUCTION=1, and supports OTTO_PAGES_DRY_RUN=1."
+    },
+    {
+      "severity": "medium",
+      "status": "fixed",
+      "summary": "Assistant output followed by idle timeout wrote a success receipt without emitting the normal terminal result event. The WS transport now emits result success on that fallback path."
+    },
+    {
+      "severity": "medium",
+      "status": "fixed",
+      "summary": "Apex documentation claimed otto.haus was on an empty Worker. Read-only review saw otto-haus.pages.dev serve the site and otto.haus return DNS no-answer, so docs now state only the verified boundary."
+    }
+  ],
+  "dataProof": {
+    "runtime": {
+      "command": "bun test apps/desktop/electron/runtime-transport/ws-protocol.test.ts apps/desktop/electron/runtime-transport/ws-runtime-transport.test.ts",
+      "result": "20 pass, 0 fail, 60 expect",
+      "assertions": [
+        "attachment prompt timeout scales with attachment count",
+        "idle timeout without assistant keeps transport ready and emits a recoverable error",
+        "assistant response without idle emits terminal result success and keeps transport ready"
+      ]
+    },
+    "pagesDeployHelper": {
+      "syntaxCheck": "bash -n site/deploy-pages.sh passed",
+      "previewDryRun": "OTTO_PAGES_DRY_RUN=1 OTTO_PAGES_BRANCH=preview-test bash site/deploy-pages.sh printed wrangler pages deploy . --project-name=otto-haus --branch=preview-test --commit-dirty=true",
+      "productionGuard": "OTTO_PAGES_BRANCH=main bash site/deploy-pages.sh refused production deploy",
+      "productionDryRunWithApproval": "OTTO_PAGES_DRY_RUN=1 OTTO_PAGES_BRANCH=main OTTO_PAGES_ALLOW_PRODUCTION=1 bash site/deploy-pages.sh printed the production command without deploying"
+    },
+    "siteReadOnlyChecks": {
+      "pagesDev": "curl -I https://otto-haus.pages.dev returned HTTP 200",
+      "apex": "curl and DNS lookup for otto.haus returned no DNS answer from this environment"
+    },
+    "securityScan": {
+      "report": "/tmp/codex-security-scans/otto/3f2969a3c1ecc36c3a56947851e6cbda56a80eea_20260614T221412Z/report.md",
+      "html": "/tmp/codex-security-scans/otto/3f2969a3c1ecc36c3a56947851e6cbda56a80eea_20260614T221412Z/report.html",
+      "result": "No remaining reportable security findings after Codex repairs."
+    }
+  },
+  "verification": [
+    {
+      "command": "bun install --frozen-lockfile",
+      "status": "passed"
+    },
+    {
+      "command": "git diff --check",
+      "status": "passed"
+    },
+    {
+      "command": "jq empty docs/receipts/staging/265-attachment-idle-timeout-20260614T220434Z/proof.json docs/receipts/staging/pages-otto-haus-20260614T220434Z/proof.json",
+      "status": "passed"
+    }
+  ],
+  "shipNotes": [
+    "Ship the WS runtime timeout fix and safe Pages helper with the functional-labs train.",
+    "Do not ship this as an apex launch: otto.haus is not verified live on Pages and DNS/custom-domain movement remains a Sebastian-approved one-way door.",
+    "No production Pages deploy or DNS/dashboard mutation was performed by Codex review."
+  ]
+}
