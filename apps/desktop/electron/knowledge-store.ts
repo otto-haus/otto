@@ -15,7 +15,7 @@ export class KnowledgeStore {
     return {
       dir: this.dir,
       registryPath,
-      registry: existsSync(registryPath) ? readRegistry(registryPath) : null,
+      registry: existsSync(registryPath) ? readRegistrySafe(registryPath) : null,
       capabilityNotesPath: existsSync(capabilityNotesPath) ? capabilityNotesPath : null,
       providerCostsPath: existsSync(providerCostsPath) ? providerCostsPath : null,
       observedPerformanceDir: existsSync(observedPerformanceDir) ? observedPerformanceDir : null,
@@ -58,6 +58,14 @@ export function resolveKnowledgeDir(): string {
   }
 
   return candidates[0] ?? resolve(process.cwd(), 'knowledge');
+}
+
+function readRegistrySafe(file: string): KnowledgeRegistrySummary | null {
+  try {
+    return readRegistry(file);
+  } catch {
+    return null;
+  }
 }
 
 function readRegistry(file: string): KnowledgeRegistrySummary {

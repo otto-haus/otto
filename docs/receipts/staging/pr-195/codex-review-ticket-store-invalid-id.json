@@ -1,0 +1,28 @@
+{
+  "pr": 195,
+  "capturedAt": "2026-06-14T20:48:35Z",
+  "surface": "TicketStore.list malformed ticket data",
+  "fixtures": [
+    {
+      "name": "missing-id",
+      "ticketYaml": "status: active\nobjective: Missing id should not become a blank ticket.\nupdated_at: \"2026-06-14T00:00:00.000Z\"\n"
+    },
+    {
+      "name": "blank-id",
+      "ticketYaml": "ticket_id: \"   \"\nstatus: active\nobjective: Blank id should not become a blank ticket.\nupdated_at: \"2026-06-14T00:00:00.000Z\"\n"
+    },
+    {
+      "name": "number-id",
+      "ticketYaml": "ticket_id: 123\nstatus: active\nobjective: Non-string id should not become a ticket.\nupdated_at: \"2026-06-14T00:00:00.000Z\"\n"
+    }
+  ],
+  "observed": {
+    "ticketsReturned": 0,
+    "skipped": 3,
+    "storage": "files"
+  },
+  "assertions": {
+    "noBlankTicketRecordsReturned": true,
+    "allMalformedFixturesSkipped": true
+  }
+}

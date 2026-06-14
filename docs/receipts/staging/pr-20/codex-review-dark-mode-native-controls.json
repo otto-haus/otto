@@ -1,0 +1,44 @@
+{
+  "generatedAt": "2026-06-14T18:35:08.343Z",
+  "url": "http://127.0.0.1:5220/#charters",
+  "viewport": {
+    "width": 1280,
+    "height": 760
+  },
+  "emulatedColorScheme": "dark",
+  "browserFallbackReason": "Browser plugin bootstrap failed because the iab browser endpoint was not available; used existing admin Playwright package via NODE_PATH.",
+  "screenshot": "docs/receipts/staging/pr-20/codex-review-dark-mode-native-controls-with-meta.png",
+  "consoleMessages": [],
+  "metrics": {
+    "url": "http://127.0.0.1:5220/#charters",
+    "title": "Otto Desktop",
+    "metaColorScheme": "light",
+    "prefersDarkMatches": true,
+    "documentColorScheme": "light",
+    "bodyBackground": "rgb(248, 247, 242)",
+    "bodyColor": "rgb(20, 22, 26)",
+    "proofSelect": {
+      "tag": "select",
+      "colorScheme": "light",
+      "backgroundColor": "rgb(255, 255, 255)",
+      "color": "rgb(20, 22, 26)",
+      "borderColor": "rgb(118, 118, 118)"
+    },
+    "proofCheckbox": {
+      "tag": "input",
+      "colorScheme": "light",
+      "backgroundColor": "rgba(0, 0, 0, 0)",
+      "color": "rgb(20, 22, 26)",
+      "borderColor": "rgb(20, 22, 26)"
+    },
+    "proofInput": {
+      "tag": "input",
+      "colorScheme": "light",
+      "backgroundColor": "rgb(255, 255, 255)",
+      "color": "rgb(20, 22, 26)",
+      "borderColor": "rgb(118, 118, 118)"
+    },
+    "routeTextIncludesCharters": true,
+    "previewLimitation": true
+  }
+}

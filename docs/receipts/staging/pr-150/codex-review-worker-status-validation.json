@@ -1,0 +1,53 @@
+{
+  "pr": 150,
+  "reviewer": "codex",
+  "reviewedAt": "2026-06-14",
+  "base": "ship/functional-labs",
+  "head": "bugfix/worker-status-validation",
+  "changeType": "electron-backend",
+  "fixApplied": {
+    "summary": "WorkerStore.updateStatus rejects invalid runtime status values before rewriting worker JSON. The allowed runtime map is now a Record<WorkerStatus, true> so TypeScript catches future WorkerStatus drift.",
+    "files": [
+      "apps/desktop/electron/worker-store.ts",
+      "apps/desktop/electron/worker-store.test.ts"
+    ]
+  },
+  "runtimeBoundaryProof": {
+    "invalidStatus": "finished",
+    "throws": "Invalid worker status",
+    "invalidUpdateDoesNotRewrite": {
+      "status": "running",
+      "receipt_ids": []
+    },
+    "validUpdateProof": {
+      "reviewAccepted": true,
+      "doneAccepted": true,
+      "receiptIdsDeduplicated": [
+        "receipt-1"
+      ]
+    }
+  },
+  "verification": {
+    "passed": [
+      "bun install --frozen-lockfile",
+      "bun test apps/desktop/electron/worker-store.test.ts (2 pass / 0 fail / 6 expect calls)",
+      "bun run typecheck",
+      "bun run --cwd apps/desktop typecheck",
+      "bun run --cwd apps/desktop electron:typecheck",
+      "git diff --check",
+      "bun test (223 pass / 1 skip / 0 fail / 744 expect calls)",
+      "bun run verify:v0 (5/5 passed)",
+      "task staging"
+    ],
+    "staging": {
+      "app": "/Applications/otto-staging.app",
+      "home": "/Users/seb/.codex/admin/otto-staging/home",
+      "ottoHome": "/Users/seb/.codex/admin/otto-staging/otto-home",
+      "profile": "/Users/seb/.codex/admin/otto-staging/profile",
+      "port": 9445
+    },
+    "notRun": [
+      "Screenshot capture: not applicable; this is backend worker JSON validation. Data proof and staging build are attached instead."
+    ]
+  }
+}

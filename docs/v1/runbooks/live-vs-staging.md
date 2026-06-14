@@ -2,8 +2,8 @@
 
 Canonical operator contract for where Otto runs, how proof is deployed, and when the live app may be refreshed.
 
-Related workflow: [`planning/hq-tickets/_workflow-run-ticket.md`](../../planning/hq-tickets/_workflow-run-ticket.md)  
-Staging rules (source of truth): [`planning/hq-tickets/AGENTS.md`](../../planning/hq-tickets/AGENTS.md)
+Related workflow: [`planning/hq-tickets/_workflow-run-ticket.md`](../../../planning/hq-tickets/_workflow-run-ticket.md)
+Staging rules (source of truth): [`planning/hq-tickets/AGENTS.md`](../../../planning/hq-tickets/AGENTS.md)
 
 ## Three tiers
 

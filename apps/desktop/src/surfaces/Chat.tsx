@@ -7,7 +7,7 @@ import { isElectron, ottoApi, type EffortLevel, type LettaModelOption, type Save
 import { useRuntimeContext } from '../RuntimeContext';
 import type { SurfaceId } from '../components/Sidebar';
 import { OttoMark } from '../components/OttoMark';
-import { CheckBlockBanner, CommandStationStrip, MessageActions, Modal, PermissionCard, ReceiptInlineCard, type PermissionDecision, type PermissionRequestView } from '../components/ui';
+import { CheckBlockBanner, MessageActions, Modal, PermissionCard, ReceiptInlineCard, type PermissionDecision, type PermissionRequestView } from '../components/ui';
 import { displayThreadTitle } from '../components/ui/ThreadList';
 import { chatCopy, permissionCopy, toastCopy } from '../copy/surfaces';
 import { useChatThreads } from '../chat/useChatThreads';
@@ -17,12 +17,16 @@ import { runTicketCommand } from '../chat/ticket-commands';
 import {
   clearInFlight,
   createQueueItem,
+  hasDuplicateQueueText,
   nextQueueItemForThread,
   persistInFlight,
   previewQueueText,
   QUEUE_KEY,
+  queueDisplayItemsForThread,
   queueMatchesThread,
   readQueue,
+  retryFailedQueueItemsForThread,
+  type QueueDisplayItem,
   type QueueItem,
 } from '../chat/queue-storage';
 import type { ProposalTarget } from '@otto-haus/core';
@@ -50,6 +54,7 @@ type AttachmentDraft = SavedAttachment & { previewUrl: string };
 
 const DRAFT_KEY = 'otto.chat.draft.v1';
 const ATTACHMENTS_KEY = 'otto.chat.attachments.v1';
+const QUEUE_DELIVERED_PRUNE_AGE_MS = 15_000;
 
 const FALLBACK_MODEL_OPTIONS: LettaModelOption[] = [
   { label: 'GPT-5.5 (ChatGPT)', handle: 'chatgpt-plus-pro/gpt-5.5' },
@@ -226,8 +231,33 @@ const dedupeQueue = (items: Array<QueueItem | null>): QueueItem[] => {
   return out;
 };
 
+const userMessageSentAt = (message: ChatMsg): number | null => {
+  if (message.who !== 'user') return null;
+  const match = /^user-(\d+)$/.exec(message.id);
+  if (!match) return null;
+  const value = Number(match[1]);
+  return Number.isFinite(value) ? value : null;
+};
+
+const queueItemAlreadyDelivered = (item: QueueItem, messages: ChatMsg[]): boolean => {
+  const textKey = item.text.trim().replace(/\s+/g, ' ');
+  return messages.some((message) => {
+    const sentAt = userMessageSentAt(message);
+    return (
+      sentAt !== null &&
+      sentAt >= item.createdAt - 2000 &&
+      message.text.trim().replace(/\s+/g, ' ') === textKey
+    );
+  });
+};
+
+const appendQueueItem = (items: QueueItem[], text: string, threadId: string | null | undefined): QueueItem[] => {
+  if (hasDuplicateQueueText(items, threadId, text)) return items;
+  return [...items, createQueueItem(text, 'queued', threadId ?? null)];
+};
+
 const QueueStrip: React.FC<{
-  queue: QueueItem[];
+  queue: QueueDisplayItem[];
   onClear: () => void;
   onRetryAll: () => void;
   onRetryOne: (id: string) => void;
@@ -240,13 +270,15 @@ const QueueStrip: React.FC<{
     : failedCount
       ? chatCopy.queueFailed(failedCount)
       : chatCopy.queuePending(pendingCount);
+  const nextItem = queue.find((item) => item.isNext);
+  const summaryText = nextItem ? chatCopy.queueNextSummary(summary, previewQueueText(nextItem.text)) : summary;
   const [expanded, setExpanded] = useState(queue.length <= 2 && failedCount === 0);
 
   return (
     <div className={`queuebar${failedCount ? ' queuebar--warn' : ''}${expanded ? ' queuebar--expanded' : ' queuebar--compact'}`} aria-label="Unsent messages">
       <div className="queuebar__head">
         <span className={`dot ${failedCount ? 'dot--warn' : 'dot--idle'}`} aria-hidden="true" />
-        <span className="queuebar__summary">{summary}</span>
+        <span className="queuebar__summary">{summaryText}</span>
         <div className="queuebar__actions">
           {failedCount > 0 && (
             <button type="button" className="queuebar__action queuebar__action--primary" onClick={onRetryAll}>
@@ -267,8 +299,12 @@ const QueueStrip: React.FC<{
         <div className="queuebar__items">
           {queue.map((item) => (
             <div className="queueitem" key={item.id}>
-              <span className={`queueitem__pill queueitem__pill--${item.state}`}>
-                {item.state === 'failed' ? 'failed' : 'waiting'}
+              <span className={`queueitem__pill queueitem__pill--${item.isNext ? 'next' : item.state}`}>
+                {item.state === 'failed'
+                  ? chatCopy.queuePillFailed
+                  : item.isNext
+                    ? chatCopy.queuePillNext
+                    : chatCopy.queuePillWaiting}
               </span>
               <span className="queueitem__text">{previewQueueText(item.text)}</span>
               {item.state === 'failed' && (
@@ -314,6 +350,45 @@ const renderInline = (text: string): React.ReactNode[] => {
   return nodes;
 };
 
+const isTableDivider = (line: string): boolean => {
+  const cells = line.trim().replace(/^\|/, '').replace(/\|$/, '').split('|').map((cell) => cell.trim());
+  return cells.length > 1 && cells.every((cell) => /^:?-{3,}:?$/.test(cell));
+};
+
+const parseTableRow = (line: string): string[] =>
+  line.trim().replace(/^\|/, '').replace(/\|$/, '').split('|').map((cell) => cell.trim());
+
+const isPotentialTableRow = (line: string): boolean =>
+  line.includes('|') && parseTableRow(line).length > 1;
+
+const isTableDividerCell = (cell: string): boolean => /^:?-{3,}:?$/.test(cell.trim());
+
+const normalizeInlineTableLine = (line: string): string[] => {
+  if (!line.includes('|') || !line.includes('---')) return [line];
+  const firstPipe = line.indexOf('|');
+  const prefix = line.slice(0, firstPipe).trim();
+  const cells = line.slice(firstPipe).split('|').map((cell) => cell.trim()).filter(Boolean);
+  const dividerStart = cells.findIndex(isTableDividerCell);
+  if (dividerStart <= 0) return [line];
+  const columnCount = dividerStart;
+  const dividerCells = cells.slice(dividerStart, dividerStart + columnCount);
+  if (dividerCells.length !== columnCount || !dividerCells.every(isTableDividerCell)) return [line];
+
+  const rows: string[] = [];
+  if (prefix) rows.push(prefix, '');
+  rows.push(`| ${cells.slice(0, columnCount).join(' | ')} |`);
+  rows.push(`| ${dividerCells.join(' | ')} |`);
+  const bodyCells = cells.slice(dividerStart + columnCount);
+  for (let i = 0; i < bodyCells.length; i += columnCount) {
+    const row = bodyCells.slice(i, i + columnCount);
+    if (row.length === columnCount) rows.push(`| ${row.join(' | ')} |`);
+  }
+  return rows;
+};
+
+const normalizeInlineTables = (text: string): string =>
+  text.split('\n').flatMap(normalizeInlineTableLine).join('\n');
+
 const MarkdownText: React.FC<{ text: string }> = ({ text }) => {
   const blocks: React.ReactNode[] = [];
   const parts = text.split(/(```[\s\S]*?```)/g).filter(Boolean);
@@ -325,7 +400,7 @@ const MarkdownText: React.FC<{ text: string }> = ({ text }) => {
       continue;
     }
 
-    const lines = part.split('\n');
+    const lines = normalizeInlineTables(part).split('\n');
     let i = 0;
     while (i < lines.length) {
       const line = lines[i];
@@ -354,6 +429,35 @@ const MarkdownText: React.FC<{ text: string }> = ({ text }) => {
         }
         const quoteText = quoted.join('\n');
         blocks.push(<blockquote className="md__quote" key={`q-${blocks.length}-${quoteText.slice(0, 48)}`}>{quoted.map((q) => <p key={q}>{renderInline(q)}</p>)}</blockquote>);
+        continue;
+      }
+
+      if (i + 1 < lines.length && isPotentialTableRow(line) && isTableDivider(lines[i + 1])) {
+        const headers = parseTableRow(line);
+        i += 2;
+        const rows: string[][] = [];
+        while (i < lines.length && lines[i].trim() && isPotentialTableRow(lines[i])) {
+          rows.push(parseTableRow(lines[i]));
+          i += 1;
+        }
+        blocks.push(
+          <div className="md__tableWrap" key={`table-${blocks.length}-${headers.join('|')}`}>
+            <table className="md__table">
+              <thead>
+                <tr>{headers.map((header, index) => <th key={`${index}-${header}`}>{renderInline(header)}</th>)}</tr>
+              </thead>
+              <tbody>
+                {rows.map((row, rowIndex) => (
+                  <tr key={`${rowIndex}-${row.join('|')}`}>
+                    {headers.map((_, cellIndex) => (
+                      <td key={`${rowIndex}-${cellIndex}`}>{renderInline(row[cellIndex] ?? '')}</td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>,
+        );
         continue;
       }
 
@@ -398,6 +502,24 @@ const MarkdownText: React.FC<{ text: string }> = ({ text }) => {
   return <div className="md">{blocks}</div>;
 };
 
+const LONG_MESSAGE_PREVIEW_CHARS = 1800;
+
+const MessageText: React.FC<{ text: string }> = ({ text }) => {
+  const [expanded, setExpanded] = useState(false);
+  if (text.length <= LONG_MESSAGE_PREVIEW_CHARS) return <MarkdownText text={text} />;
+  const preview = text.slice(0, LONG_MESSAGE_PREVIEW_CHARS).trimEnd();
+  return (
+    <div className="longMessage">
+      {expanded ? <MarkdownText text={text} /> : (
+        <pre className="longMessage__preview">{preview}</pre>
+      )}
+      <button type="button" className="longMessage__toggle" onClick={() => setExpanded((value) => !value)}>
+        {expanded ? 'Collapse message' : `Show full message (${Math.round(text.length / 1000)}k chars)`}
+      </button>
+    </div>
+  );
+};
+
 const LiveChat: React.FC<{
   onOpenSettings?: () => void;
   onNavigate?: (id: SurfaceId) => void;
@@ -438,6 +560,13 @@ const LiveChat: React.FC<{
   const selectedEffort = st?.effort ?? 'high';
   const activeThreadTitle = threads.find((t) => t.id === rt.activeThreadId)?.title;
   const headTitle = displayThreadTitle(activeThreadTitle ?? 'New chat');
+
+  const focusComposer = () => {
+    if (!ready || permission || proposeContext || modelOpen || effortOpen) return;
+    requestAnimationFrame(() => {
+      textareaRef.current?.focus({ preventScroll: true });
+    });
+  };
 
   useEffect(() => {
     if (!api) return;
@@ -484,10 +613,11 @@ const LiveChat: React.FC<{
       const text = detail?.text?.trim();
       if (!text || !ready || !api) return;
       if (detail?.send) {
-        setQueue((items) => [...items, createQueueItem(text, 'queued', rt.activeThreadId)]);
+        setQueue((items) => appendQueueItem(items, text, rt.activeThreadId));
         return;
       }
       setDraft(text);
+      focusComposer();
     };
     window.addEventListener('otto-onboarding-starter', onStarter);
     return () => window.removeEventListener('otto-onboarding-starter', onStarter);
@@ -572,7 +702,7 @@ const LiveChat: React.FC<{
   };
 
   const streamMessages = [...rt.messages, ...cmdMessages];
-  const activeQueue = queue.filter((item) => queueMatchesThread(item, rt.activeThreadId));
+  const activeQueue = queueDisplayItemsForThread(queue, rt.activeThreadId);
 
   useEffect(() => {
     setCmdMessages([]);
@@ -596,6 +726,10 @@ const LiveChat: React.FC<{
     el.style.height = 'auto';
     el.style.height = `${Math.min(el.scrollHeight, 200)}px`;
   }, [draft]);
+
+  useEffect(() => {
+    focusComposer();
+  }, [ready, rt.activeThreadId, rt.busy, modelOpen, effortOpen, permission, proposeContext]);
 
   useEffect(() => {
     tailRef.current?.scrollIntoView({ behavior: streamMessages.length > 1 ? 'smooth' : 'auto', block: 'end' });
@@ -631,17 +765,33 @@ const LiveChat: React.FC<{
         }]);
         setDraft('');
         setAttachments([]);
+        focusComposer();
         return;
       }
-      setQueue((items) => [...items, createQueueItem(text, 'queued', rt.activeThreadId)]);
+      setQueue((items) => appendQueueItem(items, text, rt.activeThreadId));
       if (rt.busy) void rt.abort();
       setDraft('');
       setAttachments([]);
+      focusComposer();
     })();
   };
 
   useEffect(() => {
-    if (!ready || !rt.activeThreadId || rt.busy || draining.current || queue.length === 0) return;
+    if (!ready || !rt.activeThreadId || queue.length === 0) return;
+    const deliveredPruned = queue.filter(
+      (item) =>
+        !(
+          queue.length === 1 &&
+          Date.now() - item.createdAt >= QUEUE_DELIVERED_PRUNE_AGE_MS &&
+          queueMatchesThread(item, rt.activeThreadId) &&
+          queueItemAlreadyDelivered(item, rt.messages)
+        )
+    );
+    if (deliveredPruned.length !== queue.length) {
+      setQueue(deliveredPruned);
+      return;
+    }
+    if (rt.busy || draining.current) return;
     const next = nextQueueItemForThread(queue, rt.activeThreadId);
     if (!next) return;
     draining.current = true;
@@ -659,7 +809,7 @@ const LiveChat: React.FC<{
       .finally(() => {
         draining.current = false;
       });
-  }, [queue, ready, rt.activeThreadId, rt.busy, rt.send]);
+  }, [queue, ready, rt.activeThreadId, rt.busy, rt.messages, rt.send]);
 
   // Failed sends remain durable in the queue; the user can retry or remove them.
 
@@ -710,12 +860,6 @@ const LiveChat: React.FC<{
         </div>
       </div>
 
-      {ready && onNavigate ? (
-        <div className="chat__commandStation">
-          <CommandStationStrip onNavigate={onNavigate} />
-        </div>
-      ) : null}
-
       <div className="chat__stream" ref={streamRef}>
         <div className="chat__streamInner">
           {!ready && (
@@ -757,7 +901,10 @@ const LiveChat: React.FC<{
                     type="button"
                     className="chatStarter"
                     disabled={!ready}
-                    onClick={() => setDraft(prompt)}
+                    onClick={() => {
+                      setDraft(prompt);
+                      focusComposer();
+                    }}
                   >
                     {prompt}
                   </button>
@@ -803,7 +950,7 @@ const LiveChat: React.FC<{
                     />
                   ) : null}
                   <div className="msg__body" style={isError ? { color: 'var(--stop)' } : undefined}>
-                    {m.text ? <MarkdownText text={m.text} /> : null}
+                    {m.text ? <MessageText text={m.text} /> : null}
                   </div>
                   {!isUser && !isError && m.text ? (
                     <MessageActions
@@ -839,10 +986,8 @@ const LiveChat: React.FC<{
           <QueueStrip
             queue={activeQueue}
             onClear={() => setQueue((items) => items.filter((item) => !queueMatchesThread(item, rt.activeThreadId)))}
-            onRetryAll={() => setQueue((items) => items.map((item) => (
-              queueMatchesThread(item, rt.activeThreadId) && item.state === 'failed' ? { ...item, state: 'queued' } : item
-            )))}
-            onRetryOne={(id) => setQueue((items) => items.map((item) => (item.id === id ? { ...item, state: 'queued' } : item)))}
+            onRetryAll={() => setQueue((items) => retryFailedQueueItemsForThread(items, rt.activeThreadId))}
+            onRetryOne={(id) => setQueue((items) => retryFailedQueueItemsForThread(items, rt.activeThreadId, id))}
             onRemove={(id) => setQueue((items) => items.filter((item) => item.id !== id))}
           />
         )}
@@ -919,7 +1064,7 @@ const LiveChat: React.FC<{
                   e.preventDefault();
                   submit();
                 }
-                else if (e.key === 'Escape') { setDraft(''); e.currentTarget.blur(); }
+                else if (e.key === 'Escape') { setDraft(''); }
               }}
               disabled={!ready}
               rows={1}
@@ -1009,13 +1154,13 @@ const PreviewChat: React.FC = () => (
         >
           <span className="dot dot--warn" />
           <span>
-            <strong>Setup required</strong> — Otto is not connected to a runtime ({requiredMissing.length} required items missing). Open <strong>Settings</strong> to configure.
+            <strong>Setup required</strong> — otto is not connected to a runtime ({requiredMissing.length} required items missing). Open <strong>Settings</strong> to configure.
           </span>
         </div>
       )}
       <div className="promptbox promptbox--disabled">
         <input
-          placeholder="Chat is not wired to the Letta runtime in this preview"
+          placeholder="Chat is disabled in this preview"
           aria-label="Chat input (disabled in preview)"
           disabled
           readOnly

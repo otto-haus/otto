@@ -1,0 +1,17 @@
+{
+  "pr": 19,
+  "generatedAt": "2026-06-14T18:39:32.792Z",
+  "branch": "craft/window-bg-match-paper",
+  "checks": {
+    "browserWindowBackgroundColor": "#f8f7f2",
+    "cssBgToken": "#f8f7f2",
+    "valuesMatch": true,
+    "expectedWarmPaper": "#f8f7f2",
+    "matchesExpectedWarmPaper": true
+  },
+  "regressionTest": {
+    "command": "bun test apps/desktop/electron/window-background.test.ts",
+    "result": "1 pass / 0 fail / 2 expects"
+  },
+  "screenshot": "desktop-home.png"
+}
