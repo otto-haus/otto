@@ -1318,10 +1318,12 @@ h1, h2, h3, h4, p { margin: 0; }
   line-height: 1.06;
   margin: 10px 0 0;
   max-width: 28ch;
+  text-wrap: balance;
 }
 .surfaceHero__lede {
   margin: 14px 0 0;
   max-width: 42ch;
+  text-wrap: pretty;
   font-size: 16px;
   line-height: 1.5;
   color: var(--mut);
