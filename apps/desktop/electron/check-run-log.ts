@@ -20,8 +20,13 @@ export class CheckRunLogStore {
   private read(): LogFile {
     if (!existsSync(this.path)) return {};
     try {
-      const raw = JSON.parse(readFileSync(this.path, 'utf8')) as LogFile;
-      return raw && typeof raw === 'object' ? raw : {};
+      const raw = JSON.parse(readFileSync(this.path, 'utf8')) as unknown;
+      if (!isRecord(raw)) return {};
+      const out: LogFile = {};
+      for (const [checkId, value] of Object.entries(raw)) {
+        if (isRecord(value)) out[checkId] = normalizeStats(value);
+      }
+      return out;
     } catch {
       return {};
     }
@@ -53,4 +58,22 @@ export class CheckRunLogStore {
   get(checkId: string): CheckRunStats | null {
     return this.read()[checkId] ?? null;
   }
+}
+
+function normalizeStats(value: Record<string, unknown>): CheckRunStats {
+  return {
+    last_run_at: typeof value.last_run_at === 'string' ? value.last_run_at : undefined,
+    last_passed: typeof value.last_passed === 'boolean' ? value.last_passed : undefined,
+    pass_count: count(value.pass_count),
+    fail_count: count(value.fail_count),
+  };
+}
+
+function count(value: unknown): number {
+  const parsed = typeof value === 'string' && value.trim() ? Number(value) : value;
+  return typeof parsed === 'number' && Number.isFinite(parsed) && parsed >= 0 ? Math.floor(parsed) : 0;
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return !!value && typeof value === 'object' && !Array.isArray(value);
 }
