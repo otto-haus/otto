@@ -29,16 +29,17 @@ If a change does not gate irreversibility or make behavior compound, question it
 - Do not claim done without receipts.
 - Do not add private/product-specific control systems to the OSS core unless behind a clear boundary.
 
-## Ticket/review workflow
+## Current issue/review workflow
 
-- **Tickets:** `planning/hq-tickets/` — folder location is status truth (`root`, `_InReview`, `_Done`, `_Parked`). Start at `planning/hq-tickets/AGENTS.md`.
-- **Active wave 136–141:** implementer model is **`Composer 2.5 Fast` only** (see `000-parallel-map.md`). Reviewers stay independent.
-- Folder/ticket state is truth. Chat claims are not state.
-- Implementer cannot self-certify Done.
-- Current reviewer topology: one Claude lane + one Codex lane.
-- For review, the implementer manually launches an unbiased reviewer subagent with the ticket packet, diff, checks, and receipts.
-- The reviewer grades AC-by-AC. No proof mapped to Done-when means no `+1`.
-- No required Claude -> Codex or Codex -> Claude handoff. Use each standing agent for its strengths; use a fresh unbiased subagent for review.
+- Use GitHub Issues for new nits, bugs, polish requests, and follow-up work. Do not create new local ticket files for ordinary intake.
+- Every GitHub Issue must carry exactly one priority label: `p0`, `p1`, `p2`, or `p3`. If Sebastian says P0, use `p0`.
+- Agents must respect priority when choosing work: `p0` before `p1` before `p2` before `p3`, then lane/status/severity.
+- Any `gh issue create` command must include one priority label at creation time, e.g. `--label p0` or `--label p2`; do not create unprioritized issues.
+- Historical `planning/hq-tickets/` files remain archived/mirrored context; do not treat them as the active intake queue unless Sebastian explicitly reopens that lane.
+- Chat claims are not state. If Sebastian reports a nit in chat, capture it as a GitHub Issue with evidence/screenshot links when available.
+- PRs that need Sebastian's merge attention should carry `status: ready for review` only after CI is green and the implementer has done a real review pass.
+- Implementer cannot self-certify Done for consequential changes. Use an unbiased reviewer/subagent when the risk warrants it, and include proof in the PR body or linked issue.
+- Sebastian is the merge gate. Keep ready-for-review PR count low; prefer fast, small PRs over large batches.
 
 ## Verify
 
@@ -56,25 +57,27 @@ Desktop:
 ```sh
 task electron       # live Electron app in dev
 task staging        # build/package/install/open isolated /Applications/otto-staging.app
-task refresh        # live /Applications/otto.app replacement; requires OTTO_ALLOW_LIVE_REFRESH=1
 task smoke:cli      # isolated disposable conversation; never default
 ```
 
-After any `apps/desktop/` implementation turn, refresh **staging** (not only live):
+After any `apps/desktop/` implementation turn, refresh **staging** (not live):
 
 ```sh
 task staging        # → /Applications/otto-staging.app (isolated HOME; never default conversation)
 ```
 
-Use `task refresh` when Sebastian needs `/Applications/otto.app` updated; otherwise default end-of-turn deploy is **staging**.
-
 Staging smokes (never `/Applications/otto.app`):
 
 ```sh
 bash apps/desktop/scripts/deploy-staging.sh
-NODE_PATH=$HOME/.codex/admin/node_modules OTTO_RECEIPT_DIR=$PWD/docs/receipts/staging \
-  node scripts/otto-staging-two-thread-smoke.cjs   # 046 thread isolation
+NODE_PATH=$HOME/.codex/admin/node_modules OTTO_RECEIPT_DIR=$PWD/docs/receipts/staging   node scripts/otto-staging-two-thread-smoke.cjs   # 046 thread isolation
 ```
+
+Canonical app boundary:
+
+- `/Applications/otto.app` must only be installed or updated from the latest published GitHub Release artifact.
+- Do not use `task refresh` or any local branch build to overwrite the canonical app.
+- Use disposable/staging app bundles for local desktop proof unless Sebastian explicitly authorizes touching an official bundle.
 
 Do not call Electron “connected” unless `session.initialize()` succeeds against a live Letta agent.
 

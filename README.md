@@ -144,6 +144,11 @@ Source of truth:
 - [`SPEC_COMPLIANCE.md`](SPEC_COMPLIANCE.md)
 - [`SHIP_CHECKS/`](SHIP_CHECKS/)
 
+New nits, bugs, polish requests, and follow-up work should be captured as GitHub Issues;
+each issue must include exactly one priority label (`p0`, `p1`, `p2`, or `p3`) at creation time;
+historical local ticket folders remain planning context. See
+[`docs/github-issues-workflow.md`](docs/github-issues-workflow.md).
+
 ### Ship tier (Labs off — what v0.1 claims)
 
 Works without enabling Labs in Settings. Staging proof on `/Applications/otto-staging.app`.
@@ -206,21 +211,25 @@ This installs Charter/Routine commands, skills, and one-way-door permission gate
 Local desktop app:
 
 ```sh
-# development Electron app
+# development Electron app; does not update the canonical installed app
 task electron
+
 
 # safe packaged app, isolated from the live profile
 task staging
-
-# intentional live replacement of /Applications/otto.app
-OTTO_ALLOW_LIVE_REFRESH=1 task refresh
 ```
+
+Canonical app boundary:
+
+- `/Applications/otto.app` is the user-facing canonical app.
+- Update it only from the latest published GitHub Release artifact.
+- Do not use `task refresh` or local branch builds to overwrite `/Applications/otto.app`.
 
 Connect the desktop app to Letta:
 
 A fresh clone does not include a hosted agent. Live chat requires a local Letta runtime, provider auth configured in Letta, and a target Letta agent.
 
-1. Open `/Applications/otto.app`.
+1. Install/open the latest published GitHub Release build at `/Applications/otto.app`.
 2. otto tries to discover Letta Desktop and your current local agent automatically.
 3. Use **Settings → General** only for advanced runtime/agent overrides.
 4. Provider/model credentials stay in Letta. otto does not ask for provider API keys in v1.
@@ -266,9 +275,8 @@ Common commands:
 
 ```sh
 task dev          # Vite web preview; no desktop bridge
-task electron     # Electron app wired to local Letta
+task electron     # Electron app wired to local Letta; does not update canonical app
 task staging      # build/package/install/open isolated /Applications/otto-staging.app
-task refresh      # live /Applications/otto.app replacement; requires OTTO_ALLOW_LIVE_REFRESH=1
 task ps           # show otto + spawned Letta CLI processes
 ```
 

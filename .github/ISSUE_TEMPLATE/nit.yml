@@ -1,0 +1,43 @@
+name: Nit / polish
+description: Capture a small product nit, UI polish request, or usability observation.
+title: "nit: "
+labels: ["enhancement", "p2"]
+body:
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Priority
+      description: Every issue must carry exactly one p* label. Default label is p2; change the label after creation if needed.
+      options:
+        - p0 — critical / handle first
+        - p1 — urgent / next
+        - p2 — normal important work
+        - p3 — low-risk polish/backlog
+      default: 2
+    validations:
+      required: true
+  - type: textarea
+    id: observation
+    attributes:
+      label: Observation
+      description: What feels off, broken, confusing, or worth improving?
+      placeholder: "The chat composer feels cramped when..."
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Evidence
+      description: Screenshots, local attachment paths, logs, or links.
+      placeholder: "Screenshot: /Users/seb/.otto/attachments/..."
+    validations:
+      required: false
+  - type: textarea
+    id: done
+    attributes:
+      label: Done when
+      description: What should be true when this is fixed?
+      placeholder: "The sidebar control no longer overlaps the macOS traffic lights."
+    validations:
+      required: true
+

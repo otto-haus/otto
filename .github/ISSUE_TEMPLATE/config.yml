@@ -1,0 +1,5 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Ready-for-review PR queue
+    url: https://github.com/otto-haus/otto/pulls?q=is%3Apr+label%3A%22status%3A+ready+for+review%22+is%3Aopen
+    about: PRs ready for Sebastian review/merge.
