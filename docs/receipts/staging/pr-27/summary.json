@@ -1,0 +1,266 @@
+[
+  {
+    "route": "settings",
+    "viewport": {
+      "name": "desktop",
+      "width": 1040,
+      "height": 720
+    },
+    "url": "http://127.0.0.1:5187/#settings",
+    "title": "Otto Desktop",
+    "notBlank": true,
+    "frameworkOverlay": false,
+    "chips": [
+      {
+        "text": "~/.otto/config.json",
+        "textOverflow": "ellipsis",
+        "whiteSpace": "nowrap",
+        "overflowX": "hidden",
+        "clientWidth": 99,
+        "scrollWidth": 184,
+        "clientHeight": 24,
+        "scrollHeight": 24,
+        "wraps": false,
+        "clipsOrEllipsizes": true
+      },
+      {
+        "text": "~/.otto/config.json",
+        "textOverflow": "ellipsis",
+        "whiteSpace": "nowrap",
+        "overflowX": "hidden",
+        "clientWidth": 91,
+        "scrollWidth": 184,
+        "clientHeight": 24,
+        "scrollHeight": 24,
+        "wraps": false,
+        "clipsOrEllipsizes": true
+      },
+      {
+        "text": "~/.otto/config.json",
+        "textOverflow": "ellipsis",
+        "whiteSpace": "nowrap",
+        "overflowX": "hidden",
+        "clientWidth": 99,
+        "scrollWidth": 184,
+        "clientHeight": 24,
+        "scrollHeight": 24,
+        "wraps": false,
+        "clipsOrEllipsizes": true
+      },
+      {
+        "text": "~/.otto",
+        "textOverflow": "ellipsis",
+        "whiteSpace": "nowrap",
+        "overflowX": "hidden",
+        "clientWidth": 98,
+        "scrollWidth": 98,
+        "clientHeight": 24,
+        "scrollHeight": 24,
+        "wraps": false,
+        "clipsOrEllipsizes": false
+      },
+      {
+        "text": "~/Code/otto-pr-27",
+        "textOverflow": "ellipsis",
+        "whiteSpace": "nowrap",
+        "overflowX": "hidden",
+        "clientWidth": 91,
+        "scrollWidth": 170,
+        "clientHeight": 24,
+        "scrollHeight": 24,
+        "wraps": false,
+        "clipsOrEllipsizes": true
+      },
+      {
+        "text": "skill/",
+        "textOverflow": "ellipsis",
+        "whiteSpace": "nowrap",
+        "overflowX": "hidden",
+        "clientWidth": 84,
+        "scrollWidth": 90,
+        "clientHeight": 24,
+        "scrollHeight": 24,
+        "wraps": false,
+        "clipsOrEllipsizes": true
+      },
+      {
+        "text": "docs/autonomy.md",
+        "textOverflow": "ellipsis",
+        "whiteSpace": "nowrap",
+        "overflowX": "hidden",
+        "clientWidth": 84,
+        "scrollWidth": 162,
+        "clientHeight": 24,
+        "scrollHeight": 24,
+        "wraps": false,
+        "clipsOrEllipsizes": true
+      }
+    ],
+    "screenshot": "/tmp/otto-pr27-proof/desktop-settings.png",
+    "focusedScreenshot": "/tmp/otto-pr27-proof/desktop-settings-runtime-panel.png"
+  },
+  {
+    "route": "charters",
+    "viewport": {
+      "name": "desktop",
+      "width": 1040,
+      "height": 720
+    },
+    "url": "http://127.0.0.1:5187/#charters",
+    "title": "Otto Desktop",
+    "notBlank": true,
+    "frameworkOverlay": false,
+    "chips": [
+      {
+        "text": "~/.otto/charters/",
+        "textOverflow": "ellipsis",
+        "whiteSpace": "nowrap",
+        "overflowX": "hidden",
+        "clientWidth": 170,
+        "scrollWidth": 170,
+        "clientHeight": 24,
+        "scrollHeight": 24,
+        "wraps": false,
+        "clipsOrEllipsizes": false
+      }
+    ],
+    "screenshot": "/tmp/otto-pr27-proof/desktop-charters.png",
+    "focusedScreenshot": null
+  },
+  {
+    "viewport": "desktop",
+    "console": []
+  },
+  {
+    "route": "settings",
+    "viewport": {
+      "name": "narrow-desktop",
+      "width": 920,
+      "height": 720
+    },
+    "url": "http://127.0.0.1:5187/#settings",
+    "title": "Otto Desktop",
+    "notBlank": true,
+    "frameworkOverlay": false,
+    "chips": [
+      {
+        "text": "~/.otto/config.json",
+        "textOverflow": "ellipsis",
+        "whiteSpace": "nowrap",
+        "overflowX": "hidden",
+        "clientWidth": 184,
+        "scrollWidth": 184,
+        "clientHeight": 24,
+        "scrollHeight": 24,
+        "wraps": false,
+        "clipsOrEllipsizes": false
+      },
+      {
+        "text": "~/.otto/config.json",
+        "textOverflow": "ellipsis",
+        "whiteSpace": "nowrap",
+        "overflowX": "hidden",
+        "clientWidth": 184,
+        "scrollWidth": 184,
+        "clientHeight": 24,
+        "scrollHeight": 24,
+        "wraps": false,
+        "clipsOrEllipsizes": false
+      },
+      {
+        "text": "~/.otto/config.json",
+        "textOverflow": "ellipsis",
+        "whiteSpace": "nowrap",
+        "overflowX": "hidden",
+        "clientWidth": 184,
+        "scrollWidth": 184,
+        "clientHeight": 24,
+        "scrollHeight": 24,
+        "wraps": false,
+        "clipsOrEllipsizes": false
+      },
+      {
+        "text": "~/.otto",
+        "textOverflow": "ellipsis",
+        "whiteSpace": "nowrap",
+        "overflowX": "hidden",
+        "clientWidth": 98,
+        "scrollWidth": 98,
+        "clientHeight": 24,
+        "scrollHeight": 24,
+        "wraps": false,
+        "clipsOrEllipsizes": false
+      },
+      {
+        "text": "~/Code/otto-pr-27",
+        "textOverflow": "ellipsis",
+        "whiteSpace": "nowrap",
+        "overflowX": "hidden",
+        "clientWidth": 170,
+        "scrollWidth": 170,
+        "clientHeight": 24,
+        "scrollHeight": 24,
+        "wraps": false,
+        "clipsOrEllipsizes": false
+      },
+      {
+        "text": "skill/",
+        "textOverflow": "ellipsis",
+        "whiteSpace": "nowrap",
+        "overflowX": "hidden",
+        "clientWidth": 90,
+        "scrollWidth": 90,
+        "clientHeight": 24,
+        "scrollHeight": 24,
+        "wraps": false,
+        "clipsOrEllipsizes": false
+      },
+      {
+        "text": "docs/autonomy.md",
+        "textOverflow": "ellipsis",
+        "whiteSpace": "nowrap",
+        "overflowX": "hidden",
+        "clientWidth": 162,
+        "scrollWidth": 162,
+        "clientHeight": 24,
+        "scrollHeight": 24,
+        "wraps": false,
+        "clipsOrEllipsizes": false
+      }
+    ],
+    "screenshot": "/tmp/otto-pr27-proof/narrow-desktop-settings.png",
+    "focusedScreenshot": "/tmp/otto-pr27-proof/narrow-desktop-settings-runtime-panel.png"
+  },
+  {
+    "route": "charters",
+    "viewport": {
+      "name": "narrow-desktop",
+      "width": 920,
+      "height": 720
+    },
+    "url": "http://127.0.0.1:5187/#charters",
+    "title": "Otto Desktop",
+    "notBlank": true,
+    "frameworkOverlay": false,
+    "chips": [
+      {
+        "text": "~/.otto/charters/",
+        "textOverflow": "ellipsis",
+        "whiteSpace": "nowrap",
+        "overflowX": "hidden",
+        "clientWidth": 170,
+        "scrollWidth": 170,
+        "clientHeight": 24,
+        "scrollHeight": 24,
+        "wraps": false,
+        "clipsOrEllipsizes": false
+      }
+    ],
+    "screenshot": "/tmp/otto-pr27-proof/narrow-desktop-charters.png",
+    "focusedScreenshot": null
+  },
+  {
+    "viewport": "narrow-desktop",
+    "console": []
+  }
+]
