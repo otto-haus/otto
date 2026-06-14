@@ -303,6 +303,26 @@ describe('ThreadStore', () => {
     }
   });
 
+  test('new chat stays above manually ordered recents', () => {
+    const tmp = mkdtempSync(join(tmpdir(), 'otto-thread-test-'));
+    try {
+      const config = mockConfig(tmp);
+      const store = new ThreadStore(config);
+      const first = store.create({ title: 'First recent' });
+      const second = store.create({ title: 'Second recent' });
+      store.move(second.id, first.id);
+
+      const created = store.create({ title: 'Brand new chat' });
+      const recents = store.list().threads.filter((thread) => !thread.pinned && !thread.archived);
+
+      expect(recents[0]?.id).toBe(created.id);
+      expect(typeof created.sortOrder).toBe('number');
+    } finally {
+      rmSync(tmp, { recursive: true, force: true });
+      delete process.env.OTTO_HOME;
+    }
+  });
+
   test('rename persists a cleaned conversation title', () => {
     const tmp = mkdtempSync(join(tmpdir(), 'otto-thread-test-'));
     try {

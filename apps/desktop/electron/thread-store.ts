@@ -96,6 +96,15 @@ function isJunkThread(thread: ChatThreadRecord): boolean {
   return /^chat session$/i.test(title);
 }
 
+function initialSortOrderForNewThread(threads: ChatThreadRecord[]): number | null {
+  const recents = threads.filter((thread) => !thread.archived && !thread.pinned);
+  const orders = recents
+    .map(sortableOrder)
+    .filter((value): value is number => value !== null);
+  if (!orders.length) return null;
+  return Math.min(...orders) - 1;
+}
+
 export class ThreadStore {
   constructor(private config: ConfigStore) {}
 
@@ -128,7 +137,7 @@ export class ThreadStore {
       title: input?.title?.trim() || 'New chat',
       createdAt: now,
       updatedAt: now,
-      sortOrder: null,
+      sortOrder: initialSortOrderForNewThread(readIndex()),
       pinned: false,
       archived: false,
     };

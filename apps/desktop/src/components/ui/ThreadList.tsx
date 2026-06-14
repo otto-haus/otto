@@ -80,7 +80,7 @@ const ConversationRow: React.FC<{
   const skipNextBlurCommit = React.useRef(false);
 
   React.useEffect(() => {
-    if (editing) setDraft(displayThreadTitle(thread.title));
+    if (editing) setDraft(thread.title);
   }, [editing, thread.title]);
 
   React.useEffect(() => {
@@ -254,8 +254,8 @@ export const ThreadList: React.FC<{
   };
   const commitRename = (thread: ThreadSummary, title: string) => {
     setEditingId(null);
-    const trimmed = title.trim();
-    if (!trimmed || displayThreadTitle(thread.title) === trimmed) return;
+    const trimmed = title.trim().replace(/\s+/g, ' ');
+    if (!trimmed || thread.title.trim().replace(/\s+/g, ' ') === trimmed) return;
     onRename?.(thread, trimmed);
   };
   const requestArchive = (thread: ThreadSummary) => {

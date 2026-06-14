@@ -3,7 +3,8 @@ export const LEGACY_MESSAGES_KEY = 'otto.chat.messages.v1';
 const MAX_RESTORED_MESSAGES = 12;
 const MAX_RESTORED_TEXT_CHARS = 1000;
 const MAX_RESTORED_THREAD_CHARS = 6000;
-const MAX_RAW_HISTORY_CHARS = 50000;
+/** Reject only pathological localStorage payloads; bounded restore stays in parseMessages(). */
+const MAX_PARSEABLE_HISTORY_CHARS = 1_000_000;
 
 export type StoredChatMsg = {
   id: string;
@@ -61,7 +62,7 @@ export function readStoredMessages(threadId: string | null): StoredChatMsg[] {
   try {
     const key = messagesKey(threadId);
     const raw = localStorage.getItem(key);
-    if (raw && raw.length > MAX_RAW_HISTORY_CHARS) {
+    if (raw && raw.length > MAX_PARSEABLE_HISTORY_CHARS) {
       return [{
         id: `history-suppressed-${threadId ?? 'legacy'}`,
         who: 'otto',

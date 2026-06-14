@@ -31,6 +31,7 @@ const DEFAULT_WS_MODEL_FALLBACKS = ['openai/gpt-5.5', 'letta/auto'];
 
 type PendingControl = {
   requestId: string;
+  upstreamId: string;
   toolName: string;
   resolve: (r: PermissionResponse) => void;
 };
@@ -68,12 +69,12 @@ export class WsRuntimeTransport implements OttoRuntimeTransport {
   resolvePermission(requestId: string, response: PermissionResponse) {
     const pending = this.pendingControls.get(requestId);
     if (!pending) return;
+    const upstreamId = pending.upstreamId;
     this.pendingControls.delete(requestId);
     if (response.behavior === 'allow' && response.scope === 'session') {
       permissionSessionStore.allow(pending.toolName);
     }
     pending.resolve(response);
-    const upstreamId = [...this.controlByUpstream.entries()].find(([, id]) => id === requestId)?.[0];
     if (upstreamId && this.runtimeSocket?.readyState === WebSocket.OPEN) {
       const approved = response.behavior === 'allow';
       this.sendCommand({
@@ -740,6 +741,7 @@ export class WsRuntimeTransport implements OttoRuntimeTransport {
     safeWebContentsSend(this.win, 'otto:permission', req);
     this.pendingControls.set(requestId, {
       requestId,
+      upstreamId,
       toolName,
       resolve: () => {
         this.controlByUpstream.delete(upstreamId);
