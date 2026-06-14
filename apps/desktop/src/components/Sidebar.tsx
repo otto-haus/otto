@@ -39,7 +39,7 @@ const COLLAPSIBLE_WORKSPACE_ITEMS: NavDef[] = [
   { id: 'checks', label: 'Checks', icon: Icon.checks, shortcut: '⌘9' },
   { id: 'skills', label: 'Skills', icon: Icon.skills, shortcut: '⌘0' },
   { id: 'knowledge', label: 'Knowledge', icon: Icon.knowledge, shortcut: '⌘⌥0' },
-  { id: 'tickets', label: 'Tickets', icon: Icon.plus },
+  { id: 'tickets', label: 'Tickets', icon: Icon.tickets },
   { id: 'channels', label: 'Channels', icon: Icon.send },
   { id: 'terminal', label: 'Terminal', icon: Icon.terminal },
 ];
