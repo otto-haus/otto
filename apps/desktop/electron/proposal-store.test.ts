@@ -264,6 +264,33 @@ describe('ProposalStore', () => {
     }
   });
 
+  test('accepting a canon-impact proposal with malformed yaml target is blocked', () => {
+    const tmp = mkdtempSync(join(tmpdir(), 'otto-proposal-test-'));
+    const proposalsDir = join(tmp, 'curation', 'proposals');
+    const receiptsDir = join(tmp, 'receipts');
+    const canonPath = join(tmp, 'practice.yaml');
+    const malformedCanon = 'slug: [unterminated\n';
+    writeFileSync(canonPath, malformedCanon);
+    try {
+      const store = new ProposalStore(proposalsDir, new ReceiptWriter(receiptsDir));
+      const created = store.createFromCorrection({
+        correction: 'Charter practice should change, but the target YAML is malformed.',
+        target: { kind: 'practice', id: 'charter', path: canonPath, action: 'update' },
+      });
+
+      const accepted = store.decide(created.proposal.id, { decision: 'accept' });
+
+      expect(accepted.blocked).toBe(true);
+      expect(accepted.proposal.status).toBe('needs_approval');
+      expect(accepted.receipt.status).toBe('blocked');
+      expect(accepted.receipt.blocker?.code).toBe('canon_apply_unsupported_target');
+      expect(accepted.receipt.blocker?.message).toContain('could not be parsed');
+      expect(readFileSync(canonPath, 'utf8')).toBe(malformedCanon);
+    } finally {
+      rmSync(tmp, { recursive: true, force: true });
+    }
+  });
+
   test('persists and reloads proposal records', () => {
     const tmp = mkdtempSync(join(tmpdir(), 'otto-proposal-test-'));
     const proposalsDir = join(tmp, 'curation', 'proposals');

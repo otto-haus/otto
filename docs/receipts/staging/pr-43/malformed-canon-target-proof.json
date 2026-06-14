@@ -1,0 +1,25 @@
+{
+  "schema": "otto.pr-review-proof.v1",
+  "pr": 43,
+  "generated_at": "2026-06-14T22:43:42.299Z",
+  "scenario": "accept canon-impact proposal whose YAML target cannot be parsed",
+  "malformed_target_input": "slug: [unterminated\n",
+  "decision_result": {
+    "blocked": true,
+    "returned_status": "needs_approval",
+    "persisted_status": "needs_approval",
+    "receipt_status": "blocked",
+    "blocker": {
+      "code": "canon_apply_unsupported_target",
+      "message": "Canon-impact proposal target could not be parsed or is not a supported canon file.",
+      "recoverable": true,
+      "next_action": "Fix the target file or choose a supported YAML or Markdown canon file before accepting it."
+    },
+    "canon_applied": false
+  },
+  "file_preservation": {
+    "target_exists": true,
+    "content_unchanged": true,
+    "after_content": "slug: [unterminated\n"
+  }
+}
