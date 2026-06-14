@@ -174,3 +174,28 @@ only when one is written. No checkmark on a step that isn't truly done.
 1. Connect inline through Settings; no dedicated setup screen.
 2. Include a static sample Receipt before connection, labeled `sample · not live · not from your workspace`; it never counts as progress.
 3. Veto onboarding screenshots are **style reference only** — see § Style reference above. Implementation tickets: `planning/hq-tickets/143-*.md` … `149-*.md`.
+
+---
+
+## Connection mode — "This Mac" vs "Existing Letta"
+
+Step 1 (Connect) opens with the mode question — *"How should otto connect?"* — and two
+selection cards. The choice is **reversible** (*"Pick one path. You can change this
+later in Settings."*), so it must never read as a trap. This section is the help
+target behind the step's **Need help?** link, so it answers the new operator's actual
+question: *what do these two paths mean, and which do I pick?*
+
+**This Mac** — *Recommended.* *"One app — embedded Letta runtime. Provider keys stay
+in Letta."* otto runs its own bundled Letta; there is nothing to start separately and
+nothing to paste. This is the zero-setup path — pick it for a first run or a
+single-machine operator.
+
+**Existing Letta install** — *"Point otto at a local URL and agent ID."* otto attaches
+to a Letta you already run, reusing that agent across tools. Pick it if you already
+operate a local Letta or want one agent shared across machines and tools; you supply
+the Letta URL and agent ID (also settable via `LETTA_BASE_URL` and `OTTO_AGENT_ID`).
+
+Either path, **Continue →** advances to the readiness gate — Chat unlocks only once
+the runtime truly connects (Step 1). Changed your mind later? Switch under
+**Settings → Connection mode**; no reinstall, and a connected runtime is the only
+thing Chat actually checks.
