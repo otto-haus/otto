@@ -1,4 +1,4 @@
-# 212-ci-dependency-review
+# 213-ci-dependency-review
 
 Owner: Codex
 Status: In review
@@ -36,5 +36,5 @@ introduced.
   - `ruby -e 'require "yaml"; YAML.load_file(ARGV.fetch(0)); puts "yaml ok"' .github/workflows/dependency-review.yml` passed.
   - `actionlint .github/workflows/dependency-review.yml` passed.
   - `task ci` passed.
-- PR: pending
+- PR: https://github.com/otto-haus/otto/pull/213
 - PR CI: pending
