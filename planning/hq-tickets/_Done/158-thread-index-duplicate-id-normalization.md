@@ -62,7 +62,7 @@ Docs/best-practice context:
 - [x] Desktop renderer and Electron typechecks pass.
 - [x] Staging desktop refresh succeeds without touching live `/Applications/otto.app`.
 - [x] Independent reviewer +1.
-- [ ] PR opened after approval and clean branch review.
+- [x] PR opened after approval and clean branch review.
 
 ## Execution receipt
 

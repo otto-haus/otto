@@ -46,7 +46,7 @@ Updated: 2026-06-14 (chat core ticket 159 added; counts refreshed from folder st
 _Done:     52 tickets
 _Backlog:  20 tickets (047, 059, 063, 068–073, 078, 080–081, 115–116, 119, 127, 129, 131, 134–135)
 _Parked:   29 tickets (019–025, 077, 083–099, 117–118, 120, 130)
-_InReview: 16 tickets (143–150 craft + 151–158 reliability/review hardening)
+_InReview: 15 tickets (143–150 craft + 151–157 reliability/review hardening)
 Root:      33 tickets (136–142 ship/labs/release + reopened integration + 159 chat core)
 Reopen:    6 premie-dones flagged in `_Done/`
 ```
