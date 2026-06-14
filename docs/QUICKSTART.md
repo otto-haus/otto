@@ -8,10 +8,10 @@ first live message, in about five minutes.
 otto is the behavior layer for persistent agents. It records what your agent
 relied on before it acted — and changes the next run only when you ratify it.
 
-otto is early. **v0.1 is a local-first, file-backed release.** The desktop app
-ships; some surfaces are intentionally deferred (see [What's not here yet](#whats-not-here-yet)).
-Nothing in otto pretends to be more done than it is — a "not yet" state is honest,
-not a bug.
+otto is early. **v0.1 is a local-first, file-backed release.** The desktop app and
+its surfaces ship; what's *not* yet wired on first launch is your live runtime
+connection, which you set up below. Nothing in otto pretends to be more done than it
+is — a "not yet" readiness state is honest, not a bug.
 
 ---
 
@@ -40,19 +40,19 @@ Letta runtime) running** before you connect, with at least one agent available.
 
 ## 2. The first-run flow
 
-On first launch the desktop app shows a **Welcome** card:
+On first launch the desktop app shows a **Welcome** card introducing otto. Click
+**Get started →** to begin. otto walks you through four steps, tracked by progress
+dots: **welcome → connect → first message → first receipt.**
 
-- **Connect local Letta →** — start connecting (recommended)
-- **See what Receipts will prove** — a preview of a feature that isn't shipped yet
-- **Skip** — dismiss; you can connect later from Settings
+At the connect step otto asks *"How should otto connect?"* — choose **This Mac** (use
+the bundled local Letta) or **Existing Letta install** (point at a Letta you already
+run), then **Continue →**. otto tries to **discover Letta and your current agent
+automatically**; use **Settings → Connect Letta** only for advanced overrides (a
+custom Letta URL or a specific agent). Chat unlocks the moment otto is truly
+connected.
 
-After you start, a small **"Getting started"** dock appears in the bottom-left and
-tracks your progress through *connect* and then *run your first message*.
-
-otto tries to **discover Letta Desktop and your current local agent
-automatically.** You only need Settings for advanced overrides (a custom Letta URL
-or a specific agent). The onboarding surface is still evolving in v0.1, so exact
-labels may shift — the flow is always **welcome → connect → first message.**
+The onboarding surface is actively evolving in v0.1, so exact labels may shift — but
+the shape is always **welcome → connect → first message → first receipt.**
 
 ---
 
@@ -74,37 +74,39 @@ A locked Chat is otto reporting its real state, not an error. Open
 | **Memory / MemFS** | otto's local file-backed memory at `~/.otto`; available once the runtime connects |
 
 Everything else is **optional and will not block Chat** — model provider (auth
-lives in Letta, not otto), workspace root, Skills, Practices, MCP servers,
-Functions, and the autonomy/permissions policy. Several of these read **"coming
-soon"** in v0.1; that's expected.
+lives in Letta, not otto), workspace root, Skills, MCP servers, Functions, and otto's
+behavior surfaces (Practices, Charters, Standards, Routines, Curation, Receipts,
+Autonomy, and more), which ship file-backed and ready to open.
 
 When the three required items report connected, Chat unlocks.
 
 ---
 
-## 4. Send your first message
+## 4. Send your first message — and your first Receipt
 
-1. From the dock, choose **Go to Chat** (or open the **Chat** surface).
-2. Type a message and send it.
-3. otto relays it to your local agent over Letta.
+1. Open **Chat** (the onboarding's *Go to Chat* takes you there). The ready state
+   asks *"What should we work on?"* — type a message, pick a starter, or choose a
+   model.
+2. Send it. otto relays it to your local agent over Letta and works the turn.
+3. otto writes a **Receipt** — proof of what it relied on before it acted (sources,
+   limits, review signature). Open the **Receipts** surface to see it; the
+   onboarding's final step links you straight there.
 
-That's first success: otto reported its state truthfully, the gate opened, and
-you're in a live session over your local Letta.
+That's first success: otto reported its state truthfully, the gate opened, you ran a
+live turn, and otto recorded the proof.
 
 ---
 
-## What's not here yet
+## What v0.1 is
 
-otto is honest about its edges. In v0.1, these are **deferred** and will not appear
-as finished features:
+otto v0.1 is **local-first and file-backed.** Live chat runs over your local Letta,
+and otto records a **Receipt** for each completed turn. The behavior surfaces —
+Practices, Charters, Standards, Routines, Curation, Receipts, Autonomy, and more —
+ship file-backed (the README marks them *"ship (Culture CI demo)"*). You're using
+otto at the edge of what's built: it's honest about its state and never pretends a
+"not yet" is done, and real operator feedback shapes what becomes standard.
 
-- **Receipts, Runs, and Approvals.** The "See what Receipts will prove" button is a
-  preview. No Receipt artifact is created at runtime in v0.1 — as the onboarding
-  dock says, *"Your first Receipt will appear here once Receipts land."*
-- **Practices** are not loaded in the v0.1 desktop yet.
-- **Curation** is not built in v0.1.
-
-For the authoritative surface-by-surface status, see the **Status** section of the
+For the authoritative, surface-by-surface status, see the **Status** section of the
 [README](../README.md) and [`docs/otto-v01-status.md`](./otto-v01-status.md).
 
 ---
@@ -123,7 +125,7 @@ For the authoritative surface-by-surface status, see the **Status** section of t
 - [README](../README.md) — what otto is and the v0.1 Status table
 - [`docs/INSTALL.md`](./INSTALL.md) — full install + environment variables
 - [`docs/desktop.md`](./desktop.md) — the desktop app in depth
-- [`docs/otto-v01-status.md`](./otto-v01-status.md) — what ships, what's deferred
+- [`docs/otto-v01-status.md`](./otto-v01-status.md) — surface-by-surface v0.1 status
 - Found something wrong or confusing? Open an issue:
   https://github.com/otto-haus/otto/issues
 
