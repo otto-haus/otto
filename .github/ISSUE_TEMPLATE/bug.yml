@@ -1,0 +1,47 @@
+name: Bug
+description: Report broken behavior or a regression.
+title: "bug: "
+labels: ["bug", "p2"]
+body:
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Priority
+      description: Every issue must carry exactly one p* label. Default label is p2; change the label after creation if needed.
+      options:
+        - p0 — critical / handle first
+        - p1 — urgent / next
+        - p2 — normal important work
+        - p3 — low-risk polish/backlog
+      default: 2
+    validations:
+      required: true
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: Describe the bug and the user-visible symptom.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+      description: What should have happened instead?
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Evidence
+      description: Screenshots, local attachment paths, logs, commit/PR links, or reproduction notes.
+    validations:
+      required: false
+  - type: textarea
+    id: done
+    attributes:
+      label: Done when
+      description: What proves the bug is fixed?
+    validations:
+      required: true
+
