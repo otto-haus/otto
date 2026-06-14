@@ -1,0 +1,29 @@
+{
+  "pr": 19,
+  "checks": [
+    {
+      "name": "window background color declaration",
+      "command": "rg -n backgroundColor apps/desktop/electron/main.ts",
+      "result": "pass",
+      "reason": "backgroundColor is set to #f8f7f2 and tied to warm-paper token in comment"
+    },
+    {
+      "name": "CSS token check",
+      "command": "rg -n '^\s*--bg:' apps/desktop/src/styles.css",
+      "result": "pass",
+      "reason": "--bg token is #f8f7f2"
+    },
+    {
+      "name": "electron:typecheck",
+      "command": "bun run --cwd apps/desktop electron:typecheck",
+      "result": "pass"
+    },
+    {
+      "name": "typecheck",
+      "command": "bun run --cwd apps/desktop typecheck",
+      "result": "pass"
+    }
+  ],
+  "artifacts": ["desktop-home.png"],
+  "notes": ["No behavioral logic changed; this is a launch-frame color alignment change."]
+}
