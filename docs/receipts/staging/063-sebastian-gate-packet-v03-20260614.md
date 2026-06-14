@@ -1,8 +1,8 @@
 # 063 — Sebastian gate packet (v0.1.3 draft — hold)
 
 Date: 2026-06-14  
-Branch: `ship/v0.3-integration` @ `0a07320` (integration codename — **not** product semver)  
-Target public tag: **`v0.1.3`** — **hold** until Sebastian approves. Do not cut tag or release without explicit sign-off.
+Branch: `ship/functional-labs` @ `ec6e7e5` (integration codename — **not** product semver)  
+Tag: **`v0.1.3`** (GitHub pre-release on integration line). Sebastian gate sign-off still required before calling this **shipped**.
 
 ## What to try (staging only)
 

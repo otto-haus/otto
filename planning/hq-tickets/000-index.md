@@ -2,6 +2,10 @@
 
 One folder. One queue. One ticket per capability.
 
+**Location:** `planning/hq-tickets/` in the otto repo (git is canonical — not Dropbox).
+
+**Design canon (public):** `docs/design/` — brand guide, onboarding, motion, reference icons.
+
 See `000-canonical.md` for the canonical operating contract. Agents should start with `AGENTS.md`.
 Use `000-parallel-map.md` as the live dependency/throughput map before launching parallel work.
 
@@ -11,6 +15,7 @@ Use `000-parallel-map.md` as the live dependency/throughput map before launching
 root       = active queue; implementer may build
 _InReview  = built; waiting for independent review
 _Done      = finished, proven, reviewer +1
+_Backlog   = not done; reopened from premie `_Done` or proof-deferred
 _Parked    = valid future work; do not touch unless explicitly unparked
 ```
 
@@ -35,9 +40,44 @@ Default to Cursor unless the hardest irreducible part is Codex-grade reasoning o
 
 ## Active queue
 
-**Current head:** *(empty)* — integration lane **033–135** (incl. **053** practice runtime, **046** thread switcher) shipped to `_Done/`. **`_InReview/` is empty.** Next work unparks from `_Parked/` only (019–025, 077, 083–099, 117–118, 120, 130) per `000-parallel-map.md`.
+Updated: 2026-06-14 (premie-dones → `_Backlog/` — see `000-audit-status.md`)
 
-Root has no active implementer tickets. Do not reopen `_Done/` unless Sebastian explicitly unparks or files a new ticket.
+```txt
+_Done:     42 tickets (001–018, 026–038, 048, 050, 064, 067, 070, 079, 082, 091, 092, 133, …)
+_Backlog:  20 tickets (047, 059, 063, 068–073, 078, 080–081, 115–116, 119, 127, 129, 131, 134–135)
+_Parked:   29 tickets (019–025, 077, 083–099, 117–118, 120, 130)
+_InReview: (empty)
+Root:      36+ numbered tickets (136–141 ship/labs wave + reopened integration)
+```
+
+**Head lanes (parallel):**
+
+1. **136–141** — Ship / Labs / Cut (functional ship; IDs reserved — not the draft “gap” 136–142 list from early conveyor plan)
+2. **Reopened integration** — see `000-parallel-map.md` ## Post-audit execution waves
+3. **142** — Sebastian release sign-off ceremony (depends 063, 140)
+
+**Reserved IDs:** 100–114 intentionally unused (platform-ops block). Document gap here; do not invent filler tickets.
+
+Do not unpark `_Parked/` unless `000-parallel-map.md` unpark table conditions are met.
+
+### Functional ship — Ship / Labs / Cut (136–141)
+
+```txt
+136 matrix (Sebastian sign-off) → 137 Labs gate → 138 Ship proof → 139 Labs shells → 141 agent parity → 140 release packet
+```
+
+**Implementer model:** `Composer 2.5 Fast` only for tickets **136–141**. Owner routing still describes task nature; execution stays on Composer 2.5 Fast until **140** lands.
+
+| # | Ticket | Owner | Model | Depends on | Proof |
+|---:|---|---|---|---|---|
+| 136 | Ship tier matrix audit | Codex | Composer 2.5 Fast | none | `docs/v1/ship-tier-matrix.md` + reopen list |
+| 137 | Labs gate (Settings + config + tiers) | Cursor | Composer 2.5 Fast | 136 | Settings toggles; nav Coming soon |
+| 138 | Ship tier core path proof | Codex+Cursor | Composer 2.5 Fast | 136, 076, 137 | 076 bootstrap + 135 demo + smokes |
+| 139 | Labs tier Coming soon shells | Claude | Composer 2.5 Fast | 137, 136 | per-feature shells + `docs/v1/labs.md` |
+| 141 | Labs agent-native parity | Cursor | Composer 2.5 Fast | 137 | IPC documented; no UI-only gate |
+| 140 | Release packaging Ship vs Labs | Cursor+Claude | Composer 2.5 Fast | 136–139, 063 | RELEASE_CHECKLIST + NOT PUSHED gate |
+
+**Ship rule:** default (Labs off) = only Ship tier works; Labs tier = Coming soon until enabled in Settings.
 
 Exception: dependency-free craft tickets may run out of order **only when explicitly labeled
 `Launch Polish`**. Core behavior tickets remain ordered by dependency.
@@ -134,7 +174,7 @@ See `_Done/` folder. Craft 026–032 complete.
 | 117 | Pilot intake flow | Claude | 115, 116 | `_Parked/` |
 | 118 | Culture vs memory page | Claude | 115 | `_Parked/` optional |
 | 119 | Primary agent default UX | Claude | 076, 080 | one agent; no fleet UI |
-| 129 | CI verify gate on main | Cursor | 054, 063 | `_Done/` — `.github/workflows/ci.yml` |
+| 129 | CI verify gate on main | Cursor | 054, 063 | `_Backlog/` — GH break→red→green receipt open |
 
 ### Category wedge — culture compounding
 
@@ -251,7 +291,7 @@ Tickets in `_Parked/` are valid, but not active. They become active only by movi
 116 Pilot claim boundary    — Codex (with 115)
 121–128 Culture wedge       — see Category wedge section
 131–135 Checks wedge          — Culture CI positioning; see plan Category and naming (locked)
-129 CI verify on main       — Cursor (_Done)
+129 CI verify on main       — Cursor (_Backlog)
 067 One-pagers alignment    — Claude (_Done)
 ```
 
@@ -267,7 +307,7 @@ real action → receipt → proposal/learning → curation → changed future be
 
 018 is `_Done`. Unpark 019–024 only per `000-parallel-map.md` unpark table.
 
-## PR stack (`ship/v0.3-integration`)
+## PR stack (`ship/functional-labs`)
 
 Prepare-only split — full detail: `docs/v1/runbooks/pr-stack-ship-v03.md`. Gate: no push without Sebastian (063).
 
@@ -284,6 +324,8 @@ Pre-merge per PR: `bun run typecheck`, `bun run --cwd apps/desktop typecheck`, t
 
 ```txt
 000-parallel-map.md            dependency DAG, waves, conflicts, parallel rules
+000-audit-status.md            latest folder audit + reopen decisions
+000-surface-map.md             Sidebar SurfaceId → ticket → SHIP_CHECK
 _template.md                 ticket template
 _workflow-run-ticket.md      implement one ticket, write receipt, stop
 _workflow-review-ticket.md   independent review, append verdict

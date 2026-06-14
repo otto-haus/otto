@@ -4,8 +4,8 @@
 it is Built, Tested (or failure documented), Demoed, Tried by Sebastian, and **explicitly
 approved by Sebastian**. Claude is execution lead; Sebastian is the only release approver.
 
-**NOT PUSHED to main / live app** — integration branch `ship/v0.3-integration` @ `0a07320` (integration codename — **not** product semver).
-**Product line:** **`v0.1.x`** — target first Sebastian gate tag **`v0.1.3`** (draft — **hold** until Sebastian approves). Mistaken GitHub tags `v0.2.0`, `v0.2.1`, `v0.3.0` removed; do not treat integration branch names as public semver.
+**NOT PUSHED to main / live app** — integration branch `ship/functional-labs` @ `0a07320` (integration codename — **not** product semver).
+**Product line:** **`v0.1.x`** — **`v0.1.3`** tags the integration/demo line (GitHub pre-release). Mistaken tags `v0.2.0`, `v0.2.1`, `v0.3.0` removed locally; do not treat integration branch names as public semver.
 Mirror: `docs/v1/SHIP_STATUS.md`. Gate packet: `docs/receipts/staging/063-sebastian-gate-packet-v03-20260614.md`.
 
 ## Release cut policy
@@ -18,7 +18,7 @@ Mirror: `docs/v1/SHIP_STATUS.md`. Gate packet: `docs/receipts/staging/063-sebast
 | **Minor** `0.1.x → 0.2.0` | A **named milestone** ships and is documented in `ship-tier-matrix.md` changelog — not “we merged a big branch” | e.g. Labs lane stable (Coming soon + gate) with fresh-Mac embedded Letta proof |
 | **Major** `→ 1.0.0` | Default operator completes the **Ship-tier loop** without Sebastian hand-holding | future |
 
-Integration branch names (`ship/v0.3-integration`) and orphan draft tags (`v0.3.0`) are **engineering labels**. Public semver stays on `0.1.x` until a minor milestone is earned.
+Integration branch names (`ship/functional-labs`) and orphan draft tags (`v0.3.0`) are **engineering labels**. Public semver stays on `0.1.x` until a minor milestone is earned.
 
 ## v0.1 honesty framing
 

@@ -2,8 +2,7 @@
 
 ## Charter
 
-**Original request:** Ship every active ticket in
-`/Users/seb/Library/CloudStorage/Dropbox/HQ/Otto Tickets`, using `000-canonical.md` as the
+**Original request:** Ship every active ticket in `planning/hq-tickets/`, using `000-canonical.md` as the
 operating contract. Work the lowest-numbered active ticket first, implement only that ticket,
 prove every "Done when" item, move the ticket to `_Done` only when proven, leave blocked tickets
 in root with the exact blocker, do not touch `_Parked`.
@@ -36,10 +35,9 @@ no `_Done`.
 
 ### Coordinates
 
-- **Tickets dir:** `/Users/seb/Library/CloudStorage/Dropbox/HQ/Otto Tickets`
-- **Contract:** `…/Otto Tickets/000-canonical.md` (+ `000-workflow.md`, `000-index.md`)
-- **Implementation repo:** `/Users/seb/Code/otto/.letta/worktrees/otto-v01-integration`
-  (Otto v1 desktop; tickets 001–018 map to `docs/otto-v1-surface-contracts.md`).
+- **Tickets dir:** `planning/hq-tickets/` (repo root: `/Users/seb/Code/otto`)
+- **Contract:** `planning/hq-tickets/000-canonical.md` (+ `000-workflow.md`, `000-index.md`)
+- **Implementation repo:** `/Users/seb/Code/otto` (branch `ship/functional-labs` or active integration worktree)
 - **Active queue:** 001 settings-letta-readiness · 002 chat-real-adapter-path ·
   003 chat-empty-error-loading-states · 004 receipt-contract · 005 receipts-surface ·
   006 charter-contract · 007 charters-surface · 008 standards-file-backed-canon ·

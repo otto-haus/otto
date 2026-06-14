@@ -2,9 +2,9 @@
 
 Updated: 2026-06-14
 
-Integration branch: `ship/v0.3-integration` @ `0a07320` (codename — not product semver)
+Integration branch: `ship/functional-labs` @ `ec6e7e5` (codename — not product semver)
 
-**Product line:** **`v0.1.x`** — target Sebastian gate tag **`v0.1.3`** (draft — **hold** until Sebastian approves). Mistaken draft tags `v0.2.x` / `v0.3.0` removed from GitHub; public semver stays on `0.1.x` until earned (see `RELEASE_CHECKLIST.md` release cut policy).
+**Product line:** **`v0.1.x`** — tag **`v0.1.3`** marks the integration/demo line (pre-release until Sebastian gate). Mistaken local tags `v0.2.x` / `v0.3.0` deleted; never use integration branch names as semver.
 **Staging proof:** `/Applications/otto-staging.app` only — live app unchanged.
 
 Lane tickets (historical): `planning/lane-tickets/` — 001–009 + 016 **done**
