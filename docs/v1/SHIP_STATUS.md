@@ -1,77 +1,76 @@
 # Otto v1 — Ship Status
 
-Updated: 2026-06-14
+Updated: 2026-06-14 (tickets **140** / **142**)
 
-Integration branch: `ship/functional-labs` @ `b8ed206` (codename — not product semver)
+Integration branch: `ship/functional-labs` (codename — not product semver)
 
-**Product line:** **`v0.1.x`** — tag **`v0.1.3`** marks the integration/demo line (pre-release until Sebastian gate). Mistaken local tags `v0.2.x` / `v0.3.0` deleted; never use integration branch names as semver.
+**Product line:** **`v0.1.x`** — target tag **`v0.1.3`** (pre-release until Sebastian gate).
 **Staging proof:** `/Applications/otto-staging.app` only — live app unchanged.
 
-Lane tickets (historical): `planning/lane-tickets/` — 001–009 + 016 **done**
+```txt
+NOT PUSHED — no main merge, no tag, no live app promotion until Sebastian sign-off.
+```
 
-HQ conveyor (canonical): `planning/hq-tickets/` — `_Done/` **62**, root **35** active (29 reopened + **136–141** ship/labs + **142** ceremony), `_Parked/` **29**. Audit: `planning/hq-tickets/000-audit-status.md`. Tier truth: `docs/v1/ship-tier-matrix.md`.
+Tier truth: [`docs/v1/ship-tier-matrix.md`](ship-tier-matrix.md) · Release tables: [`RELEASE_CHECKLIST.md`](../../RELEASE_CHECKLIST.md) · Ceremony: [`docs/v1/runbooks/sebastian-release-sign-off.md`](runbooks/sebastian-release-sign-off.md)
 
-Smoke root: `/Users/seb/.codex/admin/`
+HQ conveyor: `planning/hq-tickets/` — **138** core-path proof still in root (staging gaps logged). **139** Labs shells in `_Done/`.
 
-Shared verification (2026-06-14):
+Shared verification (2026-06-14, **140**):
 
 ```sh
 cd /Users/seb/Code/otto
-bun run verify:v0
-bash scripts/release-gate.sh   # includes verify:v0 + desktop electron:typecheck
+bun run verify:v0          # 5/5, 208 unit tests
+bash scripts/release-gate.sh
 ```
 
-## Lane completion
+## Ship tier (Labs off)
+
+Public claims must match this table only. Full matrix: [`ship-tier-matrix.md`](ship-tier-matrix.md).
+
+| Surface | Staging | Gap |
+|---------|:-------:|-----|
+| Chat, Settings, Onboarding | partial | real turn + onboarding dock visuals (**071–073**) |
+| Charters, Standards, Practices, Routines | pass (hygiene) | live walk optional |
+| Curation, Receipts, Checks, Autonomy, Skills, Tickets | pass (hygiene/unit) | Culture CI demo **135** not re-run session |
+| Knowledge, Channels | n/a (Labs) | coming soon when Labs off — **137** |
+
+**138** receipt bundle: [`staging-hygiene-proof-20260614143512.json`](../receipts/staging/staging-hygiene-proof-20260614143512.json) — not full Ship declare.
+
+## Labs tier
+
+Default **off**. [`docs/v1/labs.md`](labs.md). **139** receipt: [`124-126-123-139-ui-wedge-20260614.md`](../receipts/staging/124-126-123-139-ui-wedge-20260614.md).
+
+| Feature | Public claim |
+|---------|--------------|
+| Cognee / pgvector / Channels / worker loop / Cloud | **Not shipped** — Labs or Cut |
+
+## Cut
+
+Otto Cloud live stack, Paperclip write, extension `/ticket` as primary UX — spec/parked only.
+
+## Lane completion (historical smoke)
 
 | Lane | Surface | Status | Primary smoke |
 |---:|---|---|---|
 | 001 | Chat | done | `otto-002-chat-send-smoke-20260614T023917Z.json` |
 | 002 | Settings + Letta | done | `otto-001-connected-settings-smoke-20260614T023015Z.json` |
 | 003 | Receipts | done | `otto-004-receipt-smoke-20260614T032125Z.json` |
-| 004 | Charters | done | `otto-007-charters-smoke-20260613T210700.json` |
-| 005 | Standards | done | `otto-008-standards-smoke-20260613T220000.json` |
-| 006 | Practices | done | `otto-010-practices-smoke-20260613T221500.json` |
-| 007 | Routines | done | `otto-012-routines-contract-smoke-20260613T223000.json` |
-| 008 | Curation | done | `otto-016-curation-decisions-smoke-20260613T230000.json` |
-| 009 | Autonomy | done | `otto-017-autonomy-policy-smoke-20260613T231500.json` |
-| 016 | Readiness gate | done | `otto-018-readiness-gate-smoke-20260614T040000.json` |
+| 004–009 | Canon surfaces | done | lane receipts under smoke root |
 
 Mapping: `planning/lane-tickets/000-hq-sync.md`
 
-## Ship Check summary
-
-| Surface | Check | Decision | Gap |
-|---|---|---|---|
-| Desktop | `[~]` | Ship as Proposed | Staging branch only; no demo refresh |
-| Runs/Receipts | `[x]` | Ship in v0.1 | Repo receipts refreshed for tickets/channels |
-| Charter | `[~]` | Ship as Proposed | Desktop surface yes; extension CLI partial |
-| Standards | `[x]` | Ship in v0.1 | File-backed + surface |
-| Practices | `[~]` | Ship as Proposed | Surface + specs; CLI path partial |
-| Routines | `[~]` | Ship as Proposed | Manual run yes; automated executor partial |
-| Curation | `[x]` | Ship in v0.1 | Proposal + accept/reject/defer + canon ratify |
-| Autonomy | `[x]` | Ship in v0.1 | Policy + classifier + knowledge routing read |
-| Approvals | `[x]` | Ship in v0.1 | Records from Curation + receipts |
-| Tickets | `[~]` | Proposed | **049, 051 reopened** — orchestrate/review gate need staging proof |
-| Skills | `[~]` | Proposed | **066 reopened** — seed library incomplete |
-| Knowledge | `[~]` | Ship as Proposed | Registry/routing **proposed**; **055 reopened** — store + pane need staging re-proof |
-| Channels | `[x]` | Ship in v0.1 | File contract + pane; **056 reopened** — Discord bot deferred |
-| Otto Cloud (web) | `[ ]` | Proposed | Spec only |
-| Worker orchestration | `[~]` | Proposed | **060 reopened** — bounded runner incomplete |
-| Release gate | `[~]` | In progress | `scripts/release-gate.sh` + `verify:v0` green; **063** + **142** Sebastian sign-off open |
-
-Detail per surface: `docs/v1/SHIP_CHECKS/*.md`  
-PR split: `docs/v1/runbooks/pr-stack-ship-v03.md`
+Detail per surface: `docs/v1/SHIP_CHECKS/*.md` · PR split: `docs/v1/runbooks/pr-stack-ship-v03.md`
 
 ## Not shipped (honest)
 
-- Demos (`demo/out/*.mp4`) not refreshed for this wave
-- Public push / tag / npm publish
-- Live Discord bot runtime (channels file contract + approval gates only)
-- Letta `/ticket` extension CLI parity (130)
+- Live Discord bot, Otto Cloud sync, always-on cloud
+- Public push / tag / npm publish (**NOT PUSHED**)
 - Live `/Applications/otto.app` — staging worktree only
+- **076** fresh-Mac embedded Letta proof
+- Culture CI end-to-end demo on staging (**135**) — pending re-run
 
 ## Next
 
-1. Execute post-audit waves in `planning/hq-tickets/000-parallel-map.md` (reopened tickets first)
-2. Complete **136–141** Ship/Labs lane + **142** ceremony packet
-3. Staging smoke on reopened surfaces before moving back to `_Done/`
+1. Close **138** Ship core-path gaps with dated staging receipts
+2. Sebastian runs [`sebastian-release-sign-off.md`](runbooks/sebastian-release-sign-off.md) (**142**)
+3. Record verdict in [`063-sebastian-gate-packet-v03-20260614.md`](../receipts/staging/063-sebastian-gate-packet-v03-20260614.md)

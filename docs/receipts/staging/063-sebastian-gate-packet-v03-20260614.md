@@ -61,3 +61,12 @@ NODE_PATH=$HOME/.codex/admin/node_modules \
 3. **Approve** promoting same build to live `/Applications/otto.app`? (default: **no** — staging-only proof)
 
 Reply with approve/deny per item. Otto does not self-declare Shipped.
+
+## Ceremony (142)
+
+Runbook: [`docs/v1/runbooks/sebastian-release-sign-off.md`](../v1/runbooks/sebastian-release-sign-off.md)
+
+- Approval template: [`sebastian-release-approval-template.md`](sebastian-release-approval-template.md)
+- Dry-run example (not signed): [`sebastian-release-approval-dry-run-v013-20260614.md`](sebastian-release-approval-dry-run-v013-20260614.md)
+
+Append Sebastian verdict block here when signed.

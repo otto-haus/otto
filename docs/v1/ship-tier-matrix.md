@@ -154,6 +154,7 @@ Record pass/fail per **Ship** row in this file before Sebastian ack.
 ## Related docs
 
 - `docs/v1/labs.md` — Labs UX contract
+- `docs/v1/runbooks/sebastian-release-sign-off.md` — Sebastian gate ceremony (**142**)
 - `RELEASE_CHECKLIST.md` — release cut policy (`0.1.x` earned bumps); standard: `standards/standards/earned-semver.md`
 - `planning/hq-tickets/136-ship-tier-matrix-audit.md` — ticket AC
 - `apps/desktop/src/surface-tiers.ts` — tier registry + nav gating (**137**)

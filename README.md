@@ -108,7 +108,7 @@ otto.
 | **Charters** | Operating contracts for long-running work: objective, ACs, plan, gates, receipts. |
 | **Approvals** | Scoped, time-bound human ratification for one-way doors. |
 | **Receipts** | Proof artifacts. No artifact, no progress. |
-| **Curation** | The future engine that decides what compounds into canon. Not built in v0.1. |
+| **Curation** | The proposal-and-ratification engine in desktop (Ship tier); full spine still maturing. |
 | **otto Desktop** | Workspace over runtime readiness, chat, approvals, receipts, and surfaces. |
 
 ---
@@ -120,8 +120,8 @@ This is the first otto deployment stack, not the definition of otto:
 ```txt
 Letta remembers.      Persistent agent memory and runtime continuity.
 otto improves.        Standards, Practices, Checks, Curation, Routines, Receipts.
-Paperclip manages.    Goals, tickets, budgets, heartbeats, approvals, audit.
-Discord reaches.      Mobile blockers, approvals, field notes, status.
+Paperclip manages.    Goals, tickets, budgets, heartbeats, approvals, audit (reference stack — not shipped in v0.1).
+Discord reaches.      Mobile blockers, approvals, field notes, status (Labs — no live bot in v0.1).
 ```
 
 otto should survive replacement of any substrate except its own behavior layer.
@@ -130,27 +130,37 @@ otto should survive replacement of any substrate except its own behavior layer.
 
 ## Status
 
-otto is early. v0.1 is a local-first, file-backed release artifact.
+otto is early. v0.1 is a local-first, file-backed release artifact on the **`0.1.x`** line (target gate tag **`v0.1.3`** — **not pushed** until Sebastian approves).
+
+```txt
+NOT PUSHED — integration branch ship/functional-labs; no tag; no live app promotion.
+```
 
 Source of truth:
 
-- [`RELEASE_CHECKLIST.md`](RELEASE_CHECKLIST.md)
+- [`RELEASE_CHECKLIST.md`](RELEASE_CHECKLIST.md) — Ship / Labs / Cut tables
+- [`docs/v1/ship-tier-matrix.md`](docs/v1/ship-tier-matrix.md) — product tier truth
+- [`docs/v1/labs.md`](docs/v1/labs.md) — Labs UX contract
 - [`SPEC_COMPLIANCE.md`](SPEC_COMPLIANCE.md)
 - [`SHIP_CHECKS/`](SHIP_CHECKS/)
 
-| Surface | v0.1 decision |
+### Ship tier (Labs off — what v0.1 claims)
+
+Works without enabling Labs in Settings. Staging proof on `/Applications/otto-staging.app`.
+
+| Surface | v0.1 |
 |---|---|
-| Namespace | ship |
-| Practices | ship |
-| Skills | ship |
-| Charter | proposed |
-| Routines | proposed |
-| Standards | proposed |
-| Desktop | ship |
-| Approvals / Runs / Receipts | defer |
-| Autonomy / Tickets / Workers | defer |
-| Channels | defer |
-| Curation | cut |
+| Chat, Settings, Desktop shell | ship (live chat requires Letta `session.initialize()`) |
+| Charters, Standards, Practices, Routines | ship (file-backed) |
+| Curation, Receipts, Checks, Autonomy, Skills, Tickets | ship (Culture CI demo: [`docs/v1/demo-culture-ci.md`](docs/v1/demo-culture-ci.md)) |
+
+### Labs (experimental)
+
+Enable in **Settings → Labs**. Knowledge (Cognee/pgvector), Channels (Discord contract), worker autonomous loop, Letta Cloud — **not** part of public v0.1 shipped claims. See [`docs/v1/labs.md`](docs/v1/labs.md).
+
+### Not in v0.1
+
+Otto Cloud live stack, live Discord bot, Paperclip write integration, always-on cloud sync.
 
 The first falsifiable desktop done test:
 
@@ -162,7 +172,7 @@ The first falsifiable desktop done test:
 ## Roadmap
 
 - **Now:** otto Shell over Letta, Practices, Charters, Standards, receipts.
-- **Next:** Curation, approval records, Long-Run Practice, Paperclip work-state bridge.
+- **Next:** Curation hardening, approval records, Long-Run Practice, Paperclip work-state bridge (reference — not v0.1 ship).
 - **Then:** Intake for AI-chat exports, source-corpus hooks, relationship-state hooks, packaged install.
 
 The roadmap only matters if each step makes behavior compound or gates irreversibility.

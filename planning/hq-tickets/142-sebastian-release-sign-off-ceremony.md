@@ -44,6 +44,19 @@ grep -q "Sebastian approves" RELEASE_CHECKLIST.md
 
 Leave blank unless blocked.
 
+## Ticket receipt (142 — 2026-06-14)
+
+| Done-when | Status |
+|-----------|--------|
+| Runbook `sebastian-release-sign-off.md` | done |
+| Demo script references staging + smoke JSON paths | done |
+| Approval template + dry-run receipt | done — [`sebastian-release-approval-dry-run-v013-20260614.md`](../../docs/receipts/staging/sebastian-release-approval-dry-run-v013-20260614.md) |
+| Cross-link 063 gate packet | done |
+| Reviewer +1 ceremony completeness | pending |
+
+**Verdict:** partial — ceremony artifacts ready; real Sebastian sign-off still required (**NOT PUSHED**).
+
 ## Review
 
-Verdict: pending
+Verdict: partial (implementer)
+Reviewer +1: pending (ceremony not shipping)

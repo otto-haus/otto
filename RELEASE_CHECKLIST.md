@@ -6,7 +6,14 @@ approved by Sebastian**. Claude is execution lead; Sebastian is the only release
 
 **NOT PUSHED to main / live app** — integration branch `ship/functional-labs` (integration codename — **not** product semver).
 **Product line:** **`v0.1.x`** — **`v0.1.3`** tags the integration/demo line (GitHub pre-release). Mistaken tags `v0.2.0`, `v0.2.1`, `v0.3.0` removed locally; do not treat integration branch names as public semver.
-Mirror: `docs/v1/SHIP_STATUS.md`. Gate packet: `docs/receipts/staging/063-sebastian-gate-packet-v03-20260614.md`.
+Mirror: `docs/v1/SHIP_STATUS.md`. Tier matrix: [`docs/v1/ship-tier-matrix.md`](docs/v1/ship-tier-matrix.md).
+Gate packet: [`docs/receipts/staging/063-sebastian-gate-packet-v03-20260614.md`](docs/receipts/staging/063-sebastian-gate-packet-v03-20260614.md).
+Sign-off ceremony: [`docs/v1/runbooks/sebastian-release-sign-off.md`](docs/v1/runbooks/sebastian-release-sign-off.md) (**142**).
+
+```txt
+NOT PUSHED — v0.1.3 gate open. No merge to main. No tag. No live /Applications/otto.app.
+Target tag v0.1.3 is prepared only until Sebastian explicit approval (receipt required).
+```
 
 ## Release cut policy
 
@@ -32,28 +39,66 @@ chat requires** a successful `session.initialize()` against a configured agent �
 "connected" until that succeeds. Per-surface evidence: [`SPEC_COMPLIANCE.md`](SPEC_COMPLIANCE.md),
 [`SHIP_CHECKS/`](SHIP_CHECKS/), [`CLAIMS_AUDIT.md`](CLAIMS_AUDIT.md).
 
-## Release table
+## Ship tier (Labs off — public claims)
 
-| Feature | Built | Tested | Demo | v0.1 | Notes |
-|---|:--:|:--:|:--:|:--:|---|
-| Practices | ✅ | ✅ | ✅ | **ship** | loader/validator/CLI; real `practices.json` on desktop |
-| Skills | ✅ | manual | ✅ | **ship** | charter + routine skill packages + SkillStore pane |
-| Charter | ✅ | manual | ✅ | proposed | permission gates live; AC auditing manual |
-| Routines | ✅ | manual | ✅ | proposed | specs + manual trials; recurring scheduler deferred |
-| Standards | ✅ | manual | ✅ | proposed | canon + precedents; enforcement via review |
-| Desktop | ✅ | build ✅ | ✅ | proposed | Electron shell; Letta path wired; live chat gated |
-| Curation | ✅ | unit | — | proposed | proposals + decide in desktop; not full spine |
-| Autonomy | ✅ | unit | ✅ | defer | policy.yaml + classifier + receipts |
-| Knowledge | ✅ | unit | — | **reopened (055)** | parent ticket returned to root — staging proof pending |
-| Runs / Receipts | ✅ | unit | — | defer | types + file receipts; no full run engine |
-| Approvals | ✅ | unit | — | defer | records from Curation path |
-| Tickets | ✅ | unit | — | **reopened (049)** | orchestrate path not proven on staging |
-| Worker orchestration | ✅ | unit | — | **reopened (060)** | observe loop incomplete |
-| Channels | ✅ | files | — | **reopened (056)** | SHIP_CHECK vs ticket mismatch |
-| Marketing site | ✅ | manual | — | **preview** | `site/` local staging verified; apex DNS pending |
-| Release gate | ✅ | ✅ | — | **in progress** | **063** open; **142** ceremony queued |
+Works end-to-end without Labs. Source matrix: [`docs/v1/ship-tier-matrix.md`](docs/v1/ship-tier-matrix.md).
 
-Legend: ✅ done · `manual` = manually verifiable · v0.1 = ship / proposed / defer · Tried + Approved = Sebastian only.
+| Surface / flow | Staging proof | Receipt / link | Sebastian tried |
+|----------------|---------------|----------------|:-----------------:|
+| Chat + threads | partial | unit + hygiene; two-thread smoke **not re-run 2026-06-14** | ☐ |
+| Settings + readiness | pass | `otto-001-connected-settings-smoke-*.json` | ☐ |
+| Onboarding | partial | onboarding smoke exists; dock visuals **071–073 open** | ☐ |
+| Charters, Standards, Practices, Routines | pass (hygiene) | `staging-hygiene-proof-20260614143512.json` | ☐ |
+| Curation + ratification | pass (unit + hygiene) | proposal-store tests; **123/126/048** | ☐ |
+| Receipts | pass | hygiene 124; `otto-004-receipt-smoke-*.json` | ☐ |
+| Checks (Culture CI) | partial | seed checks + unit; **135 demo not re-run** | ☐ |
+| Autonomy | pass | policy tests + `otto-017-autonomy-policy-smoke-*.json` | ☐ |
+| Skills | pass (file) | SkillStore tests; live staging **066 open** | ☐ |
+| Tickets compile/orchestrate | pass (hygiene) | `staging-hygiene-proof-20260614143512.json` (049) | ☐ |
+| Embedded Letta bootstrap | partial | prior `staging-076-bootstrap-proof-*.json`; **fresh Mac open** | ☐ |
+| Desktop shell / craft | pass (staging) | `craft-checklist-v03-20260614.md`, rev8 hygiene | ☐ |
+
+**138** core-path ticket (still in root): [`planning/hq-tickets/138-ship-tier-core-path-proof.md`](planning/hq-tickets/138-ship-tier-core-path-proof.md) — staging log lists gaps honestly; do not mark Ship declare until **138** Done-when met.
+
+## Labs tier (Settings → Labs)
+
+Experimental; enable per feature. UX: [`docs/v1/labs.md`](docs/v1/labs.md). **139** receipt: [`docs/receipts/staging/124-126-123-139-ui-wedge-20260614.md`](docs/receipts/staging/124-126-123-139-ui-wedge-20260614.md).
+
+| Feature / surface | Default (Labs off) | Proof | Shipped claim |
+|-------------------|-------------------|-------|---------------|
+| Knowledge (+ Cognee) | coming soon | registry tests; Cognee optional | **no** — Labs only |
+| Channels (Discord) | coming soon | file contract; **no live bot** | **no** — Labs only |
+| pgvector recall | off | unit tests | **no** |
+| Worker autonomous loop | off | bounded runner stub | **no** |
+| Letta Cloud remote | off | parked **077** | **no** |
+| Otto Cloud live stack | — | spec only | **no** (Cut) |
+
+**Not public v0.1 claims:** Discord bot runtime, cloud sync, always-on cloud, Paperclip write integration.
+
+## Cut (no product UI)
+
+| Item | Notes |
+|------|-------|
+| Otto Cloud live stack | Spec **083–089** |
+| Cathedral control plane | Spec **094–099** |
+| Paperclip write integration | Private boundary **021–022** |
+| Extension `/ticket` CLI as primary UX | **130** |
+
+## Legacy feature rollup (engineering)
+
+| Feature | Built | Tested | Demo | Tier | Notes |
+|---|:--:|:--:|:--:|:---:|---|
+| Practices | ✅ | ✅ | ✅ | Ship | loader/validator/CLI |
+| Skills | ✅ | manual | ✅ | Ship | SkillStore pane |
+| Charter / Routines / Standards | ✅ | manual | ✅ | Ship | file-backed; preview badges when Labs off |
+| Desktop | ✅ | build ✅ | ✅ | Ship | staging proof target |
+| Curation / Receipts / Checks | ✅ | unit | partial | Ship | Culture CI demo **135** open |
+| Autonomy / Tickets | ✅ | unit | partial | Ship | hygiene 049; worker loop Labs |
+| Knowledge / Channels | ✅ | unit | — | Labs | **137** gate |
+| Marketing site | ✅ | manual | — | preview | local staging; apex DNS pending |
+| Release gate | ✅ | ✅ | — | in progress | **063** + **142** ceremony |
+
+Legend: Tried + Approved = Sebastian only.
 
 ## Test receipts (this machine, bun 1.3.14)
 
@@ -63,13 +108,12 @@ bun run verify:v0                        # 5/5 — typecheck, bun test, practice
 bash scripts/release-gate.sh           # verify:v0 + apps/desktop electron:typecheck
 ```
 
-Latest unit suite (2026-06-14):
+Latest unit suite (2026-06-14, ticket **140** refresh):
 
 ```
+bun run verify:v0                      → 5/5 pass
+bash scripts/release-gate.sh         → pass (verify:v0 + electron:typecheck)
 bun test                               → 208 pass / 0 fail (1 skip)
-bun run typecheck                      → exit 0
-bun run --cwd apps/desktop typecheck   → exit 0
-bun run --cwd apps/desktop electron:typecheck → exit 0 (via release-gate.sh)
 ```
 
 Per-feature receipts: [`receipts/otto-v01/`](receipts/otto-v01/). Demos: [`demo/README.md`](demo/README.md).
@@ -89,19 +133,29 @@ Staging smoke: `docs/receipts/staging/`. PR stack: `docs/v1/runbooks/pr-stack-sh
 
 ## Open issues / honest gaps
 
-- Demos: desktop walkthrough re-rendered 2026-06-14 → `demo/out/otto-v01-desktop-walkthrough.mp4` (receipt `receipts/otto-v01/demo-render-20260614T063531Z.md`); other clips: `bash scripts/render-demo-clips.sh all`.
-- Marketing site: local staging only (`bash site/deploy-staging.sh`); `otto.haus` apex not deployed.
-- Live `/Applications/otto.app` may lag integration branch; staging app is the proof target.
-- Cognee/pgvector recall require local daemons — UI shows honest empty when off.
+- **138** Ship core path: onboarding/rev8/two-thread/Culture CI not all re-run 2026-06-14 session — see ticket staging log.
+- **076** fresh-Mac embedded Letta bundle proof still open.
+- Demos: walkthrough `demo/out/otto-v01-desktop-walkthrough.mp4` + release asset naming `otto-v01-desktop.mp4` (receipt `receipts/otto-v01/demo-render-20260614T063531Z.md`).
+- Marketing site: local staging only; `otto.haus` apex not deployed.
+- Live `/Applications/otto.app` lags staging by design until Sebastian approves promotion.
+- Cognee/pgvector require local daemons — UI shows honest empty/blocked when off.
 - Sebastian checklist (Tried + Approved) all pending.
 
 ## Final gate — Sebastian approves before any push/tag
 
+Ceremony: [`docs/v1/runbooks/sebastian-release-sign-off.md`](docs/v1/runbooks/sebastian-release-sign-off.md). Template: [`docs/receipts/staging/sebastian-release-approval-template.md`](docs/receipts/staging/sebastian-release-approval-template.md).
+
 | Item | Approved? |
 |---|:--:|
-| README public story | ☐ |
-| Feature shipped table (this file) | ☐ |
-| Demo videos / walkthrough refresh | ☐ |
-| Test receipts (`verify:v0` green) | ☐ |
+| Tried staging with **Labs off** — core loop | ☐ |
+| Tried staging with **Labs on** — one lab feature | ☐ |
+| Ship table matches experience | ☐ |
+| README public story (Ship tier only) | ☐ |
+| Demo videos / walkthrough | ☐ |
+| Test receipts (`verify:v0` + `release-gate.sh` green) | ☐ |
 | Namespace `otto-haus` / `@otto-haus` | ☐ |
-| **Push + tag `v0.1.3`** (Red — explicit) | ✅ (2026-06-14 — user release cut) |
+| **Push + tag `v0.1.3`** (explicit — Red until signed) | ☐ |
+
+```txt
+NOT PUSHED until the row above is checked and approval receipt signed.
+```

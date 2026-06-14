@@ -115,6 +115,8 @@ bash scripts/embedded-letta-smoke.sh   # when OTTO_EMBEDDED_APP points at stagin
 
 **Note:** Kill stray `otto-staging.app` instances not using `--remote-debugging-port=9445` before CDP scripts — they break nav selectors.
 
+**Release packaging:** [`140-release-packaging-ship-vs-labs.md`](140-release-packaging-ship-vs-labs.md) · Sign-off ceremony: [`docs/v1/runbooks/sebastian-release-sign-off.md`](../../docs/v1/runbooks/sebastian-release-sign-off.md) (**142**). Do not mark NOT PUSHED cleared until **138** Done-when + Sebastian receipt.
+
 ## Blocker log
 
 Leave blank unless blocked.

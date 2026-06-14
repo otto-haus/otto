@@ -86,3 +86,25 @@ curl -sI "https://github.com/otto-haus/otto/releases/latest/download/otto-v01-de
 ## Blocker log
 
 Leave blank unless blocked.
+
+## Ticket receipt (140 — 2026-06-14)
+
+| Done-when | Status |
+|-----------|--------|
+| RELEASE_CHECKLIST Ship/Labs/Cut tables + evidence links | done |
+| README Ship/Labs boundary; no Labs as shipped | done |
+| `verify:v0` + `release-gate.sh` green | done (2026-06-14) |
+| Staging proof bundle 138 + 139 linked | partial — hygiene + 139 linked; **138** gaps logged |
+| NOT PUSHED banner | done |
+| Claims audit reviewer +1 | pending |
+
+**138 cross-link:** [`138-ship-tier-core-path-proof.md`](138-ship-tier-core-path-proof.md) — staging log lists onboarding/rev8/two-thread/Culture CI as not re-run this session; **076** fresh Mac open. Do not fake Ship declare.
+
+**139 receipt:** [`docs/receipts/staging/124-126-123-139-ui-wedge-20260614.md`](../../docs/receipts/staging/124-126-123-139-ui-wedge-20260614.md)
+
+**Verdict:** partial — docs refresh complete; ticket stays in root until **138** closure + Sebastian sign-off.
+
+## Review
+
+Verdict: partial (implementer)
+Reviewer +1 on claims: pending
