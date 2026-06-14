@@ -139,10 +139,13 @@ const parseStoredQueue = (raw: string | null): QueueItem[] => {
 export const readQueue = (): QueueItem[] => {
   try {
     const legacyV2Raw = localStorage.getItem(LEGACY_QUEUE_V2_KEY);
-    const legacyRaw = legacyV2Raw ?? localStorage.getItem(LEGACY_QUEUE_KEY);
+    const legacyV1Raw = localStorage.getItem(LEGACY_QUEUE_KEY);
     const currentRaw = localStorage.getItem(QUEUE_KEY);
     const current = parseStoredQueue(currentRaw);
-    const legacy = parseStoredQueue(legacyRaw);
+    const legacy = [
+      ...parseStoredQueue(legacyV2Raw),
+      ...parseStoredQueue(legacyV1Raw),
+    ];
     const items = sanitizeQueue(
       dedupeQueue([
         ...current,
@@ -152,7 +155,7 @@ export const readQueue = (): QueueItem[] => {
     );
 
     if (legacyV2Raw) localStorage.removeItem(LEGACY_QUEUE_V2_KEY);
-    if (localStorage.getItem(LEGACY_QUEUE_KEY)) localStorage.removeItem(LEGACY_QUEUE_KEY);
+    if (legacyV1Raw) localStorage.removeItem(LEGACY_QUEUE_KEY);
     localStorage.setItem(QUEUE_KEY, JSON.stringify(items));
 
     return items;
