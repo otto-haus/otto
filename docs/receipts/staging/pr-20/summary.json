@@ -1,0 +1,15 @@
+{
+  "pr": 20,
+  "checks": [
+    {
+      "name": "color-scheme meta declaration",
+      "command": "rg -n '<meta name=\"color-scheme\" content=\"light\"' apps/desktop/index.html",
+      "result": "pass",
+      "reason": "Meta declaration is present in apps/desktop/index.html"
+    }
+  ],
+  "artifacts": ["desktop-home.png"],
+  "notes": [
+    "No desktop behavior changes beyond head metadata; this is pre-style UA chrome paint control."
+  ]
+}
