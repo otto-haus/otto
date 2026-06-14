@@ -1,4 +1,6 @@
 import { describe, expect, test } from 'bun:test';
+import { mkdtempSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { StandardStore } from './standard-store';
@@ -57,6 +59,17 @@ describe('StandardStore', () => {
   test('readPrecedent returns null for missing file', () => {
     const store = new StandardStore(standardsDir);
     expect(store.readPrecedent('precedents/does-not-exist.md')).toBeNull();
+  });
+
+  test('readPrecedent rejects paths outside standards dir', () => {
+    const root = mkdtempSync(join(tmpdir(), 'otto-standards-precedent-'));
+    const standardsRoot = join(root, 'standards');
+    const outside = join(root, 'outside.md');
+    writeFileSync(outside, '## Decision\nOutside precedent should not be readable.');
+
+    const store = new StandardStore(standardsRoot);
+
+    expect(store.readPrecedent('../outside.md')).toBeNull();
   });
 
   test('IPC conflict-for-standard handler contract matches store lookup', () => {
