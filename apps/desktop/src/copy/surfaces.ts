@@ -154,8 +154,12 @@ export const chatCopy = {
   correctThis: 'Correct this',
   correctThisHint: 'Turn this moment into changed future behavior',
   correctionDefault: 'This response should change — describe the behavior you want instead.',
+  proposeFromCorrection: 'Propose from correction',
+  proposeFromCorrectionHint: 'Describe the behavior you want next time. Canon stays unchanged until you ratify in Curation.',
   onboardingHint: 'Send your first message — otto writes a Receipt when work completes with proof.',
+  onboardingReceiptHint: 'First turn recorded — open Receipts to inspect the proof record.',
   onboardingSkip: 'Skip setup',
+  onboardingViewReceipts: 'View Receipts',
 } as const;
 
 export const permissionCopy = {

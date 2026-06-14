@@ -43,11 +43,10 @@ export function onOnboardingDismiss(listener: DismissListener): () => void {
   return () => dismissListeners.delete(listener);
 }
 
-/** First successful chat send during active onboarding — dismiss dock permanently. */
+/** First successful chat send during active onboarding — advance to receipt step (not full dismiss). */
 export function notifyOnboardingFirstMessage(): void {
-  if (wasOnboarded()) return;
+  if (wasOnboarded() || wasFirstMessageDuringOnboarding()) return;
   markFirstMessageDuringOnboarding();
-  markOnboarded();
   firstMessageListeners.forEach((listener) => listener());
 }
 

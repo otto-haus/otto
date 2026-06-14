@@ -10,7 +10,14 @@ import ottoAvatar from '../assets/otto-avatar.png';
 import type { SurfaceId } from '../components/Sidebar';
 import { CommandStationStrip, MessageActions, Modal, PermissionCard, type PermissionDecision, type PermissionRequestView } from '../components/ui';
 import { chatCopy, permissionCopy, toastCopy } from '../copy/surfaces';
-import { dismissOnboarding, notifyOnboardingFirstMessage, onOnboardingDismiss, onOnboardingFirstMessage, wasOnboarded } from '../onboarding-storage';
+import {
+  dismissOnboarding,
+  notifyOnboardingFirstMessage,
+  onOnboardingDismiss,
+  onOnboardingFirstMessage,
+  wasFirstMessageDuringOnboarding,
+  wasOnboarded,
+} from '../onboarding-storage';
 
 // In Electron (window.otto present) → the runtime-wired LiveChat.
 // In the web preview → the file-backed PreviewChat (unchanged).
@@ -298,7 +305,8 @@ const LiveChat: React.FC<{
   const [permission, setPermission] = useState<PermissionRequestView | null>(null);
   const [permissionBusy, setPermissionBusy] = useState(false);
   const [correctBusy, setCorrectBusy] = useState<string | null>(null);
-  const [onboardingHint, setOnboardingHint] = useState(() => !wasOnboarded());
+  const [onboardingDismissed, setOnboardingDismissed] = useState(wasOnboarded);
+  const [onboardingFirstMessage, setOnboardingFirstMessage] = useState(wasFirstMessageDuringOnboarding);
   const draining = useRef(false);
   const fileInput = useRef<HTMLInputElement | null>(null);
   const st = rt.status;
@@ -311,8 +319,18 @@ const LiveChat: React.FC<{
     return api.onPermission((req) => setPermission(req as PermissionRequestView));
   }, [api]);
 
-  useEffect(() => onOnboardingDismiss(() => setOnboardingHint(false)), []);
-  useEffect(() => onOnboardingFirstMessage(() => setOnboardingHint(false)), []);
+  useEffect(() => onOnboardingDismiss(() => setOnboardingDismissed(true)), []);
+  useEffect(() => onOnboardingFirstMessage(() => setOnboardingFirstMessage(true)), []);
+
+  const showRunOnboardingHint = ready
+    && !onboardingDismissed
+    && !onboardingFirstMessage
+    && !permission;
+
+  const showReceiptOnboardingHint = ready
+    && !onboardingDismissed
+    && onboardingFirstMessage
+    && !permission;
 
   const respondPermission = (decision: PermissionDecision, denyMessage?: string) => {
     if (!api || !permission) return;
@@ -542,12 +560,25 @@ const LiveChat: React.FC<{
           </div>
         )}
         {attachmentError && <div className="attachmentError">{attachmentError}</div>}
-        {ready && onboardingHint && (
+        {showRunOnboardingHint && (
           <div className="onboardInlineHint" role="status">
             <span>{chatCopy.onboardingHint}</span>
             <button type="button" className="onboardInlineHint__skip" onClick={() => dismissOnboarding()}>
               {chatCopy.onboardingSkip}
             </button>
+          </div>
+        )}
+        {showReceiptOnboardingHint && (
+          <div className="onboardInlineHint" role="status">
+            <span>{chatCopy.onboardingReceiptHint}</span>
+            <div className="onboardInlineHint__actions">
+              <button type="button" className="onboardInlineHint__link" onClick={() => onNavigate?.('receipts')}>
+                {chatCopy.onboardingViewReceipts}
+              </button>
+              <button type="button" className="onboardInlineHint__skip" onClick={() => dismissOnboarding()}>
+                {chatCopy.onboardingSkip}
+              </button>
+            </div>
           </div>
         )}
         <div className="promptCompose">
@@ -650,7 +681,10 @@ const LiveChat: React.FC<{
       <Modal
         open={!!permission}
         title={permissionCopy.modalTitle}
-        onClose={() => { if (!permissionBusy) setPermission(null); }}
+        onClose={() => {
+          if (permissionBusy || !permission) return;
+          respondPermission('deny', permissionCopy.deniedByUser);
+        }}
       >
         {permission ? (
           <PermissionCard request={permission} busy={permissionBusy} onDecide={respondPermission} />

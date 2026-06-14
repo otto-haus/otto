@@ -552,7 +552,7 @@ h1, h2, h3, h4, p { margin: 0; }
 .inkblock__actions { display: flex; gap: 10px; margin-top: 4px; flex-wrap: wrap; }
 
 .modal {
-  position: fixed; inset: 0; z-index: 100;
+  position: fixed; inset: 0; z-index: 120;
   display: grid; place-items: center; padding: 24px;
   background: rgba(20, 22, 26, 0.42);
 }
@@ -897,6 +897,12 @@ h1, h2, h3, h4, p { margin: 0; }
   background: var(--accent-tint); border: 1px solid var(--line);
   font-size: 13px; line-height: 1.45; color: var(--ink-soft);
 }
+.onboardInlineHint__actions { display: flex; align-items: center; gap: 4px; flex-shrink: 0; }
+.onboardInlineHint__link {
+  border: 0; background: transparent; color: var(--ink); font-weight: 600;
+  font-size: 12.5px; cursor: pointer; padding: 4px 8px; border-radius: 6px;
+}
+.onboardInlineHint__link:hover { background: rgba(20,22,26,0.06); }
 .onboardInlineHint__skip {
   flex-shrink: 0; border: 0; background: transparent; color: var(--mut);
   font-size: 12.5px; font-weight: 500; cursor: pointer; padding: 4px 8px; border-radius: 6px;

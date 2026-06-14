@@ -41,7 +41,6 @@ export const Onboarding: React.FC<{ onNavigate: (id: SurfaceId) => void; activeS
 
   useEffect(() => onOnboardingFirstMessage(() => {
     setSessionFirstMessage(true);
-    setDismissed(true);
   }), []);
 
   useEffect(() => onOnboardingDismiss(() => setDismissed(true)), []);
@@ -132,7 +131,7 @@ export const Onboarding: React.FC<{ onNavigate: (id: SurfaceId) => void; activeS
   }
 
   const isConnect = step === 'connect';
-  // Run-step dock on Chat covers the composer and "Go to Chat" is redundant — inline hint lives in Chat.
+  // On Chat, hide the run-step dock — bottom dock covers the composer.
   if (step === 'run' && activeSurface === 'chat') return null;
 
   return (
