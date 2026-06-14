@@ -9,14 +9,22 @@ if [[ "$actual_bun_version" != "$expected_bun_version" ]]; then
   exit 1
 fi
 
-bun run typecheck
-bun run --cwd apps/desktop typecheck
-bun run --cwd apps/desktop electron:typecheck
-bun test
-bun run verify:v0
-bun run docs:validate
-bun run docs:links
-OTTO_READINESS_IGNORE_LOCAL_CONFIG=1 bun run --cwd apps/desktop electron:build
-bun audit
-git diff --check
-git diff --exit-code
+run_gate() {
+  local label="$1"
+  shift
+
+  printf '\n==> %s\n' "$label"
+  "$@"
+}
+
+run_gate "core/practices typecheck" bun run typecheck
+run_gate "desktop renderer typecheck" bun run --cwd apps/desktop typecheck
+run_gate "desktop Electron typecheck" bun run --cwd apps/desktop electron:typecheck
+run_gate "unit tests" bun test
+run_gate "v0 verifier" bun run verify:v0
+run_gate "docs validate" bun run docs:validate
+run_gate "docs links" bun run docs:links
+run_gate "desktop Electron build" env OTTO_READINESS_IGNORE_LOCAL_CONFIG=1 bun run --cwd apps/desktop electron:build
+run_gate "dependency audit" bun audit
+run_gate "diff whitespace check" git diff --check
+run_gate "working tree clean check" git diff --exit-code
