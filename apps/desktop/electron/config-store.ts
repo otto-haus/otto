@@ -73,7 +73,7 @@ export class ConfigStore {
   }
 
   connectionMode(): NonNullable<OttoConfig['connectionMode']> {
-    return this.cfg.connectionMode ?? 'existing';
+    return normalizeConnectionMode(this.cfg.connectionMode) ?? 'existing';
   }
 
   /** Isolated Letta settings root for embedded mode (076) — under ~/.otto/letta by default. */
@@ -128,5 +128,10 @@ function unique(values: Array<string | null | undefined>): string[] {
 
 function normalizeEffort(value: unknown): EffortLevel | null {
   if (value === 'off' || value === 'low' || value === 'medium' || value === 'high' || value === 'max') return value;
+  return null;
+}
+
+function normalizeConnectionMode(value: unknown): NonNullable<OttoConfig['connectionMode']> | null {
+  if (value === 'embedded' || value === 'existing' || value === 'cloud') return value;
   return null;
 }

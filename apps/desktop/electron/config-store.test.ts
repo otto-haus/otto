@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'bun:test';
-import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { ConfigStore } from './config-store';
@@ -31,6 +31,19 @@ describe('ConfigStore', () => {
       const reloaded = new ConfigStore();
       expect(reloaded.connectionMode()).toBe('existing');
       expect(reloaded.primaryAgentId()).toBe('agent-primary');
+    } finally {
+      rmSync(tmp, { recursive: true, force: true });
+      delete process.env.OTTO_HOME;
+    }
+  });
+
+  test('falls back when persisted connectionMode is invalid', () => {
+    const tmp = mkdtempSync(join(tmpdir(), 'otto-config-test-'));
+    try {
+      process.env.OTTO_HOME = tmp;
+      writeFileSync(join(tmp, 'config.json'), `${JSON.stringify({ connectionMode: 'sideways' }, null, 2)}\n`);
+      const store = new ConfigStore();
+      expect(store.connectionMode()).toBe('existing');
     } finally {
       rmSync(tmp, { recursive: true, force: true });
       delete process.env.OTTO_HOME;
