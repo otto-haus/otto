@@ -43,7 +43,13 @@ export function archiveCurrentThread(
     title: titleFromMessages(messages),
     updatedAt: Date.now(),
   };
-  const next = [entry, ...threads.filter((t) => t.conversationId !== conversationId && t.id !== id)];
+  const next = [
+    entry,
+    ...threads.filter((t) => {
+      if (conversationId != null) return t.conversationId !== conversationId;
+      return t.id !== id;
+    }),
+  ];
   persistThreads(next);
   return next.slice(0, MAX_THREADS);
 }
