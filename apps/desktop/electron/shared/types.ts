@@ -216,6 +216,27 @@ export interface EvaluateAutonomyActionResult {
   receipt: Receipt & { path: string };
 }
 
+export type {
+  KnowledgeListResult,
+  KnowledgeRegistrySummary,
+  KnowledgeModelEntry,
+  KnowledgeRoutingHint,
+  SkillListResult,
+  SkillRecord,
+  ChannelListResult,
+  ChannelRecord,
+  TicketListResult,
+  TicketRecord,
+  TicketCompileInput,
+  WorkerListResult,
+  WorkerRecord,
+  WorkerStatus,
+  RunListResult,
+  RunSummary,
+  ApprovalListResult,
+  ApprovalRecord,
+} from '@otto-haus/core';
+
 /** A loosely-typed SDK message forwarded straight to the renderer. */
 export interface OttoMessageEvent {
   message: { type: string; [k: string]: unknown };

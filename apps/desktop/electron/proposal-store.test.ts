@@ -196,4 +196,28 @@ describe('ProposalStore', () => {
     }
   });
 
+  test('listApprovals derives ratification records from decided proposals', () => {
+    const tmp = mkdtempSync(join(tmpdir(), 'otto-proposal-test-'));
+    const proposalsDir = join(tmp, 'curation', 'proposals');
+    const receiptsDir = join(tmp, 'receipts');
+    const canonPath = join(tmp, 'practice.yaml');
+    writeFileSync(canonPath, 'slug: charter\nname: Charter\nguardrails: []\n');
+    try {
+      const receipts = new ReceiptWriter(receiptsDir);
+      const store = new ProposalStore(proposalsDir, receipts);
+      const created = store.createFromCorrection({
+        correction: 'Charter practice should require explicit receipt linkage on every status change.',
+        target: { kind: 'practice', id: 'charter', path: canonPath, action: 'update' },
+      });
+      store.decide(created.proposal.id, { decision: 'accept', note: 'Ratified.' });
+
+      const approvals = store.listApprovals();
+      expect(approvals.approvals.length).toBeGreaterThan(0);
+      expect(approvals.approvals[0].proposal_id).toBe(created.proposal.id);
+      expect(approvals.approvals[0].receipt_id).toBeTruthy();
+    } finally {
+      rmSync(tmp, { recursive: true, force: true });
+    }
+  });
+
 });

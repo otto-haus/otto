@@ -16,6 +16,14 @@ extraResources:
     to: routines
   - from: ../../autonomy
     to: autonomy
+  - from: ../../knowledge
+    to: knowledge
+  - from: ../../skill
+    to: skill
+  - from: ../../channels
+    to: channels
+  - from: ../../templates
+    to: templates
 # asar OFF on purpose: the Letta SDK spawns its CLI (`node …/letta.js`) as a subprocess,
 # which is unreliable from inside an asar archive. Plain files keep the spawn working.
 asar: false

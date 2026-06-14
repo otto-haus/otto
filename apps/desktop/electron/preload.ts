@@ -35,11 +35,23 @@ import type {
   CurationProposalRecord,
   AutonomyPolicyResult,
   EvaluateAutonomyActionResult,
+  KnowledgeListResult,
+  SkillListResult,
+  SkillRecord,
+  ChannelListResult,
+  TicketListResult,
+  TicketCompileInput,
+  TicketRecord,
+  WorkerListResult,
+  WorkerStatus,
+  RunListResult,
+  ApprovalListResult,
 } from './shared/types';
 
 const api = {
   runtime: {
     init: (): Promise<RuntimeStatus> => ipcRenderer.invoke('otto:init'),
+    newChat: (): Promise<RuntimeStatus> => ipcRenderer.invoke('otto:new-chat'),
     status: (): Promise<RuntimeStatus> => ipcRenderer.invoke('otto:status'),
     send: (text: string): Promise<void> => ipcRenderer.invoke('otto:send', text),
     abort: (): Promise<void> => ipcRenderer.invoke('otto:abort'),
@@ -95,6 +107,34 @@ const api = {
       decide: (id: string, input: DecideProposalInput): Promise<DecideProposalResult> =>
         ipcRenderer.invoke('otto:curation:proposals:decide', id, input),
     },
+    approvals: {
+      list: (): Promise<ApprovalListResult> => ipcRenderer.invoke('otto:curation:approvals:list'),
+    },
+  },
+  knowledge: {
+    list: (): Promise<KnowledgeListResult> => ipcRenderer.invoke('otto:knowledge:list'),
+    resolveRole: (role: string) => ipcRenderer.invoke('otto:knowledge:resolve-role', role),
+  },
+  skills: {
+    list: (): Promise<SkillListResult> => ipcRenderer.invoke('otto:skills:list'),
+    get: (slug: string): Promise<SkillRecord | null> => ipcRenderer.invoke('otto:skills:get', slug),
+  },
+  channels: {
+    list: (): Promise<ChannelListResult> => ipcRenderer.invoke('otto:channels:list'),
+  },
+  tickets: {
+    list: (): Promise<TicketListResult> => ipcRenderer.invoke('otto:tickets:list'),
+    get: (ticketId: string): Promise<TicketRecord | null> => ipcRenderer.invoke('otto:tickets:get', ticketId),
+    compile: (input: TicketCompileInput) => ipcRenderer.invoke('otto:tickets:compile', input),
+    orchestrate: (input: TicketCompileInput & { repoRoot?: string }) => ipcRenderer.invoke('otto:tickets:orchestrate', input),
+  },
+  workers: {
+    list: (): Promise<WorkerListResult> => ipcRenderer.invoke('otto:workers:list'),
+    updateStatus: (id: string, status: WorkerStatus, receiptId?: string) =>
+      ipcRenderer.invoke('otto:workers:update-status', id, status, receiptId),
+  },
+  runs: {
+    list: (): Promise<RunListResult> => ipcRenderer.invoke('otto:runs:list'),
   },
   autonomy: {
     policy: (): Promise<AutonomyPolicyResult> => ipcRenderer.invoke('otto:autonomy:policy'),

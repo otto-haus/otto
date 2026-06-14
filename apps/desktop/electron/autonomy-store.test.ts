@@ -5,6 +5,7 @@ import { join, resolve } from 'node:path';
 import { dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { AutonomyStore, classifyAction } from './autonomy-store';
+import { KnowledgeStore } from './knowledge-store';
 import { ReceiptWriter } from './receipt-writer';
 
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), '../../..');
@@ -61,5 +62,16 @@ describe('AutonomyStore', () => {
     } finally {
       rmSync(tmp, { recursive: true, force: true });
     }
+  });
+
+  test('evaluateAction attaches knowledge routing for review actions', () => {
+    const store = new AutonomyStore(
+      join(repoRoot, 'autonomy'),
+      new ReceiptWriter(),
+      new KnowledgeStore(join(repoRoot, 'knowledge')),
+    );
+    const result = store.evaluateAction({ action: 'run standards review', context: 'quality gate' });
+    expect(result.evaluation.knowledge_routing?.role).toBe('standards_review');
+    expect(result.evaluation.knowledge_routing?.model).toBeTruthy();
   });
 });

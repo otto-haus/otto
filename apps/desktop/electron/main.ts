@@ -1,4 +1,5 @@
-import { join } from 'node:path';
+import { mkdirSync, writeFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
 import { homedir } from 'node:os';
 import { BrowserWindow, app } from 'electron';
 import { registerIpc } from './ipc';
@@ -46,6 +47,29 @@ function createWindow() {
     if (mainWindow === win) mainWindow = null;
   });
   mainWindow = win;
+
+  const capturePath = process.env.OTTO_CAPTURE_README?.trim();
+  if (capturePath) {
+    win.webContents.once('did-finish-load', () => {
+      const hash = process.env.OTTO_CAPTURE_HASH?.trim() || 'chat';
+      if (hash !== 'chat') win.webContents.executeJavaScript(`location.hash = ${JSON.stringify(hash)}`);
+      const delayMs = Number(process.env.OTTO_CAPTURE_DELAY_MS ?? 3500);
+      setTimeout(async () => {
+        try {
+          mkdirSync(dirname(capturePath), { recursive: true });
+          const image = await win.capturePage();
+          writeFileSync(capturePath, image.toPNG());
+          console.log(`[otto] README screenshot saved: ${capturePath}`);
+        } catch (err) {
+          console.error('[otto] README screenshot failed:', err);
+          app.exitCode = 1;
+        } finally {
+          app.quit();
+        }
+      }, Number.isFinite(delayMs) ? delayMs : 3500);
+    });
+  }
+
   return win;
 }
 

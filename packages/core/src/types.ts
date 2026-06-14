@@ -581,6 +581,189 @@ export interface AutonomyActionEvaluation {
   allowed_without_approval: boolean;
   reason: string;
   policy_path: string;
+  /** Proposed or active model routing from Knowledge (does not override policy alone). */
+  knowledge_routing?: KnowledgeRoutingHint | null;
+}
+
+export interface KnowledgeRoutingHint {
+  role: string;
+  provider: string;
+  model: string;
+  status: 'proposed' | 'active';
+  registry_path: string;
+}
+
+export interface KnowledgeModelEntry {
+  provider: string;
+  model: string;
+  handle_note?: string;
+  cost_tier?: string;
+  default_roles: string[];
+  verified: boolean;
+  last_verified?: string;
+}
+
+export interface KnowledgeRegistrySummary {
+  schema: 'otto.knowledge.registry.v1';
+  version: string;
+  status: 'proposed' | 'active';
+  last_reviewed?: string;
+  next_review_due?: string;
+  roles: string[];
+  models: KnowledgeModelEntry[];
+  routing: {
+    status: 'proposed' | 'active';
+    assignments: Record<string, string>;
+  };
+  provider_allowlist: {
+    status: 'proposed' | 'active';
+    providers: string[];
+  };
+  file: string;
+}
+
+export interface KnowledgeListResult {
+  dir: string;
+  registryPath: string;
+  registry: KnowledgeRegistrySummary | null;
+  capabilityNotesPath: string | null;
+  providerCostsPath: string | null;
+  observedPerformanceDir: string | null;
+  storage: 'files';
+}
+
+export interface SkillRecord {
+  slug: string;
+  name: string;
+  description: string;
+  file: string;
+  triggers: string[];
+}
+
+export interface SkillListResult {
+  dir: string;
+  skills: SkillRecord[];
+  skipped: Array<{ slug: string; file: string; reason: string }>;
+  storage: 'files';
+}
+
+export interface ChannelRecord extends Channel {
+  file: string;
+}
+
+export interface ChannelListResult {
+  dir: string;
+  configPath: string;
+  channels: ChannelRecord[];
+  storage: 'files' | 'default';
+}
+
+export type TicketStatus = 'proposed' | 'active' | 'blocked' | 'review' | 'merged' | 'cancelled';
+
+export interface TicketRecord {
+  schema: 'otto.ticket.v1';
+  ticket_id: string;
+  status: TicketStatus;
+  charter?: string;
+  owner?: string;
+  model?: string;
+  worktree?: string;
+  branch?: string;
+  objective: string;
+  why?: string;
+  owned_paths: string[];
+  shared_paths: string[];
+  non_goals: string[];
+  acceptance_criteria: Array<{ id: string; text: string; proof?: string }>;
+  checks: string[];
+  stop_conditions: string[];
+  requires_approval_for: string[];
+  receipt_path?: string;
+  integration_notes?: string;
+  root: string;
+  ticketPath: string;
+  packetPath?: string;
+  updated_at: ISO8601;
+}
+
+export interface TicketCompileInput {
+  slug: string;
+  objective: string;
+  why?: string;
+  charter?: string;
+  owned_paths?: string[];
+  shared_paths?: string[];
+  acceptance_criteria?: Array<{ id: string; text: string; proof?: string }>;
+  checks?: string[];
+}
+
+export interface TicketListResult {
+  dir: string;
+  tickets: TicketRecord[];
+  skipped: number;
+  storage: 'files';
+}
+
+export type WorkerStatus = 'draft' | 'running' | 'blocked' | 'review' | 'done' | 'failed';
+
+export interface WorkerRecord {
+  schema: 'otto.worker.v1';
+  id: string;
+  ticket_id: string;
+  status: WorkerStatus;
+  model?: string;
+  worktree?: string;
+  branch?: string;
+  started_at: ISO8601;
+  updated_at: ISO8601;
+  receipt_ids: string[];
+  summary?: string;
+  path: string;
+}
+
+export interface WorkerListResult {
+  dir: string;
+  workers: WorkerRecord[];
+  skipped: number;
+  storage: 'files';
+}
+
+export interface RunSummary {
+  id: string;
+  practice: string;
+  charter?: string;
+  routine?: string;
+  status: RunStatus;
+  started_at: ISO8601;
+  ended_at: ISO8601 | null;
+  summary?: string;
+  receipt_count: number;
+  path: string;
+}
+
+export interface RunListResult {
+  dir: string;
+  runs: RunSummary[];
+  skipped: number;
+  storage: 'files';
+}
+
+/** Approval records are ratification receipts emitted by Curation decisions. */
+export interface ApprovalRecord {
+  id: string;
+  proposal_id: string;
+  requirement: ApprovalRequirement;
+  status: 'approved' | 'denied' | 'deferred';
+  scope: string;
+  decided_at: ISO8601;
+  receipt_id: string;
+  receipt_path: string;
+}
+
+export interface ApprovalListResult {
+  dir: string;
+  approvals: ApprovalRecord[];
+  storage: 'files';
 }
 
 // ---------------------------------------------------------------------------

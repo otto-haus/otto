@@ -12,6 +12,13 @@ import { PracticeStore } from './practice-store';
 import { ProposalStore } from './proposal-store';
 import { RoutineStore } from './routine-store';
 import { AutonomyStore } from './autonomy-store';
+import { ChannelStore } from './channel-store';
+import { KnowledgeStore } from './knowledge-store';
+import { RunStore } from './run-store';
+import { SkillStore } from './skill-store';
+import { TicketOrchestrator } from './ticket-orchestrator';
+import { TicketStore } from './ticket-store';
+import { WorkerStore } from './worker-store';
 
 export function registerIpc(win: BrowserWindow) {
   const config = new ConfigStore();
@@ -21,10 +28,18 @@ export function registerIpc(win: BrowserWindow) {
   const standards = new StandardStore();
   const practices = new PracticeStore();
   const routines = new RoutineStore();
-  const proposals = new ProposalStore();
-  const autonomy = new AutonomyStore();
+  const proposals = new ProposalStore(undefined, undefined, receipts);
+  const knowledge = new KnowledgeStore();
+  const autonomy = new AutonomyStore(undefined, undefined, knowledge);
+  const skills = new SkillStore();
+  const channels = new ChannelStore();
+  const tickets = new TicketStore();
+  const workers = new WorkerStore();
+  const runs = new RunStore();
+  const orchestrator = new TicketOrchestrator(tickets, workers, runs, knowledge, autonomy);
 
   ipcMain.handle('otto:init', () => runner.init());
+  ipcMain.handle('otto:new-chat', () => runner.newChat());
   ipcMain.handle('otto:status', () => runner.getStatus());
   ipcMain.handle('otto:send', (_e, text: string) => runner.send(text));
   ipcMain.handle('otto:abort', () => runner.abort());
@@ -88,6 +103,29 @@ export function registerIpc(win: BrowserWindow) {
   ipcMain.handle('otto:curation:proposals:decide', (_e, id: string, input: DecideProposalInput) =>
     proposals.decide(id, input),
   );
+  ipcMain.handle('otto:curation:approvals:list', () => proposals.listApprovals());
+
+  ipcMain.handle('otto:knowledge:list', () => knowledge.listResult());
+  ipcMain.handle('otto:knowledge:resolve-role', (_e, role: string) => knowledge.resolveModelForRole(role));
+
+  ipcMain.handle('otto:skills:list', () => skills.listResult());
+  ipcMain.handle('otto:skills:get', (_e, slug: string) => skills.get(slug));
+
+  ipcMain.handle('otto:channels:list', () => channels.listResult());
+
+  ipcMain.handle('otto:tickets:list', () => tickets.list());
+  ipcMain.handle('otto:tickets:get', (_e, ticketId: string) => tickets.get(ticketId));
+  ipcMain.handle('otto:tickets:compile', (_e, input: import('@otto-haus/core').TicketCompileInput) => tickets.compile(input));
+  ipcMain.handle('otto:tickets:orchestrate', (_e, input: import('@otto-haus/core').TicketCompileInput & { repoRoot?: string }) =>
+    orchestrator.orchestrate(input),
+  );
+
+  ipcMain.handle('otto:workers:list', () => workers.list());
+  ipcMain.handle('otto:workers:update-status', (_e, id: string, status: import('@otto-haus/core').WorkerStatus, receiptId?: string) =>
+    workers.updateStatus(id, status, receiptId),
+  );
+
+  ipcMain.handle('otto:runs:list', () => runs.list());
 
   ipcMain.handle('otto:autonomy:policy', () => autonomy.loadResult());
   ipcMain.handle('otto:autonomy:evaluate-action', (_e, input: { action: string; context?: string }) =>

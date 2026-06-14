@@ -3,6 +3,9 @@ import { randomUUID } from 'node:crypto';
 import { join } from 'node:path';
 import { parse, stringify } from 'yaml';
 import type {
+  ApprovalListResult,
+  ApprovalRecord,
+  ApprovalRequirement,
   CreateProposalFromCorrectionInput,
   CurationProposal,
   CurationProposalRecord,
@@ -15,6 +18,7 @@ import type {
 } from '@otto-haus/core';
 import { OTTO_DIR } from './config-store';
 import { ReceiptWriter, type WrittenReceipt } from './receipt-writer';
+import { ReceiptStore } from './receipt-store';
 
 export const PROPOSALS_DIR = join(OTTO_DIR, 'curation', 'proposals');
 
@@ -40,7 +44,17 @@ export class ProposalStore {
   constructor(
     private dir = PROPOSALS_DIR,
     private receipts = new ReceiptWriter(),
+    private receiptLookup = new ReceiptStore(),
   ) {}
+
+  listApprovals(): ApprovalListResult {
+    const proposals = this.list().proposals.filter((proposal) => proposal.decision_receipt_id);
+    const approvals: ApprovalRecord[] = proposals
+      .map((proposal) => approvalFromProposal(proposal, this.receiptLookup))
+      .filter((record): record is ApprovalRecord => !!record);
+    approvals.sort((a, b) => timestampMs(b.decided_at) - timestampMs(a.decided_at));
+    return { dir: this.dir, approvals, storage: 'files' };
+  }
 
   list(): ProposalListResult {
     mkdirSync(this.dir, { recursive: true });
@@ -423,6 +437,40 @@ function isEvidenceRef(value: unknown): value is ProposalEvidenceRef {
 
 function safeId(value: string): string {
   return value.replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 64) || 'proposal';
+}
+
+function approvalFromProposal(
+  proposal: CurationProposalRecord,
+  receiptLookup: ReceiptStore,
+): ApprovalRecord | null {
+  if (!proposal.decision_receipt_id) return null;
+  if (proposal.status !== 'applied' && proposal.status !== 'rejected' && proposal.status !== 'deferred') {
+    return null;
+  }
+  const receipt = receiptLookup.get(proposal.decision_receipt_id);
+  const status = proposal.status === 'applied'
+    ? 'approved'
+    : proposal.status === 'rejected'
+      ? 'denied'
+      : 'deferred';
+  return {
+    id: proposal.decision_receipt_id,
+    proposal_id: proposal.id,
+    requirement: requirementForProposal(proposal),
+    status,
+    scope: proposal.classification.scope,
+    decided_at: proposal.applied_at ?? proposal.updated_at,
+    receipt_id: proposal.decision_receipt_id,
+    receipt_path: receipt?.path ?? join(OTTO_DIR, 'receipts', proposal.decision_receipt_id),
+  };
+}
+
+function requirementForProposal(proposal: CurationProposalRecord): ApprovalRequirement {
+  if (proposal.classification.scope === 'spend') return 'spend';
+  if (proposal.classification.scope === 'security') return 'credential-or-security-change';
+  if (proposal.classification.scope === 'external') return 'send-or-publish';
+  if (proposal.target.kind === 'routine') return 'enabling-globally';
+  return 'external-side-effects';
 }
 
 function timestampMs(value: string): number {

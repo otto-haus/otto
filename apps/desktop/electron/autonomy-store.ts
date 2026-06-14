@@ -13,6 +13,7 @@ import type {
   EvaluateAutonomyActionInput,
 } from '@otto-haus/core';
 import { ReceiptWriter, type WrittenReceipt } from './receipt-writer';
+import { KnowledgeStore } from './knowledge-store';
 
 export interface EvaluateAutonomyActionResult {
   evaluation: AutonomyActionEvaluation;
@@ -95,6 +96,7 @@ export class AutonomyStore {
   constructor(
     private dir = resolveAutonomyDir(),
     private receipts = new ReceiptWriter(),
+    private knowledge = new KnowledgeStore(),
   ) {}
 
   loadResult(): AutonomyPolicyResult {
@@ -123,7 +125,11 @@ export class AutonomyStore {
 
   evaluateAction(input: EvaluateAutonomyActionInput): EvaluateAutonomyActionResult {
     const loaded = this.loadResult();
-    const evaluation = classifyAction(input.action, loaded.policy, loaded.policyPath);
+    const evaluation = withKnowledgeRouting(
+      classifyAction(input.action, loaded.policy, loaded.policyPath),
+      input.context,
+      this.knowledge,
+    );
     const receipt = this.receipts.write({
       status: evaluation.requires_approval ? 'blocked' : 'success',
       subject: { type: 'autonomy', id: evaluation.door_id ?? evaluation.zone },
@@ -143,6 +149,7 @@ export class AutonomyStore {
           door_id: evaluation.door_id,
           requires_approval: evaluation.requires_approval,
           allowed_without_approval: evaluation.allowed_without_approval,
+          knowledge_routing: evaluation.knowledge_routing ?? null,
         },
       },
       evidence: [
@@ -164,6 +171,38 @@ export class AutonomyStore {
 
     return { evaluation, receipt };
   }
+}
+
+function withKnowledgeRouting(
+  evaluation: AutonomyActionEvaluation,
+  context: string | undefined,
+  knowledge: KnowledgeStore,
+): AutonomyActionEvaluation {
+  const role = inferKnowledgeRole(evaluation.action, context);
+  const resolved = knowledge.resolveModelForRole(role);
+  const registryPath = knowledge.listResult().registryPath;
+  if (!resolved) return evaluation;
+  return {
+    ...evaluation,
+    knowledge_routing: {
+      role,
+      provider: resolved.provider,
+      model: resolved.model,
+      status: resolved.status,
+      registry_path: registryPath,
+    },
+  };
+}
+
+function inferKnowledgeRole(action: string, context?: string): string {
+  const haystack = `${action} ${context ?? ''}`.toLowerCase();
+  if (/standard|review|fake done|quality/.test(haystack)) return 'standards_review';
+  if (/curat|proposal|ratif/.test(haystack)) return 'curation_decisions';
+  if (/autonomy|policy|door/.test(haystack)) return 'autonomy_policy';
+  if (/doc|spec|write|readme/.test(haystack)) return 'docs_worker';
+  if (/code|implement|refactor|typescript|test/.test(haystack)) return 'code_worker';
+  if (/orchestr|ticket|worker|worktree/.test(haystack)) return 'ticket_worker';
+  return 'main_otto';
 }
 
 export function classifyAction(action: string, policy: AutonomyPolicy, policyPath: string): AutonomyActionEvaluation {
@@ -198,7 +237,7 @@ export function classifyAction(action: string, policy: AutonomyPolicy, policyPat
     };
   }
 
-  if (GREEN_MATCHERS.some((pattern) => pattern.test(lower)) || text.length > 0) {
+  if (GREEN_MATCHERS.some((pattern) => pattern.test(lower))) {
     return {
       action: text,
       zone: 'green',

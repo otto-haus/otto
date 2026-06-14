@@ -110,7 +110,7 @@ export class LettaRunner {
   }
 
   /** Connect; recover from stale agents/conversations; never throw to the renderer. */
-  async init(): Promise<RuntimeStatus> {
+  async init(opts?: { freshConversation?: boolean }): Promise<RuntimeStatus> {
     const cli = resolveCli();
     const context = discoverLocalLettaContext(this.config);
     this.applyConnectionEnv(context.baseUrl);
@@ -136,10 +136,11 @@ export class LettaRunner {
       return this.status;
     }
 
+    const fresh = !!opts?.freshConversation;
     const tryOnce = async (resumeId: string | null) => {
       this.session?.close();
       const session = resumeId
-        ? (SMOKE_MODE ? sdk.createSession(resumeId, this.options()) : sdk.resumeSession(resumeId, this.options()))
+        ? (fresh || SMOKE_MODE ? sdk.createSession(resumeId, this.options()) : sdk.resumeSession(resumeId, this.options()))
         : sdk.createSession(undefined, this.options());
       const init = await session.initialize();
       if (SMOKE_MODE && init.conversationId === 'default') {
@@ -152,7 +153,8 @@ export class LettaRunner {
     try {
       let r: Awaited<ReturnType<typeof tryOnce>> | null = null;
       let lastAgentError: unknown = null;
-      for (const candidate of agentCandidates) {
+      const candidates = fresh && primaryAgentId ? [primaryAgentId] : agentCandidates;
+      for (const candidate of candidates) {
         try {
           // resumeSession's id is the AGENT id (maps to --agent); the conversation is the agent's
           // default. A stored conversationId is NOT a valid resume id — passing it would send
@@ -202,6 +204,14 @@ export class LettaRunner {
       };
     }
     return this.status;
+  }
+
+  /** Start a fresh Letta conversation on the current agent; clears stored conversation id. */
+  async newChat(): Promise<RuntimeStatus> {
+    this.session?.close();
+    this.session = null;
+    if (!SMOKE_MODE) this.config.update({ conversationId: null });
+    return this.init({ freshConversation: true });
   }
 
   async configure(input: RuntimePreferences): Promise<RuntimeStatus> {
