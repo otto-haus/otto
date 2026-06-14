@@ -1,6 +1,7 @@
 import type React from 'react';
 import { useEffect, useRef, useState } from 'react';
 import { Icon } from '../components/icons';
+import { AppSourceBadge } from '../components/AppSourceBadge';
 import { useToast } from '../components/Toast';
 import { requiredMissing, isReady } from '../readiness';
 import { isElectron, ottoApi, type EffortLevel, type LettaModelOption, type SavedAttachment } from '../runtime';
@@ -708,6 +709,7 @@ const LiveChat: React.FC<{
           </div>
         </div>
         <div className="chat__headActions">
+          <AppSourceBadge compact />
           {!st ? (
             <>
               <button type="button" className="btn btn--ghost-d" onClick={() => { void rt.retry(); }}>{chatCopy.pickerRetry}</button>

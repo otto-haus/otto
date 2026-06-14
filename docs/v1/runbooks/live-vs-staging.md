@@ -50,6 +50,31 @@ task staging
 # bash apps/desktop/scripts/deploy-staging.sh
 ```
 
+### Latest-main refresh (#338)
+
+Fetch `origin/main`, stamp source markers (channel, commit, origin/main, profile paths), and replace **only** `/Applications/otto-staging.app`:
+
+```sh
+cd /Users/seb/Code/otto
+task staging:main
+# equivalent:
+# bash scripts/staging-refresh-from-main.sh
+```
+
+If your checkout HEAD is not `origin/main`, deploy still runs but the UI shows **not latest main**. To build exact main:
+
+```sh
+git checkout main && git merge --ff-only origin/main && task staging:main
+```
+
+Source marker smoke (after staging is running on CDP port 9445):
+
+```sh
+NODE_PATH=$HOME/.codex/admin/node_modules \
+  OTTO_RECEIPT_DIR=$PWD/docs/receipts/staging \
+  node scripts/otto-staging-source-marker-smoke.cjs
+```
+
 What it does (`apps/desktop/scripts/deploy-staging.sh`):
 
 1. Builds + packages `apps/desktop/dist-app/mac-arm64/otto.app`

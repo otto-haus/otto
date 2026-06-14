@@ -105,6 +105,15 @@ tasks:
     desc: Safe deploy — build + package + install/open isolated /Applications/otto-staging.app
     cmds: [bash apps/desktop/scripts/deploy-staging.sh]
 
+  staging:main:
+    desc: Fetch origin/main and refresh /Applications/otto-staging.app with visible source markers (#338)
+    cmds: [bash scripts/staging-refresh-from-main.sh]
+
+  smoke:staging:source-marker:
+    desc: Playwright smoke — staging channel/commit/profile source marker (#321/#338)
+    cmds:
+      - node scripts/otto-staging-source-marker-smoke.cjs
+
   _refresh-live:
     internal: true
     preconditions:

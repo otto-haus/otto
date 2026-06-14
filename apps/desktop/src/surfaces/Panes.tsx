@@ -37,6 +37,7 @@ import {
   SAMPLE_RECEIPT_LABEL,
 } from '../onboarding-sample-receipt';
 import { useLabs, LAB_FEATURE_IDS, LAB_FEATURE_META } from '../labs/LabsContext';
+import { AppSourceDetails } from '../components/AppSourceBadge';
 import type { AppBuildInfo, LabFeatureId } from '../../electron/shared/types';
 import {
   ottoApi,
@@ -3768,13 +3769,7 @@ export const Settings: React.FC = () => {
           </section>
 
           <p className="faint mono settingsLocalFootnote">{settingsCopy.localOnlyFootnote}</p>
-          {buildInfo?.shortSha ? (
-            <p className="faint mono settingsLocalFootnote" data-testid="otto-build-marker">
-              Build {buildInfo.shortSha}
-              {buildInfo.builtAt ? ` · ${buildInfo.builtAt}` : ''}
-              {buildInfo.branch ? ` · ${buildInfo.branch}` : ''}
-            </p>
-          ) : null}
+          <AppSourceDetails info={buildInfo} />
         </div>
       )}
       </div>

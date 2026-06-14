@@ -27,6 +27,7 @@ import { surfaceGate } from './surface-tiers';
 import { EmptyState } from './components/ui';
 import { VALID_SURFACES } from './surface-meta';
 import { labsCopy } from './copy/surfaces';
+import { AppSourceBadge } from './components/AppSourceBadge';
 
 function renderSurface(id: SurfaceId) {
   switch (id) {
@@ -204,6 +205,7 @@ function AppShell() {
                   <div className="eyebrow">otto workspace</div>
                 </div>
                 <div className="topbar__right">
+                  <AppSourceBadge compact />
                   {sourcePill()}
                 </div>
               </header>
