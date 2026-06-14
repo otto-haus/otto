@@ -1,0 +1,360 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>otto — Letta remembers. otto improves.</title>
+<meta name="description" content="otto is CI for agent behavior: every correction becomes a test the agent has to pass before it can claim a task is done." />
+<meta property="og:title" content="otto — Letta remembers. otto improves." />
+<meta property="og:description" content="Every correction becomes a test your agent has to pass. Teach once; the lesson holds." />
+<meta property="og:image" content="https://otto.haus/og.png" />
+<meta property="og:type" content="website" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:image" content="https://otto.haus/og.png" />
+<meta name="theme-color" content="#ffffff" />
+<link rel="icon" type="image/png" href="/brand/otto-pfp.png" />
+<link rel="apple-touch-icon" href="/brand/otto-pfp.png" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<noscript><style>.rise{opacity:1;transform:none}</style></noscript>
+<style>
+  :root{
+    --ink: oklch(0.18 0.005 270);
+    --ink-soft: oklch(0.30 0.005 270);
+    --mut: oklch(0.46 0.005 270);
+    --faint: oklch(0.62 0.006 270);
+    --line: oklch(0.92 0.003 270);
+    --line-2: oklch(0.95 0.003 270);
+    --bg: oklch(1 0 0);
+    --bg-2: oklch(0.985 0.002 270);
+    --bg-3: oklch(0.965 0.003 270);
+    --dark: oklch(0.175 0.008 270);
+    --dark-2: oklch(0.22 0.008 270);
+    --dark-line: oklch(0.32 0.008 270);
+    --dark-tx: oklch(0.97 0.002 270);
+    --dark-mut: oklch(0.70 0.006 270);
+    --ok: oklch(0.48 0.10 155); --ok-bg: oklch(0.965 0.04 155); --ok-ln: oklch(0.88 0.06 155);
+    --warn: oklch(0.52 0.11 60); --warn-bg: oklch(0.97 0.035 80); --warn-ln: oklch(0.88 0.06 75);
+    --stop: oklch(0.55 0.18 27); --stop-bg: oklch(0.97 0.04 27); --stop-ln: oklch(0.88 0.07 27);
+    --maxw: 1080px;
+    --f-sans: "Inter", ui-sans-serif, system-ui, -apple-system, sans-serif;
+    --f-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  }
+  *{box-sizing:border-box}
+  html{-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;text-rendering:optimizeLegibility;scroll-behavior:smooth;font-feature-settings:"cv11","ss01","ss03"}
+  body{
+    margin:0;background:var(--bg);color:var(--ink);
+    font-family:var(--f-sans);font-size:17px;line-height:1.6;font-weight:400;
+  }
+  ::selection{background:var(--ink);color:#fff}
+  a{color:inherit;text-decoration:none}
+  h1,h2,h3,h4,p{margin:0}
+  :focus-visible{outline:2px solid var(--ink);outline-offset:3px;border-radius:3px}
+
+  .wrap{max-width:var(--maxw);margin:0 auto;padding:0 40px}
+  @media(max-width:600px){.wrap{padding:0 22px}}
+
+  .eyebrow{font-family:var(--f-mono);font-size:12px;font-weight:500;letter-spacing:.09em;text-transform:uppercase;color:var(--mut)}
+  .eyebrow.faint{color:var(--faint)}
+  .mono{font-family:var(--f-mono)}
+  .wordmark{font-weight:700;letter-spacing:-0.045em;text-transform:lowercase;color:var(--ink)}
+
+  /* ---------- pill nav ---------- */
+  .nav{position:relative;z-index:60;display:flex;justify-content:center;padding:18px 16px;pointer-events:none}
+  .pill{
+    pointer-events:auto;display:inline-flex;align-items:center;gap:6px;
+    background:rgba(255,255,255,.9);border:1px solid var(--line);border-radius:999px;
+    padding:7px 8px 7px 20px;box-shadow:0 16px 40px -28px rgba(20,34,62,.45);
+    backdrop-filter:saturate(180%) blur(14px);
+  }
+  .pill .wordmark{font-size:19px;padding-right:10px}
+  .pill .links{display:flex;gap:2px}
+  .pill .links a{font-size:13.5px;color:var(--mut);padding:8px 13px;border-radius:999px;transition:background .15s,color .15s}
+  .pill .links a:hover{color:var(--ink);background:var(--bg-3)}
+  .pill .cta{background:var(--ink);color:#fff;font-size:13.5px;font-weight:500;padding:9px 16px;border-radius:999px;transition:background .15s}
+  .pill .cta:hover{background:var(--ink-soft)}
+  @media(max-width:560px){.pill .links a.thesis{display:none}}
+
+  /* ---------- section rhythm ---------- */
+  section{padding:104px 0}
+  .ruled{border-top:1px solid var(--line)}
+  h2{font-size:clamp(1.9rem,4vw,2.1rem);letter-spacing:-0.024em;font-weight:600;line-height:1.1;max-width:20ch;text-wrap:pretty}
+  .lead{font-size:21px;line-height:1.5;color:var(--mut);max-width:56ch;font-weight:400}
+  .sec-eye{margin-bottom:28px}
+
+  /* buttons */
+  .btn{display:inline-flex;align-items:center;gap:9px;font-family:var(--f-sans);font-size:16px;font-weight:500;padding:13px 22px;border-radius:9px;border:1px solid transparent;transition:background .15s,border-color .15s,transform .15s;white-space:nowrap}
+  .btn-primary{background:var(--ink);color:#fff}
+  .btn-primary:hover{background:var(--ink-soft);transform:translateY(-1px)}
+  .btn-ghost{color:var(--ink);border-color:var(--line)}
+  .btn-ghost:hover{border-color:var(--ink)}
+  .btn .arr{transition:transform .15s}
+  .btn-ghost:hover .arr{transform:translateX(3px)}
+
+  /* ---------- hero ---------- */
+  .hero{padding:128px 0 116px}
+  .hero h1{font-size:clamp(2.7rem,6.2vw,4.3rem);letter-spacing:-0.032em;line-height:1.05;font-weight:600;max-width:19ch;text-wrap:pretty}
+  .hero .lead{margin-top:30px}
+  .hero .cta-row{display:flex;flex-wrap:wrap;gap:14px;margin-top:42px}
+
+  /* ---------- what otto is ---------- */
+  .loopline{
+    font-family:var(--f-mono);font-size:14px;color:var(--ink-soft);line-height:2;
+    margin-top:34px;border:1px solid var(--line);border-radius:10px;
+    padding:20px 24px;background:var(--bg-2);overflow-x:auto;white-space:nowrap;
+  }
+  .loopline .arrow{color:var(--faint);margin:0 10px}
+  .loopline .term{color:var(--ink)}
+
+  /* ---------- motif arc (the one bold moment) ---------- */
+  .arc{margin-top:8px}
+  .scene{font-size:21px;line-height:1.45;letter-spacing:-0.01em;max-width:40ch;margin-bottom:38px}
+  .scene .q{color:var(--ink);font-weight:500}
+  .steps{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+  @media(max-width:760px){.steps{grid-template-columns:1fr}}
+  .step{border:1px solid var(--line);border-radius:10px;padding:24px 24px 28px;background:#fff}
+  .step .sn{font-family:var(--f-mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--faint)}
+  .step h4{font-size:16.5px;letter-spacing:-0.01em;margin-top:12px;font-weight:600}
+  .step p{font-size:14px;color:var(--mut);margin-top:8px;line-height:1.5}
+
+  .climax{
+    margin-top:16px;background:var(--dark);color:var(--dark-tx);
+    border-radius:24px;padding:56px 48px;
+    box-shadow:0 40px 90px -50px rgba(20,34,62,.55);
+  }
+  @media(max-width:600px){.climax{padding:40px 26px;border-radius:18px}}
+  .climax .ce{font-family:var(--f-mono);font-size:11.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--dark-mut);margin-bottom:20px}
+  .climax h3{font-size:clamp(1.6rem,3.5vw,2.2rem);letter-spacing:-0.022em;font-weight:600;line-height:1.12;max-width:18ch}
+  .receipt{
+    margin-top:32px;border:1px solid var(--dark-line);border-radius:12px;
+    font-family:var(--f-mono);font-size:13px;line-height:1.5;color:var(--dark-mut);
+    overflow:hidden;
+  }
+  .receipt .r-head{display:flex;justify-content:space-between;gap:12px;padding:13px 18px;border-bottom:1px solid var(--dark-line);color:var(--dark-tx);letter-spacing:.06em}
+  .receipt .r-row{display:grid;grid-template-columns:150px 1fr;gap:14px;padding:11px 18px;border-bottom:1px solid var(--dark-line)}
+  .receipt .r-row:last-child{border-bottom:none}
+  .receipt .r-k{color:var(--dark-mut);text-transform:uppercase;font-size:10.5px;letter-spacing:.08em;padding-top:2px}
+  .receipt .r-v{color:var(--dark-tx)}
+  @media(max-width:560px){.receipt .r-row{grid-template-columns:1fr;gap:3px}}
+
+  /* ---------- doors ---------- */
+  .doors{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--line);border:1px solid var(--line);border-radius:10px;overflow:hidden;margin-top:8px}
+  @media(max-width:600px){.doors{grid-template-columns:1fr}}
+  .door{background:#fff;padding:30px 32px}
+  .door .dk{font-family:var(--f-mono);font-size:11.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--faint)}
+  .door h4{font-size:19px;letter-spacing:-0.012em;margin-top:12px;font-weight:600}
+  .door p{font-size:14.5px;color:var(--mut);margin-top:8px;line-height:1.5}
+
+  /* ---------- is-not ---------- */
+  .nots{margin-top:8px;border-top:1px solid var(--line)}
+  .not{display:grid;grid-template-columns:260px 1fr;gap:28px;padding:22px 0;border-bottom:1px solid var(--line-2)}
+  .not .t{font-size:16.5px;font-weight:600;letter-spacing:-0.01em}
+  .not .d{font-size:15px;color:var(--mut);line-height:1.5;align-self:center}
+  @media(max-width:640px){.not{grid-template-columns:1fr;gap:6px;padding:18px 0}}
+  .canon-line{margin-top:34px;font-size:19px;letter-spacing:-0.012em;color:var(--ink)}
+
+  /* ---------- install ---------- */
+  .paths{display:grid;grid-template-columns:1fr;gap:36px;margin-top:8px;max-width:760px}
+  .paths,.path,.path .pt,.path .pnote,.dep,pre.code{min-width:0;max-width:100%}
+  .path .pt{display:flex;align-items:baseline;gap:12px;margin-bottom:14px}
+  .path .pn{font-family:var(--f-mono);font-size:12px;letter-spacing:.08em;color:var(--faint)}
+  .path .ph{font-size:18px;font-weight:600;letter-spacing:-0.012em}
+  .path .pnote{font-size:14.5px;color:var(--mut);margin:0 0 14px;max-width:62ch;line-height:1.5}
+  pre.code{font-family:var(--f-mono);font-size:13.5px;line-height:1.7;background:var(--dark);color:var(--dark-tx);border-radius:10px;padding:20px 22px;margin:0;overflow-x:auto}
+  pre.code .c{color:var(--dark-mut)}
+  pre.code .u{color:#A9C9D6;word-break:break-all}
+  .dep{font-family:var(--f-mono);font-size:13px;color:var(--mut);margin-top:18px;border-left:1px solid var(--line);padding-left:16px;max-width:62ch;line-height:1.6}
+  .dep b{color:var(--ink);font-weight:500}
+
+  /* ---------- status ---------- */
+  .status .lead{margin-bottom:0}
+  .status .real{color:var(--ink);font-weight:500}
+  .status .pillrow{display:flex;gap:10px;flex-wrap:wrap;margin-top:30px}
+  .spill{font-family:var(--f-mono);font-size:11.5px;font-weight:500;padding:6px 12px;border-radius:999px;display:inline-flex;align-items:center;gap:7px}
+  .spill .d{width:6px;height:6px;border-radius:50%}
+  .spill.ok{color:var(--ok);background:var(--ok-bg);border:1px solid var(--ok-ln)} .spill.ok .d{background:var(--ok)}
+  .spill.warn{color:var(--warn);background:var(--warn-bg);border:1px solid var(--warn-ln)} .spill.warn .d{background:var(--warn)}
+  .spill.blk{color:var(--mut);background:var(--bg-3);border:1px solid var(--line)} .spill.blk .d{background:var(--mut)}
+
+  /* ---------- footer ---------- */
+  footer{border-top:1px solid var(--line);padding:72px 0 56px}
+  footer .wordmark{font-size:26px;display:inline-block}
+  footer .fline{font-size:21px;letter-spacing:-0.014em;color:var(--ink);margin-top:18px;max-width:24ch}
+  footer .meta{display:flex;flex-wrap:wrap;gap:12px 20px;align-items:center;margin-top:40px;font-family:var(--f-mono);font-size:12px;letter-spacing:.06em;color:var(--faint)}
+  footer .meta a{color:var(--mut)} footer .meta a:hover{color:var(--ink)}
+  footer .meta .sep{opacity:.5}
+
+  /* ---------- motion (rationed, ≤240ms, reduced-motion → instant) ---------- */
+  .rise{opacity:1;transform:none;transition:opacity .24s ease-out,transform .24s ease-out}
+  .rise.in{opacity:1;transform:none}
+  @media(max-width:600px){
+    .loopline{white-space:normal;overflow-wrap:anywhere}
+    .path .pt{align-items:flex-start;flex-wrap:wrap}
+    pre.code{white-space:pre-wrap;overflow-wrap:anywhere}
+    pre.code .u{word-break:break-word;overflow-wrap:anywhere}
+  }
+  @media(prefers-reduced-motion:reduce){
+    *{scroll-behavior:auto}
+    .rise{opacity:1;transform:none;transition:none}
+    .btn:hover,.pill .cta:hover{transform:none}
+  }
+  /* ---------- thesis section ---------- */
+  .thesis-h1{font-size:clamp(2.2rem,5vw,3rem);font-weight:600;letter-spacing:-0.03em;line-height:1.05;text-wrap:pretty;max-width:none;margin-top:6px}
+  .essay{margin-top:36px;font-size:18px;line-height:1.72;color:var(--ink-soft);max-width:64ch}
+  .essay p{margin:0 0 1.4em}
+  .essay em{font-style:italic;color:var(--ink)}
+  .essay .loopline{margin:2em 0}
+  .essay .close{margin:2.2em 0 0;padding-top:2em;border-top:1px solid var(--line);font-size:clamp(20px,3vw,23px);font-weight:500;line-height:1.32;letter-spacing:-0.012em;color:var(--ink)}
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="pill">
+    <span class="wordmark">otto</span>
+    <span class="links">
+      <a class="thesis" href="#thesis">Thesis</a>
+      <a href="#install">Install</a>
+    </span>
+    <a class="cta" href="https://github.com/otto-haus/otto">GitHub</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="wrap">
+    <p class="eyebrow">CI for agent behavior</p>
+    <h1 style="margin-top:22px">Capability is solved. Conduct isn't.</h1>
+    <p class="lead">Your agent remembers the correction and repeats the mistake anyway. otto turns each correction into a check it must pass before it can call a task done. Teach it once; it holds.</p>
+    <div class="cta-row">
+      <a class="btn btn-primary" href="https://github.com/otto-haus/otto">View on GitHub</a>
+    </div>
+  </div>
+</section>
+
+<!-- WHAT IT LOOKS LIKE — the thesis, shown -->
+<section id="what" class="ruled">
+  <div class="wrap">
+    <p class="eyebrow sec-eye">What it looks like</p>
+    <div class="arc">
+      <p class="scene">Your agent claims a task is done without proof. You correct it. <span class="q">"Stop calling it done without the test output."</span></p>
+      <div class="steps">
+        <div class="step rise"><div class="sn">Step 01</div><h4>A correction arrives</h4><p>It enters Curation before the behavior compounds.</p></div>
+        <div class="step rise"><div class="sn">Step 02</div><h4>otto proposes a check</h4><p>"Done" now requires proof.</p></div>
+        <div class="step rise"><div class="sn">Step 03</div><h4>You ratify it</h4><p>The check becomes a Standard the agent runs against itself. A suggestion is never canon.</p></div>
+      </div>
+      <div class="climax rise">
+        <div class="ce">Ratification</div>
+        <h3>The human ratifies. otto records the proof.</h3>
+        <div class="receipt">
+          <div class="r-head"><span>RECEIPT</span><span>STD-04</span></div>
+          <div class="r-row"><div class="r-k">Change</div><div class="r-v">"done" now requires proof mapped to acceptance criteria</div></div>
+          <div class="r-row"><div class="r-k">Effect</div><div class="r-v">completion claims blocked until a test, log, or artifact exists</div></div>
+          <div class="r-row"><div class="r-k">Ratified by</div><div class="r-v">you · 2026-06-14 · reversible, revocable</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- THE DOORS -->
+<section class="ruled">
+  <div class="wrap">
+    <p class="eyebrow sec-eye">The boundary</p>
+    <h2>The agent owns the steps. The human owns the doors.</h2>
+    <p class="lead" style="margin-top:22px">Like a protected branch: build and test all day, but the merge is yours. otto runs reversible work and stops only at what you can't take back.</p>
+    <div class="doors">
+      <div class="door"><div class="dk">Two-way doors</div><h4>The agent acts.</h4><p>Reversible work runs without interruption. The reversible surface widens as the agent earns trust.</p></div>
+      <div class="door"><div class="dk">One-way doors</div><h4>The human ratifies.</h4><p>Irreversible work stops for a person. That door never relaxes.</p></div>
+    </div>
+    <p class="canon-line">A value that cannot refuse you is decoration.</p>
+  </div>
+</section>
+
+<!-- INSTALL -->
+<section id="install" class="ruled">
+  <div class="wrap">
+    <p class="eyebrow sec-eye">Install</p>
+    <h2>Built to be installed by an agent.</h2>
+    <div class="paths">
+      <div class="path">
+        <div class="pt"><span class="pn">01</span><span class="ph">Have your agent install it</span></div>
+        <p class="pnote">Paste this into Claude Code, Codex, Cursor, or any coding agent. It wires otto over your Letta runtime and verifies the install.</p>
+        <pre class="code"><span class="c"># paste into your coding agent</span>
+Retrieve and follow the instructions at:
+<span class="u">https://raw.githubusercontent.com/otto-haus/otto/main/INSTALL_FOR_AGENTS.md</span></pre>
+      </div>
+      <div class="path">
+        <div class="pt"><span class="pn">02</span><span class="ph">Set it up yourself</span></div>
+        <pre class="code">brew install go-task
+git clone https://github.com/otto-haus/otto.git
+cd otto
+bun install
+bun run install-extension   <span class="c"># then run /reload in Letta Code</span></pre>
+        <p class="dep">otto runs as a behavior layer over Letta in local mode. The <b>only hard dependency is Letta Code</b>: no Docker, no database, no server. Humans need Bun and go-task for the task shortcuts.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- STATUS -->
+<section class="ruled status">
+  <div class="wrap">
+    <p class="eyebrow sec-eye">Status</p>
+    <h2>otto is early, and honest about it.</h2>
+    <p class="lead" style="margin-top:22px">v0.1 is local-first and file-backed. <span class="real">When one rejection changes what the agent does next, otto is real.</span> Everything before that is a drawing of the machine.</p>
+    <div class="pillrow">
+      <span class="spill ok"><span class="d"></span>Practices · shipped</span>
+      <span class="spill ok"><span class="d"></span>Desktop · shipped</span>
+      <span class="spill warn"><span class="d"></span>Standards · proposed</span>
+      <span class="spill blk"><span class="d"></span>Curation · next</span>
+    </div>
+  </div>
+</section>
+
+<!-- THESIS -->
+<section id="thesis" class="ruled">
+  <div class="wrap">
+    <p class="eyebrow sec-eye">Thesis</p>
+    <h2 class="thesis-h1">Culture is a test suite.</h2>
+    <div class="essay">
+      <p>AI can already do the work, and do it alone. The only question is whether it will do it the way <em>your</em> company would: your standard, your definition of done, the corner you'd never cut. And if not, why not.</p>
+      <p>That is not a capability problem. It is a conduct problem.</p>
+      <p>otto is CI for agent behavior. In software, a bug fix becomes a test that blocks the bug forever. otto does the same for conduct: you correct an agent once, you ratify the rule, and from then on "done" is gated. Proof mapped to the work, or it isn't done. The mistake isn't discouraged. It is blocked.</p>
+      <div class="loopline"><span class="term">correction</span><span class="arrow">→</span><span class="term">proposed rule</span><span class="arrow">→</span><span class="term">you ratify</span><span class="arrow">→</span><span class="term">executable check</span><span class="arrow">→</span><span class="term">receipt</span></div>
+      <p>Memory is what an agent knows. Culture is what it does under pressure.</p>
+      <p class="close">You only get to say that once you've watched it run.</p>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="wrap">
+    <span class="wordmark">otto</span>
+    <p class="fline">Letta makes the agent remember. otto makes memory change behavior.</p>
+    <div class="meta">
+      <span>MIT</span><span class="sep">·</span>
+      <span>© 2026</span><span class="sep">·</span>
+      <a href="#thesis">thesis</a><span class="sep">·</span>
+      <a href="https://github.com/otto-haus/otto">github.com/otto-haus/otto</a><span class="sep">·</span>
+      <a href="https://otto.haus">otto.haus</a>
+    </div>
+  </div>
+</footer>
+
+<script>
+  (function(){
+    var els = document.querySelectorAll('.rise');
+    if(!('IntersectionObserver' in window) || window.matchMedia('(prefers-reduced-motion: reduce)').matches){
+      els.forEach(function(e){e.classList.add('in')}); return;
+    }
+    var io = new IntersectionObserver(function(es){
+      es.forEach(function(en){ if(en.isIntersecting){ en.target.classList.add('in'); io.unobserve(en.target);} });
+    },{threshold:.14, rootMargin:'0px 0px -6% 0px'});
+    els.forEach(function(e){io.observe(e)});
+  })();
+</script>
+</body>
+</html>
