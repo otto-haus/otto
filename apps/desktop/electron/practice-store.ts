@@ -83,12 +83,12 @@ export class PracticeStore {
         .map((invocation) => invocation.trim())
         .filter(Boolean)
         .sort((a, b) => b.length - a.length)
-        .find((invocation) => lower.startsWith(invocation.toLowerCase()));
+        .find((invocation) => matchesInvocation(lower, invocation));
 
       if (match) return referenceFor(practice, match);
 
       const slugPrefix = `/${practice.slug}`;
-      if (lower === slugPrefix || lower.startsWith(`${slugPrefix} `)) {
+      if (lower === slugPrefix) {
         return referenceFor(practice, slugPrefix);
       }
     }
@@ -164,6 +164,13 @@ function referenceFor(practice: PracticeRecord, invocation: string): PracticeRef
     invocation,
     ref: practice.file,
   };
+}
+
+function matchesInvocation(text: string, invocation: string): boolean {
+  const normalized = invocation.trim().toLowerCase();
+  if (!text.startsWith(normalized)) return false;
+  const next = text.charAt(normalized.length);
+  return next === '' || /\s/.test(next);
 }
 
 function normalizeApprovalRequirement(value: string): ApprovalRequirement {

@@ -30,4 +30,10 @@ describe('PracticeStore', () => {
     expect(reference?.invocation).toBe('/charter step');
     expect(reference?.ref).toContain('/practices/charter/practice.yaml');
   });
+
+  test('does not resolve partial invocation words', () => {
+    const store = new PracticeStore(practicesDir);
+
+    expect(store.resolveForText('/charter stepper ship onboarding')).toBeNull();
+  });
 });
