@@ -47,7 +47,7 @@ export class AiFrontierReviewExecutor {
       }
     }
 
-    if (listing.registryPath && existsSync(listing.registryPath)) {
+    if (listing.registry && listing.registryPath && existsSync(listing.registryPath)) {
       const raw = parse(readFileSync(listing.registryPath, 'utf8')) as Record<string, unknown>;
       raw.last_reviewed = today;
       const models = Array.isArray(raw.models) ? raw.models : [];

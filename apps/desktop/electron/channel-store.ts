@@ -39,7 +39,7 @@ export class ChannelStore {
       return { dir: this.dir, configPath, channels: [], skipped, storage: 'files' };
     }
 
-    const channelsRaw = isRecord(raw) && Array.isArray(raw.channels) ? raw.channels : [];
+    const channelsRaw = channelRows(raw, configPath, skipped);
     const channels: ChannelRecord[] = channelsRaw.flatMap((entry, index) => {
       const channel = normalizeChannel(entry, configPath, index, skipped);
       return channel ? [channel] : [];
@@ -47,6 +47,18 @@ export class ChannelStore {
 
     return { dir: this.dir, configPath, channels, skipped, storage: 'files' };
   }
+}
+
+function channelRows(raw: unknown, configPath: string, skipped: ChannelSkip[]): unknown[] {
+  if (!isRecord(raw)) {
+    skipped.push({ index: 0, reason: 'channels.yaml root must be an object', file: configPath });
+    return [];
+  }
+  if (!Array.isArray(raw.channels)) {
+    skipped.push({ index: 0, reason: 'channels must be an array', file: configPath });
+    return [];
+  }
+  return raw.channels;
 }
 
 export function resolveChannelsDir(): string {
