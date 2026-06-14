@@ -55,9 +55,11 @@ bun run --cwd apps/desktop electron:typecheck
 Desktop:
 
 ```sh
-task electron       # live Electron app in dev
-task staging        # build/package/install/open isolated /Applications/otto-staging.app
-task smoke:cli      # isolated disposable conversation; never default
+task electron                 # live Electron app in dev
+task staging                  # build/package/install/open isolated /Applications/otto-staging.app
+task install:release          # canonical otto.app — GitHub Release only; requires OTTO_ALLOW_RELEASE_INSTALL=1
+task smoke:release:metadata   # read-only — compare installed otto.app to latest release tag
+task smoke:cli                # isolated disposable conversation; never default
 ```
 
 After any `apps/desktop/` implementation turn, refresh **staging** (not live):

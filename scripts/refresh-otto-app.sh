@@ -9,8 +9,21 @@ TARGET_APP="/Applications/otto.app"
 if [[ "${OTTO_ALLOW_LIVE_REFRESH:-}" != "1" ]]; then
   cat >&2 <<'EOF'
 Refusing to replace /Applications/otto.app without OTTO_ALLOW_LIVE_REFRESH=1.
-Use `task staging` for the isolated app, or run:
-  OTTO_ALLOW_LIVE_REFRESH=1 task refresh
+Use `task staging` for the isolated app, or the canonical release install:
+  OTTO_ALLOW_RELEASE_INSTALL=1 task install:release
+EOF
+  exit 2
+fi
+
+if [[ "${OTTO_ALLOW_LOCAL_LIVE_BUILD:-}" != "1" ]]; then
+  cat >&2 <<'EOF'
+Refusing local branch build into /Applications/otto.app.
+
+Canonical live install (GitHub Release artifact only):
+  OTTO_ALLOW_RELEASE_INSTALL=1 task install:release
+
+Sebastian-only escape hatch for local live builds:
+  OTTO_ALLOW_LOCAL_LIVE_BUILD=1 OTTO_ALLOW_LIVE_REFRESH=1 task refresh:local
 EOF
   exit 2
 fi

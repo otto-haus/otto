@@ -76,9 +76,27 @@ tasks:
       - bun run electron:build
       - bunx electron-builder --mac dir --arm64
 
+  install:release:
+    desc: Canonical live install — latest GitHub Release desktop artifact to /Applications/otto.app (requires OTTO_ALLOW_RELEASE_INSTALL=1)
+    cmds: [bash scripts/install-otto-release.sh]
+
+  smoke:release:metadata:
+    desc: Read-only check — compare installed otto.app metadata to latest GitHub Release (never mutates otto.app)
+    cmds:
+      - node scripts/otto-release-metadata-check.mjs
+
   refresh:
-    aliases: [live, refresh:live]
-    desc: LIVE app update — requires OTTO_ALLOW_LIVE_REFRESH=1
+    desc: BLOCKED — use `task install:release` (GitHub Release) or `task staging` (candidate/dev)
+    cmds:
+      - |
+        echo "task refresh no longer installs local branch builds into /Applications/otto.app." >&2
+        echo "  OTTO_ALLOW_RELEASE_INSTALL=1 task install:release" >&2
+        echo "  task staging" >&2
+        exit 2
+
+  refresh:local:
+    aliases: [refresh:live]
+    desc: Sebastian-only local branch build into otto.app — requires OTTO_ALLOW_LOCAL_LIVE_BUILD=1 and OTTO_ALLOW_LIVE_REFRESH=1
     cmds:
       - task: _refresh-live
 
@@ -91,7 +109,9 @@ tasks:
     internal: true
     preconditions:
       - sh: 'test "${OTTO_ALLOW_LIVE_REFRESH:-}" = "1"'
-        msg: 'Refusing to replace /Applications/otto.app. Use `task staging`, or run `OTTO_ALLOW_LIVE_REFRESH=1 task refresh` when you intentionally want the live app replaced.'
+        msg: 'Refusing local live build. Use `OTTO_ALLOW_RELEASE_INSTALL=1 task install:release`, or Sebastian-only `OTTO_ALLOW_LOCAL_LIVE_BUILD=1 OTTO_ALLOW_LIVE_REFRESH=1 task refresh:local`.'
+      - sh: 'test "${OTTO_ALLOW_LOCAL_LIVE_BUILD:-}" = "1"'
+        msg: 'Local branch builds cannot replace otto.app without OTTO_ALLOW_LOCAL_LIVE_BUILD=1. Canonical path: OTTO_ALLOW_RELEASE_INSTALL=1 task install:release'
     cmds: [bash scripts/refresh-otto-app.sh]
 
   open:

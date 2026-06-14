@@ -1,0 +1,38 @@
+{
+  "ok": false,
+  "issue": 305,
+  "runId": "20260614225117",
+  "repo": "otto-haus/otto",
+  "appPath": "/Applications/otto.app",
+  "requireInstalled": false,
+  "checks": {
+    "latestReleaseFetched": true,
+    "desktopAssetPublished": false,
+    "appInstalled": true,
+    "releaseTagMatchesInstalled": false,
+    "buildMarkerPresent": true
+  },
+  "warnings": [
+    "Latest GitHub Release has no desktop .app artifact yet (release-only install path is defined but blocked until publish).",
+    "Installed app marker does not match latest release tag v0.1.3."
+  ],
+  "release": {
+    "tag": "v0.1.3",
+    "name": "otto v0.1.3",
+    "publishedAt": "2026-06-14T15:39:51Z",
+    "desktopAsset": null,
+    "assets": [
+      "otto-v01-desktop-walkthrough.mp4"
+    ]
+  },
+  "installed": {
+    "installed": true,
+    "appPath": "/Applications/otto.app",
+    "version": "0.0.0",
+    "shortSha": null,
+    "sha": null,
+    "builtAt": null,
+    "branch": null
+  },
+  "receiptDir": "/Users/seb/Code/otto/.worktrees/issue-305-release-app/docs/receipts/staging/305-release-metadata-20260614225117"
+}
