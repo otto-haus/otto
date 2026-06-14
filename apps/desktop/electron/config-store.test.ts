@@ -1,9 +1,10 @@
 import { describe, expect, test } from 'bun:test';
-import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { ConfigStore } from './config-store';
 import { applyLabsConfigPatch, getLabsConfig, labsConfigToOttoPatch } from './labs-config';
+import type { OttoConfig } from './shared/types';
 
 describe('ConfigStore', () => {
   test('defaults connectionMode to existing local Letta', () => {
@@ -31,6 +32,36 @@ describe('ConfigStore', () => {
       const reloaded = new ConfigStore();
       expect(reloaded.connectionMode()).toBe('existing');
       expect(reloaded.primaryAgentId()).toBe('agent-primary');
+      reloaded.update({ connectionMode: 'cloud' });
+      expect(new ConfigStore().connectionMode()).toBe('cloud');
+    } finally {
+      rmSync(tmp, { recursive: true, force: true });
+      delete process.env.OTTO_HOME;
+    }
+  });
+
+  test('falls back when persisted connectionMode is invalid', () => {
+    const tmp = mkdtempSync(join(tmpdir(), 'otto-config-test-'));
+    try {
+      process.env.OTTO_HOME = tmp;
+      writeFileSync(join(tmp, 'config.json'), `${JSON.stringify({ connectionMode: 'sideways' }, null, 2)}\n`);
+      const store = new ConfigStore();
+      expect(store.connectionMode()).toBe('existing');
+      expect(store.get().connectionMode).toBe('existing');
+    } finally {
+      rmSync(tmp, { recursive: true, force: true });
+      delete process.env.OTTO_HOME;
+    }
+  });
+
+  test('normalizes invalid connectionMode updates before persisting', () => {
+    const tmp = mkdtempSync(join(tmpdir(), 'otto-config-test-'));
+    try {
+      process.env.OTTO_HOME = tmp;
+      const store = new ConfigStore();
+      store.update({ connectionMode: 'sideways' as OttoConfig['connectionMode'] });
+      expect(store.connectionMode()).toBe('existing');
+      expect(JSON.parse(readFileSync(join(tmp, 'config.json'), 'utf8')).connectionMode).toBe('existing');
     } finally {
       rmSync(tmp, { recursive: true, force: true });
       delete process.env.OTTO_HOME;
