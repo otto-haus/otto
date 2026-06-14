@@ -1,10 +1,11 @@
 # Otto v1 — Ship Status
 
-Updated: 2026-06-13
+Updated: 2026-06-14
 
-Integration branch: `ship/v0.3-integration` (dirty tree — PR stack in `docs/v1/runbooks/pr-stack-ship-v03.md`)
+Integration branch: `ship/v0.3-integration` @ `0a07320` (pushed; PR stack in `docs/v1/runbooks/pr-stack-ship-v03.md`)
 
-**Target release:** `v0.1.3` — Sebastian gate (063); **NOT PUSHED** until explicit sign-off.
+**Draft release:** [otto-haus/otto v0.3.0](https://github.com/otto-haus/otto/releases/tag/v0.3.0) — walkthrough uploaded; **NOT merged/shipped** until Sebastian gate (063).
+**Staging proof:** `/Applications/otto-staging.app` only — live app unchanged.
 
 Lane tickets (This Cycle): `/Users/seb/Library/CloudStorage/Dropbox/This Cycle/otto/tickets` — 001–009 + 016 **done**
 

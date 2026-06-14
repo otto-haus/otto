@@ -4,8 +4,10 @@
 it is Built, Tested (or failure documented), Demoed, Tried by Sebastian, and **explicitly
 approved by Sebastian**. Claude is execution lead; Sebastian is the only release approver.
 
-**NOT PUSHED** — target tag `v0.1.3` on integration branch `ship/v0.3-integration`. No push, tag,
-release, or npm publish without explicit Sebastian approval. Mirror: `docs/v1/SHIP_STATUS.md`.
+**NOT PUSHED to main / live app** — integration branch `ship/v0.3-integration` @ `0a07320`.
+**Draft release:** [otto-haus/otto v0.3.0](https://github.com/otto-haus/otto/releases/tag/v0.3.0) (demo assets uploaded).
+No merge to `main`, live `/Applications/otto.app`, or production declare without explicit Sebastian approval.
+Mirror: `docs/v1/SHIP_STATUS.md`. Gate packet: `docs/receipts/staging/063-sebastian-gate-packet-v03-20260614.md`.
 
 ## v0.1 honesty framing
 
