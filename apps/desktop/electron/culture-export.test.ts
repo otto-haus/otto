@@ -36,22 +36,53 @@ describe('CultureExporter', () => {
 
   test('previewImport rejects manifest include paths that escape the workspace', () => {
     ottoDir = mkdtempSync(join(tmpdir(), 'otto-culture-import-'));
+    const unsafeIncludes: unknown[][] = [
+      ['../outside.md'],
+      ['..\\outside.md'],
+      ['/tmp/outside.md'],
+      ['C:\\outside.md'],
+      ['C:outside.md'],
+      [''],
+      ['.'],
+      [null],
+      ['constitution.yaml', 7],
+    ];
+
+    unsafeIncludes.forEach((includes, index) => {
+      const bundleDir = join(ottoDir, `bundle-${index}`);
+      mkdirSync(bundleDir, { recursive: true });
+      writeManifest(bundleDir, includes);
+
+      const preview = new CultureExporter(ottoDir).previewImport(bundleDir);
+
+      expect(preview.valid).toBe(false);
+      expect(preview.blocked_reason).toMatch(/unsafe/i);
+      expect(preview.diff).toEqual([]);
+    });
+  });
+
+  test('previewImport rejects manifest includes that are not arrays', () => {
+    ottoDir = mkdtempSync(join(tmpdir(), 'otto-culture-import-'));
     const bundleDir = join(ottoDir, 'bundle');
     mkdirSync(bundleDir, { recursive: true });
-    writeFileSync(join(bundleDir, 'manifest.json'), `${JSON.stringify({
-      schema: 'otto.culture-export.v1',
-      exported_at: '2026-06-14T00:00:00.000Z',
-      workspace: 'test',
-      includes: ['../outside.md'],
-      excludes: [],
-      receipt_index_count: 0,
-      constitution_hash: null,
-    }, null, 2)}\n`);
+    writeManifest(bundleDir, 'constitution.yaml');
 
     const preview = new CultureExporter(ottoDir).previewImport(bundleDir);
 
     expect(preview.valid).toBe(false);
-    expect(preview.blocked_reason).toMatch(/escape|unsafe/i);
+    expect(preview.blocked_reason).toMatch(/includes must be an array/i);
     expect(preview.diff).toEqual([]);
   });
 });
+
+function writeManifest(bundleDir: string, includes: unknown): void {
+  writeFileSync(join(bundleDir, 'manifest.json'), `${JSON.stringify({
+    schema: 'otto.culture-export.v1',
+    exported_at: '2026-06-14T00:00:00.000Z',
+    workspace: 'test',
+    includes,
+    excludes: [],
+    receipt_index_count: 0,
+    constitution_hash: null,
+  }, null, 2)}\n`);
+}
