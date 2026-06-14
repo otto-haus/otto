@@ -12,7 +12,9 @@ pkill -f 'otto-staging.app/Contents/MacOS/otto' 2>/dev/null || true
 sleep 1
 
 rsync -a --delete out/ "$STG/Contents/Resources/app/out/"
-/usr/libexec/PlistBuddy -c 'Set :CFBundleName otto staging' "$STG/Contents/Info.plist" 2>/dev/null || true
+# CFBundleName MUST stay 'otto' — Electron's helper lookup needs 'otto Helper.app'; renaming it FATALs on launch.
+/usr/libexec/PlistBuddy -c 'Set :CFBundleName otto' "$STG/Contents/Info.plist" 2>/dev/null || true
+# Only the *display* name carries "staging".
 /usr/libexec/PlistBuddy -c 'Set :CFBundleDisplayName otto staging' "$STG/Contents/Info.plist" 2>/dev/null || true
 /usr/libexec/PlistBuddy -c 'Set :CFBundleIdentifier haus.otto.desktop.staging' "$STG/Contents/Info.plist" 2>/dev/null || true
 codesign --force --deep --sign - "$STG" >/dev/null 2>&1
