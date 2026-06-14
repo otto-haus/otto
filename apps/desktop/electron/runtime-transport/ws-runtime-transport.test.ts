@@ -509,4 +509,116 @@ describe('WsRuntimeTransport', () => {
     socket.close();
     await transport.close();
   });
+
+  test('runtime error before idle timeout surfaces actual error instead of generic timeout', async () => {
+    const prevTimeout = process.env.OTTO_WS_TURN_IDLE_TIMEOUT_MS;
+    process.env.OTTO_WS_TURN_IDLE_TIMEOUT_MS = '80';
+    const { win, sent } = mockWindow();
+    const transport = new WsRuntimeTransport(win, mockConfig());
+    (transport as unknown as { spawnRemote: () => Promise<void> }).spawnRemote = async () => {};
+
+    const initPromise = transport.init({ freshConversation: true });
+    const { port, token } = await waitForListener(transport);
+    const socket = new WebSocket(`ws://127.0.0.1:${port}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    socket.on('message', (raw) => {
+      let cmd: Record<string, unknown>;
+      try {
+        cmd = JSON.parse(String(raw)) as Record<string, unknown>;
+      } catch {
+        return;
+      }
+      if (cmd.type === 'sync') {
+        socket.send(JSON.stringify(syncResponse('conv-ws-error-no-idle')));
+        socket.send(JSON.stringify(deviceOnline()));
+        socket.send(JSON.stringify(loopIdle()));
+      }
+      if (cmd.type === 'input') {
+        socket.send(JSON.stringify({
+          type: 'stream_delta',
+          delta: { message_type: 'loop_error', message: 'Stale conversation provider failed' },
+        }));
+      }
+    });
+    await new Promise<void>((resolve, reject) => {
+      socket.once('open', () => resolve());
+      socket.once('error', reject);
+    });
+    await initPromise;
+
+    await transport.send('stale conversation');
+
+    const errorMessages = sent
+      .map((e) => (e.payload as { message?: { type?: string; message?: string } }).message)
+      .filter((message) => message?.type === 'error')
+      .map((message) => message?.message);
+    expect(errorMessages).toContain('Stale conversation provider failed');
+    expect(errorMessages).not.toContain('Timed out waiting for the runtime to finish. Try again or reconnect if the turn looks stuck.');
+    expect(sent.some((e) => {
+      const message = (e.payload as { message?: { type?: string; success?: boolean } }).message;
+      return e.channel === 'otto:event' && message?.type === 'result' && message.success === false;
+    })).toBe(true);
+
+    if (prevTimeout === undefined) Reflect.deleteProperty(process.env, 'OTTO_WS_TURN_IDLE_TIMEOUT_MS');
+    else process.env.OTTO_WS_TURN_IDLE_TIMEOUT_MS = prevTimeout;
+    socket.close();
+    await transport.close();
+  });
+
+  test('assistant timeout with an active run does not emit success result', async () => {
+    const prevTimeout = process.env.OTTO_WS_TURN_IDLE_TIMEOUT_MS;
+    process.env.OTTO_WS_TURN_IDLE_TIMEOUT_MS = '80';
+    const { win, sent } = mockWindow();
+    const transport = new WsRuntimeTransport(win, mockConfig());
+    (transport as unknown as { spawnRemote: () => Promise<void> }).spawnRemote = async () => {};
+
+    const initPromise = transport.init({ freshConversation: true });
+    const { port, token } = await waitForListener(transport);
+    const socket = new WebSocket(`ws://127.0.0.1:${port}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    socket.on('message', (raw) => {
+      let cmd: Record<string, unknown>;
+      try {
+        cmd = JSON.parse(String(raw)) as Record<string, unknown>;
+      } catch {
+        return;
+      }
+      if (cmd.type === 'sync') {
+        socket.send(JSON.stringify(syncResponse('conv-ws-active-run-no-idle')));
+        socket.send(JSON.stringify(deviceOnline()));
+        socket.send(JSON.stringify(loopIdle()));
+      }
+      if (cmd.type === 'input') {
+        socket.send(JSON.stringify({
+          type: 'update_loop_status',
+          loop_status: { status: 'RUNNING', active_run_ids: ['run-still-active'] },
+        }));
+        socket.send(JSON.stringify({
+          type: 'stream_delta',
+          delta: { message_type: 'assistant_message', run_id: 'run-still-active', content: [{ text: 'partial' }] },
+        }));
+      }
+    });
+    await new Promise<void>((resolve, reject) => {
+      socket.once('open', () => resolve());
+      socket.once('error', reject);
+    });
+    await initPromise;
+
+    await transport.send('long active run');
+
+    expect((transport as unknown as { activeRunId: string | null }).activeRunId).toBe('run-still-active');
+    expect(sent.some((e) => {
+      const message = (e.payload as { message?: { type?: string; success?: boolean } }).message;
+      return e.channel === 'otto:event' && message?.type === 'result' && message.success === true;
+    })).toBe(false);
+    expect(sent.some((e) => e.channel === 'otto:event' && (e.payload as { message?: { type?: string } }).message?.type === 'error')).toBe(true);
+
+    if (prevTimeout === undefined) Reflect.deleteProperty(process.env, 'OTTO_WS_TURN_IDLE_TIMEOUT_MS');
+    else process.env.OTTO_WS_TURN_IDLE_TIMEOUT_MS = prevTimeout;
+    socket.close();
+    await transport.close();
+  });
 });

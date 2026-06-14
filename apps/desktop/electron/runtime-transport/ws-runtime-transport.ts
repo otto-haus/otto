@@ -321,7 +321,16 @@ export class WsRuntimeTransport implements OttoRuntimeTransport {
         await this.waitForTurnComplete(turnTimeoutMs, () => this.aborted || this.turnIdle);
       } catch (e) {
         const idleTimeout = msg(e).includes('Timed out waiting for runtime idle');
-        if (idleTimeout && sawAssistant) {
+        if (idleTimeout && turnError) {
+          emitResult(false);
+          writeReceipt('failed', 'Chat turn failed before idle confirmation.', {
+            code: 'error',
+            message: turnError,
+            recoverable: true,
+            next_action: nextActionFor('error'),
+          });
+          this.emitError(turnError);
+        } else if (idleTimeout && sawAssistant && !this.activeRunId) {
           emitResult(true);
           writeReceipt('success', 'Chat turn completed without idle confirmation.', null);
         } else if (idleTimeout) {
