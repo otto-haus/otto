@@ -576,6 +576,10 @@ h1, h2, h3, h4, p { margin: 0; }
 }
 .pill--ok { color: var(--ok); border-color: #cfe2d4; background: var(--ok-tint); }
 .pill--warn { color: var(--warn); border-color: #e7dcc0; background: var(--warn-tint); }
+.pill--staging { color: var(--accent); border-color: #c8ddd6; background: #eef7f3; }
+.appSourceBadge { font-size: 11px; letter-spacing: 0; max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.settingsSourceDetails { margin-top: 8px; }
+.settingsLocalFootnote--warn { color: var(--warn); }
 .pill--stop { color: var(--stop); border-color: #ecccc4; background: var(--stop-tint); }
 .pill--info { color: var(--mut); border-color: var(--line-strong); background: transparent; }
 

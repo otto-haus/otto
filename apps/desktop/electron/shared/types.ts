@@ -82,12 +82,23 @@ export interface RuntimeStatus {
   cliResolved: boolean;
 }
 
-/** Packaged app provenance — stamped by deploy-staging.sh or dev fallback. */
+export type AppChannel = 'release' | 'staging' | 'dev' | 'disposable';
+
+/** Packaged app provenance — stamped by deploy-staging.sh, release install, or dev fallback. */
 export interface AppBuildInfo {
   sha: string | null;
   shortSha: string | null;
   builtAt: string | null;
   branch: string | null;
+  channel: AppChannel | null;
+  version: string | null;
+  appPath: string | null;
+  profilePath: string | null;
+  homePath: string | null;
+  mainSha: string | null;
+  mainShortSha: string | null;
+  /** null when mainSha or sha is unknown; false when staging build is not at origin/main. */
+  matchesMain: boolean | null;
 }
 
 /** What the Settings "Connect Letta" card reads. v1 is local-only; provider auth lives in Letta. */

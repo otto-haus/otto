@@ -5,12 +5,48 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)"
 APP_DIR="$ROOT/apps/desktop"
 BUILT_APP="$APP_DIR/dist-app/mac-arm64/otto.app"
 TARGET_APP="${OTTO_STAGING_APP:-/Applications/otto-staging.app}"
+TARGET_APP_RESOLVED="$(node -e "const path = require('node:path'); console.log(path.resolve(process.argv[1]));" "$TARGET_APP")"
 STAGING_ROOT="${OTTO_STAGING_ROOT:-$HOME/.codex/admin/otto-staging}"
 HOME_DIR="$STAGING_ROOT/home"
 OTTO_HOME_DIR="$STAGING_ROOT/otto-home"
 PROFILE_DIR="$STAGING_ROOT/profile"
 PORT="${OTTO_STAGING_PORT:-9445}"
 BUNDLE_ID="${OTTO_STAGING_BUNDLE_ID:-haus.otto.desktop.staging}"
+APP_VERSION="$(node -p "require('$ROOT/package.json').version" 2>/dev/null || echo unknown)"
+
+if [[ "$TARGET_APP_RESOLVED" == "/Applications/otto.app" || "$TARGET_APP_RESOLVED" == "/Applications/otto.app/"* ]]; then
+  echo "Refusing to deploy to live app path: $TARGET_APP" >&2
+  exit 1
+fi
+
+if [[ "${OTTO_STAGING_FETCH_MAIN:-1}" == "1" ]]; then
+  echo "==> Fetching origin/main for source marker"
+  git -C "$ROOT" fetch origin main 2>/dev/null || echo "WARN: could not fetch origin/main" >&2
+fi
+
+MAIN_SHA="$(git -C "$ROOT" rev-parse origin/main 2>/dev/null || echo unknown)"
+MAIN_SHORT="$(git -C "$ROOT" rev-parse --short origin/main 2>/dev/null || echo unknown)"
+BUILD_SHA="$(git -C "$ROOT" rev-parse HEAD 2>/dev/null || echo unknown)"
+BUILD_SHORT="$(git -C "$ROOT" rev-parse --short HEAD 2>/dev/null || echo unknown)"
+
+if [[ "$MAIN_SHA" != "unknown" && "$BUILD_SHA" != "$MAIN_SHA" ]]; then
+  echo "WARN: build HEAD ($BUILD_SHORT) is not origin/main ($MAIN_SHORT)" >&2
+  echo "staging_matches_main=false"
+  if [[ "${OTTO_STAGING_REQUIRE_MAIN:-}" == "1" ]]; then
+    echo "Refusing deploy: checkout main and fast-forward to origin/main first." >&2
+    exit 1
+  fi
+else
+  echo "staging_matches_main=true"
+fi
+
+if [[ "$TARGET_APP" == *"otto-staging"* ]]; then
+  APP_CHANNEL="staging"
+elif [[ "$TARGET_APP" == "/Applications/otto.app" ]]; then
+  APP_CHANNEL="release"
+else
+  APP_CHANNEL="disposable"
+fi
 
 plist_set() {
   local plist="$1"
@@ -23,6 +59,8 @@ plist_env_set() {
   local plist="$1"
   local key="$2"
   local value="$3"
+  /usr/libexec/PlistBuddy -c "Print :LSEnvironment" "$plist" >/dev/null 2>&1 \
+    || /usr/libexec/PlistBuddy -c "Add :LSEnvironment dict" "$plist" >/dev/null
   /usr/libexec/PlistBuddy -c "Set :LSEnvironment:$key $value" "$plist" >/dev/null 2>&1 \
     || /usr/libexec/PlistBuddy -c "Add :LSEnvironment:$key string $value" "$plist" >/dev/null
 }
@@ -32,8 +70,8 @@ stamp_bundle() {
   local plist="$bundle/Contents/Info.plist"
   local build_sha build_short build_branch build_time build_info_path
 
-  build_sha="$(git -C "$ROOT" rev-parse HEAD 2>/dev/null || echo unknown)"
-  build_short="$(git -C "$ROOT" rev-parse --short HEAD 2>/dev/null || echo unknown)"
+  build_sha="$BUILD_SHA"
+  build_short="$BUILD_SHORT"
   build_branch="$(git -C "$ROOT" rev-parse --abbrev-ref HEAD 2>/dev/null || echo unknown)"
   build_time="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
 
@@ -42,6 +80,12 @@ stamp_bundle() {
   plist_set "$plist" CFBundleName "otto"
   plist_env_set "$plist" HOME "$HOME_DIR"
   plist_env_set "$plist" OTTO_HOME "$OTTO_HOME_DIR"
+  plist_env_set "$plist" OTTO_PROFILE_PATH "$PROFILE_DIR"
+  plist_env_set "$plist" OTTO_APP_PATH "$TARGET_APP"
+  plist_env_set "$plist" OTTO_APP_CHANNEL "$APP_CHANNEL"
+  plist_env_set "$plist" OTTO_APP_VERSION "$APP_VERSION"
+  plist_env_set "$plist" OTTO_MAIN_SHA "$MAIN_SHA"
+  plist_env_set "$plist" OTTO_MAIN_SHORT_SHA "$MAIN_SHORT"
   plist_env_set "$plist" OTTO_SMOKE "1"
   plist_env_set "$plist" ELECTRON_ENABLE_LOGGING "1"
   plist_env_set "$plist" OTTO_BUILD_SHA "$build_sha"
@@ -49,14 +93,44 @@ stamp_bundle() {
   plist_env_set "$plist" OTTO_BUILD_TIME "$build_time"
   plist_env_set "$plist" OTTO_BUILD_BRANCH "$build_branch"
   build_info_path="$bundle/Contents/Resources/app/build-info.json"
-  node - "$build_info_path" "$build_sha" "$build_short" "$build_time" "$build_branch" <<'NODE'
+  node - "$build_info_path" "$build_sha" "$build_short" "$build_time" "$build_branch" "$APP_CHANNEL" "$APP_VERSION" "$TARGET_APP" "$PROFILE_DIR" "$HOME_DIR" "$MAIN_SHA" "$MAIN_SHORT" <<'NODE'
 const { writeFileSync } = require('node:fs');
-const [path, sha, shortSha, builtAt, branch] = process.argv.slice(2);
-writeFileSync(path, `${JSON.stringify({ sha, shortSha, builtAt, branch })}\n`);
+const [
+  path,
+  sha,
+  shortSha,
+  builtAt,
+  branch,
+  channel,
+  version,
+  appPath,
+  profilePath,
+  homePath,
+  mainSha,
+  mainShortSha,
+] = process.argv.slice(2);
+writeFileSync(
+  path,
+  `${JSON.stringify({
+    sha,
+    shortSha,
+    builtAt,
+    branch,
+    channel,
+    version,
+    appPath,
+    profilePath,
+    homePath,
+    mainSha,
+    mainShortSha,
+  })}\n`,
+);
 NODE
   echo "build_marker=$build_short"
   echo "build_sha=$build_sha"
   echo "build_time=$build_time"
+  echo "build_channel=$APP_CHANNEL"
+  echo "origin_main=$MAIN_SHORT"
   # Letta discovery reads ~/.letta under isolated HOME — point at real settings for staging proof.
   if [[ -f "${HOME}/.letta/settings.json" ]]; then
     plist_env_set "$plist" OTTO_LETTA_SETTINGS_PATH "${HOME}/.letta/settings.json"

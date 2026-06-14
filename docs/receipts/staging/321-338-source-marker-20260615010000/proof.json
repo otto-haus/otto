@@ -1,0 +1,48 @@
+{
+  "ok": true,
+  "issues": [321, 338],
+  "branch": "fix/321-338-staging-source-marker",
+  "worktree": "/Users/seb/Code/otto/.worktrees/issue-321-338-build-marker",
+  "baseMain": "2fa8fc516d6eb8e10789916724da6c3c92e9aee6",
+  "bundlesNotMutated": [
+    "/Applications/otto.app",
+    "/Applications/otto-staging.app"
+  ],
+  "verify": {
+    "bunInstall": "pass",
+    "bunTest": "266 pass / 0 fail",
+    "typecheck": "pass",
+    "verifyV0": "5 passed, 0 failed",
+    "desktopTypecheck": "pass",
+    "electronTypecheck": "pass"
+  },
+  "browserSmoke": {
+    "status": "not_run",
+    "reason": "Implementer did not mutate /Applications/otto-staging.app without explicit authorization. Run after task staging:main.",
+    "command": "NODE_PATH=$HOME/.codex/admin/node_modules OTTO_RECEIPT_DIR=$PWD/docs/receipts/staging node scripts/otto-staging-source-marker-smoke.cjs"
+  },
+  "acMapping": {
+    "321": [
+      "AppBuildInfo exposes channel, version, commit, build time, app/profile/home paths",
+      "Staging visually distinct badge (pill--staging) + warn when not latest main",
+      "deploy-staging.sh stamps build-info.json + plist markers",
+      "otto-staging-source-marker-smoke.cjs warns/fails on missing marker"
+    ],
+    "338": [
+      "scripts/staging-refresh-from-main.sh + task staging:main",
+      "Never touches otto.app",
+      "Visible commit/channel marker in UI",
+      "Warn when build not at origin/main"
+    ]
+  },
+  "filesTouched": [
+    "apps/desktop/electron/build-info.ts",
+    "apps/desktop/electron/shared/types.ts",
+    "apps/desktop/src/components/AppSourceBadge.tsx",
+    "apps/desktop/scripts/deploy-staging.sh",
+    "scripts/staging-refresh-from-main.sh",
+    "scripts/otto-staging-source-marker-smoke.cjs",
+    "Taskfile.yml",
+    "docs/v1/runbooks/live-vs-staging.md"
+  ]
+}
