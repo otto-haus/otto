@@ -232,18 +232,16 @@ task staging
 Bun's partial Electron bundle extraction from the local Electron cache before opening
 the development app.
 
-<<<<<<< HEAD
+`task electron` also reports the Letta CLI preflight state. The first runtime connection
+may still bootstrap Letta Code with npm; let that finish before stopping the dev app.
+Set `LETTA_CLI_PATH=/path/to/letta.js` when Letta is installed outside the default macOS
+app path.
+
 Canonical app boundary:
 
 - `/Applications/otto.app` is the user-facing canonical app.
 - Update it only from the latest published GitHub Release artifact.
 - Do not use `task refresh` or local branch builds to overwrite `/Applications/otto.app`.
-=======
-`task electron` also reports the Letta CLI preflight state. The first runtime connection
-may still bootstrap Letta Code with npm; let that finish before stopping the dev app.
-Set `LETTA_CLI_PATH=/path/to/letta.js` when Letta is installed outside the default macOS
-app path.
->>>>>>> 6812b44 (docs: surface letta bootstrap preflight)
 
 Connect the desktop app to Letta:
 
@@ -318,6 +316,8 @@ Runtime truth:
 - `OTTO_AGENT_ID` selects the target Letta agent for desktop and smoke checks.
 - `LETTA_AGENT_ID` is also accepted by `task smoke:cli` for direct Letta CLI compatibility.
 - `~/.otto` stores local otto runtime/config/traces.
+- `OTTO_USER_DATA_DIR` may override the Electron browser profile; when `OTTO_HOME` is set,
+  `task electron` uses `$OTTO_HOME/electron-user-data`.
 - `LETTA_CLI_PATH` may point at a specific Letta CLI bundle, including for `task smoke:cli`.
 - Chat stays gated until `session.initialize()` succeeds.
 

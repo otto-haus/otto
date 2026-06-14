@@ -26,7 +26,11 @@ tasks:
     dir: '{{.DESKTOP}}'
     cmds:
       - node ../../scripts/ensure-electron-ready.mjs
-      - env -u ELECTRON_RUN_AS_NODE bun run electron:dev
+      - |
+        if [ -z "${OTTO_USER_DATA_DIR:-}" ] && [ -n "${OTTO_HOME:-}" ]; then
+          export OTTO_USER_DATA_DIR="$OTTO_HOME/electron-user-data"
+        fi
+        env -u ELECTRON_RUN_AS_NODE bun run electron:dev
 
   gen:
     desc: Regenerate file-backed data (practices.json, readiness.json)

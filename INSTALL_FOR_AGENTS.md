@@ -66,6 +66,8 @@ task electron
 
 This opens a development app from the repo and runs the Electron install preflight first.
 It does not install `/Applications/otto.app`.
+For clean-profile runs, set `OTTO_HOME`; `task electron` will keep Electron user data under
+`$OTTO_HOME/electron-user-data` unless `OTTO_USER_DATA_DIR` is set explicitly.
 If the preflight reports a Letta CLI bootstrap or missing CLI, record that exact state and
 let any scoped first-run bootstrap finish before stopping the dev process. Do not call the
 desktop connected until `session.initialize()` succeeds against a live Letta agent.
