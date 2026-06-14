@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'bun:test';
-import { mkdtempSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, symlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -70,6 +70,32 @@ describe('StandardStore', () => {
     const store = new StandardStore(standardsRoot);
 
     expect(store.readPrecedent('../outside.md')).toBeNull();
+  });
+
+  test('readPrecedent rejects absolute paths outside standards dir', () => {
+    const root = mkdtempSync(join(tmpdir(), 'otto-standards-precedent-'));
+    const standardsRoot = join(root, 'standards');
+    const outside = join(root, 'outside.md');
+    mkdirSync(standardsRoot);
+    writeFileSync(outside, '## Decision\nAbsolute outside precedent should not be readable.');
+
+    const store = new StandardStore(standardsRoot);
+
+    expect(store.readPrecedent(outside)).toBeNull();
+  });
+
+  test('readPrecedent rejects symlink escapes from standards dir', () => {
+    const root = mkdtempSync(join(tmpdir(), 'otto-standards-precedent-'));
+    const standardsRoot = join(root, 'standards');
+    const precedentsRoot = join(standardsRoot, 'precedents');
+    const outside = join(root, 'outside.md');
+    mkdirSync(precedentsRoot, { recursive: true });
+    writeFileSync(outside, '## Decision\nSymlinked outside precedent should not be readable.');
+    symlinkSync(outside, join(precedentsRoot, 'outside.md'));
+
+    const store = new StandardStore(standardsRoot);
+
+    expect(store.readPrecedent('precedents/outside.md')).toBeNull();
   });
 
   test('IPC conflict-for-standard handler contract matches store lookup', () => {

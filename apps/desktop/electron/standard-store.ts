@@ -1,4 +1,4 @@
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync, readFileSync, realpathSync } from 'node:fs';
 import { isAbsolute, join, relative, resolve } from 'node:path';
 import { parse } from 'yaml';
 import type {
@@ -246,7 +246,12 @@ function resolveInsideDir(root: string, relativePath: string): string | null {
   const file = resolve(rootPath, relativePath);
   const candidate = relative(rootPath, file);
   if (!candidate || candidate.startsWith('..') || isAbsolute(candidate)) return null;
-  return file;
+  if (!existsSync(rootPath) || !existsSync(file)) return null;
+  const realRoot = realpathSync(rootPath);
+  const realFile = realpathSync(file);
+  const realCandidate = relative(realRoot, realFile);
+  if (!realCandidate || realCandidate.startsWith('..') || isAbsolute(realCandidate)) return null;
+  return realFile;
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
