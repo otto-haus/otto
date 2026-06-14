@@ -75,6 +75,7 @@ function normalizeReceipt(value: unknown): Receipt | null {
   if (!isRecord(value)) return null;
   if (value.schema !== 'otto.receipt.v1') return null;
   if (!isString(value.id) || !isString(value.timestamp) || !isStatus(value.status) || !isString(value.action)) return null;
+  if (!isValidTimestamp(value.timestamp)) return null;
   if (!isRecord(value.subject) || !isString(value.subject.type)) return null;
   if (!isRecord(value.input) || !isRecord(value.result) || !isString(value.result.summary)) return null;
   if (!Array.isArray(value.evidence)) return null;
@@ -183,6 +184,10 @@ function normalizeRoutineReference(value: unknown): RoutineReference | null | un
 function timestampMs(value: string): number {
   const ms = new Date(value).getTime();
   return Number.isFinite(ms) ? ms : 0;
+}
+
+function isValidTimestamp(value: string): boolean {
+  return Number.isFinite(new Date(value).getTime());
 }
 
 function isStatus(value: unknown): value is ReceiptStatus {
