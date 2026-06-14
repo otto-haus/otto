@@ -81,4 +81,8 @@ Result:
 
 ### Remote proof
 
-Pending PR CI.
+PR CI `checks` passed:
+
+```txt
+https://github.com/otto-haus/otto/actions/runs/27508275738/job/81303438104
+```
