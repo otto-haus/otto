@@ -24,6 +24,9 @@ else
 fi
 
 cleanup() {
+  if [[ -n "${MOUNTED_DMG:-}" ]]; then
+    hdiutil detach "$MOUNTED_DMG" >/dev/null 2>&1 || true
+  fi
   if [[ "${CLEAN_WORK_DIR:-0}" == "1" && -n "${WORK_DIR:-}" && -d "$WORK_DIR" && "${OTTO_RELEASE_KEEP_WORK_DIR:-}" != "1" ]]; then
     rm -rf "$WORK_DIR"
   fi
@@ -108,9 +111,17 @@ case "$ASSET_NAME" in
     ditto -xk "$DOWNLOAD_PATH" "$EXTRACT_DIR"
     ;;
   *.dmg)
-    MOUNT="$(hdiutil attach -nobrowse -readonly "$DOWNLOAD_PATH" | awk '/\\/Volumes\\// {print $3; exit}')"
-    ditto "$MOUNT"/*.app "$EXTRACT_DIR/otto.app"
-    hdiutil detach "$MOUNT" >/dev/null
+    MOUNTED_DMG="$WORK_DIR/mount"
+    mkdir -p "$MOUNTED_DMG"
+    hdiutil attach -nobrowse -readonly -mountpoint "$MOUNTED_DMG" "$DOWNLOAD_PATH" >/dev/null
+    DMG_APP="$(find "$MOUNTED_DMG" -maxdepth 1 -name '*.app' -type d | head -1)"
+    if [[ -z "$DMG_APP" ]]; then
+      echo "Downloaded DMG did not contain a macOS .app bundle" >&2
+      exit 1
+    fi
+    ditto "$DMG_APP" "$EXTRACT_DIR/otto.app"
+    hdiutil detach "$MOUNTED_DMG" >/dev/null
+    MOUNTED_DMG=""
     ;;
   *)
     echo "Unsupported desktop asset type: $ASSET_NAME" >&2
@@ -140,6 +151,9 @@ rm -rf "$TMP_TARGET"
 ditto "$SOURCE_APP" "$TMP_TARGET"
 plist_env_set "$TMP_TARGET/Contents/Info.plist" OTTO_RELEASE_TAG "$TAG"
 plist_env_set "$TMP_TARGET/Contents/Info.plist" OTTO_BUILD_BRANCH "release/$TAG"
+xattr -cr "$TMP_TARGET" >/dev/null 2>&1 || true
+codesign --force --deep --sign - "$TMP_TARGET" >/dev/null
+codesign --verify --deep --strict "$TMP_TARGET" >/dev/null
 
 if pgrep -f "$TARGET_APP/Contents/MacOS/otto" >/dev/null 2>&1; then
   pkill -f "$TARGET_APP/Contents/MacOS/otto" || true
@@ -148,9 +162,6 @@ fi
 
 rm -rf "$TARGET_APP"
 mv "$TMP_TARGET" "$TARGET_APP"
-xattr -cr "$TARGET_APP" >/dev/null 2>&1 || true
-codesign --force --deep --sign - "$TARGET_APP" >/dev/null
-codesign --verify --deep --strict "$TARGET_APP" >/dev/null
 
 echo "installed_app=$TARGET_APP"
 echo "release_tag=$TAG"
