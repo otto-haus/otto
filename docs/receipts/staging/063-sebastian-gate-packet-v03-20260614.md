@@ -1,7 +1,7 @@
 # 063 — Sebastian gate packet (v0.1.3 draft — hold)
 
 Date: 2026-06-14  
-Branch: `ship/functional-labs` @ `ec6e7e5` (integration codename — **not** product semver)  
+Branch: `ship/functional-labs` @ `b3861d5` (integration codename — **not** product semver)  
 Tag: **`v0.1.3`** (GitHub pre-release on integration line). Sebastian gate sign-off still required before calling this **shipped**.
 
 ## What to try (staging only)
