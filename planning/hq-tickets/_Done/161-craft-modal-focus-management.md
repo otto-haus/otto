@@ -60,3 +60,39 @@ a no-regression screenshot of `#settings` (unchanged).
 ## Blocker log
 
 Leave blank unless blocked.
+
+## Review - 2026-06-14 Codex
+
+Verdict: +1.
+
+Done-when mapping:
+
+- Opening a Modal moves focus to the dialog; closing restores it to the trigger:
+  `docs/receipts/staging/pr-151/modal-focus-proof.json` shows focus started on
+  `#trigger`, moved to `.modal__dialog[role="dialog"][tabindex="-1"]`, resolved
+  the title `Permission required`, then returned to `#trigger` after Escape.
+- Visual proof: `docs/receipts/staging/pr-151/modal-focus-open.png`.
+- Typecheck: `bun run --cwd apps/desktop typecheck` passed.
+- No visual/CSS change: PR changes only `Modal.tsx` focus attributes/effects and
+  ticket/proof files; `styles.css` is untouched.
+
+Additional verification:
+
+```sh
+bun install --frozen-lockfile
+bun run typecheck
+bun run --cwd apps/desktop typecheck
+bun run --cwd apps/desktop electron:typecheck
+git diff --check
+bun test
+bun run verify:v0
+task staging
+```
+
+Result: all passed on 2026-06-14. Full `bun test` result was 221 pass, 1 skip,
+0 fail, 738 expect calls. `verify:v0` passed 5/5. Staging refreshed
+`/Applications/otto-staging.app` with isolated staging home/profile on port
+9445.
+
+Notes: a full Tab-cycle focus trap remains out of scope per this ticket. This
+review only accepts the stated initial-focus and restore-focus slice.
