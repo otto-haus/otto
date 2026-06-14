@@ -47,7 +47,7 @@ OTTO_PAGES_BRANCH=main OTTO_PAGES_ALLOW_PRODUCTION=1 bash site/deploy-pages.sh
 - Static root: `site/` — no build command
 - Default URL: `https://otto-haus.pages.dev`
 - Production deploys require `OTTO_PAGES_ALLOW_PRODUCTION=1` and Sebastian approval in the moment.
-- **Apex `otto.haus`:** not verified live on Pages; attach custom domain on **Pages → otto-haus** only after Sebastian approves the DNS/custom-domain move.
+- **Apex `otto.haus`:** not verified live on Pages from this review environment. Attach custom domain on **Pages → otto-haus**, not on a Worker, only after Sebastian approves the DNS/custom-domain move. If Cloudflare shows `pending` / `CNAME record not set` and the zone is already on Cloudflare, use **Activate domain** / **Complete setup** in the dashboard so Cloudflare writes the apex record; remove any leftover Worker custom domain first.
 - Optional staging subdomain: `staging.otto.haus` when approved
 
 **GitHub Pages / Render static**

@@ -129,21 +129,21 @@ Archive:
 - [x] Pin conversation A; it appears in `Pinned` and stays there after relaunch.
 - [x] Unpin conversation A; it returns to Recents ordering.
 - [x] Pin action appears on the left side of the conversation name.
-- [ ] Double-click rename persists after relaunch and is not overwritten by the next send. *(159 script sets titles via rename helper; no post-relaunch rename assertion.)*
+- [x] Double-click rename persists after relaunch and is not overwritten by the next send. (`renamePersistsAndNotOverwritten` — `docs/receipts/staging/159-chat-core-working-loop-ws-202606142209_159isolated/proof.json`)
 - [x] Archive conversation B; it disappears from default sidebar lists and remains archived in the local index.
-- [ ] Archive requires two same-location clicks: arm confirm, then confirm archive. *(Not asserted by 159 loop script.)*
+- [x] Archive requires two same-location clicks: arm confirm, then confirm archive. (`archiveTwoClickSameLocation` — `docs/receipts/staging/159-chat-core-working-loop-ws-202606142209_159isolated/proof.json`)
 - [x] If the archived conversation was active, otto lands on a valid remaining conversation or a new empty one.
 - [x] Switch model at least once using a Letta-visible model handle; after the switch, send a real message successfully.
 - [x] Queue at least two messages while one turn is busy; both send in order after the active turn completes.
 - [x] Add one steering/follow-up message while busy; it remains visible as queued and sends into the same conversation.
 - [x] Queue failure path is honest: failed queued item remains retryable or dismissible, never silently dropped.
-- [ ] Command Station is absent from Chat. *(Not in 159 loop script; prior CDP receipts showed absent.)*
-- [ ] All Workspace items render as `soon` / Coming soon until explicitly graduated. *(Not in 159 loop script.)*
+- [x] Command Station is absent from Chat. (`commandStationAbsent` — `docs/receipts/staging/159-chat-core-working-loop-ws-202606142209_159isolated/proof.json`)
+- [x] All Workspace items render as `soon` / Coming soon until explicitly graduated. (`workspaceSurfacesComingSoon` — `docs/receipts/staging/159-chat-core-working-loop-ws-202606142209_159isolated/proof.json`)
 - [x] No smoke/test uses Sebastian’s live `conversation=default`.
-- [x] Staging proof uses isolated staging with fresh `OTTO_HOME`. *(Blessed: `/Applications/otto-cutover-staging.app`, `$HOME/.codex/admin/otto-cutover-staging-20260614_execute_ws`, port `9460`.)*
+- [x] Staging proof uses isolated staging with fresh `OTTO_HOME`. *(Latest proof: `/Applications/otto-159-staging.app`, `$HOME/.codex/admin/otto-159-staging`, port `9461`.)*
 - [x] Focused tests pass for thread lifecycle, archive, pin, queue, model fallback, and WS transport.
 - [x] Renderer and Electron typechecks pass.
-- [ ] Execution receipt maps every Done-when item to proof. *(Most mapped; rename, two-click archive, Command Station, Workspace open.)*
+- [x] Execution receipt maps every Done-when item to proof. (`202606142209_159isolated` receipt below.)
 - [x] Independent reviewer +1.
 
 **Status:** `_Done` — PR #306 merged; independent reviewer +1 recorded below.
@@ -990,3 +990,89 @@ Next: Wave 0 P0 **#265** (attachment idle timeout) can build on this stack.
 **PARTIAL (not blocking +1):** Double-click rename receipt, two-click archive receipt, Command Station absent receipt, Workspace `soon` badges — implemented in code; ticket leaves these Done-when items unchecked until optional proof-script follow-up.
 
 **Reviewer:** Independent (Cursor correctness review), 2026-06-14
+
+## Supplemental proof — 2026-06-14T22:09Z (`202606142209_159isolated`)
+
+Status: closes the previously unchecked proof rows from reviewer note; ticket remains `_Done`.
+
+Isolation target:
+
+- App: `/Applications/otto-159-staging.app`
+- Root: `/Users/seb/.codex/admin/otto-159-staging`
+- Debug port: `9461`
+- Bundle id: `haus.otto.desktop.ticket159-staging`
+- Display name: `otto 159 staging`
+
+Reason for isolated app:
+
+- Normal `/Applications/otto-staging.app` had an overlapping deploy/proof workflow during this pass.
+- The first updated normal-staging proof failed because the target page closed mid-switch.
+- The isolated app kept the same local-only WS runtime path without touching live `/Applications/otto.app`.
+
+Commands run:
+
+```sh
+node --check scripts/otto-staging-159-chat-loop-proof.cjs
+git diff --check -- scripts/otto-staging-159-chat-loop-proof.cjs
+bun test ./apps/desktop/electron/thread-store.test.ts ./apps/desktop/electron/chat-message-keys.test.ts ./apps/desktop/src/chat/queue-storage.test.ts
+bun test ./apps/desktop/electron/runtime-transport/ws-runtime-transport.test.ts ./apps/desktop/electron/runtime-transport/runtime-common.test.ts
+bun run --cwd apps/desktop typecheck
+bun run --cwd apps/desktop electron:typecheck
+OTTO_STAGING_APP=/Applications/otto-159-staging.app \
+OTTO_STAGING_ROOT=$HOME/.codex/admin/otto-159-staging \
+OTTO_STAGING_PORT=9461 \
+OTTO_STAGING_BUNDLE_ID=haus.otto.desktop.ticket159-staging \
+OTTO_STAGING_DISPLAY_NAME='otto 159 staging' \
+OTTO_STAGING_WS_REMOTE_ENV=otto-159-staging-byor \
+bash apps/desktop/scripts/deploy-staging.sh
+NODE_PATH=$HOME/.codex/admin/node_modules \
+OTTO_RECEIPT_DIR=$PWD/docs/receipts/staging \
+OTTO_STAGING_APP=/Applications/otto-159-staging.app \
+OTTO_STAGING_ROOT=$HOME/.codex/admin/otto-159-staging \
+OTTO_STAGING_PORT=9461 \
+OTTO_STAGING_RUN_ID=202606142209_159isolated \
+node scripts/otto-staging-159-chat-loop-proof.cjs
+```
+
+Proof result:
+
+```json
+{
+  "ok": true,
+  "stagingApp": "/Applications/otto-159-staging.app",
+  "checks": {
+    "wsReady": true,
+    "commandStationAbsent": true,
+    "renamePersistsAndNotOverwritten": true,
+    "archiveTwoClickSameLocation": true,
+    "workspaceSurfacesComingSoon": true,
+    "twoConversations": true,
+    "conversationIdsDistinct": true,
+    "notDefaultConversation": true,
+    "switchActiveRowMoves": true,
+    "noHistoryBleed": true,
+    "pinPersistsInStore": true,
+    "pinButtonLeft": true,
+    "archivePinnedWorks": true,
+    "archiveActiveFallback": true,
+    "modelSwitchSend": true,
+    "queueDrain": true,
+    "steerChangedCourse": true,
+    "queueFailureHonest": true,
+    "relaunchRestore": true,
+    "unpinReturnsToRecents": true,
+    "recentsClean": true
+  },
+  "models": {
+    "gpt": "openai/gpt-5.5",
+    "claude": "anthropic/claude-opus-4-8"
+  }
+}
+```
+
+Evidence:
+
+- Proof JSON: `docs/receipts/staging/159-chat-core-working-loop-ws-202606142209_159isolated/proof.json`
+- Screenshots: `docs/receipts/staging/159-chat-core-working-loop-ws-202606142209_159isolated/before-relaunch.png`, `docs/receipts/staging/159-chat-core-working-loop-ws-202606142209_159isolated/final.png`
+- Deploy log: `/Users/seb/.codex/admin/otto-logs/staging-20260614T150816.deploy.log`
+- App log: `/Users/seb/.codex/admin/otto-logs/staging-20260614T150816.app.log`

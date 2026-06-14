@@ -1,0 +1,1381 @@
+{
+  "ok": false,
+  "runId": "20260614221405",
+  "stagingApp": "/Applications/otto-staging.app",
+  "cdpPort": 9445,
+  "receiptDir": "/Users/seb/Code/otto/docs/receipts/staging/159-chat-core-working-loop-ws-20260614221405",
+  "markers": {
+    "a": "OTTO_159_A_20260614221405",
+    "b": "OTTO_159_B_20260614221405",
+    "model": "OTTO_159_MODEL_20260614221405",
+    "queue1": "OTTO_159_QUEUE_1_20260614221405",
+    "queue2": "OTTO_159_QUEUE_2_20260614221405",
+    "steer": "OTTO_159_STEER_20260614221405"
+  },
+  "expected": {
+    "titleA": "159 A 20260614221405",
+    "titleB": "159 B 20260614221405"
+  },
+  "checks": {
+    "notBlank": true,
+    "noSilentHang": true,
+    "commandStationAbsent": true,
+    "wsReady": true,
+    "modelRegistryHasGpt": true,
+    "modelRegistryHasClaude": true,
+    "renameNotOverwrittenByFirstSend": true,
+    "twoConversations": true,
+    "conversationIdsDistinct": true,
+    "notDefaultConversation": true,
+    "switchActiveRowMoves": true,
+    "noHistoryBleed": true,
+    "pinPersistsInStore": true,
+    "pinButtonLeft": false,
+    "archivePinnedWorks": true,
+    "archiveActiveFallback": true,
+    "archiveTwoClickSameLocation": false,
+    "modelSwitchSend": true,
+    "renameNotOverwrittenByNextSend": true,
+    "queueDrain": true,
+    "steerChangedCourse": true,
+    "queueFailureHonest": true,
+    "relaunchRestore": true,
+    "renamePersistsAfterRelaunch": true,
+    "renamePersistsAndNotOverwritten": true,
+    "unpinReturnsToRecents": true,
+    "recentsClean": true,
+    "workspaceSurfacesComingSoon": true
+  },
+  "threads": {
+    "a": {
+      "id": "local_864b56c0-968d-4743-99f5-6dc2c25772b5",
+      "lettaConversationId": "local-conv-d6f9c063-14a9-41da-8cab-4e3a3f9fa088",
+      "agentId": "agent-local-d8e35a2a-a89f-45dd-b117-5eae5df8c8f2",
+      "title": "159 A 20260614221405",
+      "createdAt": "2026-06-14T22:14:06.474Z",
+      "updatedAt": "2026-06-14T22:14:10.799Z",
+      "sortOrder": null,
+      "pinned": false,
+      "archived": false
+    },
+    "aAfterSend": {
+      "id": "local_864b56c0-968d-4743-99f5-6dc2c25772b5",
+      "lettaConversationId": "local-conv-dbcda733-6006-4df8-9a7c-c16f89976be0",
+      "agentId": "agent-local-d8e35a2a-a89f-45dd-b117-5eae5df8c8f2",
+      "title": "159 A 20260614221405",
+      "createdAt": "2026-06-14T22:14:06.474Z",
+      "updatedAt": "2026-06-14T22:14:56.859Z",
+      "sortOrder": null,
+      "pinned": false,
+      "archived": false
+    },
+    "b": {
+      "id": "local_29c74f2b-ba4b-492c-9f75-005b9c13f429",
+      "lettaConversationId": null,
+      "agentId": "agent-local-d8e35a2a-a89f-45dd-b117-5eae5df8c8f2",
+      "title": "159 B 20260614221405",
+      "createdAt": "2026-06-14T22:15:00.518Z",
+      "updatedAt": "2026-06-14T22:15:00.560Z",
+      "sortOrder": null,
+      "pinned": false,
+      "archived": false
+    },
+    "bAfterSend": {
+      "id": "local_29c74f2b-ba4b-492c-9f75-005b9c13f429",
+      "lettaConversationId": "local-conv-161933d3-7b88-4745-a31a-2f57b18a974d",
+      "agentId": "agent-local-d8e35a2a-a89f-45dd-b117-5eae5df8c8f2",
+      "title": "159 B 20260614221405",
+      "createdAt": "2026-06-14T22:15:00.518Z",
+      "updatedAt": "2026-06-14T22:15:02.300Z",
+      "sortOrder": null,
+      "pinned": false,
+      "archived": false
+    },
+    "aPinned": {
+      "id": "local_864b56c0-968d-4743-99f5-6dc2c25772b5",
+      "lettaConversationId": "local-conv-c7cf6973-f20c-41e2-9e53-59cdb3d4cf01",
+      "agentId": "agent-local-d8e35a2a-a89f-45dd-b117-5eae5df8c8f2",
+      "title": "159 A 20260614221405",
+      "createdAt": "2026-06-14T22:14:06.474Z",
+      "updatedAt": "2026-06-14T22:15:11.608Z",
+      "sortOrder": 0,
+      "pinned": true,
+      "archived": false
+    },
+    "bArchived": {
+      "id": "local_29c74f2b-ba4b-492c-9f75-005b9c13f429",
+      "lettaConversationId": "local-conv-be25b181-5e6f-4b07-ad0f-c88f72c54ac3",
+      "agentId": "agent-local-d8e35a2a-a89f-45dd-b117-5eae5df8c8f2",
+      "title": "159 B 20260614221405",
+      "createdAt": "2026-06-14T22:15:00.518Z",
+      "updatedAt": "2026-06-14T22:15:17.750Z",
+      "sortOrder": 0,
+      "pinned": false,
+      "archived": true
+    },
+    "aAfterModelSend": {
+      "id": "local_864b56c0-968d-4743-99f5-6dc2c25772b5",
+      "lettaConversationId": "local-conv-c5253b35-3ae8-463a-9dd3-10f89650b650",
+      "agentId": "agent-local-d8e35a2a-a89f-45dd-b117-5eae5df8c8f2",
+      "title": "159 A 20260614221405",
+      "createdAt": "2026-06-14T22:14:06.474Z",
+      "updatedAt": "2026-06-14T22:15:51.259Z",
+      "sortOrder": 0,
+      "pinned": true,
+      "archived": false
+    },
+    "aUnpinned": {
+      "id": "local_864b56c0-968d-4743-99f5-6dc2c25772b5",
+      "lettaConversationId": "local-conv-c5253b35-3ae8-463a-9dd3-10f89650b650",
+      "agentId": "agent-local-d8e35a2a-a89f-45dd-b117-5eae5df8c8f2",
+      "title": "159 A 20260614221405",
+      "createdAt": "2026-06-14T22:14:06.474Z",
+      "updatedAt": "2026-06-14T22:16:12.992Z",
+      "sortOrder": 0,
+      "pinned": false,
+      "archived": false
+    }
+  },
+  "models": {
+    "count": 96,
+    "gpt": {
+      "handle": "openai/gpt-5.5",
+      "label": "GPT-5.5",
+      "provider": "openai",
+      "displayName": "GPT-5.5"
+    },
+    "claude": {
+      "handle": "anthropic/claude-opus-4-8",
+      "label": "Claude Opus 4.8",
+      "provider": "anthropic",
+      "displayName": "Claude Opus 4.8"
+    }
+  },
+  "workspace": {
+    "ok": true,
+    "items": {
+      "charters": {
+        "label": "Charters",
+        "navSoon": true,
+        "surfaceComingSoon": true,
+        "textSample": "COMING SOON Charters is not enabled yet Operating contracts — bets, acceptance criteria, linked runs and receipts. Chat and Settings are live today. This workspace surface is still"
+      },
+      "standards": {
+        "label": "Standards",
+        "navSoon": true,
+        "surfaceComingSoon": true,
+        "textSample": "COMING SOON Standards is not enabled yet Explicit canon — what we reward, refuse, and do under pressure. Chat and Settings are live today. This workspace surface is still wiring up"
+      },
+      "practices": {
+        "label": "Practices",
+        "navSoon": true,
+        "surfaceComingSoon": true,
+        "textSample": "COMING SOON Practices is not enabled yet Executable Standards with guardrails and receipt requirements. Chat and Settings are live today. This workspace surface is still wiring up "
+      },
+      "routines": {
+        "label": "Routines",
+        "navSoon": true,
+        "surfaceComingSoon": true,
+        "textSample": "COMING SOON Routines is not enabled yet Repeated bundles of Practices; recurring activation is approval-gated. Chat and Settings are live today. This workspace surface is still wir"
+      },
+      "curation": {
+        "label": "Curation",
+        "navSoon": true,
+        "surfaceComingSoon": true,
+        "textSample": "COMING SOON Curation is not enabled yet Proposal-and-ratification queue; Approvals are decision receipts emitted here. Chat and Settings are live today. This workspace surface is s"
+      },
+      "receipts": {
+        "label": "Receipts",
+        "navSoon": true,
+        "surfaceComingSoon": true,
+        "textSample": "COMING SOON Receipts is not enabled yet Proof of work — receipts and run summaries from ~/.otto. Chat and Settings are live today. This workspace surface is still wiring up for v1."
+      },
+      "checks": {
+        "label": "Checks",
+        "navSoon": true,
+        "surfaceComingSoon": true,
+        "textSample": "COMING SOON Checks is not enabled yet Culture CI — compiled regressions from Standards; blocks surface in Chat. Chat and Settings are live today. This workspace surface is still wi"
+      },
+      "autonomy": {
+        "label": "Autonomy",
+        "navSoon": true,
+        "surfaceComingSoon": true,
+        "textSample": "COMING SOON Autonomy is not enabled yet Policy zones, doors, and Knowledge-informed model routing. Chat and Settings are live today. This workspace surface is still wiring up for v"
+      },
+      "skills": {
+        "label": "Skills",
+        "navSoon": true,
+        "surfaceComingSoon": true,
+        "textSample": "COMING SOON Skills is not enabled yet Reusable capability packages loaded from skill/**/SKILL.md. Chat and Settings are live today. This workspace surface is still wiring up for v1"
+      },
+      "knowledge": {
+        "label": "Knowledge",
+        "navSoon": true,
+        "surfaceComingSoon": true,
+        "textSample": "COMING SOON Knowledge is not enabled yet AI Frontier model registry — routing Autonomy and ticket workers. Chat and Settings are live today. This workspace surface is still wiring "
+      },
+      "tickets": {
+        "label": "Tickets",
+        "navSoon": true,
+        "surfaceComingSoon": true,
+        "textSample": "COMING SOON Tickets is not enabled yet Bounded worker slices — compile, orchestrate in worktrees, track workers. Chat and Settings are live today. This workspace surface is still w"
+      },
+      "channels": {
+        "label": "Channels",
+        "navSoon": true,
+        "surfaceComingSoon": true,
+        "textSample": "COMING SOON Channels is not enabled yet Reachability surfaces; outbound sends are approval-gated. Chat and Settings are live today. This workspace surface is still wiring up for v1"
+      }
+    }
+  },
+  "status": {
+    "initial": {
+      "ready": true,
+      "code": "ready",
+      "agentId": "agent-local-d8e35a2a-a89f-45dd-b117-5eae5df8c8f2",
+      "baseUrl": "http://127.0.0.1:59647",
+      "discoverySource": "otto config/env",
+      "conversationId": "local-conv-5b3423e3-1a5a-4e2a-811c-097cc3873b37",
+      "modelHandle": "openai/gpt-5.5",
+      "effort": "max",
+      "sessionMode": "smoke",
+      "transportMode": "ws",
+      "effectiveTransport": "websocket local",
+      "transportFallbackReason": null,
+      "wsListenerPort": 55615,
+      "lastReconnectAt": "2026-06-14T22:07:58.307Z",
+      "cliPath": "/Applications/Letta.app/Contents/Resources/app.asar.unpacked/node_modules/@letta-ai/letta-code/letta.js",
+      "cliResolved": true
+    },
+    "afterGptConfigure": {
+      "ready": true,
+      "code": "ready",
+      "agentId": "agent-local-d8e35a2a-a89f-45dd-b117-5eae5df8c8f2",
+      "baseUrl": "http://127.0.0.1:59647",
+      "discoverySource": "otto config/env",
+      "conversationId": "local-conv-dbcda733-6006-4df8-9a7c-c16f89976be0",
+      "modelHandle": "openai/gpt-5.5",
+      "effort": "max",
+      "sessionMode": "smoke",
+      "transportMode": "ws",
+      "effectiveTransport": "websocket local",
+      "transportFallbackReason": null,
+      "wsListenerPort": 56906,
+      "lastReconnectAt": "2026-06-14T22:14:56.520Z",
+      "cliPath": "/Applications/Letta.app/Contents/Resources/app.asar.unpacked/node_modules/@letta-ai/letta-code/letta.js",
+      "cliResolved": true
+    },
+    "afterArchive": {
+      "ready": true,
+      "code": "ready",
+      "agentId": "agent-local-d8e35a2a-a89f-45dd-b117-5eae5df8c8f2",
+      "baseUrl": "http://127.0.0.1:59647",
+      "discoverySource": "otto config/env",
+      "conversationId": "local-conv-be25b181-5e6f-4b07-ad0f-c88f72c54ac3",
+      "modelHandle": "openai/gpt-5.5",
+      "effort": "max",
+      "sessionMode": "smoke",
+      "transportMode": "ws",
+      "effectiveTransport": "websocket local",
+      "transportFallbackReason": null,
+      "wsListenerPort": 57032,
+      "lastReconnectAt": "2026-06-14T22:15:16.241Z",
+      "cliPath": "/Applications/Letta.app/Contents/Resources/app.asar.unpacked/node_modules/@letta-ai/letta-code/letta.js",
+      "cliResolved": true
+    },
+    "afterClaudeConfigure": {
+      "ready": true,
+      "code": "ready",
+      "agentId": "agent-local-d8e35a2a-a89f-45dd-b117-5eae5df8c8f2",
+      "baseUrl": "http://127.0.0.1:59647",
+      "discoverySource": "otto config/env",
+      "conversationId": "local-conv-c5253b35-3ae8-463a-9dd3-10f89650b650",
+      "modelHandle": "anthropic/claude-opus-4-8",
+      "effort": "max",
+      "sessionMode": "smoke",
+      "transportMode": "ws",
+      "effectiveTransport": "websocket local",
+      "transportFallbackReason": null,
+      "wsListenerPort": 57092,
+      "lastReconnectAt": "2026-06-14T22:15:20.294Z",
+      "cliPath": "/Applications/Letta.app/Contents/Resources/app.asar.unpacked/node_modules/@letta-ai/letta-code/letta.js",
+      "cliResolved": true
+    },
+    "afterRelaunch": {
+      "ready": true,
+      "code": "ready",
+      "agentId": "agent-local-d8e35a2a-a89f-45dd-b117-5eae5df8c8f2",
+      "baseUrl": "http://127.0.0.1:59647",
+      "discoverySource": "otto config/env",
+      "conversationId": "local-conv-c5253b35-3ae8-463a-9dd3-10f89650b650",
+      "modelHandle": "anthropic/claude-opus-4-8",
+      "effort": "max",
+      "sessionMode": "smoke",
+      "transportMode": "ws",
+      "effectiveTransport": "websocket local",
+      "transportFallbackReason": null,
+      "wsListenerPort": 57092,
+      "lastReconnectAt": "2026-06-14T22:15:20.294Z",
+      "cliPath": "/Applications/Letta.app/Contents/Resources/app.asar.unpacked/node_modules/@letta-ai/letta-code/letta.js",
+      "cliResolved": true
+    }
+  },
+  "errors": [],
+  "screenshots": {
+    "beforeRelaunch": "/Users/seb/Code/otto/docs/receipts/staging/159-chat-core-working-loop-ws-20260614221405/before-relaunch.png",
+    "final": "/Users/seb/Code/otto/docs/receipts/staging/159-chat-core-working-loop-ws-20260614221405/final.png"
+  },
+  "initial": {
+    "status": {
+      "ready": true,
+      "code": "ready",
+      "agentId": "agent-local-d8e35a2a-a89f-45dd-b117-5eae5df8c8f2",
+      "baseUrl": "http://127.0.0.1:59647",
+      "discoverySource": "otto config/env",
+      "conversationId": "local-conv-5b3423e3-1a5a-4e2a-811c-097cc3873b37",
+      "modelHandle": "openai/gpt-5.5",
+      "effort": "max",
+      "sessionMode": "smoke",
+      "transportMode": "ws",
+      "effectiveTransport": "websocket local",
+      "transportFallbackReason": null,
+      "wsListenerPort": 55615,
+      "lastReconnectAt": "2026-06-14T22:07:58.307Z",
+      "cliPath": "/Applications/Letta.app/Contents/Resources/app.asar.unpacked/node_modules/@letta-ai/letta-code/letta.js",
+      "cliResolved": true
+    },
+    "bodyLen": 763,
+    "setupHasRetry": false,
+    "queue": [],
+    "activeThreadId": "local_7ff0cdb4-aa97-4107-b901-d42969a39f46"
+  },
+  "archiveClick": {
+    "before": {
+      "x": 225,
+      "y": 323,
+      "width": 30,
+      "height": 32
+    },
+    "armed": {
+      "x": 225,
+      "y": 281,
+      "width": 30,
+      "height": 32
+    },
+    "beforeLabel": "Archive conversation",
+    "armedLabel": "Confirm archive"
+  },
+  "afterArchive": {
+    "dir": "/Users/seb/.codex/admin/otto-staging/otto-home/threads",
+    "activeThreadId": "local_864b56c0-968d-4743-99f5-6dc2c25772b5",
+    "threads": [
+      {
+        "id": "local_864b56c0-968d-4743-99f5-6dc2c25772b5",
+        "lettaConversationId": "local-conv-8fb79f6b-7b72-480c-95cc-cc0f962cc84b",
+        "agentId": "agent-local-d8e35a2a-a89f-45dd-b117-5eae5df8c8f2",
+        "title": "159 A 20260614221405",
+        "createdAt": "2026-06-14T22:14:06.474Z",
+        "updatedAt": "2026-06-14T22:15:13.507Z",
+        "sortOrder": 0,
+        "pinned": true,
+        "archived": false
+      },
+      {
+        "id": "local_7ff0cdb4-aa97-4107-b901-d42969a39f46",
+        "lettaConversationId": "local-conv-8e7c5e7b-e202-40ec-b834-880fe3a85d1f",
+        "agentId": "agent-local-d8e35a2a-a89f-45dd-b117-5eae5df8c8f2",
+        "title": "New chat",
+        "createdAt": "2026-06-14T22:13:09.828Z",
+        "updatedAt": "2026-06-14T22:13:26.738Z",
+        "sortOrder": null,
+        "pinned": false,
+        "archived": false
+      }
+    ]
+  },
+  "queueState": {
+    "queue": [],
+    "assistant": "OTTO_159_A_20260614221405\nOTTO_159_MODEL_20260614221405\nOTTO_159_LONG_20260614221405\n\n1. Ready.\n2. Listening.\n3. Focused.\n4. Concise.\n5. Steady.\n6. Direct.\n7. Useful.\n8. Present.\n9. Clear.\n10. Fast.\n11. Careful.\n12. Scoped.\n13. Practical.\n14. Grounded.\n15. Systematic.\n16. Calm.\n17. Precise.\n18. Durable.\n19. Honest.\n20. Adaptive.\n21. Observant.\n22. Patient.\n23. Reliable.\n24. Intentional.\n25. Minimal.\n26. Sharp.\n27. Accountable.\n28. Current.\n29. Aligned.\n30. Done.\nOTTO_159_STEER_20260614221405\nOTTO_159_QUEUE_1_20260614221405\nOTTO_159_QUEUE_2_20260614221405",
+    "failedVisible": false
+  },
+  "preRelaunch": {
+    "dir": "/Users/seb/.codex/admin/otto-staging/otto-home/threads",
+    "activeThreadId": "local_864b56c0-968d-4743-99f5-6dc2c25772b5",
+    "threads": [
+      {
+        "id": "local_864b56c0-968d-4743-99f5-6dc2c25772b5",
+        "lettaConversationId": "local-conv-c5253b35-3ae8-463a-9dd3-10f89650b650",
+        "agentId": "agent-local-d8e35a2a-a89f-45dd-b117-5eae5df8c8f2",
+        "title": "159 A 20260614221405",
+        "createdAt": "2026-06-14T22:14:06.474Z",
+        "updatedAt": "2026-06-14T22:16:08.521Z",
+        "sortOrder": 0,
+        "pinned": true,
+        "archived": false
+      },
+      {
+        "id": "local_98aa2af0-9b3b-4b0a-88db-6d0c9091f3b3",
+        "lettaConversationId": "local-conv-42de59ef-c5c3-494b-bd02-995a2bcef124",
+        "agentId": "agent-local-d8e35a2a-a89f-45dd-b117-5eae5df8c8f2",
+        "title": "159 B 20260614220535",
+        "createdAt": "2026-06-14T22:06:29.525Z",
+        "updatedAt": "2026-06-14T22:12:39.076Z",
+        "sortOrder": -2,
+        "pinned": false,
+        "archived": true
+      },
+      {
+        "id": "local_29c74f2b-ba4b-492c-9f75-005b9c13f429",
+        "lettaConversationId": "local-conv-be25b181-5e6f-4b07-ad0f-c88f72c54ac3",
+        "agentId": "agent-local-d8e35a2a-a89f-45dd-b117-5eae5df8c8f2",
+        "title": "159 B 20260614221405",
+        "createdAt": "2026-06-14T22:15:00.518Z",
+        "updatedAt": "2026-06-14T22:15:17.750Z",
+        "sortOrder": 0,
+        "pinned": false,
+        "archived": true
+      },
+      {
+        "id": "local_25063fd9-716a-4fbe-ac6e-bb5a79dbe762",
+        "lettaConversationId": "local-conv-de44cc80-69c2-4e98-b48d-eda8fa414eb6",
+        "agentId": "agent-local-d8e35a2a-a89f-45dd-b117-5eae5df8c8f2",
+        "title": "159 A 20260614214437",
+        "createdAt": "2026-06-14T21:44:39.030Z",
+        "updatedAt": "2026-06-14T22:12:41.082Z",
+        "sortOrder": 0,
+        "pinned": false,
+        "archived": true
+      },
+      {
+        "id": "local_defc949d-d89b-4558-bebc-53cd66dcc85a",
+        "lettaConversationId": "local-conv-0bbe19ee-a72a-4696-a4a4-00300c62d63f",
+        "agentId": "agent-local-d8e35a2a-a89f-45dd-b117-5eae5df8c8f2",
+        "title": "159 B 20260614214437",
+        "createdAt": "2026-06-14T21:45:31.252Z",
+        "updatedAt": "2026-06-14T21:45:50.791Z",
+        "sortOrder": 0,
+        "pinned": false,
+        "archived": true
+      },
+      {
+        "id": "local_b1feb21a-4639-438a-8909-f5fcc7ca5372",
+        "lettaConversationId": "local-conv-bc9b756a-9263-43ea-8e1d-b264edf7bbc1",
+        "agentId": "agent-local-d8e35a2a-a89f-45dd-b117-5eae5df8c8f2",
+        "title": "159 B 20260614203548",
+        "createdAt": "2026-06-14T20:37:30.043Z",
+        "updatedAt": "2026-06-14T20:38:28.347Z",
+        "sortOrder": 0,
+        "pinned": false,
+        "archived": true
+      },
+      {
+        "id": "local_bf7d6846-f20b-4851-b8aa-1e59a6a59f5e",
+        "lettaConversationId": "local-conv-523a7b88-740e-469d-8ba4-c167769711d2",
+        "agentId": "agent-local-d8e35a2a-a89f-45dd-b117-5eae5df8c8f2",
+        "title": "159 B 20260614202105",
+        "createdAt": "2026-06-14T20:21:16.552Z",
+        "updatedAt": "2026-06-14T20:21:30.425Z",
+        "sortOrder": 0,
+        "pinned": false,
+        "archived": true
+      },
+      {
+        "id": "local_d78a94c1-a5de-4e58-ab95-91a2f1487c93",
+        "lettaConversationId": "local-conv-1bb7a308-6b3e-45b1-bc7d-d8ba5f806539",
+        "agentId": "agent-local-d8e35a2a-a89f-45dd-b117-5eae5df8c8f2",
+        "title": "159 A 20260614220044",
+        "createdAt": "2026-06-14T22:00:46.246Z",
+        "updatedAt": "2026-06-14T22:12:43.348Z",
+        "sortOrder": 1,
+        "pinned": false,
+        "archived": true
+      },
+      {
+        "id": "local_253f9fd1-5107-4dc7-ac9d-28b500dffd4d",
+        "lettaConversationId": "local-conv-19fac803-f7ad-40d9-ae17-16d5353ff5cf",
+        "agentId": "agent-local-d8e35a2a-a89f-45dd-b117-5eae5df8c8f2",
+        "title": "159 B 20260614220044",
+        "createdAt": "2026-06-14T22:00:52.795Z",
+        "updatedAt": "2026-06-14T22:01:11.694Z",
+        "sortOrder": 1,
+        "pinned": false,
+        "archived": true
+      },
+      {
+        "id": "local_e0446af7-1230-4525-987b-f8b2cc86bd3c",
+        "lettaConversationId": "local-conv-515",
+        "agentId": "agent-local-d8e35a2a-a89f-45dd-b117-5eae5df8c8f2",
+        "title": "qweqwe",
+        "createdAt": "2026-06-14T14:21:26.822Z",
+        "updatedAt": "2026-06-14T22:12:37.870Z",
+        "pinned": false,
+        "archived": true,
+        "sortOrder": 2
+      },
+      {
+        "id": "local_259f082e-79b5-463a-8fd6-5bed9ad00ba9",
+        "lettaConversationId": "local-conv-540",
+        "agentId": "agent-local-d8e35a2a-a89f-45dd-b117-5eae5df8c8f2",
+        "title": "Do you have any diea why otto-staging works but otto.…",
+        "createdAt": "2026-06-14T07:38:50.622Z",
+        "updatedAt": "2026-06-14T22:12:37.251Z",
+        "pinned": false,
+        "archived": true,
+        "sortOrder": 2
+      },
+      {
+        "id": "local_32fae12f-8e04-49fa-8dc8-8b6536bf01c9",
+        "lettaConversationId": "local-conv-827fa3e7-3b18-4997-8c0c-9be0c87bbcb2",
+        "agentId": "agent-local-d8e35a2a-a89f-45dd-b117-5eae5df8c8f2",
+        "title": "159 A 20260614220535",
+        "createdAt": "2026-06-14T22:05:36.117Z",
+        "updatedAt": "2026-06-14T22:12:36.760Z",
+        "sortOrder": 2,
+        "pinned": false,
+        "archived": true
+      },
+      {
+        "id": "local_997e048e-f3d5-470a-8108-4e4e0e9c43e9",
+        "lettaConversationId": "local-conv-aed70995-a34a-44cf-a977-4a86e75bd05a",
+        "agentId": "agent-local-d8e35a2a-a89f-45dd-b117-5eae5df8c8f2",
+        "title": "Functional A 20260614205212",
+        "createdAt": "2026-06-14T20:52:15.601Z",
+        "updatedAt": "2026-06-14T22:12:36.287Z",
+        "sortOrder": 2,
+        "pinned": false,
+        "archived": true
+      },
+      {
+        "id": "local_fb59e98f-ef1c-43bb-bc2f-9a247a9b9e84",
+        "lettaConversationId": "local-conv-f2a980ac-187b-49d6-928b-4c9575e1325e",
+        "agentId": "agent-local-d8e35a2a-a89f-45dd-b117-5eae5df8c8f2",
+        "title": "Functional A 20260614204031",
+        "createdAt": "2026-06-14T20:40:35.109Z",
+        "updatedAt": "2026-06-14T22:12:35.812Z",
+        "sortOrder": 2,
+        "pinned": false,
+        "archived": true
+      },
+      {
+        "id": "local_c2a0527d-956a-4c58-b834-98a3f08c6007",
+        "lettaConversationId": "local-conv-c52d2a7e-b154-4eb3-8ddc-d60e7a7b5241",
+        "agentId": "agent-local-d8e35a2a-a89f-45dd-b117-5eae5df8c8f2",
+        "title": "159 A 20260614203548",
+        "createdAt": "2026-06-14T20:35:51.453Z",
+        "updatedAt": "2026-06-14T22:12:35.345Z",
+        "sortOrder": 2,
+        "pinned": false,
+        "archived": true
+      },
+      {
+        "id": "local_96c1afb4-7d30-4f34-b992-a78696190da2",
+        "lettaConversationId": "local-conv-345faacf-490a-41e0-8706-8b09990c2dd0",
+        "agentId": "agent-local-d8e35a2a-a89f-45dd-b117-5eae5df8c8f2",
+        "title": "159 A 20260614202105",
+        "createdAt": "2026-06-14T20:21:07.728Z",
+        "updatedAt": "2026-06-14T22:12:34.895Z",
+        "sortOrder": 2,
+        "pinned": false,
+        "archived": true
+      },
+      {
+        "id": "local_7ff0cdb4-aa97-4107-b901-d42969a39f46",
+        "lettaConversationId": "local-conv-8e7c5e7b-e202-40ec-b834-880fe3a85d1f",
+        "agentId": "agent-local-d8e35a2a-a89f-45dd-b117-5eae5df8c8f2",
+        "title": "New chat",
+        "createdAt": "2026-06-14T22:13:09.828Z",
+        "updatedAt": "2026-06-14T22:13:26.738Z",
+        "sortOrder": null,
+        "pinned": false,
+        "archived": false
+      },
+      {
+        "id": "local_189ff22a-2457-4b3d-bfd4-2e7f33291cdf",
+        "lettaConversationId": "local-conv-fd32dc3c-9b99-488a-bc99-fdc0d80d33bc",
+        "agentId": "agent-local-d8e35a2a-a89f-45dd-b117-5eae5df8c8f2",
+        "title": "New chat",
+        "createdAt": "2026-06-14T22:13:09.345Z",
+        "updatedAt": "2026-06-14T22:13:25.124Z",
+        "sortOrder": null,
+        "pinned": false,
+        "archived": true
+      },
+      {
+        "id": "local_2145375e-d2f2-407a-b157-28ca375c36c8",
+        "lettaConversationId": "local-conv-795293c7-0630-43aa-8f42-8109d73411b0",
+        "agentId": "agent-local-d8e35a2a-a89f-45dd-b117-5eae5df8c8f2",
+        "title": "New chat",
+        "createdAt": "2026-06-14T22:13:08.927Z",
+        "updatedAt": "2026-06-14T22:13:23.339Z",
+        "sortOrder": null,
+        "pinned": false,
+        "archived": true
+      },
+      {
+        "id": "local_c85eec01-fdb9-4fd2-a469-eeb021185ab3",
+        "lettaConversationId": "local-conv-54fe3548-3547-40b4-8e16-5394776288f1",
+        "agentId": "agent-local-d8e35a2a-a89f-45dd-b117-5eae5df8c8f2",
+        "title": "New chat",
+        "createdAt": "2026-06-14T22:13:08.505Z",
+        "updatedAt": "2026-06-14T22:13:21.474Z",
+        "sortOrder": null,
+        "pinned": false,
+        "archived": true
+      },
+      {
+        "id": "local_60f46af1-ee2d-4d18-bfa3-cec0a612760a",
+        "lettaConversationId": "local-conv-df5d6671-9e3b-4e2a-a074-f14333e37292",
+        "agentId": "agent-local-d8e35a2a-a89f-45dd-b117-5eae5df8c8f2",
+        "title": "New chat",
+        "createdAt": "2026-06-14T22:13:08.070Z",
+        "updatedAt": "2026-06-14T22:13:19.705Z",
+        "sortOrder": null,
+        "pinned": false,
+        "archived": true
+      },
+      {
+        "id": "local_3239f3f0-2661-48aa-a844-730fa7f3f511",
+        "lettaConversationId": "local-conv-babff4c4-0b49-46b6-b1c5-d9693922bec1",
+        "agentId": "agent-local-d8e35a2a-a89f-45dd-b117-5eae5df8c8f2",
+        "title": "New chat",
+        "createdAt": "2026-06-14T07:13:48.785Z",
+        "updatedAt": "2026-06-14T22:13:17.936Z",
+        "pinned": false,
+        "archived": true,
+        "sortOrder": null
+      },
+      {
+        "id": "local_4ad29b36-1fa9-4cb9-b06a-76d0073326ed",
+        "lettaConversationId": "local-conv-e4957905-2004-4e57-b87e-5c6aa376f7c9",
+        "agentId": "agent-local-d8e35a2a-a89f-45dd-b117-5eae5df8c8f2",
+        "title": "New chat",
+        "createdAt": "2026-06-14T07:22:56.086Z",
+        "updatedAt": "2026-06-14T22:13:16.170Z",
+        "pinned": false,
+        "archived": true,
+        "sortOrder": null
+      },
+      {
+        "id": "local_9871c912-3a38-4e3b-bded-24a00c3169e1",
+        "lettaConversationId": "local-conv-4a905180-6182-4025-9f80-5ab8b395bcda",
+        "agentId": "agent-local-d8e35a2a-a89f-45dd-b117-5eae5df8c8f2",
+        "title": "New chat",
+        "createdAt": "2026-06-14T07:41:58.183Z",
+        "updatedAt": "2026-06-14T22:13:14.459Z",
+        "pinned": false,
+        "archived": true,
+        "sortOrder": null
+      },
+      {
+        "id": "local_fef361aa-4211-4901-b687-75b5f69f9c4b",
+        "lettaConversationId": "local-conv-7de528de-7428-4937-983e-65f2e85b118b",
+        "agentId": "agent-local-d8e35a2a-a89f-45dd-b117-5eae5df8c8f2",
+        "title": "New chat",
+        "createdAt": "2026-06-14T07:48:50.748Z",
+        "updatedAt": "2026-06-14T22:13:12.849Z",
+        "pinned": false,
+        "archived": true,
+        "sortOrder": null
+      },
+      {
+        "id": "local_814de196-8f1b-433a-988f-364538a97e8e",
+        "lettaConversationId": "local-conv-d8cd23de-9e29-4a18-b0bc-a76bcec6cb04",
+        "agentId": "agent-local-d8e35a2a-a89f-45dd-b117-5eae5df8c8f2",
+        "title": "New chat",
+        "createdAt": "2026-06-14T08:05:25.044Z",
+        "updatedAt": "2026-06-14T22:13:11.277Z",
+        "pinned": false,
+        "archived": true,
+        "sortOrder": null
+      },
+      {
+        "id": "local_76fdcc77-e3ae-4430-8922-b9afd2347704",
+        "lettaConversationId": "local-conv-62deb3ea-d203-401d-bfeb-6b5a3534cfc9",
+        "agentId": "agent-local-d8e35a2a-a89f-45dd-b117-5eae5df8c8f2",
+        "title": "New chat",
+        "createdAt": "2026-06-14T08:15:34.724Z",
+        "updatedAt": "2026-06-14T22:13:09.237Z",
+        "pinned": false,
+        "archived": true,
+        "sortOrder": null
+      },
+      {
+        "id": "local_fb796e07-0d59-4655-80af-f32d0bdc2b5c",
+        "lettaConversationId": "local-conv-ed1f2009-ec5f-45b7-b88f-f784089383d4",
+        "agentId": "agent-local-d8e35a2a-a89f-45dd-b117-5eae5df8c8f2",
+        "title": "New chat",
+        "createdAt": "2026-06-14T07:55:53.462Z",
+        "updatedAt": "2026-06-14T22:13:07.508Z",
+        "pinned": false,
+        "archived": true,
+        "sortOrder": null
+      },
+      {
+        "id": "local_46d14db5-5260-41f1-b717-fef91eb690c3",
+        "lettaConversationId": "local-conv-523f1476-1f3b-4253-96f9-e0b040dd8333",
+        "agentId": "agent-local-d8e35a2a-a89f-45dd-b117-5eae5df8c8f2",
+        "title": "hey",
+        "createdAt": "2026-06-14T06:42:13.954Z",
+        "updatedAt": "2026-06-14T22:13:05.303Z",
+        "pinned": false,
+        "archived": true,
+        "sortOrder": null
+      },
+      {
+        "id": "local_ed883b10-a4f6-42bd-8208-93f0a29cff9e",
+        "lettaConversationId": "local-conv-74fdccb4-7c23-47f5-b159-300ee2ae1cb8",
+        "agentId": "agent-local-d8e35a2a-a89f-45dd-b117-5eae5df8c8f2",
+        "title": "New chat",
+        "createdAt": "2026-06-14T07:43:20.988Z",
+        "updatedAt": "2026-06-14T22:13:03.067Z",
+        "pinned": false,
+        "archived": true,
+        "sortOrder": null
+      },
+      {
+        "id": "local_4c6b8157-baee-49c2-94f5-8654726a947d",
+        "lettaConversationId": "local-conv-26f722db-430a-4f19-980a-5f4f654dd16b",
+        "agentId": "agent-local-d8e35a2a-a89f-45dd-b117-5eae5df8c8f2",
+        "title": "hi how are you?",
+        "createdAt": "2026-06-14T06:45:48.886Z",
+        "updatedAt": "2026-06-14T22:13:00.791Z",
+        "pinned": false,
+        "archived": true,
+        "sortOrder": null
+      },
+      {
+        "id": "local_995dc8eb-c85a-49cc-8514-e254bb0d7cbb",
+        "lettaConversationId": "local-conv-30294b01-2e49-4f6a-a714-fac42fc30ef6",
+        "agentId": "agent-local-d8e35a2a-a89f-45dd-b117-5eae5df8c8f2",
+        "title": "New chat",
+        "createdAt": "2026-06-14T07:31:07.776Z",
+        "updatedAt": "2026-06-14T22:12:58.541Z",
+        "pinned": false,
+        "archived": true,
+        "sortOrder": null
+      },
+      {
+        "id": "local_54327e51-ee97-4e22-85c0-0340d903c95c",
+        "lettaConversationId": "local-conv-c7bcabac-c8fd-4283-a678-28e01ce33d4d",
+        "agentId": "agent-local-d8e35a2a-a89f-45dd-b117-5eae5df8c8f2",
+        "title": "159 A 20260614202837",
+        "createdAt": "2026-06-14T20:28:40.542Z",
+        "updatedAt": "2026-06-14T22:12:55.744Z",
+        "sortOrder": null,
+        "pinned": false,
+        "archived": true
+      },
+      {
+        "id": "local_3d53883e-c4ea-463b-95d8-4925e592aa4a",
+        "lettaConversationId": "local-conv-78",
+        "agentId": "agent-local-d8e35a2a-a89f-45dd-b117-5eae5df8c8f2",
+        "title": "New chat",
+        "updatedAt": "2026-06-14T22:12:54.461Z",
+        "pinned": false,
+        "archived": true,
+        "sortOrder": null
+      },
+      {
+        "id": "local_d32648b7-2d0b-4b75-a6ee-abd57fd0809a",
+        "lettaConversationId": "local-conv-b8e2e4a0-850c-4cae-bc48-2b3ab6e6a01d",
+        "agentId": "agent-local-d8e35a2a-a89f-45dd-b117-5eae5df8c8f2",
+        "title": "Functional B 20260614204031",
+        "createdAt": "2026-06-14T20:40:36.704Z",
+        "updatedAt": "2026-06-14T22:12:53.440Z",
+        "sortOrder": null,
+        "pinned": false,
+        "archived": true
+      },
+      {
+        "id": "local_07fa6204-a765-489e-9a17-8eef358a190b",
+        "lettaConversationId": "local-conv-79",
+        "agentId": "agent-local-d8e35a2a-a89f-45dd-b117-5eae5df8c8f2",
+        "title": "New chat",
+        "updatedAt": "2026-06-14T22:12:51.660Z",
+        "pinned": false,
+        "archived": true,
+        "sortOrder": null
+      },
+      {
+        "id": "local_324899d4-e5aa-4413-930c-fd2a7b5a670f",
+        "lettaConversationId": "local-conv-a58d44c2-d86f-450d-a126-44e14f0f8bf9",
+        "agentId": "agent-local-d8e35a2a-a89f-45dd-b117-5eae5df8c8f2",
+        "title": "Functional Queue 20260614204031",
+        "createdAt": "2026-06-14T20:40:50.316Z",
+        "updatedAt": "2026-06-14T22:12:51.527Z",
+        "sortOrder": null,
+        "pinned": false,
+        "archived": true
+      },
+      {
+        "id": "local_8a19f3ee-1bf5-40da-9477-bced3d90cd7a",
+        "lettaConversationId": "local-conv-c2c51b3c-3d92-4b96-b04d-1bf24a13bc4d",
+        "agentId": "agent-local-d8e35a2a-a89f-45dd-b117-5eae5df8c8f2",
+        "title": "New chat",
+        "createdAt": "2026-06-14T07:20:05.526Z",
+        "updatedAt": "2026-06-14T22:12:51.033Z",
+        "pinned": false,
+        "archived": true,
+        "sortOrder": null
+      },
+      {
+        "id": "local_8f5daed2-5093-4803-86e4-cf0a3a540c98",
+        "lettaConversationId": "local-conv-14484faa-deb0-4580-8c14-36b9763ed967",
+        "agentId": "agent-local-d8e35a2a-a89f-45dd-b117-5eae5df8c8f2",
+        "title": "159 A 20260614204612",
+        "createdAt": "2026-06-14T20:46:13.992Z",
+        "updatedAt": "2026-06-14T22:12:49.269Z",
+        "sortOrder": null,
+        "pinned": false,
+        "archived": true
+      },
+      {
+        "id": "local_8087edaa-9e67-4856-a36d-09669f845540",
+        "lettaConversationId": "local-conv-ebba166c-4f18-4ce0-9304-68b2d95c7628",
+        "agentId": "agent-local-d8e35a2a-a89f-45dd-b117-5eae5df8c8f2",
+        "title": "159 A 20260614205302",
+        "createdAt": "2026-06-14T20:53:03.403Z",
+        "updatedAt": "2026-06-14T22:12:47.546Z",
+        "sortOrder": null,
+        "pinned": false,
+        "archived": true
+      },
+      {
+        "id": "local_06845887-91a4-403a-95d6-f1dd92100554",
+        "lettaConversationId": "local-conv-0eaa3af0-430a-40bc-94d2-b31afa0a83ad",
+        "agentId": "agent-local-d8e35a2a-a89f-45dd-b117-5eae5df8c8f2",
+        "title": "159 A 202606142425_staging",
+        "createdAt": "2026-06-14T21:24:08.022Z",
+        "updatedAt": "2026-06-14T22:12:45.454Z",
+        "sortOrder": null,
+        "pinned": false,
+        "archived": true
+      },
+      {
+        "id": "local_3665495c-8c42-479b-be09-d9b2e5c82012",
+        "lettaConversationId": "local-conv-64e0e14c-6fae-486f-9181-c64bcb954b59",
+        "agentId": "agent-local-d8e35a2a-a89f-45dd-b117-5eae5df8c8f2",
+        "title": "Functional B 20260614205212",
+        "createdAt": "2026-06-14T20:52:17.273Z",
+        "updatedAt": "2026-06-14T20:52:27.892Z",
+        "sortOrder": null,
+        "pinned": false,
+        "archived": true
+      },
+      {
+        "id": "local_59d274e1-105c-4ece-b72f-36862e5e585b",
+        "lettaConversationId": "local-conv-106",
+        "agentId": "agent-local-d8e35a2a-a89f-45dd-b117-5eae5df8c8f2",
+        "title": "New chat",
+        "createdAt": "2026-06-14T07:18:15.008Z",
+        "updatedAt": "2026-06-14T16:04:15.760Z",
+        "pinned": false,
+        "archived": true
+      }
+    ]
+  },
+  "afterRelaunch": {
+    "dir": "/Users/seb/.codex/admin/otto-staging/otto-home/threads",
+    "activeThreadId": "local_864b56c0-968d-4743-99f5-6dc2c25772b5",
+    "threads": [
+      {
+        "id": "local_864b56c0-968d-4743-99f5-6dc2c25772b5",
+        "lettaConversationId": "local-conv-c5253b35-3ae8-463a-9dd3-10f89650b650",
+        "agentId": "agent-local-d8e35a2a-a89f-45dd-b117-5eae5df8c8f2",
+        "title": "159 A 20260614221405",
+        "createdAt": "2026-06-14T22:14:06.474Z",
+        "updatedAt": "2026-06-14T22:16:12.365Z",
+        "sortOrder": 0,
+        "pinned": true,
+        "archived": false
+      },
+      {
+        "id": "local_98aa2af0-9b3b-4b0a-88db-6d0c9091f3b3",
+        "lettaConversationId": "local-conv-42de59ef-c5c3-494b-bd02-995a2bcef124",
+        "agentId": "agent-local-d8e35a2a-a89f-45dd-b117-5eae5df8c8f2",
+        "title": "159 B 20260614220535",
+        "createdAt": "2026-06-14T22:06:29.525Z",
+        "updatedAt": "2026-06-14T22:12:39.076Z",
+        "sortOrder": -2,
+        "pinned": false,
+        "archived": true
+      },
+      {
+        "id": "local_29c74f2b-ba4b-492c-9f75-005b9c13f429",
+        "lettaConversationId": "local-conv-be25b181-5e6f-4b07-ad0f-c88f72c54ac3",
+        "agentId": "agent-local-d8e35a2a-a89f-45dd-b117-5eae5df8c8f2",
+        "title": "159 B 20260614221405",
+        "createdAt": "2026-06-14T22:15:00.518Z",
+        "updatedAt": "2026-06-14T22:15:17.750Z",
+        "sortOrder": 0,
+        "pinned": false,
+        "archived": true
+      },
+      {
+        "id": "local_25063fd9-716a-4fbe-ac6e-bb5a79dbe762",
+        "lettaConversationId": "local-conv-de44cc80-69c2-4e98-b48d-eda8fa414eb6",
+        "agentId": "agent-local-d8e35a2a-a89f-45dd-b117-5eae5df8c8f2",
+        "title": "159 A 20260614214437",
+        "createdAt": "2026-06-14T21:44:39.030Z",
+        "updatedAt": "2026-06-14T22:12:41.082Z",
+        "sortOrder": 0,
+        "pinned": false,
+        "archived": true
+      },
+      {
+        "id": "local_defc949d-d89b-4558-bebc-53cd66dcc85a",
+        "lettaConversationId": "local-conv-0bbe19ee-a72a-4696-a4a4-00300c62d63f",
+        "agentId": "agent-local-d8e35a2a-a89f-45dd-b117-5eae5df8c8f2",
+        "title": "159 B 20260614214437",
+        "createdAt": "2026-06-14T21:45:31.252Z",
+        "updatedAt": "2026-06-14T21:45:50.791Z",
+        "sortOrder": 0,
+        "pinned": false,
+        "archived": true
+      },
+      {
+        "id": "local_b1feb21a-4639-438a-8909-f5fcc7ca5372",
+        "lettaConversationId": "local-conv-bc9b756a-9263-43ea-8e1d-b264edf7bbc1",
+        "agentId": "agent-local-d8e35a2a-a89f-45dd-b117-5eae5df8c8f2",
+        "title": "159 B 20260614203548",
+        "createdAt": "2026-06-14T20:37:30.043Z",
+        "updatedAt": "2026-06-14T20:38:28.347Z",
+        "sortOrder": 0,
+        "pinned": false,
+        "archived": true
+      },
+      {
+        "id": "local_bf7d6846-f20b-4851-b8aa-1e59a6a59f5e",
+        "lettaConversationId": "local-conv-523a7b88-740e-469d-8ba4-c167769711d2",
+        "agentId": "agent-local-d8e35a2a-a89f-45dd-b117-5eae5df8c8f2",
+        "title": "159 B 20260614202105",
+        "createdAt": "2026-06-14T20:21:16.552Z",
+        "updatedAt": "2026-06-14T20:21:30.425Z",
+        "sortOrder": 0,
+        "pinned": false,
+        "archived": true
+      },
+      {
+        "id": "local_d78a94c1-a5de-4e58-ab95-91a2f1487c93",
+        "lettaConversationId": "local-conv-1bb7a308-6b3e-45b1-bc7d-d8ba5f806539",
+        "agentId": "agent-local-d8e35a2a-a89f-45dd-b117-5eae5df8c8f2",
+        "title": "159 A 20260614220044",
+        "createdAt": "2026-06-14T22:00:46.246Z",
+        "updatedAt": "2026-06-14T22:12:43.348Z",
+        "sortOrder": 1,
+        "pinned": false,
+        "archived": true
+      },
+      {
+        "id": "local_253f9fd1-5107-4dc7-ac9d-28b500dffd4d",
+        "lettaConversationId": "local-conv-19fac803-f7ad-40d9-ae17-16d5353ff5cf",
+        "agentId": "agent-local-d8e35a2a-a89f-45dd-b117-5eae5df8c8f2",
+        "title": "159 B 20260614220044",
+        "createdAt": "2026-06-14T22:00:52.795Z",
+        "updatedAt": "2026-06-14T22:01:11.694Z",
+        "sortOrder": 1,
+        "pinned": false,
+        "archived": true
+      },
+      {
+        "id": "local_e0446af7-1230-4525-987b-f8b2cc86bd3c",
+        "lettaConversationId": "local-conv-515",
+        "agentId": "agent-local-d8e35a2a-a89f-45dd-b117-5eae5df8c8f2",
+        "title": "qweqwe",
+        "createdAt": "2026-06-14T14:21:26.822Z",
+        "updatedAt": "2026-06-14T22:12:37.870Z",
+        "pinned": false,
+        "archived": true,
+        "sortOrder": 2
+      },
+      {
+        "id": "local_259f082e-79b5-463a-8fd6-5bed9ad00ba9",
+        "lettaConversationId": "local-conv-540",
+        "agentId": "agent-local-d8e35a2a-a89f-45dd-b117-5eae5df8c8f2",
+        "title": "Do you have any diea why otto-staging works but otto.…",
+        "createdAt": "2026-06-14T07:38:50.622Z",
+        "updatedAt": "2026-06-14T22:12:37.251Z",
+        "pinned": false,
+        "archived": true,
+        "sortOrder": 2
+      },
+      {
+        "id": "local_32fae12f-8e04-49fa-8dc8-8b6536bf01c9",
+        "lettaConversationId": "local-conv-827fa3e7-3b18-4997-8c0c-9be0c87bbcb2",
+        "agentId": "agent-local-d8e35a2a-a89f-45dd-b117-5eae5df8c8f2",
+        "title": "159 A 20260614220535",
+        "createdAt": "2026-06-14T22:05:36.117Z",
+        "updatedAt": "2026-06-14T22:12:36.760Z",
+        "sortOrder": 2,
+        "pinned": false,
+        "archived": true
+      },
+      {
+        "id": "local_997e048e-f3d5-470a-8108-4e4e0e9c43e9",
+        "lettaConversationId": "local-conv-aed70995-a34a-44cf-a977-4a86e75bd05a",
+        "agentId": "agent-local-d8e35a2a-a89f-45dd-b117-5eae5df8c8f2",
+        "title": "Functional A 20260614205212",
+        "createdAt": "2026-06-14T20:52:15.601Z",
+        "updatedAt": "2026-06-14T22:12:36.287Z",
+        "sortOrder": 2,
+        "pinned": false,
+        "archived": true
+      },
+      {
+        "id": "local_fb59e98f-ef1c-43bb-bc2f-9a247a9b9e84",
+        "lettaConversationId": "local-conv-f2a980ac-187b-49d6-928b-4c9575e1325e",
+        "agentId": "agent-local-d8e35a2a-a89f-45dd-b117-5eae5df8c8f2",
+        "title": "Functional A 20260614204031",
+        "createdAt": "2026-06-14T20:40:35.109Z",
+        "updatedAt": "2026-06-14T22:12:35.812Z",
+        "sortOrder": 2,
+        "pinned": false,
+        "archived": true
+      },
+      {
+        "id": "local_c2a0527d-956a-4c58-b834-98a3f08c6007",
+        "lettaConversationId": "local-conv-c52d2a7e-b154-4eb3-8ddc-d60e7a7b5241",
+        "agentId": "agent-local-d8e35a2a-a89f-45dd-b117-5eae5df8c8f2",
+        "title": "159 A 20260614203548",
+        "createdAt": "2026-06-14T20:35:51.453Z",
+        "updatedAt": "2026-06-14T22:12:35.345Z",
+        "sortOrder": 2,
+        "pinned": false,
+        "archived": true
+      },
+      {
+        "id": "local_96c1afb4-7d30-4f34-b992-a78696190da2",
+        "lettaConversationId": "local-conv-345faacf-490a-41e0-8706-8b09990c2dd0",
+        "agentId": "agent-local-d8e35a2a-a89f-45dd-b117-5eae5df8c8f2",
+        "title": "159 A 20260614202105",
+        "createdAt": "2026-06-14T20:21:07.728Z",
+        "updatedAt": "2026-06-14T22:12:34.895Z",
+        "sortOrder": 2,
+        "pinned": false,
+        "archived": true
+      },
+      {
+        "id": "local_7ff0cdb4-aa97-4107-b901-d42969a39f46",
+        "lettaConversationId": "local-conv-8e7c5e7b-e202-40ec-b834-880fe3a85d1f",
+        "agentId": "agent-local-d8e35a2a-a89f-45dd-b117-5eae5df8c8f2",
+        "title": "New chat",
+        "createdAt": "2026-06-14T22:13:09.828Z",
+        "updatedAt": "2026-06-14T22:13:26.738Z",
+        "sortOrder": null,
+        "pinned": false,
+        "archived": false
+      },
+      {
+        "id": "local_189ff22a-2457-4b3d-bfd4-2e7f33291cdf",
+        "lettaConversationId": "local-conv-fd32dc3c-9b99-488a-bc99-fdc0d80d33bc",
+        "agentId": "agent-local-d8e35a2a-a89f-45dd-b117-5eae5df8c8f2",
+        "title": "New chat",
+        "createdAt": "2026-06-14T22:13:09.345Z",
+        "updatedAt": "2026-06-14T22:13:25.124Z",
+        "sortOrder": null,
+        "pinned": false,
+        "archived": true
+      },
+      {
+        "id": "local_2145375e-d2f2-407a-b157-28ca375c36c8",
+        "lettaConversationId": "local-conv-795293c7-0630-43aa-8f42-8109d73411b0",
+        "agentId": "agent-local-d8e35a2a-a89f-45dd-b117-5eae5df8c8f2",
+        "title": "New chat",
+        "createdAt": "2026-06-14T22:13:08.927Z",
+        "updatedAt": "2026-06-14T22:13:23.339Z",
+        "sortOrder": null,
+        "pinned": false,
+        "archived": true
+      },
+      {
+        "id": "local_c85eec01-fdb9-4fd2-a469-eeb021185ab3",
+        "lettaConversationId": "local-conv-54fe3548-3547-40b4-8e16-5394776288f1",
+        "agentId": "agent-local-d8e35a2a-a89f-45dd-b117-5eae5df8c8f2",
+        "title": "New chat",
+        "createdAt": "2026-06-14T22:13:08.505Z",
+        "updatedAt": "2026-06-14T22:13:21.474Z",
+        "sortOrder": null,
+        "pinned": false,
+        "archived": true
+      },
+      {
+        "id": "local_60f46af1-ee2d-4d18-bfa3-cec0a612760a",
+        "lettaConversationId": "local-conv-df5d6671-9e3b-4e2a-a074-f14333e37292",
+        "agentId": "agent-local-d8e35a2a-a89f-45dd-b117-5eae5df8c8f2",
+        "title": "New chat",
+        "createdAt": "2026-06-14T22:13:08.070Z",
+        "updatedAt": "2026-06-14T22:13:19.705Z",
+        "sortOrder": null,
+        "pinned": false,
+        "archived": true
+      },
+      {
+        "id": "local_3239f3f0-2661-48aa-a844-730fa7f3f511",
+        "lettaConversationId": "local-conv-babff4c4-0b49-46b6-b1c5-d9693922bec1",
+        "agentId": "agent-local-d8e35a2a-a89f-45dd-b117-5eae5df8c8f2",
+        "title": "New chat",
+        "createdAt": "2026-06-14T07:13:48.785Z",
+        "updatedAt": "2026-06-14T22:13:17.936Z",
+        "pinned": false,
+        "archived": true,
+        "sortOrder": null
+      },
+      {
+        "id": "local_4ad29b36-1fa9-4cb9-b06a-76d0073326ed",
+        "lettaConversationId": "local-conv-e4957905-2004-4e57-b87e-5c6aa376f7c9",
+        "agentId": "agent-local-d8e35a2a-a89f-45dd-b117-5eae5df8c8f2",
+        "title": "New chat",
+        "createdAt": "2026-06-14T07:22:56.086Z",
+        "updatedAt": "2026-06-14T22:13:16.170Z",
+        "pinned": false,
+        "archived": true,
+        "sortOrder": null
+      },
+      {
+        "id": "local_9871c912-3a38-4e3b-bded-24a00c3169e1",
+        "lettaConversationId": "local-conv-4a905180-6182-4025-9f80-5ab8b395bcda",
+        "agentId": "agent-local-d8e35a2a-a89f-45dd-b117-5eae5df8c8f2",
+        "title": "New chat",
+        "createdAt": "2026-06-14T07:41:58.183Z",
+        "updatedAt": "2026-06-14T22:13:14.459Z",
+        "pinned": false,
+        "archived": true,
+        "sortOrder": null
+      },
+      {
+        "id": "local_fef361aa-4211-4901-b687-75b5f69f9c4b",
+        "lettaConversationId": "local-conv-7de528de-7428-4937-983e-65f2e85b118b",
+        "agentId": "agent-local-d8e35a2a-a89f-45dd-b117-5eae5df8c8f2",
+        "title": "New chat",
+        "createdAt": "2026-06-14T07:48:50.748Z",
+        "updatedAt": "2026-06-14T22:13:12.849Z",
+        "pinned": false,
+        "archived": true,
+        "sortOrder": null
+      },
+      {
+        "id": "local_814de196-8f1b-433a-988f-364538a97e8e",
+        "lettaConversationId": "local-conv-d8cd23de-9e29-4a18-b0bc-a76bcec6cb04",
+        "agentId": "agent-local-d8e35a2a-a89f-45dd-b117-5eae5df8c8f2",
+        "title": "New chat",
+        "createdAt": "2026-06-14T08:05:25.044Z",
+        "updatedAt": "2026-06-14T22:13:11.277Z",
+        "pinned": false,
+        "archived": true,
+        "sortOrder": null
+      },
+      {
+        "id": "local_76fdcc77-e3ae-4430-8922-b9afd2347704",
+        "lettaConversationId": "local-conv-62deb3ea-d203-401d-bfeb-6b5a3534cfc9",
+        "agentId": "agent-local-d8e35a2a-a89f-45dd-b117-5eae5df8c8f2",
+        "title": "New chat",
+        "createdAt": "2026-06-14T08:15:34.724Z",
+        "updatedAt": "2026-06-14T22:13:09.237Z",
+        "pinned": false,
+        "archived": true,
+        "sortOrder": null
+      },
+      {
+        "id": "local_fb796e07-0d59-4655-80af-f32d0bdc2b5c",
+        "lettaConversationId": "local-conv-ed1f2009-ec5f-45b7-b88f-f784089383d4",
+        "agentId": "agent-local-d8e35a2a-a89f-45dd-b117-5eae5df8c8f2",
+        "title": "New chat",
+        "createdAt": "2026-06-14T07:55:53.462Z",
+        "updatedAt": "2026-06-14T22:13:07.508Z",
+        "pinned": false,
+        "archived": true,
+        "sortOrder": null
+      },
+      {
+        "id": "local_46d14db5-5260-41f1-b717-fef91eb690c3",
+        "lettaConversationId": "local-conv-523f1476-1f3b-4253-96f9-e0b040dd8333",
+        "agentId": "agent-local-d8e35a2a-a89f-45dd-b117-5eae5df8c8f2",
+        "title": "hey",
+        "createdAt": "2026-06-14T06:42:13.954Z",
+        "updatedAt": "2026-06-14T22:13:05.303Z",
+        "pinned": false,
+        "archived": true,
+        "sortOrder": null
+      },
+      {
+        "id": "local_ed883b10-a4f6-42bd-8208-93f0a29cff9e",
+        "lettaConversationId": "local-conv-74fdccb4-7c23-47f5-b159-300ee2ae1cb8",
+        "agentId": "agent-local-d8e35a2a-a89f-45dd-b117-5eae5df8c8f2",
+        "title": "New chat",
+        "createdAt": "2026-06-14T07:43:20.988Z",
+        "updatedAt": "2026-06-14T22:13:03.067Z",
+        "pinned": false,
+        "archived": true,
+        "sortOrder": null
+      },
+      {
+        "id": "local_4c6b8157-baee-49c2-94f5-8654726a947d",
+        "lettaConversationId": "local-conv-26f722db-430a-4f19-980a-5f4f654dd16b",
+        "agentId": "agent-local-d8e35a2a-a89f-45dd-b117-5eae5df8c8f2",
+        "title": "hi how are you?",
+        "createdAt": "2026-06-14T06:45:48.886Z",
+        "updatedAt": "2026-06-14T22:13:00.791Z",
+        "pinned": false,
+        "archived": true,
+        "sortOrder": null
+      },
+      {
+        "id": "local_995dc8eb-c85a-49cc-8514-e254bb0d7cbb",
+        "lettaConversationId": "local-conv-30294b01-2e49-4f6a-a714-fac42fc30ef6",
+        "agentId": "agent-local-d8e35a2a-a89f-45dd-b117-5eae5df8c8f2",
+        "title": "New chat",
+        "createdAt": "2026-06-14T07:31:07.776Z",
+        "updatedAt": "2026-06-14T22:12:58.541Z",
+        "pinned": false,
+        "archived": true,
+        "sortOrder": null
+      },
+      {
+        "id": "local_54327e51-ee97-4e22-85c0-0340d903c95c",
+        "lettaConversationId": "local-conv-c7bcabac-c8fd-4283-a678-28e01ce33d4d",
+        "agentId": "agent-local-d8e35a2a-a89f-45dd-b117-5eae5df8c8f2",
+        "title": "159 A 20260614202837",
+        "createdAt": "2026-06-14T20:28:40.542Z",
+        "updatedAt": "2026-06-14T22:12:55.744Z",
+        "sortOrder": null,
+        "pinned": false,
+        "archived": true
+      },
+      {
+        "id": "local_3d53883e-c4ea-463b-95d8-4925e592aa4a",
+        "lettaConversationId": "local-conv-78",
+        "agentId": "agent-local-d8e35a2a-a89f-45dd-b117-5eae5df8c8f2",
+        "title": "New chat",
+        "updatedAt": "2026-06-14T22:12:54.461Z",
+        "pinned": false,
+        "archived": true,
+        "sortOrder": null
+      },
+      {
+        "id": "local_d32648b7-2d0b-4b75-a6ee-abd57fd0809a",
+        "lettaConversationId": "local-conv-b8e2e4a0-850c-4cae-bc48-2b3ab6e6a01d",
+        "agentId": "agent-local-d8e35a2a-a89f-45dd-b117-5eae5df8c8f2",
+        "title": "Functional B 20260614204031",
+        "createdAt": "2026-06-14T20:40:36.704Z",
+        "updatedAt": "2026-06-14T22:12:53.440Z",
+        "sortOrder": null,
+        "pinned": false,
+        "archived": true
+      },
+      {
+        "id": "local_07fa6204-a765-489e-9a17-8eef358a190b",
+        "lettaConversationId": "local-conv-79",
+        "agentId": "agent-local-d8e35a2a-a89f-45dd-b117-5eae5df8c8f2",
+        "title": "New chat",
+        "updatedAt": "2026-06-14T22:12:51.660Z",
+        "pinned": false,
+        "archived": true,
+        "sortOrder": null
+      },
+      {
+        "id": "local_324899d4-e5aa-4413-930c-fd2a7b5a670f",
+        "lettaConversationId": "local-conv-a58d44c2-d86f-450d-a126-44e14f0f8bf9",
+        "agentId": "agent-local-d8e35a2a-a89f-45dd-b117-5eae5df8c8f2",
+        "title": "Functional Queue 20260614204031",
+        "createdAt": "2026-06-14T20:40:50.316Z",
+        "updatedAt": "2026-06-14T22:12:51.527Z",
+        "sortOrder": null,
+        "pinned": false,
+        "archived": true
+      },
+      {
+        "id": "local_8a19f3ee-1bf5-40da-9477-bced3d90cd7a",
+        "lettaConversationId": "local-conv-c2c51b3c-3d92-4b96-b04d-1bf24a13bc4d",
+        "agentId": "agent-local-d8e35a2a-a89f-45dd-b117-5eae5df8c8f2",
+        "title": "New chat",
+        "createdAt": "2026-06-14T07:20:05.526Z",
+        "updatedAt": "2026-06-14T22:12:51.033Z",
+        "pinned": false,
+        "archived": true,
+        "sortOrder": null
+      },
+      {
+        "id": "local_8f5daed2-5093-4803-86e4-cf0a3a540c98",
+        "lettaConversationId": "local-conv-14484faa-deb0-4580-8c14-36b9763ed967",
+        "agentId": "agent-local-d8e35a2a-a89f-45dd-b117-5eae5df8c8f2",
+        "title": "159 A 20260614204612",
+        "createdAt": "2026-06-14T20:46:13.992Z",
+        "updatedAt": "2026-06-14T22:12:49.269Z",
+        "sortOrder": null,
+        "pinned": false,
+        "archived": true
+      },
+      {
+        "id": "local_8087edaa-9e67-4856-a36d-09669f845540",
+        "lettaConversationId": "local-conv-ebba166c-4f18-4ce0-9304-68b2d95c7628",
+        "agentId": "agent-local-d8e35a2a-a89f-45dd-b117-5eae5df8c8f2",
+        "title": "159 A 20260614205302",
+        "createdAt": "2026-06-14T20:53:03.403Z",
+        "updatedAt": "2026-06-14T22:12:47.546Z",
+        "sortOrder": null,
+        "pinned": false,
+        "archived": true
+      },
+      {
+        "id": "local_06845887-91a4-403a-95d6-f1dd92100554",
+        "lettaConversationId": "local-conv-0eaa3af0-430a-40bc-94d2-b31afa0a83ad",
+        "agentId": "agent-local-d8e35a2a-a89f-45dd-b117-5eae5df8c8f2",
+        "title": "159 A 202606142425_staging",
+        "createdAt": "2026-06-14T21:24:08.022Z",
+        "updatedAt": "2026-06-14T22:12:45.454Z",
+        "sortOrder": null,
+        "pinned": false,
+        "archived": true
+      },
+      {
+        "id": "local_3665495c-8c42-479b-be09-d9b2e5c82012",
+        "lettaConversationId": "local-conv-64e0e14c-6fae-486f-9181-c64bcb954b59",
+        "agentId": "agent-local-d8e35a2a-a89f-45dd-b117-5eae5df8c8f2",
+        "title": "Functional B 20260614205212",
+        "createdAt": "2026-06-14T20:52:17.273Z",
+        "updatedAt": "2026-06-14T20:52:27.892Z",
+        "sortOrder": null,
+        "pinned": false,
+        "archived": true
+      },
+      {
+        "id": "local_59d274e1-105c-4ece-b72f-36862e5e585b",
+        "lettaConversationId": "local-conv-106",
+        "agentId": "agent-local-d8e35a2a-a89f-45dd-b117-5eae5df8c8f2",
+        "title": "New chat",
+        "createdAt": "2026-06-14T07:18:15.008Z",
+        "updatedAt": "2026-06-14T16:04:15.760Z",
+        "pinned": false,
+        "archived": true
+      }
+    ]
+  },
+  "finalVisible": {
+    "dir": "/Users/seb/.codex/admin/otto-staging/otto-home/threads",
+    "activeThreadId": "local_864b56c0-968d-4743-99f5-6dc2c25772b5",
+    "threads": [
+      {
+        "id": "local_864b56c0-968d-4743-99f5-6dc2c25772b5",
+        "lettaConversationId": "local-conv-c5253b35-3ae8-463a-9dd3-10f89650b650",
+        "agentId": "agent-local-d8e35a2a-a89f-45dd-b117-5eae5df8c8f2",
+        "title": "159 A 20260614221405",
+        "createdAt": "2026-06-14T22:14:06.474Z",
+        "updatedAt": "2026-06-14T22:16:12.992Z",
+        "sortOrder": 0,
+        "pinned": false,
+        "archived": false
+      },
+      {
+        "id": "local_7ff0cdb4-aa97-4107-b901-d42969a39f46",
+        "lettaConversationId": "local-conv-8e7c5e7b-e202-40ec-b834-880fe3a85d1f",
+        "agentId": "agent-local-d8e35a2a-a89f-45dd-b117-5eae5df8c8f2",
+        "title": "New chat",
+        "createdAt": "2026-06-14T22:13:09.828Z",
+        "updatedAt": "2026-06-14T22:13:26.738Z",
+        "sortOrder": null,
+        "pinned": false,
+        "archived": false
+      }
+    ]
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "at": "2026-06-14T22:14:05Z",
+  "project": "otto-haus",
+  "pages_dev": "https://otto-haus.pages.dev",
+  "actions": [
+    "Deleted empty Worker otto (was serving Hello world on apex)",
+    "Re-added Pages custom domain otto.haus",
+    "Pages domain status: pending — CNAME record not set (needs dashboard Activate domain; OAuth token lacks zone:edit)"
+  ],
+  "deploy_command": "bash site/deploy-pages.sh"
+}
