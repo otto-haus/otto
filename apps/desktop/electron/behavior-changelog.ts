@@ -1,5 +1,5 @@
 import type { BehaviorChangelogEntry, BehaviorChangelogResult } from '@otto-haus/core';
-import { OTTO_DIR } from './config-store';
+import { defaultOttoDir } from './config-store';
 import { ConstitutionStore } from './constitution-store';
 import { ProposalStore } from './proposal-store';
 import { ReceiptStore } from './receipt-store';
@@ -63,7 +63,7 @@ export class BehaviorChangelog {
     entries.sort((a, b) => timestampMs(b.timestamp) - timestampMs(a.timestamp));
 
     return {
-      dir: OTTO_DIR,
+      dir: defaultOttoDir(),
       entries,
       window_days: windowDays,
       empty_message: EMPTY_MESSAGE,

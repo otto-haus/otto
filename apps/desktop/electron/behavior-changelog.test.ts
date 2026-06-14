@@ -11,6 +11,8 @@ import { ConstitutionStore } from './constitution-store';
 describe('BehaviorChangelog', () => {
   test('empty week returns honest empty message', () => {
     const tmp = mkdtempSync(join(tmpdir(), 'otto-changelog-'));
+    const originalOttoHome = process.env.OTTO_HOME;
+    process.env.OTTO_HOME = tmp;
     try {
       const proposalsDir = join(tmp, 'curation', 'proposals');
       const receiptsDir = join(tmp, 'receipts');
@@ -24,7 +26,13 @@ describe('BehaviorChangelog', () => {
       const result = changelog.list();
       expect(result.entries).toHaveLength(0);
       expect(result.empty_message).toBe('No behavior changes this week.');
+      expect(result.dir).toBe(tmp);
     } finally {
+      if (originalOttoHome === undefined) {
+        delete process.env.OTTO_HOME;
+      } else {
+        process.env.OTTO_HOME = originalOttoHome;
+      }
       rmSync(tmp, { recursive: true, force: true });
     }
   });
