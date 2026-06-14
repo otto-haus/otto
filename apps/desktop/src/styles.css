@@ -5,6 +5,8 @@
    not shadows), Inter + IBM Plex Mono, status color only on dots/pills, one ink moment. */
 
 :root {
+  color-scheme: light;
+
   --bg: #f8f7f2;        /* warm paper field */
   --bg-2: #efeee8;      /* sidebar parchment */
   --panel: #fffefa;     /* record surface */
