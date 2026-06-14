@@ -56,6 +56,7 @@ async function main() {
     cdpPort: CDP_PORT,
     receiptDir: RECEIPT_DIR,
     checks: {},
+    uiState: null,
     buildInfo: null,
     runtimeStatus: null,
     screenshots: {},
@@ -67,17 +68,22 @@ async function main() {
     const page = await firstPage(browser.contexts()[0]);
     await page.setViewportSize({ width: 1280, height: 720 });
     await page.waitForLoadState('domcontentloaded');
-    await page.waitForTimeout(1500);
+    await page.waitForFunction(() => {
+      const body = document.body?.innerText ?? '';
+      return !document.getElementById('otto-boot-shell') && body.length > 120;
+    }, null, { timeout: TIMEOUT_MS });
+    await page.waitForTimeout(1000);
 
     const initial = await readChatState(page);
+    proof.uiState = initial.uiState;
     proof.runtimeStatus = initial.status;
     proof.buildInfo = initial.buildInfo;
-    proof.checks.nonBlankUi = initial.bodyLen > 120;
-    proof.checks.bootShellGone = initial.bootShellGone;
-    proof.checks.commandStationAbsent = initial.commandStationAbsent;
+    proof.checks.nonBlankUi = initial.uiState.bodyLen > 120;
+    proof.checks.bootShellGone = initial.uiState.bootShellGone;
+    proof.checks.commandStationAbsent = initial.uiState.commandStationAbsent;
     proof.checks.explicitReadinessWhenNotReady =
       initial.status?.ready === true ||
-      (initial.setupVisible && initial.setupHasRetry);
+      (initial.uiState.setupVisible && initial.uiState.setupHasRetry);
     proof.checks.buildMarkerPresent = !!initial.buildInfo?.shortSha;
     proof.checks.buildMarkerMatchesGit =
       !gitHead || !initial.buildInfo?.shortSha || initial.buildInfo.shortSha.startsWith(gitHead);
@@ -130,14 +136,16 @@ async function readChatState(page) {
     const status = window.otto?.runtime?.status ? await window.otto.runtime.status() : null;
     const buildInfo = window.otto?.app?.buildInfo ? await window.otto.app.buildInfo() : null;
     return {
-      bodyLen: body.length,
-      bootShellGone: !document.getElementById('otto-boot-shell'),
-      commandStationAbsent:
-        !document.querySelector('.commandStation') &&
-        !body.includes('COMMAND STATION') &&
-        !body.includes('What needs you'),
-      setupVisible: !!document.querySelector('.chat__setup'),
-      setupHasRetry: body.includes('Retry') && body.includes('Open Settings'),
+      uiState: {
+        bodyLen: body.length,
+        bootShellGone: !document.getElementById('otto-boot-shell'),
+        commandStationAbsent:
+          !document.querySelector('.commandStation') &&
+          !body.includes('COMMAND STATION') &&
+          !body.includes('What needs you'),
+        setupVisible: !!document.querySelector('.chat__setup'),
+        setupHasRetry: body.includes('Retry') && body.includes('Open Settings'),
+      },
       status,
       buildInfo,
     };
