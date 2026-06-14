@@ -48,6 +48,18 @@ tasks:
     desc: v0 release gate (scripts/verify-v0.mjs)
     cmds: [bun run verify:v0]
 
+  docs:dev:
+    desc: DevEx docs preview (Mintlify)
+    cmds: [bun run docs:dev]
+
+  docs:validate:
+    desc: Validate DevEx docs (Mintlify)
+    cmds: [bun run docs:validate]
+
+  docs:links:
+    desc: Check DevEx docs links (Mintlify)
+    cmds: [bun run docs:links]
+
   build:
     desc: Build the desktop app (main + preload + renderer)
     dir: '{{.DESKTOP}}'
