@@ -40,8 +40,10 @@ separate, diverged file and additionally drops the newer `knowledge/` dir.)
 
 ## Out of scope
 
-- Curated omissions (`planning/`, `demo/`, `examples/`, `config/`, `infra/`,
-  `site/`, `channels/`, `checks/`) — not bundled as canon resources; left as-is
+- Curated/non-canon omissions (`planning/`, `demo/`, `examples/`, `config/`,
+  `infra/`, `site/`, `channels/`, `checks/`) — `channels/` and `checks/` are
+  bundled runtime resources, but they are outside this canon-directory map
+  repair; left as-is
 - Any code change
 
 ## Done when
@@ -61,3 +63,34 @@ awk 'NR>=290 && NR<=300 { match($0,/\/[[:space:]]+/); if (RSTART>0) print RSTART
 ## Blocker log
 
 Leave blank unless blocked.
+
+## Execution receipt
+
+- repo path: `/Users/seb/Code/otto-pr-154`
+- branch: `craft/ship-3`
+- files changed:
+  - `README.md`
+  - `planning/hq-tickets/_Done/162-craft-readme-repomap-bundled-canon.md`
+  - `docs/receipts/staging/pr-154/codex-review-readme-repomap.json`
+  - `docs/receipts/staging/pr-154/summary.json`
+- proof:
+  - Verified `standards/`, `practices/`, `routines/`, `autonomy/`, `knowledge/`, and `skill/` all exist in the repo.
+  - Verified `apps/desktop/electron-builder.yml` bundles those six dirs in `extraResources`.
+  - Verified README repo-map description alignment returns a single column: `18`.
+  - `git diff --check` passed.
+  - `bun run typecheck`, `bun run --cwd apps/desktop typecheck`, and `bun run --cwd apps/desktop electron:typecheck` passed.
+  - `bun test` passed: 221 pass, 1 skip, 0 fail, 738 expects.
+  - `bun run verify:v0` passed: 5/5.
+- review repair:
+  - Clarified out-of-scope wording so it no longer implies `channels/` and `checks/` are unbundled; they are bundled runtime resources but outside this canon-directory README map repair.
+
+## Review
+
+Verdict: +1
+
+Reviewer: Codex PR review agent
+
+Notes:
+- The README additions for `autonomy/` and `knowledge/` are accurate and aligned.
+- The original ticket/out-of-scope wording had a false implication about `channels/` and `checks/`; fixed in this review pass.
+- Proof is recorded in `docs/receipts/staging/pr-154/codex-review-readme-repomap.json`.
