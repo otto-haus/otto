@@ -64,3 +64,18 @@ git diff --check
 ## Blocker log
 
 Leave blank unless blocked.
+
+## Review
+
+Verdict: +1
+
+Reviewer: Codex PR review agent
+
+Notes:
+- `task refresh` refuses before build/install without `OTTO_ALLOW_LIVE_REFRESH=1` (exit 201 from go-task precondition).
+- `bash scripts/refresh-otto-app.sh` refuses before build/install without `OTTO_ALLOW_LIVE_REFRESH=1` (exit 2 from script guard).
+- `task --list` now shows `staging` as the safe deploy task with `deploy` alias, while `refresh` is explicitly live-gated.
+- `task build` and `task package` passed and left `apps/desktop/src/data/readiness.json` clean.
+- `task package` no longer emits the previous missing description/author/package-manager warnings; the remaining ASAR notice is pre-existing and documented out of scope.
+- Local verification passed: typechecks, `bun test`, `verify:v0`, `bun audit`, and `task ci`.
+- Data proof recorded in `docs/receipts/staging/pr-157/codex-review-task-command-hygiene.json`.
