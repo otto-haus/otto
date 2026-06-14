@@ -45,7 +45,7 @@ tasks:
     cmds: [bun test]
 
   verify:
-    desc: v0 release gate (scripts/verify-v0.sh)
+    desc: v0 release gate (scripts/verify-v0.mjs)
     cmds: [bun run verify:v0]
 
   build:

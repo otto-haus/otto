@@ -172,7 +172,7 @@ bun install
 Install the Letta Code extension and skills:
 
 ```sh
-./scripts/install.sh
+bun run install-extension
 # then run /reload in Letta Code
 ```
 

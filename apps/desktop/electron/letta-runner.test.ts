@@ -42,6 +42,7 @@ describe('discoverLocalLettaContext', () => {
     expect(discoverLocalLettaContext(config)).toEqual({
       baseUrl: 'http://127.0.0.1:51087',
       agentId: 'agent-local-discovered',
+      agentCandidates: ['agent-local-discovered'],
       source: 'Letta local settings/discovery',
       reason: undefined,
     });
@@ -52,6 +53,7 @@ describe('discoverLocalLettaContext', () => {
 
     expect(discoverLocalLettaContext(config)).toMatchObject({
       agentId: 'agent-local-last',
+      agentCandidates: ['agent-local-last'],
       source: 'Letta local settings/discovery',
     });
   });

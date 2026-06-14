@@ -134,10 +134,10 @@ const ConnectLetta: React.FC = () => {
     return (
       <div className="panel">
         <div className="eyebrow">connect letta</div>
-        <div className="h-sec" style={{ marginTop: 6 }}>Connect Letta</div>
+        <div className="h-sec" style={{ marginTop: 6 }}>Local Letta connection</div>
         <p className="muted" style={{ marginTop: 6 }}>
-Local Letta URL and Agent ID are set here in the desktop app — this is the web preview.
-          For v1, Otto connects to a local Letta runtime. Model/provider keys stay in Letta.
+          The desktop app auto-detects the local Letta runtime and current/default agent.
+          This web preview cannot open the Electron bridge, so manual overrides are disabled here.
         </p>
       </div>
     );
@@ -181,7 +181,7 @@ Local Letta URL and Agent ID are set here in the desktop app — this is the web
             style={inputStyle}
             value={baseUrl}
             onChange={(e) => setBaseUrl(e.target.value)}
-            placeholder="http://127.0.0.1:51087"
+            placeholder="Auto-detect local runtime"
             spellCheck={false}
           />
         </label>
@@ -192,7 +192,7 @@ Local Letta URL and Agent ID are set here in the desktop app — this is the web
             style={inputStyle}
             value={agentId}
             onChange={(e) => setAgentId(e.target.value)}
-            placeholder="agent-..."
+            placeholder="Auto-detect current/default agent"
             spellCheck={false}
           />
         </label>
@@ -318,8 +318,56 @@ export const Settings: React.FC = () => {
   // Live runtime is the source of truth in Electron; the file-backed checklist describes local
   // config only. Never let the readiness panel say "Setup required" while the runtime is connected.
   const liveConnected = rt.electron && !!rt.status?.ready;
+  const liveRows: ReadyItem[] = liveConnected ? [
+    {
+      key: 'runtime',
+      label: 'Letta runtime',
+      required: true,
+      status: 'connected',
+      detail: 'Live Letta session initialized',
+      source: 'RuntimeStatus',
+      action: 'session.initialize() returned ready',
+    },
+    {
+      key: 'agent',
+      label: 'Agent identity',
+      required: true,
+      status: 'configured',
+      detail: rt.status?.agentId ? `agent ${rt.status.agentId}` : 'agent connected',
+      source: 'RuntimeStatus',
+      action: 'Resolved from the live Letta session',
+    },
+    {
+      key: 'model',
+      label: 'Model provider',
+      required: false,
+      status: 'connected',
+      detail: rt.status?.model ?? 'owned by live Letta runtime',
+      source: 'RuntimeStatus',
+      action: 'Configure providers in Letta Desktop / Letta local runtime',
+    },
+    {
+      key: 'memory',
+      label: 'Memory / MemFS',
+      required: true,
+      status: rt.status?.memfsEnabled ? 'connected' : 'configured',
+      detail: rt.status?.memfsEnabled ? 'MemFS enabled by live runtime' : 'Connected through live runtime; MemFS not enabled',
+      source: 'RuntimeStatus',
+      action: rt.status?.memfsEnabled ? 'Available in the initialized session' : 'Enable OTTO_MEMFS=1 only for backends that support it',
+    },
+    {
+      key: 'functions',
+      label: 'Runtime tools',
+      required: false,
+      status: (rt.status?.tools?.length ?? 0) > 0 ? 'configured' : 'not-wired',
+      detail: `${rt.status?.tools?.length ?? 0} tool${(rt.status?.tools?.length ?? 0) === 1 ? '' : 's'} available`,
+      source: 'RuntimeStatus',
+      action: 'Forwarded by the initialized Letta session',
+    },
+  ] : [];
+  const liveByKey = new Map(liveRows.map((r) => [r.key, r]));
   const ready = liveConnected || requiredMissing.length === 0;
-  const group = (keys: string[]) => readiness.filter((r) => keys.includes(r.key));
+  const group = (keys: string[]) => readiness.filter((r) => keys.includes(r.key)).map((r) => liveByKey.get(r.key) ?? r);
 
   return (
     <div className="settingsShell">

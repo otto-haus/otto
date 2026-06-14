@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { RuntimeProvider } from './RuntimeContext';
+import { RuntimeProvider, useRuntimeContext } from './RuntimeContext';
 import { Sidebar, type SurfaceId } from './components/Sidebar';
 import { Icon } from './components/icons';
 import { Chat } from './surfaces/Chat';
@@ -47,7 +47,7 @@ const initialSurface = (): SurfaceId => {
   return VALID.includes(h) ? h : 'chat';
 };
 
-// Honest per-surface status: only Settings is live in v0.1; the other workspace panes are placeholders.
+// Honest per-surface status: only Settings is live in v0.1; workspace panes are placeholders.
 const DATA_SOURCE: Partial<Record<SurfaceId, 'live' | 'coming-soon'>> = {
   settings: 'live',
   charters: 'coming-soon',
@@ -60,6 +60,15 @@ const DATA_SOURCE: Partial<Record<SurfaceId, 'live' | 'coming-soon'>> = {
 };
 
 export function App() {
+  return (
+    <RuntimeProvider>
+      <AppShell />
+    </RuntimeProvider>
+  );
+}
+
+function AppShell() {
+  const rt = useRuntimeContext();
   const [active, setActiveState] = useState<SurfaceId>(initialSurface());
   const [sidebarHidden, setSidebarHidden] = useState(false);
   const setActive = (id: SurfaceId) => {
@@ -69,52 +78,62 @@ export function App() {
   const counts: Partial<Record<SurfaceId, number>> = {};
   const meta = META[active];
 
+  const sourcePill = () => {
+    if (active === 'settings' && rt.electron) {
+      if (rt.status?.ready) return <span className="pill pill--ok">live runtime</span>;
+      if (rt.status) return <span className="pill pill--warn">runtime setup</span>;
+      return <span className="pill">connecting runtime</span>;
+    }
+    if (DATA_SOURCE[active] === 'live') return <span className="pill pill--ok">live runtime</span>;
+    if (DATA_SOURCE[active] === 'coming-soon') return <span className="pill">coming soon</span>;
+    return null;
+  };
+
   return (
-    <RuntimeProvider>
-    <div className={`app${sidebarHidden ? ' app--sidebar-hidden' : ''}`}>
-      {!sidebarHidden && (
-        <Sidebar
-          active={active}
-          onSelect={setActive}
-          counts={counts}
-          onToggleCollapsed={() => setSidebarHidden(true)}
-        />
-      )}
-      <main className="main">
-        {active === 'chat' ? (
-          <div className="content content--chat">
-            <Chat
-              onOpenSettings={() => setActive('settings')}
-              sidebarHidden={sidebarHidden}
-              onToggleSidebar={() => setSidebarHidden(false)}
-            />
-          </div>
-        ) : (
-          <>
-            <header className="topbar">
-              <div className="topbar__title">
-                {sidebarHidden && (
-                  <button type="button" className="topbar__sidebarButton" onClick={() => setSidebarHidden(false)} aria-label="Open sidebar">
-                    {Icon.panel}
-                  </button>
-                )}
-                <div>
-                  <div className="eyebrow">otto workspace</div>
-                  <h1>{meta.title}</h1>
-                  {meta.sub && <div className="topbar__sub">{meta.sub}</div>}
-                </div>
-              </div>
-              <div className="topbar__right">
-                {DATA_SOURCE[active] === 'live' && <span className="pill pill--ok">live runtime</span>}
-                {DATA_SOURCE[active] === 'coming-soon' && <span className="pill">coming soon</span>}
-              </div>
-            </header>
-            <div className="content">{renderSurface(active)}</div>
-          </>
+    <>
+      <div className={`app${sidebarHidden ? ' app--sidebar-hidden' : ''}`}>
+        {!sidebarHidden && (
+          <Sidebar
+            active={active}
+            onSelect={setActive}
+            counts={counts}
+            onToggleCollapsed={() => setSidebarHidden(true)}
+          />
         )}
-      </main>
-    </div>
-    <Onboarding onNavigate={setActive} />
-    </RuntimeProvider>
+        <main className="main">
+          {active === 'chat' ? (
+            <div className="content content--chat">
+              <Chat
+                onOpenSettings={() => setActive('settings')}
+                sidebarHidden={sidebarHidden}
+                onToggleSidebar={() => setSidebarHidden(false)}
+              />
+            </div>
+          ) : (
+            <>
+              <header className="topbar">
+                <div className="topbar__title">
+                  {sidebarHidden && (
+                    <button type="button" className="topbar__sidebarButton" onClick={() => setSidebarHidden(false)} aria-label="Open sidebar">
+                      {Icon.panel}
+                    </button>
+                  )}
+                  <div>
+                    <div className="eyebrow">otto workspace</div>
+                    <h1>{meta.title}</h1>
+                    {meta.sub && <div className="topbar__sub">{meta.sub}</div>}
+                  </div>
+                </div>
+                <div className="topbar__right">
+                  {sourcePill()}
+                </div>
+              </header>
+              <div className="content">{renderSurface(active)}</div>
+            </>
+          )}
+        </main>
+      </div>
+      <Onboarding onNavigate={setActive} />
+    </>
   );
 }

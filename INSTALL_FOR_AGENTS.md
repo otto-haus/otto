@@ -11,6 +11,7 @@ Install Otto locally, verify the repo, and install the Letta Code extension/skil
 - Git is available.
 - Bun is available or can be installed by the human.
 - Letta Code is installed if the user wants slash commands/skills.
+- Use the Bun package scripts below for install and verification; they do not require Bash or WSL.
 - Do not request or print secrets. If a Letta API key is needed, ask the human to enter it in their normal secret manager or local environment.
 
 ## Install
@@ -32,7 +33,7 @@ bun run verify:v0
 ## Install Letta Code extension + skills
 
 ```sh
-./scripts/install.sh
+bun run install-extension
 ```
 
 Then tell the human to run `/reload` in Letta Code.

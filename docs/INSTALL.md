@@ -16,10 +16,12 @@ bun test
 bun run verify:v0
 ```
 
+The install and verify package scripts are cross-platform and do not require Bash or WSL.
+
 ## Letta Code extension + skills
 
 ```sh
-./scripts/install.sh
+bun run install-extension
 ```
 
 Then run `/reload` in Letta Code.
