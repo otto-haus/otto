@@ -78,6 +78,36 @@ describe('runTicketCommand', () => {
     expect(reply?.lines.join('\n')).toContain('receipt-compile-1');
   });
 
+  test('compile existing ticket routes to orchestration guidance without overwriting', async () => {
+    let compileCalled = false;
+    const api = mockTicketApi({
+      tickets: {
+        ...mockTicketApi().tickets,
+        get: async () => ({
+          ticket_id: 'ticket_034',
+          slug: '034',
+          objective: 'Keep the original ticket.',
+          status: 'active',
+          acceptance_criteria: [],
+        }),
+        compile: async () => {
+          compileCalled = true;
+          throw new Error('compile should not be called for existing tickets');
+        },
+      },
+    } as Partial<OttoBridge>);
+
+    const reply = await runTicketCommand(api, 'compile ticket 034 Overwrite the active ticket');
+
+    expect(compileCalled).toBe(false);
+    const text = reply?.lines.join('\n') ?? '';
+    expect(text).toContain('ticket_034 already exists (active).');
+    expect(text).toContain('Keep the original ticket.');
+    expect(text).toContain('orchestrate ticket 034');
+    expect(text).toContain('choose a new ticket slug');
+    expect(text).not.toContain('overwrite via re-compile');
+  });
+
   test('orchestrate ticket returns worker run and receipt lines', async () => {
     const api = mockTicketApi({
       tickets: {
