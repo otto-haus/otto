@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import type { PracticeSpec } from '@otto-haus/core';
 import practicesData from './data/practices.json';
-import { RuntimeProvider } from './RuntimeContext';
+import { RuntimeProvider, useRuntimeContext } from './RuntimeContext';
 import { Sidebar, type SurfaceId } from './components/Sidebar';
 import { Chat } from './surfaces/Chat';
 import {
@@ -60,6 +60,15 @@ const DATA_SOURCE: Partial<Record<SurfaceId, 'file' | 'live' | 'not-wired'>> = {
 };
 
 export function App() {
+  return (
+    <RuntimeProvider>
+      <AppShell />
+    </RuntimeProvider>
+  );
+}
+
+function AppShell() {
+  const rt = useRuntimeContext();
   const [active, setActiveState] = useState<SurfaceId>(initialSurface());
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const setActive = (id: SurfaceId) => {
@@ -71,8 +80,19 @@ export function App() {
   };
   const meta = META[active];
 
+  const sourcePill = () => {
+    if (active === 'settings' && rt.electron) {
+      if (rt.status?.ready) return <span className="pill pill--ok">live runtime</span>;
+      if (rt.status) return <span className="pill pill--warn">runtime setup</span>;
+      return <span className="pill">connecting runtime</span>;
+    }
+    if (DATA_SOURCE[active] === 'file') return <span className="pill pill--ok">file-backed</span>;
+    if (DATA_SOURCE[active] === 'live') return <span className="pill pill--ok">live runtime</span>;
+    if (DATA_SOURCE[active] === 'not-wired') return <span className="pill">not wired</span>;
+    return null;
+  };
+
   return (
-    <RuntimeProvider>
     <div className={`app${sidebarCollapsed ? ' app--sidebar-collapsed' : ''}`}>
       <Sidebar
         active={active}
@@ -93,9 +113,7 @@ export function App() {
                 {meta.sub && <div className="topbar__sub">{meta.sub}</div>}
               </div>
               <div className="topbar__right">
-                {DATA_SOURCE[active] === 'file' && <span className="pill pill--ok">file-backed</span>}
-                {DATA_SOURCE[active] === 'live' && <span className="pill pill--ok">live runtime</span>}
-                {DATA_SOURCE[active] === 'not-wired' && <span className="pill">not wired</span>}
+                {sourcePill()}
               </div>
             </header>
             <div className="content">{renderSurface(active)}</div>
@@ -103,6 +121,5 @@ export function App() {
         )}
       </main>
     </div>
-    </RuntimeProvider>
   );
 }
