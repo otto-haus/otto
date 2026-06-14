@@ -14,5 +14,6 @@ mac:
   target:
     - dir
   category: public.app-category.developer-tools
+  icon: build/icon.icns # the Otto owl, generated from .github/assets/otto-avatar.png
   # Local/unsigned build — re-signed ad-hoc after packaging so it runs on Apple Silicon.
   identity: null

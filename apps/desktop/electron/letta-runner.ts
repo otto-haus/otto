@@ -1,3 +1,4 @@
+import { execFileSync } from 'node:child_process';
 import { randomUUID } from 'node:crypto';
 import type { BrowserWindow } from 'electron';
 import type { PermissionRequest, PermissionResponse, RuntimeStatus, StatusCode } from './shared/types';
@@ -80,7 +81,11 @@ export class LettaRunner {
   private applyConnectionEnv() {
     const key = getSecret('LETTA_API_KEY');
     if (key && !process.env.LETTA_API_KEY) process.env.LETTA_API_KEY = key;
-    const baseUrl = this.config.baseUrl();
+    // Base URL: explicit config/env wins; otherwise auto-discover a running local Letta
+    // server so a normal user never has to find a port. (Letta Code local mode is Otto's
+    // one hard dependency; the spawned CLI otherwise defaults to Letta Cloud and fails for
+    // a local agent.)
+    const baseUrl = this.config.baseUrl() ?? discoverLocalLettaUrl();
     if (baseUrl && !process.env.LETTA_BASE_URL) process.env.LETTA_BASE_URL = baseUrl;
   }
 
@@ -211,6 +216,30 @@ export class LettaRunner {
 
 function msg(e: unknown): string {
   return e instanceof Error ? e.message : String(e);
+}
+
+/**
+ * Best-effort discovery of a running local Letta server's URL on macOS. A GUI-launched
+ * Otto can't know the (dynamic) port the user's Letta Code chose, so we ask the OS which
+ * loopback port a Letta process is listening on. Returns null if none is found (then the
+ * CLI falls back to its default / the user sets a base URL in Settings).
+ */
+function discoverLocalLettaUrl(): string | null {
+  if (process.platform !== 'darwin') return null;
+  try {
+    const out = execFileSync('lsof', ['-nP', '-iTCP', '-sTCP:LISTEN'], {
+      timeout: 3000,
+      encoding: 'utf8',
+    });
+    for (const line of out.split('\n')) {
+      if (!/letta/i.test(line)) continue; // command column contains "Letta"
+      const m = line.match(/127\.0\.0\.1:(\d+)/);
+      if (m) return `http://127.0.0.1:${m[1]}`;
+    }
+  } catch {
+    // lsof unavailable / blocked — fall through to null
+  }
+  return null;
 }
 
 /** Map a raw connect error to a diagnosis category for the Settings UI. */
