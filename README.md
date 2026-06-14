@@ -28,6 +28,16 @@ behavior.
 
 ---
 
+## Culture CI
+
+otto is CI for agent behavior: **every correction can become a regression test.**
+
+otto turns ratified corrections into executable **Checks**. If an agent says "done" without proof, you correct it once. otto proposes a rule. You ratify it. From then on, future "done" claims must pass the Check — mapped acceptance criteria, attached evidence, and a receipt.
+
+Culture is no longer only a document. It is a test suite.
+
+---
+
 ## What this looks like
 
 Without otto, an agent can remember a correction and still repeat the same mistake.
@@ -93,6 +103,7 @@ otto.
 |---|---|
 | **Standards** | Explicit canon: what the agent rewards, refuses, and does under pressure. |
 | **Practices** | Repeatable behaviors worth preserving. Executable culture. |
+| **Checks** | Executable regressions compiled from ratified Standards — enforce at trigger time; failed Checks write blocked Receipts. |
 | **Routines** | Repeated bundles of Practices. Recurring attention requires approval. |
 | **Charters** | Operating contracts for long-running work: objective, ACs, plan, gates, receipts. |
 | **Approvals** | Scoped, time-bound human ratification for one-way doors. |
@@ -108,7 +119,7 @@ This is the first otto deployment stack, not the definition of otto:
 
 ```txt
 Letta remembers.      Persistent agent memory and runtime continuity.
-otto improves.        Standards, Practices, Curation, Routines, Receipts.
+otto improves.        Standards, Practices, Checks, Curation, Routines, Receipts.
 Paperclip manages.    Goals, tickets, budgets, heartbeats, approvals, audit.
 Discord reaches.      Mobile blockers, approvals, field notes, status.
 ```
