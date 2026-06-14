@@ -302,3 +302,10 @@ Delta vs rev9: dedicated curation + tickets MP4s land
 ### Finding
 
 Rev9 plural-clip gap closed. +1 (re-enactment caveat remains honest).
+
+## Release asset (2026-06-14)
+
+- GitHub pre-release: https://github.com/otto-haus/otto/releases/tag/v0.1.3
+- Asset: `otto-v01-desktop.mp4` (from `demo/out/otto-v01-desktop-walkthrough.mp4`)
+- Receipt: `receipts/otto-v01/demo-release-asset-202606141532Z.md`
+- **Not promoted to Latest** until Sebastian gate (063) approves v0.1.3 ship.
