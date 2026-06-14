@@ -173,6 +173,35 @@ describe('CogneeStore helpers', () => {
     }
   });
 
+  test('latestCapture falls back to legacy at when capturedAt is malformed', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'otto-cognee-legacy-fallback-'));
+    const prevRoot = process.env.OTTO_ROOT;
+    try {
+      process.env.OTTO_ROOT = dir;
+      const captureDir = join(dir, 'receipts/cognee/capture');
+      mkdirSync(captureDir, { recursive: true });
+      writeFileSync(
+        join(captureDir, 'capture-z-invalid.json'),
+        JSON.stringify({
+          id: 'invalid',
+          capturedAt: 'not-a-timestamp',
+          at: '2026-06-13T00:00:00Z',
+          paths: ['/legacy.md'],
+        }),
+      );
+      writeFileSync(
+        join(captureDir, 'capture-a-newer.json'),
+        JSON.stringify({ id: 'newer', capturedAt: '2026-06-14T00:00:00Z', paths: ['/newer.md'] }),
+      );
+
+      expect(new CogneeStore().latestCapture()?.id).toBe('newer');
+    } finally {
+      if (prevRoot !== undefined) process.env.OTTO_ROOT = prevRoot;
+      else delete process.env.OTTO_ROOT;
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
   test('recall smoke snippets use legacy capture at timestamps', () => {
     const dir = mkdtempSync(join(tmpdir(), 'otto-cognee-legacy-at-'));
     const prevRoot = process.env.OTTO_ROOT;

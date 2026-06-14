@@ -266,11 +266,10 @@ function captureTimestampMs(receipt: CogneeCaptureReceipt): number {
 }
 
 function captureTimestamp(receipt: CogneeCaptureReceipt): string {
-  return typeof receipt.capturedAt === 'string'
-    ? receipt.capturedAt
-    : typeof receipt.at === 'string'
-      ? receipt.at
-      : '';
+  if (typeof receipt.capturedAt === 'string' && Number.isFinite(Date.parse(receipt.capturedAt))) {
+    return receipt.capturedAt;
+  }
+  return typeof receipt.at === 'string' ? receipt.at : '';
 }
 
 function resolveCogneeScript(): string {
