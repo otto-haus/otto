@@ -3,6 +3,7 @@ import { dirname, join } from 'node:path';
 import { homedir } from 'node:os';
 import { BrowserWindow, app } from 'electron';
 import { registerIpc } from './ipc';
+import { resolveDevRendererUrl } from './main-security';
 
 let mainWindow: BrowserWindow | null = null;
 
@@ -28,7 +29,7 @@ function createWindow() {
     title: 'otto',
     webPreferences: {
       preload: join(__dirname, '../preload/index.cjs'),
-      sandbox: false,
+      sandbox: true,
       contextIsolation: true,
       nodeIntegration: false,
     },
@@ -37,8 +38,9 @@ function createWindow() {
   registerIpc(win);
 
   // Dev: load the running Vite renderer; Prod: load the built renderer.
-  if (process.env.ELECTRON_RENDERER_URL) {
-    win.loadURL(process.env.ELECTRON_RENDERER_URL);
+  const devRendererUrl = resolveDevRendererUrl(process.env.ELECTRON_RENDERER_URL, app.isPackaged);
+  if (devRendererUrl) {
+    win.loadURL(devRendererUrl);
   } else {
     win.loadFile(join(__dirname, '../renderer/index.html'));
   }
