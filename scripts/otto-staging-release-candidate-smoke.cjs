@@ -87,7 +87,9 @@ async function main() {
 
     await openSettings(page);
     await page.waitForTimeout(400);
-    const settingsMarker = await page.locator('[data-testid="otto-build-marker"]').innerText().catch(() => '');
+    const buildMarker = page.locator('[data-testid="otto-build-marker"]');
+    await buildMarker.scrollIntoViewIfNeeded().catch(() => {});
+    const settingsMarker = await buildMarker.innerText().catch(() => '');
     proof.checks.settingsBuildMarkerVisible = settingsMarker.includes(initial.buildInfo?.shortSha ?? '___none___');
     proof.screenshots.settings = join(RECEIPT_DIR, 'settings-build-marker.png');
     await page.screenshot({ path: proof.screenshots.settings, fullPage: false });
