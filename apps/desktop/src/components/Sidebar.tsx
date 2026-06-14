@@ -12,6 +12,7 @@ export type SurfaceId =
   | 'routines'
   | 'curation'
   | 'receipts'
+  | 'checks'
   | 'autonomy'
   | 'skills'
   | 'knowledge'
@@ -37,6 +38,7 @@ const GROUPS: { group?: string; items: NavDef[] }[] = [
     items: [
       { id: 'curation', label: 'Curation', icon: Icon.curation, shortcut: '⌘6' },
       { id: 'receipts', label: 'Receipts', icon: Icon.receipts, shortcut: '⌘7' },
+      { id: 'checks', label: 'Checks', icon: Icon.check, shortcut: '⌘9' },
       { id: 'autonomy', label: 'Autonomy', icon: Icon.autonomy, shortcut: '⌘8' },
     ],
   },

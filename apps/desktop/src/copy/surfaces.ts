@@ -92,6 +92,13 @@ export const webPreviewEmpty: Record<Exclude<SurfaceId, 'chat' | 'settings'>, We
     path: '~/.otto/channels/',
     next: 'Open the desktop app to configure channels.',
   },
+  checks: {
+    eyebrow: 'culture ci',
+    title: 'Checks compile from ratified Standards.',
+    body: 'File-backed regressions block done claims and one-way doors — failures surface here and in Chat.',
+    path: '~/.otto/checks/',
+    next: 'Open the desktop app to inspect active checks and block provenance.',
+  },
 };
 
 export const listEmpty: Partial<Record<SurfaceId, ListEmpty>> = {
@@ -131,6 +138,10 @@ export const listEmpty: Partial<Record<SurfaceId, ListEmpty>> = {
     title: 'No channels configured',
     body: 'Add a channel when otto needs a reachability surface with approval gates.',
   },
+  checks: {
+    title: 'No compiled checks yet',
+    body: 'Ratify a Standard from Curation to compile a check, or seed checks under ~/.otto/checks on first launch.',
+  },
 };
 
 export const toastCopy = {
@@ -142,6 +153,7 @@ export const toastCopy = {
   decisionBlocked: 'Decision blocked',
   proposalCreated: 'Proposal created',
   openCuration: 'Open in Curation',
+  checkActive: 'Check active',
 } as const;
 
 export const chatCopy = {
@@ -158,7 +170,7 @@ export const chatCopy = {
   proposeFromCorrection: 'Propose from correction',
   proposeFromCorrectionHint: 'Describe the behavior you want next time. Canon stays unchanged until you ratify in Curation.',
   correctThisModalTitle: 'Correct this',
-  ticketCommandHint: 'Commands: compile ticket <slug> <objective> · orchestrate ticket <slug> · status workers',
+  ticketCommandHint: 'Commands: compile ticket <slug> <objective> · orchestrate ticket <slug> · check ticket <slug> · merge ticket <slug> · status workers',
   onboardingHint: 'Send your first message — otto writes a Receipt when work completes with proof.',
   onboardingReceiptHint: 'First turn recorded — open Receipts to inspect the proof record.',
   onboardingSkip: 'Skip setup',
@@ -368,22 +380,29 @@ export const receiptsCopy = {
   debugMeta: 'Raw contract (debug)',
 } as const;
 
-/** Culture CI checks surface — list IPC ships with builder 133. */
+/** Culture CI checks surface — list via checks.list IPC. */
 export const checksCopy = {
   eyebrow: 'culture ci',
   title: 'Checks',
   lede: 'File-backed checks compile from Standards and Practices. Blocks surface here and in Chat when a check fails.',
-  emptyTitle: 'Checks not wired yet',
-  emptyBody: 'Ratify a Standard from Curation to compile a check, or seed checks from repo templates on first launch.',
-  blockEyebrow: 'check blocked',
+  inkLead: 'Every correction can become',
+  inkMuted: 'a regression test',
+  inkSub: 'Ratify in Curation; enforcement shows up here and in Chat — not as silent logs.',
+  emptyTitle: 'No compiled checks yet',
+  emptyBody: 'Ratify a Standard from Curation to compile a check, or seed checks under ~/.otto/checks on first launch.',
+  statActive: 'Active checks',
+  statDoneClaim: 'Done claim',
+  statOneWayDoor: 'One-way door',
+  metaLabel: 'Registry & provenance',
+  blockEyebrow: 'check failed',
   blockPill: 'BLOCK',
   openReceipt: 'Open receipt',
   openStandard: 'Open standard',
 } as const;
 
 export const cultureCiCopy = {
-  compileHint: 'Run compile check in Chat or via ticket command when the check contract is available.',
-  blockHint: 'Failed checks block irreversible actions until resolved or overridden per autonomy policy.',
+  compileHint: 'Use check ticket <slug> in Chat to evaluate done-claim checks before merge.',
+  blockHint: 'Failed checks block irreversible actions until mapped proof is attached or autonomy allows override.',
 } as const;
 
 export const memoryWritebackCopy = {

@@ -179,6 +179,7 @@ export type DecideProposalResult = {
   proposal: CurationProposalRecord;
   receipt: Receipt & { path: string };
   blocked?: boolean;
+  compiledCheckId?: string | null;
 };
 
 export type EvaluateAutonomyActionResult = {
@@ -217,118 +218,22 @@ export type {
   RunSummary,
   ApprovalListResult,
   ApprovalRecord,
-};
+} from '@otto-haus/core';
+
+export type { OttoConfig, TicketReviewRecord } from '../electron/shared/types';
+export type {
+  StandardConflictResult,
+  MemoryListResult,
+  MemoryBlockRecord,
+} from '../electron/shared/types';
+
+import type { OttoApi } from '../electron/preload';
+
+export type { OttoApi };
 
 export type OttoEvent =
   | { message: { type: string; [k: string]: unknown } }
   | { status: RuntimeStatus };
-
-type OttoApi = {
-  runtime: {
-    init(): Promise<RuntimeStatus>;
-    newChat(): Promise<RuntimeStatus>;
-    status(): Promise<RuntimeStatus>;
-    send(text: string): Promise<void>;
-    abort(): Promise<void>;
-    configure(input: RuntimePreferences): Promise<RuntimeStatus>;
-    openLetta(): Promise<string>;
-  };
-  config: { get(): Promise<unknown>; set(patch: unknown): Promise<unknown> };
-  attachments: { save(input: AttachmentInput): Promise<SavedAttachment> };
-  connection: {
-    get(): Promise<ConnectionInfo>;
-    save(input: ConnectionInput): Promise<RuntimeStatus>;
-  };
-  receipts: {
-    list(): Promise<ReceiptListResult>;
-    get(id: string): Promise<ReceiptDetail | null>;
-  };
-  charters: {
-    list(): Promise<CharterListResult>;
-    get(slug: string): Promise<CharterDetail | null>;
-    create(input: CharterCreateInput): Promise<CharterMutationResult>;
-    updateStatus(slug: string, status: CharterStatus, summary?: string): Promise<CharterMutationResult>;
-    linkRunReceipt(
-      slug: string,
-      input: { runId?: string; receiptId?: string; acId?: string; summary?: string },
-    ): Promise<CharterMutationResult>;
-  };
-  standards: {
-    list(): Promise<StandardListResult>;
-    get(slug: string): Promise<StandardRecord | null>;
-    citationsForText(text: string): Promise<StandardCitation[]>;
-  };
-  practices: {
-    list(): Promise<PracticeListResult>;
-    get(slug: string): Promise<PracticeRecord | null>;
-    resolveForText(text: string): Promise<PracticeReference | null>;
-  };
-  routines: {
-    list(): Promise<RoutineListResult>;
-    get(slug: string): Promise<RoutineRecord | null>;
-    activationGate(slug: string): Promise<RoutineActivationGate>;
-    runManual(slug: string): Promise<RoutineManualRunResult>;
-  };
-  curation: {
-    proposals: {
-      list(): Promise<ProposalListResult>;
-      get(id: string): Promise<CurationProposalRecord | null>;
-      createFromCorrection(input: CreateProposalFromCorrectionInput): Promise<CreateProposalResult>;
-      classify(input: { correction: string; target: ProposalTarget }): Promise<ProposalClassification>;
-      decide(id: string, input: DecideProposalInput): Promise<DecideProposalResult>;
-    };
-    approvals: {
-      list(): Promise<ApprovalListResult>;
-    };
-  };
-  knowledge: {
-    list(): Promise<KnowledgeListResult>;
-    resolveRole(role: string): Promise<{ provider: string; model: string; status: 'proposed' | 'active' } | null>;
-  };
-  skills: {
-    list(): Promise<SkillListResult>;
-    get(slug: string): Promise<SkillRecord | null>;
-  };
-  channels: {
-    list(): Promise<ChannelListResult>;
-  };
-  tickets: {
-    list(): Promise<TicketListResult>;
-    get(ticketId: string): Promise<TicketRecord | null>;
-    compile(input: TicketCompileInput): Promise<{ ticket: TicketRecord; receipt: Receipt & { path: string } }>;
-    orchestrate(input: TicketCompileInput & { repoRoot?: string }): Promise<{
-      ticket: TicketRecord;
-      worker: WorkerRecord;
-      run: RunSummary;
-      worktreePath: string;
-      receipt: Receipt & { path: string };
-    }>;
-    orchestrateExisting(
-      ticketId: string,
-      repoRoot?: string,
-    ): Promise<{
-      ticket: TicketRecord;
-      worker: WorkerRecord;
-      run: RunSummary;
-      worktreePath: string;
-      receipt: Receipt & { path: string };
-    }>;
-  };
-  workers: {
-    list(): Promise<WorkerListResult>;
-    updateStatus(id: string, status: WorkerStatus, receiptId?: string): Promise<WorkerRecord | null>;
-  };
-  runs: {
-    list(): Promise<RunListResult>;
-  };
-  autonomy: {
-    policy(): Promise<AutonomyPolicyResult>;
-    evaluateAction(input: { action: string; context?: string }): Promise<EvaluateAutonomyActionResult>;
-  };
-  permission: { respond(requestId: string, response: unknown): void };
-  onEvent(cb: (e: OttoEvent) => void): () => void;
-  onPermission(cb: (req: unknown) => void): () => void;
-};
 
 declare global {
   interface Window {
@@ -342,7 +247,18 @@ export const ottoApi = (): OttoApi | null =>
   typeof window !== 'undefined' && window.otto ? window.otto : null;
 export const isElectron = (): boolean => ottoApi() !== null;
 
-export type ChatMsg = { id: string; who: 'user' | 'otto' | 'error'; text: string; streamId?: string };
+export type ChatMsg = {
+  id: string;
+  who: 'user' | 'otto' | 'error';
+  text: string;
+  streamId?: string;
+  checkBlock?: {
+    checkName: string;
+    message: string;
+    receiptId?: string;
+    standardId?: string;
+  };
+};
 
 const MESSAGES_KEY = 'otto.chat.messages.v1';
 

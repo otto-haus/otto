@@ -20,6 +20,9 @@ import type {
   StandardCitation,
   StandardListResult,
   StandardRecord,
+  StandardConflictResult,
+  MemoryListResult,
+  MemoryBlockRecord,
   PracticeListResult,
   PracticeRecord,
   PracticeReference,
@@ -51,6 +54,49 @@ import type {
   TicketReviewRecord,
 } from './shared/types';
 import type { CheckListResult, CheckRunResult } from '@otto-haus/core';
+import type {
+  BehaviorChangelogResult,
+  ConstitutionResult,
+  CultureExportResult,
+  CultureImportPreview,
+} from '@otto-haus/core';
+
+const emptyChangelog = (windowDays: number): BehaviorChangelogResult => ({
+  dir: '',
+  entries: [],
+  window_days: windowDays,
+  empty_message: 'No behavior changes this week.',
+});
+
+const emptyMemory = (): MemoryListResult => ({
+  agentId: null,
+  baseUrl: null,
+  blocks: [],
+  apiPath: '/v1/agents/{agent_id}/core-memory/blocks',
+  error: 'Memory observatory pending Letta wiring.',
+});
+
+const emptyConstitution = (): ConstitutionResult => ({
+  dir: '',
+  yamlPath: '',
+  mdPath: '',
+  rawYaml: '',
+  storage: 'files',
+  document: {
+    schema: 'otto.constitution.v1',
+    version: '0.0.0',
+    values: [],
+    forbidden_actions: [],
+    approval_rules: [],
+    standards_refs: [],
+    writeback_policy: {
+      mode: 'proposal_only',
+      requires_curation_accept: true,
+      silent_apply_forbidden: true,
+    },
+    ratification_requirements: [],
+  },
+});
 
 const api = {
   runtime: {
@@ -93,6 +139,8 @@ const api = {
     list: (): Promise<StandardListResult> => ipcRenderer.invoke('otto:standards:list'),
     get: (slug: string): Promise<StandardRecord | null> => ipcRenderer.invoke('otto:standards:get', slug),
     citationsForText: (text: string): Promise<StandardCitation[]> => ipcRenderer.invoke('otto:standards:citations-for-text', text),
+    conflictForStandard: (slug: string): Promise<StandardConflictResult | null> =>
+      ipcRenderer.invoke('otto:standards:conflict-for-standard', slug).catch(() => null),
   },
   practices: {
     list: (): Promise<PracticeListResult> => ipcRenderer.invoke('otto:practices:list'),
@@ -163,6 +211,26 @@ const api = {
     policy: (): Promise<AutonomyPolicyResult> => ipcRenderer.invoke('otto:autonomy:policy'),
     evaluateAction: (input: { action: string; context?: string }): Promise<EvaluateAutonomyActionResult> =>
       ipcRenderer.invoke('otto:autonomy:evaluate-action', input),
+  },
+  changelog: {
+    list: (windowDays: number): Promise<BehaviorChangelogResult> =>
+      ipcRenderer.invoke('otto:changelog:list', windowDays).catch(() => emptyChangelog(windowDays)),
+  },
+  memory: {
+    list: (): Promise<MemoryListResult> =>
+      ipcRenderer.invoke('otto:memory:list').catch(() => emptyMemory()),
+  },
+  constitution: {
+    get: (): Promise<ConstitutionResult> =>
+      ipcRenderer.invoke('otto:constitution:get').catch(() => emptyConstitution()),
+    amend: (yamlDraft: string, amendedBy: string) =>
+      ipcRenderer.invoke('otto:constitution:amend', yamlDraft, amendedBy),
+    open: (): Promise<string> => ipcRenderer.invoke('otto:constitution:open'),
+  },
+  culture: {
+    export: (): Promise<CultureExportResult> => ipcRenderer.invoke('otto:culture:export'),
+    importPreview: (bundlePath: string): Promise<CultureImportPreview> =>
+      ipcRenderer.invoke('otto:culture:import-preview', bundlePath),
   },
   permission: {
     respond: (requestId: string, response: PermissionResponse): void =>

@@ -19,6 +19,7 @@ import {
   Channels,
   Settings,
 } from './surfaces/Panes';
+import { ChecksSurfaceShell } from './surfaces/ChecksSurfaceShell';
 import { Onboarding } from './Onboarding';
 
 const META: Record<SurfaceId, { title: string; sub: string }> = {
@@ -29,6 +30,7 @@ const META: Record<SurfaceId, { title: string; sub: string }> = {
   routines: { title: 'Routines', sub: 'Repeated bundles of Practices; recurring activation is approval-gated.' },
   curation: { title: 'Curation', sub: 'Proposal-and-ratification queue; Approvals are decision receipts emitted here.' },
   receipts: { title: 'Receipts', sub: 'Proof of work — receipts and run summaries from ~/.otto.' },
+  checks: { title: 'Checks', sub: 'Culture CI — compiled regressions from Standards; blocks surface in Chat.' },
   autonomy: { title: 'Autonomy', sub: 'Policy zones, doors, and Knowledge-informed model routing.' },
   skills: { title: 'Skills', sub: 'Reusable capability packages loaded from skill/**/SKILL.md.' },
   knowledge: { title: 'Knowledge', sub: 'AI Frontier model registry — routing Autonomy and ticket workers.' },
@@ -45,6 +47,7 @@ function renderSurface(id: SurfaceId) {
     case 'routines': return <Routines />;
     case 'curation': return <Curation />;
     case 'receipts': return <Receipts />;
+    case 'checks': return <ChecksSurfaceShell />;
     case 'autonomy': return <Autonomy />;
     case 'skills': return <Skills />;
     case 'knowledge': return <Knowledge />;
@@ -55,7 +58,7 @@ function renderSurface(id: SurfaceId) {
   }
 }
 
-const VALID: SurfaceId[] = ['chat', 'charters', 'standards', 'practices', 'routines', 'curation', 'receipts', 'autonomy', 'skills', 'knowledge', 'tickets', 'channels', 'settings'];
+const VALID: SurfaceId[] = ['chat', 'charters', 'standards', 'practices', 'routines', 'curation', 'receipts', 'checks', 'autonomy', 'skills', 'knowledge', 'tickets', 'channels', 'settings'];
 const initialSurface = (): SurfaceId => {
   const h = typeof location !== 'undefined' ? (location.hash.slice(1) as SurfaceId) : 'chat';
   return VALID.includes(h) ? h : 'chat';
@@ -71,6 +74,7 @@ const DATA_SOURCE: Partial<Record<SurfaceId, 'live' | 'coming-soon' | 'file'>> =
   routines: 'file',
   curation: 'file',
   receipts: 'file',
+  checks: 'file',
   autonomy: 'file',
   skills: 'file',
   knowledge: 'file',

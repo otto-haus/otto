@@ -217,6 +217,33 @@ export interface DecideProposalResult {
   proposal: CurationProposalRecord;
   receipt: Receipt & { path: string };
   blocked?: boolean;
+  compiledCheckId?: string | null;
+}
+
+/** Standards pane conflict path (050) — enriched registry conflict for one slug. */
+export interface StandardConflictResult {
+  between: string[];
+  message: string;
+  tie_breaker?: string;
+  precedent?: { excerpt?: string; file?: string };
+}
+
+/** Letta core-memory block (047) — read-only observatory. */
+export interface MemoryBlockRecord {
+  id: string;
+  label: string;
+  value: string;
+  limit: number | null;
+  updated_at: string | null;
+  description: string | null;
+}
+
+export interface MemoryListResult {
+  agentId: string | null;
+  baseUrl: string | null;
+  blocks: MemoryBlockRecord[];
+  apiPath: string;
+  error?: string;
 }
 
 export type {
@@ -279,6 +306,10 @@ export interface OttoConfig {
   effort?: EffortLevel;
   /** Letta base URL for local / self-hosted backends (cloud uses the default). */
   baseUrl?: string | null;
+  /** Preferred default agent when multiple are available (119). */
+  primaryAgentId?: string | null;
+  /** Connection UX mode — embedded vs bring-your-own vs cloud. */
+  connectionMode?: 'embedded' | 'existing' | 'cloud';
   /** Legacy / generated readiness shape; modelHandle is the v1 desktop control. */
   model?: { provider?: string; model?: string };
   mcpServers?: unknown[];

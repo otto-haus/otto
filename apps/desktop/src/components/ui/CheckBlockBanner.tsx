@@ -1,7 +1,7 @@
 import React from 'react';
 import { checksCopy } from '../../copy/surfaces';
 
-/** Inline Culture CI block banner — wired to checks.list / block events when builder 133 lands. */
+/** Inline Culture CI block banner — shown in Chat when a check blocks a done claim or one-way door. */
 export const CheckBlockBanner: React.FC<{
   checkName: string;
   message: string;

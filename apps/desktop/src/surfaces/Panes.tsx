@@ -7,7 +7,7 @@ import {
 } from '../readiness';
 import { Icon } from '../components/icons';
 import { useToast } from '../components/Toast';
-import { EmptyState, StatusPill, SurfaceProof, SurfacePage, SurfaceHero, InkBlock, SurfaceInk, SurfaceStatStrip, SurfaceMeta, SplitLayout, FilterBar, InlineEmpty, WebPreviewFrame, ReceiptCard } from '../components/ui';
+import { EmptyState, StatusPill, statusPill, SurfaceProof, SurfacePage, SurfaceHero, InkBlock, SurfaceInk, SurfaceStatStrip, SurfaceMeta, SplitLayout, FilterBar, InlineEmpty, WebPreviewFrame, ReceiptCard, CheckBlockBanner } from '../components/ui';
 import {
   toastCopy,
   curationCopy,
@@ -1064,7 +1064,10 @@ export const Curation: React.FC<{ initialPanel?: CurationMainPanel }> = ({ initi
             title: isMemoryWritebackProposal(selected.kind)
               ? toastCopy.behaviorUpdatedMemory
               : toastCopy.behaviorUpdated,
-            body: `${targetLabel}: ${selected.summary} · receipt ${outcome.receipt.id}`,
+            body: [
+              `${targetLabel}: ${selected.summary} · receipt ${outcome.receipt.id}`,
+              outcome.compiledCheckId ? `${toastCopy.checkActive}: ${outcome.compiledCheckId}` : null,
+            ].filter(Boolean).join('\n'),
             tone: 'ok',
           });
         } else {
@@ -2169,6 +2172,7 @@ export const Tickets: React.FC = () => {
   const [slug, setSlug] = useState('');
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [checkBlock, setCheckBlock] = useState<{ checkName: string; message: string; receiptId?: string } | null>(null);
   const [busy, setBusy] = useState(false);
 
   const reload = async () => {
@@ -2261,11 +2265,22 @@ export const Tickets: React.FC = () => {
     if (!api || busy || !selected) return;
     setBusy(true);
     setError(null);
+    setCheckBlock(null);
     try {
       await api.tickets.updateStatus(selected.ticket_id, review ? { status, review } : { status });
       await reload();
     } catch (e) {
-      setError(String(e));
+      const raw = String(e);
+      const receiptMatch = raw.match(/\(receipt:\s*([^)]+)\)/);
+      if (receiptMatch || raw.toLowerCase().includes('not done')) {
+        setCheckBlock({
+          checkName: 'completion-requires-receipts',
+          message: raw.replace(/\s*\(receipt:[^)]+\)\s*$/, '').trim(),
+          receiptId: receiptMatch?.[1]?.trim(),
+        });
+      } else {
+        setError(raw);
+      }
     } finally {
       setBusy(false);
     }
@@ -2295,6 +2310,14 @@ export const Tickets: React.FC = () => {
         ]}
       />
       {error && <div className="notice"><span className="dot dot--warn" /> {error}</div>}
+      {checkBlock && (
+        <CheckBlockBanner
+          checkName={checkBlock.checkName}
+          message={checkBlock.message}
+          receiptId={checkBlock.receiptId}
+          onOpenReceipt={checkBlock.receiptId ? () => { location.hash = 'receipts'; } : undefined}
+        />
+      )}
       {message && <div className="notice"><span className="dot dot--ok" /> {message}</div>}
       {!tickets && !error && (
         <div className="panel">

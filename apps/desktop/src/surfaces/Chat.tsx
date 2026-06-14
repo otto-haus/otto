@@ -8,7 +8,7 @@ import { useRuntimeContext } from '../RuntimeContext';
 import ottoAvatar from '../assets/otto-avatar.png';
 
 import type { SurfaceId } from '../components/Sidebar';
-import { CommandStationStrip, MessageActions, Modal, PermissionCard, type PermissionDecision, type PermissionRequestView } from '../components/ui';
+import { CommandStationStrip, CheckBlockBanner, MessageActions, Modal, PermissionCard, type PermissionDecision, type PermissionRequestView } from '../components/ui';
 import { chatCopy, permissionCopy, toastCopy } from '../copy/surfaces';
 import {
   dismissOnboarding,
@@ -426,6 +426,7 @@ const LiveChat: React.FC<{
           id: `cmd-${Date.now()}`,
           who: 'otto',
           text: cmd.lines.join('\n'),
+          checkBlock: cmd.checkBlock,
         }]);
         setDraft('');
         setAttachments([]);
@@ -528,6 +529,16 @@ const LiveChat: React.FC<{
           return (
             <div key={m.id} className={`msg${m.who === 'user' ? ' msg--user' : ''}${showWho ? '' : ' msg--cont'}`}>
               {showWho && <div className="msg__who">{m.who === 'user' ? 'You' : m.who === 'error' ? 'error' : 'otto'}</div>}
+              {m.checkBlock && onNavigate ? (
+                <CheckBlockBanner
+                  checkName={m.checkBlock.checkName}
+                  message={m.checkBlock.message}
+                  receiptId={m.checkBlock.receiptId}
+                  standardId={m.checkBlock.standardId}
+                  onOpenReceipt={m.checkBlock.receiptId ? () => onNavigate('receipts') : undefined}
+                  onOpenStandard={m.checkBlock.standardId ? () => onNavigate('standards') : undefined}
+                />
+              ) : null}
               <div className="msg__body" style={m.who === 'error' ? { color: 'var(--stop)' } : undefined}><MarkdownText text={m.text} /></div>
               {canPropose ? (
                 <MessageActions

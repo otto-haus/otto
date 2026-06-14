@@ -1,13 +1,24 @@
+import type { CheckRunResult } from '@otto-haus/core';
 import type { OttoBridge } from '../runtime';
+
+export type CheckBlockPayload = {
+  checkName: string;
+  message: string;
+  receiptId?: string;
+  standardId?: string;
+};
 
 export type TicketCommandReply = {
   handled: true;
   lines: string[];
+  checkBlock?: CheckBlockPayload;
 };
 
 export type ParsedTicketCommand =
   | { kind: 'compile'; slug: string; objective?: string }
   | { kind: 'orchestrate'; slug: string }
+  | { kind: 'check'; slug: string }
+  | { kind: 'merge'; slug: string }
   | { kind: 'status-workers' };
 
 const SLUG = String.raw`[\w.-]+`;
@@ -26,6 +37,14 @@ export function parseTicketCommand(text: string): ParsedTicketCommand | null {
   if (orchestrate) {
     return { kind: 'orchestrate', slug: orchestrate[1] };
   }
+  const check = trimmed.match(new RegExp(`^(?:/)?check\\s+ticket\\s+(${SLUG})$`, 'i'));
+  if (check) {
+    return { kind: 'check', slug: check[1] };
+  }
+  const merge = trimmed.match(new RegExp(`^(?:/)?merge\\s+ticket\\s+(${SLUG})$`, 'i'));
+  if (merge) {
+    return { kind: 'merge', slug: merge[1] };
+  }
   if (/^(?:\/)?status\s+workers$/i.test(trimmed)) {
     return { kind: 'status-workers' };
   }
@@ -34,6 +53,30 @@ export function parseTicketCommand(text: string): ParsedTicketCommand | null {
 
 function ticketIdForSlug(slug: string): string {
   return slug.startsWith('ticket_') ? slug : `ticket_${slug}`;
+}
+
+async function checkBlockFromResults(
+  api: OttoBridge,
+  results: CheckRunResult[],
+): Promise<CheckBlockPayload | undefined> {
+  const blocked = results.find((r) => r.blocked && !r.passed);
+  if (!blocked) return undefined;
+  const check = await api.checks.get(blocked.check_id);
+  const standardId =
+    check?.standard_slug ??
+    check?.source.replace(/^standard\//, '').replace(/\.md$/i, '') ??
+    undefined;
+  return {
+    checkName: blocked.check_id,
+    message: blocked.message,
+    receiptId: blocked.receipt_id,
+    standardId,
+  };
+}
+
+function summarizeCheckResults(results: CheckRunResult[]): string[] {
+  if (!results.length) return ['No done-claim checks are active.'];
+  return results.map((r) => `${r.check_id}: ${r.passed ? 'pass' : 'fail'} — ${r.message}`);
 }
 
 export async function runTicketCommand(api: OttoBridge, text: string): Promise<TicketCommandReply | null> {
@@ -89,6 +132,72 @@ export async function runTicketCommand(api: OttoBridge, text: string): Promise<T
       handled: true,
       lines: [`Ticket ${ticketId} not found. Compile first: compile ticket ${parsed.slug} <objective>`],
     };
+  }
+
+  if (parsed.kind === 'check') {
+    const results = await api.checks.evaluateDoneClaim({
+      acceptance_criteria: ticket.acceptance_criteria,
+      review: { evidence: [] },
+      evidence: [],
+    });
+    const checkBlock = await checkBlockFromResults(api, results);
+    return {
+      handled: true,
+      lines: [`Done-claim checks for ${ticketId}:`, ...summarizeCheckResults(results)],
+      checkBlock,
+    };
+  }
+
+  if (parsed.kind === 'merge') {
+    if (ticket.status === 'proposed') {
+      return {
+        handled: true,
+        lines: [`${ticketId} is still proposed. Run orchestrate ticket ${parsed.slug} first.`],
+      };
+    }
+    if (ticket.status === 'active' || ticket.status === 'blocked') {
+      await api.tickets.updateStatus(ticketId, { status: 'review' });
+      return {
+        handled: true,
+        lines: [
+          `${ticketId} moved to review.`,
+          `Run \`check ticket ${parsed.slug}\` before merge, then \`merge ticket ${parsed.slug}\` with reviewer +1 and mapped evidence.`,
+        ],
+      };
+    }
+    if (ticket.status !== 'review' && ticket.status !== 'merged') {
+      return {
+        handled: true,
+        lines: [`Cannot merge ${ticketId} from status "${ticket.status}".`],
+      };
+    }
+    const evidence = ticket.acceptance_criteria
+      .map((ac) => ac.proof)
+      .filter((proof): proof is string => !!proof?.trim());
+    const review = {
+      verdict: '+1' as const,
+      evidence,
+      reviewed_at: new Date().toISOString(),
+    };
+    try {
+      const merged = await api.tickets.updateStatus(ticketId, { status: 'merged', review });
+      return {
+        handled: true,
+        lines: [`Merged ${merged.ticket_id}.`, `Status: ${merged.status}`],
+      };
+    } catch (e) {
+      const results = await api.checks.evaluateDoneClaim({
+        acceptance_criteria: ticket.acceptance_criteria,
+        review,
+        evidence,
+      });
+      const checkBlock = await checkBlockFromResults(api, results);
+      return {
+        handled: true,
+        lines: [`Merge blocked for ${ticketId}:`, String(e)],
+        checkBlock,
+      };
+    }
   }
 
   const gate = await api.autonomy.evaluateAction({

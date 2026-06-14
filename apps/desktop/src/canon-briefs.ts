@@ -8,6 +8,7 @@ export const SURFACE_TESTS: Partial<Record<SurfaceId, string>> = {
   routines: 'Would Sebastian miss this Routine if it vanished?',
   curation: 'Can one proposal schema handle memory, routines, practices, and approval cards?',
   receipts: 'Can Desktop show what was proven — not just what was attempted?',
+  checks: 'When a done claim fails, does the operator see the check name, receipt, and source Standard?',
   autonomy: 'Can Otto choose the next operational move without asking unless a door appears?',
   skills: 'Does this Skill reduce repeated setup mistakes or safety footguns?',
   knowledge: 'Did a Knowledge update change model routing, ticket sizing, or Autonomy policy?',
