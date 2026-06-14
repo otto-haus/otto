@@ -372,16 +372,17 @@ function normalizePolicy(raw: Record<string, unknown>, file: string): AutonomyPo
 
   const settingsRaw = (raw.settings ?? {}) as Record<string, unknown>;
   const maxParallelWorkers = Number(settingsRaw.max_parallel_workers ?? 3);
+  const normalizedMaxParallelWorkers =
+    Number.isFinite(maxParallelWorkers) && maxParallelWorkers > 0
+      ? Math.max(1, Math.floor(maxParallelWorkers))
+      : 3;
   const settings: AutonomyPolicySettings = {
     worker_creation: settingsRaw.worker_creation === 'disabled' ? 'disabled' : 'allowed',
     worktree_creation: settingsRaw.worktree_creation === 'disabled' ? 'disabled' : 'allowed',
     pr_creation: settingsRaw.pr_creation === 'disabled' ? 'disabled' : 'allowed',
     safe_auto_merge: settingsRaw.safe_auto_merge === 'allowed' ? 'allowed' : 'disabled',
     require_receipts: settingsRaw.require_receipts !== false,
-    max_parallel_workers:
-      Number.isFinite(maxParallelWorkers) && maxParallelWorkers > 0
-        ? Math.floor(maxParallelWorkers)
-        : 3,
+    max_parallel_workers: normalizedMaxParallelWorkers,
   };
 
   return {

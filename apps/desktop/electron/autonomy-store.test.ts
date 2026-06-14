@@ -26,22 +26,32 @@ describe('AutonomyStore', () => {
     expect(loaded.policy.limitations.some((line) => line.includes('Ticketcraft'))).toBe(true);
   });
 
-  test('normalizes malformed max_parallel_workers to the default', () => {
+  test('normalizes malformed max_parallel_workers to a usable worker count', () => {
     const tmp = mkdtempSync(join(tmpdir(), 'otto-autonomy-policy-'));
     try {
-      writeFileSync(
-        join(tmp, 'policy.yaml'),
-        `version: "0.1"
+      const fixtures = [
+        { value: 'many', expected: 3 },
+        { value: '0', expected: 3 },
+        { value: '-2', expected: 3 },
+        { value: '0.5', expected: 1 },
+        { value: '2.9', expected: 2 },
+      ];
+
+      for (const fixture of fixtures) {
+        writeFileSync(
+          join(tmp, 'policy.yaml'),
+          `version: "0.1"
 summary: Test policy
 doctrine: Test doctrine
 settings:
-  max_parallel_workers: many
+  max_parallel_workers: ${fixture.value}
 `,
-      );
+        );
 
-      const loaded = new AutonomyStore(tmp).loadResult();
+        const loaded = new AutonomyStore(tmp).loadResult();
 
-      expect(loaded.policy.settings.max_parallel_workers).toBe(3);
+        expect(loaded.policy.settings.max_parallel_workers).toBe(fixture.expected);
+      }
     } finally {
       rmSync(tmp, { recursive: true, force: true });
     }
