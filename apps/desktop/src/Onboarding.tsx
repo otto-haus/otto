@@ -26,7 +26,7 @@ const inkCard: React.CSSProperties = {
   padding: '34px 36px', maxWidth: 520, boxShadow: '0 40px 90px -30px rgba(0,0,0,0.6)',
 };
 const dock: React.CSSProperties = {
-  position: 'fixed', left: 24, bottom: 24, zIndex: 100, width: 344,
+  position: 'fixed', right: 24, bottom: 24, zIndex: 100, width: 344, maxWidth: 'calc(100vw - 48px)',
   background: '#fff', border: '1px solid #E4E4E7', borderRadius: 14, padding: '18px 20px',
   boxShadow: '0 30px 70px -34px rgba(20,34,62,0.35), 0 3px 10px -4px rgba(0,0,0,0.06)',
 };

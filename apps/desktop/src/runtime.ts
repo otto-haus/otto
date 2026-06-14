@@ -16,6 +16,22 @@ import type {
   StandardCitation,
   StandardRecord,
   StandardsRegistry,
+  KnowledgeListResult,
+  KnowledgeRegistrySummary,
+  SkillListResult,
+  SkillRecord,
+  ChannelListResult,
+  ChannelRecord,
+  TicketListResult,
+  TicketRecord,
+  TicketCompileInput,
+  WorkerListResult,
+  WorkerRecord,
+  WorkerStatus,
+  RunListResult,
+  RunSummary,
+  ApprovalListResult,
+  ApprovalRecord,
 } from '@otto-haus/core';
 
 // Renderer-side view of the window.otto bridge exposed by electron/preload.ts.
@@ -163,7 +179,36 @@ export type EvaluateAutonomyActionResult = {
   receipt: Receipt & { path: string };
 };
 
-export type { StandardCitation, StandardRecord, StandardsRegistry, PracticeRecord, PracticeReference, RoutineRecord, CurationProposalRecord, CreateProposalFromCorrectionInput, DecideProposalInput, AutonomyPolicy, AutonomyPolicyResult, AutonomyActionEvaluation };
+export type {
+  StandardCitation,
+  StandardRecord,
+  StandardsRegistry,
+  PracticeRecord,
+  PracticeReference,
+  RoutineRecord,
+  CurationProposalRecord,
+  CreateProposalFromCorrectionInput,
+  DecideProposalInput,
+  AutonomyPolicy,
+  AutonomyPolicyResult,
+  AutonomyActionEvaluation,
+  KnowledgeListResult,
+  KnowledgeRegistrySummary,
+  SkillListResult,
+  SkillRecord,
+  ChannelListResult,
+  ChannelRecord,
+  TicketListResult,
+  TicketRecord,
+  TicketCompileInput,
+  WorkerListResult,
+  WorkerRecord,
+  WorkerStatus,
+  RunListResult,
+  RunSummary,
+  ApprovalListResult,
+  ApprovalRecord,
+};
 
 export type OttoEvent =
   | { message: { type: string; [k: string]: unknown } }
@@ -172,6 +217,7 @@ export type OttoEvent =
 type OttoApi = {
   runtime: {
     init(): Promise<RuntimeStatus>;
+    newChat(): Promise<RuntimeStatus>;
     status(): Promise<RuntimeStatus>;
     send(text: string): Promise<void>;
     abort(): Promise<void>;
@@ -218,6 +264,39 @@ type OttoApi = {
       createFromCorrection(input: CreateProposalFromCorrectionInput): Promise<CreateProposalResult>;
       decide(id: string, input: DecideProposalInput): Promise<DecideProposalResult>;
     };
+    approvals: {
+      list(): Promise<ApprovalListResult>;
+    };
+  };
+  knowledge: {
+    list(): Promise<KnowledgeListResult>;
+    resolveRole(role: string): Promise<{ provider: string; model: string; status: 'proposed' | 'active' } | null>;
+  };
+  skills: {
+    list(): Promise<SkillListResult>;
+    get(slug: string): Promise<SkillRecord | null>;
+  };
+  channels: {
+    list(): Promise<ChannelListResult>;
+  };
+  tickets: {
+    list(): Promise<TicketListResult>;
+    get(ticketId: string): Promise<TicketRecord | null>;
+    compile(input: TicketCompileInput): Promise<{ ticket: TicketRecord; receipt: Receipt & { path: string } }>;
+    orchestrate(input: TicketCompileInput & { repoRoot?: string }): Promise<{
+      ticket: TicketRecord;
+      worker: WorkerRecord;
+      run: RunSummary;
+      worktreePath: string;
+      receipt: Receipt & { path: string };
+    }>;
+  };
+  workers: {
+    list(): Promise<WorkerListResult>;
+    updateStatus(id: string, status: WorkerStatus, receiptId?: string): Promise<WorkerRecord | null>;
+  };
+  runs: {
+    list(): Promise<RunListResult>;
   };
   autonomy: {
     policy(): Promise<AutonomyPolicyResult>;
@@ -350,5 +429,15 @@ export function useRuntime() {
     return next;
   };
 
-  return { electron: !!api, status, messages, busy, send, abort, retry, updateStatus, configure };
+  const newChat = async () => {
+    if (!api) return;
+    sendError.current = null;
+    activeAssistantStream.current = null;
+    setBusy(false);
+    setMessages([]);
+    try { localStorage.removeItem(MESSAGES_KEY); } catch { /* best effort */ }
+    setStatus(await api.runtime.newChat());
+  };
+
+  return { electron: !!api, status, messages, busy, send, abort, retry, newChat, updateStatus, configure };
 }

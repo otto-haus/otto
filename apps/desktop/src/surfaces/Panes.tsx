@@ -28,8 +28,22 @@ import {
   type StandardListResult,
   type StandardRecord,
   type StatusCode,
+  type ApprovalListResult,
+  type KnowledgeListResult,
+  type SkillListResult,
+  type SkillRecord,
+  type ChannelListResult,
+  type ChannelRecord,
+  type TicketListResult,
+  type TicketRecord,
+  type WorkerListResult,
+  type WorkerRecord,
+  type RunListResult,
+  type RunSummary,
 } from '../runtime';
 import { useRuntimeContext } from '../RuntimeContext';
+import { SURFACE_TESTS } from '../canon-briefs';
+import type { SurfaceId } from '../components/Sidebar';
 
 const statusPill = (s: string) => {
   const cls = s === 'active' || s === 'success' || s === 'complete' ? 'pill--ok'
@@ -54,6 +68,37 @@ const EmptySurface: React.FC<{
     {next && <div className="notice"><span className="dot dot--idle" /> {next}</div>}
   </div>
 );
+
+type SkippedFile = { slug: string; file: string; reason: string };
+
+const SkippedLoaderPanel: React.FC<{ skipped: SkippedFile[] }> = ({ skipped }) => {
+  if (!skipped.length) return null;
+  return (
+    <details className="panel skippedPanel" open={skipped.length <= 3}>
+      <summary className="between">
+        <div>
+          <div className="eyebrow">loader</div>
+          <div className="h-sec">{skipped.length} malformed file{skipped.length === 1 ? '' : 's'} skipped</div>
+        </div>
+        <span className="pill pill--warn">validation</span>
+      </summary>
+      <div className="skippedList">
+        {skipped.map((item) => (
+          <div className="skippedRow" key={`${item.file}-${item.slug}`}>
+            <span className="filechip">{Icon.file} {item.file}</span>
+            <span className="muted">{item.reason}</span>
+          </div>
+        ))}
+      </div>
+    </details>
+  );
+};
+
+const SurfaceProof: React.FC<{ surface: SurfaceId }> = ({ surface }) => {
+  const test = SURFACE_TESTS[surface];
+  if (!test) return null;
+  return <p className="surfaceProof"><strong>The test:</strong> {test}</p>;
+};
 
 /* ---------- Charters ---------- */
 const CHARTER_STATUSES: CharterStatus[] = ['proposed', 'draft', 'active', 'blocked', 'complete', 'cancelled'];
@@ -110,8 +155,11 @@ export const Charters: React.FC = () => {
         setDetail(next);
         if (next) setStatusDraft(next.status);
       }
-    }).catch(() => {
-      if (!cancelled) setDetail(null);
+    }).catch((e) => {
+      if (!cancelled) {
+        setDetail(null);
+        setError(String(e));
+      }
     });
     return () => {
       cancelled = true;
@@ -252,12 +300,16 @@ export const Charters: React.FC = () => {
               </span>
             </button>
           ))}
-          {!charters.length && (
+          {result === null ? (
+            <div className="panel charterEmptyList">
+              <p className="muted">Loading charters…</p>
+            </div>
+          ) : !charters.length ? (
             <div className="panel charterEmptyList">
               <div className="h-sec">No charters yet</div>
               <p className="muted" style={{ marginTop: 6 }}>Create one to start the local proof trail.</p>
             </div>
-          )}
+          ) : null}
           <span className="filechip">{Icon.file} {result?.dir ?? '~/.otto/charters'}</span>
         </div>
 
@@ -276,6 +328,7 @@ export const Charters: React.FC = () => {
           onLinkRunReceipt={linkRunReceipt}
         />
       </div>
+      <SurfaceProof surface="charters" />
     </div>
   );
 };
@@ -467,7 +520,6 @@ export const Standards: React.FC = () => {
         <div className="row" style={{ flexWrap: 'wrap', gap: 8, marginTop: 12 }}>
           <span className="filechip">{Icon.file} {result?.registryPath ?? 'standards/registry.yaml'}</span>
           <span className="filechip">{result?.standards.length ?? 0} standards</span>
-          <span className="filechip">{result?.skipped.length ?? 0} skipped</span>
         </div>
         {result && (
           <div className="zone" style={{ marginTop: 14 }}>
@@ -480,6 +532,7 @@ export const Standards: React.FC = () => {
       </div>
 
       {error && <div className="notice"><span className="dot dot--warn" /> {error}</div>}
+      <SkippedLoaderPanel skipped={result?.skipped ?? []} />
 
       <div className="split">
         <div className="cards">
@@ -496,16 +549,21 @@ export const Standards: React.FC = () => {
               <span className="card__sub">{standard.meaning}</span>
             </button>
           ))}
-          {!standards.length && (
+          {result === null ? (
+            <div className="panel">
+              <p className="muted">Loading standards…</p>
+            </div>
+          ) : !standards.length ? (
             <div className="panel">
               <div className="h-sec">No Standards loaded</div>
               <p className="muted" style={{ marginTop: 6 }}>The loader could not read file-backed Standards.</p>
             </div>
-          )}
+          ) : null}
         </div>
 
         {selected && <StandardDetail standard={selected} />}
       </div>
+      <SurfaceProof surface="standards" />
     </div>
   );
 };
@@ -614,7 +672,6 @@ export const Practices: React.FC = () => {
         <div className="row" style={{ flexWrap: 'wrap', gap: 8, marginTop: 12 }}>
           <span className="filechip">{Icon.file} {result?.dir ?? 'practices/'}</span>
           <span className="filechip">{practices.length} practices</span>
-          <span className="filechip">{result?.skipped.length ?? 0} skipped</span>
         </div>
         <div className="zone" style={{ marginTop: 14 }}>
           <span className="zone__tag">curation gate</span>
@@ -625,6 +682,7 @@ export const Practices: React.FC = () => {
       </div>
 
       {error && <div className="notice"><span className="dot dot--warn" /> {error}</div>}
+      <SkippedLoaderPanel skipped={result?.skipped ?? []} />
 
       <div className="split">
         <div className="cards">
@@ -641,10 +699,20 @@ export const Practices: React.FC = () => {
               <span className="card__sub">{practice.summary}</span>
             </button>
           ))}
-          {!practices.length && <div className="faint">No practices loaded.</div>}
+          {result === null ? (
+            <div className="panel">
+              <p className="muted">Loading practices…</p>
+            </div>
+          ) : !practices.length ? (
+            <div className="panel">
+              <div className="h-sec">No practices loaded</div>
+              <p className="muted" style={{ marginTop: 6 }}>The loader could not read file-backed practice specs.</p>
+            </div>
+          ) : null}
         </div>
         {selected && <PracticeDetail practice={selected} relatedReceipts={relatedReceipts} />}
       </div>
+      <SurfaceProof surface="practices" />
     </div>
   );
 };
@@ -794,10 +862,15 @@ export const Routines: React.FC = () => {
 
       {error && <div className="notice"><span className="dot dot--warn" /> {error}</div>}
       {runMessage && <div className="notice"><span className="dot dot--ok" /> {runMessage}</div>}
+      <SkippedLoaderPanel skipped={result?.skipped ?? []} />
 
       <div className="split">
         <div className="cards">
-          {routines.map((routine) => (
+          {result === null ? (
+            <div className="panel">
+              <p className="muted">Loading routines…</p>
+            </div>
+          ) : routines.map((routine) => (
             <button
               key={routine.slug}
               className={`card${routine.slug === selected?.slug ? ' is-selected' : ''}`}
@@ -810,11 +883,18 @@ export const Routines: React.FC = () => {
               <span className="card__sub">{routine.summary}</span>
             </button>
           ))}
+          {result && !routines.length && (
+            <div className="panel">
+              <div className="h-sec">No routines loaded</div>
+              <p className="muted" style={{ marginTop: 6 }}>The loader could not read file-backed routine specs.</p>
+            </div>
+          )}
         </div>
         {selected && (
           <RoutineDetail routine={selected} gate={gate} busy={busy} onRunManual={runManual} />
         )}
       </div>
+      <SurfaceProof surface="routines" />
     </div>
   );
 };
@@ -879,13 +959,14 @@ const RoutineDetail: React.FC<{
 
 type ProposalInboxFilter = 'pending' | 'decided' | 'all';
 
-const PENDING_STATUSES = new Set(['proposed', 'needs_approval', 'deferred']);
+const PENDING_STATUSES = new Set(['proposed', 'needs_approval']);
 const isPendingProposal = (status: string) => PENDING_STATUSES.has(status);
-const canDecideProposal = (status: string) => status === 'proposed' || status === 'needs_approval' || status === 'deferred';
+const canDecideProposal = (status: string) => status === 'proposed' || status === 'needs_approval';
 
 export const Curation: React.FC = () => {
   const api = ottoApi();
   const [result, setResult] = useState<ProposalListResult | null>(null);
+  const [approvals, setApprovals] = useState<ApprovalListResult | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [filter, setFilter] = useState<ProposalInboxFilter>('pending');
   const [error, setError] = useState<string | null>(null);
@@ -894,17 +975,23 @@ export const Curation: React.FC = () => {
 
   const reload = () => {
     if (!api) return Promise.resolve();
-    return api.curation.proposals.list()
-      .then((next) => setResult(next))
-      .catch((e) => setError(String(e)));
+    return Promise.all([
+      api.curation.proposals.list().then((next) => setResult(next)),
+      api.curation.approvals.list().then((next) => setApprovals(next)),
+    ]).catch((e) => setError(String(e)));
   };
 
   useEffect(() => {
     if (!api) return;
     let cancelled = false;
-    api.curation.proposals.list()
-      .then((next) => {
-        if (!cancelled) setResult(next);
+    Promise.all([
+      api.curation.proposals.list(),
+      api.curation.approvals.list(),
+    ])
+      .then(([proposals, approvalList]) => {
+        if (cancelled) return;
+        setResult(proposals);
+        setApprovals(approvalList);
       })
       .catch((e) => {
         if (!cancelled) setError(String(e));
@@ -1034,6 +1121,40 @@ export const Curation: React.FC = () => {
           )}
         </div>
       )}
+
+      <div className="panel" style={{ marginTop: 16 }}>
+        <div className="between">
+          <div>
+            <div className="eyebrow">ratification records</div>
+            <div className="h-sec">Approvals</div>
+          </div>
+          <span className="pill pill--info">emitted by curation</span>
+        </div>
+        <p className="muted" style={{ marginTop: 8 }}>
+          Approvals are not a peer subsystem — each record is derived from a decided proposal and its decision receipt.
+        </p>
+        {(approvals?.approvals ?? []).length === 0 ? (
+          <p className="muted" style={{ marginTop: 12 }}>No approval records yet. Accept, reject, or defer a consequential proposal to emit one.</p>
+        ) : (
+          <div className="receiptEvidence" style={{ marginTop: 12 }}>
+            {(approvals?.approvals ?? []).slice(0, 12).map((approval) => (
+              <div className="zone receiptEvidenceRow" key={approval.id}>
+                <span className="zone__tag">{approval.status}</span>
+                <div>
+                  <div className="card__title">{approval.scope}</div>
+                  <div className="mono receiptEvidenceRef" style={{ marginTop: 4 }}>
+                    {approval.proposal_id} · {approval.receipt_id}
+                  </div>
+                  <div className="muted" style={{ marginTop: 4 }}>
+                    {approval.requirement} · {formatReceiptTime(approval.decided_at)}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+      <SurfaceProof surface="curation" />
     </div>
   );
 };
@@ -1122,6 +1243,7 @@ const RECEIPT_FILTERS: Array<'all' | ReceiptStatus> = ['all', 'success', 'blocke
 export const Receipts: React.FC = () => {
   const api = ottoApi();
   const [result, setResult] = useState<ReceiptListResult | null>(null);
+  const [runsResult, setRunsResult] = useState<RunListResult | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [detail, setDetail] = useState<ReceiptDetail | null>(null);
   const [query, setQuery] = useState('');
@@ -1134,10 +1256,11 @@ export const Receipts: React.FC = () => {
     let cancelled = false;
     setLoading(true);
     setError(null);
-    api.receipts.list()
-      .then((next) => {
+    Promise.all([api.receipts.list(), api.runs.list()])
+      .then(([next, runList]) => {
         if (cancelled) return;
         setResult(next);
+        setRunsResult(runList);
         setSelectedId((current) =>
           current && next.receipts.some((receipt) => receipt.id === current)
             ? current
@@ -1174,6 +1297,7 @@ export const Receipts: React.FC = () => {
   }, [api, selectedId]);
 
   const receipts = result?.receipts ?? [];
+  const runs = runsResult?.runs ?? [];
   const filtered = useMemo(() => {
     const needle = query.trim().toLowerCase();
     return receipts.filter((receipt) => {
@@ -1218,6 +1342,30 @@ export const Receipts: React.FC = () => {
           </div>
           <span className="filechip">{Icon.file} {result?.dir ?? '~/.otto/receipts'}</span>
         </div>
+        {error && <div className="notice"><span className="dot dot--warn" /> {error}</div>}
+        {runs.length > 0 && (
+          <div className="panel">
+            <div className="between">
+              <div>
+                <div className="eyebrow">execution records</div>
+                <div className="h-sec">Runs</div>
+              </div>
+              <span className="filechip">{runsResult?.dir ?? '~/.otto/runs'}</span>
+            </div>
+            <div className="receiptEvidence" style={{ marginTop: 12 }}>
+              {runs.slice(0, 8).map((run) => (
+                <div className="zone receiptEvidenceRow" key={run.id}>
+                  <span className="zone__tag">{run.status}</span>
+                  <div>
+                    <div className="card__title">{run.summary ?? run.practice}</div>
+                    <div className="mono receiptEvidenceRef" style={{ marginTop: 4 }}>{run.id} · {run.practice}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+        <SurfaceProof surface="receipts" />
       </div>
     );
   }
@@ -1255,6 +1403,29 @@ export const Receipts: React.FC = () => {
         <span className="filechip">{Icon.file} {result?.dir ?? '~/.otto/receipts'}</span>
       </div>
 
+      {runs.length > 0 && (
+        <div className="panel">
+          <div className="between">
+            <div>
+              <div className="eyebrow">execution records</div>
+              <div className="h-sec">Runs</div>
+            </div>
+            <span className="filechip">{runsResult?.dir ?? '~/.otto/runs'}</span>
+          </div>
+          <div className="receiptEvidence" style={{ marginTop: 12 }}>
+            {runs.slice(0, 8).map((run) => (
+              <div className="zone receiptEvidenceRow" key={run.id}>
+                <span className="zone__tag">{run.status}</span>
+                <div>
+                  <div className="card__title">{run.summary ?? run.practice}</div>
+                  <div className="mono receiptEvidenceRef" style={{ marginTop: 4 }}>{run.id} · {run.practice}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       <div className="split receiptsSplit">
         <div className="cards receiptList" aria-label="Receipts list">
           {filtered.map((receipt) => (
@@ -1284,6 +1455,7 @@ export const Receipts: React.FC = () => {
 
         <ReceiptDetailView detail={detail} summary={selectedSummary} />
       </div>
+      <SurfaceProof surface="receipts" />
     </div>
   );
 };
@@ -1455,6 +1627,7 @@ const zoneClass = (zone: string) => {
 export const Autonomy: React.FC = () => {
   const api = ottoApi();
   const [loaded, setLoaded] = useState<AutonomyPolicyResult | null>(null);
+  const [knowledge, setKnowledge] = useState<KnowledgeListResult | null>(null);
   const [actionText, setActionText] = useState('run tests in worktree');
   const [evaluation, setEvaluation] = useState<AutonomyActionEvaluation | null>(null);
   const [receiptId, setReceiptId] = useState<string | null>(null);
@@ -1464,9 +1637,12 @@ export const Autonomy: React.FC = () => {
   useEffect(() => {
     if (!api) return;
     let cancelled = false;
-    api.autonomy.policy()
-      .then((next) => {
-        if (!cancelled) setLoaded(next);
+    Promise.all([api.autonomy.policy(), api.knowledge.list()])
+      .then(([policy, knowledgeList]) => {
+        if (!cancelled) {
+          setLoaded(policy);
+          setKnowledge(knowledgeList);
+        }
       })
       .catch((e) => {
         if (!cancelled) setError(String(e));
@@ -1559,6 +1735,31 @@ export const Autonomy: React.FC = () => {
         </div>
       </div>
 
+      {knowledge?.registry && (
+        <div className="panel">
+          <div className="between">
+            <div>
+              <div className="eyebrow">knowledge-informed routing</div>
+              <div className="h-sec">Model assignments</div>
+            </div>
+            <span className={`pill ${knowledge.registry.routing.status === 'active' ? 'pill--ok' : 'pill--info'}`}>
+              {knowledge.registry.routing.status}
+            </span>
+          </div>
+          <p className="muted" style={{ marginTop: 8 }}>
+            Autonomy reads {knowledge.registryPath} when classifying actions and orchestrating ticket workers.
+          </p>
+          <div className="receiptEvidence" style={{ marginTop: 12 }}>
+            {Object.entries(knowledge.registry.routing.assignments).map(([role, handle]) => (
+              <div className="zone receiptEvidenceRow" key={role}>
+                <span className="zone__tag">{role}</span>
+                <div className="mono">{handle}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       <div className="panel">
         <div className="eyebrow">check an action</div>
         <p className="muted" style={{ marginTop: 6 }}>Classification writes an autonomy receipt — blocked when approval is required.</p>
@@ -1579,11 +1780,499 @@ export const Autonomy: React.FC = () => {
             <div>
               <div className="card__title">{evaluation.requires_approval ? 'Approval required' : 'May proceed autonomously'}</div>
               <p className="muted" style={{ marginTop: 4 }}>{evaluation.reason}</p>
+              {evaluation.knowledge_routing && (
+                <p className="muted" style={{ marginTop: 6 }}>
+                  Knowledge routing · {evaluation.knowledge_routing.role} → {evaluation.knowledge_routing.provider}/{evaluation.knowledge_routing.model} ({evaluation.knowledge_routing.status})
+                </p>
+              )}
               {receiptId && <div className="mono receiptEvidenceRef" style={{ marginTop: 6 }}>receipt · {receiptId}</div>}
             </div>
           </div>
         )}
       </div>
+      <SurfaceProof surface="autonomy" />
+    </div>
+  );
+};
+
+/* ---------- Skills ---------- */
+export const Skills: React.FC = () => {
+  const api = ottoApi();
+  const [result, setResult] = useState<SkillListResult | null>(null);
+  const [selectedSlug, setSelectedSlug] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!api) return;
+    let cancelled = false;
+    api.skills.list()
+      .then((next) => {
+        if (cancelled) return;
+        setResult(next);
+        setSelectedSlug(next.skills[0]?.slug ?? null);
+      })
+      .catch((e) => {
+        if (!cancelled) setError(String(e));
+      });
+    return () => { cancelled = true; };
+  }, [api]);
+
+  if (!api) {
+    return (
+      <EmptySurface
+        eyebrow="skills"
+        title="Skills are available in the desktop app."
+        body="The web preview cannot read skill/**/SKILL.md files."
+        path="skill/"
+        next="Open the packaged desktop app to inspect capability packages."
+      />
+    );
+  }
+
+  const skills = result?.skills ?? [];
+  const selected = skills.find((skill) => skill.slug === selectedSlug) ?? skills[0] ?? null;
+
+  return (
+    <div className="standardsSurface">
+      <div className="panel">
+        <div className="between">
+          <div>
+            <div className="eyebrow">capability packages</div>
+            <div className="h-sec">Skills</div>
+          </div>
+          <span className="pill pill--ok">{result?.storage ?? 'files'}</span>
+        </div>
+        <div className="row" style={{ flexWrap: 'wrap', gap: 8, marginTop: 12 }}>
+          <span className="filechip">{Icon.file} {result?.dir ?? 'skill/'}</span>
+          <span className="filechip">{result ? skills.length : '…'} skills</span>
+        </div>
+      </div>
+      {error && <div className="notice"><span className="dot dot--warn" /> {error}</div>}
+      <SkippedLoaderPanel skipped={result?.skipped ?? []} />
+      {!result && !error && (
+        <div className="panel">
+          <div className="h-sec">Loading skills…</div>
+        </div>
+      )}
+      {result && !skills.length && !error && (
+        <div className="panel">
+          <div className="h-sec">No skills loaded</div>
+          <p className="muted" style={{ marginTop: 6 }}>
+            Expected `skill/SKILL.md` and optional subpackages. Check the skills directory path above.
+          </p>
+        </div>
+      )}
+      {skills.length > 0 && (
+      <div className="split">
+        <div className="cards">
+          {skills.map((skill) => (
+            <button
+              key={skill.slug}
+              className={`card${skill.slug === selected?.slug ? ' is-selected' : ''}`}
+              onClick={() => setSelectedSlug(skill.slug)}
+            >
+              <div className="card__title">{skill.name}</div>
+              <span className="card__sub">{skill.slug}</span>
+            </button>
+          ))}
+        </div>
+        {selected && (
+          <div className="detail">
+            <div className="panel">
+              <div className="h-sec">{selected.name}</div>
+              <p className="lede" style={{ marginTop: 8 }}>{selected.description}</p>
+              <ChipList values={selected.triggers} empty="No triggers parsed" />
+              <span className="filechip" style={{ marginTop: 12 }}>{selected.file}</span>
+            </div>
+          </div>
+        )}
+      </div>
+      )}
+      <SurfaceProof surface="skills" />
+    </div>
+  );
+};
+
+/* ---------- Knowledge ---------- */
+export const Knowledge: React.FC = () => {
+  const api = ottoApi();
+  const [result, setResult] = useState<KnowledgeListResult | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!api) return;
+    let cancelled = false;
+    api.knowledge.list()
+      .then((next) => { if (!cancelled) setResult(next); })
+      .catch((e) => { if (!cancelled) setError(String(e)); });
+    return () => { cancelled = true; };
+  }, [api]);
+
+  if (!api) {
+    return (
+      <EmptySurface
+        eyebrow="knowledge"
+        title="Knowledge is available in the desktop app."
+        body="The web preview cannot read knowledge/ai-frontier/model-registry.yaml."
+        path="knowledge/ai-frontier/model-registry.yaml"
+        next="Knowledge informs Autonomy routing and ticket worker model selection."
+      />
+    );
+  }
+
+  const registry = result?.registry;
+
+  return (
+    <div className="standardsSurface">
+      <div className="panel">
+        <div className="between">
+          <div>
+            <div className="eyebrow">AI Frontier</div>
+            <div className="h-sec">Model registry</div>
+          </div>
+          {registry && statusPill(registry.status)}
+        </div>
+        <div className="row" style={{ flexWrap: 'wrap', gap: 8, marginTop: 12 }}>
+          <span className="filechip">{Icon.file} {result?.registryPath ?? 'knowledge/ai-frontier/model-registry.yaml'}</span>
+          <span className="filechip">{registry?.models.length ?? 0} models</span>
+        </div>
+      </div>
+      {error && <div className="notice"><span className="dot dot--warn" /> {error}</div>}
+      {result && !registry && !error && (
+        <div className="panel">
+          <div className="h-sec">Registry not found</div>
+          <p className="muted" style={{ marginTop: 6 }}>
+            Could not read `{result.registryPath}`. Knowledge routing falls back until the registry exists.
+          </p>
+        </div>
+      )}
+      {!result && !error && (
+        <div className="panel">
+          <div className="h-sec">Loading knowledge…</div>
+        </div>
+      )}
+      {registry && (
+        <>
+          {registry.status === 'proposed' && (
+            <div className="notice">
+              <span className="dot dot--warn" />
+              Registry status is proposed — routing assignments are defaults, not ratified policy.
+              {registry.last_reviewed ? ` Last reviewed ${registry.last_reviewed}.` : ''}
+            </div>
+          )}
+          <div className="panel">
+            <div className="eyebrow">routing assignments</div>
+            <div className="receiptEvidence" style={{ marginTop: 12 }}>
+              {Object.entries(registry.routing.assignments).map(([role, handle]) => (
+                <div className="zone receiptEvidenceRow" key={role}>
+                  <span className="zone__tag">{role}</span>
+                  <div className="mono">{handle}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+          <div className="panel">
+            <div className="eyebrow">models</div>
+            <div className="cards" style={{ marginTop: 12 }}>
+              {registry.models.map((model) => (
+                <div className="card" key={`${model.provider}/${model.model}`}>
+                  <div className="between">
+                    <span className="card__title">{model.provider}/{model.model}</span>
+                    <span className="pill">{model.cost_tier ?? 'unknown'}</span>
+                  </div>
+                  <span className="card__sub">{model.default_roles.join(', ')}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </>
+      )}
+      <SurfaceProof surface="knowledge" />
+    </div>
+  );
+};
+
+/* ---------- Tickets + workers ---------- */
+export const Tickets: React.FC = () => {
+  const api = ottoApi();
+  const [tickets, setTickets] = useState<TicketListResult | null>(null);
+  const [workers, setWorkers] = useState<WorkerListResult | null>(null);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [objective, setObjective] = useState('');
+  const [slug, setSlug] = useState('');
+  const [message, setMessage] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+
+  const reload = async () => {
+    if (!api) return;
+    const [ticketList, workerList] = await Promise.all([api.tickets.list(), api.workers.list()]);
+    setTickets(ticketList);
+    setWorkers(workerList);
+    setSelectedId((current) =>
+      current && ticketList.tickets.some((t) => t.ticket_id === current)
+        ? current
+        : ticketList.tickets[0]?.ticket_id ?? null,
+    );
+  };
+
+  useEffect(() => {
+    if (!api) return;
+    reload().catch((e) => setError(String(e)));
+  }, [api]);
+
+  if (!api) {
+    return (
+      <EmptySurface
+        eyebrow="tickets"
+        title="Tickets are available in the desktop app."
+        body="Compile bounded worker slices and orchestrate them in git worktrees."
+        path="~/.otto/tickets/"
+        next="Main Otto orchestrates ticket workers when Autonomy policy allows."
+      />
+    );
+  }
+
+  const list = tickets?.tickets ?? [];
+  const selected = list.find((t) => t.ticket_id === selectedId) ?? list[0] ?? null;
+  const workerForTicket = workers?.workers.find((w) => w.ticket_id === selected?.ticket_id) ?? null;
+
+  const compile = async () => {
+    if (!api || busy || !objective.trim()) return;
+    setBusy(true);
+    setError(null);
+    setMessage(null);
+    try {
+      const result = await api.tickets.compile({
+        slug: slug.trim() || slugify(objective),
+        objective: objective.trim(),
+      });
+      setMessage(`Compiled ${result.ticket.ticket_id} · receipt ${result.receipt.id}`);
+      setObjective('');
+      setSlug('');
+      await reload();
+    } catch (e) {
+      setError(String(e));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const orchestrate = async () => {
+    if (!api || busy || !objective.trim()) return;
+    setBusy(true);
+    setError(null);
+    setMessage(null);
+    try {
+      const result = await api.tickets.orchestrate({
+        slug: slug.trim() || slugify(objective),
+        objective: objective.trim(),
+      });
+      setMessage(`Orchestrated ${result.ticket.ticket_id} · worker ${result.worker.id} · run ${result.run.id}`);
+      setObjective('');
+      setSlug('');
+      await reload();
+    } catch (e) {
+      setError(String(e));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <div className="standardsSurface">
+      <div className="panel">
+        <div className="between">
+          <div>
+            <div className="eyebrow">bounded worker slices</div>
+            <div className="h-sec">Tickets</div>
+          </div>
+          <span className="filechip">{tickets?.dir ?? '~/.otto/tickets'}</span>
+        </div>
+        <input
+          style={{ width: '100%', marginTop: 10, padding: '8px 10px', borderRadius: 8, border: '1px solid var(--line)' }}
+          value={objective}
+          onChange={(e) => setObjective(e.target.value)}
+          placeholder="Objective for the worker slice…"
+        />
+        <input
+          style={{ width: '100%', marginTop: 8, padding: '8px 10px', borderRadius: 8, border: '1px solid var(--line)' }}
+          value={slug}
+          onChange={(e) => setSlug(e.target.value)}
+          placeholder="Optional slug (defaults from objective)"
+        />
+        <div className="row" style={{ marginTop: 12, gap: 8 }}>
+          <button type="button" className="btn" disabled={busy || !objective.trim()} onClick={compile}>Compile ticket</button>
+          <button type="button" className="btn btn--primary" disabled={busy || !objective.trim()} onClick={orchestrate}>Orchestrate in worktree</button>
+        </div>
+      </div>
+      {error && <div className="notice"><span className="dot dot--warn" /> {error}</div>}
+      {message && <div className="notice"><span className="dot dot--ok" /> {message}</div>}
+      {!tickets && !error && (
+        <div className="panel">
+          <div className="h-sec">Loading tickets…</div>
+        </div>
+      )}
+      <div className="split">
+        <div className="cards">
+          {list.map((ticket) => (
+            <button
+              key={ticket.ticket_id}
+              className={`card${ticket.ticket_id === selected?.ticket_id ? ' is-selected' : ''}`}
+              onClick={() => setSelectedId(ticket.ticket_id)}
+            >
+              <div className="between">
+                <span className="card__title">{ticket.objective.slice(0, 72)}</span>
+                {statusPill(ticket.status)}
+              </div>
+              <span className="card__sub">{ticket.ticket_id}</span>
+            </button>
+          ))}
+          {tickets && !list.length && (
+            <div className="panel">
+              <div className="h-sec">No tickets yet</div>
+              <p className="muted" style={{ marginTop: 6 }}>Compile a bounded slice or orchestrate one in a git worktree.</p>
+            </div>
+          )}
+        </div>
+        {selected && (
+          <div className="detail">
+            <div className="panel">
+              <div className="between">
+                <div className="h-sec">{selected.ticket_id}</div>
+                {statusPill(selected.status)}
+              </div>
+              <p className="lede" style={{ marginTop: 8 }}>{selected.objective}</p>
+              <ChipList values={selected.checks} empty="No checks" />
+              {selected.branch && <span className="filechip" style={{ marginTop: 10 }}>branch · {selected.branch}</span>}
+              {selected.model && <span className="filechip" style={{ marginTop: 10 }}>model · {selected.model}</span>}
+              {selected.worktree && <span className="filechip" style={{ marginTop: 10 }}>worktree · {selected.worktree}</span>}
+              {selected.owner && <span className="filechip" style={{ marginTop: 10 }}>owner · {selected.owner}</span>}
+            </div>
+            {!!selected.acceptance_criteria.length && (
+              <div className="panel">
+                <div className="eyebrow">acceptance criteria</div>
+                <ul className="list" style={{ marginTop: 8 }}>
+                  {selected.acceptance_criteria.map((ac) => (
+                    <li key={ac.id}><strong>{ac.id}</strong> {ac.text}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            {workerForTicket && (
+              <div className="panel">
+                <div className="eyebrow">worker status</div>
+                <div className="between" style={{ marginTop: 10 }}>
+                  <span className="mono">{workerForTicket.id}</span>
+                  {statusPill(workerForTicket.status)}
+                </div>
+                <p className="muted" style={{ marginTop: 8 }}>{workerForTicket.summary}</p>
+              </div>
+            )}
+            <div className="panel">
+              {selected.packetPath && <span className="filechip">{selected.packetPath}</span>}
+              <span className="filechip" style={{ marginTop: selected.packetPath ? 8 : 0 }}>{selected.ticketPath}</span>
+            </div>
+          </div>
+        )}
+      </div>
+      {!!tickets?.skipped && (
+        <p className="muted" style={{ marginTop: 8 }}>{tickets.skipped} malformed ticket folder{tickets.skipped === 1 ? '' : 's'} skipped.</p>
+      )}
+      {(workers?.workers.length ?? 0) > 0 && (
+        <div className="panel">
+          <div className="eyebrow">all workers</div>
+          <div className="receiptEvidence" style={{ marginTop: 12 }}>
+            {workers!.workers.slice(0, 10).map((worker) => (
+              <div className="zone receiptEvidenceRow" key={worker.id}>
+                <span className="zone__tag">{worker.status}</span>
+                <div>
+                  <div className="mono">{worker.id}</div>
+                  <div className="muted">{worker.ticket_id}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+      <SurfaceProof surface="tickets" />
+    </div>
+  );
+};
+
+/* ---------- Channels ---------- */
+export const Channels: React.FC = () => {
+  const api = ottoApi();
+  const [result, setResult] = useState<ChannelListResult | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!api) return;
+    let cancelled = false;
+    api.channels.list()
+      .then((next) => { if (!cancelled) setResult(next); })
+      .catch((e) => { if (!cancelled) setError(String(e)); });
+    return () => { cancelled = true; };
+  }, [api]);
+
+  if (!api) {
+    return (
+      <EmptySurface
+        eyebrow="channels"
+        title="Channels are available in the desktop app."
+        body="Reachability surfaces — Discord is the v0/v1 backend; files remain source of truth."
+        path="channels/channels.yaml"
+        next="Outbound sends require approval via Autonomy + Curation."
+      />
+    );
+  }
+
+  const channels = result?.channels ?? [];
+
+  return (
+    <div className="standardsSurface">
+      <div className="panel">
+        <div className="between">
+          <div>
+            <div className="eyebrow">reachability</div>
+            <div className="h-sec">Channels</div>
+          </div>
+          <span className="pill pill--ok">{result?.storage ?? 'files'}</span>
+        </div>
+        <p className="muted" style={{ marginTop: 8 }}>
+          Discord is the ambient console backend in v1. Outbound messages are external side effects and stay approval-gated.
+        </p>
+        <span className="filechip" style={{ marginTop: 10 }}>{Icon.file} {result?.configPath ?? 'channels/channels.yaml'}</span>
+      </div>
+      {error && <div className="notice"><span className="dot dot--warn" /> {error}</div>}
+      {!result && !error && (
+        <div className="panel">
+          <div className="h-sec">Loading channels…</div>
+        </div>
+      )}
+      {result && !channels.length && !error && (
+        <div className="panel">
+          <div className="h-sec">No channels configured</div>
+          <p className="muted" style={{ marginTop: 6 }}>
+            Add entries to `{result.configPath}` or rely on the built-in desktop chat default when the file is missing.
+          </p>
+        </div>
+      )}
+      <div className="cards">
+        {channels.map((channel) => (
+          <div className="card" key={channel.id}>
+            <div className="between">
+              <span className="card__title">{channel.label}</span>
+              <span className={`pill ${channel.enabled ? 'pill--ok' : 'pill--warn'}`}>{channel.enabled ? 'enabled' : 'disabled'}</span>
+            </div>
+            <span className="card__sub">{channel.kind} · {channel.address}</span>
+            {channel.requires_approval_to_send && (
+              <span className="pill pill--warn" style={{ marginTop: 8 }}>approval required to send</span>
+            )}
+          </div>
+        ))}
+      </div>
+      <SurfaceProof surface="channels" />
     </div>
   );
 };
@@ -1919,6 +2608,10 @@ export const Settings: React.FC = () => {
           <p className="faint mono" style={{ fontSize: 11.5 }}>
             v1 is local-only: otto connects to a local Letta runtime. Cloud/self-host auth can come later as an advanced path.
           </p>
+          <p className="muted" style={{ marginTop: 12 }}>
+            Canon briefs (one-pagers) live in <code className="mono">docs/onepagers/</code> — compressed alignment for each behavior surface.
+          </p>
+          <SurfaceProof surface="settings" />
         </div>
       )}
     </div>

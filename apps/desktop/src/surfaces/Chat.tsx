@@ -2,7 +2,7 @@ import type React from 'react';
 import { useEffect, useRef, useState } from 'react';
 import { Icon } from '../components/icons';
 import { requiredMissing, isReady } from '../readiness';
-import { isElectron, ottoApi, type EffortLevel, type SavedAttachment } from '../runtime';
+import { isElectron, ottoApi, type EffortLevel, type RuntimeStatus, type SavedAttachment } from '../runtime';
 import { useRuntimeContext } from '../RuntimeContext';
 import ottoAvatar from '../assets/otto-avatar.png';
 
@@ -43,6 +43,12 @@ const EFFORT_OPTIONS: Array<{ label: string; value: EffortLevel }> = [
 
 const labelForModel = (value?: string | null) => MODEL_OPTIONS.find((m) => m.value === value)?.label ?? value ?? 'Agent default';
 const labelForEffort = (value?: EffortLevel) => EFFORT_OPTIONS.find((e) => e.value === value)?.label ?? 'Max';
+
+const sessionSubtitle = (st: RuntimeStatus): string => {
+  const model = labelForModel(st.modelHandle ?? st.model);
+  const memory = st.memfsEnabled ? 'Letta memory on' : 'Letta memory off';
+  return `${model} · ${memory}`;
+};
 
 const imageFiles = (files: FileList | File[]): File[] =>
   Array.from(files).filter((file) => file.type.startsWith('image/'));
@@ -178,7 +184,7 @@ const MarkdownText: React.FC<{ text: string }> = ({ text }) => {
     if (part.startsWith('```')) {
       const code = part.replace(/^```[^\n]*\n?/, '').replace(/```$/, '').trimEnd();
       blocks.push(<pre className="md__pre" key={`code-${blocks.length}-${code.slice(0, 48)}`}><code>{code}</code></pre>);
-      return;
+      continue;
     }
 
     const lines = part.split('\n');
@@ -350,24 +356,24 @@ const LiveChat: React.FC<{ onOpenSettings?: () => void; sidebarHidden: boolean; 
         void attachImages(files);
       }}
     >
-      <div className="chat__head">
+      <div className={`chat__head${sidebarHidden ? ' chat__head--inset' : ''}`}>
         {sidebarHidden && (
-          <button type="button" className="topbar__sidebarButton" onClick={onToggleSidebar} aria-label="Open sidebar">
+          <button type="button" className="topbar__sidebarButton chat__sidebarButton" onClick={onToggleSidebar} aria-label="Open sidebar">
             {Icon.panel}
           </button>
         )}
-        <span className="brand__mark brand__mark--avatar" style={{ width: 28, height: 28, borderRadius: 8 }}><img src={ottoAvatar} alt="" /></span>
-        <div>
-          <div style={{ fontWeight: 600 }}>otto</div>
+        <span className="brand__mark brand__mark--avatar chat__avatar"><img src={ottoAvatar} alt="" /></span>
+        <div className="chat__titleBlock">
+          <div className="chat__title">otto</div>
           <div className="chat__id">
-            {st
-              ? `${st.agentId ?? 'no agent'} · ${st.model ?? labelForModel(st.modelHandle) ?? 'model unset'}${st.memfsEnabled ? ' · MemFS on' : ''}`
-              : 'connecting…'}
+            {st ? (
+              <>
+                <span className={`dot ${ready ? 'dot--ok' : 'dot--warn'}`} aria-hidden="true" />
+                {sessionSubtitle(st)}
+              </>
+            ) : 'connecting…'}
           </div>
         </div>
-        <span className={`pill ${ready ? 'pill--ok' : 'pill--warn'}`} style={{ marginLeft: 'auto' }}>
-          {ready ? 'connected' : 'not connected'}
-        </span>
       </div>
 
       <div className="chat__stream">
@@ -389,7 +395,7 @@ const LiveChat: React.FC<{ onOpenSettings?: () => void; sidebarHidden: boolean; 
           <div className="emptySurface emptySurface--chat">
             <div className="eyebrow">Session</div>
             <h2>Ready when you are.</h2>
-            <p>Connected to {st?.agentId ?? 'otto'}. Message otto to start a session.</p>
+            <p>Message otto to start a session.</p>
           </div>
         )}
         {rt.messages.map((m, i) => {
@@ -401,7 +407,7 @@ const LiveChat: React.FC<{ onOpenSettings?: () => void; sidebarHidden: boolean; 
             </div>
           );
         })}
-        {rt.busy && <div className="eyebrow">otto is working…</div>}
+        {rt.busy && <div className="chat__thinking"><span className="dot dot--idle" aria-hidden="true" /> thinking…</div>}
       </div>
 
       <div className="promptbar">
@@ -454,103 +460,100 @@ const LiveChat: React.FC<{ onOpenSettings?: () => void; sidebarHidden: boolean; 
           </div>
         )}
         {attachmentError && <div className="attachmentError">{attachmentError}</div>}
-        <div className={`promptbox${ready ? '' : ' promptbox--disabled'}`}>
-          <input
-            ref={fileInput}
-            type="file"
-            accept="image/*"
-            multiple
-            className="srOnly"
-            onChange={(e) => {
-              void attachImages(imageFiles(e.currentTarget.files ?? []));
-              e.currentTarget.value = '';
-            }}
-          />
-          <button type="button" className="btn btn--icon" aria-label="Attach image" disabled={!ready} onClick={() => fileInput.current?.click()}>
-            {Icon.image}
-          </button>
-          <textarea
-            placeholder={ready ? (rt.busy ? 'Queue a follow-up…' : 'Message otto…') : 'Runtime not ready — see Settings'}
-            aria-label="Message Otto"
-            value={draft}
-            onChange={(e) => setDraft(e.target.value)}
-            onPaste={(e) => {
-              const files = imageFilesFromTransfer(e.clipboardData);
-              if (!files.length) return;
-              e.preventDefault();
-              void attachImages(files);
-            }}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' && !e.shiftKey) {
+        <div className="promptCompose">
+          <div className="promptControls">
+            <div className="picker" data-open={modelOpen ? 'true' : 'false'}>
+              <button type="button" className="picker__button" onClick={() => { setModelOpen((x) => !x); setEffortOpen(false); }} disabled={rt.busy}>
+                <span>{labelForModel(selectedModel)}</span>
+                <span className="picker__chev">›</span>
+              </button>
+              {modelOpen && (
+                <div className="picker__menu picker__menu--model">
+                  <div className="picker__title">Select model</div>
+                  {MODEL_OPTIONS.map((m) => (
+                    <button type="button"
+                      key={m.value}
+                      className={`picker__option${selectedModel === m.value ? ' is-selected' : ''}`}
+                      onClick={() => {
+                        setModelOpen(false);
+                        void rt.configure({ modelHandle: m.value });
+                      }}
+                    >
+                      <span>{m.label}</span>
+                      <span className="mono faint">{m.value}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+            <div className="picker" data-open={effortOpen ? 'true' : 'false'}>
+              <button type="button" className="picker__button picker__button--effort" onClick={() => { setEffortOpen((x) => !x); setModelOpen(false); }} disabled={rt.busy}>
+                <span>{labelForEffort(selectedEffort)}</span>
+                <span className="effortDots" aria-hidden="true">
+                  {EFFORT_OPTIONS.slice(1).map((e) => <i key={e.value} data-on={EFFORT_OPTIONS.findIndex((x) => x.value === e.value) <= EFFORT_OPTIONS.findIndex((x) => x.value === selectedEffort) ? 'true' : 'false'} />)}
+                </span>
+                <span className="picker__chev">›</span>
+              </button>
+              {effortOpen && (
+                <div className="picker__menu picker__menu--effort">
+                  <div className="picker__title">Reasoning</div>
+                  {EFFORT_OPTIONS.map((e) => (
+                    <button type="button"
+                      key={e.value}
+                      className={`picker__option${selectedEffort === e.value ? ' is-selected' : ''}`}
+                      onClick={() => {
+                        setEffortOpen(false);
+                        void rt.configure({ effort: e.value });
+                      }}
+                    >
+                      <span>{e.label}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+          <div className={`promptbox${ready ? '' : ' promptbox--disabled'}`}>
+            <input
+              ref={fileInput}
+              type="file"
+              accept="image/*"
+              multiple
+              className="srOnly"
+              onChange={(e) => {
+                void attachImages(imageFiles(e.currentTarget.files ?? []));
+                e.currentTarget.value = '';
+              }}
+            />
+            <button type="button" className="btn btn--icon" aria-label="Attach image" disabled={!ready} onClick={() => fileInput.current?.click()}>
+              {Icon.image}
+            </button>
+            <textarea
+              placeholder={ready ? (rt.busy ? 'Queue a follow-up…' : 'Message otto…') : 'Runtime not ready — see Settings'}
+              aria-label="Message Otto"
+              value={draft}
+              onChange={(e) => setDraft(e.target.value)}
+              onPaste={(e) => {
+                const files = imageFilesFromTransfer(e.clipboardData);
+                if (!files.length) return;
                 e.preventDefault();
-                submit();
-              }
-              else if (e.key === 'Escape') { setDraft(''); e.currentTarget.blur(); }
-            }}
-            disabled={!ready}
-          />
-          {rt.busy && (
-            <button type="button" className="btn btn--icon" aria-label="Abort current run" onClick={rt.abort}>{Icon.stop}</button>
-          )}
-          <button type="button" className="btn btn--primary btn--icon" aria-label={rt.busy ? 'Queue message' : 'Send message'} disabled={!ready || (!draft.trim() && attachments.length === 0)} onClick={submit}>{Icon.send}</button>
-        </div>
-        <div className="promptControls">
-          <div className="picker" data-open={modelOpen ? 'true' : 'false'}>
-            <button type="button" className="picker__button" onClick={() => { setModelOpen((x) => !x); setEffortOpen(false); }} disabled={rt.busy}>
-              <span>{labelForModel(selectedModel)}</span>
-              <span className="picker__chev">›</span>
-            </button>
-            {modelOpen && (
-              <div className="picker__menu picker__menu--model">
-                <div className="picker__title">Select model</div>
-                {MODEL_OPTIONS.map((m) => (
-                  <button type="button"
-                    key={m.value}
-                    className={`picker__option${selectedModel === m.value ? ' is-selected' : ''}`}
-                    onClick={() => {
-                      setModelOpen(false);
-                      void rt.configure({ modelHandle: m.value });
-                    }}
-                  >
-                    <span>{m.label}</span>
-                    <span className="mono faint">{m.value}</span>
-                  </button>
-                ))}
-              </div>
+                void attachImages(files);
+              }}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                  e.preventDefault();
+                  submit();
+                }
+                else if (e.key === 'Escape') { setDraft(''); e.currentTarget.blur(); }
+              }}
+              disabled={!ready}
+              rows={2}
+            />
+            {rt.busy && (
+              <button type="button" className="btn btn--icon" aria-label="Abort current run" onClick={rt.abort}>{Icon.stop}</button>
             )}
+            <button type="button" className="btn btn--primary btn--icon" aria-label={rt.busy ? 'Queue message' : 'Send message'} disabled={!ready || (!draft.trim() && attachments.length === 0)} onClick={submit}>{Icon.send}</button>
           </div>
-          <div className="picker" data-open={effortOpen ? 'true' : 'false'}>
-            <button type="button" className="picker__button picker__button--effort" onClick={() => { setEffortOpen((x) => !x); setModelOpen(false); }} disabled={rt.busy}>
-              <span>{labelForEffort(selectedEffort)}</span>
-              <span className="effortDots" aria-hidden="true">
-                {EFFORT_OPTIONS.slice(1).map((e) => <i key={e.value} data-on={EFFORT_OPTIONS.findIndex((x) => x.value === e.value) <= EFFORT_OPTIONS.findIndex((x) => x.value === selectedEffort) ? 'true' : 'false'} />)}
-              </span>
-              <span className="picker__chev">›</span>
-            </button>
-            {effortOpen && (
-              <div className="picker__menu picker__menu--effort">
-                <div className="picker__title">Reasoning</div>
-                {EFFORT_OPTIONS.map((e) => (
-                  <button type="button"
-                    key={e.value}
-                    className={`picker__option${selectedEffort === e.value ? ' is-selected' : ''}`}
-                    onClick={() => {
-                      setEffortOpen(false);
-                      void rt.configure({ effort: e.value });
-                    }}
-                  >
-                    <span>{e.label}</span>
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
-        <div className="promptbar__meta">
-          <span>cli: {st?.cliResolved ? 'override' : 'bundled'}</span>
-          {st?.tools && <span>{st.tools.length} tools</span>}
-          <span className="faint">session: {st?.sessionMode === 'smoke' ? 'smoke conversation' : (st?.conversationId ?? 'default')}</span>
-          <span className="faint">runtime: {ready ? 'connected' : 'not connected'}</span>
         </div>
       </div>
     </div>

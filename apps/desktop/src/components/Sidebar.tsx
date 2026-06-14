@@ -12,6 +12,10 @@ export type SurfaceId =
   | 'curation'
   | 'receipts'
   | 'autonomy'
+  | 'skills'
+  | 'knowledge'
+  | 'tickets'
+  | 'channels'
   | 'settings';
 
 type NavDef = { id: SurfaceId; label: string; icon: React.ReactNode; shortcut?: string };
@@ -35,14 +39,25 @@ const GROUPS: { group?: string; items: NavDef[] }[] = [
       { id: 'autonomy', label: 'Autonomy', icon: Icon.autonomy, shortcut: '⌘8' },
     ],
   },
+  {
+    group: 'System',
+    items: [
+      { id: 'skills', label: 'Skills', icon: Icon.practices },
+      { id: 'knowledge', label: 'Knowledge', icon: Icon.standards },
+      { id: 'tickets', label: 'Tickets', icon: Icon.charter },
+      { id: 'channels', label: 'Channels', icon: Icon.chat },
+    ],
+  },
 ];
 
 export const Sidebar: React.FC<{
   active: SurfaceId;
   onSelect: (id: SurfaceId) => void;
+  onNewChat?: () => void;
   counts: Partial<Record<SurfaceId, number>>;
+  compact?: boolean;
   onToggleCollapsed: () => void;
-}> = ({ active, onSelect, counts, onToggleCollapsed }) => {
+}> = ({ active, onSelect, onNewChat, counts, compact = false, onToggleCollapsed }) => {
   const rt = useRuntimeContext();
   // Truthful readiness: only the live runtime can mark connected.
   const connected = rt.electron ? !!rt.status?.ready : false;
@@ -62,7 +77,7 @@ export const Sidebar: React.FC<{
   );
 
   return (
-    <aside className="sidebar">
+    <aside className={`sidebar${compact ? ' is-collapsed' : ''}`}>
       <div className="brand">
         <span className="brand__mark brand__mark--avatar"><img src={ottoAvatar} alt="" /></span>
         <span className="brand__text">
@@ -83,7 +98,10 @@ export const Sidebar: React.FC<{
       <button
         className="sidebar__primary has-tip"
         type="button"
-        onClick={() => onSelect('chat')}
+        onClick={() => {
+          onNewChat?.();
+          onSelect('chat');
+        }}
         aria-label="New chat"
         data-tip="New chat"
         data-kbd="⌘N"

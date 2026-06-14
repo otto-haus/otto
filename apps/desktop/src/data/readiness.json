@@ -44,7 +44,7 @@
       "required": false,
       "status": "configured",
       "detail": "Otto repo detected",
-      "source": "~/Code/otto/.letta/worktrees/otto-v01-integration",
+      "source": "~/Code/otto",
       "action": "Override with OTTO_HOME"
     },
     {
