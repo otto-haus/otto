@@ -1,0 +1,22 @@
+{
+  "pr": 17,
+  "branch": "craft/package-repository-metadata",
+  "status": "ready",
+  "assumptions": [
+    "Root package metadata should be stable for registry/editor integrations.",
+    "Existing dependency constraints from main are intentionally preserved during metadata-only changes."
+  ],
+  "changes": [
+    "Added root package.json homepage/repository/bugs metadata fields.",
+    "Restored root package.json esbuild override to avoid unrelated dependency behavior drift."
+  ],
+  "checks": [
+    { "command": "python3 -c \"import json; d=json.load(open('package.json')); print(d['repository']); print(d['homepage']); print(d['bugs'])\"", "result": "pass" },
+    { "command": "git remote get-url origin", "result": "https://github.com/otto-haus/otto.git" },
+    { "command": "bunx tsc -p packages/core/tsconfig.json", "result": "pass" },
+    { "command": "bunx tsc -p packages/practices/tsconfig.json", "result": "pass" }
+  ],
+  "notes": [
+    "`bun run typecheck` in this environment resolves to a shell `tsc` binary mismatch; verification was performed with explicit `bunx tsc` invocations."
+  ]
+}
