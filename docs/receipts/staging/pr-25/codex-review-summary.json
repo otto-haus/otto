@@ -1,0 +1,459 @@
+{
+  "base": "http://127.0.0.1:5195/",
+  "generatedAt": "2026-06-14T18:12:23.059Z",
+  "summary": [
+    {
+      "viewport": {
+        "name": "desktop",
+        "width": 1040,
+        "height": 720
+      },
+      "route": "charters",
+      "url": "http://127.0.0.1:5195/#charters",
+      "screenshot": "docs/receipts/staging/pr-25/codex-review-desktop-charters.png",
+      "metrics": {
+        "title": "Otto Desktop",
+        "notBlank": true,
+        "frameworkOverlay": false,
+        "route": "charters",
+        "activeHeading": "Charters",
+        "main": {
+          "top": 0,
+          "left": 272,
+          "width": 768,
+          "height": 720,
+          "bottom": 720,
+          "right": 1040
+        },
+        "topbar": {
+          "top": 0,
+          "left": 272,
+          "width": 768,
+          "height": 107,
+          "bottom": 107,
+          "right": 1040
+        },
+        "content": {
+          "top": 107,
+          "left": 272,
+          "width": 768,
+          "height": 613,
+          "bottom": 720,
+          "right": 1040
+        },
+        "empty": {
+          "top": 236.5,
+          "left": 396,
+          "width": 520,
+          "height": 320,
+          "bottom": 556.5,
+          "right": 916
+        },
+        "centerDeltaPx": -17,
+        "contentFlexGrow": "1",
+        "contentFlexShrink": "1",
+        "contentFlexBasis": "0%",
+        "contentMinHeight": "0px",
+        "contentOverflowY": "auto",
+        "contentScrolls": false,
+        "contentClientHeight": 613,
+        "contentScrollHeight": 613,
+        "visibleText": "otto\nNew chat\nChat\nBehavior\nCharters\nStandards\nPractices\nRoutines\nGovernance\nCuration\nReceipts\nAutonomy\nSettings\nsetup\nruntime: not connected\nsetup required — see Settings\nOTTO WORKSPACE\nCharters\nNot done yet — real oper"
+      }
+    },
+    {
+      "viewport": {
+        "name": "desktop",
+        "width": 1040,
+        "height": 720
+      },
+      "route": "receipts",
+      "url": "http://127.0.0.1:5195/#receipts",
+      "screenshot": "docs/receipts/staging/pr-25/codex-review-desktop-receipts.png",
+      "metrics": {
+        "title": "Otto Desktop",
+        "notBlank": true,
+        "frameworkOverlay": false,
+        "route": "receipts",
+        "activeHeading": "Receipts",
+        "main": {
+          "top": 0,
+          "left": 272,
+          "width": 768,
+          "height": 720,
+          "bottom": 720,
+          "right": 1040
+        },
+        "topbar": {
+          "top": 0,
+          "left": 272,
+          "width": 768,
+          "height": 107,
+          "bottom": 107,
+          "right": 1040
+        },
+        "content": {
+          "top": 107,
+          "left": 272,
+          "width": 768,
+          "height": 613,
+          "bottom": 720,
+          "right": 1040
+        },
+        "empty": {
+          "top": 236.5,
+          "left": 396,
+          "width": 520,
+          "height": 320,
+          "bottom": 556.5,
+          "right": 916
+        },
+        "centerDeltaPx": -17,
+        "contentFlexGrow": "1",
+        "contentFlexShrink": "1",
+        "contentFlexBasis": "0%",
+        "contentMinHeight": "0px",
+        "contentOverflowY": "auto",
+        "contentScrolls": false,
+        "contentClientHeight": 613,
+        "contentScrollHeight": 613,
+        "visibleText": "otto\nNew chat\nChat\nBehavior\nCharters\nStandards\nPractices\nRoutines\nGovernance\nCuration\nReceipts\nAutonomy\nSettings\nsetup\nruntime: not connected\nsetup required — see Settings\nOTTO WORKSPACE\nReceipts\nNot done yet — proof and"
+      }
+    },
+    {
+      "viewport": {
+        "name": "desktop",
+        "width": 1040,
+        "height": 720
+      },
+      "route": "settings",
+      "url": "http://127.0.0.1:5195/#settings",
+      "screenshot": "docs/receipts/staging/pr-25/codex-review-desktop-settings.png",
+      "metrics": {
+        "title": "Otto Desktop",
+        "notBlank": true,
+        "frameworkOverlay": false,
+        "route": "settings",
+        "activeHeading": "Settings",
+        "main": {
+          "top": 0,
+          "left": 272,
+          "width": 768,
+          "height": 720,
+          "bottom": 720,
+          "right": 1040
+        },
+        "topbar": {
+          "top": 0,
+          "left": 272,
+          "width": 768,
+          "height": 107,
+          "bottom": 107,
+          "right": 1040
+        },
+        "content": {
+          "top": 107,
+          "left": 272,
+          "width": 768,
+          "height": 613,
+          "bottom": 720,
+          "right": 1040
+        },
+        "empty": null,
+        "centerDeltaPx": null,
+        "contentFlexGrow": "1",
+        "contentFlexShrink": "1",
+        "contentFlexBasis": "0%",
+        "contentMinHeight": "0px",
+        "contentOverflowY": "auto",
+        "contentScrolls": true,
+        "contentClientHeight": 613,
+        "contentScrollHeight": 2638,
+        "visibleText": "otto\nNew chat\nChat\nBehavior\nCharters\nStandards\nPractices\nRoutines\nGovernance\nCuration\nReceipts\nAutonomy\nSettings\nruntime: not connected\nsetup required — see Settings\nOTTO WORKSPACE\nSettings\nSetup & readiness — what is co"
+      }
+    },
+    {
+      "viewport": {
+        "name": "desktop",
+        "width": 1040,
+        "height": 720
+      },
+      "route": "chat",
+      "url": "http://127.0.0.1:5195/#chat",
+      "screenshot": "docs/receipts/staging/pr-25/codex-review-desktop-chat.png",
+      "metrics": {
+        "title": "Otto Desktop",
+        "notBlank": true,
+        "frameworkOverlay": false,
+        "route": "chat",
+        "activeHeading": "Chat",
+        "main": {
+          "top": 0,
+          "left": 272,
+          "width": 768,
+          "height": 720,
+          "bottom": 720,
+          "right": 1040
+        },
+        "topbar": null,
+        "content": {
+          "top": 0,
+          "left": 272,
+          "width": 768,
+          "height": 720,
+          "bottom": 720,
+          "right": 1040
+        },
+        "empty": {
+          "top": 144,
+          "left": 396,
+          "width": 520,
+          "height": 320,
+          "bottom": 464,
+          "right": 916
+        },
+        "centerDeltaPx": -56,
+        "contentFlexGrow": "1",
+        "contentFlexShrink": "1",
+        "contentFlexBasis": "0%",
+        "contentMinHeight": "0px",
+        "contentOverflowY": "hidden",
+        "contentScrolls": false,
+        "contentClientHeight": 720,
+        "contentScrollHeight": 720,
+        "visibleText": "otto\nNew chat\nChat\nBehavior\nCharters\nStandards\nPractices\nRoutines\nGovernance\nCuration\nReceipts\nAutonomy\nSettings\nsetup\nruntime: not connected\nsetup required — see Settings\notto\nruntime not connected · desktop bridge unav"
+      }
+    },
+    {
+      "viewport": "desktop",
+      "console": []
+    },
+    {
+      "viewport": {
+        "name": "mobile",
+        "width": 390,
+        "height": 844
+      },
+      "route": "charters",
+      "url": "http://127.0.0.1:5195/#charters",
+      "screenshot": "docs/receipts/staging/pr-25/codex-review-mobile-charters.png",
+      "metrics": {
+        "title": "Otto Desktop",
+        "notBlank": true,
+        "frameworkOverlay": false,
+        "route": "charters",
+        "activeHeading": "Charters",
+        "main": {
+          "top": 0,
+          "left": 68,
+          "width": 322,
+          "height": 844,
+          "bottom": 844,
+          "right": 390
+        },
+        "topbar": {
+          "top": 0,
+          "left": 68,
+          "width": 322,
+          "height": 141,
+          "bottom": 141,
+          "right": 390
+        },
+        "content": {
+          "top": 141,
+          "left": 68,
+          "width": 322,
+          "height": 703,
+          "bottom": 844,
+          "right": 390
+        },
+        "empty": {
+          "top": 315.5,
+          "left": 100,
+          "width": 258,
+          "height": 320,
+          "bottom": 635.5,
+          "right": 358
+        },
+        "centerDeltaPx": -17,
+        "contentFlexGrow": "1",
+        "contentFlexShrink": "1",
+        "contentFlexBasis": "0%",
+        "contentMinHeight": "0px",
+        "contentOverflowY": "auto",
+        "contentScrolls": false,
+        "contentClientHeight": 703,
+        "contentScrollHeight": 703,
+        "visibleText": "New chat\nOTTO WORKSPACE\nCharters\nNot done yet — real operating contracts will land soon.\nFILE-BACKED\nCHARTERS\nCharters are available in the desktop app.\n\nThe web preview cannot read the local charter store. The desktop a"
+      }
+    },
+    {
+      "viewport": {
+        "name": "mobile",
+        "width": 390,
+        "height": 844
+      },
+      "route": "receipts",
+      "url": "http://127.0.0.1:5195/#receipts",
+      "screenshot": "docs/receipts/staging/pr-25/codex-review-mobile-receipts.png",
+      "metrics": {
+        "title": "Otto Desktop",
+        "notBlank": true,
+        "frameworkOverlay": false,
+        "route": "receipts",
+        "activeHeading": "Receipts",
+        "main": {
+          "top": 0,
+          "left": 68,
+          "width": 322,
+          "height": 844,
+          "bottom": 844,
+          "right": 390
+        },
+        "topbar": {
+          "top": 0,
+          "left": 68,
+          "width": 322,
+          "height": 158,
+          "bottom": 158,
+          "right": 390
+        },
+        "content": {
+          "top": 158,
+          "left": 68,
+          "width": 322,
+          "height": 686,
+          "bottom": 844,
+          "right": 390
+        },
+        "empty": {
+          "top": 323.65625,
+          "left": 100,
+          "width": 258,
+          "height": 320.703125,
+          "bottom": 644.359375,
+          "right": 358
+        },
+        "centerDeltaPx": -17,
+        "contentFlexGrow": "1",
+        "contentFlexShrink": "1",
+        "contentFlexBasis": "0%",
+        "contentMinHeight": "0px",
+        "contentOverflowY": "auto",
+        "contentScrolls": false,
+        "contentClientHeight": 686,
+        "contentScrollHeight": 686,
+        "visibleText": "New chat\nOTTO WORKSPACE\nReceipts\nNot done yet — proof and run history will land soon.\nFILE-BACKED\nRECEIPTS\nReceipts are available in the desktop app.\n\nThe web preview cannot read the local receipt directory. The desktop "
+      }
+    },
+    {
+      "viewport": {
+        "name": "mobile",
+        "width": 390,
+        "height": 844
+      },
+      "route": "settings",
+      "url": "http://127.0.0.1:5195/#settings",
+      "screenshot": "docs/receipts/staging/pr-25/codex-review-mobile-settings.png",
+      "metrics": {
+        "title": "Otto Desktop",
+        "notBlank": true,
+        "frameworkOverlay": false,
+        "route": "settings",
+        "activeHeading": "Settings",
+        "main": {
+          "top": 0,
+          "left": 68,
+          "width": 322,
+          "height": 844,
+          "bottom": 844,
+          "right": 390
+        },
+        "topbar": {
+          "top": 0,
+          "left": 68,
+          "width": 322,
+          "height": 158,
+          "bottom": 158,
+          "right": 390
+        },
+        "content": {
+          "top": 158,
+          "left": 68,
+          "width": 322,
+          "height": 686,
+          "bottom": 844,
+          "right": 390
+        },
+        "empty": null,
+        "centerDeltaPx": null,
+        "contentFlexGrow": "1",
+        "contentFlexShrink": "1",
+        "contentFlexBasis": "0%",
+        "contentMinHeight": "0px",
+        "contentOverflowY": "auto",
+        "contentScrolls": true,
+        "contentClientHeight": 686,
+        "contentScrollHeight": 5205,
+        "visibleText": "New chat\nOTTO WORKSPACE\nSettings\nSetup & readiness — what is configured vs missing.\nLIVE RUNTIME\nGeneral\nModel providers\nCONNECT LETTA\nLocal Letta connection\n\nThe desktop app auto-detects the local Letta runtime and curr"
+      }
+    },
+    {
+      "viewport": {
+        "name": "mobile",
+        "width": 390,
+        "height": 844
+      },
+      "route": "chat",
+      "url": "http://127.0.0.1:5195/#chat",
+      "screenshot": "docs/receipts/staging/pr-25/codex-review-mobile-chat.png",
+      "metrics": {
+        "title": "Otto Desktop",
+        "notBlank": true,
+        "frameworkOverlay": false,
+        "route": "chat",
+        "activeHeading": "Chat",
+        "main": {
+          "top": 0,
+          "left": 68,
+          "width": 322,
+          "height": 844,
+          "bottom": 844,
+          "right": 390
+        },
+        "topbar": null,
+        "content": {
+          "top": 0,
+          "left": 68,
+          "width": 322,
+          "height": 844,
+          "bottom": 844,
+          "right": 390
+        },
+        "empty": {
+          "top": 213,
+          "left": 96,
+          "width": 266,
+          "height": 320,
+          "bottom": 533,
+          "right": 362
+        },
+        "centerDeltaPx": -49,
+        "contentFlexGrow": "1",
+        "contentFlexShrink": "1",
+        "contentFlexBasis": "0%",
+        "contentMinHeight": "0px",
+        "contentOverflowY": "hidden",
+        "contentScrolls": false,
+        "contentClientHeight": 844,
+        "contentScrollHeight": 844,
+        "visibleText": "New chat\notto\nruntime not connected · desktop bridge unavailable\nPREVIEW · NOT CONNECTED\nCHAT\nNo live session in web preview.\n\nOpen the packaged desktop app to connect to local Letta. This preview does not show fake mess"
+      }
+    },
+    {
+      "viewport": "mobile",
+      "console": []
+    }
+  ],
+  "failures": []
+}
