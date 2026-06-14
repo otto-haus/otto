@@ -4,9 +4,14 @@ set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 REPO="otto-haus/otto"
-TARGET_APP="${OTTO_APP:-/Applications/otto.app}"
+TARGET_APP="/Applications/otto.app"
 if [[ -n "${OTTO_RELEASE_REPO:-}" && "${OTTO_RELEASE_REPO}" != "$REPO" ]]; then
   echo "Refusing OTTO_RELEASE_REPO override for canonical otto.app install: ${OTTO_RELEASE_REPO}" >&2
+  exit 2
+fi
+if [[ -n "${OTTO_APP:-}" && "${OTTO_APP}" != "$TARGET_APP" ]]; then
+  echo "Refusing OTTO_APP override for canonical otto.app install: ${OTTO_APP}" >&2
+  echo "Use disposable bundles only with separate proof tooling, not the live release installer." >&2
   exit 2
 fi
 
