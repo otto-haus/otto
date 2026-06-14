@@ -4,7 +4,7 @@ import { join } from 'node:path';
 import type { CheckRunResult, PracticeRecord, PracticeReference } from '@otto-haus/core';
 import { AutonomyStore } from './autonomy-store';
 import { CheckRunner, type DoneClaimContext } from './check-runner';
-import { OTTO_DIR } from './config-store';
+import { defaultOttoDir } from './config-store';
 import { PracticeMetricsStore } from './practice-metrics-store';
 import { PracticeStore } from './practice-store';
 import { ReceiptWriter, type WrittenReceipt } from './receipt-writer';
@@ -285,7 +285,7 @@ export class PracticeRunner {
     const raw = (payload?.raw_note ?? payload?.note ?? '').trim();
     if (!raw) throw new Error('Field note capture requires raw_note or note in payload');
 
-    const dir = join(OTTO_DIR, 'field-notes');
+    const dir = join(defaultOttoDir(), 'field-notes');
     mkdirSync(dir, { recursive: true });
     const stamp = new Date().toISOString().slice(0, 10);
     const id = `${stamp}-${randomUUID().slice(0, 8)}`;

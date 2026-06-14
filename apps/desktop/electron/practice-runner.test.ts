@@ -115,6 +115,7 @@ describe('PracticeRunner', () => {
       });
 
       expect(result.artifactPath).toBeTruthy();
+      expect(result.artifactPath?.startsWith(join(tmp, 'field-notes'))).toBe(true);
       expect(existsSync(result.artifactPath!)).toBe(true);
       const body = readFileSync(result.artifactPath!, 'utf8');
       expect(body).toContain('We need proof before wire');
