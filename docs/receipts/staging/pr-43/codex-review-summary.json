@@ -1,0 +1,46 @@
+{
+  "schema": "otto.pr-review-summary.v1",
+  "pr": 43,
+  "reviewed_head": "d98c6e4d66fc26ff3438a5d262240e283848bab2",
+  "base": "origin/ship/functional-labs",
+  "title": "fix(desktop): block malformed proposal canon targets",
+  "code_recommendation": "ready_for_sebastian_review",
+  "ship_recommendation": "ship_with_functional_labs_train",
+  "linked_issues": [],
+  "proof_reviewed": [
+    {
+      "kind": "targeted_tests",
+      "command": "bun test apps/desktop/electron/proposal-store.test.ts apps/desktop/electron/behavior-changelog.test.ts apps/desktop/electron/check-compiler.test.ts",
+      "result": "pass",
+      "summary": "21 pass, 0 fail, 116 expect() calls"
+    },
+    {
+      "kind": "full_local_gate",
+      "command": "bash scripts/ci-local-gate.sh",
+      "result": "pass",
+      "summary": "303 pass, 1 skip, 0 fail, 1020 expect() calls; verify:v0 5/5; Mintlify validate and broken-links passed; Electron build passed; bun audit found no vulnerabilities"
+    },
+    {
+      "kind": "backend_data_proof",
+      "path": "docs/receipts/staging/pr-43/malformed-canon-target-proof.json",
+      "result": "pass",
+      "summary": "Malformed YAML target returns blocked receipt, keeps proposal in needs_approval, and leaves the target file unchanged."
+    },
+    {
+      "kind": "security_diff_scan",
+      "path": "/tmp/codex-security-scans/otto/d98c6e4d66fc26ff3438a5d262240e283848bab2_20260614T224044Z/report.md",
+      "result": "no_findings",
+      "summary": "Reviewed proposal-store implementation/test diff, IPC/preload decision path, and file-backed canon mutation behavior."
+    }
+  ],
+  "blockers": [],
+  "caveats": [
+    "No screenshot was captured because this is a backend/Electron store change; the included JSON receipt is the evaluation data.",
+    "Residual non-diff risk remains that accepted proposal targets can reference arbitrary local paths; this behavior existed before PR #43 and was not widened here."
+  ],
+  "official_app_boundary": {
+    "mutated_applications_otto_app": false,
+    "mutated_applications_otto_staging_app": false,
+    "used_disposable_backend_proof_only": true
+  }
+}
