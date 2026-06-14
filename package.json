@@ -4,6 +4,14 @@
   "description": "Otto \u2014 the behavior layer for persistent AI agents. Turns operating contracts, practices, routines, standards, approvals, receipts, and corrections into governed future behavior.",
   "type": "module",
   "license": "MIT",
+  "homepage": "https://otto.haus",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/otto-haus/otto.git"
+  },
+  "bugs": {
+    "url": "https://github.com/otto-haus/otto/issues"
+  },
   "keywords": [
     "ai-agents",
     "practices",
