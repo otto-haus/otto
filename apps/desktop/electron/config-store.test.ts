@@ -3,6 +3,7 @@ import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { ConfigStore } from './config-store';
+import { getLabsConfig } from './labs-config';
 
 describe('ConfigStore', () => {
   test('defaults connectionMode to embedded', () => {
@@ -43,6 +44,18 @@ describe('ConfigStore', () => {
       const store = new ConfigStore();
       store.update({ agentId: 'agent-fallback', primaryAgentId: null });
       expect(store.primaryAgentId()).toBe('agent-fallback');
+    } finally {
+      rmSync(tmp, { recursive: true, force: true });
+      delete process.env.OTTO_HOME;
+    }
+  });
+
+  test('labs defaults false on fresh profile', () => {
+    const tmp = mkdtempSync(join(tmpdir(), 'otto-config-test-'));
+    try {
+      process.env.OTTO_HOME = tmp;
+      const store = new ConfigStore();
+      expect(getLabsConfig(store.get())).toEqual({ enabled: false, features: {} });
     } finally {
       rmSync(tmp, { recursive: true, force: true });
       delete process.env.OTTO_HOME;

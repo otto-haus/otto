@@ -24,9 +24,19 @@ import {
   settingsCopy,
   listEmpty,
   cultureSettingsCopy,
+  labsCopy,
 } from '../copy/surfaces';
 import { SURFACE_TESTS } from '../canon-briefs';
 import { resetOnboardingForReplay } from '../onboarding-storage';
+import {
+  getSampleReceiptDetail,
+  isSampleReceiptPreview,
+  sampleReceiptSummary,
+  sampleReceiptCard,
+  SAMPLE_RECEIPT_LABEL,
+} from '../onboarding-sample-receipt';
+import { useLabs, LAB_FEATURE_IDS, LAB_FEATURE_META } from '../labs/LabsContext';
+import type { LabFeatureId } from '../../electron/shared/types';
 import {
   ottoApi,
   type CharterDetail,
@@ -1592,6 +1602,32 @@ export const Receipts: React.FC = () => {
     return <WebPreviewFrame surface="receipts" />;
   }
 
+  if (!loading && !receipts.length && isSampleReceiptPreview()) {
+    const sampleDetail = getSampleReceiptDetail();
+    return (
+      <SurfacePage className="receiptsSurface">
+        <div className="onboardSampleBanner">{SAMPLE_RECEIPT_LABEL}</div>
+        <SurfaceHero
+          eyebrow={receiptsCopy.eyebrow}
+          title={receiptsCopy.emptyTitle}
+          lede="Inspect the sample structure below — it is not live proof from your workspace."
+          proof={SURFACE_TESTS.receipts}
+        />
+        <SplitLayout
+          list={(
+            <ReceiptCard
+              receipt={sampleReceiptCard}
+              selected
+              onSelect={() => {}}
+            />
+          )}
+          detail={<ReceiptDetailView detail={sampleDetail} summary={sampleReceiptSummary} />}
+        />
+        <SurfaceProof surface="receipts" />
+      </SurfacePage>
+    );
+  }
+
   if (!loading && !receipts.length) {
     return (
       <SurfacePage className="receiptsSurface">
@@ -2834,10 +2870,8 @@ const ConnectLetta: React.FC = () => {
 
   if (!api) {
     return (
-      <div className="panel">
-        <div className="eyebrow">connect letta</div>
-        <div className="h-sec" style={{ marginTop: 6 }}>Local Letta connection</div>
-        <p className="muted" style={{ marginTop: 6 }}>
+      <div className="settingsBlock">
+        <p className="settingsFieldHint">
           The desktop app auto-detects the local Letta runtime and current/default agent.
           This web preview cannot open the Electron bridge, so manual overrides are disabled here.
         </p>
@@ -2871,53 +2905,49 @@ const ConnectLetta: React.FC = () => {
   const code: StatusCode = displayStatus?.ready ? 'ready' : displayStatus?.code ?? 'error';
 
   return (
-    <div className="panel">
-      <div className="row" style={{ justifyContent: 'space-between', alignItems: 'center' }}>
-        <div className="eyebrow">connect letta</div>
+    <div className="settingsBlock">
+      <div className="row" style={{ justifyContent: 'space-between', alignItems: 'center', gap: 12 }}>
+        <p className="settingsFieldHint" style={{ margin: 0 }}>
+          {settingsCopy.primaryAgentHint}
+        </p>
         {statusCodePill(code)}
       </div>
-      <div className="h-sec" style={{ marginTop: 6 }}>Local Letta connection</div>
-      <p className="muted" style={{ marginTop: 4 }}>
-        otto tries to discover Letta Desktop and your current local agent automatically. These fields are advanced overrides for the rare case discovery picks the wrong runtime or agent.
-      </p>
-      <div className="panel" style={{ marginTop: 14, padding: 14 }}>
-        <div className="eyebrow">{settingsCopy.primaryAgentLabel}</div>
-        <p className="muted" style={{ marginTop: 6, fontSize: 13 }}>{settingsCopy.primaryAgentHint}</p>
-        <div className="grid" style={{ gap: 12, marginTop: 12 }}>
-          <label>
-            <span className="faint" style={{ fontSize: 12 }}>Primary agent ID</span>
-            <input
-              className="mono"
-              style={inputStyle}
-              value={primaryAgentId}
-              onChange={(e) => setPrimaryAgentId(e.target.value)}
-              placeholder="Default agent for this workspace"
-              spellCheck={false}
-            />
-          </label>
-          <label>
-            <span className="faint" style={{ fontSize: 12 }}>{settingsCopy.connectionModeLabel}</span>
-            <select
-              style={inputStyle}
-              value={connectionMode}
-              onChange={(e) => setConnectionMode(e.target.value as 'embedded' | 'existing' | 'cloud')}
-            >
-              <option value="embedded">{settingsCopy.connectionEmbedded}</option>
-              <option value="existing">{settingsCopy.connectionExisting}</option>
-              <option value="cloud">{settingsCopy.connectionCloud}</option>
-            </select>
-          </label>
-        </div>
+      <div className="settingsField">
+        <label>
+          <span>{settingsCopy.primaryAgentLabel}</span>
+          <input
+            className="mono"
+            style={inputStyle}
+            value={primaryAgentId}
+            onChange={(e) => setPrimaryAgentId(e.target.value)}
+            placeholder="Default agent for this workspace"
+            spellCheck={false}
+          />
+        </label>
+      </div>
+      <div className="settingsField">
+        <label>
+          <span>{settingsCopy.connectionModeLabel}</span>
+          <select
+            style={inputStyle}
+            value={connectionMode}
+            onChange={(e) => setConnectionMode(e.target.value as 'embedded' | 'existing' | 'cloud')}
+          >
+            <option value="embedded">{settingsCopy.connectionEmbedded}</option>
+            <option value="existing">{settingsCopy.connectionExisting}</option>
+            <option value="cloud">{settingsCopy.connectionCloud}</option>
+          </select>
+        </label>
       </div>
       {displayStatus && !displayStatus.ready && displayStatus.reason && (
-        <p className="faint" style={{ marginTop: 6 }}>↳ {displayStatus.reason}</p>
+        <p className="faint" style={{ margin: 0 }}>↳ {displayStatus.reason}</p>
       )}
       {connectError && (
-        <p className="faint" style={{ marginTop: 6, color: 'var(--warn)' }}>↳ Connection failed: {connectError}</p>
+        <p className="faint" style={{ margin: 0, color: 'var(--warn)' }}>↳ Connection failed: {connectError}</p>
       )}
-      <div className="grid" style={{ gap: 12, marginTop: 12 }}>
+      <div className="settingsField">
         <label>
-          <span className="faint" style={{ fontSize: 12 }}>Local Letta URL · advanced override</span>
+          <span>Local Letta URL · advanced override</span>
           <input
             style={inputStyle}
             value={baseUrl}
@@ -2926,8 +2956,10 @@ const ConnectLetta: React.FC = () => {
             spellCheck={false}
           />
         </label>
+      </div>
+      <div className="settingsField">
         <label>
-          <span className="faint" style={{ fontSize: 12 }}>Agent ID · advanced override</span>
+          <span>Agent ID · advanced override</span>
           <input
             className="mono"
             style={inputStyle}
@@ -2938,7 +2970,7 @@ const ConnectLetta: React.FC = () => {
           />
         </label>
       </div>
-      <div className="row" style={{ marginTop: 14, gap: 12, alignItems: 'center' }}>
+      <div className="row" style={{ gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
         <button type="button" className="btn btn--primary" onClick={connect} disabled={busy}>
           {busy ? 'Connecting…' : 'Save overrides & reconnect'}
         </button>
@@ -2952,7 +2984,7 @@ const ConnectLetta: React.FC = () => {
         )}
       </div>
       {displayStatus && (
-        <p className="faint" style={{ marginTop: 8, fontSize: 12 }}>
+        <p className="faint" style={{ margin: 0, fontSize: 12 }}>
           Transport: {displayStatus.transportMode ?? 'sdk'} → {displayStatus.effectiveTransport ?? 'sdk subprocess'}
           {displayStatus.transportFallbackReason ? ` (fallback: ${displayStatus.transportFallbackReason})` : ''}
         </p>
@@ -2993,13 +3025,12 @@ const ConnectPgvector: React.FC = () => {
           : 'error';
 
   return (
-    <div className="panel">
-      <div className="row" style={{ justifyContent: 'space-between', alignItems: 'center' }}>
-        <div className="eyebrow">semantic recall</div>
+    <div className="settingsOptionalBlock">
+      <div className="settingsOptionalBlock__head">
+        <div className="settingsOptionalBlock__title">pgvector</div>
         <StatusPill status={healthCode} />
       </div>
-      <div className="h-sec" style={{ marginTop: 6 }}>pgvector (optional)</div>
-      <p className="muted" style={{ marginTop: 4 }}>
+      <p className="settingsOptionalBlock__lede">
         Local Postgres + pgvector for derived recall. Disabled unless <code>OTTO_PGVECTOR=1</code>. Files remain canon.
       </p>
       {status && (
@@ -3064,14 +3095,13 @@ const ConnectCognee: React.FC = () => {
   const healthCode: StatusCode = health?.status === 'ready' ? 'ready' : health?.status === 'disabled' ? 'no-agent' : 'error';
 
   return (
-    <div className="panel">
-      <div className="row" style={{ justifyContent: 'space-between', alignItems: 'center' }}>
-        <div className="eyebrow">graph recall</div>
+    <div className="settingsOptionalBlock">
+      <div className="settingsOptionalBlock__head">
+        <div className="settingsOptionalBlock__title">Cognee</div>
         <StatusPill status={healthCode} />
       </div>
-      <div className="h-sec" style={{ marginTop: 6 }}>Cognee (optional)</div>
-      <p className="muted" style={{ marginTop: 4 }}>
-        Local loopback sidecar for derived graph recall. Disabled by default — files remain canon. See docs/cognee.md.
+      <p className="settingsOptionalBlock__lede">
+        Local loopback sidecar for derived graph recall. Disabled by default — files remain canon.
       </p>
       <div className="grid" style={{ gap: 12, marginTop: 12 }}>
         <label className="row" style={{ gap: 10, alignItems: 'center' }}>
@@ -3114,16 +3144,23 @@ const ConnectCognee: React.FC = () => {
 };
 
 /* ---------- Settings (Setup + Readiness) ---------- */
+const SettingsSectionHeader: React.FC<{ title: string; lede: string }> = ({ title, lede }) => (
+  <header className="settingsSectionHeader">
+    <h2 className="settingsSectionHeader__title">{title}</h2>
+    <p className="settingsSectionHeader__lede">{lede}</p>
+  </header>
+);
+
 const ReadyRow: React.FC<{ item: ReadyItem }> = ({ item }) => (
-  <div className="zone" style={{ gridTemplateColumns: '190px minmax(0, 1fr) auto', gap: 16 }}>
-    <span style={{ fontWeight: 600, fontSize: 14 }}>
-      {item.label}
-      {item.required && <span className="faint" style={{ fontWeight: 400, fontSize: 12 }}> · required</span>}
-    </span>
+  <div className="settingsReadinessRow">
     <div>
-      <div className="muted" style={{ fontSize: 13.5 }}>{item.detail}</div>
-      {item.source && <span className="filechip" style={{ marginTop: 6 }}>{Icon.file} {item.source}</span>}
-      <div className="faint mono" style={{ fontSize: 11.5, marginTop: 6 }}>↳ {item.action}</div>
+      <div className="settingsReadinessRow__label">
+        {item.label}
+        {item.required && <span className="faint" style={{ fontWeight: 400, fontSize: 12 }}> · required</span>}
+      </div>
+      <div className="settingsReadinessRow__detail">{item.detail}</div>
+      {item.source && <span className="filechip" style={{ marginTop: 8 }}>{Icon.file} {item.source}</span>}
+      <div className="settingsReadinessRow__meta">↳ {item.action}</div>
     </div>
     {readyStatusPill(item.status)}
   </div>
@@ -3186,36 +3223,26 @@ const ModelProviders: React.FC = () => {
   };
 
   return (
-    <div className="providersScreen">
-      <div className="panel providersHero">
-        <div>
-          <div className="eyebrow">model providers</div>
-          <div className="h-sec" style={{ marginTop: 6 }}>Write-only BYOK mirror</div>
-          <p className="muted" style={{ marginTop: 6 }}>
-            {mirror?.note ?? settingsCopy.providerMirrorNote}
-          </p>
-        </div>
+    <div className="settingsPage__content providersScreen">
+      <SettingsSectionHeader title={settingsCopy.providersTitle} lede={settingsCopy.providersLede} />
+      <div className="row" style={{ justifyContent: 'flex-end' }}>
         <button type="button" className="btn btn--primary" onClick={openLetta}>Open Letta</button>
       </div>
 
-      <div className="panel" style={{ marginBottom: 16 }}>
-        <div className="between">
-          <div>
-            <div className="eyebrow">runtime mirror</div>
-            <div className="row" style={{ gap: 8, marginTop: 8, flexWrap: 'wrap' }}>
-              <span className={`pill ${mirror?.lettaConnected ? 'pill--ok' : 'pill--warn'}`}>
-                Letta {mirror?.lettaConnected ? 'reachable' : 'not connected'}
-              </span>
-              <span className={`pill ${mirror?.hasApiKey ? 'pill--ok' : ''}`}>
-                {mirror?.hasApiKey ? settingsCopy.providerApiKeyPresent : settingsCopy.providerApiKeyMissing}
-              </span>
-              {mirror?.modelHandle && <span className="filechip mono">{mirror.modelHandle}</span>}
-            </div>
-          </div>
+      <div className="providersMirror">
+        <div className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
+          <span className={`pill ${mirror?.lettaConnected ? 'pill--ok' : 'pill--warn'}`}>
+            Letta {mirror?.lettaConnected ? 'reachable' : 'not connected'}
+          </span>
+          <span className={`pill ${mirror?.hasApiKey ? 'pill--ok' : ''}`}>
+            {mirror?.hasApiKey ? settingsCopy.providerApiKeyPresent : settingsCopy.providerApiKeyMissing}
+          </span>
+          {mirror?.modelHandle && <span className="filechip mono">{mirror.modelHandle}</span>}
         </div>
-        <div className="grid" style={{ gap: 10, marginTop: 14 }}>
+        <p className="settingsFieldHint">{mirror?.note ?? settingsCopy.providerMirrorNote}</p>
+        <div className="settingsField">
           <label>
-            <span className="faint" style={{ fontSize: 12 }}>{settingsCopy.providerSubmitKey}</span>
+            <span>{settingsCopy.providerSubmitKey}</span>
             <input
               type="password"
               autoComplete="off"
@@ -3225,12 +3252,12 @@ const ModelProviders: React.FC = () => {
               placeholder="Paste key once — never shown again"
             />
           </label>
-          <div className="row" style={{ gap: 8, alignItems: 'center' }}>
-            <button type="button" className="btn btn--primary" onClick={submitApiKey} disabled={keyBusy || !apiKeyDraft.trim()}>
-              {keyBusy ? 'Saving…' : settingsCopy.providerSubmitKey}
-            </button>
-            {keyMessage && <span className="muted" style={{ fontSize: 13 }}>{keyMessage}</span>}
-          </div>
+        </div>
+        <div className="row" style={{ gap: 8, alignItems: 'center' }}>
+          <button type="button" className="btn btn--primary" onClick={submitApiKey} disabled={keyBusy || !apiKeyDraft.trim()}>
+            {keyBusy ? 'Saving…' : settingsCopy.providerSubmitKey}
+          </button>
+          {keyMessage && <span className="muted" style={{ fontSize: 13 }}>{keyMessage}</span>}
         </div>
       </div>
 
@@ -3291,26 +3318,22 @@ const MemoryObservatory: React.FC<{ connected: boolean; onOpenLetta: () => void 
     : blocks;
 
   return (
-    <div className="grid" style={{ maxWidth: 880, gap: 16 }}>
-      <div className="panel">
-        <div className="between">
-          <div>
-            <div className="eyebrow">read-only</div>
-            <div className="h-sec">Letta memory observatory</div>
-          </div>
-          <button type="button" className="btn" onClick={onOpenLetta}>Open in Letta</button>
-        </div>
-        <p className="muted" style={{ marginTop: 8 }}>
-          Inspects Letta core-memory blocks via `{result?.apiPath ?? '/v1/agents/{id}/core-memory/blocks'}`. Otto does not write memory here — use Curation proposals for writeback.
-        </p>
+    <div className="settingsPage__content">
+      <SettingsSectionHeader title={settingsCopy.memoryTitle} lede={settingsCopy.memoryLede} />
+      <div className="row" style={{ justifyContent: 'flex-end' }}>
+        <button type="button" className="btn" onClick={onOpenLetta}>Open in Letta</button>
+      </div>
+      <p className="settingsFieldHint">
+        Inspects Letta core-memory blocks via `{result?.apiPath ?? '/v1/agents/{id}/core-memory/blocks'}`. Otto does not write memory here — use Curation proposals for writeback.
+      </p>
         {!connected && (
-          <div className="notice" style={{ marginTop: 12 }}>
-            <span className="dot dot--warn" /> Connect Letta in Settings before expecting live blocks.
+          <div className="settingsStatusBanner settingsStatusBanner--warn" style={{ marginTop: 12 }}>
+            Connect Letta in General before expecting live blocks.
           </div>
         )}
         {(result?.error || error) && (
-          <div className="notice" style={{ marginTop: 12 }}>
-            <span className="dot dot--warn" /> {result?.error ?? error}
+          <div className="settingsStatusBanner settingsStatusBanner--warn" style={{ marginTop: 12 }}>
+            {result?.error ?? error}
           </div>
         )}
         <input
@@ -3320,9 +3343,8 @@ const MemoryObservatory: React.FC<{ connected: boolean; onOpenLetta: () => void 
           placeholder="Search blocks…"
           disabled={!blocks.length}
         />
-      </div>
       {filtered.map((block: MemoryBlockRecord) => (
-        <div className="panel" key={block.id}>
+        <div className="panel" key={block.id} style={{ marginTop: 12 }}>
           <div className="between">
             <span className="h-sec">{block.label}</span>
             {block.updated_at && <span className="faint mono">{block.updated_at}</span>}
@@ -3340,17 +3362,68 @@ const MemoryObservatory: React.FC<{ connected: boolean; onOpenLetta: () => void 
   );
 };
 
+const LabsSettingsPanel: React.FC = () => {
+  const { labs, setMasterEnabled, setFeatureEnabled, hydrated } = useLabs();
+
+  return (
+    <div className="settingsPage__content settingsLabs">
+      <SettingsSectionHeader title={settingsCopy.tabLabs} lede={labsCopy.lede} />
+      <div className="settingsLabsWarn">{settingsCopy.labsWarn}</div>
+      <div className="settingsFieldRow">
+        <div className="settingsFieldRow__main">
+          <div className="settingsFieldRow__title">{labsCopy.masterLabel}</div>
+          <p className="settingsFieldRow__hint">{labsCopy.masterWarning}</p>
+        </div>
+        <label className="labsRow__toggle">
+          <input
+            type="checkbox"
+            checked={labs.enabled === true}
+            disabled={!hydrated}
+            onChange={(e) => void setMasterEnabled(e.target.checked)}
+          />
+        </label>
+      </div>
+      <div className="labsList" style={{ marginTop: 0 }}>
+        {LAB_FEATURE_IDS.map((id: LabFeatureId) => {
+          const meta = LAB_FEATURE_META[id];
+          const enabled = labs.features?.[id] === true;
+          return (
+            <div key={id} className="settingsFieldRow">
+              <div className="settingsFieldRow__main">
+                <div className="settingsFieldRow__title">
+                  {meta.label}
+                  <span className="pill">{labsCopy.previewBadge}</span>
+                </div>
+                <p className="settingsFieldRow__hint">{meta.blurb}</p>
+              </div>
+              <label className="labsRow__toggle">
+                <input
+                  type="checkbox"
+                  checked={enabled}
+                  disabled={!hydrated || labs.enabled !== true}
+                  onChange={(e) => void setFeatureEnabled(id, e.target.checked)}
+                />
+              </label>
+            </div>
+          );
+        })}
+      </div>
+      <p className="faint mono" style={{ marginTop: 8 }}>{labsCopy.matrixLink}</p>
+    </div>
+  );
+};
+
 export const Settings: React.FC = () => {
   const rt = useRuntimeContext();
   const api = ottoApi();
   const { push: pushToast } = useToast();
-  const [section, setSection] = useState<'general' | 'providers' | 'memory' | 'culture'>('general');
+  const [section, setSection] = useState<'general' | 'providers' | 'memory' | 'culture' | 'labs'>('general');
 
   useEffect(() => {
     try {
       const pending = sessionStorage.getItem('otto.settings.section');
-      if (pending === 'memory') {
-        setSection('memory');
+      if (pending === 'memory' || pending === 'labs') {
+        setSection(pending);
         sessionStorage.removeItem('otto.settings.section');
       }
     } catch { /* best effort */ }
@@ -3410,24 +3483,31 @@ export const Settings: React.FC = () => {
   const ready = liveConnected || requiredMissing.length === 0;
   const group = (keys: string[]) => readiness.filter((r) => keys.includes(r.key)).map((r) => liveByKey.get(r.key) ?? r);
 
+  const settingsTabs: Array<{ id: typeof section; label: string; icon: React.ReactNode; hidden?: boolean }> = [
+    { id: 'general', label: settingsCopy.tabGeneral, icon: Icon.settings },
+    { id: 'providers', label: settingsCopy.tabProviders, icon: Icon.lock },
+    { id: 'memory', label: settingsCopy.tabMemory, icon: Icon.theme },
+    { id: 'culture', label: settingsCopy.tabCulture, icon: Icon.file, hidden: !api },
+    { id: 'labs', label: settingsCopy.tabLabs, icon: Icon.owl },
+  ];
+
   return (
-    <div className="settingsShell">
-      <aside className="settingsNav" aria-label="Settings sections">
-        <button type="button" className={section === 'general' ? 'is-active' : ''} onClick={() => setSection('general')}>
-          {Icon.settings}<span>General</span>
-        </button>
-        <button type="button" className={section === 'providers' ? 'is-active' : ''} onClick={() => setSection('providers')}>
-          {Icon.lock}<span>Model providers</span>
-        </button>
-        <button type="button" className={section === 'memory' ? 'is-active' : ''} onClick={() => setSection('memory')}>
-          {Icon.theme}<span>Memory observatory</span>
-        </button>
-        {api ? (
-          <button type="button" className={section === 'culture' ? 'is-active' : ''} onClick={() => setSection('culture')}>
-            {Icon.file}<span>Culture</span>
+    <div className="settingsPage">
+      <nav className="settingsTabs" role="tablist" aria-label="Settings sections">
+        {settingsTabs.filter((t) => !t.hidden).map((tab) => (
+          <button
+            key={tab.id}
+            type="button"
+            role="tab"
+            aria-selected={section === tab.id}
+            className={section === tab.id ? 'is-active' : ''}
+            onClick={() => setSection(tab.id)}
+          >
+            {tab.icon}
+            <span>{tab.label}</span>
           </button>
-        ) : null}
-      </aside>
+        ))}
+      </nav>
 
       {section === 'providers' ? (
         <ModelProviders />
@@ -3435,102 +3515,80 @@ export const Settings: React.FC = () => {
         <MemoryObservatory connected={liveConnected} onOpenLetta={() => void ottoApi()?.runtime.openLetta()} />
       ) : section === 'culture' && api ? (
         <CultureSettingsPanel api={api} pushToast={pushToast} />
+      ) : section === 'labs' ? (
+        <LabsSettingsPanel />
       ) : (
-        <SurfacePage className="settingsGeneral">
-          <SurfaceHero
-            eyebrow={settingsCopy.eyebrow}
-            title={settingsCopy.title}
-            lede={settingsCopy.lede}
-            proof={SURFACE_TESTS.settings}
-          />
-          <SurfaceInk lead={settingsCopy.inkLead} muted={settingsCopy.inkMuted} sub={settingsCopy.inkSub} />
-          <SurfaceStatStrip
-            stats={[
-              {
-                label: settingsCopy.statRuntime,
-                value: liveConnected ? 'Connected' : 'Not connected',
-                tone: liveConnected ? 'ok' : 'warn',
-              },
-              {
-                label: settingsCopy.statRequired,
-                value: liveConnected ? 0 : requiredMissing.length,
-                tone: requiredMissing.length && !liveConnected ? 'warn' : 'neutral',
-              },
-            ]}
-          />
-          <div className="grid" style={{ maxWidth: 880, gap: 16 }}>
-          <ConnectLetta />
-          <ConnectCognee />
-          <ConnectPgvector />
-          <div className="panel">
-            <div className="eyebrow">onboarding</div>
-            <div className="h-sec" style={{ marginTop: 6 }}>Show onboarding again</div>
-            <p className="muted" style={{ marginTop: 6 }}>
-              Clears the first-run flag so Welcome and the getting-started dock return on next launch.
-              Also clears the onboarding first-message marker so Done/Skip stays honest after a replay.
-            </p>
-            <button
-              type="button"
-              className="btn"
-              style={{ marginTop: 12 }}
-              onClick={() => {
-                resetOnboardingForReplay();
-                pushToast({ title: 'Onboarding reset', body: 'Relaunch otto to see Welcome again.', tone: 'ok' });
-              }}
-            >
-              Reset onboarding
-            </button>
-          </div>
-          <div className="panel" style={ready ? undefined : { borderColor: '#e7dcc0', background: 'var(--warn-tint)' }}>
-            <div className="eyebrow">readiness</div>
-            <div className="h-sec" style={{ marginTop: 6 }}>
+        <div className="settingsPage__content">
+          <SettingsSectionHeader title={settingsCopy.generalTitle} lede={settingsCopy.generalLede} />
+
+          <section>
+            <SettingsSectionHeader title={settingsCopy.connectionTitle} lede={settingsCopy.connectionLede} />
+            <ConnectLetta />
+          </section>
+
+          {(api?.cognee || api?.pgvector) ? (
+            <section>
+              <SettingsSectionHeader title={settingsCopy.optionalRecallTitle} lede={settingsCopy.optionalRecallLede} />
+              <ConnectCognee />
+              <ConnectPgvector />
+            </section>
+          ) : null}
+
+          <section>
+            <SettingsSectionHeader title={settingsCopy.onboardingTitle} lede={settingsCopy.onboardingLede} />
+            <div className="settingsFieldRow">
+              <div className="settingsFieldRow__main">
+                <div className="settingsFieldRow__title">Replay first-run</div>
+                <p className="settingsFieldRow__hint">
+                  Clears the first-run flag so Welcome and the getting-started dock return on next launch.
+                </p>
+              </div>
+              <button
+                type="button"
+                className="btn"
+                onClick={() => {
+                  resetOnboardingForReplay();
+                  pushToast({ title: 'Onboarding reset', body: 'Relaunch otto to see Welcome again.', tone: 'ok' });
+                }}
+              >
+                {settingsCopy.onboardingReset}
+              </button>
+            </div>
+          </section>
+
+          <section>
+            <SettingsSectionHeader title={settingsCopy.readinessTitle} lede={settingsCopy.readinessLede} />
+            <div className={`settingsStatusBanner${!ready && !liveConnected ? ' settingsStatusBanner--warn' : ''}`}>
               {liveConnected
-                ? `Connected — ${rt.status?.agentId ?? 'agent'}${rt.status?.model ? ` · ${rt.status.model}` : ''}`
+                ? `${settingsCopy.readinessConnected}${rt.status?.agentId ? ` · ${rt.status.agentId}` : ''}${rt.status?.model ? ` · ${rt.status.model}` : ''}`
                 : ready
                   ? 'otto is ready to work'
-                  : 'Setup required — otto is not ready to work'}
+                  : `${settingsCopy.readinessNotReady} ${requiredMissing.map((r) => r.label).join(' · ')}`}
             </div>
-            {liveConnected ? (
-              <p className="muted" style={{ marginTop: 6 }}>
-                Live Letta runtime connected. Expand readiness detail below for file-backed checks.
-              </p>
-            ) : (
-              !ready && (
-                <p className="muted" style={{ marginTop: 6 }}>
-                  {requiredMissing.length} required {requiredMissing.length === 1 ? 'item' : 'items'} missing:{' '}
-                  {requiredMissing.map((r) => r.label).join(' · ')}. Configure them below — until then, Chat is disabled.
-                </p>
-              )
-            )}
-          </div>
-          <SurfaceMeta label={settingsCopy.metaReadiness}>
-            <div className="panel" style={{ marginTop: 0, border: 'none', padding: 0 }}>
-              <div className="eyebrow">runtime &amp; identity</div>
-              <div style={{ marginTop: 4 }}>
+            <details className="settingsReadinessDetails" style={{ marginTop: 16 }}>
+              <summary>{settingsCopy.readinessDetail}</summary>
+              <div className="settingsReadinessGroup">
+                <div className="faint" style={{ fontSize: 12, fontWeight: 600, paddingTop: 8 }}>Runtime &amp; identity</div>
                 {group(['runtime', 'agent', 'model', 'memory', 'workspace']).map((r) => <ReadyRow key={r.key} item={r} />)}
               </div>
-            </div>
-            <div className="panel" style={{ marginTop: 12, border: 'none', padding: 0 }}>
-              <div className="eyebrow">capabilities</div>
-              <div style={{ marginTop: 4 }}>
+              <div className="settingsReadinessGroup">
+                <div className="faint" style={{ fontSize: 12, fontWeight: 600, paddingTop: 8 }}>Capabilities</div>
                 {group(['skills', 'practices', 'mcp', 'functions', 'permissions']).map((r) => <ReadyRow key={r.key} item={r} />)}
               </div>
-            </div>
-            <div className="panel" style={{ marginTop: 12, border: 'none', padding: 0 }}>
-              <div className="eyebrow">v1 surfaces</div>
-              <div style={{ marginTop: 4 }}>
+              <div className="settingsReadinessGroup">
+                <div className="faint" style={{ fontSize: 12, fontWeight: 600, paddingTop: 8 }}>v1 surfaces</div>
                 {group(['charters', 'standards', 'routines', 'curation', 'receipts', 'autonomy', 'knowledge', 'tickets', 'channels']).map((r) => (
                   <ReadyRow key={r.key} item={r} />
                 ))}
               </div>
-            </div>
-          </SurfaceMeta>
+            </details>
+          </section>
+
           <p className="faint mono" style={{ fontSize: 11.5 }}>
-            v1 is local-only: otto connects to a local Letta runtime. Cloud/self-host auth can come later as an advanced path.
+            v1 is local-only: otto connects to a local Letta runtime. Cloud auth stays an advanced path.
           </p>
           <SurfaceProof surface="settings" />
-          </div>
-        </SurfacePage>
+        </div>
       )}
     </div>
   );
@@ -3623,37 +3681,33 @@ const CultureSettingsPanel: React.FC<{
   };
 
   return (
-    <div className="grid" style={{ maxWidth: 880, gap: 16 }}>
-      <div className="panel">
-        <div className="eyebrow">{cultureSettingsCopy.eyebrow}</div>
-        <div className="h-sec" style={{ marginTop: 6 }}>{cultureSettingsCopy.title}</div>
-        <p className="muted" style={{ marginTop: 6 }}>{cultureSettingsCopy.lede}</p>
-        <div className="row" style={{ flexWrap: 'wrap', gap: 8, marginTop: 12 }}>
-          <button type="button" className="btn" disabled={busy} onClick={() => void api.constitution.open()}>
-            {cultureSettingsCopy.openConstitution}
-          </button>
-          <button type="button" className="btn" disabled={busy} onClick={() => void exportCulture()}>
-            {cultureSettingsCopy.exportCulture}
-          </button>
-        </div>
-        {bundlePath ? <p className="mono faint" style={{ marginTop: 8, fontSize: 11.5 }}>{bundlePath}</p> : null}
+    <div className="settingsPage__content">
+      <SettingsSectionHeader title={cultureSettingsCopy.title} lede={cultureSettingsCopy.lede} />
+      <div className="row" style={{ flexWrap: 'wrap', gap: 8 }}>
+        <button type="button" className="btn" disabled={busy} onClick={() => void api.constitution.open()}>
+          {cultureSettingsCopy.openConstitution}
+        </button>
+        <button type="button" className="btn" disabled={busy} onClick={() => void exportCulture()}>
+          {cultureSettingsCopy.exportCulture}
+        </button>
       </div>
-      <div className="panel">
-        <div className="eyebrow">{cultureSettingsCopy.amendTitle}</div>
+      {bundlePath ? <p className="mono faint" style={{ fontSize: 11.5 }}>{bundlePath}</p> : null}
+      <div className="settingsField" style={{ marginTop: 8 }}>
+        <span>{cultureSettingsCopy.amendTitle}</span>
         <textarea
           className="mono"
           rows={14}
           value={yamlDraft}
           onChange={(e) => setYamlDraft(e.target.value)}
           disabled={busy}
-          style={{ width: '100%', marginTop: 8 }}
+          style={{ width: '100%' }}
         />
         <button type="button" className="btn btn--solid-d" style={{ marginTop: 12 }} disabled={busy} onClick={() => void amend()}>
           {cultureSettingsCopy.amendSave}
         </button>
       </div>
-      <div className="panel">
-        <div className="eyebrow">{cultureSettingsCopy.importPreview}</div>
+      <div className="settingsField">
+        <span>{cultureSettingsCopy.importPreview}</span>
         <input
           type="text"
           className="mono"
@@ -3661,14 +3715,14 @@ const CultureSettingsPanel: React.FC<{
           value={importPath}
           onChange={(e) => setImportPath(e.target.value)}
           disabled={busy}
-          style={{ width: '100%', marginTop: 8 }}
+          style={{ width: '100%' }}
         />
         <button type="button" className="btn" style={{ marginTop: 12 }} disabled={busy || !importPath.trim()} onClick={() => void previewImport()}>
           Preview import (dry-run)
         </button>
         {importPreview ? <pre className="receiptJson mono" style={{ marginTop: 12 }}>{importPreview}</pre> : null}
       </div>
-      {error ? <div className="notice"><span className="dot dot--warn" /> {error}</div> : null}
+      {error ? <div className="settingsStatusBanner settingsStatusBanner--warn">{error}</div> : null}
       <SurfaceProof surface="settings" />
     </div>
   );

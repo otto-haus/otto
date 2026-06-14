@@ -29,16 +29,18 @@ import type { ChatMsg } from '../runtime';
 export const Chat: React.FC<{
   onOpenSettings?: () => void;
   onNavigate?: (id: SurfaceId) => void;
+  isSurfaceEnabled?: (id: SurfaceId) => boolean;
   sidebarHidden?: boolean;
   onToggleSidebar?: () => void;
 }> = ({
   onOpenSettings,
   onNavigate,
+  isSurfaceEnabled,
   sidebarHidden = false,
   onToggleSidebar,
 }) =>
   isElectron()
-    ? <LiveChat onOpenSettings={onOpenSettings} onNavigate={onNavigate} sidebarHidden={sidebarHidden} onToggleSidebar={onToggleSidebar} />
+    ? <LiveChat onOpenSettings={onOpenSettings} onNavigate={onNavigate} isSurfaceEnabled={isSurfaceEnabled} sidebarHidden={sidebarHidden} onToggleSidebar={onToggleSidebar} />
     : <PreviewChat />;
 
 /* ---------- LiveChat (Electron, wired to the Letta runtime) ---------- */
@@ -283,11 +285,13 @@ const MarkdownText: React.FC<{ text: string }> = ({ text }) => {
 const LiveChat: React.FC<{
   onOpenSettings?: () => void;
   onNavigate?: (id: SurfaceId) => void;
+  isSurfaceEnabled?: (id: SurfaceId) => boolean;
   sidebarHidden: boolean;
   onToggleSidebar?: () => void;
 }> = ({
   onOpenSettings,
   onNavigate,
+  isSurfaceEnabled,
   sidebarHidden,
   onToggleSidebar,
 }) => {
@@ -353,6 +357,21 @@ const LiveChat: React.FC<{
   useEffect(() => onOnboardingDismiss(() => setOnboardingDismissed(true)), []);
   useEffect(() => onOnboardingFirstMessage(() => setOnboardingFirstMessage(true)), []);
 
+  useEffect(() => {
+    const onStarter = (event: Event) => {
+      const detail = (event as CustomEvent<{ text?: string; send?: boolean }>).detail;
+      const text = detail?.text?.trim();
+      if (!text || !ready || !api) return;
+      if (detail?.send) {
+        setQueue((items) => [...items, { id: `starter-${Date.now()}`, text, createdAt: Date.now(), state: 'queued' }]);
+        return;
+      }
+      setDraft(text);
+    };
+    window.addEventListener('otto-onboarding-starter', onStarter);
+    return () => window.removeEventListener('otto-onboarding-starter', onStarter);
+  }, [api, ready]);
+
   const showRunOnboardingHint = ready
     && !onboardingDismissed
     && !onboardingFirstMessage
@@ -389,8 +408,10 @@ const LiveChat: React.FC<{
             authority: 'human (permission gate)',
           },
         }]);
+      } else if (decision === 'allow-session') {
+        api.permission.respond(active.requestId, { behavior: 'allow', scope: 'session' });
       } else {
-        api.permission.respond(active.requestId, { behavior: 'allow' });
+        api.permission.respond(active.requestId, { behavior: 'allow', scope: 'once' });
       }
     } finally {
       setPermission(null);
@@ -558,7 +579,7 @@ const LiveChat: React.FC<{
 
       <div className="chat__stream">
         {ready && onNavigate ? (
-          <CommandStationStrip onNavigate={onNavigate} counts={stationCounts} />
+          <CommandStationStrip onNavigate={onNavigate} counts={stationCounts} isSurfaceEnabled={isSurfaceEnabled} />
         ) : null}
         {!ready && st && (
           <div className="inkblock" style={{ maxWidth: 760 }}>

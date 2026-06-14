@@ -8,6 +8,7 @@ import type {
   CharterListResult,
   CharterMutationResult,
   CharterStatus,
+  LabsConfig,
   OttoConfig,
   OttoEvent,
   PermissionRequest,
@@ -122,6 +123,10 @@ const api = {
   config: {
     get: (): Promise<OttoConfig> => ipcRenderer.invoke('otto:config:get'),
     set: (patch: Partial<OttoConfig>): Promise<OttoConfig> => ipcRenderer.invoke('otto:config:set', patch),
+  },
+  labs: {
+    get: (): Promise<LabsConfig> => ipcRenderer.invoke('otto:labs:get'),
+    set: (patch: Partial<LabsConfig>): Promise<LabsConfig> => ipcRenderer.invoke('otto:labs:set', patch),
   },
   attachments: {
     save: (input: AttachmentInput): Promise<SavedAttachment> => ipcRenderer.invoke('otto:attachment:save', input),

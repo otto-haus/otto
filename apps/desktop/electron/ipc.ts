@@ -1,5 +1,6 @@
 import { type BrowserWindow, ipcMain, shell } from 'electron';
-import type { ConnectionInfo, ConnectionInput, CreateProposalFromCorrectionInput, DecideProposalInput, OttoConfig, PermissionRequest, PermissionResponse, ProposalClassification, ProposalTarget, RuntimePreferences } from './shared/types';
+import type { ConnectionInfo, ConnectionInput, CreateProposalFromCorrectionInput, DecideProposalInput, LabsConfig, OttoConfig, PermissionRequest, PermissionResponse, ProposalClassification, ProposalTarget, RuntimePreferences } from './shared/types';
+import { getLabsConfig, labsConfigToOttoPatch, patchLabsConfig } from './labs-config';
 import type { CharterCreateInput, CharterStatus } from './shared/types';
 import type { AttachmentInput } from './shared/types';
 import { saveAttachment } from './attachments';
@@ -24,6 +25,7 @@ import { WorkerRunner } from './worker-runner';
 import { ReceiptWriter } from './receipt-writer';
 import { CheckRunner } from './check-runner';
 import { ThreadStore } from './thread-store';
+import { permissionSessionStore } from './permission-session-store';
 import { BehaviorChangelog } from './behavior-changelog';
 import { ConstitutionStore, CONSTITUTION_MD, CONSTITUTION_YAML } from './constitution-store';
 import { CultureExporter } from './culture-export';
@@ -66,6 +68,7 @@ export function registerIpc(win: BrowserWindow) {
     return runner.init();
   });
   ipcMain.handle('otto:new-chat', async () => {
+    permissionSessionStore.clear();
     threads.create();
     return runner.init({ freshConversation: true });
   });
@@ -77,6 +80,12 @@ export function registerIpc(win: BrowserWindow) {
 
   ipcMain.handle('otto:config:get', () => config.get());
   ipcMain.handle('otto:config:set', (_e, patch: Partial<OttoConfig>) => config.update(patch));
+  ipcMain.handle('otto:labs:get', () => getLabsConfig(config.get()));
+  ipcMain.handle('otto:labs:set', (_e, patch: Partial<LabsConfig>) => {
+    const next = patchLabsConfig(config.get(), patch);
+    config.update(labsConfigToOttoPatch(next));
+    return next;
+  });
   ipcMain.handle('otto:attachment:save', (_e, input: AttachmentInput) => saveAttachment(input));
 
   // Connection setup. v1 is local-only: provider auth lives in Letta, not Otto.
@@ -230,6 +239,7 @@ export function registerIpc(win: BrowserWindow) {
 
   ipcMain.handle('otto:threads:list', (_e, includeArchived?: boolean) => threads.list(!!includeArchived));
   ipcMain.handle('otto:threads:create', async (_e, input?: { title?: string; agentId?: string | null }) => {
+    permissionSessionStore.clear();
     const thread = threads.create(input);
     const status = await runner.init({ freshConversation: true });
     safeWebContentsSend(win, 'otto:threads:active', { threadId: thread.id, status });

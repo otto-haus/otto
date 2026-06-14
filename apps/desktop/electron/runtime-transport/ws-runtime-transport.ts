@@ -21,6 +21,7 @@ import {
   safeWebContentsSend,
 } from './runtime-common';
 import { isDeviceOnline, isLoopIdle, normalizeWsEvent, type WsRuntimeEvent } from './ws-protocol';
+import { permissionSessionStore } from '../permission-session-store';
 import type { OttoRuntimeTransport } from './types';
 
 const CONNECT_TIMEOUT_MS = 45_000;
@@ -28,6 +29,7 @@ const REMOTE_ENV = process.env.OTTO_WS_REMOTE_ENV ?? 'otto-byor';
 
 type PendingControl = {
   requestId: string;
+  toolName: string;
   resolve: (r: PermissionResponse) => void;
 };
 
@@ -62,6 +64,9 @@ export class WsRuntimeTransport implements OttoRuntimeTransport {
     const pending = this.pendingControls.get(requestId);
     if (!pending) return;
     this.pendingControls.delete(requestId);
+    if (response.behavior === 'allow' && response.scope === 'session') {
+      permissionSessionStore.allow(pending.toolName);
+    }
     pending.resolve(response);
     const upstreamId = [...this.controlByUpstream.entries()].find(([, id]) => id === requestId)?.[0];
     if (upstreamId && this.runtimeSocket?.readyState === WebSocket.OPEN) {
@@ -454,15 +459,24 @@ export class WsRuntimeTransport implements OttoRuntimeTransport {
 
   private handleControlRequest(event: WsRuntimeEvent) {
     const upstreamId = String(event.request_id ?? event.requestId ?? randomUUID());
-    const requestId = randomUUID();
-    this.controlByUpstream.set(upstreamId, requestId);
     const toolName = String((event.tool_name ?? event.toolName ?? 'tool') as string);
     const toolInput = (event.tool_input ?? event.toolInput ?? {}) as Record<string, unknown>;
+    if (permissionSessionStore.isAllowed(toolName)) {
+      this.sendCommand({
+        type: 'control_response',
+        request_id: upstreamId,
+        approved: true,
+      });
+      return;
+    }
+    const requestId = randomUUID();
+    this.controlByUpstream.set(upstreamId, requestId);
     const interactive = toolName === 'AskUserQuestion' || toolName === 'ExitPlanMode';
     const req: PermissionRequest = { requestId, toolName, toolInput, interactive };
     safeWebContentsSend(this.win, 'otto:permission', req);
     this.pendingControls.set(requestId, {
       requestId,
+      toolName,
       resolve: () => {
         this.controlByUpstream.delete(upstreamId);
       },

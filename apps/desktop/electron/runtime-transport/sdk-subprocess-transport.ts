@@ -20,6 +20,7 @@ import {
   resolveCli,
   safeWebContentsSend,
 } from './runtime-common';
+import { permissionSessionStore } from '../permission-session-store';
 import type { OttoRuntimeTransport } from './types';
 
 const DEFAULT_PERMISSION_TIMEOUT_MS = 120_000;
@@ -31,6 +32,7 @@ export function permissionTimeoutMs(): number {
 }
 
 type PendingPermission = {
+  toolName: string;
   resolve: (r: PermissionResponse) => void;
   timer: ReturnType<typeof setTimeout>;
 };
@@ -64,6 +66,9 @@ export class SdkSubprocessTransport implements OttoRuntimeTransport {
     if (!entry) return;
     clearTimeout(entry.timer);
     this.pending.delete(requestId);
+    if (response.behavior === 'allow' && response.scope === 'session') {
+      permissionSessionStore.allow(entry.toolName);
+    }
     entry.resolve(response);
   }
 
@@ -77,6 +82,9 @@ export class SdkSubprocessTransport implements OttoRuntimeTransport {
 
   private canUseTool() {
     return (toolName: string, toolInput: Record<string, unknown>): Promise<PermissionResponse> => {
+      if (permissionSessionStore.isAllowed(toolName)) {
+        return Promise.resolve({ behavior: 'allow', scope: 'session' });
+      }
       const requestId = randomUUID();
       const interactive = toolName === 'AskUserQuestion' || toolName === 'ExitPlanMode';
       const req: PermissionRequest = { requestId, toolName, toolInput, interactive };
@@ -87,7 +95,7 @@ export class SdkSubprocessTransport implements OttoRuntimeTransport {
           this.pending.delete(requestId);
           resolve({ behavior: 'deny', message: 'Permission request timed out.' });
         }, permissionTimeoutMs());
-        this.pending.set(requestId, { resolve, timer });
+        this.pending.set(requestId, { toolName, resolve, timer });
       });
     };
   }

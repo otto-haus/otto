@@ -2,6 +2,30 @@
 
 export const ONBOARDED_KEY = 'otto.onboarded.v1';
 export const FIRST_MESSAGE_KEY = 'otto.onboarding.firstMessage.v1';
+export const MODE_DRAFT_KEY = 'otto.onboarding.connectionModeDraft.v1';
+
+export type OnboardingConnectionMode = 'embedded' | 'existing';
+
+export function getOnboardingModeDraft(): OnboardingConnectionMode | null {
+  try {
+    const v = sessionStorage.getItem(MODE_DRAFT_KEY);
+    return v === 'embedded' || v === 'existing' ? v : null;
+  } catch {
+    return null;
+  }
+}
+
+export function setOnboardingModeDraft(mode: OnboardingConnectionMode): void {
+  try { sessionStorage.setItem(MODE_DRAFT_KEY, mode); } catch { /* ignore */ }
+}
+
+export function clearOnboardingModeDraft(): void {
+  try { sessionStorage.removeItem(MODE_DRAFT_KEY); } catch { /* ignore */ }
+}
+
+export function requestOnboardingStarter(text: string): void {
+  window.dispatchEvent(new CustomEvent('otto-onboarding-starter', { detail: { text, send: true } }));
+}
 
 export function wasOnboarded(): boolean {
   try { return localStorage.getItem(ONBOARDED_KEY) === '1'; } catch { return false; }

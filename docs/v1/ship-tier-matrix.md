@@ -21,6 +21,7 @@ Cut   = not in product UI (spec / parked only)
 
 | Date | Change |
 |------|--------|
+| 2026-06-14 | **137** Labs gate: master + feature toggles; Knowledge/Channels Labs-tier only |
 | 2026-06-14 | Initial matrix from ticket 136 + staging walk |
 
 ---
@@ -41,11 +42,9 @@ Cut   = not in product UI (spec / parked only)
 | Checks | Ship | Culture CI pane + Chat block | preview | `docs/v1/demo-culture-ci.md` + **135** demo | 131–135 |
 | Autonomy | Ship | Policy read/evaluate | shipped | `autonomy/policy.yaml` + evaluate receipt | 017 |
 | Skills | Ship | SkillStore | shipped | `skill/**/SKILL.md` browse | 066 |
-| Knowledge | Labs | Registry file-backed; Cognee optional | preview | Registry read; Cognee = Labs blocked shell | 040–044, 055 |
+| Knowledge | Labs | Registry file-backed; Cognee optional | **coming soon** (Labs off) | Registry read; enable `knowledge_cognee` in Settings → Labs | 040–044, 055, **137** |
 | Tickets | Ship | Compile/orchestrate | shipped | `node scripts/otto-staging-ticket-proof-capture.cjs` | 049 |
-| Channels | Labs | Contract + config; no live bot | shipped* | Honest empty / contract-only until bot wired | 056 |
-
-\*Channels pane is file-backed today but **outbound live bot** is Labs — see Labs features table.
+| Channels | Labs | Contract + config; no live bot | **coming soon** (Labs off) | Enable `channels_outbound` in Settings → Labs | 056, **137** |
 
 ---
 
@@ -155,6 +154,6 @@ Record pass/fail per **Ship** row in this file before Sebastian ack.
 ## Related docs
 
 - `docs/v1/labs.md` — Labs UX contract
-- `RELEASE_CHECKLIST.md` — release cut policy (`0.1.x` earned bumps)
+- `RELEASE_CHECKLIST.md` — release cut policy (`0.1.x` earned bumps); standard: `standards/standards/earned-semver.md`
 - `planning/hq-tickets/136-ship-tier-matrix-audit.md` — ticket AC
-- `apps/desktop/src/labs/surface-labs.ts` — runtime Labs defaults (may lag matrix until **137–139**)
+- `apps/desktop/src/surface-tiers.ts` — tier registry + nav gating (**137**)

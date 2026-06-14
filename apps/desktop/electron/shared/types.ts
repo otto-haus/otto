@@ -22,8 +22,10 @@ import type {
 
 export type { CharterStatus };
 
+export type PermissionScope = 'once' | 'session';
+
 export type PermissionResponse =
-  | { behavior: 'allow'; updatedInput?: Record<string, unknown> | null }
+  | { behavior: 'allow'; scope?: PermissionScope; updatedInput?: Record<string, unknown> | null }
   | { behavior: 'deny'; message: string };
 
 export interface PermissionRequest {
@@ -421,7 +423,27 @@ export interface OttoConfig {
     enabled?: boolean;
     baseUrl?: string | null;
   };
+  /** Labs gate — master off by default; per-feature opt-in (137). */
+  labs?: LabsConfig;
 }
+
+/** Lab feature ids — must match docs/v1/ship-tier-matrix.md */
+export type LabFeatureId =
+  | 'knowledge_cognee'
+  | 'pgvector_recall'
+  | 'channels_outbound'
+  | 'memory_observatory'
+  | 'worker_autonomous_loop'
+  | 'practice_mining'
+  | 'culture_export'
+  | 'remote_letta_cloud'
+  | 'command_station_full';
+
+export type LabsConfig = {
+  /** Master Labs switch — default false on fresh profile. */
+  enabled?: boolean;
+  features?: Partial<Record<LabFeatureId, boolean>>;
+};
 
 export type CogneeSettings = {
   enabled: boolean;

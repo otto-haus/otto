@@ -64,6 +64,7 @@ export const Sidebar: React.FC<{
   activeThreadId?: string | null;
   activeConversationId?: string | null;
   onSelectThread?: (thread: ThreadSummary) => void;
+  isComingSoon?: (id: SurfaceId) => boolean;
 }> = ({
   active,
   onSelect,
@@ -75,14 +76,17 @@ export const Sidebar: React.FC<{
   activeThreadId,
   activeConversationId,
   onSelectThread,
+  isComingSoon,
 }) => {
   const rt = useRuntimeContext();
   // Truthful readiness: only the live runtime can mark connected.
   const connected = rt.electron ? !!rt.status?.ready : false;
-  const item = (n: NavDef) => (
+  const item = (n: NavDef) => {
+    const soon = isComingSoon?.(n.id) ?? false;
+    return (
     <button type="button"
       key={n.id}
-      className={`nav__item has-tip${active === n.id ? ' is-active' : ''}`}
+      className={`nav__item has-tip${active === n.id ? ' is-active' : ''}${soon ? ' nav__item--soon' : ''}`}
       onClick={() => onSelect(n.id)}
       aria-label={n.label}
       data-tip={n.label}
@@ -90,9 +94,11 @@ export const Sidebar: React.FC<{
     >
       <span className="nav__icon">{n.icon}</span>
       <span className="nav__label">{n.label}</span>
-      {counts[n.id] ? <span className="nav__badge">{counts[n.id]}</span> : null}
+      {soon ? <span className="nav__badge nav__badge--soon">soon</span> : null}
+      {!soon && counts[n.id] ? <span className="nav__badge">{counts[n.id]}</span> : null}
     </button>
   );
+  };
 
   return (
     <aside className={`sidebar${compact ? ' is-collapsed' : ''}`}>

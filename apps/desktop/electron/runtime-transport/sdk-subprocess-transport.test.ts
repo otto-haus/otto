@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, test } from 'bun:test';
 import type { BrowserWindow } from 'electron';
 import { ConfigStore } from '../config-store';
+import { permissionSessionStore } from '../permission-session-store';
 import { permissionTimeoutMs, SdkSubprocessTransport } from './sdk-subprocess-transport';
 
 const originalTimeout = process.env.OTTO_PERMISSION_TIMEOUT_MS;
@@ -190,5 +191,62 @@ describe('SdkSubprocessTransport permissions', () => {
     expect(perm).toBeTruthy();
     transport.resolvePermission((perm!.payload as { requestId: string }).requestId, { behavior: 'allow' });
     await sendPromise;
+  });
+
+  test('session allow skips modal on repeat tool use', async () => {
+    permissionSessionStore.clear();
+    process.env.OTTO_PERMISSION_TIMEOUT_MS = '5000';
+    const { win, sent } = mockWindow();
+    const transport = new SdkSubprocessTransport(win, mockConfig());
+
+    let canUseTool: ((toolName: string, toolInput: Record<string, unknown>) => Promise<{ behavior: string; scope?: string }>) | null = null;
+    const session = {
+      close: () => {},
+      initialize: async () => ({
+        agentId: 'agent-test',
+        conversationId: 'conv-test',
+        model: 'test-model',
+        memfsEnabled: false,
+        tools: [],
+      }),
+      send: async () => {},
+      abort: async () => {},
+      async *stream() {
+        const first = await canUseTool!('run_shell', { cmd: 'echo one' });
+        expect(first.behavior).toBe('allow');
+        expect(first.scope).toBe('session');
+        const second = await canUseTool!('run_shell', { cmd: 'echo two' });
+        expect(second.behavior).toBe('allow');
+        expect(second.scope).toBe('session');
+        yield { type: 'result', success: true, conversationId: 'conv-test' };
+      },
+    };
+
+    (transport as unknown as { sdk: unknown }).sdk = {
+      createSession: (_id: unknown, options: { canUseTool: typeof canUseTool }) => {
+        canUseTool = options.canUseTool;
+        return session;
+      },
+      resumeSession: (_id: unknown, options: { canUseTool: typeof canUseTool }) => {
+        canUseTool = options.canUseTool;
+        return session;
+      },
+    };
+
+    process.env.OTTO_AGENT_ID = 'agent-test';
+    process.env.OTTO_SKIP_LETTA_LSOF = '1';
+    await transport.init({ freshConversation: true });
+
+    const sendPromise = transport.send('session allow repeat');
+    await new Promise((r) => setTimeout(r, 15));
+    const perm = sent.find((e) => e.channel === 'otto:permission');
+    expect(perm).toBeTruthy();
+    transport.resolvePermission((perm!.payload as { requestId: string }).requestId, {
+      behavior: 'allow',
+      scope: 'session',
+    });
+    await sendPromise;
+    expect(sent.filter((e) => e.channel === 'otto:permission').length).toBe(1);
+    permissionSessionStore.clear();
   });
 });

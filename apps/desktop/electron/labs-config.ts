@@ -1,0 +1,78 @@
+import type { LabFeatureId, LabsConfig, OttoConfig } from './shared/types';
+
+export const LAB_FEATURE_IDS: LabFeatureId[] = [
+  'knowledge_cognee',
+  'pgvector_recall',
+  'channels_outbound',
+  'memory_observatory',
+  'worker_autonomous_loop',
+  'practice_mining',
+  'culture_export',
+  'remote_letta_cloud',
+  'command_station_full',
+];
+
+const LEGACY_SURFACE_KEYS = new Set([
+  'charters',
+  'standards',
+  'practices',
+  'routines',
+  'curation',
+  'receipts',
+  'checks',
+  'autonomy',
+  'skills',
+  'knowledge',
+  'tickets',
+  'channels',
+]);
+
+function isLegacyLabsShape(raw: OttoConfig['labs']): raw is Record<string, boolean> {
+  if (!raw || typeof raw !== 'object') return false;
+  if ('enabled' in raw || 'features' in raw) return false;
+  return Object.keys(raw).some((k) => LEGACY_SURFACE_KEYS.has(k));
+}
+
+/** Fresh profile default: Labs master off, no features enabled. */
+export function defaultLabsConfig(): LabsConfig {
+  return { enabled: false, features: {} };
+}
+
+export function normalizeLabsConfig(raw: OttoConfig['labs'] | undefined): LabsConfig {
+  if (!raw) return defaultLabsConfig();
+
+  if (isLegacyLabsShape(raw)) {
+    const legacy = raw as Record<string, boolean>;
+    const features: Partial<Record<LabFeatureId, boolean>> = {};
+    if (legacy.knowledge) features.knowledge_cognee = true;
+    if (legacy.channels) features.channels_outbound = true;
+    const anyFeature = Object.values(features).some(Boolean);
+    return {
+      enabled: anyFeature,
+      features,
+    };
+  }
+
+  const nested = raw as LabsConfig;
+  return {
+    enabled: nested.enabled ?? false,
+    features: { ...(nested.features ?? {}) },
+  };
+}
+
+export function getLabsConfig(cfg: OttoConfig): LabsConfig {
+  return normalizeLabsConfig(cfg.labs);
+}
+
+export function patchLabsConfig(cfg: OttoConfig, patch: Partial<LabsConfig>): LabsConfig {
+  const current = normalizeLabsConfig(cfg.labs);
+  const next: LabsConfig = {
+    enabled: patch.enabled ?? current.enabled,
+    features: { ...current.features, ...(patch.features ?? {}) },
+  };
+  return next;
+}
+
+export function labsConfigToOttoPatch(next: LabsConfig): Pick<OttoConfig, 'labs'> {
+  return { labs: next };
+}
