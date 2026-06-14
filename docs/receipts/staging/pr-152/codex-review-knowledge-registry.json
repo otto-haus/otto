@@ -1,0 +1,53 @@
+{
+  "pr": 152,
+  "reviewer": "codex",
+  "reviewedAt": "2026-06-14",
+  "base": "ship/functional-labs",
+  "head": "bugfix/knowledge-registry-parse",
+  "changeType": "electron-backend",
+  "fixApplied": {
+    "summary": "Malformed knowledge registry YAML now degrades to null for listing/routing and no longer crashes the manual AI frontier review executor.",
+    "files": [
+      "apps/desktop/electron/knowledge-store.test.ts",
+      "apps/desktop/electron/ai-frontier-review-executor.ts",
+      "apps/desktop/electron/ai-frontier-review-executor.test.ts"
+    ]
+  },
+  "malformedRegistryProof": {
+    "fixture": "models: [unterminated\\n",
+    "knowledgeStore": {
+      "listResultRegistry": null,
+      "routingForRole": null,
+      "resolveModelForRole": null
+    },
+    "aiFrontierReviewExecutor": {
+      "doesNotThrow": true,
+      "updatesCapabilityNote": true,
+      "skipsRegistryRewrite": true,
+      "registryContentPreserved": true
+    }
+  },
+  "verification": {
+    "passed": [
+      "bun install --frozen-lockfile",
+      "bun test apps/desktop/electron/knowledge-store.test.ts apps/desktop/electron/ai-frontier-review-executor.test.ts (7 pass / 0 fail / 26 expect calls)",
+      "bun run typecheck",
+      "bun run --cwd apps/desktop typecheck",
+      "bun run --cwd apps/desktop electron:typecheck",
+      "git diff --check",
+      "bun test (223 pass / 1 skip / 0 fail / 747 expect calls)",
+      "bun run verify:v0 (5/5 passed)",
+      "task staging"
+    ],
+    "staging": {
+      "app": "/Applications/otto-staging.app",
+      "home": "/Users/seb/.codex/admin/otto-staging/home",
+      "ottoHome": "/Users/seb/.codex/admin/otto-staging/otto-home",
+      "profile": "/Users/seb/.codex/admin/otto-staging/profile",
+      "port": 9445
+    },
+    "notRun": [
+      "Screenshot capture: not applicable; this is a backend malformed-file resilience fix. Data proof and staging build are attached instead."
+    ]
+  }
+}

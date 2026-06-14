@@ -34,11 +34,14 @@ describe('KnowledgeStore', () => {
       mkdirSync(frontierDir, { recursive: true });
       writeFileSync(join(frontierDir, 'model-registry.yaml'), 'models: [unterminated\n');
 
-      const result = new KnowledgeStore(tmp).listResult();
+      const store = new KnowledgeStore(tmp);
+      const result = store.listResult();
 
       expect(result.registryPath).toBe(join(frontierDir, 'model-registry.yaml'));
       expect(result.registry).toBeNull();
       expect(result.storage).toBe('files');
+      expect(store.routingForRole('ticket_worker')).toBeNull();
+      expect(store.resolveModelForRole('ticket_worker')).toBeNull();
     } finally {
       rmSync(tmp, { recursive: true, force: true });
     }
