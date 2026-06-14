@@ -79,4 +79,30 @@ describe('ReceiptStore', () => {
     expect(receipt?.path.endsWith('.json')).toBe(true);
     expect(new ReceiptStore(tmp).get('missing')).toBeNull();
   });
+
+  it('skips receipts with invalid timestamps', () => {
+    tmp = mkdtempSync(join(tmpdir(), 'otto-receipt-store-test-'));
+    writeFileSync(
+      join(tmp, 'bad-time.json'),
+      `${JSON.stringify({
+        schema: 'otto.receipt.v1',
+        id: 'receipt-bad-time',
+        timestamp: 'not-a-date',
+        status: 'success',
+        subject: { type: 'chat', id: 'local-conv-1' },
+        action: 'chat.send',
+        input: { text: 'hello' },
+        result: { summary: 'Chat turn completed.' },
+        evidence: [{ kind: 'log', ref: '/tmp/success.jsonl' }],
+        blocker: null,
+      }, null, 2)}\n`,
+    );
+
+    const store = new ReceiptStore(tmp);
+    const listed = store.list();
+
+    expect(listed.receipts).toEqual([]);
+    expect(listed.skipped).toBe(1);
+    expect(store.get('receipt-bad-time')).toBeNull();
+  });
 });
