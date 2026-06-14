@@ -40,7 +40,8 @@ Implementation anchors:
 - No adapter required for first launch.
 - Missing adapter state is graceful (no fake connected).
 - Read-only import first; scoped writes require config + receipts.
-- Parked HQ tickets (`019`–`022`) implement connectors; they do not change this seam.
+- Parked HQ tickets (`019`–`022`, `074`–`075`) implement connectors; they do not change this seam.
+- **Paperclip:** work plane only. Read-only import first (`021`); UI slice (`074`); task create (`022`) and status feedback (`075`) require approval doors. Paperclip status is never otto Done.
 
 ## Done test for new adapters
 
