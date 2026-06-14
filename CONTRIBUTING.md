@@ -12,6 +12,25 @@ org-specific doctrine, gates, and templates belong in a separate private repo, n
 
 ## Dev
 
+- Install dependencies from the committed lockfile:
+
+  ```sh
+  bun install --frozen-lockfile
+  ```
+
+- Run the local CI gate before opening a PR:
+
+  ```sh
+  task ci
+  ```
+
+  This wraps `scripts/ci-local-gate.sh`, the same gate GitHub Actions runs. If
+  `task` is not installed yet, run the script directly:
+
+  ```sh
+  bash scripts/ci-local-gate.sh
+  ```
+
 - The extension is two files: `extension/charter.ts` (Charter operating contracts + permission gates — the Letta Code extension API) and `extension/routine.ts` (Routines — repeated bundles of Practices).
 - The skills mirror them: `skill/SKILL.md` (charter) and `skill/routine/SKILL.md` (routine).
 - After editing the extension, run `/reload` in Letta Code.
