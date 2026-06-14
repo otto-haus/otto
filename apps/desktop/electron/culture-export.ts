@@ -1,5 +1,5 @@
 import { cpSync, existsSync, mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
-import { basename, join } from 'node:path';
+import { basename, isAbsolute, join, win32 } from 'node:path';
 import { execFileSync } from 'node:child_process';
 import type { CultureExportManifest, CultureExportResult, CultureImportPreview } from '@otto-haus/core';
 import { OTTO_DIR } from './config-store';
@@ -124,6 +124,20 @@ export class CultureExporter {
     if (manifest.schema !== 'otto.culture-export.v1') {
       return { valid: false, manifest, diff: [], blocked_reason: 'Unsupported manifest schema' };
     }
+    const includes = manifest.includes as unknown;
+    if (!Array.isArray(includes)) {
+      return { valid: false, manifest, diff: [], blocked_reason: 'Manifest includes must be an array' };
+    }
+    const unsafeInclude = includes.find((rel) => !isSafeManifestInclude(rel));
+    if (unsafeInclude !== undefined) {
+      return {
+        valid: false,
+        manifest,
+        diff: [],
+        blocked_reason: `Manifest include path is unsafe: ${String(unsafeInclude)}`,
+      };
+    }
+    const safeIncludes = includes as string[];
 
     try {
       this.assertNoSecretsInDir(bundlePath);
@@ -136,7 +150,7 @@ export class CultureExporter {
       };
     }
 
-    const diff = (manifest.includes ?? []).map((rel) => {
+    const diff = safeIncludes.map((rel) => {
       const dest = rel.startsWith('constitution')
         ? join(this.ottoDir, basename(rel))
         : join(this.ottoDir, rel);
@@ -166,6 +180,15 @@ export class CultureExporter {
       }
     }
   }
+}
+
+function isSafeManifestInclude(rel: unknown): rel is string {
+  if (typeof rel !== 'string') return false;
+  const normalized = rel.replace(/\\/g, '/');
+  if (!normalized || normalized.includes(':') || normalized.startsWith('/') || isAbsolute(rel) || win32.isAbsolute(normalized)) {
+    return false;
+  }
+  return normalized.split('/').every((part) => part !== '' && part !== '.' && part !== '..');
 }
 
 function walk(dir: string): string[] {

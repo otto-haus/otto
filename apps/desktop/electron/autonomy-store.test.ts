@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'bun:test';
-import { existsSync, mkdtempSync, rmSync, readFileSync } from 'node:fs';
+import { existsSync, mkdtempSync, rmSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { dirname } from 'node:path';
@@ -24,6 +24,37 @@ describe('AutonomyStore', () => {
     expect(loaded.policy.doors.length).toBeGreaterThanOrEqual(6);
     expect(loaded.policy.settings.safe_auto_merge).toBe('disabled');
     expect(loaded.policy.limitations.some((line) => line.includes('Ticketcraft'))).toBe(true);
+  });
+
+  test('normalizes malformed max_parallel_workers to a usable worker count', () => {
+    const tmp = mkdtempSync(join(tmpdir(), 'otto-autonomy-policy-'));
+    try {
+      const fixtures = [
+        { value: 'many', expected: 3 },
+        { value: '0', expected: 3 },
+        { value: '-2', expected: 3 },
+        { value: '0.5', expected: 1 },
+        { value: '2.9', expected: 2 },
+      ];
+
+      for (const fixture of fixtures) {
+        writeFileSync(
+          join(tmp, 'policy.yaml'),
+          `version: "0.1"
+summary: Test policy
+doctrine: Test doctrine
+settings:
+  max_parallel_workers: ${fixture.value}
+`,
+        );
+
+        const loaded = new AutonomyStore(tmp).loadResult();
+
+        expect(loaded.policy.settings.max_parallel_workers).toBe(fixture.expected);
+      }
+    } finally {
+      rmSync(tmp, { recursive: true, force: true });
+    }
   });
 
   test('classifies consequential actions as red and approval-required', () => {

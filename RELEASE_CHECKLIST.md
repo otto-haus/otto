@@ -136,7 +136,7 @@ Staging smoke: `docs/receipts/staging/`. PR stack: `docs/v1/runbooks/pr-stack-sh
 - **138** Ship core path: onboarding/rev8/two-thread/Culture CI not all re-run 2026-06-14 session — see ticket staging log.
 - **076** fresh-Mac embedded Letta bundle proof still open.
 - Demos: walkthrough `demo/out/otto-v01-desktop-walkthrough.mp4` + release asset naming `otto-v01-desktop.mp4` (receipt `receipts/otto-v01/demo-render-20260614T063531Z.md`).
-- Marketing site: local staging only; `otto.haus` apex not deployed.
+- Marketing site: **Pages production** at `https://otto-haus.pages.dev` (`bash site/deploy-pages.sh`). Apex `otto.haus`: empty Worker `otto` deleted 2026-06-14; Pages custom domain pending — activate DNS in dashboard (Workers & Pages → otto-haus → Custom domains → otto.haus → complete setup).
 - Live `/Applications/otto.app` lags staging by design until Sebastian approves promotion.
 - Cognee/pgvector require local daemons — UI shows honest empty/blocked when off.
 - Sebastian checklist (Tried + Approved) all pending.

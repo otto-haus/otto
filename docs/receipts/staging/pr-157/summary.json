@@ -1,0 +1,37 @@
+{
+  "pr": 157,
+  "title": "ci(task): guard live desktop refresh",
+  "reviewer": "Codex PR review agent",
+  "branch": "ci/task-command-hygiene",
+  "base": "main",
+  "status": "ready_for_sebastian_review",
+  "review_result": "No production defect found. Command behavior matches the ticket: live refresh refuses without opt-in, deploy points to staging, build/package keep readiness clean, and local CI passes.",
+  "changed_files": [
+    "AGENTS.md",
+    "README.md",
+    "Taskfile.yml",
+    "apps/desktop/package.json",
+    "package.json",
+    "planning/hq-tickets/_Done/158-ci-task-command-hygiene.md",
+    "scripts/refresh-otto-app.sh",
+    "docs/receipts/staging/pr-157/codex-review-task-command-hygiene.json",
+    "docs/receipts/staging/pr-157/summary.json"
+  ],
+  "data_receipt": "docs/receipts/staging/pr-157/codex-review-task-command-hygiene.json",
+  "verification": [
+    "bun install --frozen-lockfile",
+    "task --list",
+    "task refresh",
+    "bash scripts/refresh-otto-app.sh",
+    "task build",
+    "task package",
+    "bun run typecheck",
+    "bun run --cwd apps/desktop typecheck",
+    "bun run --cwd apps/desktop electron:typecheck",
+    "bun test",
+    "bun run verify:v0",
+    "bun audit",
+    "task ci"
+  ],
+  "known_gaps": []
+}

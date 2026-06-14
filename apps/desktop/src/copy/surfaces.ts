@@ -183,11 +183,15 @@ export const chatCopy = {
   queueFailed: (count: number) => `${count} couldn't send`,
   queueMixed: (pending: number, failed: number) =>
     `${pending} waiting · ${failed} failed`,
+  queueNextSummary: (summary: string, next: string) => `${summary} · next: ${next}`,
   queueClearAll: 'Dismiss all',
   queueRetryAll: 'Retry all',
   queueShow: 'Show',
   queueHide: 'Hide',
   queueRetryOne: 'Retry',
+  queuePillNext: 'next',
+  queuePillWaiting: 'waiting',
+  queuePillFailed: 'failed',
   runtimeConnectingEyebrow: 'starting runtime',
   runtimeConnectingTitle: 'Connecting to Letta…',
   runtimeConnectingBody: 'Booting your local agent session. This usually takes a few seconds.',
@@ -284,11 +288,13 @@ export const threadCopy = {
   pinnedLabel: 'Pinned',
   recentsLabel: 'Recents',
   empty: 'No conversations yet.',
-    pinnedEmpty: 'Pin a thread to keep it here.',
-    pin: 'Pin conversation',
-    unpin: 'Unpin conversation',
-    archive: 'Archive conversation',
-  } as const;
+  pinnedEmpty: 'Pin a conversation to keep it here.',
+  pin: 'Pin conversation',
+  unpin: 'Unpin conversation',
+  archive: 'Archive conversation',
+  archiveConfirm: 'Confirm archive',
+  rename: 'Rename conversation',
+} as const;
 
 export const curationCopy = {
   eyebrow: 'curation',

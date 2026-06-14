@@ -3278,6 +3278,15 @@ const ReadyRow: React.FC<{ item: ReadyItem }> = ({ item }) => (
 );
 
 type ProviderKind = 'local' | 'cloud';
+const PROVIDER_TABS: Array<{
+  kind: ProviderKind;
+  label: string;
+  tabId: string;
+  panelId: string;
+}> = [
+  { kind: 'local', label: 'Local', tabId: 'provider-tab-local', panelId: 'provider-panel-local' },
+  { kind: 'cloud', label: 'Cloud', tabId: 'provider-tab-cloud', panelId: 'provider-panel-cloud' },
+];
 const MODEL_PROVIDERS: Array<{
   kind: ProviderKind;
   name: string;
@@ -3307,6 +3316,28 @@ const ModelProviders: React.FC = () => {
   const activeModel = `${rt.status?.modelHandle ?? ''} ${rt.status?.model ?? ''}`.toLowerCase();
   const openLetta = () => void api?.runtime.openLetta();
   const rows = MODEL_PROVIDERS.filter((p) => p.kind === tab);
+  const activeProviderTab = PROVIDER_TABS.find((providerTab) => providerTab.kind === tab) ?? PROVIDER_TABS[0];
+
+  const handleProviderTabKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
+    const activeIndex = PROVIDER_TABS.findIndex((providerTab) => providerTab.kind === tab);
+    const currentIndex = activeIndex === -1 ? 0 : activeIndex;
+    let nextIndex: number | null = null;
+
+    if (event.key === 'ArrowRight' || event.key === 'ArrowDown') {
+      nextIndex = (currentIndex + 1) % PROVIDER_TABS.length;
+    } else if (event.key === 'ArrowLeft' || event.key === 'ArrowUp') {
+      nextIndex = (currentIndex - 1 + PROVIDER_TABS.length) % PROVIDER_TABS.length;
+    } else if (event.key === 'Home') {
+      nextIndex = 0;
+    } else if (event.key === 'End') {
+      nextIndex = PROVIDER_TABS.length - 1;
+    }
+
+    if (nextIndex == null) return;
+    event.preventDefault();
+    setTab(PROVIDER_TABS[nextIndex].kind);
+    event.currentTarget.querySelectorAll<HTMLButtonElement>('[role="tab"]')[nextIndex]?.focus();
+  };
 
   const refreshMirror = () => {
     if (!api?.provider) return;
@@ -3372,12 +3403,31 @@ const ModelProviders: React.FC = () => {
         </div>
       </div>
 
-      <div className="segmented" role="tablist" aria-label="Provider type">
-        <button type="button" className={tab === 'local' ? 'is-active' : ''} onClick={() => setTab('local')}>Local</button>
-        <button type="button" className={tab === 'cloud' ? 'is-active' : ''} onClick={() => setTab('cloud')}>Cloud</button>
+      <div className="segmented" role="tablist" aria-label="Provider type" onKeyDown={handleProviderTabKeyDown}>
+        {PROVIDER_TABS.map((providerTab) => (
+          <button
+            key={providerTab.kind}
+            id={providerTab.tabId}
+            type="button"
+            role="tab"
+            aria-selected={tab === providerTab.kind}
+            aria-controls={providerTab.panelId}
+            tabIndex={tab === providerTab.kind ? 0 : -1}
+            className={tab === providerTab.kind ? 'is-active' : ''}
+            onClick={() => setTab(providerTab.kind)}
+          >
+            {providerTab.label}
+          </button>
+        ))}
       </div>
 
-      <div className="providerList">
+      <div
+        className="providerList"
+        id={activeProviderTab.panelId}
+        role="tabpanel"
+        aria-labelledby={activeProviderTab.tabId}
+        tabIndex={0}
+      >
         {rows.map((provider) => {
           const active = provider.matches.some((m) => activeModel.includes(m));
           return (

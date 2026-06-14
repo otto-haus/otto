@@ -1,0 +1,21 @@
+{
+  "pr": 115,
+  "status": "ready_for_review_after_codex_verification",
+  "evidenceType": "ui-screenshots-and-queue-data",
+  "screenshots": [
+    "docs/receipts/staging/pr-115/queue-compact-next-summary.png",
+    "docs/receipts/staging/pr-115/queue-expanded-next-pill.png"
+  ],
+  "renderProof": "docs/receipts/staging/pr-115/queue-render-proof.json",
+  "browserFallback": "Browser plugin invocation previously failed in this review session, so local Playwright was used.",
+  "assertions": {
+    "compactStartsCollapsed": true,
+    "compactNamesNextItem": true,
+    "compactHidesExpandedRows": true,
+    "expandedShowsExpectedPills": true,
+    "expandedShowsOnlyActiveAndLegacyRows": true,
+    "otherThreadHidden": true,
+    "noConsoleErrors": true
+  },
+  "readyForSebastian": true
+}

@@ -4,9 +4,9 @@ import { resolveTransportMode } from './transport-mode';
 describe('resolveTransportMode', () => {
   const original = process.env.OTTO_RUNTIME_TRANSPORT;
 
-  test('defaults to auto', () => {
+  test('defaults to ws', () => {
     delete process.env.OTTO_RUNTIME_TRANSPORT;
-    expect(resolveTransportMode()).toBe('auto');
+    expect(resolveTransportMode()).toBe('ws');
   });
 
   test('parses ws mode', () => {
@@ -24,9 +24,9 @@ describe('resolveTransportMode', () => {
     expect(resolveTransportMode()).toBe('sdk');
   });
 
-  test('unknown values fall back to auto', () => {
+  test('unknown values fall back to ws', () => {
     process.env.OTTO_RUNTIME_TRANSPORT = 'cloud';
-    expect(resolveTransportMode()).toBe('auto');
+    expect(resolveTransportMode()).toBe('ws');
   });
 
   if (original === undefined) delete process.env.OTTO_RUNTIME_TRANSPORT;
