@@ -83,6 +83,34 @@ describe('RoutineStore', () => {
     }
   });
 
+  test('uses directory slug when routine.yaml has blank slug', () => {
+    const tmp = mkdtempSync(join(tmpdir(), 'otto-routine-blank-slug-'));
+    try {
+      const routineDir = join(tmp, 'blank-slug-routine');
+      mkdirSync(routineDir, { recursive: true });
+      writeFileSync(
+        join(routineDir, 'routine.yaml'),
+        [
+          'id: routine-blank-slug',
+          'slug: "   "',
+          'name: Blank Slug Routine',
+          'status: proposed',
+          'summary: Uses directory slug for blank slug.',
+          'steps:',
+          '  - practice: check',
+          '    invocation: /check',
+          'created_at: 2026-06-14T00:00:00.000Z',
+          '',
+        ].join('\n'),
+      );
+      const result = new RoutineStore(tmp).listResult();
+      expect(result.skipped).toEqual([]);
+      expect(result.routines[0]?.slug).toBe('blank-slug-routine');
+    } finally {
+      rmSync(tmp, { recursive: true, force: true });
+    }
+  });
+
   test('manual run writes a receipt with routine reference', () => {
     const tmp = mkdtempSync(join(tmpdir(), 'otto-routine-test-'));
     try {
