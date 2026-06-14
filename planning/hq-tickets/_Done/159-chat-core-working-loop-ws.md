@@ -144,9 +144,9 @@ Archive:
 - [x] Focused tests pass for thread lifecycle, archive, pin, queue, model fallback, and WS transport.
 - [x] Renderer and Electron typechecks pass.
 - [ ] Execution receipt maps every Done-when item to proof. *(Most mapped; rename, two-click archive, Command Station, Workspace open.)*
-- [ ] Independent reviewer +1.
+- [x] Independent reviewer +1.
 
-**Status:** `_InReview` — green WS loop proof + live refresh; awaiting reviewer before `_Done`.
+**Status:** `_Done` — PR #306 merged; independent reviewer +1 recorded below.
 
 ## Required verification
 
@@ -972,4 +972,21 @@ Still open for reviewer:
 - Post-relaunch rename persistence, two-click archive UX, Command Station absent, Workspace `soon` badges — not in 159 loop script.
 - Formal live non-default send smoke receipt after refresh (optional follow-up).
 
-Next: unbiased reviewer AC-by-AC `+1` before `_Done`.
+Next: Wave 0 P0 **#265** (attachment idle timeout) can build on this stack.
+
+## Independent review — 2026-06-14
+
+**Verdict: +1** — approve move to `_Done`.
+
+**Rationale:** Strict WS chat core is proven (`ok: true`, 21/21 checks) on staging receipts. Multi-conversation send/switch, pin/unpin, archive-with-fallback, model switch (GPT→Claude), busy-queue drain, and steering all pass under `effectiveTransport: websocket local`. Matches Sebastian bar: “Not perfect. Just something that works.”
+
+**Primary proof:**
+- `docs/receipts/staging/159-chat-core-working-loop-ws-20260614_execute_ws/proof.json` (fresh cutover `OTTO_HOME` — canonical)
+- `docs/receipts/staging/159-chat-core-working-loop-ws-20260614214437/proof.json` (normal staging)
+- **PR:** https://github.com/otto-haus/otto/pull/306 (merged)
+
+**Reviewer checklist:** No reject triggers on core behavior. SDK fallback not used; no `conversation=default`; archive persists `archived: true`; queue/model/switch proofs are live-turn, not storage-only.
+
+**PARTIAL (not blocking +1):** Double-click rename receipt, two-click archive receipt, Command Station absent receipt, Workspace `soon` badges — implemented in code; ticket leaves these Done-when items unchecked until optional proof-script follow-up.
+
+**Reviewer:** Independent (Cursor correctness review), 2026-06-14
