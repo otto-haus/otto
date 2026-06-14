@@ -4,6 +4,7 @@ import { join } from 'node:path';
 import type { EffortLevel, OttoConfig } from './shared/types';
 
 export const defaultOttoDir = () => process.env.OTTO_CONFIG_DIR || join(homedir(), '.otto');
+export const OTTO_DIR = defaultOttoDir();
 const LETTA_SETTINGS_LOCAL = join(homedir(), '.letta', 'settings.local.json');
 const LETTA_SETTINGS = join(homedir(), '.letta', 'settings.json');
 

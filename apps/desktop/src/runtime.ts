@@ -1,4 +1,22 @@
 import { useEffect, useRef, useState } from 'react';
+import type {
+  Charter,
+  CharterRef,
+  CharterStatus,
+  PracticeRecord,
+  PracticeReference,
+  Receipt,
+  RoutineRecord,
+  CurationProposalRecord,
+  CreateProposalFromCorrectionInput,
+  DecideProposalInput,
+  AutonomyPolicy,
+  AutonomyPolicyResult,
+  AutonomyActionEvaluation,
+  StandardCitation,
+  StandardRecord,
+  StandardsRegistry,
+} from '@otto-haus/core';
 
 // Renderer-side view of the window.otto bridge exposed by electron/preload.ts.
 // In the web preview window.otto is undefined → the app stays a file-backed shell.
@@ -36,6 +54,116 @@ export type EffortLevel = 'off' | 'low' | 'medium' | 'high' | 'max';
 export type RuntimePreferences = { modelHandle?: string | null; effort?: EffortLevel };
 export type AttachmentInput = { name: string; mime: string; dataUrl: string };
 export type SavedAttachment = { id: string; name: string; mime: string; path: string; url: string; size: number };
+export type ReceiptStatus = 'success' | 'blocked' | 'failed';
+
+export type ReceiptSummary = {
+  id: string;
+  timestamp: string;
+  status: ReceiptStatus;
+  action: string;
+  subjectType: Receipt['subject']['type'];
+  subjectId: string | null;
+  summary: string;
+  blockerCode: string | null;
+  evidenceCount: number;
+  practiceSlug: string | null;
+  routineSlug: string | null;
+  path: string;
+};
+
+export type ReceiptDetail = Receipt & { path: string };
+
+export type ReceiptListResult = {
+  dir: string;
+  receipts: ReceiptSummary[];
+  skipped: number;
+};
+
+export type { CharterStatus };
+
+export type CharterCreateInput = {
+  slug: string;
+  objective: string;
+  title?: string;
+  status?: CharterStatus;
+  acceptanceCriteria: Array<{ id: string; text: string; receipts?: string[] }>;
+  runIds?: string[];
+  receiptIds?: string[];
+};
+
+export type CharterDetail = Charter & { root: string; path: string };
+
+export type CharterListResult = {
+  dir: string;
+  charters: CharterRef[];
+};
+
+export type CharterMutationResult = {
+  charter: Charter;
+  path: string;
+  receipt: Receipt & { path: string };
+};
+
+export type StandardListResult = {
+  dir: string;
+  registryPath: string;
+  registry: StandardsRegistry;
+  standards: StandardRecord[];
+  skipped: Array<{ slug: string; file: string; reason: string }>;
+  storage: 'files';
+};
+
+export type PracticeListResult = {
+  dir: string;
+  practices: PracticeRecord[];
+  skipped: Array<{ slug: string; file: string; reason: string }>;
+  storage: 'files';
+};
+
+export type RoutineListResult = {
+  dir: string;
+  routines: RoutineRecord[];
+  skipped: Array<{ slug: string; file: string; reason: string }>;
+  storage: 'files';
+};
+
+export type RoutineActivationGate = {
+  slug: string;
+  requiresApproval: boolean;
+  scheduled: boolean;
+  allowed: boolean;
+  reason: string;
+};
+
+export type RoutineManualRunResult = {
+  routine: RoutineRecord;
+  receipt: Receipt & { path: string };
+};
+
+export type ProposalListResult = {
+  dir: string;
+  proposals: CurationProposalRecord[];
+  skipped: number;
+  storage: 'files';
+};
+
+export type CreateProposalResult = {
+  proposal: CurationProposalRecord;
+  receipt: Receipt & { path: string };
+};
+
+export type DecideProposalResult = {
+  proposal: CurationProposalRecord;
+  receipt: Receipt & { path: string };
+  blocked?: boolean;
+};
+
+export type EvaluateAutonomyActionResult = {
+  evaluation: AutonomyActionEvaluation;
+  receipt: Receipt & { path: string };
+};
+
+export type { StandardCitation, StandardRecord, StandardsRegistry, PracticeRecord, PracticeReference, RoutineRecord, CurationProposalRecord, CreateProposalFromCorrectionInput, DecideProposalInput, AutonomyPolicy, AutonomyPolicyResult, AutonomyActionEvaluation };
 
 export type OttoEvent =
   | { message: { type: string; [k: string]: unknown } }
@@ -55,6 +183,45 @@ type OttoApi = {
   connection: {
     get(): Promise<ConnectionInfo>;
     save(input: ConnectionInput): Promise<RuntimeStatus>;
+  };
+  receipts: {
+    list(): Promise<ReceiptListResult>;
+    get(id: string): Promise<ReceiptDetail | null>;
+  };
+  charters: {
+    list(): Promise<CharterListResult>;
+    get(slug: string): Promise<CharterDetail | null>;
+    create(input: CharterCreateInput): Promise<CharterMutationResult>;
+    updateStatus(slug: string, status: CharterStatus, summary?: string): Promise<CharterMutationResult>;
+    linkRunReceipt(slug: string, input: { runId?: string; receiptId?: string; summary?: string }): Promise<CharterMutationResult>;
+  };
+  standards: {
+    list(): Promise<StandardListResult>;
+    get(slug: string): Promise<StandardRecord | null>;
+    citationsForText(text: string): Promise<StandardCitation[]>;
+  };
+  practices: {
+    list(): Promise<PracticeListResult>;
+    get(slug: string): Promise<PracticeRecord | null>;
+    resolveForText(text: string): Promise<PracticeReference | null>;
+  };
+  routines: {
+    list(): Promise<RoutineListResult>;
+    get(slug: string): Promise<RoutineRecord | null>;
+    activationGate(slug: string): Promise<RoutineActivationGate>;
+    runManual(slug: string): Promise<RoutineManualRunResult>;
+  };
+  curation: {
+    proposals: {
+      list(): Promise<ProposalListResult>;
+      get(id: string): Promise<CurationProposalRecord | null>;
+      createFromCorrection(input: CreateProposalFromCorrectionInput): Promise<CreateProposalResult>;
+      decide(id: string, input: DecideProposalInput): Promise<DecideProposalResult>;
+    };
+  };
+  autonomy: {
+    policy(): Promise<AutonomyPolicyResult>;
+    evaluateAction(input: { action: string; context?: string }): Promise<EvaluateAutonomyActionResult>;
   };
   permission: { respond(requestId: string, response: unknown): void };
   onEvent(cb: (e: OttoEvent) => void): () => void;
