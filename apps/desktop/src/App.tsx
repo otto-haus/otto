@@ -152,6 +152,7 @@ function AppShell() {
             <div className="content content--chat">
               <Chat
                 onOpenSettings={() => setActive('settings')}
+                onNavigate={setActive}
                 sidebarHidden={sidebarHidden}
                 onToggleSidebar={() => setSidebarHidden(false)}
               />

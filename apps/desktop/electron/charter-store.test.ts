@@ -80,4 +80,31 @@ describe('CharterStore', () => {
     expect(persisted.changes.at(-1).kind).toBe('status-changed');
     expect(persisted.changes.at(-1).receipt_id).toBe(result.receipt.id);
   });
+
+  it('blocks complete when acceptance criteria lack receipt proof', () => {
+    const s = store();
+    s.create({
+      slug: 'ship-receipts',
+      objective: 'Ship the receipts surface.',
+      status: 'active',
+      acceptanceCriteria: [{ id: 'AC1', text: 'Receipts are visible.' }],
+    });
+
+    expect(() => s.updateStatus('ship-receipts', 'complete')).toThrow(/missing receipt proof/i);
+  });
+
+  it('allows complete when every acceptance criterion has receipt proof', () => {
+    const s = store();
+    s.create({
+      slug: 'ship-receipts',
+      objective: 'Ship the receipts surface.',
+      status: 'active',
+      acceptanceCriteria: [{ id: 'AC1', text: 'Receipts are visible.' }],
+    });
+
+    s.linkRunReceipt('ship-receipts', { receiptId: 'receipt-ac1', acId: 'AC1' });
+    const result = s.updateStatus('ship-receipts', 'complete');
+    expect(result.charter.status).toBe('complete');
+    expect(result.charter.acceptance_criteria[0]?.receipts).toContain('receipt-ac1');
+  });
 });

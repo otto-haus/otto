@@ -6,14 +6,26 @@ import { isElectron, ottoApi, type EffortLevel, type RuntimeStatus, type SavedAt
 import { useRuntimeContext } from '../RuntimeContext';
 import ottoAvatar from '../assets/otto-avatar.png';
 
+import type { SurfaceId } from '../components/Sidebar';
+import { CommandStationStrip } from '../components/ui';
+import { chatCopy } from '../copy/surfaces';
+
 // In Electron (window.otto present) → the runtime-wired LiveChat.
 // In the web preview → the file-backed PreviewChat (unchanged).
-export const Chat: React.FC<{ onOpenSettings?: () => void; sidebarHidden?: boolean; onToggleSidebar?: () => void }> = ({
+export const Chat: React.FC<{
+  onOpenSettings?: () => void;
+  onNavigate?: (id: SurfaceId) => void;
+  sidebarHidden?: boolean;
+  onToggleSidebar?: () => void;
+}> = ({
   onOpenSettings,
+  onNavigate,
   sidebarHidden = false,
   onToggleSidebar,
 }) =>
-  isElectron() ? <LiveChat onOpenSettings={onOpenSettings} sidebarHidden={sidebarHidden} onToggleSidebar={onToggleSidebar} /> : <PreviewChat />;
+  isElectron()
+    ? <LiveChat onOpenSettings={onOpenSettings} onNavigate={onNavigate} sidebarHidden={sidebarHidden} onToggleSidebar={onToggleSidebar} />
+    : <PreviewChat />;
 
 /* ---------- LiveChat (Electron, wired to the Letta runtime) ---------- */
 type QueueState = 'queued' | 'sending' | 'failed';
@@ -260,8 +272,14 @@ const MarkdownText: React.FC<{ text: string }> = ({ text }) => {
   return <div className="md">{blocks}</div>;
 };
 
-const LiveChat: React.FC<{ onOpenSettings?: () => void; sidebarHidden: boolean; onToggleSidebar?: () => void }> = ({
+const LiveChat: React.FC<{
+  onOpenSettings?: () => void;
+  onNavigate?: (id: SurfaceId) => void;
+  sidebarHidden: boolean;
+  onToggleSidebar?: () => void;
+}> = ({
   onOpenSettings,
+  onNavigate,
   sidebarHidden,
   onToggleSidebar,
 }) => {
@@ -377,10 +395,13 @@ const LiveChat: React.FC<{ onOpenSettings?: () => void; sidebarHidden: boolean; 
       </div>
 
       <div className="chat__stream">
+        {ready && onNavigate ? (
+          <CommandStationStrip onNavigate={onNavigate} />
+        ) : null}
         {!ready && st && (
           <div className="inkblock" style={{ maxWidth: 760 }}>
-            <div className="inkblock__eyebrow"><span className="dot dot--warn" /> runtime not ready</div>
-            <div className="inkblock__title">Otto can't connect yet</div>
+            <div className="inkblock__eyebrow"><span className="dot dot--warn" /> {chatCopy.runtimeNotReadyEyebrow}</div>
+            <div className="inkblock__title">{chatCopy.runtimeNotReadyTitle}</div>
             <div className="inkblock__meta">
               <span>{st.reason ?? 'unknown reason'}</span>
               <span>cli: {st.cliResolved ? st.cliPath : 'bundled @letta-ai/letta-code'}</span>
@@ -393,9 +414,9 @@ const LiveChat: React.FC<{ onOpenSettings?: () => void; sidebarHidden: boolean; 
         )}
         {ready && rt.messages.length === 0 && (
           <div className="emptySurface emptySurface--chat">
-            <div className="eyebrow">Session</div>
-            <h2>Ready when you are.</h2>
-            <p>Message otto to start a session.</p>
+            <div className="eyebrow">{chatCopy.sessionEyebrow}</div>
+            <h2>{chatCopy.sessionTitle}</h2>
+            <p>{chatCopy.sessionBody}</p>
           </div>
         )}
         {rt.messages.map((m, i) => {

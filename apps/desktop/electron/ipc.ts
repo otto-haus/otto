@@ -78,8 +78,10 @@ export function registerIpc(win: BrowserWindow) {
   ipcMain.handle('otto:charters:update-status', (_e, slug: string, status: CharterStatus, summary?: string) =>
     charters.updateStatus(slug, status, summary),
   );
-  ipcMain.handle('otto:charters:link-run-receipt', (_e, slug: string, input: { runId?: string; receiptId?: string; summary?: string }) =>
-    charters.linkRunReceipt(slug, input),
+  ipcMain.handle(
+    'otto:charters:link-run-receipt',
+    (_e, slug: string, input: { runId?: string; receiptId?: string; acId?: string; summary?: string }) =>
+      charters.linkRunReceipt(slug, input),
   );
 
   ipcMain.handle('otto:standards:list', () => standards.listResult());
@@ -118,6 +120,9 @@ export function registerIpc(win: BrowserWindow) {
   ipcMain.handle('otto:tickets:compile', (_e, input: import('@otto-haus/core').TicketCompileInput) => tickets.compile(input));
   ipcMain.handle('otto:tickets:orchestrate', (_e, input: import('@otto-haus/core').TicketCompileInput & { repoRoot?: string }) =>
     orchestrator.orchestrate(input),
+  );
+  ipcMain.handle('otto:tickets:orchestrate-existing', (_e, ticketId: string, repoRoot?: string) =>
+    orchestrator.orchestrateExisting(ticketId, { repoRoot }),
   );
 
   ipcMain.handle('otto:workers:list', () => workers.list());

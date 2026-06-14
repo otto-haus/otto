@@ -728,7 +728,7 @@ h1, h2, h3, h4, p { margin: 0; }
 .toast--ok { border-color: #b8dcc4; background: linear-gradient(180deg, #f6fbf8 0%, var(--panel) 100%); }
 .toast--warn { border-color: #e7dcc0; background: var(--warn-tint); }
 .toast__title { font-size: 13px; font-weight: 600; color: var(--ink); }
-.toast__body { margin-top: 4px; font-family: var(--mono); font-size: 11px; color: var(--muted); line-height: 1.45; }
+.toast__body { margin-top: 4px; font-family: var(--mono); font-size: 11px; color: var(--mut); line-height: 1.45; }
 @keyframes toast-in {
   from { opacity: 0; transform: translateY(8px); }
   to { opacity: 1; transform: translateY(0); }
@@ -750,6 +750,83 @@ h1, h2, h3, h4, p { margin: 0; }
 .emptySurface--chat { margin: auto; align-items: center; text-align: center; }
 .emptySurface h2 { font-size: 28px; line-height: 1.08; letter-spacing: -0.04em; }
 .emptySurface p { color: var(--mut); font-size: 15px; line-height: 1.6; max-width: 560px; }
+
+.listEmpty {
+  padding: 20px 0 8px;
+  animation: surfaceIn 180ms var(--ease) both;
+}
+
+.surfacePage { animation: surfaceIn 180ms var(--ease) both; }
+.filterBar { flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+
+.commandStation {
+  max-width: 760px;
+  margin: 0 auto 20px;
+  padding: 0 4px;
+  animation: surfaceIn 180ms var(--ease) both;
+}
+.commandStation__head { margin-bottom: 10px; }
+.commandStation__title { font-size: 15px; font-weight: 600; letter-spacing: -0.02em; margin-top: 2px; }
+.commandStation__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(148px, 1fr));
+  gap: 10px;
+}
+.commandStation__card {
+  text-align: left;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--panel);
+  padding: 12px 12px 10px;
+  cursor: pointer;
+  display: grid;
+  gap: 2px;
+  min-height: 88px;
+  transition: border-color 120ms var(--ease), background 120ms var(--ease);
+}
+.commandStation__card:hover { border-color: var(--line-strong); background: #fffdf8; }
+.commandStation__card--culture { background: rgba(255,254,250,0.72); }
+.commandStation__count {
+  font-size: 22px;
+  font-weight: 600;
+  letter-spacing: -0.04em;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+.commandStation__dash {
+  font-family: var(--mono);
+  font-size: 18px;
+  color: var(--faint);
+  line-height: 1;
+}
+.commandStation__label { font-size: 13px; font-weight: 600; color: var(--ink-soft); margin-top: 4px; }
+.commandStation__hint { font-size: 11px; color: var(--faint); line-height: 1.35; }
+
+/* ---------- onboarding (first-run) ---------- */
+.onboardOverlay {
+  position: fixed; inset: 0; z-index: 100; display: grid; place-items: center;
+  background: rgba(15,16,20,0.55); backdrop-filter: blur(3px);
+}
+.onboardCard {
+  background: var(--dark); border: 1px solid #2C2E32; border-radius: 18px;
+  padding: 34px 36px; max-width: 520px; box-shadow: 0 40px 90px -30px rgba(0,0,0,0.6);
+  color: var(--dark-tx);
+}
+.onboardDock {
+  position: fixed; right: 24px; bottom: 24px; z-index: 100; width: 344px; max-width: calc(100vw - 48px);
+  background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 18px 20px;
+  box-shadow: 0 30px 70px -34px rgba(20,34,62,0.35), 0 3px 10px -4px rgba(0,0,0,0.06);
+}
+.onboardEyebrow { font-family: var(--mono); font-size: 10.5px; letter-spacing: 0.09em; text-transform: uppercase; }
+.onboardEyebrow--dark { color: #9D9EA2; }
+.onboardEyebrow--light { color: var(--faint); }
+.onboardTitle { font-size: 28px; line-height: 1.08; letter-spacing: -0.04em; margin-top: 8px; }
+.onboardBody { color: var(--dark-mut); font-size: 15px; line-height: 1.55; margin-top: 10px; }
+.onboardBody--light { color: var(--mut); }
+.onboardActions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 18px; align-items: center; }
+.onboardDots { display: flex; gap: 6px; margin-top: 16px; }
+.onboardDot { width: 6px; height: 6px; border-radius: 999px; border: 1px solid #C9CACE; background: transparent; }
+.onboardDot.is-active { background: #57585B; }
 
 /* ---------- settings / providers ---------- */
 .settingsShell { display: grid; grid-template-columns: 230px minmax(0, 1fr); gap: 24px; align-items: start; }

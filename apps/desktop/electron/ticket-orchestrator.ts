@@ -33,6 +33,17 @@ export class TicketOrchestrator {
   ) {}
 
   orchestrate(input: OrchestrateTicketInput): OrchestrateTicketResult {
+    const compiled = this.tickets.compile(input);
+    return this.orchestrateExisting(compiled.ticket.ticket_id, {
+      repoRoot: input.repoRoot,
+      compileReceiptId: compiled.receipt.id,
+    });
+  }
+
+  orchestrateExisting(
+    ticketId: string,
+    options: { repoRoot?: string; compileReceiptId?: string } = {},
+  ): OrchestrateTicketResult {
     const policy = this.autonomy.getPolicy();
     if (policy.settings.worker_creation === 'disabled') {
       throw new Error('Worker creation is disabled in autonomy policy.');
@@ -41,9 +52,15 @@ export class TicketOrchestrator {
       throw new Error('Worktree creation is disabled in autonomy policy.');
     }
 
-    const compiled = this.tickets.compile(input);
-    const ticket = compiled.ticket;
-    const repoRoot = resolveRepoRoot(input.repoRoot);
+    const ticket = this.tickets.get(ticketId);
+    if (!ticket) throw new Error(`Ticket not found: ${ticketId}`);
+
+    const activeWorker = findActiveWorker(this.workers, ticket.ticket_id);
+    if (activeWorker) {
+      throw new Error(`Active worker already exists for ${ticket.ticket_id}: ${activeWorker.id} (${activeWorker.status}).`);
+    }
+
+    const repoRoot = resolveRepoRoot(options.repoRoot);
     const worktreeRel = ticket.worktree ?? `.letta/worktrees/${slugFromTicket(ticket)}`;
     const worktreePath = join(repoRoot, worktreeRel);
     const branch = ticket.branch ?? `feat/${slugFromTicket(ticket)}`;
@@ -87,13 +104,14 @@ export class TicketOrchestrator {
         worktree: worktreeRel,
         branch,
         model: modelHandle ?? null,
+        compileReceiptId: options.compileReceiptId ?? null,
       },
       result: {
         summary: `Orchestrated ${ticket.ticket_id} in ${worktreeRel}`,
         data: {
           workerId: worker.id,
           runId: run.id,
-          compileReceiptId: compiled.receipt.id,
+          compileReceiptId: options.compileReceiptId ?? null,
         },
       },
       evidence: [
@@ -113,6 +131,12 @@ export class TicketOrchestrator {
       receipt,
     };
   }
+}
+
+const ACTIVE_WORKER_STATUSES = new Set(['running', 'blocked', 'review']);
+
+function findActiveWorker(workers: WorkerStore, ticketId: string) {
+  return workers.list().workers.find((w) => w.ticket_id === ticketId && ACTIVE_WORKER_STATUSES.has(w.status)) ?? null;
 }
 
 function slugFromTicket(ticket: TicketRecord): string {
@@ -141,7 +165,7 @@ function ensureWorktree(repoRoot: string, worktreePath: string, branch: string):
   if (existsSync(worktreePath)) return;
   mkdirSync(join(worktreePath, '..'), { recursive: true });
   try {
-    execFileSync('git', ['-C', repoRoot, 'worktree', 'add', '-B', branch, worktreePath, branch], {
+    execFileSync('git', ['-C', repoRoot, 'worktree', 'add', '-B', branch, worktreePath, 'HEAD'], {
       stdio: 'pipe',
       encoding: 'utf8',
     });

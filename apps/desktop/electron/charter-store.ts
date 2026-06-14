@@ -109,6 +109,15 @@ export class CharterStore {
 
   updateStatus(slug: string, status: CharterStatus, summary = `Charter status changed to ${status}.`): CharterUpdateResult {
     const current = this.require(slug);
+    if (status === 'complete') {
+      const missing = current.acceptance_criteria.filter((ac) => ac.receipts.length === 0);
+      if (missing.length) {
+        const ids = missing.map((ac) => ac.id).join(', ');
+        throw new Error(
+          `Cannot mark charter complete: ${missing.length} acceptance ${missing.length === 1 ? 'criterion' : 'criteria'} missing receipt proof (${ids}). Link a receipt to each AC first.`,
+        );
+      }
+    }
     const receipt = this.writeChangeReceipt(current, {
       kind: 'status-changed',
       summary,
@@ -127,11 +136,26 @@ export class CharterStore {
     return { charter, path: this.pathFor(charter.slug), receipt };
   }
 
-  linkRunReceipt(slug: string, input: { runId?: Run['id']; receiptId?: Receipt['id']; summary?: string }): CharterUpdateResult {
+  linkRunReceipt(
+    slug: string,
+    input: { runId?: Run['id']; receiptId?: Receipt['id']; acId?: string; summary?: string },
+  ): CharterUpdateResult {
     if (!input.runId && !input.receiptId) throw new Error('runId or receiptId is required.');
     const current = this.require(slug);
+    const acId = input.acId?.trim();
+    const acceptance_criteria = acId
+      ? current.acceptance_criteria.map((ac) =>
+          ac.id === acId && input.receiptId
+            ? { ...ac, receipts: unique([...ac.receipts, input.receiptId]) }
+            : ac,
+        )
+      : current.acceptance_criteria;
+    if (acId && !acceptance_criteria.some((ac) => ac.id === acId)) {
+      throw new Error(`Acceptance criterion not found: ${acId}`);
+    }
     const next: Charter = {
       ...current,
+      acceptance_criteria,
       run_ids: unique([...current.run_ids, input.runId]),
       receipt_ids: unique([...current.receipt_ids, input.receiptId]),
     };

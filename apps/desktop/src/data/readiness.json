@@ -9,7 +9,7 @@
       "status": "not-wired",
       "detail": "SDK session not connected in this preview",
       "source": null,
-      "action": "Wire @letta-ai/letta-code-sdk (deferred from v0.1)"
+      "action": "Connect Letta in Settings → General"
     },
     {
       "key": "agent",
@@ -60,10 +60,10 @@
       "key": "practices",
       "label": "Practices",
       "required": false,
-      "status": "not-wired",
-      "detail": "Coming soon; not loaded in the v0.1 desktop",
-      "source": null,
-      "action": "Ship a real Practices loader before marking this surface done"
+      "status": "file",
+      "detail": "Practice store + bundled catalog wired in desktop IPC",
+      "source": "~/.otto/practices",
+      "action": "Open Practices surface in the desktop app"
     },
     {
       "key": "mcp",
@@ -88,9 +88,90 @@
       "label": "Permissions / autonomy",
       "required": false,
       "status": "file",
-      "detail": "Three-zone policy defined; not runtime-enforced",
-      "source": "docs/autonomy.md",
-      "action": "Enforced once Curation + runtime land"
+      "detail": "Autonomy policy store + docs/autonomy.md",
+      "source": "~/.otto/autonomy",
+      "action": "Open Autonomy surface; runtime permission modal ships separately"
+    },
+    {
+      "key": "charters",
+      "label": "Charters",
+      "required": false,
+      "status": "file",
+      "detail": "Charter store + AC gate wired",
+      "source": "~/.otto",
+      "action": "Open the surface in the desktop app"
+    },
+    {
+      "key": "standards",
+      "label": "Standards",
+      "required": false,
+      "status": "file",
+      "detail": "Standards catalog + citation resolver",
+      "source": "~/.otto",
+      "action": "Open the surface in the desktop app"
+    },
+    {
+      "key": "routines",
+      "label": "Routines",
+      "required": false,
+      "status": "file",
+      "detail": "Routine catalog + manual run gate",
+      "source": "~/.otto",
+      "action": "Open the surface in the desktop app"
+    },
+    {
+      "key": "curation",
+      "label": "Curation",
+      "required": false,
+      "status": "file",
+      "detail": "Proposal + approval stores",
+      "source": "~/.otto",
+      "action": "Open the surface in the desktop app"
+    },
+    {
+      "key": "receipts",
+      "label": "Receipts",
+      "required": false,
+      "status": "file",
+      "detail": "Receipt index under ~/.otto/receipts",
+      "source": "~/.otto",
+      "action": "Open the surface in the desktop app"
+    },
+    {
+      "key": "autonomy",
+      "label": "Autonomy",
+      "required": false,
+      "status": "file",
+      "detail": "Three-zone policy evaluator",
+      "source": "~/.otto",
+      "action": "Open the surface in the desktop app"
+    },
+    {
+      "key": "knowledge",
+      "label": "Knowledge",
+      "required": false,
+      "status": "file",
+      "detail": "Role → model routing table",
+      "source": "~/.otto",
+      "action": "Open the surface in the desktop app"
+    },
+    {
+      "key": "tickets",
+      "label": "Tickets",
+      "required": false,
+      "status": "file",
+      "detail": "Compile + orchestrate in worktrees",
+      "source": "~/.otto",
+      "action": "Open the surface in the desktop app"
+    },
+    {
+      "key": "channels",
+      "label": "Channels",
+      "required": false,
+      "status": "file",
+      "detail": "Channel contract file store",
+      "source": "~/.otto",
+      "action": "Open the surface in the desktop app"
     }
   ]
 }

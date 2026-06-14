@@ -19,8 +19,10 @@ const scriptDir = dirname(fileURLToPath(import.meta.url));
 const appRoot = resolve(scriptDir, '..');
 const repoRoot = resolve(appRoot, '../..');
 const outputPath = join(appRoot, 'src/data/readiness.json');
+const electronDir = join(appRoot, 'electron');
 
 const has = (...p) => existsSync(join(...p));
+const storePresent = (name) => has(electronDir, `${name}-store.ts`);
 // Home-relativize so the committed readiness.json never leaks an absolute /Users/... path.
 const tilde = (p) => (p && p.startsWith(homedir()) ? '~' + p.slice(homedir().length) : p);
 
@@ -42,6 +44,17 @@ const skillRoutine = has(repoRoot, 'skill', 'routine', 'SKILL.md');
 const skillsPresent = [skillMain && 'SKILL.md', skillRoutine && 'routine/SKILL.md'].filter(Boolean);
 
 const permissionsDoc = has(repoRoot, 'docs', 'autonomy.md');
+const practicesBundled = has(appRoot, 'src/data/practices.json');
+
+const surface = (key, label, storeName, detail, source = '~/.otto') => ({
+  key,
+  label,
+  required: false,
+  status: storePresent(storeName) ? 'file' : 'missing',
+  detail: storePresent(storeName) ? detail : 'IPC store not present in desktop build',
+  source: storePresent(storeName) ? source : null,
+  action: storePresent(storeName) ? 'Open the surface in the desktop app' : 'Ship the store before marking ready',
+});
 
 // --- config-derived (absent in a fresh clone → honestly missing/not-wired) ---
 const runtimeConnected = cfg.runtime?.connected === true;
@@ -54,7 +67,7 @@ const items = [
   { key: 'runtime', label: 'Letta runtime', required: true,
     status: runtimeConnected ? 'connected' : 'not-wired',
     detail: runtimeConnected ? 'connected' : 'SDK session not connected in this preview',
-    source: cfgSrc, action: 'Wire @letta-ai/letta-code-sdk (deferred from v0.1)' },
+    source: cfgSrc, action: 'Connect Letta in Settings → General' },
   { key: 'agent', label: 'Agent identity', required: true,
     status: agentId ? 'configured' : 'missing',
     detail: agentId ? `agent ${agentId}` : 'No agent selected',
@@ -76,10 +89,12 @@ const items = [
     detail: skillsPresent.length ? skillsPresent.join(' · ') : 'none found', source: 'skill/',
     action: 'Install into a live agent via scripts/install.sh' },
   { key: 'practices', label: 'Practices', required: false,
-    status: 'not-wired',
-    detail: 'Coming soon; not loaded in the v0.1 desktop',
-    source: null,
-    action: 'Ship a real Practices loader before marking this surface done' },
+    status: storePresent('practice') && practicesBundled ? 'file' : 'missing',
+    detail: storePresent('practice') && practicesBundled
+      ? 'Practice store + bundled catalog wired in desktop IPC'
+      : 'Practice loader missing',
+    source: storePresent('practice') ? '~/.otto/practices' : 'src/data/practices.json',
+    action: 'Open Practices surface in the desktop app' },
   { key: 'mcp', label: 'MCP servers', required: false,
     status: mcpCount > 0 ? 'configured' : 'missing',
     detail: mcpCount > 0 ? `${mcpCount} configured` : 'None configured',
@@ -89,9 +104,21 @@ const items = [
     detail: fnCount > 0 ? `${fnCount} registered` : 'No local tools registered',
     source: fnCount > 0 ? cfgSrc : null, action: 'Register functions in ~/.otto/config.json' },
   { key: 'permissions', label: 'Permissions / autonomy', required: false,
-    status: permissionsDoc ? 'file' : 'missing',
-    detail: 'Three-zone policy defined; not runtime-enforced', source: 'docs/autonomy.md',
-    action: 'Enforced once Curation + runtime land' },
+    status: permissionsDoc && storePresent('autonomy') ? 'file' : (permissionsDoc ? 'file' : 'missing'),
+    detail: storePresent('autonomy')
+      ? 'Autonomy policy store + docs/autonomy.md'
+      : 'Three-zone policy defined; not runtime-enforced',
+    source: storePresent('autonomy') ? '~/.otto/autonomy' : 'docs/autonomy.md',
+    action: 'Open Autonomy surface; runtime permission modal ships separately' },
+  surface('charters', 'Charters', 'charter', 'Charter store + AC gate wired'),
+  surface('standards', 'Standards', 'standard', 'Standards catalog + citation resolver'),
+  surface('routines', 'Routines', 'routine', 'Routine catalog + manual run gate'),
+  surface('curation', 'Curation', 'proposal', 'Proposal + approval stores'),
+  surface('receipts', 'Receipts', 'receipt', 'Receipt index under ~/.otto/receipts'),
+  surface('autonomy', 'Autonomy', 'autonomy', 'Three-zone policy evaluator'),
+  surface('knowledge', 'Knowledge', 'knowledge', 'Role → model routing table'),
+  surface('tickets', 'Tickets', 'ticket', 'Compile + orchestrate in worktrees'),
+  surface('channels', 'Channels', 'channel', 'Channel contract file store'),
 ];
 
 const requiredMissing = items.filter((i) => i.required && (i.status === 'missing' || i.status === 'not-wired'));

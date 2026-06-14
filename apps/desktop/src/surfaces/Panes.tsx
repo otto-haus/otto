@@ -7,6 +7,8 @@ import {
 } from '../readiness';
 import { Icon } from '../components/icons';
 import { useToast } from '../components/Toast';
+import { EmptyState, statusPill, SurfaceProof } from '../components/ui';
+import { toastCopy } from '../copy/surfaces';
 import {
   ottoApi,
   type CharterDetail,
@@ -43,32 +45,9 @@ import {
   type RunSummary,
 } from '../runtime';
 import { useRuntimeContext } from '../RuntimeContext';
-import { SURFACE_TESTS } from '../canon-briefs';
 import type { SurfaceId } from '../components/Sidebar';
 
-const statusPill = (s: string) => {
-  const cls = s === 'active' || s === 'success' || s === 'complete' ? 'pill--ok'
-    : s === 'blocked' || s === 'pending' ? 'pill--warn'
-    : s === 'failed' ? 'pill--stop'
-    : s === 'proposed' || s === 'running' || s === 'draft' ? 'pill--info' : '';
-  return <span className={`pill ${cls}`}>{s}</span>;
-};
-
-const EmptySurface: React.FC<{
-  eyebrow: string;
-  title: string;
-  body: string;
-  path?: string;
-  next?: string;
-}> = ({ eyebrow, title, body, path, next }) => (
-  <div className="emptySurface">
-    <div className="eyebrow">{eyebrow}</div>
-    <h2>{title}</h2>
-    <p>{body}</p>
-    {path && <span className="filechip">{Icon.file} {path}</span>}
-    {next && <div className="notice"><span className="dot dot--idle" /> {next}</div>}
-  </div>
-);
+const EmptySurface = EmptyState;
 
 type SkippedFile = { slug: string; file: string; reason: string };
 
@@ -93,12 +72,6 @@ const SkippedLoaderPanel: React.FC<{ skipped: SkippedFile[] }> = ({ skipped }) =
       </div>
     </details>
   );
-};
-
-const SurfaceProof: React.FC<{ surface: SurfaceId }> = ({ surface }) => {
-  const test = SURFACE_TESTS[surface];
-  if (!test) return null;
-  return <p className="surfaceProof"><strong>The test:</strong> {test}</p>;
 };
 
 /* ---------- Charters ---------- */
@@ -434,6 +407,11 @@ const CharterDetailView: React.FC<{
           <select className="charterInput" value={statusDraft} onChange={(e) => setStatusDraft(e.target.value as CharterStatus)} aria-label="Charter status">
             {CHARTER_STATUSES.map((status) => <option key={status} value={status}>{status}</option>)}
           </select>
+          {statusDraft === 'complete' && detail.acceptance_criteria.some((ac) => !ac.receipts.length) && (
+            <p className="muted" style={{ marginTop: 8 }}>
+              Complete requires receipt proof on every acceptance criterion ({detail.acceptance_criteria.filter((ac) => !ac.receipts.length).map((ac) => ac.id).join(', ')} missing).
+            </p>
+          )}
           <input className="charterInput" value={statusSummary} onChange={(e) => setStatusSummary(e.target.value)} placeholder="change summary" aria-label="Status change summary" />
           <button className="btn" onClick={onUpdateStatus} disabled={busy || statusDraft === detail.status}>Update</button>
         </div>
@@ -1039,32 +1017,32 @@ export const Curation: React.FC = () => {
       if (outcome.blocked) {
         const blockedMessage = outcome.receipt.blocker?.message ?? 'Decision blocked';
         setError(blockedMessage);
-        pushToast({ title: 'Decision blocked', body: blockedMessage, tone: 'warn' });
+        pushToast({ title: toastCopy.decisionBlocked, body: blockedMessage, tone: 'warn' });
       } else if (decision === 'accept') {
         const canonApplied = outcome.receipt.result?.data?.canonApplied === true;
         const targetLabel = selected.target?.kind ?? 'canon';
         if (canonApplied || outcome.proposal.status === 'applied') {
           pushToast({
-            title: 'Behavior updated',
+            title: toastCopy.behaviorUpdated,
             body: `${targetLabel}: ${selected.summary} · receipt ${outcome.receipt.id}`,
             tone: 'ok',
           });
         } else {
           pushToast({
-            title: 'Proposal accepted',
+            title: toastCopy.proposalAccepted,
             body: `receipt ${outcome.receipt.id}`,
             tone: 'ok',
           });
         }
       } else if (decision === 'reject') {
         pushToast({
-          title: 'Proposal rejected',
+          title: toastCopy.proposalRejected,
           body: `receipt ${outcome.receipt.id}`,
           tone: 'info',
         });
       } else {
         pushToast({
-          title: 'Proposal deferred',
+          title: toastCopy.proposalDeferred,
           body: `receipt ${outcome.receipt.id}`,
           tone: 'info',
         });
@@ -2106,6 +2084,26 @@ export const Tickets: React.FC = () => {
     }
   };
 
+  const orchestrateSelected = async () => {
+    if (!api || busy || !selected) return;
+    setBusy(true);
+    setError(null);
+    setMessage(null);
+    try {
+      const result = await api.tickets.orchestrateExisting(selected.ticket_id);
+      setMessage(`Orchestrated ${result.ticket.ticket_id} · worker ${result.worker.id} · run ${result.run.id}`);
+      await reload();
+    } catch (e) {
+      setError(String(e));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const activeWorker = workerForTicket && ['running', 'blocked', 'review'].includes(workerForTicket.status)
+    ? workerForTicket
+    : null;
+
   return (
     <div className="standardsSurface">
       <div className="panel">
@@ -2170,6 +2168,19 @@ export const Tickets: React.FC = () => {
                 {statusPill(selected.status)}
               </div>
               <p className="lede" style={{ marginTop: 8 }}>{selected.objective}</p>
+              <div className="row" style={{ marginTop: 12, gap: 8 }}>
+                <button
+                  type="button"
+                  className="btn btn--primary"
+                  disabled={busy || !!activeWorker}
+                  onClick={orchestrateSelected}
+                >
+                  Orchestrate selected
+                </button>
+                {activeWorker && (
+                  <span className="muted">Active worker {activeWorker.id} — finish or fail before re-orchestrating.</span>
+                )}
+              </div>
               <ChipList values={selected.checks} empty="No checks" />
               {selected.branch && <span className="filechip" style={{ marginTop: 10 }}>branch · {selected.branch}</span>}
               {selected.model && <span className="filechip" style={{ marginTop: 10 }}>model · {selected.model}</span>}
@@ -2637,6 +2648,14 @@ export const Settings: React.FC = () => {
             <div className="eyebrow">capabilities</div>
             <div style={{ marginTop: 4 }}>
               {group(['skills', 'practices', 'mcp', 'functions', 'permissions']).map((r) => <ReadyRow key={r.key} item={r} />)}
+            </div>
+          </div>
+          <div className="panel">
+            <div className="eyebrow">v1 surfaces</div>
+            <div style={{ marginTop: 4 }}>
+              {group(['charters', 'standards', 'routines', 'curation', 'receipts', 'autonomy', 'knowledge', 'tickets', 'channels']).map((r) => (
+                <ReadyRow key={r.key} item={r} />
+              ))}
             </div>
           </div>
           <p className="faint mono" style={{ fontSize: 11.5 }}>

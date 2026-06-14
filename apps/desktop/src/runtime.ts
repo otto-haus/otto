@@ -244,7 +244,10 @@ type OttoApi = {
     get(slug: string): Promise<CharterDetail | null>;
     create(input: CharterCreateInput): Promise<CharterMutationResult>;
     updateStatus(slug: string, status: CharterStatus, summary?: string): Promise<CharterMutationResult>;
-    linkRunReceipt(slug: string, input: { runId?: string; receiptId?: string; summary?: string }): Promise<CharterMutationResult>;
+    linkRunReceipt(
+      slug: string,
+      input: { runId?: string; receiptId?: string; acId?: string; summary?: string },
+    ): Promise<CharterMutationResult>;
   };
   standards: {
     list(): Promise<StandardListResult>;
@@ -289,6 +292,16 @@ type OttoApi = {
     get(ticketId: string): Promise<TicketRecord | null>;
     compile(input: TicketCompileInput): Promise<{ ticket: TicketRecord; receipt: Receipt & { path: string } }>;
     orchestrate(input: TicketCompileInput & { repoRoot?: string }): Promise<{
+      ticket: TicketRecord;
+      worker: WorkerRecord;
+      run: RunSummary;
+      worktreePath: string;
+      receipt: Receipt & { path: string };
+    }>;
+    orchestrateExisting(
+      ticketId: string,
+      repoRoot?: string,
+    ): Promise<{
       ticket: TicketRecord;
       worker: WorkerRecord;
       run: RunSummary;

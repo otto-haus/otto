@@ -79,7 +79,10 @@ const api = {
     create: (input: CharterCreateInput): Promise<CharterMutationResult> => ipcRenderer.invoke('otto:charters:create', input),
     updateStatus: (slug: string, status: CharterStatus, summary?: string): Promise<CharterMutationResult> =>
       ipcRenderer.invoke('otto:charters:update-status', slug, status, summary),
-    linkRunReceipt: (slug: string, input: { runId?: string; receiptId?: string; summary?: string }): Promise<CharterMutationResult> =>
+    linkRunReceipt: (
+      slug: string,
+      input: { runId?: string; receiptId?: string; acId?: string; summary?: string },
+    ): Promise<CharterMutationResult> =>
       ipcRenderer.invoke('otto:charters:link-run-receipt', slug, input),
   },
   standards: {
@@ -127,6 +130,8 @@ const api = {
     get: (ticketId: string): Promise<TicketRecord | null> => ipcRenderer.invoke('otto:tickets:get', ticketId),
     compile: (input: TicketCompileInput) => ipcRenderer.invoke('otto:tickets:compile', input),
     orchestrate: (input: TicketCompileInput & { repoRoot?: string }) => ipcRenderer.invoke('otto:tickets:orchestrate', input),
+    orchestrateExisting: (ticketId: string, repoRoot?: string) =>
+      ipcRenderer.invoke('otto:tickets:orchestrate-existing', ticketId, repoRoot),
   },
   workers: {
     list: (): Promise<WorkerListResult> => ipcRenderer.invoke('otto:workers:list'),
