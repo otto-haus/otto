@@ -240,7 +240,7 @@ A fresh clone does not include a hosted agent. Live chat requires a local Letta 
 
 1. Use the window from your launch path: `task electron` opens the development app; `task staging` opens an isolated `/Applications/otto-staging.app`. For the canonical app, install/open the latest published GitHub Release build at `/Applications/otto.app`.
 2. otto tries to discover Letta Desktop and your current local agent automatically.
-3. Use **Settings → General** only for advanced runtime/agent overrides.
+3. If it stays disconnected, open **Settings → General** to read the blocker and retry. Edit the runtime/agent fields only if auto-discovery picked the wrong target.
 4. Provider/model credentials stay in Letta. otto does not ask for provider API keys in v1.
 
 Useful checks:
