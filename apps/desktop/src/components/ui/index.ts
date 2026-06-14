@@ -1,6 +1,16 @@
 export { StatusPill, statusPill } from './StatusPill';
 export { EmptyState, InlineEmpty } from './EmptyState';
-export { SurfaceHeader, SurfacePage, SplitLayout, FilterBar } from './SurfaceLayout';
+export {
+  SurfaceHeader,
+  SurfaceHero,
+  InkBlock,
+  SurfaceInk,
+  SurfaceStatStrip,
+  SurfaceMeta,
+  SurfacePage,
+  SplitLayout,
+  FilterBar,
+} from './SurfaceLayout';
 export { Notice } from './Notice';
 export { SurfaceProof } from './SurfaceProof';
 export { CommandStationStrip } from './CommandStationStrip';

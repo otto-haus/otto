@@ -135,6 +135,7 @@ export const listEmpty: Partial<Record<SurfaceId, ListEmpty>> = {
 
 export const toastCopy = {
   behaviorUpdated: 'Behavior updated',
+  behaviorUpdatedMemory: 'Behavior updated · memory writeback',
   proposalAccepted: 'Proposal accepted',
   proposalRejected: 'Proposal rejected',
   proposalDeferred: 'Proposal deferred',
@@ -156,6 +157,7 @@ export const chatCopy = {
   correctionDefault: 'This response should change — describe the behavior you want instead.',
   proposeFromCorrection: 'Propose from correction',
   proposeFromCorrectionHint: 'Describe the behavior you want next time. Canon stays unchanged until you ratify in Curation.',
+  correctThisModalTitle: 'Correct this',
   ticketCommandHint: 'Commands: compile ticket <slug> <objective> · orchestrate ticket <slug> · status workers',
   onboardingHint: 'Send your first message — otto writes a Receipt when work completes with proof.',
   onboardingReceiptHint: 'First turn recorded — open Receipts to inspect the proof record.',
@@ -171,6 +173,7 @@ export const permissionCopy = {
   deny: 'Deny',
   denyPlaceholder: 'Optional reason if you deny',
   deniedByUser: 'Denied by operator',
+  correctThis: 'Correct this',
   interactiveNote: 'This tool needs a richer answer than yes/no — allow or deny for now; full interactive flow ships separately.',
 } as const;
 
@@ -180,35 +183,189 @@ export const threadCopy = {
 } as const;
 
 export const curationCopy = {
-  eyebrow: 'curation inbox',
-  title: 'Proposals',
-  lede: 'Corrections become explicit proposals. Ratify to change future behavior; defer or reject to keep canon unchanged.',
-  pathLabel: 'files',
+  eyebrow: 'curation',
+  title: 'Curation decides what compounds.',
+  lede: 'Classify proposed changes by consequence — auto-apply reversible work, ratify doors, write receipts.',
+  inkHeadline: 'Own reversible work.',
+  inkHeadlineMuted: 'Gate consequential work.',
+  inkSub: 'One engine owns classification so door doctrine cannot drift.',
+  statPending: 'Needs ratification',
+  statDecided: 'Decided',
   filterPending: 'Pending',
   filterDecided: 'Decided',
   filterAll: 'All',
-  emptyPendingTitle: 'No pending proposals',
-  emptyPendingBody: 'When otto proposes a behavior change, it lands here for ratification.',
+  emptyPendingTitle: 'Nothing waiting on you',
+  emptyPendingBody: 'When otto proposes a behavior change, it lands here for ratification before canon moves.',
   emptyDecidedTitle: 'No decided proposals yet',
-  emptyDecidedBody: 'Accepted and rejected proposals appear here with their decision record.',
+  emptyDecidedBody: 'Accepted, rejected, and deferred proposals appear here with their decision record.',
+  ratificationTitle: 'Ratify this change',
+  ratificationLede: 'Accept applies canon when a target is set. Reject and defer write receipts without changing behavior.',
+  accept: 'Accept',
+  reject: 'Reject',
+  defer: 'Defer',
   approvalsEyebrow: 'ratification records',
-  approvalsTitle: 'Approvals',
-  approvalsLede: 'Each decision writes an approval record tied to the proposal artifact.',
+  approvalsTitle: 'Approvals are records',
+  approvalsLede: 'Emitted by Curation — not a peer subsystem. Each decision ties proposal, approval, and receipt.',
+  approvalsEmpty: 'No approval records yet. Accept, reject, or defer a consequential proposal to emit one.',
+  memoryBadge: 'memory writeback',
+  metaStorage: 'Proposal storage',
+  changelogEyebrow: 'behavior changelog',
+  changelogTitle: 'What changed this week',
+  changelogLede: 'Culture changes only — ratified proposals, constitution edits, autonomy policy. Not chat activity.',
+} as const;
+
+export const chartersCopy = {
+  eyebrow: 'operating contracts',
+  title: 'Charters bind intent to proof.',
+  lede: 'Explicit bets with acceptance criteria, linked runs, and receipts — not chat goals.',
+  inkLead: 'Intent without proof',
+  inkMuted: 'is a wish list.',
+  inkSub: 'The office decides. Otto records the review.',
+  statTotal: 'Charters',
+  statActive: 'Active',
+  statComplete: 'Complete',
+  metaLabel: 'Create charter',
+  createEyebrow: 'new charter',
+  createTitle: 'Operating contract',
+} as const;
+
+export const standardsCopy = {
+  eyebrow: 'case law',
+  title: 'Culture needs case law.',
+  lede: 'Explicit rules — what otto rewards, refuses, and does under pressure.',
+  inkLead: 'Until a Standard costs something,',
+  inkMuted: 'it is still a poster.',
+  inkSub: 'The first real Review should let No Fake Done block a premature completion.',
+  statLoaded: 'Standards',
+  statActive: 'Active',
+  metaLabel: 'Registry & ratification',
+} as const;
+
+export const practicesCopy = {
+  eyebrow: 'executable culture',
+  title: 'Practices are executable culture.',
+  lede: 'Guardrails, invocations, and receipt requirements — promotion stays approval-gated.',
+  inkLead: 'A Practice exists only if behavior should repeat.',
+  inkMuted: 'No ritual sludge.',
+  inkSub: 'If it does not create durable state, evidence, or better decisions, it is not a Practice.',
+  statLoaded: 'Practices',
+  statWithReceipts: 'With proof',
+  metaLabel: 'Practice storage',
+  curationGate: 'Practice promotion, activation, and publish remain approval-gated.',
+} as const;
+
+export const routinesCopy = {
+  eyebrow: 'compound behavior',
+  title: 'Routines make Practices compound.',
+  lede: 'Manual runs write receipts immediately; recurring activation stays approval-gated.',
+  inkLead: 'Attention is a one-way door.',
+  inkMuted: 'Recurring output must earn it.',
+  inkSub: 'A routine that would not be missed should be pruned or redesigned.',
+  statLoaded: 'Routines',
+  statActive: 'Active',
+  metaLabel: 'Routine files',
+} as const;
+
+export const autonomyCopy = {
+  eyebrow: 'orchestration policy',
+  title: 'Autonomy owns the steps.',
+  lede: 'Zones, doors, and Knowledge-informed routing — consequential actions always escalate.',
+  inkLead: 'Otto owns orchestration.',
+  inkMuted: 'Sebastian owns consequences.',
+  inkSub: 'Workers are sessions, not separate identities.',
+  statZones: 'Zones',
+  statDoors: 'Doors',
+  metaLabel: 'Policy file',
+  evaluateEyebrow: 'check an action',
+  evaluateHint: 'Classification writes an autonomy receipt — blocked when approval is required.',
+} as const;
+
+export const skillsCopy = {
+  eyebrow: 'capability packages',
+  title: 'Skills provide capability.',
+  lede: 'Reusable packages with triggers and scope — culture sets the standard, skills provide the how.',
+  inkLead: 'Culture sets the standard.',
+  inkMuted: 'Skills provide the capability.',
+  inkSub: 'Password management is a Skill; Winning is a Standard.',
+  statLoaded: 'Skills',
+  metaLabel: 'Skill directory',
+} as const;
+
+export const knowledgeCopy = {
+  eyebrow: 'AI Frontier',
+  title: 'Expectations must update.',
+  lede: 'Model routing hints for Autonomy and ticket workers — not a second memory store.',
+  inkLead: 'Autonomy should track actual capability.',
+  inkMuted: 'Not inherited human-era assumptions.',
+  inkSub: 'Stale caution can be as wrong as reckless speed.',
+  statModels: 'Models',
+  statRoles: 'Routing roles',
+  metaLabel: 'Registry path',
+} as const;
+
+export const ticketsCopy = {
+  eyebrow: 'worker slices',
+  title: 'Tickets define the slice.',
+  lede: 'Compile bounded packets, orchestrate workers in worktrees, track status with receipts.',
+  inkLead: 'Charters define the bet.',
+  inkMuted: 'Tickets define the slice.',
+  inkSub: 'One worktree per ticket keeps implementation parallel and reviewable.',
+  statOpen: 'Open',
+  statReview: 'In review',
+  statTotal: 'Tickets',
+  metaLabel: 'Create & orchestrate',
+} as const;
+
+export const channelsCopy = {
+  eyebrow: 'reachability',
+  title: 'Channels reach the human.',
+  lede: 'Discord is the ambient console backend in v1. Outbound sends are external side effects.',
+  inkLead: 'Channels notify and collect input.',
+  inkMuted: 'They do not replace the record.',
+  inkSub: 'A tool being present is never authorization to use it.',
+  statConfigured: 'Channels',
+  statEnabled: 'Enabled',
+  metaLabel: 'Channel config',
+} as const;
+
+export const settingsCopy = {
+  eyebrow: 'workspace',
+  title: 'Own the workspace. Keep Letta.',
+  lede: 'Connection, readiness, and culture export — the app is a workspace, not the engine.',
+  inkLead: 'Letta makes Otto remember.',
+  inkMuted: 'Otto makes Otto improve.',
+  inkSub: 'The app is a workspace, not the engine.',
+  statRuntime: 'Runtime',
+  statRequired: 'Required gaps',
+  metaReadiness: 'Readiness detail',
 } as const;
 
 export const receiptsCopy = {
   eyebrow: 'proof trail',
-  title: 'Receipts',
-  lede: 'Every completed, blocked, or failed action emits a receipt with schema-backed fields.',
-  searchPlaceholder: 'Search action, summary, subject…',
-  filterAll: 'All statuses',
+  title: 'What was proven',
+  lede: 'Authority, evidence, and outcome — not a log dump. Each receipt states who decided and what changed.',
+  statTotal: 'Receipts',
+  statSuccess: 'Succeeded',
+  statBlocked: 'Blocked',
+  statFailed: 'Failed',
+  searchPlaceholder: 'Search summary, action, subject…',
+  filterAll: 'All',
   selectTitle: 'Select a receipt',
-  selectBody: 'The detail pane shows the exact receipt contract fields.',
-  loadingTitle: 'Loading receipt detail…',
+  selectBody: 'Pick a proof record to see authority, evidence, and blockers.',
+  loadingTitle: 'Loading proof…',
+  emptyTitle: 'No proof yet',
+  emptyBody: 'Send or block a chat turn, ratify a proposal, or run a practice — otto writes a receipt when behavior completes.',
+  sampleEyebrow: 'onboarding sample',
+  sampleTitle: 'Sample proof record',
+  sampleBody: 'This shows what a real receipt looks like. Send a chat turn to create your first live proof.',
   runsEyebrow: 'execution records',
   runsTitle: 'Runs',
   noMatchTitle: 'No matching receipts',
-  noMatchBody: 'Clear the search or status filter to inspect the full proof trail.',
+  noMatchBody: 'Clear the search or status filter to see the full proof trail.',
+  authorityEyebrow: 'authority & outcome',
+  evidenceEyebrow: 'evidence',
+  recordMeta: 'Receipt record',
+  debugMeta: 'Raw contract (debug)',
 } as const;
 
 /** Culture CI checks surface — list IPC ships with builder 133. */
@@ -217,7 +374,7 @@ export const checksCopy = {
   title: 'Checks',
   lede: 'File-backed checks compile from Standards and Practices. Blocks surface here and in Chat when a check fails.',
   emptyTitle: 'Checks not wired yet',
-  emptyBody: 'Waiting on checks.list and block events (builder 133). No mock check rows.',
+  emptyBody: 'Ratify a Standard from Curation to compile a check, or seed checks from repo templates on first launch.',
   blockEyebrow: 'check blocked',
   blockPill: 'BLOCK',
   openReceipt: 'Open receipt',
@@ -247,4 +404,19 @@ export const commandStationCopy = {
   autonomy: { label: 'Doors', hint: 'Awaiting approval' },
   constitution: { label: 'Constitution', hint: 'Source of culture' },
   changelog: { label: 'Changelog', hint: 'What changed' },
+  latestProof: { label: 'Latest proof', hint: 'Authority + status' },
+  needsRatification: { label: 'Needs ratification', hint: 'Pending Curation' },
+} as const;
+
+export const cultureSettingsCopy = {
+  eyebrow: 'culture',
+  title: 'Constitution & export',
+  lede: 'Read and amend workspace culture. Export a portable bundle without secrets or Letta memory.',
+  openConstitution: 'Open constitution.yaml',
+  exportCulture: 'Export culture…',
+  importPreview: 'Import preview (dry-run)',
+  amendTitle: 'Amend constitution (YAML)',
+  amendSave: 'Save amendment',
+  exportDone: 'Culture bundle exported',
+  writebackGate: 'Memory changes only after you accept in Curation.',
 } as const;

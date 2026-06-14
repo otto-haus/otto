@@ -1,5 +1,73 @@
 import React from 'react';
 
+/** Hero band — one-pager scale title + optional proof line. */
+export const SurfaceHero: React.FC<{
+  eyebrow: string;
+  title: string;
+  lede?: string;
+  proof?: string;
+  actions?: React.ReactNode;
+}> = ({ eyebrow, title, lede, proof, actions }) => (
+  <header className="surfaceHero">
+    <div className="between">
+      <div className="eyebrow">{eyebrow}</div>
+      {actions}
+    </div>
+    <h1 className="surfaceHero__title">{title}</h1>
+    {lede ? <p className="surfaceHero__lede">{lede}</p> : null}
+    {proof ? (
+      <p className="surfaceHero__proof">
+        <strong>The test:</strong> {proof}
+      </p>
+    ) : null}
+  </header>
+);
+
+/** Single ink moment per surface — matches one-pager dark block. */
+export const InkBlock: React.FC<{ headline: React.ReactNode; sub?: string }> = ({ headline, sub }) => (
+  <div className="inkBlock">
+    <div className="inkBlock__headline">{headline}</div>
+    {sub ? <p className="inkBlock__sub">{sub}</p> : null}
+  </div>
+);
+
+/** Ink moment from lead + muted tail — matches one-pager HTML. */
+export const SurfaceInk: React.FC<{ lead: string; muted: string; sub?: string }> = ({ lead, muted, sub }) => (
+  <InkBlock
+    headline={
+      <>
+        {lead} <span className="inkBlock__muted">{muted}</span>
+      </>
+    }
+    sub={sub}
+  />
+);
+
+export const SurfaceStatStrip: React.FC<{
+  stats: ReadonlyArray<{ label: string; value: number | string; tone?: 'ok' | 'warn' | 'neutral' }>;
+}> = ({ stats }) => (
+  <div className="surfaceStatStrip" role="list">
+    {stats.map((stat) => (
+      <div
+        key={stat.label}
+        className={`surfaceStatStrip__item${stat.tone ? ` surfaceStatStrip__item--${stat.tone}` : ''}`}
+        role="listitem"
+      >
+        <span className="surfaceStatStrip__value">{stat.value}</span>
+        <span className="surfaceStatStrip__label">{stat.label}</span>
+      </div>
+    ))}
+  </div>
+);
+
+/** Collapsed paths / schema — operator story stays above the fold. */
+export const SurfaceMeta: React.FC<{ label?: string; children: React.ReactNode }> = ({ label = 'Storage', children }) => (
+  <details className="surfaceMeta">
+    <summary>{label}</summary>
+    <div className="surfaceMeta__body">{children}</div>
+  </details>
+);
+
 export const SurfaceHeader: React.FC<{
   eyebrow: string;
   title: string;

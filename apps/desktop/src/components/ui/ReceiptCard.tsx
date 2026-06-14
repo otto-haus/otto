@@ -22,10 +22,10 @@ export const ReceiptCard: React.FC<{
     onClick={onSelect}
   >
     <div className="between">
-      <span className="card__title">{receipt.action}</span>
+      <span className="card__title">{receipt.summary}</span>
       {statusPill(receipt.status)}
     </div>
-    <span className="card__sub">{receipt.summary}</span>
+    <span className="card__sub">{receipt.action}</span>
     <span className="receiptCard__meta mono">{receipt.metaLine}</span>
     {receipt.blockerCode && <span className="filechip">{receipt.blockerCode}</span>}
   </button>
