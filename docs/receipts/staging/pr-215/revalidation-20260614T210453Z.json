@@ -1,0 +1,39 @@
+{
+  "pr": 215,
+  "reviewedBy": "codex",
+  "capturedAt": "2026-06-14T21:04:53Z",
+  "baseBranch": "ship/functional-labs",
+  "baseHead": "873ae3d4f395199387e81b4e7f05263f6d36fcb6",
+  "revalidatedHeadBeforeProofCommit": "a2dd4054665428b23816f28fdbe10b200445d881",
+  "codeRecommendation": "ready",
+  "shipRecommendation": "hold",
+  "shipRecommendationReason": "The current head is code-ready and proofed on the latest ship/functional-labs base, but this PR changes the default desktop runtime path to WebSocket mode. I would ship only if Sebastian explicitly wants that runtime cutover now.",
+  "revalidationReason": "PR #215 was previously marked ready, but ship/functional-labs advanced and the PR returned to status: needs codex review. This receipt revalidates the branch after merging the latest base.",
+  "proof": {
+    "existingScreenshots": [
+      "docs/receipts/staging/pr-215/preview-desktop-chat.png",
+      "docs/receipts/staging/pr-215/preview-desktop-settings.png",
+      "docs/receipts/staging/pr-215/preview-mobile-chat.png",
+      "docs/receipts/staging/pr-215/preview-mobile-settings.png"
+    ],
+    "existingDataReceipt": "docs/receipts/staging/pr-215/preview-ui-proof.json",
+    "nativeStaging": {
+      "command": "OTTO_STAGING_ROOT=/tmp/otto-pr-215-revalidate-staging OTTO_STAGING_PORT=9459 OTTO_STAGING_WS_REMOTE_ENV=otto-pr215-revalidate-byor OTTO_AGENT_ID=agent-00000000-0000-4000-8000-000000000000 LETTA_BASE_URL=http://127.0.0.1:9 OTTO_STAGING_LOG_CAPTURE_SECONDS=1 task staging",
+      "deployLog": "/Users/seb/.codex/admin/otto-logs/staging-20260614T140429.deploy.log",
+      "appLog": "/Users/seb/.codex/admin/otto-logs/staging-20260614T140429.app.log",
+      "result": "passed; installed and launched /Applications/otto-staging.app"
+    }
+  },
+  "verification": [
+    "bun test apps/desktop/electron/runtime-transport/ws-runtime-transport.test.ts apps/desktop/electron/runtime-transport/ws-protocol.test.ts apps/desktop/electron/runtime-transport/transport-mode.test.ts apps/desktop/electron/logs.test.ts -> 17 pass, 0 fail, 38 expect calls",
+    "bash scripts/ci-local-gate.sh -> pass",
+    "bun test inside local gate -> 274 pass, 1 skip, 0 fail, 936 expect calls",
+    "bun run verify:v0 inside local gate -> 5 passed, 0 failed",
+    "devex mint validate inside local gate -> pass",
+    "devex broken-links inside local gate -> pass",
+    "electron-vite build inside local gate -> pass",
+    "bun audit inside local gate -> No vulnerabilities found",
+    "task staging -> pass, installed and launched /Applications/otto-staging.app"
+  ],
+  "proofBoundary": "The existing screenshots remain attached from the original #215 review. This revalidation confirms the current head after the latest base merge; no live Letta connection is claimed."
+}
