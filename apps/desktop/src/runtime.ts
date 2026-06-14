@@ -361,6 +361,7 @@ export function useRuntime() {
   const [messages, setMessages] = useState<ChatMsg[]>([]);
   const [busy, setBusy] = useState(false);
   const activeAssistantStream = useRef<string | null>(null);
+  const seenAssistantChunks = useRef(new Set<string>());
   const sendError = useRef<string | null>(null);
   const activeThreadRef = useRef<string | null>(null);
   const messagesRef = useRef<ChatMsg[]>([]);
@@ -479,6 +480,9 @@ export function useRuntime() {
         const t = assistantText(m);
         if (t) {
           const streamId = String(m.uuid ?? m.runId ?? 'assistant');
+          const chunkId = typeof m.chunkId === 'string' && m.chunkId ? `${streamId}:${m.chunkId}` : null;
+          if (chunkId && seenAssistantChunks.current.has(chunkId)) return;
+          if (chunkId) seenAssistantChunks.current.add(chunkId);
           patchInflightMessages((x) => {
             const last = x[x.length - 1];
             if (activeAssistantStream.current === streamId && last?.who === 'otto') {
@@ -492,6 +496,7 @@ export function useRuntime() {
         const ownedTurn = inflightThreadRef.current;
         sendError.current = String((m as { message?: unknown }).message ?? 'error');
         activeAssistantStream.current = null;
+        seenAssistantChunks.current.clear();
         patchInflightMessages((x) => [
           ...x,
           { id: `error-${Date.now()}`, who: 'error', text: String((m as { message?: unknown }).message ?? 'error') },
@@ -500,6 +505,7 @@ export function useRuntime() {
         if (!ownedTurn) setBusy(false);
       } else if (m.type === 'result') {
         activeAssistantStream.current = null;
+        seenAssistantChunks.current.clear();
         inflightThreadRef.current = null;
         const conversationId = typeof m.conversationId === 'string' ? m.conversationId : null;
         if (conversationId) {
@@ -526,6 +532,7 @@ export function useRuntime() {
     if (!sendThreadId) throw new Error('No active conversation thread yet.');
     sendError.current = null;
     activeAssistantStream.current = null;
+    seenAssistantChunks.current.clear();
     inflightThreadRef.current = sendThreadId;
     const snippet = text.trim().replace(/\s+/g, ' ');
     if (snippet) {
@@ -556,12 +563,19 @@ export function useRuntime() {
     if (!api) return;
     await api.runtime.abort();
     activeAssistantStream.current = null;
+    seenAssistantChunks.current.clear();
     inflightThreadRef.current = null;
     setBusy(false);
   };
 
   const configure = async (input: RuntimePreferences) => {
     if (!api || busy) return status;
+    setStatus((current) => ({
+      ...(current ?? { cliPath: '', cliResolved: false }),
+      ready: false,
+      code: 'error',
+      reason: 'Switching model…',
+    }));
     const next = await api.runtime.configure(input);
     setStatus(next);
     return next;
@@ -575,6 +589,12 @@ export function useRuntime() {
     activeAssistantStream.current = null;
     inflightThreadRef.current = null;
     setBusy(false);
+    setStatus((current) => ({
+      ...(current ?? { cliPath: '', cliResolved: false }),
+      ready: false,
+      code: 'error',
+      reason: 'Starting a new conversation…',
+    }));
     if (activeThreadRef.current) {
       applyThreadView(activeThreadRef.current, { persistLeaving: true });
     }
@@ -595,6 +615,12 @@ export function useRuntime() {
     activeAssistantStream.current = null;
     inflightThreadRef.current = null;
     setBusy(false);
+    setStatus((current) => ({
+      ...(current ?? { cliPath: '', cliResolved: false }),
+      ready: false,
+      code: 'error',
+      reason: 'Switching conversation…',
+    }));
     if (activeThreadRef.current) {
       threadMessagesCache.current.set(activeThreadRef.current, messagesRef.current);
       flushMessages(activeThreadRef.current, messagesRef.current);

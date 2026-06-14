@@ -20,7 +20,13 @@ export function normalizeWsEvent(event: WsRuntimeEvent): Record<string, unknown>
       const text = extractDeltaText(delta.content);
       if (!text) return null;
       const streamId = String(delta.otid ?? delta.run_id ?? randomUUID());
-      return { type: 'assistant', text, content: delta.content, uuid: streamId, runId: delta.run_id ?? null };
+      const chunkId = String(
+        event.idempotency_key
+          ?? delta.id
+          ?? delta.seq_id
+          ?? `${streamId}:${text}`,
+      );
+      return { type: 'assistant', text, content: delta.content, uuid: streamId, runId: delta.run_id ?? null, chunkId };
     }
     case 'error':
       return {
