@@ -76,6 +76,18 @@ export class ConfigStore {
     return this.cfg.connectionMode ?? 'embedded';
   }
 
+  /** Isolated Letta settings root for embedded mode (076) — under ~/.otto/letta by default. */
+  lettaStateDir(): string {
+    return join(defaultOttoDir(), 'letta');
+  }
+
+  /** Ensure embedded Letta state directory exists; returns absolute path. */
+  ensureLettaStateDir(): string {
+    const dir = this.lettaStateDir();
+    mkdirSync(dir, { recursive: true });
+    return dir;
+  }
+
   primaryAgentId(): string | null {
     return this.cfg.primaryAgentId ?? this.cfg.agentId ?? null;
   }

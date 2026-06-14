@@ -417,3 +417,23 @@ Date: 2026-06-14
 Verdict: pending
 
 Awaiting implementer execution receipt and independent reviewer +1.
+
+## Execution receipt (slice 2026-06-14)
+
+Status: partial — scripts/tests; live `ready` + named smoke on operator machine still required
+Owner lane: Cursor
+
+### What changed
+
+- `scripts/cognee-home.sh` — resolves `cognee-cli`, uvicorn start, writes `otto-041-local-home-smoke-*.json` on success
+- `skill/cognee/SKILL.md` — cognee-cli note
+
+### Verification
+
+```sh
+bash scripts/cognee-home.sh health  # disabled honesty when OTTO_COGNEE_ENABLED off
+bun test apps/desktop/electron/cognee-store.test.ts  # 8 pass
+bun run verify:v0
+```
+
+Receipt: `docs/receipts/staging/runtime-cognee-slice-20260614T120000Z.json`

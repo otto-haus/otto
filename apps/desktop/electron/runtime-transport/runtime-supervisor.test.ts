@@ -31,7 +31,12 @@ describe('RuntimeSupervisor auto fallback', () => {
       getStatus: () => status(true),
     };
 
+    const prev = process.env.OTTO_WS_PROMOTION_APPROVED;
+    process.env.OTTO_WS_PROMOTION_APPROVED = '1';
     const result = await supervisor.init();
+    if (prev === undefined) delete process.env.OTTO_WS_PROMOTION_APPROVED;
+    else process.env.OTTO_WS_PROMOTION_APPROVED = prev;
+
     expect(result.ready).toBe(true);
     expect(result.transportMode).toBe('auto');
     expect(result.effectiveTransport).toBe('sdk subprocess');
@@ -55,7 +60,12 @@ describe('RuntimeSupervisor auto fallback', () => {
       getStatus: () => status(true),
     };
 
+    const prev = process.env.OTTO_WS_PROMOTION_APPROVED;
+    process.env.OTTO_WS_PROMOTION_APPROVED = '1';
     const result = await supervisor.init();
+    if (prev === undefined) delete process.env.OTTO_WS_PROMOTION_APPROVED;
+    else process.env.OTTO_WS_PROMOTION_APPROVED = prev;
+
     expect(result.ready).toBe(true);
     expect(result.effectiveTransport).toBe('websocket local');
     expect(result.transportFallbackReason).toBeNull();
@@ -70,5 +80,35 @@ describe('promotion gate defaults', () => {
     expect(resolveTransportMode()).toBe('sdk');
     if (original === undefined) delete process.env.OTTO_RUNTIME_TRANSPORT;
     else process.env.OTTO_RUNTIME_TRANSPORT = original;
+  });
+
+  test('auto skips WS when promotion gate is closed', async () => {
+    const sdkInit = async () => status(true);
+    const wsInit = async () => {
+      throw new Error('WS should not be attempted when promotion gate is closed');
+    };
+
+    const supervisor = new RuntimeSupervisor({} as never, {} as never);
+    (supervisor as unknown as { mode: string }).mode = 'auto';
+    (supervisor as unknown as { ws: { init: typeof wsInit; close: () => Promise<void> } }).ws = {
+      init: wsInit,
+      close: async () => {},
+      getStatus: () => status(false),
+    };
+    (supervisor as unknown as { sdk: { init: typeof sdkInit; close: () => Promise<void> } }).sdk = {
+      init: sdkInit,
+      close: async () => {},
+      getStatus: () => status(true),
+    };
+
+    const prev = process.env.OTTO_WS_PROMOTION_APPROVED;
+    process.env.OTTO_WS_PROMOTION_APPROVED = '0';
+    const result = await supervisor.init();
+    if (prev === undefined) delete process.env.OTTO_WS_PROMOTION_APPROVED;
+    else process.env.OTTO_WS_PROMOTION_APPROVED = prev;
+
+    expect(result.ready).toBe(true);
+    expect(result.effectiveTransport).toBe('sdk subprocess');
+    expect(result.transportFallbackReason).toContain('promotion scorecard');
   });
 });

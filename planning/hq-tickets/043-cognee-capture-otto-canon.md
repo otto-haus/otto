@@ -370,3 +370,22 @@ Date: 2026-06-14
 Verdict: pending
 
 Awaiting implementer execution receipt and independent reviewer +1.
+
+## Execution receipt (slice 2026-06-14)
+
+Status: partial — script + dry-run unit test; live apply/cognify pending
+Owner lane: Cursor
+
+### What changed
+
+- `scripts/cognee-capture.sh` — cognee-cli resolution, `ingestMode` in capture receipt
+
+### Verification
+
+```sh
+bash scripts/cognee-capture.sh --kinds receipt,precedent --dry-run
+bun test apps/desktop/electron/cognee-store.test.ts
+bun run verify:v0
+```
+
+Receipt: `docs/receipts/staging/runtime-cognee-slice-20260614T120000Z.json`

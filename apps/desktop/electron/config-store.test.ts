@@ -61,4 +61,17 @@ describe('ConfigStore', () => {
       delete process.env.OTTO_HOME;
     }
   });
+
+  test('lettaStateDir defaults under OTTO_HOME for embedded mode', () => {
+    const tmp = mkdtempSync(join(tmpdir(), 'otto-config-test-'));
+    try {
+      process.env.OTTO_HOME = tmp;
+      const store = new ConfigStore();
+      expect(store.lettaStateDir()).toBe(join(tmp, 'letta'));
+      expect(store.ensureLettaStateDir()).toBe(join(tmp, 'letta'));
+    } finally {
+      rmSync(tmp, { recursive: true, force: true });
+      delete process.env.OTTO_HOME;
+    }
+  });
 });

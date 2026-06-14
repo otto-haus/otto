@@ -70,12 +70,23 @@ ID="capture-$(date -u +%Y%m%dT%H%M%SZ)"
 RECEIPT="$CAPTURE_DIR/$ID.json"
 DOC_COUNT=${#PATHS[@]}
 
-# Stub ingest — real cognee.remember() when CLI available
-if command -v cognee >/dev/null 2>&1; then
+# Stub ingest — real cognee remember/cognify when CLI available
+COGNEE_CLI=""
+if command -v cognee-cli >/dev/null 2>&1; then
+  COGNEE_CLI="$(command -v cognee-cli)"
+elif command -v cognee >/dev/null 2>&1; then
+  COGNEE_CLI="$(command -v cognee)"
+elif [[ -x "$HOME/.otto/cognee/venv/bin/cognee-cli" ]]; then
+  COGNEE_CLI="$HOME/.otto/cognee/venv/bin/cognee-cli"
+fi
+
+INGEST_MODE="stub"
+if [[ -n "$COGNEE_CLI" ]]; then
+  INGEST_MODE="cli"
   for p in "${PATHS[@]:0:50}"; do
-    cognee add "$p" 2>/dev/null || true
+    "$COGNEE_CLI" add "$p" 2>/dev/null || true
   done
-  cognee cognify 2>/dev/null || true
+  "$COGNEE_CLI" cognify 2>/dev/null || true
 fi
 
 cat >"$RECEIPT" <<EOF
@@ -89,7 +100,8 @@ cat >"$RECEIPT" <<EOF
   "provenance": {
     "kinds": "$KINDS",
     "since": "$SINCE",
-    "git_commit": "$(git -C "$ROOT" rev-parse --short HEAD 2>/dev/null || echo unknown)"
+    "git_commit": "$(git -C "$ROOT" rev-parse --short HEAD 2>/dev/null || echo unknown)",
+    "ingestMode": "$INGEST_MODE"
   }
 }
 EOF

@@ -97,12 +97,15 @@ From `runtime-supervisor.ts` `init()`:
 
 ```txt
 auto:
-  1. Close SDK
-  2. ws.init()
-  3. If wsStatus.ready → active = WS, effectiveTransport = "websocket local"
-  4. Else → close WS, sdk.init(), active = SDK,
+  1. If WS promotion gate not passed → SDK only, transportFallbackReason = promotion gate message
+  2. Close SDK
+  3. ws.init()
+  4. If wsStatus.ready → active = WS, effectiveTransport = "websocket local"
+  5. Else → close WS, sdk.init(), active = SDK,
      transportFallbackReason = wsStatus.reason ?? "WebSocket transport unavailable"
 ```
+
+Gate: `ws-promotion-gate.ts` — `OTTO_WS_PROMOTION_APPROVED=1` or scorecard with all dimensions `pass`. Until then, `auto` never attempts WS.
 
 `sdk` and `ws` modes are exclusive: the non-selected transport is closed on init.
 

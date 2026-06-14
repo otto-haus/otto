@@ -4,6 +4,7 @@ import type { ConfigStore } from '../config-store';
 import { SdkSubprocessTransport } from './sdk-subprocess-transport';
 import { WsRuntimeTransport } from './ws-runtime-transport';
 import { resolveTransportMode } from './transport-mode';
+import { WS_PROMOTION_GATE_REASON, wsPromotionApproved } from './ws-promotion-gate';
 import type { OttoRuntimeTransport, RuntimeTransportMode } from './types';
 
 /** Owns transport selection, fallback, and delegation to the active implementation. */
@@ -39,6 +40,16 @@ export class RuntimeSupervisor implements OttoRuntimeTransport {
       this.active = this.ws;
       await this.sdk.close().catch(() => {});
       return this.withModeMeta(await this.ws.init(opts), 'ws', 'websocket local', null);
+    }
+    if (!wsPromotionApproved()) {
+      this.active = this.sdk;
+      await this.ws.close().catch(() => {});
+      return this.withModeMeta(
+        await this.sdk.init(opts),
+        'auto',
+        'sdk subprocess',
+        WS_PROMOTION_GATE_REASON,
+      );
     }
     await this.sdk.close().catch(() => {});
     const wsStatus = await this.ws.init(opts);

@@ -24,12 +24,13 @@ description: Local Cognee graph recall — read-first sidecar; capture and delet
 
 ```sh
 pip install cognee
+# venv recommended: ~/.otto/cognee/venv (binary is cognee-cli on 1.1.x)
 export OTTO_COGNEE_ENABLED=1
 ./scripts/cognee-home.sh start
 ./scripts/cognee-home.sh health
 ```
 
-MCP template: `config/cognee-mcp.template.json` (register only when health is ready).
+MCP template: `config/cognee-mcp.template.json` (HTTP :8001 preferred on cognee 1.1.x; register only when health is ready).
 
 ## Autonomy
 

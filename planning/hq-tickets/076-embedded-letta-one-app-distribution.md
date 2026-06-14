@@ -413,3 +413,22 @@ Date: 2026-06-14
 Verdict: pending
 
 Awaiting implementer execution receipt and independent reviewer +1.
+
+## Execution receipt (slice 2026-06-14)
+
+Status: partial — isolated Letta state dir wired; fresh-Mac bootstrap proof still open
+Owner lane: Cursor
+
+### What changed
+
+- `config-store.ts` — `lettaStateDir()` / `ensureLettaStateDir()` under `~/.otto/letta`
+- `sdk-subprocess-transport.ts` — embedded mode sets `OTTO_LETTA_SETTINGS_PATH` when unset
+
+### Verification
+
+```sh
+bun test apps/desktop/electron/config-store.test.ts
+bun run verify:v0
+```
+
+Receipt: `docs/receipts/staging/runtime-cognee-slice-20260614T120000Z.json`

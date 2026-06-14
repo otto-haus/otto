@@ -1,0 +1,45 @@
+{
+  "id": "runtime-cognee-slice-20260614T120000Z",
+  "branch": "ship/functional-labs",
+  "lane": "Cursor",
+  "verifyV0": "5 passed, 0 failed (180 unit tests)",
+  "tickets": {
+    "039": {
+      "status": "partial",
+      "slice": "WS promotion gate in auto mode (ws-promotion-gate.ts + runtime-supervisor)",
+      "blocked": "Live WS disposable smoke — LETTA_API_KEY absent; scorecard dimensions pending"
+    },
+    "041": {
+      "status": "partial",
+      "slice": "cognee-home.sh cognee-cli/uvicorn + smoke receipt writer; skill/docs sync",
+      "blocked": "Live daemon ready + named smoke receipt on operator machine"
+    },
+    "042": {
+      "status": "partial",
+      "slice": "MCP template HTTP :8001 + path-backed recallSmoke + recall receipts",
+      "blocked": "Disposable MCP recall smoke with daemon running"
+    },
+    "043": {
+      "status": "partial",
+      "slice": "cognee-capture.sh cognee-cli + ingestMode in receipt; captureDryRun unit test",
+      "blocked": "Live --apply cognify (OPENAI_API_KEY)"
+    },
+    "044": {
+      "status": "partial",
+      "slice": "recall citations from capture receipts when health ready (unit test)",
+      "blocked": "Staging Knowledge pane screenshot with Cognee ready"
+    },
+    "076": {
+      "status": "partial",
+      "slice": "lettaStateDir under OTTO_HOME + OTTO_LETTA_SETTINGS_PATH in embedded SDK transport",
+      "blocked": "Fresh-profile bootstrap + cliResolved from bundled resources proof"
+    }
+  },
+  "commands": [
+    "bun test ./apps/desktop/electron/runtime-transport/*.test.ts",
+    "bun test ./apps/desktop/electron/cognee-store.test.ts",
+    "bun test ./apps/desktop/electron/config-store.test.ts",
+    "bun run verify:v0",
+    "bash scripts/cognee-home.sh health"
+  ]
+}

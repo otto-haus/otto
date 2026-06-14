@@ -324,3 +324,21 @@ Date: 2026-06-14
 Verdict: pending
 
 Awaiting implementer execution receipt and independent reviewer +1.
+
+## Execution receipt (slice 2026-06-14)
+
+Status: partial — recall citations wired in store; staging screenshot pending
+Owner lane: Cursor
+
+### What changed
+
+- `cognee-store.recallSmoke` returns path-backed citations when health ready + capture receipt exists (042/044 seam)
+
+### Verification
+
+```sh
+bun test apps/desktop/electron/cognee-store.test.ts
+bun run verify:v0
+```
+
+Receipt: `docs/receipts/staging/runtime-cognee-slice-20260614T120000Z.json`

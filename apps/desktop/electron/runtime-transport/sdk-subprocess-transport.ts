@@ -1,4 +1,5 @@
 import { randomUUID } from 'node:crypto';
+import { join } from 'node:path';
 import type { BrowserWindow } from 'electron';
 import type { PermissionRequest, PermissionResponse, RuntimePreferences, RuntimeStatus, StatusCode } from '../shared/types';
 import type { ConfigStore } from '../config-store';
@@ -123,6 +124,10 @@ export class SdkSubprocessTransport implements OttoRuntimeTransport {
   private applyConnectionEnv(baseUrl: string | null) {
     const cli = resolveCli(this.config.connectionMode());
     if (cli.cliResolved && !process.env.LETTA_CLI_PATH) process.env.LETTA_CLI_PATH = cli.cliPath;
+    if (this.config.connectionMode() === 'embedded' && !process.env.OTTO_LETTA_SETTINGS_PATH) {
+      const lettaDir = this.config.ensureLettaStateDir();
+      process.env.OTTO_LETTA_SETTINGS_PATH = join(lettaDir, 'settings.json');
+    }
     const key = getSecret('LETTA_API_KEY');
     if (key && !process.env.LETTA_API_KEY) process.env.LETTA_API_KEY = key;
     if (baseUrl) process.env.LETTA_BASE_URL = baseUrl;

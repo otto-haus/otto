@@ -707,3 +707,25 @@ Date: 2026-06-14
 Verdict: pending
 
 Awaiting implementer execution receipt and independent reviewer +1.
+
+## Execution receipt (slice 2026-06-14)
+
+Status: partial (code + unit tests; live/staging proof blocked upstream)
+Owner lane: Cursor
+
+### What changed
+
+- `ws-promotion-gate.ts` — `auto` skips WS until `OTTO_WS_PROMOTION_APPROVED=1` or filled scorecard
+- `runtime-supervisor.ts` — promotion gate path with visible `transportFallbackReason`
+- Tests: `ws-promotion-gate.test.ts`, supervisor gate test, WS success tests require approval env
+
+### Verification
+
+```sh
+bun test ./apps/desktop/electron/runtime-transport/*.test.ts  # 21 pass
+bun run verify:v0  # 5/5 pass
+```
+
+### Blocker
+
+`LETTA_API_KEY` absent — live WS smoke and scorecard pass rows remain pending. Receipt: `docs/receipts/staging/runtime-cognee-slice-20260614T120000Z.json`

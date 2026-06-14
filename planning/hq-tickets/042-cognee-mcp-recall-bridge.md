@@ -368,3 +368,22 @@ Date: 2026-06-14
 Verdict: pending
 
 Awaiting implementer execution receipt and independent reviewer +1.
+
+## Execution receipt (slice 2026-06-14)
+
+Status: partial — MCP template + path-backed recall; live MCP smoke pending
+Owner lane: Cursor
+
+### What changed
+
+- `config/cognee-mcp.template.json` — HTTP :8001 + stdio cognee-cli entries
+- `cognee-store.ts` — `recallSmoke` path-backed citations + `writeCogneeRecallReceipt`
+
+### Verification
+
+```sh
+bun test apps/desktop/electron/cognee-store.test.ts  # recall citation test
+bun run verify:v0
+```
+
+Receipt: `docs/receipts/staging/runtime-cognee-slice-20260614T120000Z.json`

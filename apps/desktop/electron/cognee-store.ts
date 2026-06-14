@@ -190,7 +190,7 @@ export class CogneeStore {
     return this.latestCapture();
   }
 
-  /** Fixed recall smoke (042/044) — honest empty when daemon or index missing. */
+  /** Fixed recall smoke (042/044) — path-backed citations from capture receipts; semantic MCP when indexed. */
   recallSmoke(query = 'otto receipt precedent'): {
     ok: boolean;
     query: string;
@@ -223,15 +223,31 @@ export class CogneeStore {
         error: 'No capture receipt yet — run scripts/cognee-capture.sh --apply after Cognee is ready',
       };
     }
-    const match = latest.paths.find((p) => p.includes('receipt') || p.includes('precedent')) ?? latest.paths[0];
-    return {
-      ok: false,
+
+    const terms = query.toLowerCase().split(/\s+/).filter(Boolean);
+    const ranked = latest.paths
+      .map((p) => {
+        const lower = p.toLowerCase();
+        const score = terms.reduce((n, t) => (lower.includes(t) ? n + 1 : n), 0);
+        return { path: p, score };
+      })
+      .sort((a, b) => b.score - a.score);
+
+    const picks = (ranked.some((r) => r.score > 0) ? ranked.filter((r) => r.score > 0) : ranked)
+      .slice(0, 5)
+      .map((r) => ({
+        path: r.path,
+        snippet: `Indexed in capture ${latest.id} (${latest.capturedAt})`,
+      }));
+
+    const result = {
+      ok: picks.length > 0,
       query,
-      citations: [],
-      error: match
-        ? `MCP semantic recall not wired yet. Latest capture indexed ${match} — citations appear after 042 ships.`
-        : 'MCP semantic recall not wired yet — capture receipt on file but no query results.',
+      citations: picks,
+      error: picks.length > 0 ? null : 'Capture receipt has no paths to cite',
     };
+    if (result.ok) writeCogneeRecallReceipt(result);
+    return result;
   }
 }
 
@@ -261,5 +277,23 @@ export function writeCogneeSmokeReceipt(payload: Record<string, unknown>): strin
   const id = `otto-041-local-home-smoke-${Date.now()}`;
   const path = join(dir, `${id}.json`);
   writeFileSync(path, `${JSON.stringify({ id, at: new Date().toISOString(), ...payload }, null, 2)}\n`, 'utf8');
+  return path;
+}
+
+export function writeCogneeRecallReceipt(payload: {
+  ok: boolean;
+  query: string;
+  citations: Array<{ path: string; snippet: string }>;
+  error: string | null;
+}): string {
+  const dir = join(resolveCogneeReceiptsDir(), 'recall');
+  mkdirSync(dir, { recursive: true });
+  const id = `recall-${Date.now()}`;
+  const path = join(dir, `${id}.json`);
+  writeFileSync(
+    path,
+    `${JSON.stringify({ id, kind: 'cognee_recall', at: new Date().toISOString(), ...payload }, null, 2)}\n`,
+    'utf8',
+  );
   return path;
 }

@@ -1,10 +1,10 @@
 import { describe, expect, test } from 'bun:test';
-import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdtempSync, mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { ConfigStore } from './config-store';
-import { CogneeStore, cogneeEnabled, isLoopbackUrl } from './cognee-store';
+import { CogneeStore, cogneeEnabled, isLoopbackUrl, writeCogneeRecallReceipt } from './cognee-store';
 
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), '../../..');
 
@@ -77,6 +77,65 @@ describe('CogneeStore helpers', () => {
     expect(result.count).toBeGreaterThan(0);
     expect(result.paths.some((p) => p.includes('receipts'))).toBe(true);
     expect(result.paths.every((p) => !p.includes('.env') && !p.includes('secrets'))).toBe(true);
+    if (prev !== undefined) process.env.OTTO_ROOT = prev;
+    else delete process.env.OTTO_ROOT;
+  });
+
+  test('recall smoke returns path-backed citations when ready and capture receipt exists', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'otto-cognee-recall-'));
+    const prevRoot = process.env.OTTO_ROOT;
+    const prevEnabled = process.env.OTTO_COGNEE_ENABLED;
+    const prevUrl = process.env.OTTO_COGNEE_BASE_URL;
+    try {
+      process.env.OTTO_ROOT = repoRoot;
+      process.env.OTTO_COGNEE_ENABLED = '1';
+      process.env.OTTO_COGNEE_BASE_URL = 'http://127.0.0.1:8000';
+      const captureDir = join(repoRoot, 'receipts/cognee/capture');
+      mkdirSync(captureDir, { recursive: true });
+      writeFileSync(
+        join(captureDir, 'capture-test.json'),
+        JSON.stringify({
+          id: 'capture-test',
+          capturedAt: '2026-06-14T00:00:00Z',
+          paths: [`${repoRoot}/receipts/otto-v01/sample.md`, `${repoRoot}/standards/precedents/foo.md`],
+        }),
+      );
+
+      const store = new CogneeStore();
+      const healthSpy = store.health.bind(store);
+      store.health = () => ({
+        status: 'ready',
+        baseUrl: 'http://127.0.0.1:8000',
+        lastError: null,
+        lastCheckedAt: new Date().toISOString(),
+      });
+
+      const result = store.recallSmoke('receipt precedent');
+      expect(result.ok).toBe(true);
+      expect(result.citations.length).toBeGreaterThan(0);
+      expect(result.citations[0]?.path).toContain('receipts');
+      store.health = healthSpy;
+    } finally {
+      if (prevRoot !== undefined) process.env.OTTO_ROOT = prevRoot;
+      else delete process.env.OTTO_ROOT;
+      if (prevEnabled !== undefined) process.env.OTTO_COGNEE_ENABLED = prevEnabled;
+      else delete process.env.OTTO_COGNEE_ENABLED;
+      if (prevUrl !== undefined) process.env.OTTO_COGNEE_BASE_URL = prevUrl;
+      else delete process.env.OTTO_COGNEE_BASE_URL;
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  test('writeCogneeRecallReceipt writes under receipts/cognee/recall', () => {
+    const prev = process.env.OTTO_ROOT;
+    process.env.OTTO_ROOT = repoRoot;
+    const path = writeCogneeRecallReceipt({
+      ok: true,
+      query: 'test',
+      citations: [{ path: '/receipts/foo.md', snippet: 'indexed' }],
+      error: null,
+    });
+    expect(path).toContain('receipts/cognee/recall');
     if (prev !== undefined) process.env.OTTO_ROOT = prev;
     else delete process.env.OTTO_ROOT;
   });
