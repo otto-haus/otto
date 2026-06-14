@@ -12,8 +12,8 @@ org-specific doctrine, gates, and templates belong in a separate private repo, n
 
 ## Dev
 
-- The extension is a single file: `extension/charter.ts` (Letta Code extension API).
-- The workflow is a single skill: `skill/SKILL.md`.
+- The extension is two files: `extension/charter.ts` (Charter operating contracts + permission gates — the Letta Code extension API) and `extension/routine.ts` (Routines — repeated bundles of Practices).
+- The skills mirror them: `skill/SKILL.md` (charter) and `skill/routine/SKILL.md` (routine).
 - After editing the extension, run `/reload` in Letta Code.
 - Prefer deterministic, fast permission checks. Asking is cheap; bypassing is not.
 
