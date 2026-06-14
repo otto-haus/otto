@@ -156,7 +156,7 @@ export function friendly(code: StatusCode, reason: string): string {
     const preset = match?.[1];
     return preset
       ? `Model preset "${preset}" isn't available in your Letta build. Choose another model or lower reasoning effort.`
-      : 'Model preset isn't available in your Letta build. Choose another model or lower reasoning effort.';
+      : "Model preset isn't available in your Letta build. Choose another model or lower reasoning effort.";
   }
   switch (code) {
     case 'no-api-key':
@@ -199,13 +199,6 @@ export function modelSelectionForCli(modelHandle: string, effort: string): strin
       high: 'gpt-5.5-plus-pro-high',
       // Not every Letta CLI build registers a distinct xhigh preset — fall back to high.
       xhigh: 'gpt-5.5-plus-pro-high',
-    },
-    'openai-codex/gpt-5.5': {
-      off: 'gpt-5.5-codex-none',
-      low: 'gpt-5.5-codex-low',
-      medium: 'gpt-5.5-codex-medium',
-      high: 'gpt-5.5-codex-high',
-      xhigh: 'gpt-5.5-codex-high',
     },
     'anthropic/claude-opus-4-8': {
       low: 'opus-4.8-low',

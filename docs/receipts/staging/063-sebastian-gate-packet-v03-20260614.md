@@ -1,7 +1,7 @@
 # 063 — Sebastian gate packet (v0.1.3 draft — hold)
 
 Date: 2026-06-14 (updated 14:45 local)  
-Branch: `ship/functional-labs` @ `1d93ff1` (hygiene commits on branch; +1 follow-up commit may apply)  
+Branch: `ship/functional-labs` @ `bedbd42` (hygiene + gate commits; verify:v0 @ 188 tests)  
 Tag: **`v0.1.3`** (GitHub pre-release on integration line — **not tagged yet**). Sebastian gate sign-off still required before calling this **shipped**.
 
 ## What to try (staging only)
@@ -15,8 +15,8 @@ Tag: **`v0.1.3`** (GitHub pre-release on integration line — **not tagged yet**
 
 | Gate | Result |
 |------|--------|
-| `bun run verify:v0` | 5/5 pass (186 unit tests) @ 2026-06-14 |
-| `bash scripts/release-gate.sh` | pass @ 2026-06-14 (typecheck + 186 pass / 1 skip) |
+| `bun run verify:v0` | 5/5 pass (188 unit tests) @ 2026-06-14 |
+| `bash scripts/release-gate.sh` | pass @ 2026-06-14 (typecheck + 188 pass / 1 skip) |
 | Staging deploy | `OTTO_STAGING_REFRESH=1 bash apps/desktop/scripts/deploy-staging.sh` — `/Applications/otto-staging.app`, CDP **9445**, profile `~/.codex/admin/otto-staging/profile` |
 | Hygiene staging proof | `scripts/otto-staging-hygiene-proof.cjs` → `staging-hygiene-proof-20260614143512.json` (054–058, 049, 053 all `ok: true`) |
 | Craft checklist | `docs/receipts/staging/craft-checklist-v03-20260614.md` |

@@ -3,7 +3,7 @@ import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import type { BrowserWindow } from 'electron';
-import { classify, friendly, nextActionFor, resolveCli, safeWebContentsSend } from './runtime-common';
+import { classify, friendly, modelSelectionForCli, nextActionFor, resolveCli, safeWebContentsSend } from './runtime-common';
 
 describe('resolveCli connectionMode', () => {
   test('embedded prefers bundled resources path', () => {
@@ -26,6 +26,23 @@ describe('resolveCli connectionMode', () => {
       if (prevCli === undefined) delete process.env.LETTA_CLI_PATH;
       else process.env.LETTA_CLI_PATH = prevCli;
     }
+  });
+});
+
+describe('modelSelectionForCli', () => {
+  test('maps max ChatGPT effort to high preset when xhigh is unavailable', () => {
+    expect(modelSelectionForCli('chatgpt-plus-pro/gpt-5.5', 'max')).toBe('gpt-5.5-plus-pro-high');
+    expect(modelSelectionForCli('chatgpt-plus-pro/gpt-5.5', 'high')).toBe('gpt-5.5-plus-pro-high');
+  });
+
+  test('passes through unknown handles', () => {
+    expect(modelSelectionForCli('openai-codex/gpt-5.5', 'max')).toBe('openai-codex/gpt-5.5');
+  });
+});
+
+describe('friendly invalid model', () => {
+  test('shortens invalid model errors', () => {
+    expect(friendly('error', "Invalid model 'gpt-5.5-plus-pro-xhigh'")).toMatch(/isn't available/i);
   });
 });
 
