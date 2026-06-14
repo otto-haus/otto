@@ -57,7 +57,7 @@ Already wired in `Panes.tsx` via `useToast` + `toastCopy`. Do not duplicate.
 
 ### Permission modal (**045**)
 
-Use existing `.panel`, `.btn`, ink block patterns. Modal shell can live in `components/ui/Modal.tsx` when implemented — coordinate with UX lane first.
+Use `Modal` + `PermissionCard` in `components/ui/` — wired in Chat wedge pack #1.
 
 ### Multi-thread list (**046**)
 
