@@ -229,6 +229,26 @@ const dedupeQueue = (items: Array<QueueItem | null>): QueueItem[] => {
 const queueTextKey = (text: string, threadId: string | null | undefined) =>
   `${threadId ?? 'legacy'}:${text.trim().replace(/\s+/g, ' ')}`;
 
+const userMessageSentAt = (message: ChatMsg): number | null => {
+  if (message.who !== 'user') return null;
+  const match = /^user-(\d+)$/.exec(message.id);
+  if (!match) return null;
+  const value = Number(match[1]);
+  return Number.isFinite(value) ? value : null;
+};
+
+const queueItemAlreadyDelivered = (item: QueueItem, messages: ChatMsg[]): boolean => {
+  const textKey = item.text.trim().replace(/\s+/g, ' ');
+  return messages.some((message) => {
+    const sentAt = userMessageSentAt(message);
+    return (
+      sentAt !== null &&
+      sentAt >= item.createdAt - 2000 &&
+      message.text.trim().replace(/\s+/g, ' ') === textKey
+    );
+  });
+};
+
 const appendQueueItemOnce = (items: QueueItem[], text: string, threadId: string | null | undefined): QueueItem[] => {
   const key = queueTextKey(text, threadId);
   if (items.some((item) => item.state !== 'failed' && queueTextKey(item.text, item.threadId) === key)) return items;
@@ -751,7 +771,20 @@ const LiveChat: React.FC<{
   };
 
   useEffect(() => {
-    if (!ready || !rt.activeThreadId || rt.busy || draining.current || queue.length === 0) return;
+    if (!ready || !rt.activeThreadId || queue.length === 0) return;
+    const deliveredPruned = queue.filter(
+      (item) =>
+        !(
+          item.state === 'queued' &&
+          queueMatchesThread(item, rt.activeThreadId) &&
+          queueItemAlreadyDelivered(item, rt.messages)
+        )
+    );
+    if (deliveredPruned.length !== queue.length) {
+      setQueue(deliveredPruned);
+      return;
+    }
+    if (rt.busy || draining.current) return;
     const next = nextQueueItemForThread(queue, rt.activeThreadId);
     if (!next) return;
     const sendingKey = queueTextKey(next.text, rt.activeThreadId);
@@ -776,7 +809,7 @@ const LiveChat: React.FC<{
         sendingQueueKeys.current.delete(sendingKey);
         draining.current = false;
       });
-  }, [queue, ready, rt.activeThreadId, rt.busy, rt.send]);
+  }, [queue, ready, rt.activeThreadId, rt.busy, rt.messages, rt.send]);
 
   // Failed sends remain durable in the queue; the user can retry or remove them.
 
