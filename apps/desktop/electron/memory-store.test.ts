@@ -88,7 +88,7 @@ describe('MemoryStore', () => {
     }
   });
 
-  test('encodes agent ids in fallback memory API path segments', async () => {
+  test('encodes agent ids in every fallback memory API path segment', async () => {
     const config = new ConfigStore();
     config.update({ agentId: 'agent/with space', baseUrl: 'http://127.0.0.1:8283' });
     const store = new MemoryStore(config);
@@ -96,15 +96,18 @@ describe('MemoryStore', () => {
     const calledPaths: string[] = [];
     globalThis.fetch = async (input) => {
       calledPaths.push(String(input));
-      if (calledPaths.length === 1) return new Response('', { status: 404 });
+      if (calledPaths.length < 4) return new Response('', { status: 404 });
       return new Response(JSON.stringify([{ id: 'b1', label: 'persona', value: 'helpful' }]), { status: 200 });
     };
     try {
       const result = await store.listBlocks();
       expect(result.error).toBeUndefined();
       expect(result.blocks).toHaveLength(1);
+      expect(calledPaths).toHaveLength(4);
       expect(calledPaths[0]).toContain('/v1/blocks?agent_id=agent%2Fwith%20space');
       expect(calledPaths[1]).toContain('/v1/agents/agent%2Fwith%20space/core-memory/blocks');
+      expect(calledPaths[2]).toContain('/v1/agents/agent%2Fwith%20space/memory/blocks');
+      expect(calledPaths[3]).toContain('/v1/agents/agent%2Fwith%20space/blocks');
     } finally {
       globalThis.fetch = originalFetch;
     }
