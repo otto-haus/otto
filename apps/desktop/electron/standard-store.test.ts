@@ -32,4 +32,41 @@ describe('StandardStore', () => {
     expect(citations[0].ref).toContain('/standards/');
     expect(citations[0].reason).toContain('file-backed Standards');
   });
+
+  test('conflictForStandard surfaces candor vs kindness precedent', () => {
+    const store = new StandardStore(standardsDir);
+    const result = store.conflictForStandard('candor-kindness');
+
+    expect(result).not.toBeNull();
+    expect(result?.between).toContain('candor-kindness');
+    expect(result?.precedent?.file).toBe('precedents/2026-06-13-candor-vs-kindness.md');
+    expect(result?.precedent?.excerpt).toContain('Candor wins');
+    expect(result?.tie_breaker).toContain('kindness');
+  });
+
+  test('conflict without precedent returns honest no case law message', () => {
+    const store = new StandardStore(standardsDir);
+    const result = store.conflictForStandard('quality');
+
+    expect(result).not.toBeNull();
+    expect(result?.between).toEqual(['quality', 'winning']);
+    expect(result?.precedent).toBeUndefined();
+    expect(result?.message).toContain('No case law yet');
+  });
+
+  test('readPrecedent returns null for missing file', () => {
+    const store = new StandardStore(standardsDir);
+    expect(store.readPrecedent('precedents/does-not-exist.md')).toBeNull();
+  });
+
+  test('IPC conflict-for-standard handler contract matches store lookup', () => {
+    const store = new StandardStore(standardsDir);
+    const handler = (slug: string) => store.conflictForStandard(slug);
+    const result = handler('candor-kindness');
+
+    expect(result).not.toBeNull();
+    expect(result?.precedent?.file).toBe('precedents/2026-06-13-candor-vs-kindness.md');
+    expect(result?.precedent?.excerpt).toContain('Candor wins');
+    expect(result?.message).toContain('Case law applies');
+  });
 });

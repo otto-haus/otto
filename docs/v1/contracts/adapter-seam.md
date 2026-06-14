@@ -43,6 +43,22 @@ Implementation anchors:
 - Parked HQ tickets (`019`–`022`, `074`–`075`) implement connectors; they do not change this seam.
 - **Paperclip:** work plane only. Read-only import first (`021`); UI slice (`074`); task create (`022`) and status feedback (`075`) require approval doors. Paperclip status is never otto Done.
 
+## Exemplar: Cognee (recall adapter)
+
+**Cognee** (**040**) is the reference implementation for a **derived recall** adapter under Knowledge — not a parallel memory system.
+
+| Return type | Cognee usage |
+|-------------|--------------|
+| `context` | Entity/relationship recall + cited passages |
+| `artifacts` | Graph snapshots (non-authoritative exports) |
+| `proposals` | Graph-derived Curation candidates only |
+
+**Cognee MUST NOT:** mutate Standards/Practices/Routines/charters/tickets, write Letta memory, replace `knowledge/ai-frontier/` canon, or auto-enable cloud without config + receipt.
+
+Full contract: [`docs/cognee.md`](../../cognee.md).
+
+---
+
 ## Done test for new adapters
 
 > Can this system import context and emit proposals without bypassing curation, autonomy, or receipts?

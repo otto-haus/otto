@@ -1,0 +1,35 @@
+{
+  "api": {
+    "connected": false,
+    "blockCount": 20,
+    "labels": [
+      "system/onboarding",
+      "system/human",
+      "system/persona",
+      "skills/1password",
+      "skills/doc",
+      "skills/image-generation",
+      "skills/discord",
+      "skills/frontend-skill",
+      "skills/gog",
+      "skills/pdf",
+      "skills/playwright",
+      "skills/remotion",
+      "skills/screenshot",
+      "skills/slides",
+      "skills/speech",
+      "skills/spreadsheet",
+      "skills/transcribe",
+      "reference/corrections",
+      "reference/doctrine",
+      "reference/veto"
+    ],
+    "apiPath": "/v1/blocks?agent_id=agent-local-d8e35a2a-a89f-45dd-b117-5eae5df8c8f2",
+    "error": null
+  },
+  "searchTerm": "onboar",
+  "visibleBlockPanels": 3,
+  "searchNarrows": true,
+  "noMatchEmpty": true,
+  "ok": true
+}

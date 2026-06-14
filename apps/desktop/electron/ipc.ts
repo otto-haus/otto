@@ -1,5 +1,5 @@
 import { type BrowserWindow, ipcMain, shell } from 'electron';
-import type { ConnectionInfo, ConnectionInput, CreateProposalFromCorrectionInput, DecideProposalInput, OttoConfig, PermissionResponse, ProposalClassification, ProposalTarget, RuntimePreferences } from './shared/types';
+import type { ConnectionInfo, ConnectionInput, CreateProposalFromCorrectionInput, DecideProposalInput, OttoConfig, PermissionRequest, PermissionResponse, ProposalClassification, ProposalTarget, RuntimePreferences } from './shared/types';
 import type { CharterCreateInput, CharterStatus } from './shared/types';
 import type { AttachmentInput } from './shared/types';
 import { saveAttachment } from './attachments';
@@ -9,6 +9,7 @@ import { discoverLocalLettaContext, LettaRunner } from './letta-runner';
 import { ReceiptStore } from './receipt-store';
 import { StandardStore } from './standard-store';
 import { PracticeStore } from './practice-store';
+import { PracticeRunner } from './practice-runner';
 import { ProposalStore, classifyProposal } from './proposal-store';
 import { RoutineStore } from './routine-store';
 import { AutonomyStore } from './autonomy-store';
@@ -19,7 +20,19 @@ import { SkillStore } from './skill-store';
 import { TicketOrchestrator } from './ticket-orchestrator';
 import { TicketStore } from './ticket-store';
 import { WorkerStore } from './worker-store';
+import { WorkerRunner } from './worker-runner';
+import { ReceiptWriter } from './receipt-writer';
 import { CheckRunner } from './check-runner';
+import { ThreadStore } from './thread-store';
+import { BehaviorChangelog } from './behavior-changelog';
+import { ConstitutionStore, CONSTITUTION_MD, CONSTITUTION_YAML } from './constitution-store';
+import { CultureExporter } from './culture-export';
+import { buildProviderMirror } from './provider-mirror';
+import { setSecret, hasSecret } from './secret-store';
+import { CogneeStore } from './cognee-store';
+import { MemoryStore } from './memory-store';
+import { PgvectorStore } from './pgvector-store';
+import { safeWebContentsSend, smokeMode } from './runtime-transport/runtime-common';
 
 export function registerIpc(win: BrowserWindow) {
   const config = new ConfigStore();
@@ -37,11 +50,25 @@ export function registerIpc(win: BrowserWindow) {
   const tickets = new TicketStore();
   const workers = new WorkerStore();
   const runs = new RunStore();
+  const practiceRunner = new PracticeRunner(practices, runs, new ReceiptWriter(), undefined, autonomy);
   const orchestrator = new TicketOrchestrator(tickets, workers, runs, knowledge, autonomy);
   const checkRunner = new CheckRunner();
+  const threads = new ThreadStore(config);
+  const constitution = new ConstitutionStore(CONSTITUTION_YAML, CONSTITUTION_MD);
+  const changelog = new BehaviorChangelog(proposals, receipts, constitution);
+  const cultureExporter = new CultureExporter();
+  const cognee = new CogneeStore(config);
+  const memory = new MemoryStore(config);
+  const pgvector = new PgvectorStore();
 
-  ipcMain.handle('otto:init', () => runner.init());
-  ipcMain.handle('otto:new-chat', () => runner.newChat());
+  ipcMain.handle('otto:init', async () => {
+    threads.ensureActiveThread(config.agentId());
+    return runner.init();
+  });
+  ipcMain.handle('otto:new-chat', async () => {
+    threads.create();
+    return runner.init({ freshConversation: true });
+  });
   ipcMain.handle('otto:status', () => runner.getStatus());
   ipcMain.handle('otto:send', (_e, text: string) => runner.send(text));
   ipcMain.handle('otto:abort', () => runner.abort());
@@ -89,10 +116,24 @@ export function registerIpc(win: BrowserWindow) {
   ipcMain.handle('otto:standards:list', () => standards.listResult());
   ipcMain.handle('otto:standards:get', (_e, slug: string) => standards.get(slug));
   ipcMain.handle('otto:standards:citations-for-text', (_e, text: string) => standards.citationsForText(text));
+  ipcMain.handle('otto:standards:conflict-for-standard', (_e, slug: string) => standards.conflictForStandard(slug));
+
+  ipcMain.handle('otto:changelog:list', (_e, windowDays?: number) => changelog.list(windowDays ?? 7));
+
+  ipcMain.handle('otto:constitution:get', () => constitution.load());
+  ipcMain.handle('otto:constitution:amend', (_e, yamlDraft: string, amendedBy: string) =>
+    constitution.amend(yamlDraft, amendedBy),
+  );
+  ipcMain.handle('otto:constitution:open', () => shell.openPath(constitution.load().yamlPath));
+
+  ipcMain.handle('otto:culture:export', () => cultureExporter.exportBundle());
+  ipcMain.handle('otto:culture:import-preview', (_e, bundlePath: string) => cultureExporter.previewImport(bundlePath));
 
   ipcMain.handle('otto:practices:list', () => practices.listResult());
   ipcMain.handle('otto:practices:get', (_e, slug: string) => practices.get(slug));
   ipcMain.handle('otto:practices:resolve-for-text', (_e, text: string) => practices.resolveForText(text));
+  ipcMain.handle('otto:practices:metrics', (_e, slug: string) => practiceRunner.metricsFor(slug));
+  ipcMain.handle('otto:practices:run', (_e, input: import('./practice-runner').PracticeRunInput) => practiceRunner.run(input));
 
   ipcMain.handle('otto:routines:list', () => routines.listResult());
   ipcMain.handle('otto:routines:get', (_e, slug: string) => routines.get(slug));
@@ -117,6 +158,21 @@ export function registerIpc(win: BrowserWindow) {
   ipcMain.handle('otto:knowledge:list', () => knowledge.listResult());
   ipcMain.handle('otto:knowledge:resolve-role', (_e, role: string) => knowledge.resolveModelForRole(role));
 
+  ipcMain.handle('otto:memory:list', () => memory.listBlocks());
+  ipcMain.handle('otto:cognee:health', () => cognee.health());
+  ipcMain.handle('otto:cognee:settings:get', () => cognee.settings());
+  ipcMain.handle('otto:cognee:settings:set', (_e, patch: { enabled?: boolean; baseUrl?: string }) => {
+    cognee.saveSettings(patch);
+    return cognee.health();
+  });
+  ipcMain.handle('otto:cognee:start', () => cognee.start());
+  ipcMain.handle('otto:cognee:stop', () => cognee.stop());
+  ipcMain.handle('otto:cognee:latest-capture', () => cognee.latestCapture());
+  ipcMain.handle('otto:cognee:capture-dry-run', () => cognee.captureDryRun());
+  ipcMain.handle('otto:cognee:capture-apply', () => cognee.captureApply());
+  ipcMain.handle('otto:cognee:recall-smoke', (_e, query?: string) => cognee.recallSmoke(query));
+  ipcMain.handle('otto:pgvector:status', () => pgvector.status());
+
   ipcMain.handle('otto:skills:list', () => skills.listResult());
   ipcMain.handle('otto:skills:get', (_e, slug: string) => skills.get(slug));
 
@@ -140,6 +196,11 @@ export function registerIpc(win: BrowserWindow) {
   ipcMain.handle('otto:workers:update-status', (_e, id: string, status: import('@otto-haus/core').WorkerStatus, receiptId?: string) =>
     workers.updateStatus(id, status, receiptId),
   );
+  ipcMain.handle(
+    'otto:workers:run-bounded',
+    (_e, workerId: string, opts?: { maxTurns?: number }) =>
+      new WorkerRunner(workers, tickets, runs, autonomy, new ReceiptWriter()).runBounded(workerId, opts ?? {}),
+  );
 
   ipcMain.handle('otto:runs:list', () => runs.list());
 
@@ -157,7 +218,87 @@ export function registerIpc(win: BrowserWindow) {
     checkRunner.evaluateOneWayDoor(context),
   );
 
+  ipcMain.handle('otto:provider:mirror', () => {
+    const status = runner.getStatus();
+    return buildProviderMirror(config, status.ready);
+  });
+  ipcMain.handle('otto:provider:set-api-key', (_e, value: string) => {
+    const trimmed = typeof value === 'string' ? value.trim() : '';
+    setSecret('LETTA_API_KEY', trimmed || null);
+    return { ok: true, hasApiKey: hasSecret('LETTA_API_KEY') };
+  });
+
+  ipcMain.handle('otto:threads:list', (_e, includeArchived?: boolean) => threads.list(!!includeArchived));
+  ipcMain.handle('otto:threads:create', async (_e, input?: { title?: string; agentId?: string | null }) => {
+    const thread = threads.create(input);
+    const status = await runner.init({ freshConversation: true });
+    safeWebContentsSend(win, 'otto:threads:active', { threadId: thread.id, status });
+    return { thread, status };
+  });
+  ipcMain.handle('otto:threads:switch', async (_e, threadId: string) => {
+    const thread = threads.switch(threadId);
+    const status = await runner.init();
+    safeWebContentsSend(win, 'otto:threads:active', { threadId: thread.id, status });
+    return { thread, status };
+  });
+  ipcMain.handle('otto:threads:archive', (_e, threadId: string) => threads.archive(threadId));
+  ipcMain.handle('otto:threads:pin', (_e, threadId: string, pinned: boolean) => threads.pin(threadId, pinned));
+  ipcMain.handle(
+    'otto:threads:touch',
+    (_e, input: { title?: string; lettaConversationId?: string | null; agentId?: string | null }) =>
+      threads.touchActive(input),
+  );
+
   ipcMain.on('otto:permission:respond', (_e, requestId: string, response: PermissionResponse) =>
     runner.resolvePermission(requestId, response),
+  );
+  ipcMain.handle(
+    'otto:permission:deny-receipt',
+    (_e, input: { requestId: string; toolName: string; message: string }) => {
+      const writer = new ReceiptWriter();
+      const receipt = writer.write({
+        status: 'blocked',
+        subject: { type: 'autonomy', id: input.toolName },
+        action: 'autonomy.permission.deny',
+        input: {
+          requestId: input.requestId,
+          toolName: input.toolName,
+          message: input.message,
+        },
+        result: {
+          summary: `Tool permission denied: ${input.toolName}`,
+          data: { authority: 'human (permission gate)' },
+        },
+        evidence: [],
+        blocker: {
+          code: 'permission-denied',
+          message: input.message,
+          recoverable: true,
+          next_action: 'Correct this moment or allow the tool if appropriate.',
+        },
+      });
+      return { id: receipt.id, path: receipt.path };
+    },
+  );
+
+  ipcMain.handle(
+    'otto:smoke:trigger-permission',
+    (_e, input?: { toolName?: string; requestId?: string; interactive?: boolean }) => {
+      if (!smokeMode()) {
+        throw new Error('otto:smoke:trigger-permission requires OTTO_SMOKE=1');
+      }
+      const requestId = input?.requestId ?? `smoke-perm-${Date.now()}`;
+      const req: PermissionRequest = {
+        requestId,
+        toolName: input?.toolName ?? 'smoke.read_file',
+        toolInput: {
+          path: '/tmp/otto-smoke-permission-proof.txt',
+          note: 'Staging smoke — read-only permission modal capture (no tool execution).',
+        },
+        interactive: input?.interactive ?? false,
+      };
+      safeWebContentsSend(win, 'otto:permission', req);
+      return { ok: true, requestId, toolName: req.toolName };
+    },
   );
 }

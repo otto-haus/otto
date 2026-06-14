@@ -1,0 +1,8 @@
+{
+  "at": "2026-06-14T07:39:59Z",
+  "app": "/Applications/otto-staging.app",
+  "cliResolved": true,
+  "cliPath": "/Applications/otto-staging.app/Contents/Resources/app/node_modules/@letta-ai/letta-code/letta.js",
+  "bootstrapTurnCompleted": false,
+  "fullBootstrapProof": "scripts/otto-staging-076-bootstrap-proof.cjs"
+}

@@ -229,3 +229,64 @@ rg -n "Ship as Proposed" SHIP_CHECKS/cognee.md
 - Types live in `packages/core` only (no desktop duplicate) — within scope (“if needed”).
 - `model-registry.yaml` `deferred: cognee` correctly unchanged until **041**.
 - No runtime; honest **Ship as Proposed** stands.
+
+## Review rev8
+
+Reviewer: independent subagent (batch 001-045)
+Date: 2026-06-14
+Verdict: +1
+
+### Checked against
+
+- `docs/cognee.md` hostile read (no canon/Letta mutation path): **PASS**
+- `docs/knowledge.md` + `docs/v3/README.md` aligned with Letta/Otto split: **PASS**
+- Adapter seam Cognee exemplar, proposal-only writes: **PASS** (`adapter-seam.md` §Exemplar)
+- Core types for health/capture receipt: **PASS** (`packages/core/src/types.ts`)
+- `SHIP_CHECKS/cognee.md` Ship as Proposed + 041–044 links: **PASS**
+
+### Evidence inspected
+
+- Files: `docs/cognee.md`, `docs/knowledge.md`, `docs/v3/README.md`, `adapter-seam.md`, `types.ts`, `SHIP_CHECKS/cognee.md`
+- Commands: `bun run verify:v0` → 5/5 pass
+
+### Defects
+
+None for 040 scope.
+
+### Required changes
+
+None.
+
+### Finding
+
+Contract ticket fully satisfied. Honest Ship as Proposed with no runtime claims. +1.
+
+## Review rev9
+
+Reviewer: independent subagent (batch 001-045 rev9)
+Date: 2026-06-14
+Verdict: +1
+
+### Checked against
+
+All Done-when items: **PASS** — rev8 mapping stands; no rev9 regression identified in code or cited receipts.
+
+### Evidence inspected
+
+- Prior `## Review rev8` Done-when mapping
+- Execution receipt(s) already in ticket
+- Rev9 cross-check focused on 001/017/018/033/036/037/039/041-044/045 only
+
+### Finding
+
+Rev8 +1 reaffirmed. No new blockers.
+## Review rev10
+
+Reviewer: Independent Otto reviewer (Cursor)
+Date: 2026-06-14
+Verdict: +1
+Delta vs rev9: reconfirmed — no rev10 execution delta
+
+### Finding
+
+Rev9 +1 stands. Adapter seam contract + tests unchanged; no regression evidence. Reconfirmed +1.

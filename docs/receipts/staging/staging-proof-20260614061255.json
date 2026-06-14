@@ -1,0 +1,39 @@
+{
+  "ok": true,
+  "runId": "20260614061255",
+  "gitHead": "c50b728",
+  "stagingApp": "/Applications/otto-staging.app",
+  "cdpPort": 9445,
+  "home": "/Users/seb/.codex/admin/otto-staging/home",
+  "screenshots": {
+    "commandStation": "/Users/seb/Code/otto/docs/receipts/staging/127-command-station-culture-home.png",
+    "sidebarThreads": "/Users/seb/Code/otto/docs/receipts/staging/046-sidebar-thread-list.png",
+    "standardsFooter": "/Users/seb/Code/otto/docs/receipts/staging/067-standards-test-footer.png",
+    "memoryObservatory": "/Users/seb/Code/otto/docs/receipts/staging/047-memory-observatory.png",
+    "settingsFooter": "/Users/seb/Code/otto/docs/receipts/staging/067-settings-test-footer.png"
+  },
+  "checks": {
+    "runtimeReady": false,
+    "transportMode": null,
+    "commandStationVisible": true,
+    "constitutionCard": true,
+    "changelogCard": true,
+    "threadListRendered": true,
+    "standardsTestLine": true,
+    "precedentConflictBanner": false,
+    "memoryObservatorySection": true,
+    "settingsTestLine": true,
+    "settingsTransportLine": true,
+    "siteIndexExists": true,
+    "siteResponsiveMeta": true
+  },
+  "runtimeStatus": {
+    "ready": false,
+    "reason": "not initialized",
+    "cliPath": "/Applications/Letta.app/Contents/Resources/app.asar.unpacked/node_modules/@letta-ai/letta-code/letta.js",
+    "cliResolved": true,
+    "transportMode": "sdk",
+    "effectiveTransport": "sdk subprocess",
+    "transportFallbackReason": null
+  }
+}

@@ -105,3 +105,74 @@ bun run typecheck   # exit 0 (2026-06-13)
 - Multi-agent summary references **093** ADR (`docs/v1/adr/093-multi-agent-workspace-policy.md`), **119**, **120** — aligned with index.
 - **082** cross-link confirmed; spec is umbrella over cloud topology slice.
 - No implementation claimed; appropriate for P1 cathedral gate.
+
+## Review rev8
+
+Reviewer: Independent Otto reviewer (Cursor)
+Date: 2026-06-14
+Verdict: +1
+Move to _Done?: Yes
+
+### Checked against Done when
+
+- `docs/v1/agent-control-plane-spec.md` merged: **Pass** — 11 subsystems, five-pillar matrix, **094–099** phase map
+- `000-index.md` lists **092–099**: **Pass** — index rows 192–199
+- Cathedral done-test paragraph reviewed: **Pass** — §Done test (cathedral)
+- Reviewer +1: **Pass** (this review)
+
+### Evidence inspected
+
+- Files: `docs/v1/agent-control-plane-spec.md`, `docs/v1/otto-web-spec.md` (umbrella link), `planning/hq-tickets/000-index.md`
+- Commands: `bun run verify:v0` → 5 passed / 0 failed
+
+### Finding
+
+Cathedral spec complete; implementation gaps honestly marked → **094–099** parked. No fake implementation claims.
+
+## Review rev9
+
+Reviewer: Independent Otto reviewer (Cursor)
+Date: 2026-06-14
+Verdict: +1
+Move to _Done?: Yes
+Delta vs rev8: unchanged — reaffirm
+
+### Checked against Done when
+
+- `docs/v1/agent-control-plane-spec.md` merged: **Pass** — 11 subsystems, five-pillar matrix, **094–099** phase map
+- `000-index.md` lists **092–099** with phases: **Pass**
+- Cathedral done-test paragraph reviewed: **Pass** — §Done test (cathedral)
+- Reviewer +1: **Pass** (this review)
+
+### Evidence inspected
+
+- Files: `docs/v1/agent-control-plane-spec.md`, `docs/v1/otto-web-spec.md` (umbrella link), `planning/hq-tickets/000-index.md`
+- Commands: `bun run verify:v0` → 5 passed / 0 failed
+
+### Finding
+
+Doc-only cathedral spec; rev8 +1 stands. +1.
+
+## Review rev10
+
+Reviewer: Independent Otto reviewer (Cursor)
+Date: 2026-06-14
+Verdict: +1
+Move to _Done?: Yes
+Delta vs rev9: unchanged — reaffirm
+
+### Checked against Done when
+
+- `docs/v1/agent-control-plane-spec.md` merged: **Pass**
+- `000-index.md` lists **092–099** with phases: **Pass**
+- Cathedral done-test paragraph reviewed: **Pass**
+- Reviewer +1: **Pass** (this review)
+
+### Evidence inspected
+
+- Files: `docs/v1/agent-control-plane-spec.md`, `docs/v1/otto-web-spec.md`, `000-index.md`
+- Commands: `bun run verify:v0` → 5 passed / 0 failed
+
+### Finding
+
+Doc-only; no rev10 delta. +1.

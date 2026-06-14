@@ -1,0 +1,23 @@
+{
+  "runId": "20260614070149",
+  "proofJson": "/Users/seb/Code/otto/docs/receipts/staging/staging-rev7-proof-20260614070149.json",
+  "checkBlockBanner": true,
+  "checksSeeded": 2,
+  "block": {
+    "ok": true,
+    "checkName": "completion-requires-receipts",
+    "message": "Not done: missing mapped proof.",
+    "receiptId": "receipt-4da58640-c42b-4ad0-9c75-e1f785aaab40",
+    "standardId": "no-fake-done",
+    "results": [
+      {
+        "check_id": "completion-requires-receipts",
+        "trigger": "done_claim",
+        "passed": false,
+        "message": "Not done: missing mapped proof.",
+        "blocked": true,
+        "receipt_id": "receipt-4da58640-c42b-4ad0-9c75-e1f785aaab40"
+      }
+    ]
+  }
+}

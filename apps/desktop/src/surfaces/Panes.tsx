@@ -7,7 +7,7 @@ import {
 } from '../readiness';
 import { Icon } from '../components/icons';
 import { useToast } from '../components/Toast';
-import { EmptyState, StatusPill, statusPill, SurfaceProof, SurfacePage, SurfaceHero, InkBlock, SurfaceInk, SurfaceStatStrip, SurfaceMeta, SplitLayout, FilterBar, InlineEmpty, WebPreviewFrame, ReceiptCard, CheckBlockBanner } from '../components/ui';
+import { EmptyState, StatusPill, statusPill, statusCodePill, readyStatusPill, SurfaceProof, SurfacePage, SurfaceHero, InkBlock, SurfaceInk, SurfaceStatStrip, SurfaceMeta, SplitLayout, FilterBar, InlineEmpty, WebPreviewFrame, ReceiptCard, CheckBlockBanner } from '../components/ui';
 import {
   toastCopy,
   curationCopy,
@@ -26,11 +26,6 @@ import {
   cultureSettingsCopy,
 } from '../copy/surfaces';
 import { SURFACE_TESTS } from '../canon-briefs';
-import {
-  isSampleReceiptPreviewEnabled,
-  SAMPLE_RECEIPT_DETAIL,
-  SAMPLE_RECEIPT_SUMMARY,
-} from '../onboarding-sample-receipt';
 import { resetOnboardingForReplay } from '../onboarding-storage';
 import {
   ottoApi,
@@ -39,6 +34,7 @@ import {
   type CharterStatus,
   type CurationProposalRecord,
   type PracticeListResult,
+  type PracticeMetricsSnapshot,
   type PracticeRecord,
   type ReceiptDetail,
   type ReceiptListResult,
@@ -67,6 +63,14 @@ import {
   type WorkerRecord,
   type RunListResult,
   type RunSummary,
+  type StandardConflictResult,
+  type CogneeHealth,
+  type CogneeCaptureReceipt,
+  type CogneeRecallSmokeResult,
+  type PgvectorStatus,
+  type MemoryListResult,
+  type MemoryBlockRecord,
+  type ProviderMirrorSnapshot,
 } from '../runtime';
 import { useRuntimeContext } from '../RuntimeContext';
 import type { SurfaceId } from '../components/Sidebar';
@@ -574,7 +578,7 @@ export const Standards: React.FC = () => {
 
 const StandardDetail: React.FC<{ standard: StandardRecord }> = ({ standard }) => {
   const api = ottoApi();
-  const [conflict, setConflict] = useState<import('../runtime').StandardConflictResult | null>(null);
+  const [conflict, setConflict] = useState<StandardConflictResult | null>(null);
 
   useEffect(() => {
     if (!api?.standards.conflictForStandard) return;
@@ -650,12 +654,49 @@ const StandardDetail: React.FC<{ standard: StandardRecord }> = ({ standard }) =>
 };
 
 /* ---------- Practices ---------- */
+const RUNTIME_PRACTICE_SLUGS = new Set(['charter', 'review', 'field-note']);
+
+function formatPracticeLastRun(iso: string | null | undefined): string {
+  if (!iso) return 'Never run';
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return iso;
+  return date.toLocaleString();
+}
+
+function trialPayloadForPractice(slug: string): { invocation?: string; payload?: Record<string, unknown> } {
+  switch (slug) {
+    case 'charter':
+      return { invocation: '/charter step', payload: { intent: 'Practices surface trial run' } };
+    case 'review':
+      return {
+        invocation: '/review done',
+        payload: {
+          acceptance_criteria: [{ id: 'AC1', text: 'Practice run emits receipt with practice ref' }],
+          evidence: [],
+        },
+      };
+    case 'field-note':
+      return {
+        invocation: '/field-note capture',
+        payload: {
+          raw_note: 'Trial field note from Practices surface Run.',
+          source: { who: 'operator', role: 'practices-surface', where: 'desktop', when: new Date().toISOString().slice(0, 10) },
+        },
+      };
+    default:
+      return {};
+  }
+}
+
 export const Practices: React.FC = () => {
   const api = ottoApi();
   const [result, setResult] = useState<PracticeListResult | null>(null);
   const [receipts, setReceipts] = useState<ReceiptSummary[]>([]);
+  const [metrics, setMetrics] = useState<PracticeMetricsSnapshot | null>(null);
   const [selectedSlug, setSelectedSlug] = useState<string | null>(null);
+  const [runMessage, setRunMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
 
   useEffect(() => {
     if (!api) return;
@@ -675,6 +716,47 @@ export const Practices: React.FC = () => {
     };
   }, [api]);
 
+  useEffect(() => {
+    if (!api || !selectedSlug) {
+      setMetrics(null);
+      return;
+    }
+    let cancelled = false;
+    api.practices.metrics(selectedSlug)
+      .then((next) => {
+        if (!cancelled) setMetrics(next);
+      })
+      .catch((e) => {
+        if (!cancelled) setError(String(e));
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [api, selectedSlug, runMessage]);
+
+  const runPractice = async () => {
+    if (!api || !selectedSlug || busy || !RUNTIME_PRACTICE_SLUGS.has(selectedSlug)) return;
+    setBusy(true);
+    setRunMessage(null);
+    setError(null);
+    try {
+      const trial = trialPayloadForPractice(selectedSlug);
+      const run = await api.practices.run({ slug: selectedSlug, ...trial });
+      const status = run.blocked ? 'blocked' : 'recorded';
+      setRunMessage(`Practice run ${status}: ${run.receipt.id}`);
+      const [receiptResult, nextMetrics] = await Promise.all([
+        api.receipts.list(),
+        api.practices.metrics(selectedSlug),
+      ]);
+      setReceipts(receiptResult.receipts);
+      setMetrics(nextMetrics);
+    } catch (e) {
+      setError(String(e));
+    } finally {
+      setBusy(false);
+    }
+  };
+
   if (!api) {
     return <WebPreviewFrame surface="practices" />;
   }
@@ -687,6 +769,7 @@ export const Practices: React.FC = () => {
   const withProofCount = practices.filter((p) =>
     receipts.some((r) => r.practiceSlug === p.slug),
   ).length;
+  const runnableCount = practices.filter((p) => RUNTIME_PRACTICE_SLUGS.has(p.slug)).length;
 
   return (
     <SurfacePage>
@@ -701,9 +784,11 @@ export const Practices: React.FC = () => {
         stats={[
           { label: practicesCopy.statLoaded, value: practices.length },
           { label: practicesCopy.statWithReceipts, value: withProofCount },
+          { label: practicesCopy.statRunnable, value: runnableCount },
         ]}
       />
       {error && <div className="notice"><span className="dot dot--warn" /> {error}</div>}
+      {runMessage && <div className="notice"><span className="dot dot--ok" /> {runMessage}</div>}
       <SkippedLoaderPanel skipped={result?.skipped ?? []} />
       <SplitLayout
         list={
@@ -730,7 +815,16 @@ export const Practices: React.FC = () => {
             ) : null}
           </>
         }
-        detail={selected ? <PracticeDetail practice={selected} relatedReceipts={relatedReceipts} /> : null}
+        detail={selected ? (
+          <PracticeDetail
+            practice={selected}
+            relatedReceipts={relatedReceipts}
+            metrics={metrics}
+            runnable={RUNTIME_PRACTICE_SLUGS.has(selected.slug)}
+            busy={busy}
+            onRun={runPractice}
+          />
+        ) : null}
       />
       <SurfaceMeta label={practicesCopy.metaLabel}>
         <span className="filechip">{Icon.file} {result?.dir ?? 'practices/'}</span>
@@ -744,7 +838,14 @@ export const Practices: React.FC = () => {
   );
 };
 
-const PracticeDetail: React.FC<{ practice: PracticeRecord; relatedReceipts: ReceiptSummary[] }> = ({ practice, relatedReceipts }) => (
+const PracticeDetail: React.FC<{
+  practice: PracticeRecord;
+  relatedReceipts: ReceiptSummary[];
+  metrics: PracticeMetricsSnapshot | null;
+  runnable: boolean;
+  busy: boolean;
+  onRun: () => void;
+}> = ({ practice, relatedReceipts, metrics, runnable, busy, onRun }) => (
   <div className="detail">
     <div className="panel">
       <div className="between">
@@ -754,6 +855,29 @@ const PracticeDetail: React.FC<{ practice: PracticeRecord; relatedReceipts: Rece
       <p className="lede" style={{ marginTop: 6 }}>{practice.summary}</p>
       <ChipList values={practice.invocations ?? []} empty="No invocations declared." />
     </div>
+    {runnable && (
+      <div className="panel">
+        <div className="between">
+          <div>
+            <div className="eyebrow">practice run</div>
+            <p className="muted" style={{ marginTop: 6 }}>
+              Records run id + receipt under ~/.otto. Last run: {formatPracticeLastRun(metrics?.last_used_at)}
+            </p>
+            {metrics?.last_receipt_id && (
+              <span className="filechip" style={{ marginTop: 8 }}>receipt: {metrics.last_receipt_id}</span>
+            )}
+          </div>
+          <button className="btn btn--primary" disabled={busy} onClick={onRun}>
+            {busy ? 'Running…' : 'Run'}
+          </button>
+        </div>
+        <div className="row" style={{ flexWrap: 'wrap', gap: 8, marginTop: 12 }}>
+          <span className="filechip">uses: {metrics?.uses ?? 0}</span>
+          <span className="filechip">success: {metrics?.successful_runs ?? 0}</span>
+          <span className="filechip">blocked: {metrics?.blocked_runs ?? 0}</span>
+        </div>
+      </div>
+    )}
     <div className="grid grid--2">
       <div className="panel">
         <div className="eyebrow">guardrails</div>
@@ -1469,36 +1593,6 @@ export const Receipts: React.FC = () => {
   }
 
   if (!loading && !receipts.length) {
-    if (isSampleReceiptPreviewEnabled()) {
-      return (
-        <SurfacePage className="receiptsSurface">
-          <SurfaceHero
-            eyebrow={receiptsCopy.sampleEyebrow}
-            title={receiptsCopy.sampleTitle}
-            lede={receiptsCopy.sampleBody}
-            proof={SURFACE_TESTS.receipts}
-          />
-          <SplitLayout
-            list={
-              <ReceiptCard
-                receipt={{
-                  id: SAMPLE_RECEIPT_SUMMARY.id,
-                  action: SAMPLE_RECEIPT_SUMMARY.action,
-                  status: SAMPLE_RECEIPT_SUMMARY.status,
-                  summary: SAMPLE_RECEIPT_SUMMARY.summary,
-                  metaLine: 'sample · chat:onboarding-sample',
-                }}
-                selected
-                onSelect={() => undefined}
-              />
-            }
-            detail={<ReceiptDetailView detail={SAMPLE_RECEIPT_DETAIL} summary={SAMPLE_RECEIPT_SUMMARY} />}
-          />
-          <SurfaceProof surface="receipts" />
-        </SurfacePage>
-      );
-    }
-
     return (
       <SurfacePage className="receiptsSurface">
         <SurfaceHero
@@ -2069,6 +2163,168 @@ export const Skills: React.FC = () => {
   );
 };
 
+/* ---------- Knowledge — Cognee + pgvector ---------- */
+const CogneeKnowledgePanel: React.FC = () => {
+  const api = ottoApi();
+  const [health, setHealth] = useState<CogneeHealth | null>(null);
+  const [capture, setCapture] = useState<CogneeCaptureReceipt | null>(null);
+  const [recall, setRecall] = useState<CogneeRecallSmokeResult | null>(null);
+  const [busy, setBusy] = useState(false);
+
+  const reload = async () => {
+    if (!api?.cognee) return;
+    const [nextHealth, nextCapture] = await Promise.all([
+      api.cognee.health(),
+      api.cognee.latestCapture(),
+    ]);
+    setHealth(nextHealth);
+    setCapture(nextCapture);
+  };
+
+  useEffect(() => {
+    void reload();
+  }, [api]);
+
+  if (!api?.cognee) return null;
+
+  const runRecallSmoke = async () => {
+    setBusy(true);
+    try {
+      setRecall(await api.cognee!.recallSmoke('otto receipt precedent'));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <div className="panel">
+      <div className="between">
+        <div>
+          <div className="eyebrow">derived recall</div>
+          <div className="h-sec">Graph recall (Cognee)</div>
+        </div>
+        {health ? statusPill(health.status) : null}
+      </div>
+      {health?.status === 'disabled' && (
+        <InlineEmpty
+          title="Cognee graph recall is off"
+          body="Set OTTO_COGNEE_ENABLED=1 and start the local sidecar. See docs/cognee.md — no mock graph rows."
+        />
+      )}
+      {health && health.status !== 'disabled' && (
+        <>
+          <p className="muted" style={{ marginTop: 8 }}>
+            Loopback only · {health.baseUrl ?? '—'}
+            {health.lastCheckedAt ? ` · checked ${health.lastCheckedAt}` : ''}
+          </p>
+          {health.lastError && health.status !== 'ready' && (
+            <div className="notice" style={{ marginTop: 12 }}>
+              <span className="dot dot--warn" /> {health.lastError}
+            </div>
+          )}
+          {capture ? (
+            <div className="receiptEvidence" style={{ marginTop: 12 }}>
+              <div className="zone receiptEvidenceRow">
+                <span className="zone__tag">last capture</span>
+                <div className="mono">{capture.id ?? capture.at}</div>
+              </div>
+              {typeof capture.count === 'number' && (
+                <div className="zone receiptEvidenceRow">
+                  <span className="zone__tag">docs</span>
+                  <div>{capture.count}</div>
+                </div>
+              )}
+              {Array.isArray(capture.paths) && capture.paths.length > 0 && (
+                <div className="zone receiptEvidenceRow">
+                  <span className="zone__tag">path</span>
+                  <div className="mono">{capture.paths[0]}</div>
+                </div>
+              )}
+            </div>
+          ) : (
+            <p className="muted" style={{ marginTop: 12 }}>No capture receipt yet — run scripts/cognee-capture.sh after Cognee is ready.</p>
+          )}
+          <div className="between" style={{ marginTop: 12, gap: 8, flexWrap: 'wrap' }}>
+            <button type="button" className="btn" disabled={busy} onClick={() => void reload()}>Refresh health</button>
+            <button type="button" className="btn" disabled={busy || health.status !== 'ready'} onClick={() => void runRecallSmoke()}>
+              Recall smoke
+            </button>
+          </div>
+          {recall && (
+            <div style={{ marginTop: 12 }}>
+              {recall.ok && recall.citations.length > 0 ? (
+                recall.citations.map((c: { path: string; snippet: string }) => (
+                  <div className="zone receiptEvidenceRow" key={c.path}>
+                    <span className="zone__tag">citation</span>
+                    <div>
+                      <div className="mono">{c.path}</div>
+                      <div className="muted">{c.snippet}</div>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="notice">
+                  <span className="dot dot--warn" /> {recall.error ?? 'No citations — index capture or start Cognee daemon first.'}
+                </div>
+              )}
+            </div>
+          )}
+        </>
+      )}
+      <span className="filechip" style={{ marginTop: 12 }}>{Icon.file} docs/cognee.md</span>
+    </div>
+  );
+};
+
+const PgvectorKnowledgePanel: React.FC = () => {
+  const api = ottoApi();
+  const [status, setStatus] = useState<PgvectorStatus | null>(null);
+
+  useEffect(() => {
+    if (!api?.pgvector) return;
+    let cancelled = false;
+    api.pgvector.status().then((next) => { if (!cancelled) setStatus(next); });
+    return () => { cancelled = true; };
+  }, [api]);
+
+  if (!api?.pgvector || !status) return null;
+
+  return (
+    <div className="panel">
+      <div className="between">
+        <div>
+          <div className="eyebrow">semantic recall</div>
+          <div className="h-sec">pgvector (optional)</div>
+        </div>
+        {statusPill(
+          !status.enabled
+            ? 'disabled'
+            : status.state === 'ready'
+              ? 'ready'
+              : status.state === 'stopped'
+                ? 'stopped'
+                : 'error',
+        )}
+      </div>
+      {!status.enabled && (
+        <InlineEmpty title="Semantic recall off" body={status.note} />
+      )}
+      {status.enabled && status.state !== 'ready' && (
+        <div className="notice" style={{ marginTop: 12 }}>
+          <span className="dot dot--warn" /> {status.note}
+          {status.connectionHint ? ` · ${status.connectionHint}` : ''}
+        </div>
+      )}
+      {status.enabled && status.state === 'ready' && (
+        <p className="muted" style={{ marginTop: 12, fontSize: 13 }}>
+          {status.note}
+          {status.lastIndexedAt ? ` Last index: ${status.lastIndexedAt}.` : ' No index run yet.'}
+        </p>
+      )}
+    </div>
+  );
+};
+
 /* ---------- Knowledge ---------- */
 export const Knowledge: React.FC = () => {
   const api = ottoApi();
@@ -2154,6 +2410,8 @@ export const Knowledge: React.FC = () => {
           </div>
         </>
       )}
+      <CogneeKnowledgePanel />
+      <PgvectorKnowledgePanel />
       <SurfaceMeta label={knowledgeCopy.metaLabel}>
         <span className="filechip">{Icon.file} {result?.registryPath ?? 'knowledge/ai-frontier/model-registry.yaml'}</span>
       </SurfaceMeta>
@@ -2172,7 +2430,7 @@ export const Tickets: React.FC = () => {
   const [slug, setSlug] = useState('');
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [checkBlock, setCheckBlock] = useState<{ checkName: string; message: string; receiptId?: string } | null>(null);
+  const [checkBlock, setCheckBlock] = useState<{ checkName: string; message: string; receiptId?: string; standardId?: string } | null>(null);
   const [busy, setBusy] = useState(false);
 
   const reload = async () => {
@@ -2277,6 +2535,7 @@ export const Tickets: React.FC = () => {
           checkName: 'completion-requires-receipts',
           message: raw.replace(/\s*\(receipt:[^)]+\)\s*$/, '').trim(),
           receiptId: receiptMatch?.[1]?.trim(),
+          standardId: 'no-fake-done',
         });
       } else {
         setError(raw);
@@ -2315,7 +2574,9 @@ export const Tickets: React.FC = () => {
           checkName={checkBlock.checkName}
           message={checkBlock.message}
           receiptId={checkBlock.receiptId}
+          standardId={checkBlock.standardId}
           onOpenReceipt={checkBlock.receiptId ? () => { location.hash = 'receipts'; } : undefined}
+          onOpenStandard={checkBlock.standardId ? () => { location.hash = 'standards'; } : undefined}
         />
       )}
       {message && <div className="notice"><span className="dot dot--ok" /> {message}</div>}
@@ -2536,16 +2797,6 @@ export const Channels: React.FC = () => {
 };
 
 /* ---------- Connect Letta (live setup) ---------- */
-const codePill: Record<StatusCode, [string, string]> = {
-  ready: ['pill--ok', 'connected'],
-  'no-api-key': ['pill--warn', 'auth needed'],
-  'no-agent': ['pill--warn', 'needs agent'],
-  unreachable: ['pill--warn', 'unreachable'],
-  'sdk-missing': ['pill--warn', 'SDK missing'],
-  stale: ['pill--warn', 'stale session'],
-  error: ['pill--warn', 'not connected'],
-};
-
 const inputStyle: React.CSSProperties = {
   border: '1px solid var(--line)',
   borderRadius: 8,
@@ -2566,6 +2817,7 @@ const ConnectLetta: React.FC = () => {
   const [primaryAgentId, setPrimaryAgentId] = useState('');
   const [connectionMode, setConnectionMode] = useState<'embedded' | 'existing' | 'cloud'>('embedded');
   const [busy, setBusy] = useState(false);
+  const [connectError, setConnectError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!api) return;
@@ -2595,6 +2847,7 @@ const ConnectLetta: React.FC = () => {
 
   const connect = async () => {
     setBusy(true);
+    setConnectError(null);
     try {
       const next = await api.connection.save({
         baseUrl: baseUrl.trim() || null,
@@ -2606,6 +2859,9 @@ const ConnectLetta: React.FC = () => {
       });
       setStatus(next);
       rt.updateStatus(next);
+    } catch (e) {
+      const message = e instanceof Error ? e.message : String(e);
+      setConnectError(message);
     } finally {
       setBusy(false);
     }
@@ -2618,14 +2874,46 @@ const ConnectLetta: React.FC = () => {
     <div className="panel">
       <div className="row" style={{ justifyContent: 'space-between', alignItems: 'center' }}>
         <div className="eyebrow">connect letta</div>
-        <StatusPill status={code} />
+        {statusCodePill(code)}
       </div>
       <div className="h-sec" style={{ marginTop: 6 }}>Local Letta connection</div>
       <p className="muted" style={{ marginTop: 4 }}>
         otto tries to discover Letta Desktop and your current local agent automatically. These fields are advanced overrides for the rare case discovery picks the wrong runtime or agent.
       </p>
+      <div className="panel" style={{ marginTop: 14, padding: 14 }}>
+        <div className="eyebrow">{settingsCopy.primaryAgentLabel}</div>
+        <p className="muted" style={{ marginTop: 6, fontSize: 13 }}>{settingsCopy.primaryAgentHint}</p>
+        <div className="grid" style={{ gap: 12, marginTop: 12 }}>
+          <label>
+            <span className="faint" style={{ fontSize: 12 }}>Primary agent ID</span>
+            <input
+              className="mono"
+              style={inputStyle}
+              value={primaryAgentId}
+              onChange={(e) => setPrimaryAgentId(e.target.value)}
+              placeholder="Default agent for this workspace"
+              spellCheck={false}
+            />
+          </label>
+          <label>
+            <span className="faint" style={{ fontSize: 12 }}>{settingsCopy.connectionModeLabel}</span>
+            <select
+              style={inputStyle}
+              value={connectionMode}
+              onChange={(e) => setConnectionMode(e.target.value as 'embedded' | 'existing' | 'cloud')}
+            >
+              <option value="embedded">{settingsCopy.connectionEmbedded}</option>
+              <option value="existing">{settingsCopy.connectionExisting}</option>
+              <option value="cloud">{settingsCopy.connectionCloud}</option>
+            </select>
+          </label>
+        </div>
+      </div>
       {displayStatus && !displayStatus.ready && displayStatus.reason && (
         <p className="faint" style={{ marginTop: 6 }}>↳ {displayStatus.reason}</p>
+      )}
+      {connectError && (
+        <p className="faint" style={{ marginTop: 6, color: 'var(--warn)' }}>↳ Connection failed: {connectError}</p>
       )}
       <div className="grid" style={{ gap: 12, marginTop: 12 }}>
         <label>
@@ -2673,19 +2961,159 @@ const ConnectLetta: React.FC = () => {
   );
 };
 
-/* ---------- Settings (Setup + Readiness) ---------- */
-const readyPill = (s: ReadyStatus) => {
-  const map: Record<ReadyStatus, [string, string]> = {
-    connected: ['pill--ok', 'connected'],
-    configured: ['pill--ok', 'configured'],
-    file: ['pill', 'file-backed'],
-    missing: ['pill--warn', 'missing'],
-    'not-wired': ['pill', 'not wired'],
+const ConnectPgvector: React.FC = () => {
+  const api = ottoApi();
+  const [status, setStatus] = useState<PgvectorStatus | null>(null);
+  const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    if (!api?.pgvector) return;
+    api.pgvector.status().then(setStatus).catch(() => {});
+  }, [api]);
+
+  if (!api?.pgvector) return null;
+
+  const refresh = async () => {
+    setBusy(true);
+    try {
+      const next = await api.pgvector!.status();
+      setStatus(next);
+    } finally {
+      setBusy(false);
+    }
   };
-  const [cls, label] = map[s];
-  return <span className={`pill ${cls}`}>{label}</span>;
+
+  const healthCode: StatusCode =
+    !status?.enabled
+      ? 'no-agent'
+      : status.state === 'ready'
+        ? 'ready'
+        : status.state === 'disabled'
+          ? 'no-agent'
+          : 'error';
+
+  return (
+    <div className="panel">
+      <div className="row" style={{ justifyContent: 'space-between', alignItems: 'center' }}>
+        <div className="eyebrow">semantic recall</div>
+        <StatusPill status={healthCode} />
+      </div>
+      <div className="h-sec" style={{ marginTop: 6 }}>pgvector (optional)</div>
+      <p className="muted" style={{ marginTop: 4 }}>
+        Local Postgres + pgvector for derived recall. Disabled unless <code>OTTO_PGVECTOR=1</code>. Files remain canon.
+      </p>
+      {status && (
+        <p className="faint" style={{ marginTop: 8, fontSize: 12 }}>
+          {status.state}
+          {status.connectionHint ? ` · ${status.connectionHint}` : ''}
+          {status.lastIndexedAt ? ` · indexed ${status.lastIndexedAt}` : ''}
+        </p>
+      )}
+      {status?.error && status.enabled && (
+        <p className="faint" style={{ marginTop: 6, fontSize: 12 }}>↳ {status.error}</p>
+      )}
+      {!status?.enabled && status && (
+        <p className="muted" style={{ marginTop: 8, fontSize: 13 }}>{status.note}</p>
+      )}
+      <div className="row" style={{ marginTop: 14, gap: 12, alignItems: 'center' }}>
+        <button type="button" className="btn btn--primary" onClick={refresh} disabled={busy}>
+          {busy ? 'Checking…' : 'Check health'}
+        </button>
+        {status?.lastCheckedAt && (
+          <span className="muted" style={{ fontSize: 13 }}>
+            {status.available ? 'ready' : status.state}
+          </span>
+        )}
+      </div>
+      <span className="filechip" style={{ marginTop: 10 }}>{Icon.file} docs/pgvector.md</span>
+    </div>
+  );
 };
 
+const ConnectCognee: React.FC = () => {
+  const api = ottoApi();
+  const [enabled, setEnabled] = useState(false);
+  const [baseUrl, setBaseUrl] = useState('http://127.0.0.1:8000');
+  const [health, setHealth] = useState<CogneeHealth | null>(null);
+  const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    if (!api?.cognee?.settings) return;
+    api.cognee.settings.get().then((s) => {
+      setEnabled(s.enabled);
+      setBaseUrl(s.baseUrl);
+    });
+    api.cognee.health().then(setHealth).catch(() => {});
+  }, [api]);
+
+  if (!api?.cognee) return null;
+
+  const saveAndCheck = async () => {
+    setBusy(true);
+    try {
+      const next = await api.cognee!.settings.set({
+        enabled,
+        baseUrl: baseUrl.trim() || 'http://127.0.0.1:8000',
+      });
+      setHealth(next);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const healthCode: StatusCode = health?.status === 'ready' ? 'ready' : health?.status === 'disabled' ? 'no-agent' : 'error';
+
+  return (
+    <div className="panel">
+      <div className="row" style={{ justifyContent: 'space-between', alignItems: 'center' }}>
+        <div className="eyebrow">graph recall</div>
+        <StatusPill status={healthCode} />
+      </div>
+      <div className="h-sec" style={{ marginTop: 6 }}>Cognee (optional)</div>
+      <p className="muted" style={{ marginTop: 4 }}>
+        Local loopback sidecar for derived graph recall. Disabled by default — files remain canon. See docs/cognee.md.
+      </p>
+      <div className="grid" style={{ gap: 12, marginTop: 12 }}>
+        <label className="row" style={{ gap: 10, alignItems: 'center' }}>
+          <input
+            type="checkbox"
+            checked={enabled}
+            onChange={(e) => setEnabled(e.target.checked)}
+          />
+          <span style={{ fontSize: 13.5 }}>Enable Cognee (`OTTO_COGNEE_ENABLED`)</span>
+        </label>
+        <label>
+          <span className="faint" style={{ fontSize: 12 }}>Base URL (loopback only)</span>
+          <input
+            style={inputStyle}
+            value={baseUrl}
+            onChange={(e) => setBaseUrl(e.target.value)}
+            placeholder="http://127.0.0.1:8000"
+            spellCheck={false}
+            disabled={!enabled}
+          />
+        </label>
+      </div>
+      {health?.lastError && enabled && (
+        <p className="faint" style={{ marginTop: 8, fontSize: 12 }}>↳ {health.lastError}</p>
+      )}
+      <div className="row" style={{ marginTop: 14, gap: 12, alignItems: 'center' }}>
+        <button type="button" className="btn btn--primary" onClick={saveAndCheck} disabled={busy}>
+          {busy ? 'Checking…' : 'Save & check health'}
+        </button>
+        {health?.lastCheckedAt && (
+          <span className="muted" style={{ fontSize: 13 }}>
+            {health.status}
+            {health.baseUrl ? ` · ${health.baseUrl}` : ''}
+          </span>
+        )}
+      </div>
+      <span className="filechip" style={{ marginTop: 10 }}>{Icon.file} docs/cognee.md</span>
+    </div>
+  );
+};
+
+/* ---------- Settings (Setup + Readiness) ---------- */
 const ReadyRow: React.FC<{ item: ReadyItem }> = ({ item }) => (
   <div className="zone" style={{ gridTemplateColumns: '190px minmax(0, 1fr) auto', gap: 16 }}>
     <span style={{ fontWeight: 600, fontSize: 14 }}>
@@ -2697,7 +3125,7 @@ const ReadyRow: React.FC<{ item: ReadyItem }> = ({ item }) => (
       {item.source && <span className="filechip" style={{ marginTop: 6 }}>{Icon.file} {item.source}</span>}
       <div className="faint mono" style={{ fontSize: 11.5, marginTop: 6 }}>↳ {item.action}</div>
     </div>
-    {readyPill(item.status)}
+    {readyStatusPill(item.status)}
   </div>
 );
 
@@ -2724,21 +3152,86 @@ const ModelProviders: React.FC = () => {
   const api = ottoApi();
   const rt = useRuntimeContext();
   const [tab, setTab] = useState<ProviderKind>('local');
+  const [mirror, setMirror] = useState<ProviderMirrorSnapshot | null>(null);
+  const [apiKeyDraft, setApiKeyDraft] = useState('');
+  const [keyBusy, setKeyBusy] = useState(false);
+  const [keyMessage, setKeyMessage] = useState<string | null>(null);
   const activeModel = `${rt.status?.modelHandle ?? ''} ${rt.status?.model ?? ''}`.toLowerCase();
   const openLetta = () => void api?.runtime.openLetta();
   const rows = MODEL_PROVIDERS.filter((p) => p.kind === tab);
+
+  const refreshMirror = () => {
+    if (!api?.provider) return;
+    api.provider.mirror().then(setMirror).catch(() => setMirror(null));
+  };
+
+  useEffect(() => {
+    refreshMirror();
+  }, [api, rt.status?.ready]);
+
+  const submitApiKey = async () => {
+    if (!api?.provider || !apiKeyDraft.trim()) return;
+    setKeyBusy(true);
+    setKeyMessage(null);
+    try {
+      const result = await api.provider.setApiKey(apiKeyDraft);
+      setApiKeyDraft('');
+      setKeyMessage(result.hasApiKey ? settingsCopy.providerApiKeyPresent : settingsCopy.providerApiKeyMissing);
+      refreshMirror();
+      const next = await api.runtime.init();
+      rt.updateStatus(next);
+    } finally {
+      setKeyBusy(false);
+    }
+  };
 
   return (
     <div className="providersScreen">
       <div className="panel providersHero">
         <div>
           <div className="eyebrow">model providers</div>
-          <div className="h-sec" style={{ marginTop: 6 }}>Managed in Letta, selected in otto</div>
+          <div className="h-sec" style={{ marginTop: 6 }}>Write-only BYOK mirror</div>
           <p className="muted" style={{ marginTop: 6 }}>
-            otto does not collect provider keys. Connect providers in Letta, then choose model and effort from the chat composer.
+            {mirror?.note ?? settingsCopy.providerMirrorNote}
           </p>
         </div>
         <button type="button" className="btn btn--primary" onClick={openLetta}>Open Letta</button>
+      </div>
+
+      <div className="panel" style={{ marginBottom: 16 }}>
+        <div className="between">
+          <div>
+            <div className="eyebrow">runtime mirror</div>
+            <div className="row" style={{ gap: 8, marginTop: 8, flexWrap: 'wrap' }}>
+              <span className={`pill ${mirror?.lettaConnected ? 'pill--ok' : 'pill--warn'}`}>
+                Letta {mirror?.lettaConnected ? 'reachable' : 'not connected'}
+              </span>
+              <span className={`pill ${mirror?.hasApiKey ? 'pill--ok' : ''}`}>
+                {mirror?.hasApiKey ? settingsCopy.providerApiKeyPresent : settingsCopy.providerApiKeyMissing}
+              </span>
+              {mirror?.modelHandle && <span className="filechip mono">{mirror.modelHandle}</span>}
+            </div>
+          </div>
+        </div>
+        <div className="grid" style={{ gap: 10, marginTop: 14 }}>
+          <label>
+            <span className="faint" style={{ fontSize: 12 }}>{settingsCopy.providerSubmitKey}</span>
+            <input
+              type="password"
+              autoComplete="off"
+              style={inputStyle}
+              value={apiKeyDraft}
+              onChange={(e) => setApiKeyDraft(e.target.value)}
+              placeholder="Paste key once — never shown again"
+            />
+          </label>
+          <div className="row" style={{ gap: 8, alignItems: 'center' }}>
+            <button type="button" className="btn btn--primary" onClick={submitApiKey} disabled={keyBusy || !apiKeyDraft.trim()}>
+              {keyBusy ? 'Saving…' : settingsCopy.providerSubmitKey}
+            </button>
+            {keyMessage && <span className="muted" style={{ fontSize: 13 }}>{keyMessage}</span>}
+          </div>
+        </div>
       </div>
 
       <div className="segmented" role="tablist" aria-label="Provider type">
@@ -2775,7 +3268,7 @@ const ModelProviders: React.FC = () => {
 /* ---------- Settings (Setup + Readiness) ---------- */
 const MemoryObservatory: React.FC<{ connected: boolean; onOpenLetta: () => void }> = ({ connected, onOpenLetta }) => {
   const api = ottoApi();
-  const [result, setResult] = useState<import('../runtime').MemoryListResult | null>(null);
+  const [result, setResult] = useState<MemoryListResult | null>(null);
   const [query, setQuery] = useState('');
   const [error, setError] = useState<string | null>(null);
 
@@ -2790,7 +3283,7 @@ const MemoryObservatory: React.FC<{ connected: boolean; onOpenLetta: () => void 
 
   const blocks = result?.blocks ?? [];
   const filtered = query.trim()
-    ? blocks.filter((b) =>
+    ? blocks.filter((b: MemoryBlockRecord) =>
       b.label.toLowerCase().includes(query.toLowerCase())
       || b.value.toLowerCase().includes(query.toLowerCase())
       || (b.description?.toLowerCase().includes(query.toLowerCase()) ?? false),
@@ -2828,7 +3321,7 @@ const MemoryObservatory: React.FC<{ connected: boolean; onOpenLetta: () => void 
           disabled={!blocks.length}
         />
       </div>
-      {filtered.map((block) => (
+      {filtered.map((block: MemoryBlockRecord) => (
         <div className="panel" key={block.id}>
           <div className="between">
             <span className="h-sec">{block.label}</span>
@@ -2967,6 +3460,8 @@ export const Settings: React.FC = () => {
           />
           <div className="grid" style={{ maxWidth: 880, gap: 16 }}>
           <ConnectLetta />
+          <ConnectCognee />
+          <ConnectPgvector />
           <div className="panel">
             <div className="eyebrow">onboarding</div>
             <div className="h-sec" style={{ marginTop: 6 }}>Show onboarding again</div>

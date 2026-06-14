@@ -25,12 +25,13 @@ afterEach(() => {
 });
 
 describe('onboarding storage', () => {
-  it('notifyOnboardingFirstMessage marks first message but not onboarded', () => {
+  it('notifyOnboardingFirstMessage marks first message and permanently dismisses dock', () => {
     notifyOnboardingFirstMessage();
     expect(wasFirstMessageDuringOnboarding()).toBe(true);
-    expect(wasOnboarded()).toBe(false);
+    expect(wasOnboarded()).toBe(true);
     notifyOnboardingFirstMessage();
     expect(localStorage.getItem(FIRST_MESSAGE_KEY)).toBe('1');
+    expect(localStorage.getItem(ONBOARDED_KEY)).toBe('1');
   });
 
   it('dismissOnboarding marks onboarded', () => {

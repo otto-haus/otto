@@ -3,6 +3,7 @@ import type {
   Charter,
   CharterRef,
   CharterStatus,
+  CheckRunResult,
   PracticeRecord,
   PracticeReference,
   Receipt,
@@ -143,6 +144,44 @@ export type PracticeListResult = {
   storage: 'files';
 };
 
+export type PracticeMetricsSnapshot = {
+  slug: string;
+  uses: number;
+  last_used_at: string | null;
+  successful_runs: number;
+  blocked_runs: number;
+  last_run_id?: string;
+  last_receipt_id?: string;
+  last_receipt_path?: string;
+};
+
+export type PracticeRunPayload = {
+  note?: string;
+  raw_note?: string;
+  source?: { who?: string; role?: string; where?: string; when?: string };
+  acceptance_criteria?: Array<{ id: string; text: string; proof?: string; receipts?: string[] }>;
+  review?: { verdict?: string; evidence?: string[]; reviewed_at?: string };
+  evidence?: string[];
+  artifacts?: string[];
+  intent?: string;
+};
+
+export type PracticeRunInput = {
+  slug: string;
+  invocation?: string;
+  payload?: PracticeRunPayload;
+  approved?: boolean;
+};
+
+export type PracticeRunResult = {
+  practice: PracticeRecord;
+  invocation: string;
+  run: RunSummary;
+  receipt: Receipt & { path: string };
+  artifactPath?: string;
+  blocked: boolean;
+};
+
 export type RoutineListResult = {
   dir: string;
   routines: RoutineRecord[];
@@ -185,6 +224,7 @@ export type DecideProposalResult = {
 export type EvaluateAutonomyActionResult = {
   evaluation: AutonomyActionEvaluation;
   receipt: Receipt & { path: string };
+  check_results?: CheckRunResult[];
 };
 
 export type {
@@ -220,11 +260,18 @@ export type {
   ApprovalRecord,
 } from '@otto-haus/core';
 
-export type { OttoConfig, TicketReviewRecord } from '../electron/shared/types';
+export type {
+  CogneeHealth,
+  CogneeCaptureReceipt,
+} from '@otto-haus/core';
+
+export type { OttoConfig, TicketReviewRecord, ProviderMirrorSnapshot } from '../electron/shared/types';
 export type {
   StandardConflictResult,
   MemoryListResult,
   MemoryBlockRecord,
+  CogneeRecallSmokeResult,
+  PgvectorStatus,
 } from '../electron/shared/types';
 
 import type { OttoApi } from '../electron/preload';
@@ -258,13 +305,25 @@ export type ChatMsg = {
     receiptId?: string;
     standardId?: string;
   };
+  receiptInline?: {
+    id: string;
+    status: 'success' | 'blocked' | 'failed';
+    action: string;
+    summary: string;
+    authority?: string;
+  };
 };
 
-const MESSAGES_KEY = 'otto.chat.messages.v1';
+import { LEGACY_MESSAGES_KEY, messagesKey } from './chat/message-storage';
 
-function readStoredMessages(): ChatMsg[] {
+function readStoredMessages(threadId: string | null): ChatMsg[] {
   try {
-    const parsed = JSON.parse(localStorage.getItem(MESSAGES_KEY) ?? '[]') as ChatMsg[];
+    const key = messagesKey(threadId);
+    let raw = localStorage.getItem(key);
+    if (!raw && threadId && key !== LEGACY_MESSAGES_KEY) {
+      raw = localStorage.getItem(LEGACY_MESSAGES_KEY);
+    }
+    const parsed = JSON.parse(raw ?? '[]') as ChatMsg[];
     if (!Array.isArray(parsed)) return [];
     return parsed
       .filter((m) => typeof m?.id === 'string' && typeof m.text === 'string' && (m.who === 'user' || m.who === 'otto' || m.who === 'error'))
@@ -288,16 +347,113 @@ function assistantText(m: Record<string, unknown>): string | null {
   return null;
 }
 
+function flushMessages(threadId: string | null, msgs: ChatMsg[]) {
+  try {
+    localStorage.setItem(messagesKey(threadId), JSON.stringify(msgs.slice(-200)));
+  } catch {
+    /* best effort */
+  }
+}
+
+function loadThreadMessages(
+  threadId: string | null,
+  cache: Map<string, ChatMsg[]>,
+): ChatMsg[] {
+  if (!threadId) return [];
+  const cached = cache.get(threadId);
+  if (cached) return cached;
+  const loaded = readStoredMessages(threadId);
+  cache.set(threadId, loaded);
+  return loaded;
+}
+
 export function useRuntime() {
   const api = ottoApi();
   const [status, setStatus] = useState<RuntimeStatus | null>(null);
-  const [messages, setMessages] = useState<ChatMsg[]>(readStoredMessages);
+  const [activeThreadId, setActiveThreadId] = useState<string | null>(null);
+  const [messages, setMessages] = useState<ChatMsg[]>([]);
   const [busy, setBusy] = useState(false);
   const activeAssistantStream = useRef<string | null>(null);
   const sendError = useRef<string | null>(null);
+  const activeThreadRef = useRef<string | null>(null);
+  const messagesRef = useRef<ChatMsg[]>([]);
+  const threadHydrated = useRef(false);
+  const threadMessagesCache = useRef(new Map<string, ChatMsg[]>());
+  /** Thread that owns the in-flight Letta turn — events route here, not to the active view. */
+  const inflightThreadRef = useRef<string | null>(null);
+
+  const applyThreadView = (threadId: string, opts?: { persistLeaving?: boolean }) => {
+    const leaving = activeThreadRef.current;
+    if (opts?.persistLeaving !== false && leaving && leaving !== threadId) {
+      threadMessagesCache.current.set(leaving, messagesRef.current);
+      flushMessages(leaving, messagesRef.current);
+    }
+    const loaded = loadThreadMessages(threadId, threadMessagesCache.current);
+    activeThreadRef.current = threadId;
+    messagesRef.current = loaded;
+    setActiveThreadId(threadId);
+    setMessages(loaded);
+  };
+
+  useEffect(() => {
+    activeThreadRef.current = activeThreadId;
+  }, [activeThreadId]);
+
+  useEffect(() => {
+    messagesRef.current = messages;
+  }, [messages]);
+
+  useEffect(() => {
+    if (!api) {
+      setMessages(readStoredMessages(null));
+      return;
+    }
+    let cancelled = false;
+    void api.threads.list().then((result) => {
+      if (cancelled || threadHydrated.current) return;
+      threadHydrated.current = true;
+      const threadId = result.activeThreadId;
+      activeThreadRef.current = threadId;
+      const loaded = loadThreadMessages(threadId, threadMessagesCache.current);
+      messagesRef.current = loaded;
+      setActiveThreadId(threadId);
+      setMessages(loaded);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [api]);
+
+  useEffect(() => {
+    if (!api?.onActiveThread) return;
+    return api.onActiveThread(({ threadId, status }) => {
+      threadHydrated.current = true;
+      if (status) setStatus(status);
+      if (activeThreadRef.current === threadId) {
+        const loaded = loadThreadMessages(threadId, threadMessagesCache.current);
+        messagesRef.current = loaded;
+        setMessages(loaded);
+        return;
+      }
+      applyThreadView(threadId);
+    });
+  }, [api]);
 
   useEffect(() => {
     if (!api) return;
+    const patchInflightMessages = (updater: (msgs: ChatMsg[]) => ChatMsg[]) => {
+      const threadId = inflightThreadRef.current ?? activeThreadRef.current;
+      if (!threadId) return;
+      const prev = loadThreadMessages(threadId, threadMessagesCache.current);
+      const next = updater(prev);
+      threadMessagesCache.current.set(threadId, next);
+      flushMessages(threadId, next);
+      if (activeThreadRef.current === threadId) {
+        messagesRef.current = next;
+        setMessages(next);
+      }
+    };
+
     api.runtime
       .init()
       .then(setStatus)
@@ -312,7 +468,7 @@ export function useRuntime() {
         const t = assistantText(m);
         if (t) {
           const streamId = String(m.uuid ?? m.runId ?? 'assistant');
-          setMessages((x) => {
+          patchInflightMessages((x) => {
             const last = x[x.length - 1];
             if (activeAssistantStream.current === streamId && last?.who === 'otto') {
               return [...x.slice(0, -1), { ...last, text: `${last.text}${t}` }];
@@ -324,19 +480,24 @@ export function useRuntime() {
       } else if (m.type === 'error') {
         sendError.current = String((m as { message?: unknown }).message ?? 'error');
         activeAssistantStream.current = null;
-        setMessages((x) => [...x, { id: `error-${Date.now()}`, who: 'error', text: String((m as { message?: unknown }).message ?? 'error') }]);
+        patchInflightMessages((x) => [
+          ...x,
+          { id: `error-${Date.now()}`, who: 'error', text: String((m as { message?: unknown }).message ?? 'error') },
+        ]);
+        inflightThreadRef.current = null;
         setBusy(false);
       } else if (m.type === 'result') {
         activeAssistantStream.current = null;
+        inflightThreadRef.current = null;
         setBusy(false);
+        const conversationId = typeof m.conversationId === 'string' ? m.conversationId : null;
+        if (conversationId) {
+          void api.threads.touch({ lettaConversationId: conversationId });
+        }
       }
     });
     return off;
   }, [api]);
-
-  useEffect(() => {
-    try { localStorage.setItem(MESSAGES_KEY, JSON.stringify(messages.slice(-200))); } catch { /* best effort */ }
-  }, [messages]);
 
   const retry = async () => {
     if (api) setStatus(await api.runtime.init());
@@ -348,9 +509,21 @@ export function useRuntime() {
 
   const send = async (text: string) => {
     if (!api || !status?.ready || busy) return;
+    const sendThreadId = activeThreadRef.current;
+    if (!sendThreadId) return;
     sendError.current = null;
     activeAssistantStream.current = null;
-    setMessages((x) => [...x, { id: `user-${Date.now()}`, who: 'user', text }]);
+    inflightThreadRef.current = sendThreadId;
+    const snippet = text.trim().replace(/\s+/g, ' ');
+    if (snippet) {
+      void api.threads.touch({ title: snippet.length > 56 ? `${snippet.slice(0, 53)}…` : snippet });
+    }
+    const prev = loadThreadMessages(sendThreadId, threadMessagesCache.current);
+    const next: ChatMsg[] = [...prev, { id: `user-${Date.now()}`, who: 'user', text }];
+    threadMessagesCache.current.set(sendThreadId, next);
+    flushMessages(sendThreadId, next);
+    messagesRef.current = next;
+    setMessages(next);
     setBusy(true);
     await api.runtime.send(text);
     if (sendError.current) throw new Error(sendError.current);
@@ -360,6 +533,7 @@ export function useRuntime() {
     if (!api) return;
     await api.runtime.abort();
     activeAssistantStream.current = null;
+    inflightThreadRef.current = null;
     setBusy(false);
   };
 
@@ -372,13 +546,54 @@ export function useRuntime() {
 
   const newChat = async () => {
     if (!api) return;
+    if (busy) await abort();
+    threadHydrated.current = true;
     sendError.current = null;
     activeAssistantStream.current = null;
+    inflightThreadRef.current = null;
     setBusy(false);
-    setMessages([]);
-    try { localStorage.removeItem(MESSAGES_KEY); } catch { /* best effort */ }
-    setStatus(await api.runtime.newChat());
+    if (activeThreadRef.current) {
+      applyThreadView(activeThreadRef.current, { persistLeaving: true });
+    }
+    const { thread, status: next } = await api.threads.create();
+    applyThreadView(thread.id, { persistLeaving: false });
+    setStatus(next);
   };
 
-  return { electron: !!api, status, messages, busy, send, abort, retry, newChat, updateStatus, configure };
+  const switchThread = async (threadId: string) => {
+    if (!api) return;
+    if (busy) await abort();
+    threadHydrated.current = true;
+    sendError.current = null;
+    activeAssistantStream.current = null;
+    inflightThreadRef.current = null;
+    setBusy(false);
+    if (activeThreadRef.current) {
+      applyThreadView(activeThreadRef.current, { persistLeaving: true });
+    }
+    const { thread, status: next } = await api.threads.switch(threadId);
+    applyThreadView(thread.id, { persistLeaving: false });
+    setStatus(next);
+  };
+
+  const refreshThreads = async () => {
+    if (!api) return null;
+    return api.threads.list();
+  };
+
+  return {
+    electron: !!api,
+    status,
+    messages,
+    busy,
+    activeThreadId,
+    send,
+    abort,
+    retry,
+    newChat,
+    switchThread,
+    refreshThreads,
+    updateStatus,
+    configure,
+  };
 }

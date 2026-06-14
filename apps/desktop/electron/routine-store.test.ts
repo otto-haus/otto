@@ -47,4 +47,18 @@ describe('RoutineStore', () => {
       rmSync(tmp, { recursive: true, force: true });
     }
   });
+
+  test('ai-frontier-review manual run delegates to frontier executor', () => {
+    const tmp = mkdtempSync(join(tmpdir(), 'otto-routine-test-'));
+    try {
+      const store = new RoutineStore(routinesDir, new ReceiptWriter(tmp));
+      const result = store.runManual('ai-frontier-review');
+
+      expect(result.receipt.action).toBe('routine.run.manual');
+      expect(result.knowledgeReceiptId).toBeTruthy();
+      expect(result.receipt.result.data.knowledgeReceiptId).toBe(result.knowledgeReceiptId);
+    } finally {
+      rmSync(tmp, { recursive: true, force: true });
+    }
+  });
 });

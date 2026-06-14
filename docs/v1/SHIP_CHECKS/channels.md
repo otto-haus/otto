@@ -6,36 +6,60 @@ Channels are communication surfaces. Discord is v0/v1 backend: mobile and ambien
 
 ## Required file contract if shipping
 
-- [ ] Channel type exists in core.
-- [ ] Channel config exists.
-- [ ] Discord docs/templates exist.
-- [ ] Approval gate for outbound messages exists.
-- [ ] Channel receipts exist.
+- [x] Channel type exists in core.
+  - Evidence: `packages/core/src/types.ts` — `Channel`, `ChannelKind`
+
+- [x] Channel config exists.
+  - Evidence: `channels/channels.yaml` — discord-main (disabled) + desktop-chat (enabled)
+
+- [x] Discord docs/templates exist.
+  - Evidence: `channels/README.md`; config comments in `channels.yaml`
+
+- [x] Approval gate for outbound messages exists.
+  - Evidence: `requires_approval_to_send: true` on discord-main; `defaults.approval_required_for_outbound: true`
+
+- [~] Channel receipts exist.
+  - Partial: `Run.delivered_to` type field exists; no live send path yet → no delivery receipts
 
 ## Required runtime behavior if shipping
 
-- [ ] Can read/send via channel or explicitly mark scaffold-only.
-- [ ] Outbound side effects require approval.
-- [ ] Files remain source of truth.
+- [x] File-backed channel list in desktop (scaffold + contract).
+  - Evidence: `ChannelStore`; IPC `otto:channels:list`; Channels pane with file/live pill
+
+- [ ] Live read/send via Discord.
+  - Gap: Discord bot runtime deferred (020); `discord-main.enabled: false`
+
+- [x] Files remain source of truth.
+  - Evidence: `channels/channels.yaml` canon; pane shows `configPath`
 
 ## v0.1 decision
 
-- [ ] Ship only if live/local flow works and approval is enforced.
-- [ ] Otherwise Defer and remove demo/ship claims.
+- [x] File contract + desktop surface ship; live Discord deferred.
+  - Evidence: `RELEASE_CHECKLIST.md`; discord channel `enabled: false`
+
+## Staging smoke (desktop pane)
+
+- Load: Channels pane reads `channels/channels.yaml`
+- Empty: missing file → built-in defaults or empty list with path hint
+- Disabled: discord-main shows `disabled` pill + approval-required badge
+- Enabled: desktop-chat shows `enabled` pill
+- File/live pill: `storage: files` chip visible
+
+## Automated verification
+
+```sh
+bun test ./apps/desktop/electron/channel-store.test.ts
+```
 
 ## Status legend
 
 - `[x]` Done — evidence path required
 - `[~]` Partial / prototype / proposed — evidence + gap required
-- `[ ]` Not done — missing work required
+- [ ] Not done — missing work required
 
 ## Ship decision
 
-Choose one:
-- Ship in v0.1
-- Ship as Proposed
-- Defer
-- Cut from public claims
+**Ship in v0.1** — file-backed contract + desktop surface; live Discord bot **deferred**.
 
 ## Truth rule
 

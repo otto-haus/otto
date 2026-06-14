@@ -1,0 +1,21 @@
+{
+  "ok": false,
+  "runId": "20260614135922",
+  "gitHead": null,
+  "appTemplate": "/Applications/otto-staging.app",
+  "receiptDir": "/Users/seb/Code/otto/docs/receipts/staging",
+  "screenshots": {
+    "connectDock": "/Users/seb/Code/otto/docs/receipts/staging/072-primary-connect-dock.png",
+    "narrowLayout": "/Users/seb/Code/otto/docs/receipts/staging/073-narrow-dock-layout.png"
+  },
+  "checks": {
+    "connectedFirstRuntimeReady": false,
+    "connectedFirstWelcomeVisible": false,
+    "connectedFirstError": "runtime status predicate not satisfied in time",
+    "receiptsCtaShowsSample": false,
+    "receiptsCtaError": "locator.waitFor: Timeout 10000ms exceeded.\nCall log:\n  - waiting for getByText('Sample proof record') to be visible\n",
+    "primaryCtaConnectDock": true,
+    "narrowComposerVisible": true
+  },
+  "consoleMessages": []
+}

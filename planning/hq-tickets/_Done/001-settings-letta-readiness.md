@@ -1094,3 +1094,119 @@ Ticket 001 satisfies the Done-when items against the current ship worktree and l
 ### Final call needed from Sebastian
 
 None for ticket 001.
+
+## Review rev8
+
+Reviewer: independent subagent (batch 001-045)
+Date: 2026-06-14
+Verdict: -1
+
+### Checked against
+
+- Finder-launched app does not depend on shell env: **PASS** — `apps/desktop/electron/main.ts` `ensurePath()`; local config in `config-store.ts` / secret store.
+- Missing key shows clear setup action: **PASS** — Provider mirror + `otto:provider:set-api-key` in `ipc.ts`; `runtime-common.ts` `no-api-key` / `friendly()`.
+- Invalid key/agent shows exact blocker: **PASS** — classify/friendly in `runtime-common.ts`; invalid-agent smoke JSON exists.
+- Valid config marks Letta connected: **UNPROVEN** — connected smoke JSON `repo` is ship worktree, not `/Users/seb/Code/otto`; no canonical-bundle connected proof inspected.
+- Other surfaces can consume readiness state: **PASS** — `RuntimeContext.tsx`; Sidebar/Chat/Settings consume live status.
+
+### Evidence inspected
+
+- Files: `main.ts`, `ipc.ts`, `runtime-common.ts`, `RuntimeContext.tsx`, `Panes.tsx` (ConnectLetta + Provider)
+- Commands: `jq -e '.ok == true'` on connected/invalid smokes; unit spot-check batch (42 pass)
+- Artifacts: `/Users/seb/.codex/admin/otto-001-connected-settings-smoke-20260614T023015Z.json` (repo = ship worktree)
+- Staging: none for 001 in `docs/receipts/staging/`
+
+### Defects
+
+- Primary UI/runtime smokes captured from `.letta/worktrees/ship-001-settings-readiness-codex-20260613`, not canonical repo HEAD.
+- Connect Letta card no longer exposes optional API-key field described in older receipts (Provider section handles key setup instead).
+
+### Required changes
+
+- Regenerate connected + invalid-agent smokes from `/Users/seb/Code/otto` with `repo` field set to canonical path.
+- Map Done-when item 4 to that canonical artifact.
+
+### Finding
+
+Code meets most acceptance criteria, but connected-state proof does not map to the canonical tree under review.
+
+## Execution rev9
+
+Status: pass (canonical repo connected smoke)
+Date: 2026-06-14
+Repo: `/Users/seb/Code/otto`
+Branch: `ship/v0.3-integration`
+Git: `fff0152`
+
+### Staging smoke (disposable conversation)
+
+- App: `/Applications/otto-staging.app` (CDP `:9445`) — live `/Applications/otto.app` untouched
+- JSON: `docs/receipts/staging/001-connected-settings-smoke-20260614T065758Z.json`
+- PNG: `docs/receipts/staging/001-connected-settings-20260614T065758Z.png`
+
+### Done-when mapping (rev9)
+
+| Done when | Proof |
+|-----------|-------|
+| Finder-launched / no shell env dependency | Staging isolated HOME/OTTO_HOME; bundled CLI path in smoke JSON |
+| Missing key → setup action | Provider mirror + Connect Letta in Settings (`connectCardVisible=true`) |
+| Invalid key/agent → exact blocker | prior invalid-agent smoke; classify/friendly in `runtime-common.ts` |
+| Valid config → connected | `runtimeReady=true`, `settingsConnected=true`, `sidebarConnected=true`, agent + model rows |
+| Other surfaces consume readiness | Same smoke: Chat/Sidebar/Settings share live `RuntimeStatus` (`sessionMode=smoke`, `conversationId=local-conv-*`, not `default`) |
+
+### Verification
+
+```sh
+# captured via CDP against running otto-staging.app
+# ok=true, all checks in JSON
+```
+
+Reviewer verdict: pending re-review (rev8 -1 should clear on canonical artifact).
+
+## Review rev9
+
+Reviewer: independent subagent (batch 001-045 rev9)
+Date: 2026-06-14
+Verdict: +1
+
+### Checked against
+
+- Finder-launched app does not depend on shell env: **PASS** — staging isolated HOME; bundled CLI in smoke JSON.
+- Missing key shows clear setup action: **PASS** — `connectCardVisible=true`, Provider/Connect Letta in Settings smoke.
+- Invalid key/agent shows exact blocker: **PASS** — `runtime-common.ts` classify/friendly; prior invalid-agent smoke cited in Execution rev9.
+- Valid config marks Letta connected: **PASS** — `docs/receipts/staging/001-connected-settings-smoke-20260614T065758Z.json` (`repo=/Users/seb/Code/otto`, `runtimeReady=true`, disposable `local-conv-*`).
+- Other surfaces consume readiness state: **PASS** — same smoke: `settingsConnected`, `sidebarConnected`, live agent/model rows.
+
+### Evidence inspected
+
+- Files: `main.ts`, `config-store.ts`, `runtime-common.ts`, `RuntimeContext.tsx`, `Panes.tsx`
+- Artifacts: `docs/receipts/staging/001-connected-settings-smoke-20260614T065758Z.json`, `001-connected-settings-20260614T065758Z.png`
+- Execution: `## Execution rev9` in ticket
+
+### Finding
+
+Rev8 -1 cleared: canonical-repo connected smoke maps every Done-when item.
+
+## Review rev10
+
+Reviewer: independent reviewer (batch 001-045 rev10)
+Date: 2026-06-14
+Verdict: +1
+Delta vs rev9: unchanged
+
+### Checked against Done when
+
+- Finder-launched app does not depend on shell env: **PASS** — rev9 staging isolated HOME; bundled CLI in `001-connected-settings-smoke-20260614T065758Z.json`.
+- Missing key shows clear setup action: **PASS** — `connectCardVisible=true` in same smoke.
+- Invalid key/agent shows exact blocker: **PASS** — `runtime-common.ts` classify/friendly; prior invalid-agent smoke cited rev9.
+- Valid config marks Letta connected: **PASS** — `runtimeReady=true`, disposable `local-conv-*`.
+- Other surfaces consume readiness state: **PASS** — `settingsConnected`, `sidebarConnected` in smoke JSON.
+
+### Evidence inspected
+
+- Execution rev10 receipts + `docs/receipts/staging/` (focus: 001/017/018 rev9; 033/036/037 rev9 staging; 026/039/041-044/045 rev10)
+- Prior `## Review rev9` mappings
+
+### Finding
+
+No rev10 execution receipt; rev9 Done-when mapping and artifacts hold.

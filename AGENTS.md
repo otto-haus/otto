@@ -56,6 +56,14 @@ task refresh        # build/package/install/open /Applications/otto.app
 task smoke:cli      # isolated disposable conversation; never default
 ```
 
+Staging smokes (never `/Applications/otto.app`):
+
+```sh
+bash apps/desktop/scripts/deploy-staging.sh
+NODE_PATH=$HOME/.codex/admin/node_modules OTTO_RECEIPT_DIR=$PWD/docs/receipts/staging \
+  node scripts/otto-staging-two-thread-smoke.cjs   # 046 thread isolation
+```
+
 Do not call Electron “connected” unless `session.initialize()` succeeds against a live Letta agent.
 
 ## Repo map

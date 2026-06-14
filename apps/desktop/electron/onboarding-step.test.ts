@@ -11,6 +11,15 @@ describe('resolveOnboardingStep', () => {
     })).toBe('welcome');
   });
 
+  it('shows welcome before started even when already connected', () => {
+    expect(resolveOnboardingStep({
+      started: false,
+      intent: 'connect',
+      connected: true,
+      firstMessageDuringOnboarding: false,
+    })).toBe('welcome');
+  });
+
   it('ignores stale chat history — connect path waits for real connection', () => {
     expect(resolveOnboardingStep({
       started: true,

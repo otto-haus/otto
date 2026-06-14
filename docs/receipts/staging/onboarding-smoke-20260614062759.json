@@ -1,0 +1,22 @@
+{
+  "ok": true,
+  "runId": "20260614062759",
+  "gitHead": "fff0152",
+  "appTemplate": "/Applications/otto-staging.app",
+  "receiptDir": "/Users/seb/Code/otto/docs/receipts/staging",
+  "screenshots": {
+    "connectedFirst": "/Users/seb/Code/otto/docs/receipts/staging/069-connected-first-state.png",
+    "receiptsSample": "/Users/seb/Code/otto/docs/receipts/staging/071-072-receipts-sample-onboarding.png",
+    "connectDock": "/Users/seb/Code/otto/docs/receipts/staging/072-primary-connect-dock.png",
+    "narrowLayout": "/Users/seb/Code/otto/docs/receipts/staging/073-narrow-dock-layout.png"
+  },
+  "checks": {
+    "connectedFirstRuntimeReady": true,
+    "connectedFirstWelcomeVisible": true,
+    "receiptsCtaShowsSample": true,
+    "receiptsCtaNotConnectDock": true,
+    "primaryCtaConnectDock": true,
+    "narrowComposerVisible": true
+  },
+  "consoleMessages": []
+}

@@ -1,20 +1,121 @@
+import { createRequire } from 'node:module';
 import { existsSync } from 'node:fs';
+import { join } from 'node:path';
+import type { BrowserWindow } from 'electron';
+import type { OttoConfig } from '../shared/types';
 import type { StatusCode } from '../shared/types';
 
-export const SMOKE_MODE = process.env.OTTO_SMOKE === '1' || process.env.OTTO_SMOKE === 'true';
+export function smokeMode(): boolean {
+  return process.env.OTTO_SMOKE === '1' || process.env.OTTO_SMOKE === 'true';
+}
+
+export const SMOKE_MODE = smokeMode();
 export const WANT_MEMFS = process.env.OTTO_MEMFS === '1' || process.env.OTTO_MEMFS === 'true';
 
 const LETTA_DESKTOP_CLI = '/Applications/Letta.app/Contents/Resources/app.asar.unpacked/node_modules/@letta-ai/letta-code/letta.js';
 
-export function resolveCli(): { cliPath: string; cliResolved: boolean } {
-  const explicit = process.env.LETTA_CLI_PATH;
+export type ConnectionMode = NonNullable<OttoConfig['connectionMode']>;
+
+export type CliResolution = {
+  cliPath: string;
+  cliResolved: boolean;
+  /** Set when embedded mode could not resolve bundled CLI, or existing mode fell back from Letta.app. */
+  cliFallbackReason?: string;
+};
+
+function bundledCliCandidates(): string[] {
+  const candidates: string[] = [];
+  const resourcesPath = (process as NodeJS.Process & { resourcesPath?: string }).resourcesPath;
+  if (resourcesPath) {
+    candidates.push(join(resourcesPath, 'app', 'node_modules', '@letta-ai', 'letta-code', 'letta.js'));
+    candidates.push(join(resourcesPath, 'app.asar.unpacked', 'node_modules', '@letta-ai', 'letta-code', 'letta.js'));
+  }
+  candidates.push(join(process.cwd(), 'node_modules', '@letta-ai', 'letta-code', 'letta.js'));
+  candidates.push(join(process.cwd(), 'apps', 'desktop', 'node_modules', '@letta-ai', 'letta-code', 'letta.js'));
+  try {
+    const req = createRequire(__filename);
+    candidates.push(req.resolve('@letta-ai/letta-code/letta.js'));
+  } catch {
+    // package not installed on this machine
+  }
+  return candidates;
+}
+
+function firstExisting(paths: string[]): string | null {
+  for (const path of paths) {
+    if (existsSync(path)) return path;
+  }
+  return null;
+}
+
+/**
+ * Resolve Letta Code CLI path honoring Settings connection mode (076).
+ * - embedded: bundled app resources / node_modules only (never prefers Letta.app)
+ * - existing | cloud: Letta Desktop CLI first, then bundled with explicit fallback reason
+ * LETTA_CLI_PATH always wins when set.
+ */
+export function resolveCli(connectionMode: ConnectionMode = 'embedded'): CliResolution {
+  const explicit = process.env.LETTA_CLI_PATH?.trim();
   if (explicit) return { cliPath: explicit, cliResolved: true };
-  if (existsSync(LETTA_DESKTOP_CLI)) return { cliPath: LETTA_DESKTOP_CLI, cliResolved: true };
-  return { cliPath: '(bundled @letta-ai/letta-code)', cliResolved: false };
+
+  const bundled = firstExisting(bundledCliCandidates());
+
+  if (connectionMode === 'embedded') {
+    if (bundled) return { cliPath: bundled, cliResolved: true };
+    return {
+      cliPath: '(bundled @letta-ai/letta-code — not found)',
+      cliResolved: false,
+      cliFallbackReason:
+        'Embedded mode: bundled letta.js not found under app resources or node_modules. Rebuild otto.app or set LETTA_CLI_PATH.',
+    };
+  }
+
+  if (existsSync(LETTA_DESKTOP_CLI)) {
+    return { cliPath: LETTA_DESKTOP_CLI, cliResolved: true };
+  }
+
+  if (bundled) {
+    return {
+      cliPath: bundled,
+      cliResolved: true,
+      cliFallbackReason:
+        connectionMode === 'existing'
+          ? 'Existing mode: Letta Desktop CLI not at /Applications/Letta.app — using bundled letta.js from otto dependencies.'
+          : 'Cloud mode: using bundled letta.js locally; remote URL comes from Settings/env.',
+    };
+  }
+
+  return {
+    cliPath: '(letta.js not resolved)',
+    cliResolved: false,
+    cliFallbackReason:
+      connectionMode === 'existing'
+        ? 'Existing mode: install Letta Desktop, rebuild otto with @letta-ai/letta-code, or set LETTA_CLI_PATH.'
+        : 'Cloud mode: set LETTA_BASE_URL and LETTA_CLI_PATH, or install Letta Desktop for local CLI.',
+  };
 }
 
 export function msg(e: unknown): string {
   return e instanceof Error ? e.message : String(e);
+}
+
+/** Skip IPC when the BrowserWindow or webContents is destroyed (058). */
+export function safeWebContentsSend(
+  win: BrowserWindow | null | undefined,
+  channel: string,
+  payload: unknown,
+): boolean {
+  if (!win) return false;
+  if (typeof win.isDestroyed === 'function' && win.isDestroyed()) return false;
+  const wc = win.webContents;
+  if (!wc) return false;
+  if (typeof wc.isDestroyed === 'function' && wc.isDestroyed()) return false;
+  try {
+    wc.send(channel, payload);
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 export const isNotFound = (e: unknown) => {

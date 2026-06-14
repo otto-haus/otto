@@ -2,20 +2,22 @@
 
 Updated: 2026-06-13
 
-Worktree (uncommitted): `/Users/seb/Code/otto/.letta/worktrees/ticket-004-receipt-contract-codex-20260613`
+Integration branch: `ship/v0.3-integration` (dirty tree — PR stack in `docs/v1/runbooks/pr-stack-ship-v03.md`)
+
+**Target release:** `v0.1.3` — Sebastian gate (063); **NOT PUSHED** until explicit sign-off.
 
 Lane tickets (This Cycle): `/Users/seb/Library/CloudStorage/Dropbox/This Cycle/otto/tickets` — 001–009 + 016 **done**
 
-HQ conveyor: `~/Library/CloudStorage/Dropbox/HQ/Otto Tickets` — 001–018 **_Done**
+HQ conveyor: `~/Library/CloudStorage/Dropbox/HQ/Otto Tickets` — 001–018 **_Done**; 033–056 in flight on integration branch
 
 Smoke root: `/Users/seb/.codex/admin/`
 
 Shared verification (2026-06-13):
 
 ```sh
-cd /Users/seb/Code/otto/.letta/worktrees/ticket-004-receipt-contract-codex-20260613/apps/desktop
-bun test ./electron/*.test.ts   # 25 pass
-bun run typecheck               # pass
+cd /Users/seb/Code/otto
+bun run verify:v0
+bash scripts/release-gate.sh   # includes verify:v0 + desktop electron:typecheck
 ```
 
 ## Lane completion
@@ -39,35 +41,36 @@ Mapping: `tickets/000-hq-sync.md`
 
 | Surface | Check | Decision | Gap |
 |---|---|---|---|
-| Desktop | `[~]` | Ship as Proposed | No demo video; staging worktree only |
-| Runs/Receipts | `[x]` | Ship in v0.1 | Repo `receipts/otto-v01/*.md` not refreshed |
-| Charter | `[~]` | Ship as Proposed | Desktop surface yes; full extension CLI partial |
-| Standards | `[x]` | Ship in v0.1 | File-backed + surface; no demo |
+| Desktop | `[~]` | Ship as Proposed | Staging branch only; no demo refresh |
+| Runs/Receipts | `[x]` | Ship in v0.1 | Repo receipts refreshed for tickets/channels |
+| Charter | `[~]` | Ship as Proposed | Desktop surface yes; extension CLI partial |
+| Standards | `[x]` | Ship in v0.1 | File-backed + surface |
 | Practices | `[~]` | Ship as Proposed | Surface + specs; CLI path partial |
-| Routines | `[~]` | Ship as Proposed | Manual run yes; no automated executor |
+| Routines | `[~]` | Ship as Proposed | Manual run yes; automated executor partial |
 | Curation | `[x]` | Ship in v0.1 | Proposal + accept/reject/defer + canon ratify |
-| Autonomy | `[x]` | Ship in v0.1 | `v1/contracts/autonomy-policy.yaml` + desktop classifier |
-| Approvals | `[x]` | Ship in v0.1 | Records derived from Curation decisions + decision receipts |
-| Tickets | `[x]` | Ship in v0.1 | Compile + orchestrate in worktrees; desktop surface |
-| Skills | `[x]` | Ship in v0.1 | File-backed skill/**/SKILL.md loader + surface |
-| Knowledge | `[x]` | Ship in v0.1 | model-registry.yaml + Autonomy/ticket routing |
-| Channels | `[x]` | Ship in v0.1 | channels.yaml contract + surface; Discord bot deferred |
-| Otto Cloud (web) | `[ ]` | Proposed | Spec `docs/v1/otto-web-spec.md`; tickets 082–088; not implemented |
-| Worker orchestration | `[x]` | Ship in v0.1 | TicketOrchestrator spawns workers, worktrees, runs |
-| Release gate | `[ ]` | Blocked | No push/tag; Sebastian approval required |
+| Autonomy | `[x]` | Ship in v0.1 | Policy + classifier + knowledge routing read |
+| Approvals | `[x]` | Ship in v0.1 | Records from Curation + receipts |
+| Tickets | `[x]` | Ship in v0.1 | Desktop compile + orchestrate; `/ticket` CLI deferred |
+| Skills | `[x]` | Ship in v0.1 | SkillStore + desktop pane |
+| Knowledge | `[~]` | Ship as Proposed | Registry/routing **proposed**; store + pane ship |
+| Channels | `[x]` | Ship in v0.1 | File contract + pane; Discord bot deferred |
+| Otto Cloud (web) | `[ ]` | Proposed | Spec only |
+| Worker orchestration | `[x]` | Ship in v0.1 | TicketOrchestrator + worktrees |
+| Release gate | `[~]` | In progress | `scripts/release-gate.sh` + `verify:v0` green (134 unit tests, 2026-06-13); target tag `v0.1.3`; Sebastian sign-off + staging smoke still open |
 
-Detail per surface: `SHIP_CHECKS/*.md`
+Detail per surface: `docs/v1/SHIP_CHECKS/*.md`  
+PR split: `docs/v1/runbooks/pr-stack-ship-v03.md`
 
 ## Not shipped (honest)
 
 - Demos (`demo/out/*.mp4`) not refreshed for this wave
 - Public push / tag / npm publish
 - Live Discord bot runtime (channels file contract + approval gates only)
-- Intake, Paperclip adapters (lane 010–013) — optional next
+- Letta `/ticket` extension CLI parity (130)
 - Live `/Applications/otto.app` — staging worktree only
 
 ## Next
 
-1. Unpark HQ `019` Intake (or This Cycle `010`) when Sebastian chooses next adapter
-2. Commit worktree when approved
-3. Refresh repo demos/receipts (still gap)
+1. Sebastian reviews PR stack (054) and approves split merges
+2. Staging smoke on desktop panes + Culture CI block UX before 063 release sign-off
+3. Ratify knowledge routing or keep Proposed claims (055)

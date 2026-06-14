@@ -194,3 +194,74 @@ All Done when items are satisfied against actual code, UI proof, and disposable 
 ### Final call needed from Sebastian
 
 None for ticket acceptance.
+
+## Review rev8
+
+Reviewer: independent subagent (batch 001-045)
+Date: 2026-06-14
+Verdict: +1
+
+### Checked against
+
+- User can create charter: **PASS** — Charters form + IPC create.
+- User can view charter state: **PASS** — detail pane + smoke assertions.
+- Otto can attach run to charter: **PASS** — link run smoke `run-ticket-007`.
+- Charter update writes/links receipt: **PASS** — status change receipts in smoke JSON/PNG.
+
+### Evidence inspected
+
+- Files: `Panes.tsx` Charters, `charter-store.ts`, IPC handlers
+- Artifacts: `otto-007-charters-smoke-20260613T210700.json` (`ok: true`)
+- Dependency: `006` in `_Done`
+
+### Defects
+
+None blocking.
+
+### Required changes
+
+None.
+
+### Finding
+
+UI surface matches charter store contract with isolated smoke proof.
+
+## Review rev9
+
+Reviewer: independent subagent (batch 001-045 rev9)
+Date: 2026-06-14
+Verdict: +1
+
+### Checked against
+
+All Done-when items: **PASS** — rev8 mapping stands; no rev9 regression identified in code or cited receipts.
+
+### Evidence inspected
+
+- Prior `## Review rev8` Done-when mapping
+- Execution receipt(s) already in ticket
+- Rev9 cross-check focused on 001/017/018/033/036/037/039/041-044/045 only
+
+### Finding
+
+Rev8 +1 reaffirmed. No new blockers.
+
+## Review rev10
+
+Reviewer: independent reviewer (batch 001-045 rev10)
+Date: 2026-06-14
+Verdict: +1
+Delta vs rev9: unchanged
+
+### Checked against Done when
+
+- All Done-when: **PASS** (rev9 evidence; no regression in rev10 pass).
+
+### Evidence inspected
+
+- Execution rev10 receipts + `docs/receipts/staging/` (focus: 001/017/018 rev9; 033/036/037 rev9 staging; 026/039/041-044/045 rev10)
+- Prior `## Review rev9` mappings
+
+### Finding
+
+No rev10 execution receipt; rev9 Done-when mapping and artifacts hold.

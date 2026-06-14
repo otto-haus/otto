@@ -11,9 +11,10 @@ export type ThreadSummary = {
 
 export const ThreadList: React.FC<{
   threads: ThreadSummary[];
+  activeThreadId?: string | null;
   activeConversationId?: string | null;
   onSelect?: (thread: ThreadSummary) => void;
-}> = ({ threads, activeConversationId, onSelect }) => {
+}> = ({ threads, activeThreadId, activeConversationId, onSelect }) => {
   if (!threads.length) {
     return (
       <div className="sidebar__threads">
@@ -27,7 +28,9 @@ export const ThreadList: React.FC<{
       <div className="threadGroup">
         <div className="threadGroup__label">{threadCopy.groupLabel}</div>
         {threads.map((thread) => {
-          const active = !!activeConversationId && thread.conversationId === activeConversationId;
+          const active = activeThreadId
+            ? thread.id === activeThreadId
+            : !!activeConversationId && thread.conversationId === activeConversationId;
           return (
             <button
               key={thread.id}

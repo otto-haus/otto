@@ -105,3 +105,74 @@ bun run typecheck   # exit 0 (2026-06-13)
 - Cross-links **076**, **077**, **079**, **020**, **065** present in spec References + dependencies table.
 - Umbrella link to **092** `agent-control-plane-spec.md` at line 5 — good layering.
 - **083–088** correctly remain parked; SHIP_STATUS honest **Proposed**.
+
+## Review rev8
+
+Reviewer: Independent Otto reviewer (Cursor)
+Date: 2026-06-14
+Verdict: +1
+Move to _Done?: Yes
+
+### Checked against Done when
+
+- `docs/v1/otto-web-spec.md` merged: **Pass** — authority split, mermaid, D1/R2/Workers, phases **083–088**, cross-links present
+- `000-index.md` + `000-parallel-map.md` list **082–088**: **Pass** — index rows 177–185
+- No contradiction with `AGENTS.md`: **Pass** — Letta owns memory/secrets; Otto stores flags not secret values
+- Reviewer +1: **Pass** (this review)
+
+### Evidence inspected
+
+- Files: `docs/v1/otto-web-spec.md`, `docs/v1/SHIP_STATUS.md`, `planning/hq-tickets/000-index.md`
+- Commands: `bun run verify:v0` → 5 passed / 0 failed; `test -f docs/v1/otto-web-spec.md` exit 0
+
+### Finding
+
+Doc-only spec ticket; all Done-when items mapped. Implementation **083–088** correctly parked.
+
+## Review rev9
+
+Reviewer: Independent Otto reviewer (Cursor)
+Date: 2026-06-14
+Verdict: +1
+Move to _Done?: Yes
+Delta vs rev8: unchanged — reaffirm
+
+### Checked against Done when
+
+- `docs/v1/otto-web-spec.md` merged: **Pass** — spec present; authority split, mermaid, D1/R2/Workers, phases **083–088**
+- `000-index.md` + `000-parallel-map.md` list **082–088**: **Pass**
+- No contradiction with `AGENTS.md`: **Pass** — Letta owns memory/secrets
+- Reviewer +1: **Pass** (this review)
+
+### Evidence inspected
+
+- Files: `docs/v1/otto-web-spec.md`, `planning/hq-tickets/000-index.md`, `docs/v1/SHIP_STATUS.md`
+- Commands: `bun run verify:v0` → 5 passed / 0 failed
+
+### Finding
+
+No rev9 execution delta required for doc spec. rev8 +1 stands. +1.
+
+## Review rev10
+
+Reviewer: Independent Otto reviewer (Cursor)
+Date: 2026-06-14
+Verdict: +1
+Move to _Done?: Yes
+Delta vs rev9: unchanged — reaffirm
+
+### Checked against Done when
+
+- `docs/v1/otto-web-spec.md` merged: **Pass**
+- `000-index.md` + `000-parallel-map.md` list **082–088**: **Pass**
+- No contradiction with `AGENTS.md`: **Pass**
+- Reviewer +1: **Pass** (this review)
+
+### Evidence inspected
+
+- Files: `docs/v1/otto-web-spec.md`, `planning/hq-tickets/000-index.md`
+- Commands: `bun run verify:v0` → 5 passed / 0 failed
+
+### Finding
+
+Doc-only; no rev10 delta. +1.

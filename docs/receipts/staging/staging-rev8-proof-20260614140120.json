@@ -1,0 +1,199 @@
+{
+  "ok": true,
+  "runId": "20260614140120",
+  "gitHead": "fff0152",
+  "stagingApp": "/Applications/otto-staging.app",
+  "cdpPort": 9445,
+  "tickets": {
+    "033": {
+      "widths": {
+        "640": {
+          "chat": {
+            "horizontalScroll": false,
+            "scrollWidth": 640,
+            "clientWidth": 640
+          },
+          "standards": {
+            "horizontalScroll": false,
+            "scrollWidth": 640,
+            "clientWidth": 640
+          },
+          "settings": {
+            "horizontalScroll": false,
+            "scrollWidth": 640,
+            "clientWidth": 640
+          }
+        },
+        "900": {
+          "chat": {
+            "horizontalScroll": false,
+            "scrollWidth": 900,
+            "clientWidth": 900
+          },
+          "standards": {
+            "horizontalScroll": false,
+            "scrollWidth": 900,
+            "clientWidth": 900
+          },
+          "settings": {
+            "horizontalScroll": false,
+            "scrollWidth": 900,
+            "clientWidth": 900
+          }
+        },
+        "1100": {
+          "chat": {
+            "horizontalScroll": false,
+            "scrollWidth": 1100,
+            "clientWidth": 1100
+          },
+          "standards": {
+            "horizontalScroll": false,
+            "scrollWidth": 1100,
+            "clientWidth": 1100
+          },
+          "settings": {
+            "horizontalScroll": false,
+            "scrollWidth": 1100,
+            "clientWidth": 1100
+          }
+        },
+        "1280": {
+          "chat": {
+            "horizontalScroll": false,
+            "scrollWidth": 1280,
+            "clientWidth": 1280
+          },
+          "standards": {
+            "horizontalScroll": false,
+            "scrollWidth": 1280,
+            "clientWidth": 1280
+          },
+          "settings": {
+            "horizontalScroll": false,
+            "scrollWidth": 1280,
+            "clientWidth": 1280
+          }
+        }
+      },
+      "ok": true
+    },
+    "036": {
+      "ok": true,
+      "proposalId": "prop_20260614_3649c330",
+      "status": "deferred",
+      "pendingCount": 1,
+      "deferredCount": 5,
+      "deferredSummary": "rev8 staging proof — defer filter visibility",
+      "pendingListHasDeferred": false,
+      "decidedListHasDeferred": true
+    },
+    "037": {
+      "skippedPanelVisible": true,
+      "skippedText": "LOADER\n1 malformed file skipped\nVALIDATION\n/Users/seb/Code/otto/practices/_staging-proof-malformed/practice.yaml\nFlow sequence in block collection must be sufficiently indented and end with a ] at line 3, column 1: slug: [invalid yaml ^",
+      "ok": true
+    },
+    "048": {
+      "ok": true,
+      "proposalId": "prop_20260614_d1770c38",
+      "receiptId": "receipt-629fc349-58e6-4af9-a100-f6067806ca7d",
+      "summary": "Always cite message evidence when proposing from Chat correction.",
+      "status": "needs_approval",
+      "visibleInCuration": true
+    },
+    "049": {
+      "compileCmd": "compile ticket rev8-proof Staging rev8 ticket orchestration proof capture",
+      "transcriptHasCompile": true,
+      "transcriptSnippet": "COMMAND STATION\nWhat needs you\n2\nCuration\nPending proposals\n3\nRecent proof\nLatest receipts\n4\nTickets\nOpen worker slices\n7\nDoors\nAwaiting approval\n→\nConstitution\nSource of culture\n→\nChangelog\nWhat changed\nOTTO\n\nCompiled ticket_rev8-proof. Receipt: receipt-4df505e4-e1dd-4c27-b8ec-620d659ee7b2 Packet: /Users/seb/.codex/admin/otto-staging/otto-home/tickets/rev8-proof/worker-packet.md\n\nPropose from correction\nCorrect this",
+      "ok": true
+    },
+    "050": {
+      "candorSelected": true,
+      "conflictBannerVisible": true,
+      "detailText": "CONFLICT · CASE LAW\ncandor-kindness\n\nCase law applies — truth in substance, kindness in delivery\n\nTie-breaker: truth in substance, kindness in delivery\n\n**Candor wins on *what* is said; Kindness governs *how*.** They are not symmetric: you may\nnever trade away the truth, but you must always pay the cost of delivering it well.\nprecedents/2026-06-13-candor-vs-kindness.md\nSTANDARD DETAIL\nCandor + Kindness\nACTIVE\n\nSay the true, useful thing early — hard on the work, soft on the person.\n\nSCHEMA\notto.standard.v1\nSLUG\ncandor-kindness\nVERSION\n0.1\nFILE\n/Users/seb/Code/otto/standards/standards/candor-kindness.md\nUNDER PRESSURE · DO\nsurface the blocker or disagreement now, not later\nlead with the real issue and a recommendation\ncritique the work, protect the person\npair every gap with a path to the bar\nUNDER PRESSURE · REFUSE\nfalse reassurance / burying the lede to be polite\nsilent disagreement that ships anyway\nbluntness aimed at the person\nbluntness excused as \"just being honest\"\nEVIDENCE\nblocker raised (timestamped) before the deadline\nrecorded disagreement / dissent note\nfeedback specific to the artifact + a path-to-fix\nCITATION PATH\n\nReceipts cite this file by slug and path.\n\ncandor-kindness · /Users/seb/Code/otto/standards/standards/candor-kindness.md",
+      "ok": true
+    },
+    "057": {
+      "systemGroupVisible": true,
+      "labels": [
+        "Skills",
+        "Knowledge",
+        "Tickets",
+        "Channels"
+      ],
+      "ok": true
+    },
+    "081": {
+      "noCliString": true,
+      "noMemFsString": true,
+      "runtimeReady": true,
+      "workingPulse": true,
+      "ok": true
+    }
+  },
+  "screenshots": {
+    "033_1280_chat": "/Users/seb/Code/otto/docs/receipts/staging/033-resize-1280-chat.png",
+    "033_1280_standards": "/Users/seb/Code/otto/docs/receipts/staging/033-resize-1280-standards.png",
+    "033_1280_settings": "/Users/seb/Code/otto/docs/receipts/staging/033-resize-1280-settings.png",
+    "033_1100_chat": "/Users/seb/Code/otto/docs/receipts/staging/033-resize-1100-chat.png",
+    "033_1100_standards": "/Users/seb/Code/otto/docs/receipts/staging/033-resize-1100-standards.png",
+    "033_1100_settings": "/Users/seb/Code/otto/docs/receipts/staging/033-resize-1100-settings.png",
+    "033_900_chat": "/Users/seb/Code/otto/docs/receipts/staging/033-resize-900-chat.png",
+    "033_900_standards": "/Users/seb/Code/otto/docs/receipts/staging/033-resize-900-standards.png",
+    "033_900_settings": "/Users/seb/Code/otto/docs/receipts/staging/033-resize-900-settings.png",
+    "033_640_chat": "/Users/seb/Code/otto/docs/receipts/staging/033-resize-640-chat.png",
+    "033_640_standards": "/Users/seb/Code/otto/docs/receipts/staging/033-resize-640-standards.png",
+    "033_640_settings": "/Users/seb/Code/otto/docs/receipts/staging/033-resize-640-settings.png",
+    "036_pending": "/Users/seb/Code/otto/docs/receipts/staging/036-curation-pending-filter.png",
+    "036_decided": "/Users/seb/Code/otto/docs/receipts/staging/036-curation-deferred-decided-filter.png",
+    "037": "/Users/seb/Code/otto/docs/receipts/staging/037-practices-skipped-loader.png",
+    "048": "/Users/seb/Code/otto/docs/receipts/staging/048-correction-proposal-curation.png",
+    "049": "/Users/seb/Code/otto/docs/receipts/staging/049-chat-ticket-compile.png",
+    "050": "/Users/seb/Code/otto/docs/receipts/staging/050-precedent-conflict-banner.png",
+    "057": "/Users/seb/Code/otto/docs/receipts/staging/057-system-nav-distinct-icons.png",
+    "057_skills": "/Users/seb/Code/otto/docs/receipts/staging/057-nav-skills.png",
+    "057_knowledge": "/Users/seb/Code/otto/docs/receipts/staging/057-nav-knowledge.png",
+    "057_tickets": "/Users/seb/Code/otto/docs/receipts/staging/057-nav-tickets.png",
+    "057_channels": "/Users/seb/Code/otto/docs/receipts/staging/057-nav-channels.png",
+    "081_before": "/Users/seb/Code/otto/docs/receipts/staging/081-chat-shell-before-reference.png",
+    "081_after": "/Users/seb/Code/otto/docs/receipts/staging/081-chat-shell-craft-product-polish.png"
+  },
+  "checks": {
+    "runtimeReady": true,
+    "notDefaultConversation": true
+  },
+  "runtimeStatus": {
+    "ready": true,
+    "code": "ready",
+    "agentId": "agent-local-d8e35a2a-a89f-45dd-b117-5eae5df8c8f2",
+    "baseUrl": "http://127.0.0.1:51398",
+    "discoverySource": "otto config/env",
+    "conversationId": "local-conv-bd987957-7a51-4507-805e-e8337db66872",
+    "model": "chatgpt-plus-pro/gpt-5.5",
+    "modelHandle": null,
+    "effort": "max",
+    "sessionMode": "smoke",
+    "memfsEnabled": false,
+    "tools": [
+      "Bash",
+      "TaskOutput",
+      "Edit",
+      "EnterPlanMode",
+      "ExitPlanMode",
+      "Glob",
+      "Grep",
+      "TaskStop",
+      "memory",
+      "Read",
+      "Skill",
+      "Task",
+      "TodoWrite",
+      "Write"
+    ],
+    "transportMode": "sdk",
+    "effectiveTransport": "sdk subprocess",
+    "transportFallbackReason": null,
+    "cliPath": "/Applications/otto-staging.app/Contents/Resources/app/node_modules/@letta-ai/letta-code/letta.js",
+    "cliResolved": true
+  }
+}

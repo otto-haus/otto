@@ -1,0 +1,20 @@
+{
+  "runId": "20260614070138",
+  "gitHead": "fff0152",
+  "baseUrl": "http://127.0.0.1:4321",
+  "viewport": {
+    "width": 1280,
+    "height": 720
+  },
+  "command": "bash site/deploy-staging.sh + playwright capture",
+  "screenshots": {
+    "home065": "/Users/seb/Code/otto/docs/receipts/staging/065-home-1280-20260614070138.png",
+    "pricing115": "/Users/seb/Code/otto/docs/receipts/staging/115-pricing-1280-20260614070138.png"
+  },
+  "checks": {
+    "homeLoaded": true,
+    "pricingLoaded": true
+  },
+  "lighthouse": "/tmp/otto-lh-065.json",
+  "honestStatus": "local preview only — apex DNS pending Sebastian"
+}

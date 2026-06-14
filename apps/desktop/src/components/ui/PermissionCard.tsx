@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { permissionCopy } from '../../copy/surfaces';
+import { chatCopy, permissionCopy } from '../../copy/surfaces';
 
 export type PermissionRequestView = {
   requestId: string;
@@ -14,7 +14,8 @@ export const PermissionCard: React.FC<{
   request: PermissionRequestView;
   busy?: boolean;
   onDecide: (decision: PermissionDecision, denyMessage?: string) => void;
-}> = ({ request, busy = false, onDecide }) => {
+  onCorrectThis?: () => void;
+}> = ({ request, busy = false, onDecide, onCorrectThis }) => {
   const [denyReason, setDenyReason] = useState('');
 
   return (
@@ -49,6 +50,17 @@ export const PermissionCard: React.FC<{
         >
           {permissionCopy.deny}
         </button>
+        {onCorrectThis ? (
+          <button
+            type="button"
+            className="btn btn--ghost-d"
+            disabled={busy}
+            title={chatCopy.correctThisHint}
+            onClick={onCorrectThis}
+          >
+            {permissionCopy.correctThis}
+          </button>
+        ) : null}
       </div>
     </div>
   );

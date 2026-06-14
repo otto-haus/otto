@@ -1,14 +1,40 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import type { ThreadSummary } from '../components/ui/ThreadList';
-import type { ChatMsg } from '../runtime';
-import { archiveCurrentThread, readThreads } from './thread-index';
+import { isElectron, ottoApi } from '../runtime';
 
-export function useChatThreads(conversationId: string | null | undefined, messages: ChatMsg[]) {
-  const [threads, setThreads] = useState<ThreadSummary[]>(() => readThreads());
+function mapThread(thread: {
+  id: string;
+  lettaConversationId: string | null;
+  title: string;
+  updatedAt: string;
+  pinned?: boolean;
+  archived?: boolean;
+}): ThreadSummary {
+  return {
+    id: thread.id,
+    conversationId: thread.lettaConversationId,
+    title: thread.title,
+    updatedAt: Date.parse(thread.updatedAt) || Date.now(),
+  };
+}
 
-  const archiveForNewChat = useCallback(() => {
-    setThreads((prev) => archiveCurrentThread(prev, conversationId, messages));
-  }, [conversationId, messages]);
+export function useChatThreads(activeThreadId?: string | null) {
+  const [threads, setThreads] = useState<ThreadSummary[]>([]);
+  const [showArchived, setShowArchived] = useState(false);
 
-  return { threads, archiveForNewChat, activeConversationId: conversationId ?? null };
+  const refresh = useCallback(async () => {
+    const api = ottoApi();
+    if (!api || !isElectron()) {
+      setThreads([]);
+      return;
+    }
+    const result = await api.threads.list(showArchived);
+    setThreads(result.threads.map(mapThread));
+  }, [showArchived]);
+
+  useEffect(() => {
+    void refresh();
+  }, [refresh, activeThreadId]);
+
+  return { threads, showArchived, setShowArchived, refresh };
 }

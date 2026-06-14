@@ -70,6 +70,8 @@ export const v01Cutline: Record<string, "ship" | "proposed" | "deferred"> = {
   OttoV01Desktop: "ship",
   OttoV01DesktopWalkthrough: "ship",
   OttoV01Knowledge: "deferred",
+  OttoV01Curation: "proposed",
+  OttoV01Tickets: "ship",
 };
 
 export const features: Feature[] = [
@@ -302,3 +304,47 @@ export const features: Feature[] = [
       "Built, not Shipped: a proposed Knowledge surface, clearly marked, routing unratified.",
   },
 ];
+
+export const curationFeature: Feature = {
+  id: "OttoV01Curation",
+  file: "otto-v01-curation",
+  name: "Curation",
+  kicker: "the keystone gate",
+  tagline:
+    "Corrections become proposals. Accept ratifies canon; reject and defer leave files unchanged.",
+  termTitle: "curation — otto",
+  lines: [
+    L("head", "Curation inbox — proposals queue"),
+    L("cmd", "Chat → Correct this → propose refinement"),
+    L("file", "~/.otto/curation/proposals/   needs_approval | ratified | rejected"),
+    L("good", "Accept ratifies into standards/ or practices/"),
+    L("gate", "Reject and defer leave canon unchanged — no auto-ratification"),
+    L("dim", "no fake curation loop · no silent memory writes in v0.1"),
+    L("out", "Curation is the keystone — one gate decides what compounds"),
+    L("good", "file-backed proposals · honest empty state when queue is clear"),
+  ],
+  status: { built: true, tested: "manual", tried: false, approved: false },
+  proves: "Curation routes corrections through human ratification — never auto-applies.",
+};
+
+export const ticketsFeature: Feature = {
+  id: "OttoV01Tickets",
+  file: "otto-v01-tickets",
+  name: "Tickets",
+  kicker: "bounded worker slices",
+  tagline:
+    "Compile messy work into sharp packets. Main Otto orchestrates; workers execute with receipts.",
+  termTitle: "tickets — otto",
+  lines: [
+    L("head", "Ticketcraft — compile → orchestrate → receipt"),
+    L("cmd", '/ticket compile "add OTTO_HOME env fallback"'),
+    L("dim", "allowed_files · acceptance · verify cmd · one-way-door list"),
+    L("file", "~/.otto/tickets/<id>/   packet.yaml · status · receipts/"),
+    L("cmd", "/ticket orchestrate <id>"),
+    L("good", "worker spawns in isolated worktree; status tracked on disk"),
+    L("gate", "RED doors: send · spend · deploy · merge · push → explicit approval"),
+    L("out", "receipts prove worker output — no fake done without proof"),
+  ],
+  status: { built: true, tested: true, tried: false, approved: false },
+  proves: "Tickets turn intent into bounded, receipt-backed worker slices.",
+};

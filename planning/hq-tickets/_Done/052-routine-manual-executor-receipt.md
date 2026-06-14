@@ -106,3 +106,43 @@ Core loop is real: manual routine trial → receipt artifact → visible UI conf
 ### Final call needed from Sebastian
 
 None.
+
+## Review rev8
+
+Reviewer: Independent Otto reviewer (rev8 batch)
+Date: 2026-06-14
+Verdict: +1
+Move to _Done?: Yes
+
+### Checked against Done when
+
+- All four Done-when items: **Pass** — prior reviewer staging receipt + `routine-store.test.ts` 3/3 (re-read 2026-06-14)
+
+### Finding
+
+Full receipt path proven; reconfirmed +1.
+
+## Review rev9
+
+Reviewer: Independent Otto reviewer (rev9 batch)
+Date: 2026-06-14
+Verdict: +1
+Delta vs rev8: reconfirm
+
+### Evidence inspected
+
+- Commands: `bun run verify:v0` → 5/5 (163 unit tests)
+
+### Finding
+
+rev8 +1 stands; no rev9 delta.
+## Review rev10
+
+Reviewer: Independent Otto reviewer (Cursor)
+Date: 2026-06-14
+Verdict: +1
+Delta vs rev9: reconfirmed
+
+### Finding
+
+Rev9 +1 stands. Reconfirmed +1.

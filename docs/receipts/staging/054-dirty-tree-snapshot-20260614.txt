@@ -1,0 +1,329 @@
+## ship/v0.3-integration...origin/ship/v0.3-integration
+ M AGENTS.md
+ M RELEASE_CHECKLIST.md
+ M SHIP_CHECKS/README.md
+ M SHIP_CHECKS/channels.md
+ M SHIP_CHECKS/knowledge.md
+ M SHIP_CHECKS/skills.md
+ M SHIP_CHECKS/tickets.md
+ M apps/desktop/electron-builder.yml
+ M apps/desktop/electron.vite.config.ts
+ M apps/desktop/electron/autonomy-store.test.ts
+ M apps/desktop/electron/autonomy-store.ts
+ M apps/desktop/electron/chat-ticket-commands.test.ts
+ M apps/desktop/electron/check-runner.test.ts
+ M apps/desktop/electron/check-runner.ts
+ M apps/desktop/electron/check-store.ts
+ M apps/desktop/electron/config-store.ts
+ M apps/desktop/electron/ipc.ts
+ M apps/desktop/electron/onboarding-step.test.ts
+ M apps/desktop/electron/onboarding-storage.test.ts
+ M apps/desktop/electron/preload.ts
+ M apps/desktop/electron/proposal-store.test.ts
+ M apps/desktop/electron/proposal-store.ts
+ M apps/desktop/electron/routine-store.test.ts
+ M apps/desktop/electron/routine-store.ts
+ M apps/desktop/electron/runtime-transport/letta-discovery.ts
+ M apps/desktop/electron/runtime-transport/runtime-common.ts
+ M apps/desktop/electron/runtime-transport/sdk-subprocess-transport.ts
+ M apps/desktop/electron/runtime-transport/ws-runtime-transport.ts
+ M apps/desktop/electron/shared/types.ts
+ M apps/desktop/electron/standard-store.test.ts
+ M apps/desktop/electron/standard-store.ts
+ M apps/desktop/electron/ticket-store.test.ts
+ M apps/desktop/package.json
+ M apps/desktop/scripts/deploy-staging.sh
+ M apps/desktop/src/App.tsx
+ M apps/desktop/src/Onboarding.tsx
+ M apps/desktop/src/chat/ProposeCorrectionModal.tsx
+ M apps/desktop/src/chat/useChatThreads.ts
+ M apps/desktop/src/components/Sidebar.tsx
+ M apps/desktop/src/components/ui/PermissionCard.tsx
+ M apps/desktop/src/components/ui/StatusPill.tsx
+ M apps/desktop/src/components/ui/ThreadList.tsx
+ M apps/desktop/src/components/ui/index.ts
+ M apps/desktop/src/copy/surfaces.ts
+ D apps/desktop/src/onboarding-sample-receipt.ts
+ M apps/desktop/src/onboarding-storage.ts
+ M apps/desktop/src/runtime.ts
+ M apps/desktop/src/surfaces/Chat.tsx
+ M apps/desktop/src/surfaces/ChecksSurfaceShell.tsx
+ M apps/desktop/src/surfaces/Panes.tsx
+ M autonomy/policy.yaml
+ M bun.lock
+ M demo/README.md
+ M demo/render-all.sh
+ M demo/src/Root.tsx
+ M demo/src/features.tsx
+ M docs/knowledge.md
+ M docs/marketing-site.md
+ M docs/v1/SHIP_CHECKS/channels.md
+ M docs/v1/SHIP_CHECKS/knowledge.md
+ M docs/v1/SHIP_CHECKS/skills.md
+ M docs/v1/SHIP_CHECKS/tickets.md
+ M docs/v1/SHIP_STATUS.md
+ M docs/v1/contracts/adapter-seam.md
+ M docs/v1/otto-web-spec.md
+ M docs/v3/README.md
+ M knowledge/ai-frontier/capability-notes.md
+ M knowledge/ai-frontier/model-registry.yaml
+ M package.json
+ M packages/core/src/check.ts
+ M packages/core/src/types.ts
+ M packages/practices/src/index.ts
+ M planning/hq-tickets/000-index.md
+ M planning/hq-tickets/000-workflow.md
+ D planning/hq-tickets/039-cathedral-ws-runtime-transport.md
+ D planning/hq-tickets/041-cognee-local-home.md
+ D planning/hq-tickets/042-cognee-mcp-recall-bridge.md
+ D planning/hq-tickets/043-cognee-capture-otto-canon.md
+ D planning/hq-tickets/044-cognee-knowledge-graph-surface.md
+ D planning/hq-tickets/046-conversation-list-thread-switcher.md
+ D planning/hq-tickets/047-letta-memory-read-surface.md
+ D planning/hq-tickets/050-standards-precedent-conflict-path.md
+ D planning/hq-tickets/051-automated-review-gate-no-fake-done.md
+ D planning/hq-tickets/053-practice-runtime-charter-review-field-note.md
+ D planning/hq-tickets/058-craft-runtime-robustness-pack.md
+ D planning/hq-tickets/059-command-station-dashboard-thin.md
+ D planning/hq-tickets/060-worker-autonomous-runtime-loop.md
+ D planning/hq-tickets/061-practice-mining-observe-loop.md
+ D planning/hq-tickets/062-ai-frontier-review-routine-executor.md
+ D planning/hq-tickets/063-release-lane-v01-sebastian-gate.md
+ D planning/hq-tickets/064-remotion-demo-asset-refresh.md
+ D planning/hq-tickets/066-skills-capability-library-seed.md
+ D planning/hq-tickets/068-pgvector-local-recall-store.md
+ D planning/hq-tickets/076-embedded-letta-one-app-distribution.md
+ D planning/hq-tickets/078-provider-capability-mirror-settings.md
+ D planning/hq-tickets/080-onboarding-one-app-zero-setup.md
+ D planning/hq-tickets/081-chat-shell-craft-product-polish.md
+ D planning/hq-tickets/115-marketing-pricing-pilot-page.md
+ D planning/hq-tickets/116-pilot-offer-claim-boundary.md
+ D planning/hq-tickets/119-primary-agent-default-ux.md
+ D planning/hq-tickets/121-behavior-changelog-weekly-digest.md
+ D planning/hq-tickets/122-constitution-file-source-of-culture.md
+ D planning/hq-tickets/123-correction-button-product-loop.md
+ D planning/hq-tickets/124-receipts-first-class-ui.md
+ D planning/hq-tickets/125-agent-culture-export-portable-bundle.md
+ D planning/hq-tickets/126-ratification-moment-behavior-updated.md
+ D planning/hq-tickets/127-command-station-culture-home.md
+ D planning/hq-tickets/128-memory-writeback-gate-ui.md
+ D planning/hq-tickets/129-ci-verify-main-gate.md
+ D planning/hq-tickets/131-check-contract-culture-ci.md
+ D planning/hq-tickets/132-compile-standard-to-check.md
+ D planning/hq-tickets/133-check-runtime-seed-checks.md
+ D planning/hq-tickets/134-culture-ci-ui-checks-surface.md
+ D planning/hq-tickets/135-culture-ci-demo-vertical-slice.md
+ M planning/hq-tickets/AGENTS.md
+ M planning/hq-tickets/_Done/001-settings-letta-readiness.md
+ M planning/hq-tickets/_Done/002-chat-real-adapter-path.md
+ M planning/hq-tickets/_Done/003-chat-empty-error-loading-states.md
+ M planning/hq-tickets/_Done/004-receipt-contract.md
+ M planning/hq-tickets/_Done/005-receipts-surface.md
+ M planning/hq-tickets/_Done/006-charter-contract.md
+ M planning/hq-tickets/_Done/007-charters-surface.md
+ M planning/hq-tickets/_Done/008-standards-file-backed-canon.md
+ M planning/hq-tickets/_Done/009-standards-surface.md
+ M planning/hq-tickets/_Done/010-practices-contract.md
+ M planning/hq-tickets/_Done/011-practices-surface.md
+ M planning/hq-tickets/_Done/012-routines-contract.md
+ M planning/hq-tickets/_Done/013-routines-surface.md
+ M planning/hq-tickets/_Done/014-curation-proposal-contract.md
+ M planning/hq-tickets/_Done/015-curation-inbox.md
+ M planning/hq-tickets/_Done/016-curation-decisions.md
+ M planning/hq-tickets/_Done/017-autonomy-policy.md
+ M planning/hq-tickets/_Done/018-next-layer-readiness-gate.md
+ M planning/hq-tickets/_Done/026-icon-set.md
+ M planning/hq-tickets/_Done/027-motion-spec-section.md
+ M planning/hq-tickets/_Done/028-onboarding-design.md
+ M planning/hq-tickets/_Done/029-collapsed-sidebar-fix.md
+ M planning/hq-tickets/_Done/030-wire-approved-icons.md
+ M planning/hq-tickets/_Done/031-sidebar-logo-alignment.md
+ M planning/hq-tickets/_Done/032-onboarding-first-run.md
+ M planning/hq-tickets/_Done/033-bug-desktop-responsive-resize.md
+ M planning/hq-tickets/_Done/034-bug-charter-completion-ac-gate.md
+ M planning/hq-tickets/_Done/035-bug-ticket-orchestrate-existing.md
+ M planning/hq-tickets/_Done/036-bug-curation-deferred-filter.md
+ M planning/hq-tickets/_Done/037-bug-standards-skipped-visible.md
+ M planning/hq-tickets/_Done/038-bug-readiness-json-stale.md
+ M planning/hq-tickets/_Done/040-cognee-contract-adapter-seam.md
+ M planning/hq-tickets/_Done/052-routine-manual-executor-receipt.md
+ M planning/hq-tickets/_Done/057-system-nav-distinct-icons.md
+ M planning/hq-tickets/_Done/070-bug-onboarding-stale-chat-messages.md
+ M planning/hq-tickets/_Done/082-otto-cloud-architecture-spec.md
+ M planning/hq-tickets/_Done/092-agent-control-plane-cathedral-spec.md
+ D planning/hq-tickets/_InReview/045-chat-permission-modal-abort-fix.md
+ D planning/hq-tickets/_InReview/048-chat-propose-from-correction.md
+ D planning/hq-tickets/_InReview/049-chat-ticket-orchestration-commands.md
+ D planning/hq-tickets/_InReview/054-repo-hygiene-commit-split-prs.md
+ D planning/hq-tickets/_InReview/055-knowledge-baseline-ship.md
+ D planning/hq-tickets/_InReview/056-system-surfaces-ship-skills-tickets-channels.md
+ D planning/hq-tickets/_InReview/065-marketing-site-otto-haus.md
+ D planning/hq-tickets/_InReview/067-onepagers-surface-alignment.md
+ D planning/hq-tickets/_InReview/069-bug-onboarding-welcome-skipped-when-connected.md
+ D planning/hq-tickets/_InReview/071-bug-onboarding-missing-receipt-step-sample.md
+ D planning/hq-tickets/_InReview/072-bug-onboarding-receipts-cta-wrong-dock.md
+ D planning/hq-tickets/_InReview/073-bug-onboarding-dock-ux-gaps.md
+ D planning/hq-tickets/_InReview/079-runtime-transport-mode-matrix-doc.md
+ D planning/hq-tickets/_InReview/091-live-vs-staging-deploy-runbook.md
+ M planning/hq-tickets/_Parked/077-letta-cloud-remote-mode.md
+ M planning/hq-tickets/_workflow-run-ticket.md
+ M receipts/otto-v01/README.md
+ M receipts/otto-v01/knowledge.md
+ M receipts/otto-v01/skills.md
+ M scripts/release-gate.sh
+ M site/index.html
+ M standards/standards/quality.md
+?? SHIP_CHECKS/cognee.md
+?? apps/desktop/electron/ai-frontier-review-executor.test.ts
+?? apps/desktop/electron/ai-frontier-review-executor.ts
+?? apps/desktop/electron/behavior-changelog.test.ts
+?? apps/desktop/electron/behavior-changelog.ts
+?? apps/desktop/electron/chat-message-keys.test.ts
+?? apps/desktop/electron/check-compiler.test.ts
+?? apps/desktop/electron/check-run-log.test.ts
+?? apps/desktop/electron/check-run-log.ts
+?? apps/desktop/electron/cognee-store.test.ts
+?? apps/desktop/electron/cognee-store.ts
+?? apps/desktop/electron/config-store.test.ts
+?? apps/desktop/electron/constitution-store.test.ts
+?? apps/desktop/electron/constitution-store.ts
+?? apps/desktop/electron/culture-export.test.ts
+?? apps/desktop/electron/culture-export.ts
+?? apps/desktop/electron/memory-store.test.ts
+?? apps/desktop/electron/memory-store.ts
+?? apps/desktop/electron/pgvector-store.test.ts
+?? apps/desktop/electron/pgvector-store.ts
+?? apps/desktop/electron/practice-metrics-store.ts
+?? apps/desktop/electron/practice-mining.test.ts
+?? apps/desktop/electron/practice-mining.ts
+?? apps/desktop/electron/practice-runner.test.ts
+?? apps/desktop/electron/practice-runner.ts
+?? apps/desktop/electron/provider-mirror.test.ts
+?? apps/desktop/electron/provider-mirror.ts
+?? apps/desktop/electron/runtime-transport/runtime-common.test.ts
+?? apps/desktop/electron/runtime-transport/runtime-supervisor.test.ts
+?? apps/desktop/electron/runtime-transport/sdk-subprocess-transport.test.ts
+?? apps/desktop/electron/runtime-transport/ws-runtime-transport.test.ts
+?? apps/desktop/electron/thread-store.test.ts
+?? apps/desktop/electron/thread-store.ts
+?? apps/desktop/electron/worker-runner.test.ts
+?? apps/desktop/electron/worker-runner.ts
+?? apps/desktop/src/chat/message-storage.ts
+?? apps/desktop/src/components/ui/ReceiptInlineCard.tsx
+?? config/
+?? demo/src/OttoV01Curation.tsx
+?? demo/src/OttoV01Tickets.tsx
+?? docs/brand/
+?? docs/cognee.md
+?? docs/marketing/
+?? docs/onepagers/charters-onepager.html
+?? docs/onepagers/checks-onepager.html
+?? docs/onepagers/receipts-onepager.html
+?? docs/pgvector.md
+?? docs/receipts/
+?? docs/runtime-transport.md
+?? docs/v1/adr/
+?? docs/v1/agent-control-plane-spec.md
+?? docs/v1/constitution-schema.md
+?? docs/v1/demo-culture-ci.md
+?? docs/v1/runbooks/
+?? extension/field-note.ts
+?? extension/review.ts
+?? infra/
+?? knowledge/_receipts/
+?? planning/hq-tickets/_Done/039-cathedral-ws-runtime-transport.md
+?? planning/hq-tickets/_Done/041-cognee-local-home.md
+?? planning/hq-tickets/_Done/042-cognee-mcp-recall-bridge.md
+?? planning/hq-tickets/_Done/043-cognee-capture-otto-canon.md
+?? planning/hq-tickets/_Done/044-cognee-knowledge-graph-surface.md
+?? planning/hq-tickets/_Done/045-chat-permission-modal-abort-fix.md
+?? planning/hq-tickets/_Done/046-conversation-list-thread-switcher.md
+?? planning/hq-tickets/_Done/047-letta-memory-read-surface.md
+?? planning/hq-tickets/_Done/048-chat-propose-from-correction.md
+?? planning/hq-tickets/_Done/049-chat-ticket-orchestration-commands.md
+?? planning/hq-tickets/_Done/050-standards-precedent-conflict-path.md
+?? planning/hq-tickets/_Done/051-automated-review-gate-no-fake-done.md
+?? planning/hq-tickets/_Done/053-practice-runtime-charter-review-field-note.md
+?? planning/hq-tickets/_Done/054-repo-hygiene-commit-split-prs.md
+?? planning/hq-tickets/_Done/055-knowledge-baseline-ship.md
+?? planning/hq-tickets/_Done/056-system-surfaces-ship-skills-tickets-channels.md
+?? planning/hq-tickets/_Done/058-craft-runtime-robustness-pack.md
+?? planning/hq-tickets/_Done/059-command-station-dashboard-thin.md
+?? planning/hq-tickets/_Done/060-worker-autonomous-runtime-loop.md
+?? planning/hq-tickets/_Done/061-practice-mining-observe-loop.md
+?? planning/hq-tickets/_Done/062-ai-frontier-review-routine-executor.md
+?? planning/hq-tickets/_Done/063-release-lane-v01-sebastian-gate.md
+?? planning/hq-tickets/_Done/064-remotion-demo-asset-refresh.md
+?? planning/hq-tickets/_Done/065-marketing-site-otto-haus.md
+?? planning/hq-tickets/_Done/066-skills-capability-library-seed.md
+?? planning/hq-tickets/_Done/067-onepagers-surface-alignment.md
+?? planning/hq-tickets/_Done/068-pgvector-local-recall-store.md
+?? planning/hq-tickets/_Done/069-bug-onboarding-welcome-skipped-when-connected.md
+?? planning/hq-tickets/_Done/071-bug-onboarding-missing-receipt-step-sample.md
+?? planning/hq-tickets/_Done/072-bug-onboarding-receipts-cta-wrong-dock.md
+?? planning/hq-tickets/_Done/073-bug-onboarding-dock-ux-gaps.md
+?? planning/hq-tickets/_Done/076-embedded-letta-one-app-distribution.md
+?? planning/hq-tickets/_Done/078-provider-capability-mirror-settings.md
+?? planning/hq-tickets/_Done/079-runtime-transport-mode-matrix-doc.md
+?? planning/hq-tickets/_Done/080-onboarding-one-app-zero-setup.md
+?? planning/hq-tickets/_Done/081-chat-shell-craft-product-polish.md
+?? planning/hq-tickets/_Done/091-live-vs-staging-deploy-runbook.md
+?? planning/hq-tickets/_Done/115-marketing-pricing-pilot-page.md
+?? planning/hq-tickets/_Done/116-pilot-offer-claim-boundary.md
+?? planning/hq-tickets/_Done/119-primary-agent-default-ux.md
+?? planning/hq-tickets/_Done/121-behavior-changelog-weekly-digest.md
+?? planning/hq-tickets/_Done/122-constitution-file-source-of-culture.md
+?? planning/hq-tickets/_Done/123-correction-button-product-loop.md
+?? planning/hq-tickets/_Done/124-receipts-first-class-ui.md
+?? planning/hq-tickets/_Done/125-agent-culture-export-portable-bundle.md
+?? planning/hq-tickets/_Done/126-ratification-moment-behavior-updated.md
+?? planning/hq-tickets/_Done/127-command-station-culture-home.md
+?? planning/hq-tickets/_Done/128-memory-writeback-gate-ui.md
+?? planning/hq-tickets/_Done/129-ci-verify-main-gate.md
+?? planning/hq-tickets/_Done/131-check-contract-culture-ci.md
+?? planning/hq-tickets/_Done/132-compile-standard-to-check.md
+?? planning/hq-tickets/_Done/133-check-runtime-seed-checks.md
+?? planning/hq-tickets/_Done/134-culture-ci-ui-checks-surface.md
+?? planning/hq-tickets/_Done/135-culture-ci-demo-vertical-slice.md
+?? receipts/otto-v01/channels.md
+?? receipts/otto-v01/demo-render-20260614T063531Z.md
+?? receipts/otto-v01/demo-render-20260614T070031Z.md
+?? receipts/otto-v01/demo-render-20260614T071501Z.md
+?? receipts/otto-v01/demo-render-20260614T071514Z.md
+?? receipts/otto-v01/demo-render-20260614T073931Z.md
+?? receipts/otto-v01/demo-render-20260614T073944Z.md
+?? receipts/otto-v01/embedded-letta-smoke-20260614T063553Z.md
+?? receipts/otto-v01/embedded-letta-smoke-20260614T065850Z.md
+?? receipts/otto-v01/embedded-letta-smoke-20260614T071347Z.md
+?? receipts/otto-v01/embedded-letta-smoke-20260614T073920Z.md
+?? receipts/otto-v01/embedded-letta-smoke-20260614T073959Z.json
+?? receipts/otto-v01/embedded-letta-smoke-20260614T073959Z.md
+?? receipts/otto-v01/embedded-letta-smoke-20260614T074004Z.json
+?? receipts/otto-v01/embedded-letta-smoke-20260614T074004Z.md
+?? receipts/otto-v01/tickets.md
+?? scripts/cognee-capture.sh
+?? scripts/cognee-home.sh
+?? scripts/embedded-letta-smoke.sh
+?? scripts/export-icon-16px-grid.mjs
+?? scripts/otto-staging-046-debug.cjs
+?? scripts/otto-staging-076-bootstrap-proof.cjs
+?? scripts/otto-staging-onboarding-smoke.cjs
+?? scripts/otto-staging-proof-capture.cjs
+?? scripts/otto-staging-rev10-proof.cjs
+?? scripts/otto-staging-rev7-proof.cjs
+?? scripts/otto-staging-rev8-036-recapture.cjs
+?? scripts/otto-staging-rev8-proof.cjs
+?? scripts/otto-staging-ticket-proof-capture.cjs
+?? scripts/otto-staging-two-thread-smoke.cjs
+?? scripts/render-demo-clips.sh
+?? scripts/ws-disposable-smoke.ts
+?? scripts/ws-promotion-scorecard.sh
+?? site/capture-screenshots.cjs
+?? site/deploy-staging.sh
+?? site/pricing.html
+?? skill/1password/
+?? skill/browser-proof/
+?? skill/cognee/
+?? skill/discord/
+?? skill/github/
+?? skill/pdf/

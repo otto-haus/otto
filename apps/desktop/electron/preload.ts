@@ -24,6 +24,9 @@ import type {
   MemoryListResult,
   MemoryBlockRecord,
   PracticeListResult,
+  PracticeMetricsSnapshot,
+  PracticeRunInput,
+  PracticeRunResult,
   PracticeRecord,
   PracticeReference,
   RoutineActivationGate,
@@ -44,6 +47,10 @@ import type {
   SkillListResult,
   SkillRecord,
   ChannelListResult,
+  CogneeHealth,
+  CogneeCaptureReceipt,
+  CogneeRecallSmokeResult,
+  PgvectorStatus,
   TicketListResult,
   TicketCompileInput,
   TicketRecord,
@@ -52,6 +59,10 @@ import type {
   RunListResult,
   ApprovalListResult,
   TicketReviewRecord,
+  ChatThreadRecord,
+  ThreadListResult,
+  ThreadSwitchResult,
+  ProviderMirrorSnapshot,
 } from './shared/types';
 import type { CheckListResult, CheckRunResult } from '@otto-haus/core';
 import type {
@@ -73,7 +84,7 @@ const emptyMemory = (): MemoryListResult => ({
   baseUrl: null,
   blocks: [],
   apiPath: '/v1/agents/{agent_id}/core-memory/blocks',
-  error: 'Memory observatory pending Letta wiring.',
+  error: 'Could not load memory blocks from Letta.',
 });
 
 const emptyConstitution = (): ConstitutionResult => ({
@@ -146,6 +157,8 @@ const api = {
     list: (): Promise<PracticeListResult> => ipcRenderer.invoke('otto:practices:list'),
     get: (slug: string): Promise<PracticeRecord | null> => ipcRenderer.invoke('otto:practices:get', slug),
     resolveForText: (text: string): Promise<PracticeReference | null> => ipcRenderer.invoke('otto:practices:resolve-for-text', text),
+    metrics: (slug: string): Promise<PracticeMetricsSnapshot> => ipcRenderer.invoke('otto:practices:metrics', slug),
+    run: (input: PracticeRunInput): Promise<PracticeRunResult> => ipcRenderer.invoke('otto:practices:run', input),
   },
   routines: {
     list: (): Promise<RoutineListResult> => ipcRenderer.invoke('otto:routines:list'),
@@ -171,6 +184,25 @@ const api = {
   knowledge: {
     list: (): Promise<KnowledgeListResult> => ipcRenderer.invoke('otto:knowledge:list'),
     resolveRole: (role: string) => ipcRenderer.invoke('otto:knowledge:resolve-role', role),
+  },
+  cognee: {
+    health: (): Promise<CogneeHealth> => ipcRenderer.invoke('otto:cognee:health'),
+    settings: {
+      get: (): Promise<{ enabled: boolean; baseUrl: string }> => ipcRenderer.invoke('otto:cognee:settings:get'),
+      set: (patch: { enabled?: boolean; baseUrl?: string }): Promise<CogneeHealth> =>
+        ipcRenderer.invoke('otto:cognee:settings:set', patch),
+    },
+    start: (): Promise<CogneeHealth> => ipcRenderer.invoke('otto:cognee:start'),
+    stop: (): Promise<CogneeHealth> => ipcRenderer.invoke('otto:cognee:stop'),
+    latestCapture: (): Promise<CogneeCaptureReceipt | null> => ipcRenderer.invoke('otto:cognee:latest-capture'),
+    captureDryRun: (): Promise<{ paths: string[]; count: number }> =>
+      ipcRenderer.invoke('otto:cognee:capture-dry-run'),
+    captureApply: (): Promise<CogneeCaptureReceipt | null> => ipcRenderer.invoke('otto:cognee:capture-apply'),
+    recallSmoke: (query?: string): Promise<CogneeRecallSmokeResult> =>
+      ipcRenderer.invoke('otto:cognee:recall-smoke', query),
+  },
+  pgvector: {
+    status: (): Promise<PgvectorStatus> => ipcRenderer.invoke('otto:pgvector:status'),
   },
   skills: {
     list: (): Promise<SkillListResult> => ipcRenderer.invoke('otto:skills:list'),
@@ -199,17 +231,29 @@ const api = {
     evaluateOneWayDoor: (context: unknown): Promise<CheckRunResult[]> =>
       ipcRenderer.invoke('otto:checks:evaluate-one-way-door', context),
   },
+  provider: {
+    mirror: (): Promise<ProviderMirrorSnapshot> => ipcRenderer.invoke('otto:provider:mirror'),
+    setApiKey: (value: string): Promise<{ ok: boolean; hasApiKey: boolean }> =>
+      ipcRenderer.invoke('otto:provider:set-api-key', value),
+  },
   workers: {
     list: (): Promise<WorkerListResult> => ipcRenderer.invoke('otto:workers:list'),
     updateStatus: (id: string, status: WorkerStatus, receiptId?: string) =>
       ipcRenderer.invoke('otto:workers:update-status', id, status, receiptId),
+    runBounded: (workerId: string, opts?: { maxTurns?: number }) =>
+      ipcRenderer.invoke('otto:workers:run-bounded', workerId, opts),
   },
   runs: {
     list: (): Promise<RunListResult> => ipcRenderer.invoke('otto:runs:list'),
   },
   autonomy: {
     policy: (): Promise<AutonomyPolicyResult> => ipcRenderer.invoke('otto:autonomy:policy'),
-    evaluateAction: (input: { action: string; context?: string }): Promise<EvaluateAutonomyActionResult> =>
+    evaluateAction: (input: {
+      action: string;
+      context?: string;
+      approved?: boolean;
+      session_allowed?: boolean;
+    }): Promise<EvaluateAutonomyActionResult> =>
       ipcRenderer.invoke('otto:autonomy:evaluate-action', input),
   },
   changelog: {
@@ -235,11 +279,36 @@ const api = {
   permission: {
     respond: (requestId: string, response: PermissionResponse): void =>
       ipcRenderer.send('otto:permission:respond', requestId, response),
+    denyReceipt: (input: { requestId: string; toolName: string; message: string }): Promise<{ id: string; path: string }> =>
+      ipcRenderer.invoke('otto:permission:deny-receipt', input),
+  },
+  smoke: {
+    triggerPermission: (input?: { toolName?: string; requestId?: string; interactive?: boolean }) =>
+      ipcRenderer.invoke('otto:smoke:trigger-permission', input),
+  },
+  threads: {
+    list: (includeArchived?: boolean): Promise<ThreadListResult> =>
+      ipcRenderer.invoke('otto:threads:list', includeArchived),
+    create: (input?: { title?: string; agentId?: string | null }): Promise<ThreadSwitchResult> =>
+      ipcRenderer.invoke('otto:threads:create', input),
+    switch: (threadId: string): Promise<ThreadSwitchResult> =>
+      ipcRenderer.invoke('otto:threads:switch', threadId),
+    archive: (threadId: string): Promise<ChatThreadRecord> =>
+      ipcRenderer.invoke('otto:threads:archive', threadId),
+    pin: (threadId: string, pinned: boolean): Promise<ChatThreadRecord> =>
+      ipcRenderer.invoke('otto:threads:pin', threadId, pinned),
+    touch: (input: { title?: string; lettaConversationId?: string | null; agentId?: string | null }): Promise<ChatThreadRecord | null> =>
+      ipcRenderer.invoke('otto:threads:touch', input),
   },
   onEvent: (cb: (e: OttoEvent) => void): (() => void) => {
     const h = (_: unknown, e: OttoEvent) => cb(e);
     ipcRenderer.on('otto:event', h);
     return () => ipcRenderer.removeListener('otto:event', h);
+  },
+  onActiveThread: (cb: (payload: { threadId: string; status: RuntimeStatus }) => void): (() => void) => {
+    const h = (_: unknown, payload: { threadId: string; status: RuntimeStatus }) => cb(payload);
+    ipcRenderer.on('otto:threads:active', h);
+    return () => ipcRenderer.removeListener('otto:threads:active', h);
   },
   onPermission: (cb: (req: PermissionRequest) => void): (() => void) => {
     const h = (_: unknown, req: PermissionRequest) => cb(req);

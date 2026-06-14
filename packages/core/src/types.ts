@@ -262,6 +262,14 @@ export interface StandardConflict {
   precedent: string | null;
 }
 
+/** Enriched registry conflict for Standards UI (050) — precedent excerpt + tie-breaker. */
+export interface StandardConflictResult {
+  between: Slug[];
+  message: string;
+  tie_breaker?: string;
+  precedent?: { excerpt?: string; file?: string };
+}
+
 export interface StandardsRegistry {
   version: SemVer;
   status: StandardStatus;
@@ -339,7 +347,10 @@ export type ReceiptSubjectType =
   | 'proposal'
   | 'check'
   | 'autonomy'
-  | 'task';
+  | 'task'
+  | 'worker'
+  | 'constitution'
+  | 'knowledge';
 
 export type ReceiptEvidenceKind = 'file' | 'link' | 'log' | 'screenshot' | 'commit' | 'message' | 'status';
 
@@ -572,6 +583,10 @@ export interface AutonomyPolicyResult {
 export interface EvaluateAutonomyActionInput {
   action: string;
   context?: string;
+  /** Explicit human approval for one-way door checks (045 permission modal). */
+  approved?: boolean;
+  /** Session-scoped allow from permission modal (045). */
+  session_allowed?: boolean;
 }
 
 export interface AutonomyActionEvaluation {
@@ -765,6 +780,110 @@ export interface ApprovalListResult {
   dir: string;
   approvals: ApprovalRecord[];
   storage: 'files';
+}
+
+// ---------------------------------------------------------------------------
+// Culture — constitution, changelog, export (121–122, 125)
+// ---------------------------------------------------------------------------
+
+export interface ConstitutionWritebackPolicy {
+  mode: 'proposal_only';
+  requires_curation_accept: boolean;
+  silent_apply_forbidden: boolean;
+}
+
+export interface ConstitutionDocument {
+  schema: 'otto.constitution.v1';
+  version: string;
+  values: string[];
+  forbidden_actions: string[];
+  approval_rules: string[];
+  standards_refs: string[];
+  writeback_policy: ConstitutionWritebackPolicy;
+  ratification_requirements: string[];
+  amended_at?: ISO8601;
+  amended_by?: string;
+}
+
+export interface ConstitutionResult {
+  dir: string;
+  yamlPath: string;
+  mdPath: string;
+  document: ConstitutionDocument;
+  rawYaml: string;
+  storage: 'files';
+}
+
+export interface ConstitutionAmendResult {
+  document: ConstitutionDocument;
+  receipt: Receipt & { path: string };
+}
+
+export type BehaviorChangelogSource =
+  | 'proposal_ratified'
+  | 'constitution_amend'
+  | 'autonomy_policy';
+
+export interface BehaviorChangelogEntry {
+  id: string;
+  timestamp: ISO8601;
+  what: string;
+  why: string;
+  authority: string;
+  receipt_id: string;
+  source: BehaviorChangelogSource;
+}
+
+export interface BehaviorChangelogResult {
+  dir: string;
+  entries: BehaviorChangelogEntry[];
+  window_days: number;
+  empty_message: string;
+}
+
+export interface CultureExportManifest {
+  schema: 'otto.culture-export.v1';
+  exported_at: ISO8601;
+  workspace: string;
+  includes: string[];
+  excludes: string[];
+  receipt_index_count: number;
+  constitution_hash: string | null;
+}
+
+export interface CultureExportResult {
+  bundlePath: string;
+  manifest: CultureExportManifest;
+  receipt: Receipt & { path: string };
+}
+
+export interface CultureImportPreview {
+  valid: boolean;
+  manifest: CultureExportManifest | null;
+  diff: Array<{ path: string; action: 'add' | 'update'; note: string }>;
+  blocked_reason?: string;
+}
+
+// ---------------------------------------------------------------------------
+// Cognee — local knowledge graph stubs (041–044)
+// ---------------------------------------------------------------------------
+
+export type CogneeHealthStatus = 'disabled' | 'ready' | 'stopped' | 'error';
+
+export interface CogneeHealth {
+  status: CogneeHealthStatus;
+  baseUrl: string | null;
+  lastError: string | null;
+  lastCheckedAt: ISO8601 | null;
+}
+
+export interface CogneeCaptureReceipt {
+  id: string;
+  at: ISO8601;
+  paths?: string[];
+  count?: number;
+  mode?: 'dry-run' | 'apply';
+  [key: string]: unknown;
 }
 
 // ---------------------------------------------------------------------------

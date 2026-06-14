@@ -1,0 +1,83 @@
+import { describe, expect, test } from 'bun:test';
+import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { dirname, join, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { ConfigStore } from './config-store';
+import { CogneeStore, cogneeEnabled, isLoopbackUrl } from './cognee-store';
+
+const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), '../../..');
+
+describe('CogneeStore helpers', () => {
+  test('rejects non-loopback URLs', () => {
+    expect(isLoopbackUrl('http://127.0.0.1:8000')).toBe(true);
+    expect(isLoopbackUrl('http://localhost:8000/health')).toBe(true);
+    expect(isLoopbackUrl('https://cognee.cloud')).toBe(false);
+  });
+
+  test('disabled by default', () => {
+    const prev = process.env.OTTO_COGNEE_ENABLED;
+    delete process.env.OTTO_COGNEE_ENABLED;
+    expect(cogneeEnabled()).toBe(false);
+    const health = new CogneeStore().health();
+    expect(health.status).toBe('disabled');
+    if (prev !== undefined) process.env.OTTO_COGNEE_ENABLED = prev;
+  });
+
+  test('recall smoke is honest when disabled', () => {
+    const prev = process.env.OTTO_COGNEE_ENABLED;
+    delete process.env.OTTO_COGNEE_ENABLED;
+    const result = new CogneeStore().recallSmoke();
+    expect(result.ok).toBe(false);
+    expect(result.citations).toEqual([]);
+    expect(result.error).toContain('disabled');
+    if (prev !== undefined) process.env.OTTO_COGNEE_ENABLED = prev;
+  });
+
+  test('health rejects non-loopback base URL when enabled', () => {
+    const prevEnabled = process.env.OTTO_COGNEE_ENABLED;
+    const prevUrl = process.env.OTTO_COGNEE_BASE_URL;
+    process.env.OTTO_COGNEE_ENABLED = '1';
+    process.env.OTTO_COGNEE_BASE_URL = 'https://cognee.cloud';
+    const health = new CogneeStore().health();
+    expect(health.status).toBe('error');
+    expect(health.lastError).toContain('loopback');
+    if (prevEnabled !== undefined) process.env.OTTO_COGNEE_ENABLED = prevEnabled;
+    else delete process.env.OTTO_COGNEE_ENABLED;
+    if (prevUrl !== undefined) process.env.OTTO_COGNEE_BASE_URL = prevUrl;
+    else delete process.env.OTTO_COGNEE_BASE_URL;
+  });
+
+  test('persists enabled flag in config when ConfigStore present', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'otto-cognee-cfg-'));
+    const prevDir = process.env.OTTO_CONFIG_DIR;
+    const prevEnabled = process.env.OTTO_COGNEE_ENABLED;
+    try {
+      process.env.OTTO_CONFIG_DIR = join(dir, 'otto');
+      delete process.env.OTTO_COGNEE_ENABLED;
+      const config = new ConfigStore();
+      const store = new CogneeStore(config);
+      expect(store.settings().enabled).toBe(false);
+      store.saveSettings({ enabled: true, baseUrl: 'http://127.0.0.1:8000' });
+      expect(config.get().cognee?.enabled).toBe(true);
+      expect(cogneeEnabled(config)).toBe(true);
+    } finally {
+      if (prevDir !== undefined) process.env.OTTO_CONFIG_DIR = prevDir;
+      else delete process.env.OTTO_CONFIG_DIR;
+      if (prevEnabled !== undefined) process.env.OTTO_COGNEE_ENABLED = prevEnabled;
+      else delete process.env.OTTO_COGNEE_ENABLED;
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  test('captureDryRun lists allowlisted paths without secrets', () => {
+    const prev = process.env.OTTO_ROOT;
+    process.env.OTTO_ROOT = repoRoot;
+    const result = new CogneeStore().captureDryRun();
+    expect(result.count).toBeGreaterThan(0);
+    expect(result.paths.some((p) => p.includes('receipts'))).toBe(true);
+    expect(result.paths.every((p) => !p.includes('.env') && !p.includes('secrets'))).toBe(true);
+    if (prev !== undefined) process.env.OTTO_ROOT = prev;
+    else delete process.env.OTTO_ROOT;
+  });
+});

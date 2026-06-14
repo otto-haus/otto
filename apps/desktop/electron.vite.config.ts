@@ -20,7 +20,7 @@ export default defineConfig({
       // must also re-externalize the Letta SDK here — otherwise it gets inlined into a chunk
       // and resolves its bundled CLI from the wrong base dir. Keep both external so the bundle
       // does `require("electron")` / `require("@letta-ai/...")` and loads them from node_modules.
-      rollupOptions: { external: ['electron', /^@letta-ai\//], output: { entryFileNames: 'index.cjs' } },
+      rollupOptions: { external: ['electron', 'pg', /^@letta-ai\//], output: { entryFileNames: 'index.cjs' } },
     },
   },
   preload: {

@@ -1,0 +1,94 @@
+{
+  "ok": false,
+  "runId": "20260614064341",
+  "gitHead": "fff0152",
+  "stagingApp": "/Applications/otto-staging.app",
+  "cdpPort": 9445,
+  "viewport": {
+    "width": 1280,
+    "height": 720
+  },
+  "screenshots": {
+    "sidebar046": "/Users/seb/Code/otto/docs/receipts/staging/046-sidebar-thread-list.png",
+    "chat081": "/Users/seb/Code/otto/docs/receipts/staging/081-chat-shell-craft-product-polish.png"
+  },
+  "checks": {
+    "runtimeReady": false,
+    "conversationId": null,
+    "sessionMode": "smoke",
+    "notDefaultConversation": false,
+    "threadIsolation": true,
+    "threadCountGte2": true,
+    "noCliString": true,
+    "noMemFsString": true,
+    "workingPulseCopy": false,
+    "commandStationVisible": false,
+    "checkBlockBanner": false,
+    "checkBlockBannerNote": "no block result"
+  },
+  "runtimeStatus": {
+    "ready": false,
+    "code": "error",
+    "reason": "Failed to initialize session - no init message received\nCLI stderr:\nFailed to connect to Letta server\nBase URL: local:/Users/seb/.letta/lc-local-backend\nYour credentials may be invalid or the server may be unreachable.\nDelete ~/.letta/settings.json then run 'letta' to re-authenticate",
+    "agentId": "agent-local-d8e35a2a-a89f-45dd-b117-5eae5df8c8f2",
+    "baseUrl": "local:/Users/seb/.letta/lc-local-backend",
+    "discoverySource": "otto config/env",
+    "modelHandle": null,
+    "effort": "max",
+    "sessionMode": "smoke",
+    "cliPath": "/Applications/otto-staging.app/Contents/Resources/app/node_modules/@letta-ai/letta-code/letta.js",
+    "cliResolved": true,
+    "transportMode": "sdk",
+    "effectiveTransport": "sdk subprocess",
+    "transportFallbackReason": null
+  },
+  "threads": {
+    "ok": true,
+    "alphaId": "local_4c6b8157-baee-49c2-94f5-8654726a947d",
+    "betaId": "local_036b0544-4a4e-4f17-a7db-a23d4c32e693",
+    "alphaText": "046-alpha: isolated message A",
+    "betaText": "046-beta: isolated message B",
+    "isolationOk": true,
+    "threadCount": 8,
+    "activeThreadId": "local_036b0544-4a4e-4f17-a7db-a23d4c32e693",
+    "titles": [
+      {
+        "id": "local_036b0544-4a4e-4f17-a7db-a23d4c32e693",
+        "title": "046-beta-thread"
+      },
+      {
+        "id": "local_4c6b8157-baee-49c2-94f5-8654726a947d",
+        "title": "046-alpha-thread"
+      },
+      {
+        "id": "local_f435e2e6-3916-4ca7-8328-ba6ac06aed62",
+        "title": "046-beta-thread"
+      },
+      {
+        "id": "local_46d14db5-5260-41f1-b717-fef91eb690c3",
+        "title": "046-alpha-thread"
+      },
+      {
+        "id": "local_6aee9e7c-7e0a-467a-9fd1-136142881e0e",
+        "title": "046-beta-thread"
+      },
+      {
+        "id": "local_351abfc8-c879-4f4e-ae05-010e1afe34d6",
+        "title": "046-alpha-thread"
+      },
+      {
+        "id": "local_07fa6204-a765-489e-9a17-8eef358a190b",
+        "title": "New chat"
+      },
+      {
+        "id": "local_3d53883e-c4ea-463b-95d8-4925e592aa4a",
+        "title": "New chat"
+      }
+    ]
+  },
+  "block": {
+    "ok": false,
+    "reason": "no block result",
+    "results": []
+  }
+}

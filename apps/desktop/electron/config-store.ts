@@ -71,6 +71,14 @@ export class ConfigStore {
   effort(): EffortLevel {
     return normalizeEffort(process.env.OTTO_EFFORT || this.cfg.effort) ?? 'max';
   }
+
+  connectionMode(): NonNullable<OttoConfig['connectionMode']> {
+    return this.cfg.connectionMode ?? 'embedded';
+  }
+
+  primaryAgentId(): string | null {
+    return this.cfg.primaryAgentId ?? this.cfg.agentId ?? null;
+  }
 }
 
 function readJson<T>(path: string): T | null {

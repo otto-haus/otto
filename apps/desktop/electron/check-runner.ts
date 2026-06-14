@@ -4,6 +4,7 @@ import type { Check, CheckRunResult, CheckTriggerEvent } from '@otto-haus/core';
 import type { TicketReviewRecord } from './shared/types';
 import { ReceiptWriter, type WrittenReceipt } from './receipt-writer';
 import { CheckStore } from './check-store';
+import { CheckRunLogStore } from './check-run-log';
 
 export type DoneClaimContext = {
   acceptance_criteria?: Array<{ id: string; text: string; proof?: string; receipts?: string[] }>;
@@ -22,10 +23,13 @@ export class CheckRunner {
   constructor(
     private store = new CheckStore(),
     private receipts = new ReceiptWriter(),
+    private runLog = new CheckRunLogStore(),
   ) {}
 
   list() {
-    return this.store.listResult();
+    const result = this.store.listResult();
+    const stats = this.runLog.getAll();
+    return Object.keys(stats).length ? { ...result, stats } : result;
   }
 
   get(id: string) {
@@ -47,6 +51,7 @@ export class CheckRunner {
 
   private runCheck(check: Check, context: unknown): CheckRunResult {
     const passed = this.inspect(check, context);
+    this.runLog.record(check.id, passed);
     if (passed) {
       return {
         check_id: check.id,

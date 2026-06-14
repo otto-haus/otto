@@ -117,8 +117,17 @@ export type CheckRunResult = {
   receipt_id?: string;
 };
 
+export type CheckRunStats = {
+  last_run_at?: string;
+  last_passed?: boolean;
+  pass_count: number;
+  fail_count: number;
+};
+
 export type CheckListResult = {
   dir: string;
   checks: Check[];
   skipped: Array<{ id: string; file: string; reason: string }>;
+  /** Per-check run history — empty or omitted when no runs recorded yet. */
+  stats?: Record<string, CheckRunStats>;
 };

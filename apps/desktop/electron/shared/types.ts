@@ -17,6 +17,7 @@ import type {
   DecideProposalInput,
   ProposalClassification,
   ProposalTarget,
+  RunSummary,
 } from '@otto-haus/core';
 
 export type { CharterStatus };
@@ -179,6 +180,44 @@ export interface PracticeListResult {
   storage: 'files';
 }
 
+export interface PracticeMetricsSnapshot {
+  slug: string;
+  uses: number;
+  last_used_at: string | null;
+  successful_runs: number;
+  blocked_runs: number;
+  last_run_id?: string;
+  last_receipt_id?: string;
+  last_receipt_path?: string;
+}
+
+export interface PracticeRunPayload {
+  note?: string;
+  raw_note?: string;
+  source?: { who?: string; role?: string; where?: string; when?: string };
+  acceptance_criteria?: Array<{ id: string; text: string; proof?: string; receipts?: string[] }>;
+  review?: { verdict?: string; evidence?: string[]; reviewed_at?: string };
+  evidence?: string[];
+  artifacts?: string[];
+  intent?: string;
+}
+
+export interface PracticeRunInput {
+  slug: string;
+  invocation?: string;
+  payload?: PracticeRunPayload;
+  approved?: boolean;
+}
+
+export interface PracticeRunResult {
+  practice: PracticeRecord;
+  invocation: string;
+  run: RunSummary;
+  receipt: Receipt & { path: string };
+  artifactPath?: string;
+  blocked: boolean;
+}
+
 export interface RoutineListResult {
   dir: string;
   routines: RoutineRecord[];
@@ -197,6 +236,9 @@ export interface RoutineActivationGate {
 export interface RoutineManualRunResult {
   routine: RoutineRecord;
   receipt: Receipt & { path: string };
+  knowledgeReceiptId?: string;
+  observeReceiptId?: string;
+  proposalIds?: string[];
 }
 
 export type { RoutineRecord, RoutineReference, CurationProposalRecord, CreateProposalFromCorrectionInput, DecideProposalInput, ProposalClassification, ProposalTarget };
@@ -220,12 +262,33 @@ export interface DecideProposalResult {
   compiledCheckId?: string | null;
 }
 
-/** Standards pane conflict path (050) — enriched registry conflict for one slug. */
-export interface StandardConflictResult {
-  between: string[];
-  message: string;
-  tie_breaker?: string;
-  precedent?: { excerpt?: string; file?: string };
+export type { StandardConflictResult } from '@otto-haus/core';
+
+/** Local chat thread index (046). */
+export interface ChatThreadRecord {
+  id: string;
+  lettaConversationId: string | null;
+  agentId: string | null;
+  title: string;
+  createdAt: string;
+  updatedAt: string;
+  pinned: boolean;
+  archived: boolean;
+}
+
+export interface ThreadListResult {
+  dir: string;
+  activeThreadId: string | null;
+  threads: ChatThreadRecord[];
+}
+
+/** Provider capability mirror — boolean presence only (078). */
+export interface ProviderMirrorSnapshot {
+  lettaConnected: boolean;
+  hasApiKey: boolean;
+  modelHandle: string | null;
+  agentId: string | null;
+  note: string;
 }
 
 /** Letta core-memory block (047) — read-only observatory. */
@@ -256,6 +319,7 @@ export type {
 export interface EvaluateAutonomyActionResult {
   evaluation: import('@otto-haus/core').AutonomyActionEvaluation;
   receipt: Receipt & { path: string };
+  check_results?: import('@otto-haus/core').CheckRunResult[];
 }
 
 export type {
@@ -263,6 +327,9 @@ export type {
   KnowledgeRegistrySummary,
   KnowledgeModelEntry,
   KnowledgeRoutingHint,
+  CogneeHealth,
+  CogneeHealthStatus,
+  CogneeCaptureReceipt,
   SkillListResult,
   SkillRecord,
   ChannelListResult,
@@ -279,6 +346,15 @@ export type {
   ApprovalRecord,
 } from '@otto-haus/core';
 
+export type { PgvectorStatus } from '../pgvector-store';
+
+export type CogneeRecallSmokeResult = {
+  ok: boolean;
+  query: string;
+  citations: Array<{ path: string; snippet: string }>;
+  error: string | null;
+};
+
 /** A loosely-typed SDK message forwarded straight to the renderer. */
 export interface OttoMessageEvent {
   message: { type: string; [k: string]: unknown };
@@ -291,6 +367,29 @@ export interface OttoStatusEvent {
 
 export type OttoEvent = OttoMessageEvent | OttoStatusEvent;
 
+/** Local thread index row — persisted under ~/.otto/threads/index.json (046). */
+export interface ChatThreadRecord {
+  id: string;
+  lettaConversationId: string | null;
+  agentId: string | null;
+  title: string;
+  createdAt: string;
+  updatedAt: string;
+  pinned: boolean;
+  archived: boolean;
+}
+
+export interface ThreadListResult {
+  dir: string;
+  activeThreadId: string | null;
+  threads: ChatThreadRecord[];
+}
+
+export interface ThreadSwitchResult {
+  thread: ChatThreadRecord;
+  status: RuntimeStatus;
+}
+
 export interface TicketReviewRecord {
   verdict?: '+1' | '-1' | 'blocked';
   evidence?: string[];
@@ -302,6 +401,8 @@ export interface TicketReviewRecord {
 export interface OttoConfig {
   agentId?: string | null;
   conversationId?: string | null;
+  /** Active local thread id from ~/.otto/threads/index.json (046). */
+  activeThreadId?: string | null;
   modelHandle?: string | null;
   effort?: EffortLevel;
   /** Letta base URL for local / self-hosted backends (cloud uses the default). */
@@ -315,4 +416,14 @@ export interface OttoConfig {
   mcpServers?: unknown[];
   functions?: unknown[];
   runtime?: { connected?: boolean };
+  /** Local Cognee sidecar (041) — env vars still override when set. */
+  cognee?: {
+    enabled?: boolean;
+    baseUrl?: string | null;
+  };
 }
+
+export type CogneeSettings = {
+  enabled: boolean;
+  baseUrl: string;
+};

@@ -1,0 +1,21 @@
+{
+  "mcpServers": {
+    "cognee-local": {
+      "command": "cognee",
+      "args": ["mcp"],
+      "env": {
+        "OTTO_COGNEE_BASE_URL": "http://127.0.0.1:8000"
+      }
+    }
+  },
+  "_otto_notes": {
+    "when": "Only register when OTTO_COGNEE_ENABLED=1 and scripts/cognee-home.sh health returns ready",
+    "read_tools": ["search", "recall", "read_graph"],
+    "gated_tools": ["ingest", "remember", "delete", "admin"],
+    "autonomy": {
+      "cognee.recall": "green",
+      "cognee.capture": "yellow",
+      "cognee.delete": "red"
+    }
+  }
+}

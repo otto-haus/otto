@@ -4,120 +4,89 @@
 it is Built, Tested (or failure documented), Demoed, Tried by Sebastian, and **explicitly
 approved by Sebastian**. Claude is execution lead; Sebastian is the only release approver.
 
-Status as of the integration branch `letta/otto-v01-integration` (local only — no push, no
-tag, no release, no npm publish without explicit approval).
+**NOT PUSHED** — target tag `v0.1.3` on integration branch `ship/v0.3-integration`. No push, tag,
+release, or npm publish without explicit Sebastian approval. Mirror: `docs/v1/SHIP_STATUS.md`.
 
 ## v0.1 honesty framing
 
-Otto v0.1 is a **local-first, file-backed artifact**, not a runtime. **Nothing here is
-automatically enforced.** The shared **Curation** proposal/ratification engine is **not built**
-(no schema, no queue, no lifecycle), so Standards, Approvals, and Knowledge "enforcement" is
-**manual editorial judgment**, not an automated gate. The `/ticket` compiler and worker
-orchestration are **not in v0.1**. The **desktop Electron runtime bridge to Letta is implemented**
-(`apps/desktop`) but **not proven live** — chat is gated on a real `session.initialize()` against
-`OTTO_AGENT_ID`, recovers stale sessions, and reports the exact blocker; nothing claims "connected"
-until that succeeds. The runtime hook proven so far is **Charter's permission gate**. Per-surface evidence and the
-full cutline are in [`SPEC_COMPLIANCE.md`](SPEC_COMPLIANCE.md); Ship Checks in [`SHIP_CHECKS/`](SHIP_CHECKS/); claims classified in [`CLAIMS_AUDIT.md`](CLAIMS_AUDIT.md).
-
-**v0.1 cutline:** Ship — namespace · practices · skills. Proposed (honest preview) — desktop ·
-charter · routines · standards. Defer (Built, not Shipped) — approvals · autonomy · tickets ·
-knowledge · runs-receipts · worker-orchestration · channels. **Cut — curation** (engine not built).
+Otto v0.1 is a **local-first workspace shell** with file-backed governance surfaces. **Nothing
+ships to production without Sebastian sign-off.** Curation proposal/ratification exists in the
+desktop lane (016) but is not the full product spine. The `/ticket` Letta extension CLI remains
+deferred (130). **Desktop Electron + Letta bridge is implemented** (`apps/desktop`) but **live
+chat requires** a successful `session.initialize()` against a configured agent — nothing claims
+"connected" until that succeeds. Per-surface evidence: [`SPEC_COMPLIANCE.md`](SPEC_COMPLIANCE.md),
+[`SHIP_CHECKS/`](SHIP_CHECKS/), [`CLAIMS_AUDIT.md`](CLAIMS_AUDIT.md).
 
 ## Release table
 
-| Feature | Built | Tested | Demo | Tried | Approved | Released | Notes |
-|---|:--:|:--:|:--:|:--:|:--:|:--:|---|
 | Feature | Built | Tested | Demo | v0.1 | Notes |
 |---|:--:|:--:|:--:|:--:|---|
-| Practices | ✅ | ✅ | ✅ | **ship** | loader/validator/CLI; 6 unit tests; real `practices.json` on desktop |
-| Skills | ✅ | manual | ✅ | **ship** | charter + routine skill packages + install.sh; live `/reload` load unproven |
-| Charter | ✅ | manual | ✅ | proposed | operating contract; permission **gates are live**; AC-by-AC auditing is **manual** (Auditor not coded) |
-| Routines | ✅ | manual | ✅ | proposed | specs + one-off trials + approval gate; recurring Letta-cron scheduler **deferred** |
-| Standards | ✅ | manual | ✅ | proposed | canon + precedents; can block work **via review**; automated enforcement deferred (needs Curation) |
-| Desktop | ✅ | build ✅ | ✅ | proposed | **Electron shell present** + web preview; Letta connection path implemented (`OTTO_AGENT_ID` · `~/.otto` · recovery); **live chat blocked until a valid agent/provider/session** — not "connected" |
-| Autonomy | ✅ files | — | ✅ | defer | spec + worker/ticket templates; **`/ticket` compiler is not runtime**; single-worker only |
-| Knowledge | ✅ files | — | ✅ | defer | **Built, not Shipped** — proposed AI-frontier surface; routing unratified, no runtime |
-| Runs / Receipts | ✅ types | — | — | defer | Run/Receipt types + receipts exist; **no run engine** (runs not created at runtime) |
-| Approvals | ✅ type | — | — | defer | Approval is a core type; **cannot be emitted** (no Curation); gates don't read records by status/scope |
-| Worker orchestration | ✅ spec | — | — | defer | worker packets + worktree policy; **no orchestrator runtime** |
-| Channels | — | — | — | defer | no runtime / config / send pathway — fully deferred |
-| Curation | — | — | — | **cut** | engine not built (no schema/queue/lifecycle) — the missing spine; removed from v0.1 claims |
+| Practices | ✅ | ✅ | ✅ | **ship** | loader/validator/CLI; real `practices.json` on desktop |
+| Skills | ✅ | manual | ✅ | **ship** | charter + routine skill packages + SkillStore pane |
+| Charter | ✅ | manual | ✅ | proposed | permission gates live; AC auditing manual |
+| Routines | ✅ | manual | ✅ | proposed | specs + manual trials; recurring scheduler deferred |
+| Standards | ✅ | manual | ✅ | proposed | canon + precedents; enforcement via review |
+| Desktop | ✅ | build ✅ | ✅ | proposed | Electron shell; Letta path wired; live chat gated |
+| Curation | ✅ | unit | — | proposed | proposals + decide in desktop; not full spine |
+| Autonomy | ✅ | unit | ✅ | defer | policy.yaml + classifier + receipts |
+| Knowledge | ✅ | unit | ✅ | defer | AI-frontier + optional Cognee/pgvector panels |
+| Runs / Receipts | ✅ | unit | — | defer | types + file receipts; no full run engine |
+| Approvals | ✅ | unit | — | defer | records from Curation path |
+| Tickets | ✅ | unit | — | defer | compile/orchestrate in desktop; `/ticket` CLI deferred |
+| Worker orchestration | ✅ | unit | — | defer | bounded runner + worktree policy |
+| Channels | ✅ | files | — | defer | file contract + pane; Discord bot deferred |
+| Marketing site | ✅ | manual | — | **preview** | `site/` local staging verified; apex DNS pending — `bash site/deploy-staging.sh` |
+| Release gate | ✅ | ✅ | — | **in progress** | `verify:v0` + `release-gate.sh`; Sebastian sign-off open |
 
-Legend: ✅ done · `✅ files`/`✅ types`/`✅ spec` = artifacts exist, no closing runtime · `manual`
-manually verifiable, no automated test · `build` build/typecheck passes · v0.1 = ship / proposed /
-defer (Built, not Shipped) / cut · "—" not present. **Tried + Approved are Sebastian's and all pending.**
+Legend: ✅ done · `manual` = manually verifiable · v0.1 = ship / proposed / defer · Tried + Approved = Sebastian only.
 
 ## Test receipts (this machine, bun 1.3.14)
 
-```
-bun run typecheck                       → exit 0 (tsc -p packages/core)
-bun test                                → 6 pass / 0 fail (7 expect calls)
-bun packages/practices/src/cli.ts       → 5 practice specs validate (charter active)
-bun run --cwd apps/desktop typecheck    → exit 0 (tsc --noEmit)
-bun run --cwd apps/desktop build        → vite build ok (22 modules, dist/ 204 kB)
-bun run verify:v0                        → core checks + this table pointer
+```sh
+cd /Users/seb/Code/otto
+bun run verify:v0                        # 5/5 — typecheck, bun test, practices, desktop typecheck, rename sweep
+bash scripts/release-gate.sh           # verify:v0 + apps/desktop electron:typecheck
 ```
 
-Per-feature receipts: [`receipts/otto-v01/`](receipts/otto-v01/). Demos: [`demo/`](demo/README.md).
+Latest unit suite (2026-06-13):
+
+```
+bun test                               → 151 pass / 0 fail
+bun run typecheck                      → exit 0
+bun run --cwd apps/desktop typecheck   → exit 0
+bun run --cwd apps/desktop electron:typecheck → exit 0 (via release-gate.sh)
+```
+
+Per-feature receipts: [`receipts/otto-v01/`](receipts/otto-v01/). Demos: [`demo/README.md`](demo/README.md).
+Staging smoke: `docs/receipts/staging/`. PR stack: `docs/v1/runbooks/pr-stack-ship-v03.md`.
 
 ## Rename / packaging sweep
 
 - `Vinny OS` / `Vinny` → `Otto`; `cockpit` → `workspace`; old private repo target → `otto-haus/otto`.
 - Packages: `@vinny-os/*` → `@otto-haus/*`; root → `otto`; bin `vinny-practices` → `otto-practices`.
-- Local repo renamed `~/Code/vinny-os` → `~/Code/otto` (nested worktrees repaired).
-- Lockfile regenerated; workspace resolution verified (`@otto-haus/core|practices|desktop`).
-
-### Remaining old-name hits (all intentional)
-
-| Hit | Where | Why kept |
-|---|---|---|
-| `VINNY_HOME` | `extension/routine.ts`, `skill/routine/SKILL.md` | Back-compat env fallback after `OTTO_HOME` |
-| `VINNY_OS_ROOT` | `packages/practices/src/cli.ts` | Back-compat env fallback after `OTTO_ROOT` |
-| "Vinny OS" (1) | `README.md` Compatibility section | Documents the rename for migrating users |
-| `vinny-os` | `bun.lock` | Generated lockfile only — n/a (no hand-edit) |
-
-`bun run verify:v0` enforces no old product-name hits in tracked files; the `VINNY_*` env tokens above are the allowed back-compat fallbacks.
+- `bun run verify:v0` enforces no old product-name hits in tracked files; `VINNY_*` env tokens are allowed back-compat fallbacks.
 
 ## Compatibility notes
 
-- **Env vars:** `OTTO_HOME` preferred, `VINNY_HOME` fallback; `OTTO_ROOT` preferred,
-  `VINNY_OS_ROOT` fallback. Default runtime root `~/.otto`.
-- **Bin alias:** the practices CLI is `otto-practices` (was `vinny-practices`).
-- **Historical:** the old private GitHub remote is preserved untouched locally.
-- **Namespace target: `otto-haus` (NOT final).** Target identity = org `otto-haus`, repo `otto-haus/otto`, scope `@otto-haus`, domain `otto.haus`, future dream `ot.to`. Also owned but non-canonical: `otto-do`, `otto-hq` (`otto.do` was unavailable, not owned). Implemented locally as `@otto-haus`; the final public namespace is an approval ask before push.
-
-## GitHub metadata (prepared — NOT applied; push is Sebastian's call)
-
-- Owner / repo: `otto-haus/otto` *(provisional — namespace pending approval)* · Description: `The behavior layer for persistent AI agents.`
-- Topics: `ai-agents` `agent-runtime` `autonomous-agents` `guardrails` `local-first` `letta` `routines` `practices`
-- Homepage: blank — Otto v0.1 does not depend on a website (`otto.haus` is the current domain asset)
-- Avatar: `~/Library/CloudStorage/Dropbox/This Cycle/otto/otto-pfp-github.png`
+- **Env vars:** `OTTO_HOME` preferred, `VINNY_HOME` fallback; `OTTO_ROOT` preferred, `VINNY_OS_ROOT` fallback.
+- **Cognee:** `OTTO_COGNEE_ENABLED`, `OTTO_COGNEE_BASE_URL` — also in Settings → General (persisted to `~/.otto/config.json`).
+- **Namespace target:** `otto-haus` (provisional) — confirm before push.
 
 ## Open issues / honest gaps
 
-- Demo terminals are faithful re-enactments, not live captures (see `demo/README.md`).
-- Charter, Routines, Skills, Standards, Autonomy have no automated unit tests yet (manual).
-- Knowledge is **proposed**; model-registry ratings are qualitative, routing unratified.
-- **Namespace target `otto-haus` — not locked.** Implemented locally (org `otto-haus`, `@otto-haus`, `otto.haus`, future `ot.to`). Also owned, non-canonical: `otto-do`, `otto-hq`; `otto.do` unavailable. Final org / scope / domain is an approval ask before push.
-- Desktop chat is a prototype shell (file-backed panes work; the Letta runtime is not yet wired).
+- Demos: desktop walkthrough re-rendered 2026-06-14 → `demo/out/otto-v01-desktop-walkthrough.mp4` (receipt `receipts/otto-v01/demo-render-20260614T063531Z.md`); other clips: `bash scripts/render-demo-clips.sh all`.
+- Marketing site: local staging only (`bash site/deploy-staging.sh`); `otto.haus` apex not deployed.
+- Live `/Applications/otto.app` may lag integration branch; staging app is the proof target.
+- Cognee/pgvector recall require local daemons — UI shows honest empty when off.
+- Sebastian checklist (Tried + Approved) all pending.
 
 ## Final gate — Sebastian approves before any push/tag
-
-**Sequence (nothing is pushed, tagged, published, or changed on GitHub until step 4):**
-
-1. Sebastian watches the demos.
-2. Sebastian approves which features ship.
-3. Sebastian confirms namespace / org / package scope / domain.
-4. Then we push together.
 
 | Item | Approved? |
 |---|:--:|
 | README public story | ☐ |
 | Feature shipped table (this file) | ☐ |
-| Demo videos (8, in `demo/out/`) | ☐ |
-| Test receipts | ☐ |
-| Remaining old-name hits (all intentional) | ☐ |
-| Namespace target `otto-haus` / `@otto-haus` / `otto.haus` (otto-do + otto-hq also owned) | ☐ confirm before push |
-| GitHub metadata (incl. avatar) — not applied yet | ☐ |
-| Release/tag name (`v0.1.0`) | ☐ |
-| **Push + tag** (Red — explicit, step 4) | ☐ |
+| Demo videos / walkthrough refresh | ☐ |
+| Test receipts (`verify:v0` green) | ☐ |
+| Namespace `otto-haus` / `@otto-haus` | ☐ |
+| **Push + tag `v0.1.3`** (Red — explicit) | ☐ |

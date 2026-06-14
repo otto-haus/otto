@@ -1,0 +1,38 @@
+{
+  "commands": {
+    "compile034": {
+      "text": "compile ticket 034 Staging rev10 proof packet for charter AC gate",
+      "composerEnabled": true,
+      "sent": true,
+      "userMessagePersisted": false,
+      "transcriptAfter": "COMMAND STATION\nWhat needs you\n1\nCuration\nPending proposals\n3\nRecent proof\nLatest receipts\n4\nTickets\nOpen worker slices\n6\nDoors\nAwaiting approval\n→\nConstitution\nSource of culture\n→\nChangelog\nWhat changed\nOTTO\n\nCompiled ticket_034. Receipt: receipt-69fb0000-ff3e-40bb-a370-31b91b14ae88 Packet: /Users/seb/.codex/admin/otto-staging/otto-home/tickets/034/worker-packet.md\n\nPropose from correction\nCorrect this",
+      "matched": true
+    },
+    "compile035": {
+      "text": "compile ticket 035 Staging rev10 proof packet for orchestrate-existing",
+      "composerEnabled": true,
+      "sent": true,
+      "userMessagePersisted": false,
+      "transcriptAfter": "COMMAND STATION\nWhat needs you\n1\nCuration\nPending proposals\n3\nRecent proof\nLatest receipts\n4\nTickets\nOpen worker slices\n6\nDoors\nAwaiting approval\n→\nConstitution\nSource of culture\n→\nChangelog\nWhat changed\nOTTO\n\nCompiled ticket_034. Receipt: receipt-69fb0000-ff3e-40bb-a370-31b91b14ae88 Packet: /Users/seb/.codex/admin/otto-staging/otto-home/tickets/034/worker-packet.md\n\nPropose from correction\nCorrect this\n\nCompiled ticket_035. Receipt: receipt-c55372bf-5fb8-4074-8b1e-5142ddc119a2 Packet: /Users/seb/.codex/admin/otto-staging/otto-home/tickets/035/worker-packet.md\n\nPropose from correction\nCorrect this",
+      "matched": true
+    },
+    "orchestrate035": {
+      "text": "orchestrate ticket 035",
+      "composerEnabled": true,
+      "sent": false,
+      "userMessagePersisted": false,
+      "transcriptAfter": "COMMAND STATION\nWhat needs you\n1\nCuration\nPending proposals\n3\nRecent proof\nLatest receipts\n4\nTickets\nOpen worker slices\n6\nDoors\nAwaiting approval\n→\nConstitution\nSource of culture\n→\nChangelog\nWhat changed\nOTTO\n\nCompiled ticket_034. Receipt: receipt-69fb0000-ff3e-40bb-a370-31b91b14ae88 Packet: /Users/seb/.codex/admin/otto-staging/otto-home/tickets/034/worker-packet.md\n\nPropose from correction\nCorrect this\n\nCompiled ticket_035. Receipt: receipt-c55372bf-5fb8-4074-8b1e-5142ddc119a2 Packet: /Users/seb/.codex/admin/otto-staging/otto-home/tickets/035/worker-packet.md\n\nPropose from correction\nCorrect this",
+      "matched": false
+    },
+    "statusWorkers": {
+      "text": "status workers",
+      "composerEnabled": true,
+      "sent": true,
+      "userMessagePersisted": false,
+      "transcriptAfter": "COMMAND STATION\nWhat needs you\n1\nCuration\nPending proposals\n3\nRecent proof\nLatest receipts\n4\nTickets\nOpen worker slices\n6\nDoors\nAwaiting approval\n→\nConstitution\nSource of culture\n→\nChangelog\nWhat changed\nOTTO\n\nCompiled ticket_034. Receipt: receipt-69fb0000-ff3e-40bb-a370-31b91b14ae88 Packet: /Users/seb/.codex/admin/otto-staging/otto-home/tickets/034/worker-packet.md\n\nPropose from correction\nCorrect this\n\nCompiled ticket_035. Receipt: receipt-c55372bf-5fb8-4074-8b1e-5142ddc119a2 Packet: /Users/seb/.codex/admin/otto-staging/otto-home/tickets/035/worker-packet.md\n\nPropose from correction\nCorrect this\n\nWorker status: worker_20260614_f6b33db1 · running · ticket ticket_035 · .letta/worktrees/035\n\nPropose from correction\nCorrect this",
+      "matched": true
+    }
+  },
+  "transcript": "COMMAND STATION\nWhat needs you\n1\nCuration\nPending proposals\n3\nRecent proof\nLatest receipts\n4\nTickets\nOpen worker slices\n6\nDoors\nAwaiting approval\n→\nConstitution\nSource of culture\n→\nChangelog\nWhat changed\nOTTO\n\nCompiled ticket_034. Receipt: receipt-69fb0000-ff3e-40bb-a370-31b91b14ae88 Packet: /Users/seb/.codex/admin/otto-staging/otto-home/tickets/034/worker-packet.md\n\nPropose from correction\nCorrect this\n\nCompiled ticket_035. Receipt: receipt-c55372bf-5fb8-4074-8b1e-5142ddc119a2 Packet: /Users/seb/.codex/admin/otto-staging/otto-home/tickets/035/worker-packet.md\n\nPropose from correction\nCorrect this\n\nWorker status: worker_20260614_f6b33db1 · running · ticket ticket_035 · .letta/worktrees/035\n\nPropose from correction\nCorrect this",
+  "ok": false
+}

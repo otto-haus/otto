@@ -4,6 +4,7 @@ import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { ReceiptWriter } from './receipt-writer';
+import { ReceiptStore } from './receipt-store';
 import { ProposalStore, classifyProposal } from './proposal-store';
 
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), '../../..');
@@ -46,6 +47,28 @@ describe('ProposalStore', () => {
     }
   });
 
+  test('createFromCorrection preserves Chat message evidence refs', () => {
+    const tmp = mkdtempSync(join(tmpdir(), 'otto-proposal-test-'));
+    const proposalsDir = join(tmp, 'curation', 'proposals');
+    const receiptsDir = join(tmp, 'receipts');
+    try {
+      const store = new ProposalStore(proposalsDir, new ReceiptWriter(receiptsDir));
+      const result = store.createFromCorrection({
+        correction: 'Always cite precedent before improvising on Standards conflicts.',
+        rationale: 'Chat correction from assistant mistake.',
+        target: { kind: 'standard', id: 'candor-kindness', action: 'update' },
+        evidence: [{ kind: 'message', ref: 'msg-abc-123', note: 'Otto guessed instead of citing case law.' }],
+      });
+
+      expect(result.proposal.evidence.some((e) => e.kind === 'message' && e.ref === 'msg-abc-123')).toBe(true);
+      expect(result.proposal.summary).toContain('precedent');
+      expect(result.receipt.action).toBe('curation.proposal.create');
+      expect(store.list().proposals.some((p) => p.id === result.proposal.id)).toBe(true);
+    } finally {
+      rmSync(tmp, { recursive: true, force: true });
+    }
+  });
+
   test('classify preview matches IPC handler contract', () => {
     const classification = classifyProposal(
       { kind: 'memory', action: 'update' },
@@ -53,6 +76,33 @@ describe('ProposalStore', () => {
     );
     expect(classification.route).toBe('ask');
     expect(classification.required_gate).toBe('human_ratification');
+  });
+
+  test('memory_writeback proposals cannot skip Curation', () => {
+    const tmp = mkdtempSync(join(tmpdir(), 'otto-proposal-test-'));
+    const proposalsDir = join(tmp, 'curation', 'proposals');
+    const receiptsDir = join(tmp, 'receipts');
+    try {
+      const store = new ProposalStore(proposalsDir, new ReceiptWriter(receiptsDir));
+      const result = store.createFromCorrection({
+        correction: 'Remember to cite precedent before answering Standards questions.',
+        rationale: 'Memory writeback from correction flow.',
+        target: { kind: 'memory', action: 'update' },
+      });
+
+      expect(result.proposal.kind).toBe('memory_writeback');
+      expect(result.proposal.status).toBe('needs_approval');
+      expect(result.proposal.classification.route).toBe('ask');
+      expect(result.proposal.classification.required_gate).toBe('human_ratification');
+      expect(result.proposal.classification.canon_impact).toBe('memory');
+
+      const accepted = store.decide(result.proposal.id, { decision: 'accept', note: 'Ratified memory writeback.' });
+      expect(accepted.blocked).toBeUndefined();
+      expect(accepted.proposal.status).toBe('applied');
+      expect(accepted.receipt.action).toBe('curation.proposal.accept');
+    } finally {
+      rmSync(tmp, { recursive: true, force: true });
+    }
   });
 
   test('classifies standards changes as high-risk ratification', () => {
@@ -202,6 +252,38 @@ describe('ProposalStore', () => {
       expect(proposal?.summary).toBe('Test proposal');
     } finally {
       rmSync(tmp, { recursive: true, force: true });
+    }
+  });
+
+  test('accepting a standard proposal compiles check and writes check.compiled receipt', () => {
+    const tmp = mkdtempSync(join(tmpdir(), 'otto-proposal-standard-'));
+    const proposalsDir = join(tmp, 'curation', 'proposals');
+    const receiptsDir = join(tmp, 'receipts');
+    const checksDir = join(tmp, 'checks');
+    const standardPath = join(repoRoot, 'standards/standards/quality.md');
+    try {
+      process.env.OTTO_CHECKS_DIR = checksDir;
+      const store = new ProposalStore(proposalsDir, new ReceiptWriter(receiptsDir));
+      const created = store.createFromCorrection({
+        correction: 'Quality standard must block fake done claims.',
+        rationale: 'Ratify quality standard for Culture CI compile path.',
+        target: { kind: 'standard', id: 'quality', path: standardPath, action: 'update' },
+      });
+
+      const decided = store.decide(created.proposal.id, { decision: 'accept', note: 'Ratified.' });
+      expect(decided.blocked).toBeUndefined();
+      expect(decided.compiledCheckId).toBe('completion-requires-receipts');
+      expect(existsSync(join(checksDir, 'completion-requires-receipts.yaml'))).toBe(true);
+
+      const receipts = new ReceiptStore(receiptsDir).list();
+      const compiledSummary = receipts.receipts.find((r) => r.action === 'check.compiled');
+      expect(compiledSummary?.status).toBe('success');
+      expect(compiledSummary?.subjectId).toBe('completion-requires-receipts');
+      const compiledReceipt = new ReceiptStore(receiptsDir).get(compiledSummary!.id);
+      expect(compiledReceipt?.input?.proposal_id).toBe(created.proposal.id);
+    } finally {
+      rmSync(tmp, { recursive: true, force: true });
+      delete process.env.OTTO_CHECKS_DIR;
     }
   });
 

@@ -35,9 +35,9 @@ Default to Cursor unless the hardest irreducible part is Codex-grade reasoning o
 
 ## Active queue
 
-**Current head:** **058** → **059** → **122**/**124**/**128** → **131–135 Culture CI** → **063** → wedge **121**/**125**/**127**; **129** after **054** (_InReview); **130** parked. **054–056** → `_InReview/`.
+**Current head:** *(empty)* — integration lane **033–135** (incl. **053** practice runtime, **046** thread switcher) shipped to `_Done/`. **`_InReview/` is empty.** Next work unparks from `_Parked/` only (019–025, 077, 083–099, 117–118, 120, 130) per `000-parallel-map.md`.
 
-Work the lowest-numbered dependency-safe wave in root.
+Root has no active implementer tickets. Do not reopen `_Done/` unless Sebastian explicitly unparks or files a new ticket.
 
 Exception: dependency-free craft tickets may run out of order **only when explicitly labeled
 `Launch Polish`**. Core behavior tickets remain ordered by dependency.
@@ -75,7 +75,7 @@ See `_Done/` folder. Craft 026–032 complete.
 |---:|---|---|---|---|
 | **076** | **Embedded Letta / One-App Distribution** | Codex | 033-038 | **P0** — no Letta.app install; Chat on fresh Mac |
 | 039 | Cathedral: WebSocket Runtime Transport | Codex | 033-038, **076** | WS/BYOR transport + promotion gate |
-| 079 | Runtime Transport Mode Matrix (doc) | Codex | 076, 039 | `docs/runtime-transport.md`; no silent Cloud fallback |
+| 079 | Runtime Transport Mode Matrix (doc) | Codex | 076, 039 | `_Done/` — `docs/runtime-transport.md` |
 | 078 | Provider Capability Mirror (Settings) | Claude | 076 | write-only BYOK; otto not secret SoR |
 | 077 | Letta Cloud / Remote Mode (parked) | Codex | 076, 039 | `_Parked/` — advanced opt-in only |
 | 040 | Cognee: Contract & Adapter Seam | Codex | 018, 033-038 | docs + types; Cognee under Knowledge |
@@ -89,7 +89,7 @@ See `_Done/` folder. Craft 026–032 complete.
 | # | Ticket | Owner | Depends on | Proof |
 |---:|---|---|---|---|
 | 045 | Chat: Permission Modal + Abort Fix | Cursor | 002, 003 | no deadlock; busy clears |
-| 046 | Chat: Multi-Thread List + Switcher | Claude | 002, 003 | **P0 ship blocker** — sidebar thread list |
+| 046 | Chat: Multi-Thread List + Switcher | Claude | 002, 003 | `_Done/` — `scripts/otto-staging-two-thread-smoke.cjs` |
 | 047 | Letta Memory Observatory (read-only) | Cursor | 001, 002, **076** | blocks + search; Open in Letta |
 | 048 | Chat: Propose from Correction | Cursor | 014, 016, 002 | proposal in Curation |
 | 123 | Correction Button (product loop) | Claude | 048, 002, 014 | Correct this → Curation |
@@ -99,15 +99,15 @@ See `_Done/` folder. Craft 026–032 complete.
 | 050 | Standards: Precedent Conflict Path | Codex+Claude | 009 | precedent surfaced on conflict |
 | 051 | Automated Review Gate (No Fake Done) | Codex | 004, 035, 050 | done blocked without +1 |
 | 052 | Routine Manual Executor + Receipt | Cursor | 012, 013 | trial run receipt |
-| 053 | Practice Runtime (Charter/Review/Field Note) | Cursor | 010, 011, 052 | invocation receipts |
+| 053 | Practice Runtime (Charter/Review/Field Note) | Cursor | 010, 011, 052 | `_Done/` — invocation receipts |
 
 ### Integration + system surfaces
 
 | # | Ticket | Owner | Depends on | Proof |
 |---:|---|---|---|---|
-| 054 | Repo Hygiene: Commit & Split PRs | Cursor | 033-038 | `_InReview/` — `docs/v1/runbooks/pr-stack-ship-v03.md` |
-| 055 | Knowledge Baseline Ship | Cursor | 054, 017 | `_InReview/` — `docs/v1/SHIP_CHECKS/knowledge.md` |
-| 056 | System Surfaces Ship (Skills/Tickets/Channels) | Cursor | 054, 055 | `_InReview/` — per-surface receipts |
+| 054 | Repo Hygiene: Commit & Split PRs | Cursor | 033-038 | `_Done/` — `docs/v1/runbooks/pr-stack-ship-v03.md` |
+| 055 | Knowledge Baseline Ship | Cursor | 054, 017 | `_Done/` — `docs/v1/SHIP_CHECKS/knowledge.md` |
+| 056 | System Surfaces Ship (Skills/Tickets/Channels) | Cursor | 054, 055 | `_Done/` — per-surface receipts |
 | 058 | Craft: Runtime Robustness Pack | Cursor | 045, 039 | punchlist P1 |
 | 059 | Command Station Dashboard (Thin) | Claude | 049, 056, 045 | unified status cards |
 
@@ -134,7 +134,7 @@ See `_Done/` folder. Craft 026–032 complete.
 | 117 | Pilot intake flow | Claude | 115, 116 | `_Parked/` |
 | 118 | Culture vs memory page | Claude | 115 | `_Parked/` optional |
 | 119 | Primary agent default UX | Claude | 076, 080 | one agent; no fleet UI |
-| 129 | CI verify gate on main | Cursor | 054, 063 | AGENTS.md suite on PR |
+| 129 | CI verify gate on main | Cursor | 054, 063 | `_Done/` — `.github/workflows/ci.yml` |
 
 ### Category wedge — culture compounding
 
@@ -183,7 +183,7 @@ Extends **051** (No Fake Done) into general **Check** runtime. Primary launch de
 | 088 | WorkOS orgs | Codex | 087 | `_Parked/` — multi-user later |
 | 089 | Desktop ↔ Cloud sync contract | Codex | 082, 084 | `_Parked/` — after 084 stub |
 | 090 | Cloud monorepo layout ADR | Codex | 082 | `_Parked/` — before 083 |
-| 091 | Live vs staging deploy runbook | Cursor | none | operator runbook — P1 now |
+| 091 | Live vs staging deploy runbook | Cursor | none | `_Done/` — `docs/v1/runbooks/live-vs-staging.md` |
 
 ### Cathedral / always-on control plane
 
@@ -251,8 +251,8 @@ Tickets in `_Parked/` are valid, but not active. They become active only by movi
 116 Pilot claim boundary    — Codex (with 115)
 121–128 Culture wedge       — see Category wedge section
 131–135 Checks wedge          — Culture CI positioning; see plan Category and naming (locked)
-129 CI verify on main       — Cursor (after 054)
-067 One-pagers alignment    — Claude (InReview — staging smoke pending)
+129 CI verify on main       — Cursor (_Done)
+067 One-pagers alignment    — Claude (_Done)
 ```
 
 Owner = task nature (real reasoning → Codex; writing/UI/UX/craft → Claude; straightforward implementation/plumbing → Cursor). Lane note: 001 and 002 were executed by Claude/Codex during launch but are Cursor-nature under the new routing; their receipts record the actual executor.
@@ -267,6 +267,19 @@ real action → receipt → proposal/learning → curation → changed future be
 
 018 is `_Done`. Unpark 019–024 only per `000-parallel-map.md` unpark table.
 
+## PR stack (`ship/v0.3-integration`)
+
+Prepare-only split — full detail: `docs/v1/runbooks/pr-stack-ship-v03.md`. Gate: no push without Sebastian (063).
+
+| PR | Domain | Closes tickets |
+|---|---|---|
+| A | Desktop stores, IPC, surfaces | 033–038, 045–049, 055–056 (runtime), 123–124 (partial) |
+| B | Knowledge + channels file canon | 055, 017, 040 (docs) |
+| C | Docs, ship checks, runbooks | **054**, **079**, 082, **091**, 067, ADRs |
+| D | Planning conveyor + marketing (optional) | 054 housekeeping, 115–116, 065, 067 |
+
+Pre-merge per PR: `bun run typecheck`, `bun run --cwd apps/desktop typecheck`, targeted desktop tests, `bun run verify:v0`.
+
 ## Workflow files
 
 ```txt
@@ -274,4 +287,7 @@ real action → receipt → proposal/learning → curation → changed future be
 _template.md                 ticket template
 _workflow-run-ticket.md      implement one ticket, write receipt, stop
 _workflow-review-ticket.md   independent review, append verdict
+docs/v1/runbooks/live-vs-staging.md   dev vs staging vs live refresh (091)
+docs/v1/runbooks/pr-stack-ship-v03.md PR split handoff (054)
+docs/runtime-transport.md             mode matrix (079)
 ```

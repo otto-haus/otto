@@ -3,13 +3,14 @@ import { useEffect, useRef, useState } from 'react';
 import { Icon } from '../components/icons';
 import { useToast } from '../components/Toast';
 import { requiredMissing, isReady } from '../readiness';
-import { isElectron, ottoApi, type EffortLevel, type RuntimeStatus, type SavedAttachment } from '../runtime';
+import { isElectron, ottoApi, type EffortLevel, type SavedAttachment } from '../runtime';
 import { useRuntimeContext } from '../RuntimeContext';
 import ottoAvatar from '../assets/otto-avatar.png';
 
 import type { SurfaceId } from '../components/Sidebar';
-import { CommandStationStrip, CheckBlockBanner, MessageActions, Modal, PermissionCard, type PermissionDecision, type PermissionRequestView } from '../components/ui';
+import { CommandStationStrip, CheckBlockBanner, MessageActions, Modal, PermissionCard, ReceiptInlineCard, type CommandStationCounts, type PermissionDecision, type PermissionRequestView } from '../components/ui';
 import { chatCopy, permissionCopy, toastCopy } from '../copy/surfaces';
+import { useChatThreads } from '../chat/useChatThreads';
 import {
   dismissOnboarding,
   notifyOnboardingFirstMessage,
@@ -68,12 +69,6 @@ const EFFORT_OPTIONS: Array<{ label: string; value: EffortLevel }> = [
 
 const labelForModel = (value?: string | null) => MODEL_OPTIONS.find((m) => m.value === value)?.label ?? value ?? 'Agent default';
 const labelForEffort = (value?: EffortLevel) => EFFORT_OPTIONS.find((e) => e.value === value)?.label ?? 'Max';
-
-const sessionSubtitle = (st: RuntimeStatus): string => {
-  const model = labelForModel(st.modelHandle ?? st.model);
-  const memory = st.memfsEnabled ? 'Letta memory on' : 'Letta memory off';
-  return `${model} · ${memory}`;
-};
 
 const imageFiles = (files: FileList | File[]): File[] =>
   Array.from(files).filter((file) => file.type.startsWith('image/'));
@@ -298,7 +293,9 @@ const LiveChat: React.FC<{
 }) => {
   const api = ottoApi();
   const rt = useRuntimeContext();
+  const { threads } = useChatThreads(rt.activeThreadId);
   const toast = useToast();
+  const [stationCounts, setStationCounts] = useState<CommandStationCounts>({});
   const [draft, setDraft] = useState(readDraft);
   const [attachments, setAttachments] = useState<AttachmentDraft[]>(readAttachments);
   const [attachmentError, setAttachmentError] = useState<string | null>(null);
@@ -319,6 +316,34 @@ const LiveChat: React.FC<{
   const ready = !!st?.ready;
   const selectedModel = st?.modelHandle ?? st?.model ?? null;
   const selectedEffort = st?.effort ?? 'max';
+  const activeThreadTitle = threads.find((t) => t.id === rt.activeThreadId)?.title;
+
+  useEffect(() => {
+    if (!api || !ready) {
+      setStationCounts({});
+      return;
+    }
+    let cancelled = false;
+    void Promise.all([
+      api.curation.proposals.list(),
+      api.receipts.list(),
+      api.tickets.list(),
+      api.curation.approvals.list(),
+    ]).then(([proposals, receipts, tickets, approvals]) => {
+      if (cancelled) return;
+      const pending = proposals.proposals.filter((p) => p.status === 'proposed' || p.status === 'needs_approval').length;
+      const openTickets = tickets.tickets.filter((t) => t.status !== 'merged' && t.status !== 'cancelled').length;
+      setStationCounts({
+        curationPending: pending || undefined,
+        recentReceipts: receipts.receipts.length ? Math.min(receipts.receipts.length, 3) : undefined,
+        openTickets: openTickets || undefined,
+        autonomyDoors: approvals.approvals.length || undefined,
+      });
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [api, ready, rt.busy]);
 
   useEffect(() => {
     if (!api) return;
@@ -335,22 +360,51 @@ const LiveChat: React.FC<{
     && !proposeContext;
 
   const showReceiptOnboardingHint = ready
-    && !onboardingDismissed
     && onboardingFirstMessage
     && !permission
     && !proposeContext;
 
-  const respondPermission = (decision: PermissionDecision, denyMessage?: string) => {
+  const respondPermission = async (decision: PermissionDecision, denyMessage?: string) => {
     if (!api || !permission) return;
     setPermissionBusy(true);
-    if (decision === 'deny') {
-      api.permission.respond(permission.requestId, { behavior: 'deny', message: denyMessage ?? permissionCopy.deniedByUser });
-    } else {
-      // Session-scoped allow ships when runtime exposes it; both allow paths use allow today.
-      api.permission.respond(permission.requestId, { behavior: 'allow' });
+    const active = permission;
+    const msg = denyMessage ?? permissionCopy.deniedByUser;
+    try {
+      if (decision === 'deny') {
+        api.permission.respond(active.requestId, { behavior: 'deny', message: msg });
+        const receipt = await api.permission.denyReceipt({
+          requestId: active.requestId,
+          toolName: active.toolName,
+          message: msg,
+        });
+        setCmdMessages((items) => [...items, {
+          id: `permission-deny-${active.requestId}`,
+          who: 'otto',
+          text: '',
+          receiptInline: {
+            id: receipt.id,
+            status: 'blocked',
+            action: 'autonomy.permission.deny',
+            summary: `Tool permission denied: ${active.toolName}`,
+            authority: 'human (permission gate)',
+          },
+        }]);
+      } else {
+        api.permission.respond(active.requestId, { behavior: 'allow' });
+      }
+    } finally {
+      setPermission(null);
+      setPermissionBusy(false);
     }
-    setPermission(null);
-    setPermissionBusy(false);
+  };
+
+  const openPermissionCorrection = () => {
+    if (!permission) return;
+    setProposeContext({
+      messageId: `permission-${permission.requestId}`,
+      messageText: `Permission blocked for tool \`${permission.toolName}\`.\n\n${JSON.stringify(permission.toolInput, null, 2)}`,
+      who: 'otto',
+    });
   };
 
   const submitProposal = async (input: { correction: string; target: ProposalTarget; rationale: string }) => {
@@ -387,6 +441,10 @@ const LiveChat: React.FC<{
   };
 
   const streamMessages = [...rt.messages, ...cmdMessages];
+
+  useEffect(() => {
+    setCmdMessages([]);
+  }, [rt.activeThreadId]);
 
   useEffect(() => {
     try { localStorage.setItem(DRAFT_KEY, draft); } catch { /* best effort */ }
@@ -491,7 +549,7 @@ const LiveChat: React.FC<{
             {st ? (
               <>
                 <span className={`dot ${ready ? 'dot--ok' : 'dot--warn'}`} aria-hidden="true" />
-                {sessionSubtitle(st)}
+                {activeThreadTitle ?? (ready ? 'New chat' : st.reason ?? 'connecting…')}
               </>
             ) : 'connecting…'}
           </div>
@@ -500,7 +558,7 @@ const LiveChat: React.FC<{
 
       <div className="chat__stream">
         {ready && onNavigate ? (
-          <CommandStationStrip onNavigate={onNavigate} />
+          <CommandStationStrip onNavigate={onNavigate} counts={stationCounts} />
         ) : null}
         {!ready && st && (
           <div className="inkblock" style={{ maxWidth: 760 }}>
@@ -539,7 +597,19 @@ const LiveChat: React.FC<{
                   onOpenStandard={m.checkBlock.standardId ? () => onNavigate('standards') : undefined}
                 />
               ) : null}
-              <div className="msg__body" style={m.who === 'error' ? { color: 'var(--stop)' } : undefined}><MarkdownText text={m.text} /></div>
+              {m.receiptInline ? (
+                <ReceiptInlineCard
+                  id={m.receiptInline.id}
+                  status={m.receiptInline.status}
+                  action={m.receiptInline.action}
+                  summary={m.receiptInline.summary}
+                  authority={m.receiptInline.authority}
+                  onOpenReceipts={onNavigate ? () => onNavigate('receipts') : undefined}
+                />
+              ) : null}
+              <div className="msg__body" style={m.who === 'error' ? { color: 'var(--stop)' } : undefined}>
+                {m.text ? <MarkdownText text={m.text} /> : null}
+              </div>
               {canPropose ? (
                 <MessageActions
                   disabled={proposeBusy}
@@ -730,7 +800,12 @@ const LiveChat: React.FC<{
         }}
       >
         {permission ? (
-          <PermissionCard request={permission} busy={permissionBusy} onDecide={respondPermission} />
+          <PermissionCard
+            request={permission}
+            busy={permissionBusy}
+            onDecide={(decision, denyMessage) => { void respondPermission(decision, denyMessage); }}
+            onCorrectThis={openPermissionCorrection}
+          />
         ) : null}
       </Modal>
 
@@ -741,6 +816,7 @@ const LiveChat: React.FC<{
         onClose={() => { if (!proposeBusy) setProposeContext(null); }}
         onSubmit={(input) => { void submitProposal(input); }}
         classify={api ? (input) => api.curation.proposals.classify(input) : undefined}
+        constitutionGet={api ? () => api.constitution.get() : undefined}
       />
     </div>
   );

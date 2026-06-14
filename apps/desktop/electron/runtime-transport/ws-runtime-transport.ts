@@ -12,12 +12,13 @@ import { PracticeStore } from '../practice-store';
 import { TraceWriter } from '../trace-writer';
 import { discoverLocalLettaContext } from './letta-discovery';
 import {
-  SMOKE_MODE,
+  smokeMode,
   classify,
   friendly,
   msg,
   nextActionFor,
   resolveCli,
+  safeWebContentsSend,
 } from './runtime-common';
 import { isDeviceOnline, isLoopIdle, normalizeWsEvent, type WsRuntimeEvent } from './ws-protocol';
 import type { OttoRuntimeTransport } from './types';
@@ -32,7 +33,7 @@ type PendingControl = {
 
 /** Local BYOR WebSocket server; Letta Code `remote` connects inbound. */
 export class WsRuntimeTransport implements OttoRuntimeTransport {
-  private status: RuntimeStatus = { ready: false, reason: 'not initialized', ...resolveCli() };
+  private status: RuntimeStatus = { ready: false, reason: 'not initialized', ...resolveCli('embedded') };
   private server: WebSocketServer | null = null;
   private listenerPort: number | null = null;
   private sessionToken = '';
@@ -41,6 +42,7 @@ export class WsRuntimeTransport implements OttoRuntimeTransport {
   private pendingControls = new Map<string, PendingControl>();
   private controlByUpstream = new Map<string, string>();
   private aborted = false;
+  private turnIdle = false;
   private activeRunId: string | null = null;
   private receipts = new ReceiptWriter();
   private standards = new StandardStore();
@@ -76,7 +78,7 @@ export class WsRuntimeTransport implements OttoRuntimeTransport {
 
   async init(opts?: { freshConversation?: boolean }): Promise<RuntimeStatus> {
     await this.close();
-    const cli = resolveCli();
+    const cli = resolveCli(this.config.connectionMode());
     const context = discoverLocalLettaContext(this.config);
     const agentId = context.agentCandidates[0] ?? context.agentId;
     if (!agentId) {
@@ -88,11 +90,11 @@ export class WsRuntimeTransport implements OttoRuntimeTransport {
 
     try {
       await this.startListener();
-      await this.spawnRemote(cli.cliPath);
+      await this.spawnRemote(cli.cliPath, context.baseUrl);
       await this.waitForRuntimeSocket();
       const conversationId = opts?.freshConversation ? null : this.config.get().conversationId;
       await this.syncRuntime(agentId, conversationId ?? null);
-      if (SMOKE_MODE && this.status.conversationId === 'default') {
+      if (smokeMode() && this.status.conversationId === 'default') {
         await this.close();
         throw new Error('Smoke test refused to use conversation=default');
       }
@@ -105,7 +107,7 @@ export class WsRuntimeTransport implements OttoRuntimeTransport {
         conversationId: this.status.conversationId ?? conversationId,
         modelHandle: this.config.modelHandle(),
         effort: this.config.effort(),
-        sessionMode: SMOKE_MODE ? 'smoke' : 'default',
+        sessionMode: smokeMode() ? 'smoke' : 'default',
         transportMode: 'ws',
         effectiveTransport: 'websocket local',
         transportFallbackReason: null,
@@ -113,7 +115,7 @@ export class WsRuntimeTransport implements OttoRuntimeTransport {
         lastReconnectAt: this.lastReconnectAt,
         ...cli,
       };
-      if (!SMOKE_MODE) {
+      if (!smokeMode()) {
         this.config.update({
           agentId,
           baseUrl: context.baseUrl,
@@ -130,7 +132,7 @@ export class WsRuntimeTransport implements OttoRuntimeTransport {
   }
 
   async newChat(): Promise<RuntimeStatus> {
-    if (!SMOKE_MODE) this.config.update({ conversationId: null });
+    if (!smokeMode()) this.config.update({ conversationId: null });
     return this.init({ freshConversation: true });
   }
 
@@ -151,6 +153,7 @@ export class WsRuntimeTransport implements OttoRuntimeTransport {
     const trace = new TraceWriter(this.status.conversationId || 'ws');
     const startedStatus = { ...this.status };
     this.aborted = false;
+    this.turnIdle = false;
     this.activeRunId = null;
     trace.write('prompt', { text, transport: 'ws', agentId: this.status.agentId, conversationId: this.status.conversationId });
 
@@ -174,14 +177,16 @@ export class WsRuntimeTransport implements OttoRuntimeTransport {
           this.handleControlRequest(event);
           return;
         }
+        this.trackActiveRun(event);
         const normalized = normalizeWsEvent(event);
         if (normalized) {
-          this.win.webContents.send('otto:event', { message: normalized });
+          safeWebContentsSend(this.win, 'otto:event', { message: normalized });
           if (normalized.type === 'assistant') sawAssistant = true;
           if (normalized.type === 'error') turnError = String(normalized.message ?? 'error');
         }
         if (isLoopIdle(event)) {
-          this.win.webContents.send('otto:event', {
+          this.turnIdle = true;
+          safeWebContentsSend(this.win, 'otto:event', {
             message: { type: 'result', success: !turnError, conversationId: this.status.conversationId, uuid: randomUUID() },
           });
           writeReceipt(turnError ? 'failed' : 'success', turnError ? 'Chat turn failed.' : 'Chat turn completed.', turnError ? {
@@ -208,7 +213,7 @@ export class WsRuntimeTransport implements OttoRuntimeTransport {
         },
       });
 
-      await this.waitForTurnComplete(CONNECT_TIMEOUT_MS, () => this.aborted);
+      await this.waitForTurnComplete(CONNECT_TIMEOUT_MS, () => this.aborted || this.turnIdle);
       if (!receiptWritten) {
         writeReceipt(this.aborted ? 'blocked' : sawAssistant ? 'success' : 'failed', this.aborted ? 'Chat turn was aborted.' : sawAssistant ? 'Chat turn completed.' : 'Chat turn ended without idle signal.', this.aborted ? {
           code: 'aborted',
@@ -237,6 +242,9 @@ export class WsRuntimeTransport implements OttoRuntimeTransport {
     this.aborted = true;
     if (this.activeRunId && this.runtimeSocket?.readyState === WebSocket.OPEN) {
       this.sendCommand({ type: 'abort_message', run_id: this.activeRunId });
+    }
+    if (this.status.ready) {
+      this.status = { ...this.status, code: 'ready', reason: 'Turn abort requested' };
     }
   }
 
@@ -275,7 +283,7 @@ export class WsRuntimeTransport implements OttoRuntimeTransport {
       discoverySource: context.source,
       modelHandle: this.config.modelHandle(),
       effort: this.config.effort(),
-      sessionMode: SMOKE_MODE ? 'smoke' : 'default',
+      sessionMode: smokeMode() ? 'smoke' : 'default',
       transportMode: 'ws',
       effectiveTransport: 'websocket local',
       transportFallbackReason: reason,
@@ -325,22 +333,33 @@ export class WsRuntimeTransport implements OttoRuntimeTransport {
     });
   }
 
-  private async spawnRemote(cliPath: string): Promise<void> {
+  private async spawnRemote(cliPath: string, backendBaseUrl: string | null): Promise<void> {
     if (!this.listenerPort) throw new Error('WebSocket listener not started');
     const key = getSecret('LETTA_API_KEY');
+    const listenerUrl = `http://127.0.0.1:${this.listenerPort}`;
     const env = {
       ...process.env,
-      LETTA_BASE_URL: `http://127.0.0.1:${this.listenerPort}`,
+      LETTA_BASE_URL: listenerUrl,
       IGNORE_SELF_HOSTED_LISTENER_ERROR: '1',
       BYOR_REMOTE_TOKEN: this.sessionToken,
+      ...(backendBaseUrl ? { OTTO_LETTA_BACKEND_URL: backendBaseUrl } : {}),
       ...(key ? { LETTA_API_KEY: key } : {}),
     };
-    this.remoteProc = spawn(process.execPath, [cliPath, 'remote', '--env-name', REMOTE_ENV, '--backend', 'local'], {
+    const nodeBin = process.env.LETTA_NODE?.trim() || 'node';
+    const stderrChunks: string[] = [];
+    this.remoteProc = spawn(nodeBin, [cliPath, 'remote', '--env-name', REMOTE_ENV, '--backend', 'local'], {
       env,
       stdio: ['ignore', 'pipe', 'pipe'],
     });
-    this.remoteProc.stderr?.on('data', () => {
-      // stderr captured in trace only if needed — never log secrets
+    this.remoteProc.stderr?.on('data', (chunk: Buffer) => {
+      const line = String(chunk).trim();
+      if (line) stderrChunks.push(line);
+    });
+    this.remoteProc.on('exit', (code) => {
+      if (code !== 0 && !this.runtimeSocket) {
+        const detail = stderrChunks.slice(-3).join(' | ') || `exit ${code}`;
+        this.markNotReady(`Letta Code remote exited before connect (${detail}).`, 'unreachable');
+      }
     });
   }
 
@@ -422,6 +441,17 @@ export class WsRuntimeTransport implements OttoRuntimeTransport {
     });
   }
 
+  private trackActiveRun(event: WsRuntimeEvent) {
+    if (event.type !== 'update_loop_status') return;
+    const loop = event.loop_status as { active_run_ids?: unknown[] } | undefined;
+    const ids = loop?.active_run_ids;
+    if (Array.isArray(ids) && ids.length > 0) {
+      this.activeRunId = String(ids[0]);
+      return;
+    }
+    if (isLoopIdle(event)) this.activeRunId = null;
+  }
+
   private handleControlRequest(event: WsRuntimeEvent) {
     const upstreamId = String(event.request_id ?? event.requestId ?? randomUUID());
     const requestId = randomUUID();
@@ -430,7 +460,7 @@ export class WsRuntimeTransport implements OttoRuntimeTransport {
     const toolInput = (event.tool_input ?? event.toolInput ?? {}) as Record<string, unknown>;
     const interactive = toolName === 'AskUserQuestion' || toolName === 'ExitPlanMode';
     const req: PermissionRequest = { requestId, toolName, toolInput, interactive };
-    this.win.webContents.send('otto:permission', req);
+    safeWebContentsSend(this.win, 'otto:permission', req);
     this.pendingControls.set(requestId, {
       requestId,
       resolve: () => {
@@ -446,11 +476,11 @@ export class WsRuntimeTransport implements OttoRuntimeTransport {
       code,
       reason: friendly(code, reason),
     };
-    this.win.webContents.send('otto:event', { status: this.status });
+    safeWebContentsSend(this.win, 'otto:event', { status: this.status });
   }
 
   private emitError(message: string) {
-    this.win.webContents.send('otto:event', {
+    safeWebContentsSend(this.win, 'otto:event', {
       message: { type: 'error', message, uuid: randomUUID() },
     });
   }

@@ -1,7 +1,12 @@
 import { describe, expect, test } from 'bun:test';
-import { existsSync, mkdtempSync, rmSync } from 'node:fs';
+import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { parse, stringify } from 'yaml';
+import { CheckRunner } from './check-runner';
+import { CheckStore } from './check-store';
+import { ReceiptWriter } from './receipt-writer';
+import { ReceiptStore } from './receipt-store';
 import { TicketStore } from './ticket-store';
 
 describe('TicketStore', () => {
@@ -45,6 +50,40 @@ describe('TicketStore', () => {
       expect(merged.status).toBe('merged');
     } finally {
       rmSync(tmp, { recursive: true, force: true });
+    }
+  });
+
+  test('blocks merged when check fails and surfaces receipt_id', () => {
+    const tmp = mkdtempSync(join(tmpdir(), 'otto-ticket-check-'));
+    const checksDir = join(tmp, 'checks');
+    const receiptsDir = join(tmp, 'receipts');
+    try {
+      process.env.OTTO_CHECKS_DIR = checksDir;
+      const checkStore = new CheckStore(checksDir);
+      checkStore.listResult();
+      const checks = new CheckRunner(checkStore, new ReceiptWriter(receiptsDir));
+      const store = new TicketStore(join(tmp, 'tickets'), new ReceiptWriter(receiptsDir), checks);
+      const compiled = store.compile({ slug: 'check-gate', objective: 'Culture CI gate fixture.' });
+      store.updateStatus(compiled.ticket.ticket_id, { status: 'active' });
+      store.updateStatus(compiled.ticket.ticket_id, { status: 'review' });
+
+      const raw = parse(readFileSync(compiled.ticket.ticketPath, 'utf8')) as Record<string, unknown>;
+      const acs = raw.acceptance_criteria as Array<{ id: string; text: string; proof?: string }>;
+      acs[0].proof = '';
+      writeFileSync(compiled.ticket.ticketPath, stringify(raw), 'utf8');
+
+      expect(() =>
+        store.updateStatus(compiled.ticket.ticket_id, {
+          status: 'merged',
+          review: { verdict: '+1', evidence: ['receipts/2026-06-13/check-gate.md'], reviewed_at: new Date().toISOString() },
+        }),
+      ).toThrow(/receipt:/);
+
+      const failedReceipts = new ReceiptStore(receiptsDir).list().receipts.filter((r) => r.action === 'check.failed');
+      expect(failedReceipts.length).toBeGreaterThan(0);
+    } finally {
+      rmSync(tmp, { recursive: true, force: true });
+      delete process.env.OTTO_CHECKS_DIR;
     }
   });
 

@@ -36,6 +36,15 @@ export interface CreateProposalResult {
   receipt: WrittenReceipt;
 }
 
+export interface CreateProposalFromSystemInput {
+  summary: string;
+  rationale: string;
+  target: ProposalTarget;
+  evidence?: ProposalEvidenceRef[];
+  source?: CurationProposal['source'];
+  created_by?: CurationProposal['created_by'];
+}
+
 export interface DecideProposalResult {
   proposal: CurationProposalRecord;
   receipt: WrittenReceipt;
@@ -117,6 +126,65 @@ export class ProposalStore {
         correction: input.correction,
         target: input.target,
         classification,
+      },
+      result: {
+        summary: `Proposal recorded: ${proposalBody.summary}`,
+        data: { proposalId: id, route: classification.route },
+      },
+      evidence: evidence.map((entry) => ({
+        kind: entry.kind === 'receipt' ? 'log' : entry.kind === 'file' ? 'file' : 'message',
+        ref: entry.ref,
+        note: entry.note,
+      })),
+      blocker: null,
+    });
+
+    const record: CurationProposalRecord = {
+      ...proposalBody,
+      receipt_id: receipt.id,
+      path: join(this.dir, `${safeId(id)}.json`),
+    };
+    writeFileSync(record.path, `${JSON.stringify(record, null, 2)}\n`);
+
+    return { proposal: record, receipt };
+  }
+
+  createFromSystem(input: CreateProposalFromSystemInput): CreateProposalResult {
+    mkdirSync(this.dir, { recursive: true });
+    const now = new Date().toISOString();
+    const id = `prop_${now.slice(0, 10).replace(/-/g, '')}_${randomUUID().slice(0, 8)}`;
+    const classification = classifyProposal(input.target, input.rationale);
+    const kind = kindForTarget(input.target);
+    const evidence = input.evidence ?? [];
+    const rationale = input.rationale.trim();
+    const summary = input.summary.trim();
+    const status = classification.required_gate === 'none' ? 'proposed' : 'needs_approval';
+
+    const proposalBody: CurationProposal = {
+      schema: 'otto.proposal.v1',
+      id,
+      source: input.source ?? 'run_review',
+      kind,
+      summary,
+      rationale,
+      evidence,
+      target: input.target,
+      classification,
+      status,
+      created_at: now,
+      updated_at: now,
+      created_by: input.created_by ?? 'otto',
+    };
+
+    const receipt = this.receipts.write({
+      status: 'success',
+      subject: { type: 'proposal', id },
+      action: 'curation.proposal.create',
+      input: {
+        summary,
+        target: input.target,
+        classification,
+        source: proposalBody.source,
       },
       result: {
         summary: `Proposal recorded: ${proposalBody.summary}`,
@@ -245,7 +313,7 @@ export class ProposalStore {
 
     let compiledCheckId: string | null = null;
     if (input.decision === 'accept' && nextStatus === 'applied') {
-      const compiler = new CheckCompiler();
+      const compiler = new CheckCompiler(undefined, this.receipts);
       const standardsDir = new StandardStore().listResult().dir;
       const compiled = compiler.compileFromProposal(updated, standardsDir);
       if (compiled.compiled) compiledCheckId = compiled.compiled.id;

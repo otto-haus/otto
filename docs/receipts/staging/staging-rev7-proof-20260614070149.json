@@ -1,0 +1,171 @@
+{
+  "ok": true,
+  "runId": "20260614070149",
+  "gitHead": "fff0152",
+  "stagingApp": "/Applications/otto-staging.app",
+  "cdpPort": 9445,
+  "viewport": {
+    "width": 1280,
+    "height": 720
+  },
+  "screenshots": {
+    "sidebar046": "/Users/seb/Code/otto/docs/receipts/staging/046-sidebar-thread-list.png",
+    "chat081": "/Users/seb/Code/otto/docs/receipts/staging/081-chat-shell-craft-product-polish.png",
+    "commandStation059": "/Users/seb/Code/otto/docs/receipts/staging/059-command-station-live.png",
+    "checks134": "/Users/seb/Code/otto/docs/receipts/staging/134-checks-surface.png",
+    "block135": "/Users/seb/Code/otto/docs/receipts/staging/135-culture-ci-block.png"
+  },
+  "checks": {
+    "runtimeReady": true,
+    "conversationId": "local-conv-14d8c308-8b31-4b0d-96fc-a916775bbe59",
+    "sessionMode": "smoke",
+    "notDefaultConversation": true,
+    "threadIsolation": true,
+    "threadCountGte2": true,
+    "noCliString": true,
+    "noMemFsString": true,
+    "workingPulseCopy": true,
+    "commandStationVisible": true,
+    "checksSeededGte1": true,
+    "checksSurfaceHasContent": true,
+    "checkBlockBanner": true,
+    "checkBlockBannerSynthetic": false,
+    "checkBlockBannerHasReceiptLink": true
+  },
+  "runtimeStatus": {
+    "ready": true,
+    "code": "ready",
+    "agentId": "agent-local-d8e35a2a-a89f-45dd-b117-5eae5df8c8f2",
+    "baseUrl": "http://127.0.0.1:51398",
+    "discoverySource": "otto config/env",
+    "conversationId": "local-conv-14d8c308-8b31-4b0d-96fc-a916775bbe59",
+    "model": "chatgpt-plus-pro/gpt-5.5",
+    "modelHandle": null,
+    "effort": "max",
+    "sessionMode": "smoke",
+    "memfsEnabled": false,
+    "tools": [
+      "Bash",
+      "TaskOutput",
+      "Edit",
+      "EnterPlanMode",
+      "ExitPlanMode",
+      "Glob",
+      "Grep",
+      "TaskStop",
+      "memory",
+      "Read",
+      "Skill",
+      "Task",
+      "TodoWrite",
+      "Write"
+    ],
+    "transportMode": "sdk",
+    "effectiveTransport": "sdk subprocess",
+    "transportFallbackReason": null,
+    "cliPath": "/Applications/otto-staging.app/Contents/Resources/app/node_modules/@letta-ai/letta-code/letta.js",
+    "cliResolved": true
+  },
+  "threads": {
+    "ok": true,
+    "alphaId": "local_344b87f1-e999-49fc-aa4e-d8bbf73bcdb6",
+    "betaId": "local_c5f9e9d7-1ca0-401d-afc5-3dbec6042952",
+    "alphaText": "046-alpha: isolated message A",
+    "betaText": "046-beta: isolated message B",
+    "isolationOk": true,
+    "threadCount": 16,
+    "activeThreadId": "local_c5f9e9d7-1ca0-401d-afc5-3dbec6042952",
+    "titles": [
+      {
+        "id": "local_c5f9e9d7-1ca0-401d-afc5-3dbec6042952",
+        "title": "046-beta-thread"
+      },
+      {
+        "id": "local_344b87f1-e999-49fc-aa4e-d8bbf73bcdb6",
+        "title": "046-alpha-thread"
+      },
+      {
+        "id": "local_2ceac24d-dee1-4e19-9805-4e9b14d38762",
+        "title": "046-beta-thread"
+      },
+      {
+        "id": "local_f7fadf5c-3bbd-43b9-a6d4-0f57e6ecf1f9",
+        "title": "046-alpha-thread"
+      },
+      {
+        "id": "local_01bc769b-8147-481e-a210-89705bab3c05",
+        "title": "046-beta-thread"
+      },
+      {
+        "id": "local_ea186588-9645-4956-bd0b-2f6505599746",
+        "title": "046-alpha-thread"
+      },
+      {
+        "id": "local_a484dd88-23da-49d5-986f-8e1ade037c51",
+        "title": "046-beta-thread"
+      },
+      {
+        "id": "local_4ff4c683-2442-46cb-be6e-9db951a08186",
+        "title": "046-alpha-thread"
+      },
+      {
+        "id": "local_036b0544-4a4e-4f17-a7db-a23d4c32e693",
+        "title": "046-beta-thread"
+      },
+      {
+        "id": "local_4c6b8157-baee-49c2-94f5-8654726a947d",
+        "title": "046-alpha-thread"
+      },
+      {
+        "id": "local_f435e2e6-3916-4ca7-8328-ba6ac06aed62",
+        "title": "046-beta-thread"
+      },
+      {
+        "id": "local_46d14db5-5260-41f1-b717-fef91eb690c3",
+        "title": "046-alpha-thread"
+      },
+      {
+        "id": "local_6aee9e7c-7e0a-467a-9fd1-136142881e0e",
+        "title": "046-beta-thread"
+      },
+      {
+        "id": "local_351abfc8-c879-4f4e-ae05-010e1afe34d6",
+        "title": "046-alpha-thread"
+      },
+      {
+        "id": "local_07fa6204-a765-489e-9a17-8eef358a190b",
+        "title": "New chat"
+      },
+      {
+        "id": "local_3d53883e-c4ea-463b-95d8-4925e592aa4a",
+        "title": "New chat"
+      }
+    ]
+  },
+  "block": {
+    "ok": true,
+    "checkName": "completion-requires-receipts",
+    "message": "Not done: missing mapped proof.",
+    "receiptId": "receipt-4da58640-c42b-4ad0-9c75-e1f785aaab40",
+    "standardId": "no-fake-done",
+    "results": [
+      {
+        "check_id": "completion-requires-receipts",
+        "trigger": "done_claim",
+        "passed": false,
+        "message": "Not done: missing mapped proof.",
+        "blocked": true,
+        "receipt_id": "receipt-4da58640-c42b-4ad0-9c75-e1f785aaab40"
+      }
+    ]
+  },
+  "checksSurface": {
+    "ok": true,
+    "dir": "/Users/seb/.codex/admin/otto-staging/otto-home/checks",
+    "count": 2,
+    "ids": [
+      "completion-requires-receipts",
+      "one-way-door-approval"
+    ]
+  }
+}

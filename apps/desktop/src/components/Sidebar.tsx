@@ -61,6 +61,7 @@ export const Sidebar: React.FC<{
   compact?: boolean;
   onToggleCollapsed: () => void;
   threads?: ThreadSummary[];
+  activeThreadId?: string | null;
   activeConversationId?: string | null;
   onSelectThread?: (thread: ThreadSummary) => void;
 }> = ({
@@ -71,6 +72,7 @@ export const Sidebar: React.FC<{
   compact = false,
   onToggleCollapsed,
   threads = [],
+  activeThreadId,
   activeConversationId,
   onSelectThread,
 }) => {
@@ -137,6 +139,7 @@ export const Sidebar: React.FC<{
 
       <ThreadList
         threads={threads}
+        activeThreadId={activeThreadId}
         activeConversationId={activeConversationId}
         onSelect={onSelectThread}
       />

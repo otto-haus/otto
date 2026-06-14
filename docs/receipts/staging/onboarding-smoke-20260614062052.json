@@ -1,0 +1,22 @@
+{
+  "ok": false,
+  "runId": "20260614062052",
+  "gitHead": null,
+  "appTemplate": "/Applications/otto-staging.app",
+  "receiptDir": "/Users/seb/Code/otto/docs/receipts/staging",
+  "screenshots": {
+    "connectedFirst": "/Users/seb/Code/otto/docs/receipts/staging/069-connected-first-state.png",
+    "receiptsSample": "/Users/seb/Code/otto/docs/receipts/staging/071-072-receipts-sample-onboarding.png",
+    "narrowLayout": "/Users/seb/Code/otto/docs/receipts/staging/073-narrow-dock-layout.png"
+  },
+  "checks": {
+    "connectedFirstRuntimeReady": true,
+    "connectedFirstWelcomeVisible": true,
+    "receiptsCtaShowsSample": true,
+    "receiptsCtaNotConnectDock": true,
+    "primaryCtaConnectDock": false,
+    "primaryCtaError": "locator.click: Timeout 30000ms exceeded.\nCall log:\n  - waiting for getByRole('button', { name: 'Connect local Letta →' })\n",
+    "narrowComposerVisible": true
+  },
+  "consoleMessages": []
+}

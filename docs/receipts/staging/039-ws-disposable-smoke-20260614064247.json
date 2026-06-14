@@ -1,0 +1,34 @@
+{
+  "schema": "otto.ws-disposable-smoke.v1",
+  "runId": "20260614064247",
+  "agentId": "agent-local-d8e35a2a-a89f-45dd-b117-5eae5df8c8f2",
+  "ottoHome": "/tmp/otto-ws-smoke-20260614064247",
+  "initMs": 45022,
+  "initStatus": {
+    "ready": false,
+    "code": "unreachable",
+    "reason": "Can't reach the Letta backend — check the base URL in Settings. (Timed out waiting for Letta Code remote to connect (letta remote --backend local).)",
+    "agentId": "agent-local-d8e35a2a-a89f-45dd-b117-5eae5df8c8f2",
+    "baseUrl": "http://localhost:51087",
+    "discoverySource": "otto config/env",
+    "modelHandle": null,
+    "effort": "max",
+    "sessionMode": "smoke",
+    "transportMode": "ws",
+    "effectiveTransport": "websocket local",
+    "transportFallbackReason": "Can't reach the Letta backend — check the base URL in Settings. (Timed out waiting for Letta Code remote to connect (letta remote --backend local).)",
+    "wsListenerPort": null,
+    "lastReconnectAt": null,
+    "cliPath": "/Applications/Letta.app/Contents/Resources/app.asar.unpacked/node_modules/@letta-ai/letta-code/letta.js",
+    "cliResolved": true
+  },
+  "sendMs": null,
+  "conversationId": null,
+  "tracePaths": [],
+  "receiptDir": "/tmp/otto-ws-smoke-20260614064247/receipts",
+  "runsDir": "/tmp/otto-ws-smoke-20260614064247/runs",
+  "ok": false,
+  "notes": [
+    "init failed: Can't reach the Letta backend — check the base URL in Settings. (Timed out waiting for Letta Code remote to connect (letta remote --backend local).)"
+  ]
+}

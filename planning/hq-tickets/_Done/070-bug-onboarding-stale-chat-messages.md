@@ -125,3 +125,43 @@ Scope satisfied; dependency on 069’s welcome gate holds via shared step machin
 ### Final call needed from Sebastian
 
 None — move to `_Done`.
+
+## Review rev8
+
+Reviewer: Independent Otto reviewer (rev8 batch)
+Date: 2026-06-14
+Verdict: +1
+Move to _Done?: Yes
+
+### Checked against Done when
+
+- All Done-when items: **Pass** — `onboarding-step.test.ts`; prior +1
+
+### Finding
+
+Reconfirmed +1.
+
+## Review rev9
+
+Reviewer: Independent Otto reviewer (rev9 batch)
+Date: 2026-06-14
+Verdict: +1
+Delta vs rev8: reconfirm
+
+### Evidence inspected
+
+- Commands: `bun run verify:v0` → 5/5 (163 unit tests)
+
+### Finding
+
+rev8 +1 stands; no rev9 delta.
+## Review rev10
+
+Reviewer: Independent Otto reviewer (Cursor)
+Date: 2026-06-14
+Verdict: +1
+Delta vs rev9: reconfirmed
+
+### Finding
+
+Rev9 +1 stands. Reconfirmed +1.

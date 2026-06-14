@@ -1,0 +1,20 @@
+{
+  "ok": false,
+  "runId": "20260614061307",
+  "gitHead": "c50b728",
+  "appTemplate": "/Applications/otto-staging.app",
+  "receiptDir": "/Users/seb/Code/otto/docs/receipts/staging",
+  "screenshots": {
+    "connectDock": "/Users/seb/Code/otto/docs/receipts/staging/072-primary-connect-dock.png"
+  },
+  "checks": {
+    "connectedFirstRuntimeReady": true,
+    "connectedFirstWelcomeVisible": false,
+    "connectedFirstError": "locator.waitFor: Timeout 8000ms exceeded.\nCall log:\n  - waiting for getByRole('heading', { name: 'The behavior layer for persistent agents.' }) to be visible\n",
+    "receiptsCtaShowsSample": false,
+    "receiptsCtaError": "locator.waitFor: Timeout 10000ms exceeded.\nCall log:\n  - waiting for getByText('sample · not live · not from your workspace') to be visible\n    15 × locator resolved to hidden <span class=\"filechip\">sample · not live · not from your workspace</span>\n",
+    "primaryCtaConnectDock": true,
+    "narrowLayoutError": "locator.waitFor: Timeout 8000ms exceeded.\nCall log:\n  - waiting for locator('textarea, [contenteditable=\"true\"]').first() to be visible\n"
+  },
+  "consoleMessages": []
+}

@@ -1,0 +1,26 @@
+{
+  "schema": "otto.046-reload-after-quit.v1",
+  "ok": true,
+  "runId": "20260614070008",
+  "gitHead": "fff0152",
+  "stagingApp": "/Applications/otto-staging.app",
+  "smokeScript": "scripts/otto-staging-two-thread-smoke.cjs",
+  "receiptJson": "docs/receipts/staging/two-thread-smoke-20260614070008.json",
+  "screenshots": {
+    "threadA": "docs/receipts/staging/046-two-thread-a-20260614070008.png",
+    "threadB": "docs/receipts/staging/046-two-thread-b-20260614070008.png",
+    "afterQuit": "docs/receipts/staging/046-after-quit-20260614070008.png"
+  },
+  "checks": {
+    "distinctThreadIds": true,
+    "threadIsolation": true,
+    "relaunchHasThreadA": true,
+    "relaunchHasThreadB": true,
+    "relaunchThreadAShowsMarker": true,
+    "relaunchOk": true
+  },
+  "notes": [
+    "Session 1: create two threads, inject distinct localStorage markers, switch + reload.",
+    "Session 2: quit app, relaunch same profile — thread index + active thread messages restore after switch+reload."
+  ]
+}

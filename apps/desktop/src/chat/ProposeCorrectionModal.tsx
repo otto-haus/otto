@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import type { ProposalCanonImpact, ProposalClassification, ProposalTarget } from '@otto-haus/core';
+import type { ConstitutionResult, ProposalCanonImpact, ProposalClassification, ProposalTarget } from '@otto-haus/core';
 import { Modal } from '../components/ui/Modal';
-import { chatCopy } from '../copy/surfaces';
+import { chatCopy, cultureSettingsCopy, memoryWritebackCopy } from '../copy/surfaces';
 
 const TARGET_OPTIONS: Array<{ kind: ProposalCanonImpact | 'task'; label: string }> = [
   { kind: 'standard', label: 'Standard' },
@@ -25,11 +25,14 @@ export const ProposeCorrectionModal: React.FC<{
   onClose: () => void;
   onSubmit: (input: { correction: string; target: ProposalTarget; rationale: string }) => void;
   classify?: (input: { correction: string; target: ProposalTarget }) => Promise<ProposalClassification>;
-}> = ({ open, context, busy = false, onClose, onSubmit, classify }) => {
+  constitutionGet?: () => Promise<ConstitutionResult>;
+}> = ({ open, context, busy = false, onClose, onSubmit, classify, constitutionGet }) => {
   const [correction, setCorrection] = useState('');
   const [rationale, setRationale] = useState('');
   const [targetKind, setTargetKind] = useState<ProposalCanonImpact | 'task'>('standard');
   const [preview, setPreview] = useState<ProposalClassification | null>(null);
+  const [writebackAllowed, setWritebackAllowed] = useState(true);
+  const [writebackReason, setWritebackReason] = useState<string>(cultureSettingsCopy.writebackGate);
 
   useEffect(() => {
     if (!open || !context) return;
@@ -54,7 +57,37 @@ export const ProposeCorrectionModal: React.FC<{
     };
   }, [open, classify, correction, targetKind]);
 
+  useEffect(() => {
+    if (!open || targetKind !== 'memory' || !constitutionGet) {
+      setWritebackAllowed(true);
+      setWritebackReason(cultureSettingsCopy.writebackGate);
+      return;
+    }
+    let cancelled = false;
+    void constitutionGet().then((result) => {
+      if (cancelled) return;
+      const policy = result.document.writeback_policy;
+      const allowed = policy.mode === 'proposal_only'
+        && policy.requires_curation_accept
+        && policy.silent_apply_forbidden;
+      setWritebackAllowed(allowed);
+      setWritebackReason(allowed
+        ? cultureSettingsCopy.writebackGate
+        : 'Constitution writeback_policy requires proposal-only flow with Curation accept.');
+    }).catch(() => {
+      if (!cancelled) {
+        setWritebackAllowed(false);
+        setWritebackReason('Constitution unavailable — memory writeback blocked until policy loads.');
+      }
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [open, targetKind, constitutionGet]);
+
   const target = targetForKind(targetKind);
+  const memoryTarget = targetKind === 'memory';
+  const submitDisabled = busy || !correction.trim() || (memoryTarget && !writebackAllowed);
 
   return (
     <Modal open={open} title="Propose from correction" onClose={() => { if (!busy) onClose(); }}>
@@ -84,12 +117,28 @@ export const ProposeCorrectionModal: React.FC<{
               <p className="muted">{preview.reason}</p>
             </div>
           ) : null}
+          {memoryTarget ? (
+            <div className="proposeModal__writebackGate panel">
+              <div className="eyebrow">{memoryWritebackCopy.eyebrow}</div>
+              <p className="muted" style={{ marginTop: 8 }}>{memoryWritebackCopy.lede}</p>
+              <p className="faint" style={{ marginTop: 8 }}>{writebackReason}</p>
+              {context ? (
+                <p className="muted" style={{ marginTop: 8 }}>
+                  <strong>Evidence:</strong> {context.messageText.slice(0, 280)}
+                  {context.messageText.length > 280 ? '…' : ''}
+                </p>
+              ) : null}
+              {!writebackAllowed ? (
+                <p className="notice notice--warn" style={{ marginTop: 10 }}>{writebackReason}</p>
+              ) : null}
+            </div>
+          ) : null}
           <div className="proposeModal__actions">
             <button type="button" className="btn btn--ghost-d" disabled={busy} onClick={onClose}>Cancel</button>
             <button
               type="button"
               className="btn btn--solid-d"
-              disabled={busy || !correction.trim()}
+              disabled={submitDisabled}
               onClick={() => onSubmit({ correction: correction.trim(), target, rationale: rationale.trim() || correction.trim() })}
             >
               Create proposal

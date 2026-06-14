@@ -6,23 +6,51 @@ Skills are reusable capability/context packages an agent loads to do a kind of w
 
 ## Required file contract
 
-- [ ] Core Otto skill exists.
-- [ ] Routine skill exists if claimed.
-- [ ] Skill docs include triggers, workflow, constraints, and outputs.
-- [ ] Install/load instructions exist.
+- [x] Core Otto skill exists.
+  - Evidence: `skill/SKILL.md`
+
+- [x] Routine skill exists if claimed.
+  - Evidence: `skill/routine/SKILL.md`
+
+- [x] Skill docs include triggers, workflow, constraints, and outputs.
+  - Evidence: frontmatter `description` + workflow sections in both SKILL.md files
+
+- [x] Install/load instructions exist.
+  - Evidence: `scripts/install.sh` — symlinks extensions + copies skills to Letta memory dir
 
 ## Required runtime behavior
 
-- [ ] Skills can be installed or loaded in Letta Code.
-- [ ] Skills point to real repo artifacts and current naming.
+- [x] Skills load from file-backed canon in desktop.
+  - Evidence: `SkillStore` (`apps/desktop/electron/skill-store.ts`); IPC `otto:skills:list`; Skills pane with `storage: files` pill
+
+- [~] Skills can be installed or loaded in Letta Code.
+  - Partial: `scripts/install.sh` + extensions exist; no CI harness for live Letta `/reload`
+
+- [x] Skills point to real repo artifacts and current naming.
+  - Evidence: `skill-store.test.ts` loads `otto` slug from `skill/SKILL.md`
 
 ## Required demo
 
-- [ ] `demo/out/otto-v01-skills.mp4` shows actual skill files and what they enable.
+- [x] `demo/out/otto-v01-skills.mp4` shows actual skill files and what they enable.
+  - Evidence: `demo/out/otto-v01-skills.mp4` exists
 
 ## Required receipt
 
-- [ ] `receipts/otto-v01/skills.md` states manual vs automated verification.
+- [x] `receipts/otto-v01/skills.md` states manual vs automated verification.
+  - Evidence: `receipts/otto-v01/skills.md` + `skill-store.test.ts`
+
+## Staging smoke (desktop pane)
+
+- Load: Skills pane lists SKILL.md packages from `skill/`
+- Empty: no skills dir → honest empty state (store returns empty list)
+- Error: IPC failure surfaces notice banner
+- File/live pill: `storage: files` chip visible
+
+## Automated verification
+
+```sh
+bun test ./apps/desktop/electron/skill-store.test.ts
+```
 
 ## Status legend
 
@@ -32,11 +60,7 @@ Skills are reusable capability/context packages an agent loads to do a kind of w
 
 ## Ship decision
 
-Choose one:
-- Ship in v0.1
-- Ship as Proposed
-- Defer
-- Cut from public claims
+**Ship in v0.1** — file-backed loader + desktop surface; Letta install path manual.
 
 ## Truth rule
 

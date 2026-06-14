@@ -3,6 +3,7 @@ import { join, resolve } from 'node:path';
 import { parse } from 'yaml';
 import type {
   StandardCitation,
+  StandardConflictResult,
   StandardRecord,
   StandardRef,
   StandardsRegistry,
@@ -64,6 +65,43 @@ export class StandardStore {
     if (/\b(decide|judgment|uncertain|tradeoff|risk)\b/.test(lower)) slugs.add('judgment');
     if (/\b(candid|truth|kind|blunt)\b/.test(lower)) slugs.add('candor-kindness');
     return this.citationsForSlugs([...slugs], 'Runtime receipt cites relevant file-backed Standards.');
+  }
+
+  conflictForSlugs(slugs: string[]): StandardConflictResult | null {
+    const normalized = unique(slugs);
+    if (!normalized.length) return null;
+    const { registry } = this.listResult();
+    const match = registry.conflicts.find((conflict) =>
+      conflict.between.some((slug) => normalized.includes(slug)),
+    );
+    return match ? this.enrichConflict(match) : null;
+  }
+
+  conflictForStandard(slug: string): StandardConflictResult | null {
+    const standard = this.get(slug);
+    const related = unique([slug, ...(standard?.conflicts_with ?? [])]);
+    return this.conflictForSlugs(related);
+  }
+
+  readPrecedent(relativePath: string): { excerpt?: string; file?: string } | null {
+    const file = join(this.dir, relativePath);
+    if (!existsSync(file)) return null;
+    const source = readFileSync(file, 'utf8');
+    const excerpt = extractPrecedentExcerpt(source);
+    return { file: relativePath, excerpt };
+  }
+
+  private enrichConflict(conflict: StandardsRegistry['conflicts'][number]): StandardConflictResult {
+    const precedent = conflict.precedent ? this.readPrecedent(conflict.precedent) : null;
+    const message = precedent?.excerpt
+      ? `Case law applies — ${conflict.tie_breaker}`
+      : `No case law yet — tie-breaker is "${conflict.tie_breaker}".`;
+    return {
+      between: conflict.between,
+      message,
+      tie_breaker: conflict.tie_breaker,
+      precedent: precedent ?? undefined,
+    };
   }
 
   private pathFor(registryFile: string): string {
@@ -203,4 +241,12 @@ function unique(values: string[]): string[] {
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return !!value && typeof value === 'object' && !Array.isArray(value);
+}
+
+function extractPrecedentExcerpt(markdown: string): string {
+  const which = markdown.match(/## Which standard won\?\s*\n([\s\S]*?)(?:\n## |\n$)/);
+  if (which?.[1]) return which[1].trim().slice(0, 480);
+  const decision = markdown.match(/## Decision\s*\n([\s\S]*?)(?:\n## |\n$)/);
+  if (decision?.[1]) return decision[1].trim().slice(0, 480);
+  return markdown.replace(/^```[\s\S]*?```\s*/m, '').trim().slice(0, 480);
 }

@@ -1,0 +1,128 @@
+#!/usr/bin/env bash
+# 076 — verify bundled Letta CLI resolves from app Resources (embedded mode).
+# Does not launch Electron or mutate live /Applications/otto.app.
+set -euo pipefail
+
+ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+DEFAULT_STAGING="/Applications/otto-staging.app"
+DEFAULT_BUILT="$ROOT/apps/desktop/dist-app/mac-arm64/otto.app"
+
+APP="${OTTO_EMBEDDED_APP:-}"
+if [[ -z "$APP" ]]; then
+  if [[ -d "$DEFAULT_STAGING" ]]; then
+    APP="$DEFAULT_STAGING"
+  elif [[ -d "$DEFAULT_BUILT" ]]; then
+    APP="$DEFAULT_BUILT"
+  else
+    echo "error: no packaged otto.app — set OTTO_EMBEDDED_APP or run:" >&2
+    echo "  bun run --cwd apps/desktop app:dir" >&2
+    echo "  bash apps/desktop/scripts/deploy-staging.sh" >&2
+    exit 1
+  fi
+fi
+
+RESOURCES="$APP/Contents/Resources"
+BUNDLED="$RESOURCES/app/node_modules/@letta-ai/letta-code/letta.js"
+DESKTOP_CLI="/Applications/Letta.app/Contents/Resources/app.asar.unpacked/node_modules/@letta-ai/letta-code/letta.js"
+
+echo "embedded-letta-smoke"
+echo "  app=$APP"
+echo "  resources=$RESOURCES"
+
+if [[ ! -f "$BUNDLED" ]]; then
+  echo "FAIL: bundled letta.js missing at expected path:" >&2
+  echo "  $BUNDLED" >&2
+  echo "Rebuild with: bun run --cwd apps/desktop app:dir (asar: false → app/node_modules)" >&2
+  exit 1
+fi
+
+echo "  bundled_letta=$BUNDLED (exists)"
+
+# resolveCli('embedded') must pick Resources path, never Letta.app first.
+RESULT="$(cd "$ROOT" && bun -e "
+  process.resourcesPath = ${RESOURCES@Q};
+  delete process.env.LETTA_CLI_PATH;
+  const { resolveCli } = await import('./apps/desktop/electron/runtime-transport/runtime-common.ts');
+  const embedded = resolveCli('embedded');
+  const existing = resolveCli('existing');
+  console.log(JSON.stringify({ embedded, existing, desktopCliExists: require('fs').existsSync(${DESKTOP_CLI@Q}) }));
+")"
+
+CLI_PATH="$(echo "$RESULT" | bun -e "const j=JSON.parse(await Bun.stdin.text()); console.log(j.embedded.cliPath);")"
+CLI_RESOLVED="$(echo "$RESULT" | bun -e "const j=JSON.parse(await Bun.stdin.text()); console.log(j.embedded.cliResolved);")"
+EXISTING_PATH="$(echo "$RESULT" | bun -e "const j=JSON.parse(await Bun.stdin.text()); console.log(j.existing.cliPath);")"
+
+if [[ "$CLI_RESOLVED" != "true" ]]; then
+  echo "FAIL: resolveCli('embedded').cliResolved !== true" >&2
+  echo "$RESULT" >&2
+  exit 1
+fi
+
+if [[ "$CLI_PATH" != "$BUNDLED" ]]; then
+  echo "FAIL: embedded mode did not prefer bundled Resources path" >&2
+  echo "  got:      $CLI_PATH" >&2
+  echo "  expected: $BUNDLED" >&2
+  exit 1
+fi
+
+# When Letta Desktop is installed, existing mode should prefer it over bundled.
+if [[ -f "$DESKTOP_CLI" && "$EXISTING_PATH" != "$DESKTOP_CLI" ]]; then
+  echo "WARN: Letta.app present but resolveCli('existing') did not pick desktop CLI" >&2
+  echo "  got: $EXISTING_PATH" >&2
+fi
+
+STAMP="$(date -u +%Y%m%dT%H%M%SZ)"
+RECEIPT="$ROOT/receipts/otto-v01/embedded-letta-smoke-$STAMP.md"
+mkdir -p "$(dirname "$RECEIPT")"
+cat >"$RECEIPT" <<EOF
+# Embedded Letta CLI smoke (076)
+
+- **At:** $(date -u +%Y-%m-%dT%H:%M:%SZ)
+- **App:** $APP
+- **Bundled path:** $BUNDLED
+- **resolveCli(embedded):** cliResolved=true, cliPath matches bundled
+- **Command:** bash scripts/embedded-letta-smoke.sh
+
+Honest scope: path resolution only — use \`otto-staging-076-bootstrap-proof.cjs\` for init + chat turn, or \`OTTO_BOOTSTRAP_PROOF=1\` to chain both.
+EOF
+
+JSON_RECEIPT="$ROOT/receipts/otto-v01/embedded-letta-smoke-$STAMP.json"
+cat >"$JSON_RECEIPT" <<EOF
+{
+  "at": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
+  "app": "$APP",
+  "cliResolved": true,
+  "cliPath": "$CLI_PATH",
+  "bootstrapTurnCompleted": false,
+  "fullBootstrapProof": "scripts/otto-staging-076-bootstrap-proof.cjs"
+}
+EOF
+
+if [[ "${OTTO_BOOTSTRAP_PROOF:-}" == "1" ]]; then
+  echo "  chaining bootstrap proof (076)..."
+  if NODE_PATH="${NODE_PATH:-$HOME/.codex/admin/node_modules}" node "$ROOT/scripts/otto-staging-076-bootstrap-proof.cjs"; then
+    BOOT_JSON="$(ls -t "$ROOT/docs/receipts/staging"/staging-076-bootstrap-proof-*.json 2>/dev/null | head -1)"
+    if [[ -n "$BOOT_JSON" && -f "$BOOT_JSON" ]]; then
+      BOOT_OK="$(bun -e "const j=JSON.parse(await Bun.file(process.argv[1]).text()); console.log(j.bootstrapTurnCompleted===true?'true':'false');" "$BOOT_JSON")"
+      if [[ "$BOOT_OK" == "true" ]]; then
+        bun -e "
+          const fs = require('fs');
+          const sidecar = ${JSON_RECEIPT@Q};
+          const boot = JSON.parse(fs.readFileSync(${BOOT_JSON@Q}, 'utf8'));
+          const merged = {
+            ...JSON.parse(fs.readFileSync(sidecar, 'utf8')),
+            bootstrapTurnCompleted: true,
+            bootstrapProofJson: ${BOOT_JSON@Q},
+          };
+          fs.writeFileSync(sidecar, JSON.stringify(merged, null, 2) + '\n');
+        "
+      fi
+    fi
+  else
+    echo "WARN: bootstrap proof failed — sidecar keeps bootstrapTurnCompleted=false" >&2
+  fi
+fi
+
+echo "PASS: resolveCli('embedded') → $CLI_PATH"
+echo "Receipt: $RECEIPT"
+echo "JSON: $JSON_RECEIPT"

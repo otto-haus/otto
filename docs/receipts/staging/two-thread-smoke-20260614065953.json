@@ -1,0 +1,78 @@
+{
+  "ok": false,
+  "runId": "20260614065953",
+  "gitHead": "fff0152",
+  "appTemplate": "/Applications/otto-staging.app",
+  "receiptDir": "/Users/seb/Code/otto/docs/receipts/staging",
+  "markers": {
+    "threadA": "046-smoke-thread-a-20260614065953",
+    "threadB": "046-smoke-thread-b-20260614065953"
+  },
+  "screenshots": {
+    "threadA": "/Users/seb/Code/otto/docs/receipts/staging/046-two-thread-a-20260614065953.png",
+    "threadB": "/Users/seb/Code/otto/docs/receipts/staging/046-two-thread-b-20260614065953.png",
+    "afterQuit": "/Users/seb/Code/otto/docs/receipts/staging/046-after-quit-20260614065953.png"
+  },
+  "checks": {
+    "distinctThreadIds": true,
+    "distinctStorageKeys": true,
+    "threadAShowsMarker": true,
+    "threadAHidesMarkerB": true,
+    "threadBShowsMarker": true,
+    "threadBHidesMarkerA": true,
+    "sidebarThreadCount": 2,
+    "uiSendAttempted": false,
+    "uiSendSkippedReason": "composer disabled (runtime not ready)",
+    "relaunchThreadCount": 2,
+    "relaunchHasThreadA": true,
+    "relaunchHasThreadB": true,
+    "relaunchThreadAShowsMarker": false,
+    "relaunchThreadAHidesMarkerB": false,
+    "relaunchOk": false
+  },
+  "threads": {
+    "a": {
+      "id": "local_8098ed2d-fcf5-4738-8fd0-a0698fe2a19b",
+      "key": "otto.chat.messages.local_8098ed2d-fcf5-4738-8fd0-a0698fe2a19b.v1",
+      "title": "New chat"
+    },
+    "b": {
+      "id": "local_f54411f9-6651-4bf3-8d2f-0a7004e13350",
+      "key": "otto.chat.messages.local_f54411f9-6651-4bf3-8d2f-0a7004e13350.v1",
+      "title": "New chat"
+    }
+  },
+  "storageKeys": {
+    "threadA": {
+      "key": "otto.chat.messages.local_8098ed2d-fcf5-4738-8fd0-a0698fe2a19b.v1",
+      "sample": [
+        {
+          "id": "smoke-a",
+          "who": "user",
+          "text": "046-smoke-thread-a-20260614065953"
+        }
+      ]
+    },
+    "threadB": {
+      "key": "otto.chat.messages.local_f54411f9-6651-4bf3-8d2f-0a7004e13350.v1",
+      "sample": [
+        {
+          "id": "smoke-b",
+          "who": "user",
+          "text": "046-smoke-thread-b-20260614065953"
+        }
+      ]
+    },
+    "afterQuitA": {
+      "key": "otto.chat.messages.local_8098ed2d-fcf5-4738-8fd0-a0698fe2a19b.v1",
+      "sample": [
+        {
+          "id": "smoke-a",
+          "who": "user",
+          "text": "046-smoke-thread-a-20260614065953"
+        }
+      ]
+    }
+  },
+  "consoleMessages": []
+}

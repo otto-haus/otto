@@ -11,11 +11,14 @@ export function resolveChecksDir(): string {
 }
 
 export function resolveSeedChecksDir(): string {
+  const resourcesPath = (process as NodeJS.Process & { resourcesPath?: string }).resourcesPath;
   const candidates = [
+    process.env.OTTO_CHECKS_SEED_DIR?.trim() || null,
     process.env.OTTO_ROOT ? join(process.env.OTTO_ROOT, 'checks') : null,
+    resourcesPath ? join(resourcesPath, 'checks') : null,
     resolve(process.cwd(), 'checks'),
     resolve(process.cwd(), '../../checks'),
-  ].filter(Boolean) as string[];
+  ].filter((value): value is string => !!value);
   for (const dir of candidates) {
     if (existsSync(dir)) return dir;
   }

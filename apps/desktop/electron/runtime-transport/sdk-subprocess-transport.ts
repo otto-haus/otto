@@ -18,8 +18,22 @@ import {
   msg,
   nextActionFor,
   resolveCli,
+  safeWebContentsSend,
 } from './runtime-common';
 import type { OttoRuntimeTransport } from './types';
+
+const DEFAULT_PERMISSION_TIMEOUT_MS = 120_000;
+
+export function permissionTimeoutMs(): number {
+  const raw = process.env.OTTO_PERMISSION_TIMEOUT_MS;
+  const parsed = raw ? Number.parseInt(raw, 10) : NaN;
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : DEFAULT_PERMISSION_TIMEOUT_MS;
+}
+
+type PendingPermission = {
+  resolve: (r: PermissionResponse) => void;
+  timer: ReturnType<typeof setTimeout>;
+};
 
 type SDK = typeof import('@letta-ai/letta-code-sdk');
 type Session = import('@letta-ai/letta-code-sdk').Session;
@@ -29,8 +43,8 @@ type CreateSessionOptions = import('@letta-ai/letta-code-sdk').CreateSessionOpti
 export class SdkSubprocessTransport implements OttoRuntimeTransport {
   private sdk: SDK | null = null;
   private session: Session | null = null;
-  private status: RuntimeStatus = { ready: false, reason: 'not initialized', ...resolveCli() };
-  private pending = new Map<string, (r: PermissionResponse) => void>();
+  private status: RuntimeStatus = { ready: false, reason: 'not initialized', ...resolveCli('embedded') };
+  private pending = new Map<string, PendingPermission>();
   private receipts = new ReceiptWriter();
   private standards = new StandardStore();
   private practices = new PracticeStore();
@@ -46,10 +60,18 @@ export class SdkSubprocessTransport implements OttoRuntimeTransport {
   }
 
   resolvePermission(requestId: string, response: PermissionResponse) {
-    const fn = this.pending.get(requestId);
-    if (fn) {
+    const entry = this.pending.get(requestId);
+    if (!entry) return;
+    clearTimeout(entry.timer);
+    this.pending.delete(requestId);
+    entry.resolve(response);
+  }
+
+  private rejectPendingPermissions(message: string) {
+    for (const [requestId, entry] of this.pending) {
+      clearTimeout(entry.timer);
+      entry.resolve({ behavior: 'deny', message });
       this.pending.delete(requestId);
-      fn(response);
     }
   }
 
@@ -58,8 +80,15 @@ export class SdkSubprocessTransport implements OttoRuntimeTransport {
       const requestId = randomUUID();
       const interactive = toolName === 'AskUserQuestion' || toolName === 'ExitPlanMode';
       const req: PermissionRequest = { requestId, toolName, toolInput, interactive };
-      this.win.webContents.send('otto:permission', req);
-      return new Promise<PermissionResponse>((resolve) => this.pending.set(requestId, resolve));
+      safeWebContentsSend(this.win, 'otto:permission', req);
+      return new Promise<PermissionResponse>((resolve) => {
+        const timer = setTimeout(() => {
+          if (!this.pending.has(requestId)) return;
+          this.pending.delete(requestId);
+          resolve({ behavior: 'deny', message: 'Permission request timed out.' });
+        }, permissionTimeoutMs());
+        this.pending.set(requestId, { resolve, timer });
+      });
     };
   }
 
@@ -84,8 +113,7 @@ export class SdkSubprocessTransport implements OttoRuntimeTransport {
 
   /** Inject stored Letta key + discovered/local base URL into the spawned CLI env. */
   private applyConnectionEnv(baseUrl: string | null) {
-    const cli = resolveCli();
-    // Prefer the installed Letta Desktop CLI, which is the live local-backend runtime Sebastian is using.
+    const cli = resolveCli(this.config.connectionMode());
     if (cli.cliResolved && !process.env.LETTA_CLI_PATH) process.env.LETTA_CLI_PATH = cli.cliPath;
     const key = getSecret('LETTA_API_KEY');
     if (key && !process.env.LETTA_API_KEY) process.env.LETTA_API_KEY = key;
@@ -98,11 +126,27 @@ export class SdkSubprocessTransport implements OttoRuntimeTransport {
 
   /** Connect; recover from stale agents/conversations; never throw to the renderer. */
   async init(opts?: { freshConversation?: boolean }): Promise<RuntimeStatus> {
-    const cli = resolveCli();
+    const cli = resolveCli(this.config.connectionMode());
     const context = discoverLocalLettaContext(this.config);
     this.applyConnectionEnv(context.baseUrl);
     const agentCandidates = context.agentCandidates;
     const primaryAgentId = agentCandidates[0] ?? null;
+
+    if (!cli.cliResolved && this.config.connectionMode() === 'embedded') {
+      this.status = {
+        ready: false,
+        code: 'error',
+        reason: cli.cliFallbackReason ?? 'Embedded Letta engine not found in app bundle.',
+        agentId: primaryAgentId,
+        baseUrl: context.baseUrl,
+        discoverySource: context.source,
+        modelHandle: this.config.modelHandle(),
+        effort: this.config.effort(),
+        sessionMode: SMOKE_MODE ? 'smoke' : 'default',
+        ...cli,
+      };
+      return this.status;
+    }
 
     let sdk: SDK;
     try {
@@ -215,7 +259,7 @@ export class SdkSubprocessTransport implements OttoRuntimeTransport {
   }
 
   private publishStatus(): void {
-    this.win.webContents.send('otto:event', { status: this.status });
+    safeWebContentsSend(this.win, 'otto:event', { status: this.status });
   }
 
   private markNotReady(reason: string, code: StatusCode = 'error'): void {
@@ -283,7 +327,7 @@ export class SdkSubprocessTransport implements OttoRuntimeTransport {
       await this.session.send(text);
       for await (const message of this.session.stream()) {
         trace.write('event', message);
-        this.win.webContents.send('otto:event', { message });
+        safeWebContentsSend(this.win, 'otto:event', { message });
         const m = message as {
           type: string;
           conversationId?: string;
@@ -333,13 +377,16 @@ export class SdkSubprocessTransport implements OttoRuntimeTransport {
           next_action: nextActionFor(code),
         });
       }
-      if (!receiptWritten) {
-        writeReceipt(this.aborted ? 'blocked' : 'failed', this.aborted ? 'Chat turn was aborted.' : 'Chat turn ended without a terminal result.', {
-          code: this.aborted ? 'aborted' : 'missing-result',
-          message: this.aborted ? 'The chat turn was aborted before completion.' : 'The runtime stream ended without a result or error event.',
-          recoverable: true,
-          next_action: 'Retry the message if the runtime is still connected.',
-        });
+      if (!sawResult) {
+        if (!receiptWritten) {
+          writeReceipt(this.aborted ? 'blocked' : 'failed', this.aborted ? 'Chat turn was aborted.' : 'Chat turn ended without a terminal result.', {
+            code: this.aborted ? 'aborted' : 'missing-result',
+            message: this.aborted ? 'The chat turn was aborted before completion.' : 'The runtime stream ended without a result or error event.',
+            recoverable: true,
+            next_action: 'Retry the message if the runtime is still connected.',
+          });
+        }
+        this.emitTurnTerminal(false, this.aborted ? 'The chat turn was aborted before completion.' : turnError ?? 'The runtime stream ended without a result or error event.');
       }
     } catch (e) {
       const reason = msg(e);
@@ -378,6 +425,7 @@ export class SdkSubprocessTransport implements OttoRuntimeTransport {
 
   async abort(): Promise<void> {
     this.aborted = true;
+    this.rejectPendingPermissions('Chat turn was aborted.');
     try {
       await this.session?.abort();
     } catch {
@@ -397,8 +445,22 @@ export class SdkSubprocessTransport implements OttoRuntimeTransport {
   }
 
   private emitError(message: string) {
-    this.win.webContents.send('otto:event', {
+    safeWebContentsSend(this.win, 'otto:event', {
       message: { type: 'error', message, uuid: randomUUID() },
+    });
+  }
+
+  /** Emit a terminal result when the SDK stream ends without one (timeout/abort/missing result). */
+  private emitTurnTerminal(success: boolean, reason?: string) {
+    safeWebContentsSend(this.win, 'otto:event', {
+      message: {
+        type: 'result',
+        success,
+        conversationId: this.status.conversationId,
+        error: reason,
+        reason,
+        uuid: randomUUID(),
+      },
     });
   }
 

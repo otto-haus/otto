@@ -94,7 +94,7 @@ export function App() {
 
 function AppShell() {
   const rt = useRuntimeContext();
-  const { threads, archiveForNewChat, activeConversationId } = useChatThreads(rt.status?.conversationId, rt.messages);
+  const { threads, refresh: refreshThreads } = useChatThreads(rt.activeThreadId);
   const [active, setActiveState] = useState<SurfaceId>(initialSurface());
   const [sidebarHidden, setSidebarHidden] = useState(false);
   const [sidebarCompact, setSidebarCompact] = useState(
@@ -148,14 +148,16 @@ function AppShell() {
             active={active}
             onSelect={setActive}
             onNewChat={() => {
-              archiveForNewChat();
-              void rt.newChat();
+              void rt.newChat().then(() => refreshThreads());
             }}
             counts={counts}
             compact={sidebarCompact}
             onToggleCollapsed={() => setSidebarHidden(true)}
             threads={threads}
-            activeConversationId={activeConversationId}
+            activeThreadId={rt.activeThreadId}
+            onSelectThread={(thread) => {
+              void rt.switchThread(thread.id).then(() => refreshThreads());
+            }}
           />
         )}
         <main className="main">

@@ -2,7 +2,6 @@ import type React from 'react';
 import { useEffect, useState } from 'react';
 import { useRuntimeContext } from './RuntimeContext';
 import type { SurfaceId } from './components/Sidebar';
-import { enableSampleReceiptPreview } from './onboarding-sample-receipt';
 import {
   dismissOnboarding,
   onOnboardingDismiss,
@@ -36,7 +35,7 @@ export const Onboarding: React.FC<{ onNavigate: (id: SurfaceId) => void; activeS
   const [started, setStarted] = useState(false);
   const [intent, setIntent] = useState<OnboardingIntent>('connect');
   const [sessionFirstMessage, setSessionFirstMessage] = useState(false);
-  /** Avoid welcome flash before runtime status is known; auto-start connect path when already connected. */
+  /** Avoid welcome flash before runtime status is known (not an auto-start gate). */
   const [hydrated, setHydrated] = useState(!rt.electron);
 
   useEffect(() => onOnboardingFirstMessage(() => {
@@ -48,10 +47,6 @@ export const Onboarding: React.FC<{ onNavigate: (id: SurfaceId) => void; activeS
   useEffect(() => {
     if (!rt.electron) return;
     if (rt.status === null) return;
-    if (!wasOnboarded() && rt.status.ready) {
-      setStarted(true);
-      setIntent('connect');
-    }
     setHydrated(true);
   }, [rt.electron, rt.status]);
 
@@ -70,7 +65,6 @@ export const Onboarding: React.FC<{ onNavigate: (id: SurfaceId) => void; activeS
   const startPath = (nextIntent: OnboardingIntent, surface: SurfaceId) => {
     setIntent(nextIntent);
     setStarted(true);
-    if (nextIntent === 'receipts-preview') enableSampleReceiptPreview();
     onNavigate(surface);
   };
 
@@ -83,14 +77,14 @@ export const Onboarding: React.FC<{ onNavigate: (id: SurfaceId) => void; activeS
             The behavior layer for persistent agents.
           </h2>
           <p className="onboardBody" style={{ maxWidth: '46ch' }}>
-            otto records what your agent relied on before it acted — and changes the next run only when you ratify it.
+            otto ships as one desktop app. It records what your agent relied on before it acted — and changes the next run only when you ratify it.
           </p>
           <div style={{ fontSize: 13.5, color: '#C9CACE', marginTop: 22, fontWeight: 500 }}>
             The human ratifies. otto records the proof.
           </div>
           <div className="onboardActions">
             <button type="button" className="btn btn--solid-d" onClick={() => startPath('connect', 'settings')}>
-              Connect local Letta →
+              Get started →
             </button>
             <button type="button" className="btn btn--ghost-d" onClick={() => startPath('receipts-preview', 'receipts')}>
               See what Receipts will prove
@@ -116,14 +110,14 @@ export const Onboarding: React.FC<{ onNavigate: (id: SurfaceId) => void; activeS
           <Dots at={dotAt} />
         </div>
         <div style={{ fontSize: 15, fontWeight: 600, letterSpacing: '-0.01em' }}>
-          Inspect a sample Receipt
+          Receipts prove what happened
         </div>
         <p className="onboardBody onboardBody--light" style={{ marginTop: 8 }}>
           Receipts are durable proof records — what was relied on, what happened, and what evidence was retained.
-          The sample card is labeled and is not from your workspace.
+          otto does not show placeholder proof; your first receipt appears after a real chat turn or ratified change.
         </p>
         <div className="onboardActions" style={{ marginTop: 16 }}>
-          <button type="button" className="btn btn--primary" onClick={() => onNavigate('receipts')}>View sample Receipt</button>
+          <button type="button" className="btn btn--primary" onClick={() => onNavigate('receipts')}>Open Receipts</button>
           <button type="button" className="btn" onClick={finish}>Done</button>
         </div>
       </div>
@@ -141,11 +135,11 @@ export const Onboarding: React.FC<{ onNavigate: (id: SurfaceId) => void; activeS
         <Dots at={dotAt} />
       </div>
       <div style={{ fontSize: 15, fontWeight: 600, letterSpacing: '-0.01em' }}>
-        {isConnect ? 'Connect otto to your local Letta' : "You're connected — run your first message"}
+        {isConnect ? 'Finish connecting otto' : "You're connected — send your first message"}
       </div>
       <p className="onboardBody onboardBody--light" style={{ marginTop: 8 }}>
         {isConnect
-          ? 'otto tries to discover Letta Desktop and your current local agent automatically. Use Settings only for advanced overrides; Chat unlocks the moment otto is truly connected.'
+          ? 'otto runs as one app on your machine and discovers your local agent runtime automatically. Open Settings to add a provider key if prompted — Chat unlocks only when otto is truly connected.'
           : 'Send otto a first message and watch it do real work. When the turn completes, otto writes an `otto.receipt.v1` proof record you can inspect in Receipts.'}
       </p>
       {isConnect && !connected && (statusReason || statusCode) && (
@@ -156,7 +150,12 @@ export const Onboarding: React.FC<{ onNavigate: (id: SurfaceId) => void; activeS
       )}
       <div className="onboardActions" style={{ marginTop: 16 }}>
         {isConnect
-          ? <button type="button" className="btn btn--primary" onClick={() => onNavigate('settings')}>Open Settings</button>
+          ? (
+            <>
+              <button type="button" className="btn btn--primary" onClick={() => onNavigate('settings')}>Open Settings</button>
+              <button type="button" className="btn" onClick={() => onNavigate('settings')}>Advanced: existing Letta install</button>
+            </>
+          )
           : <button type="button" className="btn btn--primary" onClick={() => onNavigate('chat')}>Go to Chat</button>}
         <button type="button" className="btn" onClick={finish}>
           {sessionFirstMessage ? 'Done' : 'Skip'}

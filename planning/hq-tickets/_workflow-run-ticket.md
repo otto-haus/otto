@@ -36,8 +36,9 @@ git diff --stat
 
 5. Do not overwrite user changes.
 6. **Do not quit, replace, or verify against live `/Applications/otto.app`.** Use Otto staging only:
+   - canonical runbook: `docs/v1/runbooks/live-vs-staging.md` (dev vs staging vs live refresh)
    - smoke: `/Users/seb/.codex/admin/otto-staging/launch-otto-staging-smoke.sh`
-   - deploy: `apps/desktop/scripts/deploy-staging.sh` → `/Applications/otto-staging.app`
+   - deploy: `task staging` or `apps/desktop/scripts/deploy-staging.sh` → `/Applications/otto-staging.app`
 7. Do not push, tag, publish, rename remotes, or commit unless explicitly approved.
 8. Build only the ticket scope.
 9. If unclear, write the ambiguity into the ticket and stop.

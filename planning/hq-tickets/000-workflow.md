@@ -165,6 +165,7 @@ isolated worktree/session per implementer
 independent reviewer for each ticket
 clear merge order if shared app shell files may be touched
 runtime/UI proof via Otto staging only — never live /Applications/otto.app
+see docs/v1/runbooks/live-vs-staging.md for deploy commands and isolated paths
 ```
 
 Safe to parallelize:

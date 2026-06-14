@@ -51,9 +51,19 @@ function readLettaSettings(): LettaSettings | null {
 export function normalizeBaseUrl(value?: string | null): string | null {
   const trimmed = value?.trim();
   if (!trimmed) return null;
+  if (/^local:/i.test(trimmed)) return trimmed;
   if (/^https?:\/\//i.test(trimmed)) return trimmed.replace(/\/+$/, '');
   if (/^(localhost|127\.0\.0\.1):\d+$/i.test(trimmed)) return `http://${trimmed.replace(/\/+$/, '')}`;
   return null;
+}
+
+/** Map `local:` or missing base URLs to a loopback HTTP endpoint for read-only fetches (047). */
+export function resolveHttpBaseUrl(configured?: string | null): string | null {
+  const direct = normalizeBaseUrl(configured);
+  if (direct && /^https?:\/\//i.test(direct)) return direct;
+  const fromSettings = discoverSettingsHttpBaseUrl(readLettaSettings());
+  if (fromSettings && /^https?:\/\//i.test(fromSettings)) return fromSettings;
+  return discoverLocalLettaUrl();
 }
 
 function discoverSettingsHttpBaseUrl(settings: LettaSettings | null): string | null {

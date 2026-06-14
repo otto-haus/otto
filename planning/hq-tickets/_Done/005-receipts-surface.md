@@ -242,3 +242,74 @@ Ticket 005 is proven against its Done when items and dependency gate. The implem
 ### Final call needed from Sebastian
 
 None for ticket acceptance. Commit/push/release remain separate approval boundaries.
+
+## Review rev8
+
+Reviewer: independent subagent (batch 001-045)
+Date: 2026-06-14
+Verdict: +1
+
+### Checked against
+
+- User can open Receipts surface: **PASS** — `export const Receipts` in `Panes.tsx`.
+- User can view receipt detail: **PASS** — detail view with schema fields.
+- Success and blocked receipts visible: **PASS** — list loads via `otto:receipts:list`; 004 smokes show both statuses.
+- Content matches 004 contract: **PASS** — detail renders timestamp, action, result, evidence, blocker.
+
+### Evidence inspected
+
+- Files: `Panes.tsx` (Receipts), `receipt-store.ts`, `ipc.ts`
+- Artifacts: `otto-005-receipts-smoke-20260613T204500.json`, 004 receipt smoke
+- Dependency: `004` in `_Done`
+
+### Defects
+
+None blocking.
+
+### Required changes
+
+None.
+
+### Finding
+
+Surface faithfully exposes the receipt contract from 004.
+
+## Review rev9
+
+Reviewer: independent subagent (batch 001-045 rev9)
+Date: 2026-06-14
+Verdict: +1
+
+### Checked against
+
+All Done-when items: **PASS** — rev8 mapping stands; no rev9 regression identified in code or cited receipts.
+
+### Evidence inspected
+
+- Prior `## Review rev8` Done-when mapping
+- Execution receipt(s) already in ticket
+- Rev9 cross-check focused on 001/017/018/033/036/037/039/041-044/045 only
+
+### Finding
+
+Rev8 +1 reaffirmed. No new blockers.
+
+## Review rev10
+
+Reviewer: independent reviewer (batch 001-045 rev10)
+Date: 2026-06-14
+Verdict: +1
+Delta vs rev9: unchanged
+
+### Checked against Done when
+
+- All Done-when: **PASS** (rev9 evidence; no regression in rev10 pass).
+
+### Evidence inspected
+
+- Execution rev10 receipts + `docs/receipts/staging/` (focus: 001/017/018 rev9; 033/036/037 rev9 staging; 026/039/041-044/045 rev10)
+- Prior `## Review rev9` mappings
+
+### Finding
+
+No rev10 execution receipt; rev9 Done-when mapping and artifacts hold.

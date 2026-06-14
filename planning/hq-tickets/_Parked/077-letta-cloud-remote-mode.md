@@ -7,6 +7,8 @@ Release bucket: vNext runtime
 
 **Parked until 076 (embedded default) and 039 (transport seam) land.**
 
+**Canonical contract:** `docs/runtime-transport.md` § Planned / advanced — `cloudRemote`, `cloudApi`, `selfHosted`; explicit opt-in only; **`auto` never falls back to cloud** (079).
+
 ## Outcome
 
 Settings **Letta Cloud / remote environment** mode connects otto to a hosted or remote Letta runtime — explicitly opt-in, never silent fallback from embedded local.

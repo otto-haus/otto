@@ -29,7 +29,14 @@ site/
 
 ## Deploy (staging first)
 
-Pick one host; apex `otto.haus` requires Sebastian DNS approval.
+**Local staging checks (no DNS):**
+
+```sh
+bash site/deploy-staging.sh   # curl + copy checks; receipt in docs/receipts/staging/
+./site/dev.sh                 # interactive preview on :4321
+```
+
+Pick one host for public preview; apex `otto.haus` requires Sebastian DNS approval.
 
 **Cloudflare Pages**
 

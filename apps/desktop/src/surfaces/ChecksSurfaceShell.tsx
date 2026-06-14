@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import type { Check, CheckListResult } from '@otto-haus/core';
+import type { Check, CheckListResult, CheckRunStats } from '@otto-haus/core';
 import { Icon } from '../components/icons';
 import {
   InlineEmpty,
@@ -18,6 +18,25 @@ import { ottoApi } from '../runtime';
 
 function triggerLabel(event: Check['trigger']['event']): string {
   return event === 'done_claim' ? 'done claim' : 'one-way door';
+}
+
+function formatLastRun(stats: CheckRunStats | undefined): { label: string; tone: 'ok' | 'warn' | 'neutral' } {
+  if (!stats?.last_run_at) {
+    return { label: checksCopy.lastRunNone, tone: 'neutral' };
+  }
+  const when = new Date(stats.last_run_at).toLocaleString();
+  const outcome = stats.last_passed ? checksCopy.lastRunPass : checksCopy.lastRunFail;
+  return {
+    label: `${when} · ${outcome}`,
+    tone: stats.last_passed ? 'ok' : 'warn',
+  };
+}
+
+function runCountLabel(stats: CheckRunStats | undefined): string {
+  if (!stats || (stats.pass_count === 0 && stats.fail_count === 0)) {
+    return checksCopy.lastRunNone;
+  }
+  return `${stats.pass_count} pass / ${stats.fail_count} fail`;
 }
 
 export const ChecksSurfaceShell: React.FC = () => {
@@ -49,7 +68,9 @@ export const ChecksSurfaceShell: React.FC = () => {
   }
 
   const checks = result?.checks ?? [];
+  const stats = result?.stats ?? {};
   const selected = checks.find((check) => check.id === selectedId) ?? checks[0] ?? null;
+  const selectedStats = selected ? stats[selected.id] : undefined;
   const doneClaimCount = checks.filter((c) => c.trigger.event === 'done_claim').length;
   const doorCount = checks.filter((c) => c.trigger.event === 'one_way_door_action').length;
 
@@ -90,7 +111,10 @@ export const ChecksSurfaceShell: React.FC = () => {
       )}
       {checks.length > 0 && (
         <SplitLayout
-          list={checks.map((check) => (
+          list={checks.map((check) => {
+            const checkStats = stats[check.id];
+            const lastRun = formatLastRun(checkStats);
+            return (
             <button
               key={check.id}
               type="button"
@@ -102,8 +126,14 @@ export const ChecksSurfaceShell: React.FC = () => {
                 <span className="pill pill--info">{triggerLabel(check.trigger.event)}</span>
               </div>
               <span className="card__sub">{check.source}</span>
+              <div className="row" style={{ marginTop: 8, gap: 8, flexWrap: 'wrap' }}>
+                <span className={`pill ${lastRun.tone === 'ok' ? 'pill--ok' : lastRun.tone === 'warn' ? 'pill--warn' : ''}`}>
+                  {checksCopy.statLastRun}: {lastRun.label}
+                </span>
+              </div>
             </button>
-          ))}
+            );
+          })}
           detail={
             selected ? (
               <div className="detail">
@@ -146,6 +176,14 @@ export const ChecksSurfaceShell: React.FC = () => {
                         <div className="mono">{selected.standard_slug}</div>
                       </div>
                     ) : null}
+                    <div className="zone receiptEvidenceRow">
+                      <span className="zone__tag">{checksCopy.statLastRun}</span>
+                      <div>{formatLastRun(selectedStats).label}</div>
+                    </div>
+                    <div className="zone receiptEvidenceRow">
+                      <span className="zone__tag">{checksCopy.runCounts}</span>
+                      <div>{runCountLabel(selectedStats)}</div>
+                    </div>
                   </div>
                 </div>
               </div>

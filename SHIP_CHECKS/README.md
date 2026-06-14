@@ -1,8 +1,10 @@
-# Otto Ship Checks
+# Otto Ship Checks (legacy mirror)
 
-Every surface gets a Ship Check: what must exist, run, prove, and be approved before it can ship.
+**Canonical ship checks:** `docs/v1/SHIP_CHECKS/` — edit there first.
 
-These are the objective acceptance checks for Otto v0.1. They are not vibes, polish notes, or marketing copy. They convert the Otto v1 spec into done / partial / missing criteria.
+This root `SHIP_CHECKS/` directory is a **read-only mirror** for scripts and older links (`verify:v0` allow-list, PR-C split). When `docs/v1/SHIP_CHECKS/*` changes, sync the matching file here or replace with a one-line pointer.
+
+Master status table: `docs/v1/SHIP_STATUS.md`
 
 ## How to use
 

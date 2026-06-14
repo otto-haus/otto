@@ -35,6 +35,8 @@ render OttoV01Standards           otto-v01-standards
 render OttoV01Autonomy otto-v01-autonomy
 render OttoV01Desktop             otto-v01-desktop
 render OttoV01Knowledge           otto-v01-knowledge
+render OttoV01Curation            otto-v01-curation
+render OttoV01Tickets             otto-v01-tickets
 render_walkthrough
 
 echo "ALL_RENDERS_DONE"

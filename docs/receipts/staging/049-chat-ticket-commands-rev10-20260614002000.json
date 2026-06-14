@@ -1,0 +1,34 @@
+{
+  "commands": {
+    "compile034": {
+      "text": "compile ticket 034 Staging rev10 proof packet for charter AC gate",
+      "composerEnabled": true,
+      "sent": true,
+      "transcriptAfter": "COMMAND STATION\nWhat needs you\n1\nCuration\nPending proposals\n3\nRecent proof\nLatest receipts\n2\nTickets\nOpen worker slices\n6\nDoors\nAwaiting approval\n→\nConstitution\nSource of culture\n→\nChangelog\nWhat changed\nYOU\n\n046-rev10-thread-b-20260614001330\n\nPropose from correction\nERROR\n\nTransport not connected (closed=true, pid=undefined, stdin=false)\n\nOTTO\n\nCompiled ticket_034. Receipt: receipt-bce824f6-577b-44e7-8f94-9b55b05002a5 Packet: /Users/seb/.codex/admin/otto-staging/otto-home/tickets/034/worker-packet.md\n\nPropose from correction\nCorrect this",
+      "matched": true
+    },
+    "compile035": {
+      "text": "compile ticket 035 Staging rev10 proof packet for orchestrate-existing",
+      "composerEnabled": true,
+      "sent": true,
+      "transcriptAfter": "COMMAND STATION\nWhat needs you\n1\nCuration\nPending proposals\n3\nRecent proof\nLatest receipts\n2\nTickets\nOpen worker slices\n6\nDoors\nAwaiting approval\n→\nConstitution\nSource of culture\n→\nChangelog\nWhat changed\nYOU\n\n046-rev10-thread-b-20260614001330\n\nPropose from correction\nERROR\n\nTransport not connected (closed=true, pid=undefined, stdin=false)\n\nOTTO\n\nCompiled ticket_034. Receipt: receipt-bce824f6-577b-44e7-8f94-9b55b05002a5 Packet: /Users/seb/.codex/admin/otto-staging/otto-home/tickets/034/worker-packet.md\n\nPropose from correction\nCorrect this\n\nCompiled ticket_035. Receipt: receipt-e94280a3-af9d-43b3-b0e5-c13343c8af31 Packet: /Users/seb/.codex/admin/otto-staging/otto-home/tickets/035/worker-packet.md\n\nPropose from correction\nCorrect this",
+      "matched": true
+    },
+    "orchestrate035": {
+      "text": "orchestrate ticket 035",
+      "composerEnabled": true,
+      "sent": true,
+      "transcriptAfter": "COMMAND STATION\nWhat needs you\n1\nCuration\nPending proposals\n3\nRecent proof\nLatest receipts\n2\nTickets\nOpen worker slices\n6\nDoors\nAwaiting approval\n→\nConstitution\nSource of culture\n→\nChangelog\nWhat changed\nYOU\n\n046-rev10-thread-b-20260614001330\n\nPropose from correction\nERROR\n\nTransport not connected (closed=true, pid=undefined, stdin=false)\n\nOTTO\n\nCompiled ticket_034. Receipt: receipt-bce824f6-577b-44e7-8f94-9b55b05002a5 Packet: /Users/seb/.codex/admin/otto-staging/otto-home/tickets/034/worker-packet.md\n\nPropose from correction\nCorrect this\n\nCompiled ticket_035. Receipt: receipt-e94280a3-af9d-43b3-b0e5-c13343c8af31 Packet: /Users/seb/.codex/admin/otto-staging/otto-home/tickets/035/worker-packet.md\n\nPropose from correction\nCorrect this\n\nOrchestration blocked by autonomy policy (yellow). Uncla",
+      "matched": true
+    },
+    "statusWorkers": {
+      "text": "status workers",
+      "composerEnabled": true,
+      "sent": true,
+      "transcriptAfter": "COMMAND STATION\nWhat needs you\n1\nCuration\nPending proposals\n3\nRecent proof\nLatest receipts\n2\nTickets\nOpen worker slices\n6\nDoors\nAwaiting approval\n→\nConstitution\nSource of culture\n→\nChangelog\nWhat changed\nYOU\n\n046-rev10-thread-b-20260614001330\n\nPropose from correction\nERROR\n\nTransport not connected (closed=true, pid=undefined, stdin=false)\n\nOTTO\n\nCompiled ticket_034. Receipt: receipt-bce824f6-577b-44e7-8f94-9b55b05002a5 Packet: /Users/seb/.codex/admin/otto-staging/otto-home/tickets/034/worker-packet.md\n\nPropose from correction\nCorrect this\n\nCompiled ticket_035. Receipt: receipt-e94280a3-af9d-43b3-b0e5-c13343c8af31 Packet: /Users/seb/.codex/admin/otto-staging/otto-home/tickets/035/worker-packet.md\n\nPropose from correction\nCorrect this\n\nOrchestration blocked by autonomy policy (yellow). Uncla",
+      "matched": true
+    }
+  },
+  "transcript": "COMMAND STATION\nWhat needs you\n1\nCuration\nPending proposals\n3\nRecent proof\nLatest receipts\n2\nTickets\nOpen worker slices\n6\nDoors\nAwaiting approval\n→\nConstitution\nSource of culture\n→\nChangelog\nWhat changed\nYOU\n\n046-rev10-thread-b-20260614001330\n\nPropose from correction\nERROR\n\nTransport not connected (closed=true, pid=undefined, stdin=false)\n\nOTTO\n\nCompiled ticket_034. Receipt: receipt-bce824f6-577b-44e7-8f94-9b55b05002a5 Packet: /Users/seb/.codex/admin/otto-staging/otto-home/tickets/034/worker-packet.md\n\nPropose from correction\nCorrect this\n\nCompiled ticket_035. Receipt: receipt-e94280a3-af9d-43b3-b0e5-c13343c8af31 Packet: /Users/seb/.codex/admin/otto-staging/otto-home/tickets/035/worker-packet.md\n\nPropose from correction\nCorrect this\n\nOrchestration blocked by autonomy policy (yellow). Unclassified actions default to prompt-once until policy maps them explicitly. Receipt: receipt-d41eb54b-1191-4095-81f2-4ade8d902eae\n\nPropose from correction\nCorrect this\n\nNo workers recorded yet.\n\nPropose from correction\nCorrect this",
+  "ok": true
+}
