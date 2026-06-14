@@ -4,10 +4,21 @@
 it is Built, Tested (or failure documented), Demoed, Tried by Sebastian, and **explicitly
 approved by Sebastian**. Claude is execution lead; Sebastian is the only release approver.
 
-**NOT PUSHED to main / live app** — integration branch `ship/v0.3-integration` @ `0a07320`.
-**Draft release:** [otto-haus/otto v0.3.0](https://github.com/otto-haus/otto/releases/tag/v0.3.0) (demo assets uploaded).
-No merge to `main`, live `/Applications/otto.app`, or production declare without explicit Sebastian approval.
+**NOT PUSHED to main / live app** — integration branch `ship/v0.3-integration` @ `0a07320` (integration codename — **not** product semver).
+**Product line:** **`v0.1.x`** — target first Sebastian gate tag **`v0.1.3`** (draft — **hold** until Sebastian approves). Mistaken GitHub tags `v0.2.0`, `v0.2.1`, `v0.3.0` removed; do not treat integration branch names as public semver.
 Mirror: `docs/v1/SHIP_STATUS.md`. Gate packet: `docs/receipts/staging/063-sebastian-gate-packet-v03-20260614.md`.
+
+## Release cut policy
+
+**Floor:** `0.1.x` is the lowest honest public line. We are on it. Version numbers are **earned**, not branch names.
+
+| Bump | When | Example |
+|------|------|---------|
+| **Patch** `0.1.n → 0.1.n+1` | Sebastian gate after a **closed proof bundle**: Ship-tier matrix signed, staging smokes green, RELEASE_CHECKLIST rows updated, no aspirational rows marked ship | First public cut → `v0.1.3` |
+| **Minor** `0.1.x → 0.2.0` | A **named milestone** ships and is documented in `ship-tier-matrix.md` changelog — not “we merged a big branch” | e.g. Labs lane stable (Coming soon + gate) with fresh-Mac embedded Letta proof |
+| **Major** `→ 1.0.0` | Default operator completes the **Ship-tier loop** without Sebastian hand-holding | future |
+
+Integration branch names (`ship/v0.3-integration`) and orphan draft tags (`v0.3.0`) are **engineering labels**. Public semver stays on `0.1.x` until a minor milestone is earned.
 
 ## v0.1 honesty framing
 
@@ -31,14 +42,14 @@ chat requires** a successful `session.initialize()` against a configured agent �
 | Desktop | ✅ | build ✅ | ✅ | proposed | Electron shell; Letta path wired; live chat gated |
 | Curation | ✅ | unit | — | proposed | proposals + decide in desktop; not full spine |
 | Autonomy | ✅ | unit | ✅ | defer | policy.yaml + classifier + receipts |
-| Knowledge | ✅ | unit | ✅ | defer | AI-frontier + optional Cognee/pgvector panels |
+| Knowledge | ✅ | unit | — | **reopened (055)** | parent ticket returned to root — staging proof pending |
 | Runs / Receipts | ✅ | unit | — | defer | types + file receipts; no full run engine |
 | Approvals | ✅ | unit | — | defer | records from Curation path |
-| Tickets | ✅ | unit | — | defer | compile/orchestrate in desktop; `/ticket` CLI deferred |
-| Worker orchestration | ✅ | unit | — | defer | bounded runner + worktree policy |
-| Channels | ✅ | files | — | defer | file contract + pane; Discord bot deferred |
-| Marketing site | ✅ | manual | — | **preview** | `site/` local staging verified; apex DNS pending — `bash site/deploy-staging.sh` |
-| Release gate | ✅ | ✅ | — | **in progress** | `verify:v0` + `release-gate.sh`; Sebastian sign-off open |
+| Tickets | ✅ | unit | — | **reopened (049)** | orchestrate path not proven on staging |
+| Worker orchestration | ✅ | unit | — | **reopened (060)** | observe loop incomplete |
+| Channels | ✅ | files | — | **reopened (056)** | SHIP_CHECK vs ticket mismatch |
+| Marketing site | ✅ | manual | — | **preview** | `site/` local staging verified; apex DNS pending |
+| Release gate | ✅ | ✅ | — | **in progress** | **063** open; **142** ceremony queued |
 
 Legend: ✅ done · `manual` = manually verifiable · v0.1 = ship / proposed / defer · Tried + Approved = Sebastian only.
 

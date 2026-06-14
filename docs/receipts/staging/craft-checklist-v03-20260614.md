@@ -1,4 +1,4 @@
-# Craft checklist v0.3 — staging proof (12 items)
+# Craft checklist — staging proof for v0.1.3 gate (12 items)
 
 Date: 2026-06-14  
 Build: `ship/v0.3-integration` @ `0a07320`  
@@ -26,7 +26,7 @@ Live `/Applications/otto.app` intentionally **not** updated.
 | 9 | Traced send icon | Custom Icon.send, not stock paper-plane | pass (source) | iconography bundle |
 | 10 | Toast/proposal UX | Propose correction modal + receipts inline | pass | `048`, `123` staging receipts |
 | 11 | Sidebar brand (031) | Left-align + padding per ticket 031 | pass | `.brand { padding: 0 40px 4px 8px }` |
-| 12 | Remotion on release | Walkthrough on otto-haus v0.3.0 | pass | https://github.com/otto-haus/otto/releases/tag/v0.3.0 |
+| 12 | Remotion walkthrough | Local `demo/out/otto-v01-desktop-walkthrough.mp4` rendered; GitHub release asset on hold until **`v0.1.3`** approval | pass | `receipts/otto-v01/demo-render-20260614T063531Z.md` |
 
 ## Live vs staging (why screenshot looked old)
 

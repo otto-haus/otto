@@ -1,15 +1,15 @@
-# 063 — Sebastian gate packet (v0.3.0 integration)
+# 063 — Sebastian gate packet (v0.1.3 draft — hold)
 
 Date: 2026-06-14  
-Branch: `ship/v0.3-integration` @ `0a07320`  
-**NOT production-shipped** until you explicitly approve tag/merge/live deploy.
+Branch: `ship/v0.3-integration` @ `0a07320` (integration codename — **not** product semver)  
+Target public tag: **`v0.1.3`** — **hold** until Sebastian approves. Do not cut tag or release without explicit sign-off.
 
 ## What to try (staging only)
 
 1. Open `/Applications/otto-staging.app` — title must read **otto staging**.
 2. Chat: clean header, model/effort **above** compose, custom send icon, no cli/MemFS footer.
 3. Skim System surfaces (Standards, Curation, Tickets, Checks) for culture CI banner.
-4. Watch demo: https://github.com/otto-haus/otto/releases/tag/v0.3.0
+4. Watch demo: `demo/out/otto-v01-desktop-walkthrough.mp4` (local) — GitHub release assets deferred until **`v0.1.3`** approval
 
 ## Verification receipts
 
@@ -19,7 +19,7 @@ Branch: `ship/v0.3-integration` @ `0a07320`
 | `bash scripts/release-gate.sh` | pass |
 | Staging deploy | `bash apps/desktop/scripts/deploy-staging.sh` @ 0a07320 |
 | Craft checklist | `docs/receipts/staging/craft-checklist-v03-20260614.md` |
-| Remotion | `otto-v01-desktop-walkthrough.mp4` + `otto-v01-desktop.mp4` on otto-haus v0.3.0 |
+| Remotion | `demo/out/otto-v01-desktop-walkthrough.mp4` + `otto-v01-desktop.mp4` (local; attach to **`v0.1.3`** release when approved) |
 
 ## Honest gaps (not hidden)
 
@@ -32,7 +32,7 @@ Branch: `ship/v0.3-integration` @ `0a07320`
 ## Decisions needed from Sebastian
 
 1. **Approve** integration merge to `main`? (PR stack runbook: `docs/v1/runbooks/pr-stack-ship-v03.md`)
-2. **Approve** tag `v0.3.0` on otto-haus/otto as public release line?
+2. **Approve** tag **`v0.1.3`** on otto-haus/otto as public release line? (draft — not tagged yet)
 3. **Approve** promoting same build to live `/Applications/otto.app`? (default: **no** — staging-only proof)
 
 Reply with approve/deny per item. Otto does not self-declare Shipped.
