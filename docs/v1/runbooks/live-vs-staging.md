@@ -116,28 +116,42 @@ runtime_ready=true|false
 build_marker=<git short SHA or bundle mtime>
 ```
 
-## Tier 3 — Live refresh
+## Tier 3 — Live install (release-only)
 
-**Human gate.** Refreshes Sebastian's installed Otto. Quits live app, replaces bundle, reopens.
+**Human gate.** `/Applications/otto.app` may only be installed from the **latest published GitHub Release desktop artifact** — never from a local branch build.
 
 ```sh
 cd /Users/seb/Code/otto
-task refresh
-# alias: task deploy
-# equivalent: bash scripts/refresh-otto-app.sh
+OTTO_ALLOW_RELEASE_INSTALL=1 task install:release
+# equivalent: bash scripts/install-otto-release.sh
 ```
+
+Read-only metadata check (never mutates live app):
+
+```sh
+task smoke:release:metadata
+# equivalent: node scripts/otto-release-metadata-check.mjs
+```
+
+Sebastian-only escape hatch if a desktop artifact is not published yet:
+
+```sh
+OTTO_ALLOW_LOCAL_LIVE_BUILD=1 OTTO_ALLOW_LIVE_REFRESH=1 task refresh:local
+```
+
+`task refresh` is **blocked** — it prints the canonical commands above.
 
 Target: `/Applications/otto.app` only. Uses normal macOS profile (`~/Library/Application Support/@otto-haus/desktop`).
 
-Agents must **not** run `task refresh`, `task quit`, or `task smoke:desktop:live` unless Sebastian explicitly asks.
+Agents must **not** run `task install:release`, `task refresh:local`, `task quit`, or `task smoke:desktop:live` unless Sebastian explicitly asks.
 
-### Live refresh receipt (Sebastian or explicit approval)
+### Live install receipt (Sebastian or explicit approval)
 
 ```txt
 live_app=/Applications/otto.app
-refresh_cmd=task refresh
-git_head=<SHA>
-bundle_mtime=<ISO timestamp>
+install_cmd=OTTO_ALLOW_RELEASE_INSTALL=1 task install:release
+release_tag=<GitHub tag>
+asset=<downloaded artifact name>
 sebastian_approved=yes
 ```
 
@@ -147,7 +161,9 @@ sebastian_approved=yes
 |------|---------|
 | `task electron` | Dev shell |
 | `task staging` | Build + deploy `/Applications/otto-staging.app` |
-| `task refresh` / `task deploy` | Build + install live `/Applications/otto.app` |
+| `task install:release` | Install live `/Applications/otto.app` from latest GitHub Release (gated) |
+| `task smoke:release:metadata` | Read-only release tag vs installed app check |
+| `task refresh:local` | Sebastian-only local branch build into live app (double-gated) |
 | `task smoke:desktop` | Non-destructive second instance (temp dirs; live app untouched) |
 | `task smoke:desktop:live` | **Dangerous** — quits/reopens live app |
 
