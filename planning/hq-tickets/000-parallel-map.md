@@ -2,7 +2,7 @@
 
 Throughput principle: maximize **accepted** tickets per unit time. Parallelize independent chains; preserve isolated worktrees and independent review gates.
 
-Updated: 2026-06-14 (root 033–082, 091–092, 115–116, 119, 121–129; parked … 130)
+Updated: 2026-06-14 (root 033–082, 091–092, 115–116, 119, 121–135; parked … 130)
 
 ## Staging runtime (all lanes)
 
@@ -21,15 +21,22 @@ All runtime/UI proof uses staging with isolated HOME/OTTO_HOME. Do not close liv
 ```txt
 _Done:     001–018, 026–032
 _InReview: 067 (one-pagers — staging smoke pending)
-Root:      033–082, 091–092, 115–116, 119, 121–129 (queued)
+Root:      033–082, 091–092, 115–116, 119, 121–135 (queued)
 _Parked:   019–025, 077, 083–099, 117–118, 120, 130
 ```
 
 ## Category wedge loop
 
 ```txt
-123 Correct this → 048 propose → Curation accept → 126 Behavior updated → 124 receipt → 121 changelog → 122 constitution → 125 export
-128 gates memory writeback → 126 on accept · 127 surfaces 121/124/122 on 059
+123 Correct this → 048 propose → Curation accept → 126 Behavior updated → 132 compile check → 133 enforce → 134 block UX → 135 demo
+124 receipt · 121 changelog · 122 constitution · 125 export · 128 gates memory · 127 on 059
+```
+
+## Culture CI loop (131–135)
+
+```txt
+131 contract → 132 compile on ratify → 133 runtime (no-fake-done + one-way-door) → 134 UI → 135 30s demo
+Category: Letta = memory · Paperclip = management · Otto = behavior CI
 ```
 
 ## Wave 1 — Bug fix (parallel-safe)
@@ -131,6 +138,18 @@ _Parked:   019–025, 077, 083–099, 117–118, 120, 130
 | 121 | Claude | 048, 051, 126 | Behavior Changelog |
 | 125 | Codex | 122, 124 | Culture export bundle |
 
+## Wave 7c — Culture CI (Checks)
+
+| Ticket | Owner | Depends | Notes |
+|--------|-------|---------|-------|
+| 131 | Codex | 008, 009, 016 | Check contract + `docs/v1/checks.md` — **P0 thesis** |
+| 132 | Codex | 131, 048, 126 | Compile Standard → Check on ratification |
+| 133 | Codex | 131, 132, 051, 045 | Check runtime + No Fake Done + One-Way Door; `checks.list`/`checks.get` |
+| 134 | Claude | 131, 133, 124 | Checks surface + block UX — after **133** IPC |
+| 135 | Claude | 123–126, 132–134 | 30s demo runbook — **primary launch proof** |
+
+**131** can start after **016**; **132** after **126** accept path stable; **133** unblocks **135**; **134** parallel with **133** once IPC list exists.
+
 ## Wave 8 — Release + public surface
 
 | Ticket | Owner | Depends | Notes |
@@ -208,16 +227,18 @@ _Parked:   019–025, 077, 083–099, 117–118, 120, 130
 | Electron/runtime | 039, 045, 058, **076** | Codex owns 076+039 |
 | Chat.tsx / shell | 033, 045, 046, 048, 123, 049, 069–073, **081** | Serialize onboarding edits |
 | Curation accept UX | 126, 128, 016 | Claude UI + Codex gate logic |
-| Panes.tsx | 037, 044, 055, 056, 057, 059, 127, 121, 124 | Claude UI — avoid parallel edits |
-| proposal-store | 048, 128, 050, 051, 021 | Codex review for gate logic |
+| Panes.tsx | 037, 044, 055, 056, 057, 059, 127, 121, 124, **134** | Claude UI — avoid parallel edits |
+| proposal-store | 048, 128, 050, 051, 021, **132** | Codex review for gate + compile logic |
+| check-* (compiler, runner) | **131–133** | Codex owns runtime; IPC `checks.*`; no renderer bypass |
 | `.github/workflows/` | 129 | Cursor only |
 | extension/ | 130 | Parked; after 053 |
 
 ## Recommended execution order (single lane)
 
 ```txt
-033–038 → 076 → 078 → 045 → 046–048 → 123 → 126 → 128 → 081 → 054 → 129 → 055–056
-→ 051 → 049 → 039 + 079 → 047 → 080 → 119 → 122 → 124 → 059 → 127 → 041–044/068
+033–038 → 076 → 078 → 045 → 046–048 → 123 → 126 → **131 → 132 → 133 → 134 → 135**
+→ 128 → 081 → 054 → 129 → 055–056 → 051 (feeds 133) → 049 → 039 + 079 → 047 → 080 → 119
+→ 122 → 124 → 059 → 127 → 041–044/068
 → 063 → 065 + 115–116 → 121 → 125
 → unpark 021 → 074 → 022 → 075; 019 → 020; 077 after 039
 → parallel: 082 → 090 → 083 → 084 → 089 → 085 → 086; 087 with 056; 088 later
@@ -228,7 +249,7 @@ _Parked:   019–025, 077, 083–099, 117–118, 120, 130
 ## Cathedral vs v0.1
 
 ```txt
-v0.1 ship:     local otto + governance loop + culture wedge + cloud scaffold
+v0.1 ship:     local otto + governance loop + culture wedge + **Culture CI (131–135)** + cloud scaffold
 Cathedral:     092 + 094–099 control plane semantics + cloud CP live
 ```
 

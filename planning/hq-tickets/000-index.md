@@ -35,7 +35,7 @@ Default to Cursor unless the hardest irreducible part is Codex-grade reasoning o
 
 ## Active queue
 
-**Current head:** **033–038** → **076** → **045–048** + **123** + **126** → **054–056** → **122**/**124**/**128** → **063** → wedge **121**/**125**/**127**; **129** after **054**; **130** parked.
+**Current head:** **033–038** → **076** → **045–048** + **123** + **126** → **054–056** → **122**/**124**/**128** → **131–135 Culture CI** → **063** → wedge **121**/**125**/**127**; **129** after **054**; **130** parked.
 
 Work the lowest-numbered dependency-safe wave in root.
 
@@ -147,8 +147,28 @@ See `_Done/` folder. Craft 026–032 complete.
 | 127 | Command Station culture home | Claude | 059, 121, 122, 124 | culture cards on **059** |
 
 ```txt
-123 → 048 → accept → 126 → 124 → 121 → 122 → 125 · 128 gates memory · 127 on 059
+123 → 048 → accept → 126 → 132 compile → 133 enforce → 134 UX → 135 demo
+124 receipt · 121 changelog · 122 constitution · 125 export · 128 gates memory · 127 on 059
 ```
+
+### Checks wedge — Culture CI (category thesis)
+
+**Naming (locked):** product primitive **Checks** (UI, `checks.*` IPC, `~/.otto/checks/`, `otto.check.v1`); category **Culture CI** in README/marketing prose only. **Practices** = behavior specs; **Checks** = executable regressions from ratified **Standards**.
+
+| # | Ticket | Owner | Depends on | Proof |
+|---:|---|---|---|---|
+| 131 | Check contract (`otto.check.v1`) | Codex | 008, 009, 016 | schema + `docs/v1/checks.md` |
+| 132 | Compile Standard → Check | Codex | 131, 048, 126 | Check on ratification |
+| 133 | Runtime + seed Checks (No Fake Done, One-Way Door) | Codex | 131, 132, 051, 045 | block + Receipt |
+| 134 | Checks surface + block UX | Claude | 131, 133, 124 | staging block visible |
+| 135 | No Fake Done demo: 30s vertical slice | Claude | 123–126, 132–134 | runbook + capture |
+
+```txt
+Culture is a test suite.
+Ratified rule → executable Check → blocked or allowed → Receipt
+```
+
+Extends **051** (No Fake Done) into general **Check** runtime. Primary launch demo (**135**) over Remotion-only polish.
 
 ### Otto Cloud (web control plane)
 
@@ -230,6 +250,7 @@ Tickets in `_Parked/` are valid, but not active. They become active only by movi
 115 Pricing pilot page      — Claude (after 063)
 116 Pilot claim boundary    — Codex (with 115)
 121–128 Culture wedge       — see Category wedge section
+131–135 Checks wedge          — Culture CI positioning; see plan Category and naming (locked)
 129 CI verify on main       — Cursor (after 054)
 067 One-pagers alignment    — Claude (InReview — staging smoke pending)
 ```

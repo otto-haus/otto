@@ -11,6 +11,8 @@ Workers and implementers **cannot self-certify Done**. Ticket/charter completion
 
 Implements AGENTS.md topology: one Claude lane + one Codex lane; unbiased reviewer subagent; AC-by-AC +1.
 
+**Culture CI:** **133** generalizes this gate into the **Check** runtime (`done_claim` trigger). **051** remains the ticket/charter lifecycle slice; do not duplicate logic — route through Check engine when **131–133** land.
+
 ## Why this matters
 
 Standards "No Fake Done" is poster until it blocks premature completion. Charter AC gate (034) is one slice; this is the product-wide gate.
