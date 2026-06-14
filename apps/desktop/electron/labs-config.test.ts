@@ -92,6 +92,37 @@ describe('labs-config', () => {
     }
   });
 
+  test('IPC set ignores malformed labs patch values before persisting', () => {
+    const tmp = mkdtempSync(join(tmpdir(), 'otto-labs-ipc-test-'));
+    try {
+      process.env.OTTO_HOME = tmp;
+      const store = new ConfigStore();
+      persistLabsIpcSet(store, {
+        enabled: true,
+        features: { knowledge_cognee: true, channels_outbound: false },
+      });
+
+      const next = persistLabsIpcSet(store, {
+        enabled: 'yes',
+        features: {
+          knowledge_cognee: 'false',
+          channels_outbound: true,
+          bogus_feature: true,
+        },
+      } as never);
+
+      expect(next).toEqual({
+        enabled: true,
+        features: { knowledge_cognee: true, channels_outbound: true },
+      });
+      const onDisk = JSON.parse(readFileSync(join(tmp, 'config.json'), 'utf8'));
+      expect(onDisk.labs).toEqual(next);
+    } finally {
+      rmSync(tmp, { recursive: true, force: true });
+      delete process.env.OTTO_HOME;
+    }
+  });
+
   test('Settings persist shape (full merged object) round-trips via IPC path', () => {
     const prevHome = process.env.OTTO_HOME;
     const tmp = mkdtempSync(join(tmpdir(), 'otto-labs-settings-shape-'));
