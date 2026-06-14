@@ -47,31 +47,45 @@ describe('chat message storage keys (046)', () => {
     expect(readStoredMessages('thread_a').map((m) => m.text)).toEqual(['only a']);
   });
 
-  test('73k thread history restores instead of startup suppression warning', () => {
+  test('valid 73k thread history restores the bounded recent tail', () => {
     installStorage();
-    const threadId = 'thread_large';
-    const messages = Array.from({ length: 80 }, (_, index) => ({
-      id: `m-${index}`,
-      who: 'user' as const,
-      text: 'x'.repeat(900),
+    const older = Array.from({ length: 75 }, (_, i) => ({
+      id: `older-${i}`,
+      who: 'otto' as const,
+      text: `older ${i} ${'x'.repeat(1000)}`,
     }));
-    const raw = JSON.stringify(messages);
-    expect(raw.length).toBeGreaterThan(50_000);
+    const recent = [
+      { id: 'tail-user', who: 'user' as const, text: 'recent user turn' },
+      { id: 'tail-otto', who: 'otto' as const, text: 'recent otto reply' },
+    ];
+    const raw = JSON.stringify([...older, ...recent]);
+    expect(raw.length).toBeGreaterThan(73_000);
     expect(raw.length).toBeLessThan(1_000_000);
-    localStorage.setItem(messagesKey(threadId), raw);
+    localStorage.setItem(messagesKey('thread_large'), raw);
 
-    const restored = readStoredMessages(threadId);
-    expect(restored.length).toBeGreaterThan(0);
-    expect(restored.some((m) => m.text.includes('hidden because it is too large'))).toBe(false);
+    const restored = readStoredMessages('thread_large');
+
+    expect(restored.map((m) => m.id)).toContain('tail-user');
+    expect(restored.map((m) => m.id)).toContain('tail-otto');
+    expect(restored.some((m) => m.id.startsWith('history-suppressed-'))).toBe(false);
+    expect(restored.length).toBeLessThanOrEqual(12);
+    expect(restored.reduce((sum, m) => sum + m.text.length, 0)).toBeLessThanOrEqual(7_000);
   });
 
-  test('pathological multi-megabyte history stays suppressed', () => {
+  test('corrupt thread history fails closed to empty history', () => {
     installStorage();
-    const threadId = 'thread_huge';
-    localStorage.setItem(messagesKey(threadId), `[${' '.repeat(1_000_001)}]`);
+    localStorage.setItem(messagesKey('thread_corrupt'), '[{"id":"1","who":"user","text":"unterminated"');
 
-    const restored = readStoredMessages(threadId);
+    expect(readStoredMessages('thread_corrupt')).toEqual([]);
+  });
+
+  test('pathological thread history still uses the startup safety gate', () => {
+    installStorage();
+    localStorage.setItem(messagesKey('thread_huge'), `[${' '.repeat(1_000_001)}]`);
+
+    const restored = readStoredMessages('thread_huge');
+
     expect(restored).toHaveLength(1);
-    expect(restored[0]?.text).toContain('hidden because it is too large');
+    expect(restored[0]?.text).toContain('too large to restore safely at startup');
   });
 });

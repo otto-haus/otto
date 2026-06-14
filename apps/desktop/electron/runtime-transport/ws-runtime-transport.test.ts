@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, test } from 'bun:test';
+import type { ChildProcess } from 'node:child_process';
 import type { BrowserWindow } from 'electron';
 import { WebSocket } from 'ws';
 import { ConfigStore } from '../config-store';
@@ -45,6 +46,21 @@ function mockConfig(conversationId: string | null = null): ConfigStore {
     agentCandidates: () => ['agent-ws-test'],
     get: () => ({ conversationId }),
     update: () => ({}),
+  } as unknown as ConfigStore;
+}
+
+function mockMutableConfig(conversationId: string | null = null): ConfigStore {
+  let modelHandle: string | null = null;
+  let effort: 'off' | 'low' | 'medium' | 'high' | 'max' = 'max';
+  return {
+    ...mockConfig(conversationId),
+    modelHandle: () => modelHandle,
+    effort: () => effort,
+    update: (patch: { modelHandle?: string | null; effort?: typeof effort }) => {
+      if ('modelHandle' in patch) modelHandle = patch.modelHandle ?? null;
+      if (patch.effort) effort = patch.effort;
+      return {};
+    },
   } as unknown as ConfigStore;
 }
 
@@ -135,6 +151,7 @@ describe('WsRuntimeTransport', () => {
     expect(transport.getStatus().effectiveTransport).toBe('websocket local');
     expect(smokeMode()).toBe(true);
     expect(transport.getStatus().sessionMode).toBe('smoke');
+    expect(sent.some((e) => e.channel === 'otto:event' && (e.payload as { status?: { ready?: boolean } }).status?.ready === true)).toBe(true);
     const syncCommand = commands.find((cmd) => cmd.type === 'sync');
     expect(syncCommand).toBeTruthy();
     const runtime = syncCommand?.runtime as { conversation_id?: string } | undefined;
@@ -145,6 +162,133 @@ describe('WsRuntimeTransport', () => {
     expect(transport.getStatus().ready).toBe(false);
     expect(transport.getStatus().reason).toContain('disconnected');
     expect(sent.some((e) => e.channel === 'otto:event' && (e.payload as { status?: { ready?: boolean } }).status?.ready === false)).toBe(true);
+    await transport.close();
+    expect(transport.getStatus().ready).toBe(false);
+    expect(transport.getStatus().code).toBe('error');
+    expect(transport.getStatus().reason).toBe('transport closed');
+  });
+
+  test('stale remote process exit cannot overwrite a newer WS session', () => {
+    const { win } = mockWindow();
+    const transport = new WsRuntimeTransport(win, mockConfig());
+    const oldProc = { killed: false } as ChildProcess;
+    const newProc = { killed: false } as ChildProcess;
+
+    (transport as unknown as { remoteGeneration: number }).remoteGeneration = 2;
+    (transport as unknown as { remoteProc: ChildProcess | null }).remoteProc = newProc;
+
+    expect((transport as unknown as {
+      shouldHonorRemoteExit: (proc: ChildProcess, generation: number) => boolean;
+    }).shouldHonorRemoteExit(oldProc, 1)).toBe(false);
+    expect((transport as unknown as {
+      shouldHonorRemoteExit: (proc: ChildProcess, generation: number) => boolean;
+    }).shouldHonorRemoteExit(newProc, 2)).toBe(true);
+  });
+
+  test('stale runtime socket close cannot overwrite a newer WS session', async () => {
+    const { win } = mockWindow();
+    const transport = new WsRuntimeTransport(win, mockConfig());
+    (transport as unknown as { spawnRemote: () => Promise<void> }).spawnRemote = async () => {};
+
+    const initPromise = transport.init({ freshConversation: true });
+    const socket = await connectMockRuntime(transport, 'conv-ws-disposable');
+    await initPromise;
+
+    expect(transport.getStatus().ready).toBe(true);
+    (transport as unknown as { socketGeneration: number }).socketGeneration += 1;
+    socket.close();
+    await new Promise((r) => setTimeout(r, 30));
+
+    expect(transport.getStatus().ready).toBe(true);
+    await transport.close();
+  });
+
+  test('configure resyncs an existing websocket without full init', async () => {
+    const { win } = mockWindow();
+    const config = mockMutableConfig();
+    const transport = new WsRuntimeTransport(win, config);
+    let synced: { agentId: string; conversationId: string | null; modelHandle: string | null } | null = null;
+    (transport as unknown as { status: Record<string, unknown> }).status = {
+      ready: true,
+      code: 'ready',
+      agentId: 'agent-ws-test',
+      conversationId: 'conv-ws-configure',
+      modelHandle: null,
+    };
+    (transport as unknown as { runtimeSocket: WebSocket | null }).runtimeSocket = {
+      readyState: WebSocket.OPEN,
+      removeAllListeners: () => {},
+      close: () => {},
+    } as unknown as WebSocket;
+    (transport as unknown as {
+      syncRuntimeWithFallback: (agentId: string, conversationId: string | null, modelHandle: string | null) => Promise<string | null>;
+    }).syncRuntimeWithFallback = async (agentId, conversationId, modelHandle) => {
+      synced = { agentId, conversationId, modelHandle };
+      return modelHandle;
+    };
+    (transport as unknown as { init: () => Promise<unknown> }).init = async () => {
+      throw new Error('full init should not run for ready socket configure');
+    };
+
+    const status = await transport.configure({ modelHandle: 'openai/gpt-5.5', effort: 'high' });
+
+    expect(status.ready).toBe(true);
+    expect(status.modelHandle).toBe('openai/gpt-5.5');
+    expect(status.effort).toBe('high');
+    expect(synced).toEqual({
+      agentId: 'agent-ws-test',
+      conversationId: 'conv-ws-configure',
+      modelHandle: 'openai/gpt-5.5',
+    });
+    await transport.close();
+  });
+
+  test('explicit configure does not silently fall back to another model', async () => {
+    const { win } = mockWindow();
+    const config = mockMutableConfig();
+    const transport = new WsRuntimeTransport(win, config);
+    const attempted: Array<{ modelHandle: string | null | undefined; allowFallback?: boolean }> = [];
+    (transport as unknown as { status: Record<string, unknown> }).status = {
+      ready: true,
+      code: 'ready',
+      agentId: 'agent-ws-test',
+      conversationId: 'conv-ws-configure',
+      modelHandle: 'openai/gpt-5.5',
+    };
+    (transport as unknown as { runtimeSocket: WebSocket | null }).runtimeSocket = {
+      readyState: WebSocket.OPEN,
+      removeAllListeners: () => {},
+      close: () => {},
+    } as unknown as WebSocket;
+    (transport as unknown as {
+      syncRuntimeWithFallback: (
+        agentId: string,
+        conversationId: string | null,
+        modelHandle: string | null,
+        opts?: { allowFallback?: boolean },
+      ) => Promise<string | null>;
+    }).syncRuntimeWithFallback = async (_agentId, _conversationId, modelHandle, opts) => {
+      attempted.push({ modelHandle, allowFallback: opts?.allowFallback });
+      throw new Error('selected model unavailable');
+    };
+    (transport as unknown as { init: (opts?: { strictModelHandle?: string | null }) => Promise<unknown> }).init = async (opts) => {
+      attempted.push({ modelHandle: opts?.strictModelHandle, allowFallback: false });
+      return {
+        ready: true,
+        code: 'ready',
+        agentId: 'agent-ws-test',
+        conversationId: 'conv-ws-configure',
+        modelHandle: opts?.strictModelHandle,
+      };
+    };
+
+    const status = await transport.configure({ modelHandle: 'anthropic/claude-opus-4-8' });
+
+    expect(status.modelHandle).toBe('anthropic/claude-opus-4-8');
+    expect(attempted).toEqual([
+      { modelHandle: 'anthropic/claude-opus-4-8', allowFallback: false },
+      { modelHandle: 'anthropic/claude-opus-4-8', allowFallback: false },
+    ]);
     await transport.close();
   });
 

@@ -105,12 +105,24 @@ function initialSortOrderForNewThread(threads: ChatThreadRecord[]): number | nul
   return Math.min(...orders) - 1;
 }
 
+function isInactiveEmptyNewChat(thread: ChatThreadRecord, activeThreadId: string | null): boolean {
+  return (
+    thread.id !== activeThreadId &&
+    !thread.pinned &&
+    !thread.archived &&
+    !normalizeConversationId(thread.lettaConversationId) &&
+    /^new chat$/i.test(thread.title.trim())
+  );
+}
+
 export class ThreadStore {
   constructor(private config: ConfigStore) {}
 
   list(includeArchived = false): ThreadListResult {
-    const threads = sortThreads(readIndex()).filter((t) => includeArchived || !t.archived);
     const configuredActiveId = this.config.get().activeThreadId ?? null;
+    const threads = sortThreads(readIndex())
+      .filter((t) => includeArchived || !t.archived)
+      .filter((t) => includeArchived || !isInactiveEmptyNewChat(t, configuredActiveId));
     const activeThreadId = configuredActiveId && threads.some((t) => t.id === configuredActiveId)
       ? configuredActiveId
       : threads[0]?.id ?? null;
