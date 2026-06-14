@@ -9,7 +9,7 @@ export const DEFAULT_REPO = 'otto-haus/otto';
 export const DEFAULT_APP = '/Applications/otto.app';
 
 const DESKTOP_ASSET_RE =
-  /(?:^|\/)(?:otto[-_.]?)?(?:v?\d[\w.-]*)?(?:desktop|mac)(?:[-_.][\w.-]+)?\.(?:zip|dmg|tar\.gz)$/i;
+  /(?:^|\/)(?:otto[-_.]?)?(?:v?\d[\w.-]*)?(?:desktop|mac)(?:[-_.][\w.-]+)?\.(?:zip|dmg)$/i;
 
 export function pickDesktopAsset(assets = []) {
   for (const asset of assets) {

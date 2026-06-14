@@ -10,9 +10,14 @@ describe('otto-release-metadata', () => {
   test('pickDesktopAsset prefers desktop zip/dmg names', () => {
     const assets = [
       { name: 'otto-v01-desktop.mp4' },
+      { name: 'otto-v01-desktop-mac.tar.gz' },
       { name: 'otto-v01-desktop-mac.zip' },
     ];
     expect(pickDesktopAsset(assets)?.name).toBe('otto-v01-desktop-mac.zip');
+  });
+
+  test('pickDesktopAsset ignores unsupported archive formats', () => {
+    expect(pickDesktopAsset([{ name: 'otto-v01-desktop-mac.tar.gz' }])).toBeNull();
   });
 
   test('tagsMatch compares normalized tags', () => {

@@ -45,7 +45,7 @@ ASSET_NAME="$(python3 - <<'PY' "$RELEASE_JSON"
 import json, re, sys
 data = json.loads(sys.argv[1])
 assets = data.get("assets") or []
-pat = re.compile(r"(?:^|/)(?:otto[-_.]?)?(?:v?\d[\w.-]*)?(?:desktop|mac)(?:[-_.][\w.-]+)?\.(?:zip|dmg|tar\.gz)$", re.I)
+pat = re.compile(r"(?:^|/)(?:otto[-_.]?)?(?:v?\d[\w.-]*)?(?:desktop|mac)(?:[-_.][\w.-]+)?\.(?:zip|dmg)$", re.I)
 for asset in assets:
     name = asset.get("name") or ""
     if pat.search(name):
@@ -103,7 +103,7 @@ case "$ASSET_NAME" in
 esac
 
 SOURCE_APP="$(find "$EXTRACT_DIR" -maxdepth 3 -name 'otto.app' -type d | head -1)"
-if [[ -z "$SOURCE_APP" || ! -d "$SOURCE_APP/Contents/MacOS/otto" ]]; then
+if [[ -z "$SOURCE_APP" || ! -f "$SOURCE_APP/Contents/MacOS/otto" ]]; then
   echo "Downloaded artifact did not contain otto.app" >&2
   exit 1
 fi
