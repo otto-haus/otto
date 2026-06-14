@@ -29,6 +29,31 @@ describe('TicketStore', () => {
     }
   });
 
+  test('compile refuses to overwrite an existing ticket', () => {
+    const tmp = mkdtempSync(join(tmpdir(), 'otto-ticket-test-'));
+    try {
+      const store = new TicketStore(join(tmp, 'tickets'), new ReceiptWriter(join(tmp, 'receipts')));
+      const compiled = store.compile({
+        slug: 'active-slice',
+        objective: 'Keep the first objective.',
+      });
+      store.updateStatus(compiled.ticket.ticket_id, { status: 'active' });
+
+      expect(() =>
+        store.compile({
+          slug: 'active-slice',
+          objective: 'Overwrite the active ticket.',
+        }),
+      ).toThrow(/already exists/i);
+
+      const ticket = store.get(compiled.ticket.ticket_id);
+      expect(ticket?.status).toBe('active');
+      expect(ticket?.objective).toBe('Keep the first objective.');
+    } finally {
+      rmSync(tmp, { recursive: true, force: true });
+    }
+  });
+
   test('blocks merged without reviewer +1 and evidence', () => {
     const tmp = mkdtempSync(join(tmpdir(), 'otto-ticket-gate-'));
     try {

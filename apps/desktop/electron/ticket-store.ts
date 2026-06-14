@@ -99,6 +99,8 @@ export class TicketStore {
     const slug = slugify(input.slug);
     const ticketId = `ticket_${slug}`;
     const root = join(this.dir, slug);
+    const ticketPath = join(root, 'ticket.yaml');
+    if (existsSync(ticketPath)) throw new Error(`Ticket already exists: ${ticketId}`);
     mkdirSync(root, { recursive: true });
 
     const now = new Date().toISOString();
@@ -130,7 +132,6 @@ export class TicketStore {
       updated_at: now,
     };
 
-    const ticketPath = join(root, 'ticket.yaml');
     writeFileSync(ticketPath, stringify(body), 'utf8');
 
     const packetPath = join(root, 'worker-packet.md');
