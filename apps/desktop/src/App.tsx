@@ -51,12 +51,12 @@ const initialSurface = (): SurfaceId => {
 const DATA_SOURCE: Partial<Record<SurfaceId, 'file' | 'live' | 'not-wired'>> = {
   practices: 'file',
   settings: 'live',
-  charters: 'not-wired',
-  standards: 'not-wired',
-  routines: 'not-wired',
-  curation: 'not-wired',
-  receipts: 'not-wired',
-  autonomy: 'not-wired',
+  charters: 'file',
+  standards: 'file',
+  routines: 'file',
+  curation: 'file',
+  receipts: 'file',
+  autonomy: 'file',
 };
 
 export function App() {

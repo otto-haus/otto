@@ -1,4 +1,23 @@
 // Shared types across the Electron main process and the renderer (type-only, erased at runtime).
+import type {
+  Charter,
+  CharterRef,
+  CharterStatus,
+  Receipt,
+  ReceiptStatus,
+  StandardCitation,
+  StandardRecord,
+  StandardsRegistry,
+  PracticeRecord,
+  PracticeReference,
+  RoutineRecord,
+  RoutineReference,
+  CurationProposalRecord,
+  CreateProposalFromCorrectionInput,
+  DecideProposalInput,
+} from '@otto-haus/core';
+
+export type { CharterStatus };
 
 export type PermissionResponse =
   | { behavior: 'allow'; updatedInput?: Record<string, unknown> | null }
@@ -58,6 +77,122 @@ export type EffortLevel = 'off' | 'low' | 'medium' | 'high' | 'max';
 export interface RuntimePreferences {
   modelHandle?: string | null;
   effort?: EffortLevel;
+}
+
+export interface ReceiptSummary {
+  id: string;
+  timestamp: string;
+  status: ReceiptStatus;
+  action: string;
+  subjectType: Receipt['subject']['type'];
+  subjectId: string | null;
+  summary: string;
+  blockerCode: string | null;
+  evidenceCount: number;
+  practiceSlug: string | null;
+  routineSlug: string | null;
+  path: string;
+}
+
+export type ReceiptDetail = Receipt & { path: string };
+
+export interface ReceiptListResult {
+  dir: string;
+  receipts: ReceiptSummary[];
+  skipped: number;
+}
+
+export interface CharterCreateInput {
+  slug: string;
+  objective: string;
+  title?: string;
+  status?: CharterStatus;
+  acceptanceCriteria: Array<{ id: string; text: string; receipts?: string[] }>;
+  runIds?: string[];
+  receiptIds?: string[];
+}
+
+export type CharterDetail = Charter & { root: string; path: string };
+
+export interface CharterListResult {
+  dir: string;
+  charters: CharterRef[];
+}
+
+export interface CharterMutationResult {
+  charter: Charter;
+  path: string;
+  receipt: Receipt & { path: string };
+}
+
+export interface StandardListResult {
+  dir: string;
+  registryPath: string;
+  registry: StandardsRegistry;
+  standards: StandardRecord[];
+  skipped: Array<{ slug: string; file: string; reason: string }>;
+  storage: 'files';
+}
+
+export type { StandardCitation, StandardRecord, StandardsRegistry, PracticeRecord, PracticeReference };
+
+export interface PracticeListResult {
+  dir: string;
+  practices: PracticeRecord[];
+  skipped: Array<{ slug: string; file: string; reason: string }>;
+  storage: 'files';
+}
+
+export interface RoutineListResult {
+  dir: string;
+  routines: RoutineRecord[];
+  skipped: Array<{ slug: string; file: string; reason: string }>;
+  storage: 'files';
+}
+
+export interface RoutineActivationGate {
+  slug: string;
+  requiresApproval: boolean;
+  scheduled: boolean;
+  allowed: boolean;
+  reason: string;
+}
+
+export interface RoutineManualRunResult {
+  routine: RoutineRecord;
+  receipt: Receipt & { path: string };
+}
+
+export type { RoutineRecord, RoutineReference, CurationProposalRecord, CreateProposalFromCorrectionInput, DecideProposalInput };
+
+export interface ProposalListResult {
+  dir: string;
+  proposals: CurationProposalRecord[];
+  skipped: number;
+  storage: 'files';
+}
+
+export interface CreateProposalResult {
+  proposal: CurationProposalRecord;
+  receipt: Receipt & { path: string };
+}
+
+export interface DecideProposalResult {
+  proposal: CurationProposalRecord;
+  receipt: Receipt & { path: string };
+  blocked?: boolean;
+}
+
+export type {
+  AutonomyPolicy,
+  AutonomyPolicyResult,
+  AutonomyActionEvaluation,
+  EvaluateAutonomyActionInput,
+} from '@otto-haus/core';
+
+export interface EvaluateAutonomyActionResult {
+  evaluation: import('@otto-haus/core').AutonomyActionEvaluation;
+  receipt: Receipt & { path: string };
 }
 
 /** A loosely-typed SDK message forwarded straight to the renderer. */
