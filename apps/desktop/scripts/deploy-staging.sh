@@ -49,8 +49,11 @@ stamp_bundle() {
   plist_env_set "$plist" OTTO_BUILD_TIME "$build_time"
   plist_env_set "$plist" OTTO_BUILD_BRANCH "$build_branch"
   build_info_path="$bundle/Contents/Resources/app/build-info.json"
-  printf '{"sha":"%s","shortSha":"%s","builtAt":"%s","branch":"%s"}\n' \
-    "$build_sha" "$build_short" "$build_time" "$build_branch" > "$build_info_path"
+  node - "$build_info_path" "$build_sha" "$build_short" "$build_time" "$build_branch" <<'NODE'
+const { writeFileSync } = require('node:fs');
+const [path, sha, shortSha, builtAt, branch] = process.argv.slice(2);
+writeFileSync(path, `${JSON.stringify({ sha, shortSha, builtAt, branch })}\n`);
+NODE
   echo "build_marker=$build_short"
   echo "build_sha=$build_sha"
   echo "build_time=$build_time"
