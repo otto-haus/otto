@@ -7,7 +7,7 @@ import { isElectron, ottoApi, type EffortLevel, type LettaModelOption, type Save
 import { useRuntimeContext } from '../RuntimeContext';
 import type { SurfaceId } from '../components/Sidebar';
 import { OttoMark } from '../components/OttoMark';
-import { CheckBlockBanner, CommandStationStrip, MessageActions, Modal, PermissionCard, ReceiptInlineCard, type PermissionDecision, type PermissionRequestView } from '../components/ui';
+import { CheckBlockBanner, MessageActions, Modal, PermissionCard, ReceiptInlineCard, type PermissionDecision, type PermissionRequestView } from '../components/ui';
 import { displayThreadTitle } from '../components/ui/ThreadList';
 import { chatCopy, permissionCopy, toastCopy } from '../copy/surfaces';
 import { useChatThreads } from '../chat/useChatThreads';
@@ -718,12 +718,6 @@ const LiveChat: React.FC<{
           ) : null}
         </div>
       </div>
-
-      {ready && onNavigate ? (
-        <div className="chat__commandStation">
-          <CommandStationStrip onNavigate={onNavigate} />
-        </div>
-      ) : null}
 
       <div className="chat__stream" ref={streamRef}>
         <div className="chat__streamInner">

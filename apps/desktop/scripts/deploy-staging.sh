@@ -30,6 +30,12 @@ plist_env_set() {
 stamp_bundle() {
   local bundle="$1"
   local plist="$bundle/Contents/Info.plist"
+  local build_sha build_short build_branch build_time build_info_path
+
+  build_sha="$(git -C "$ROOT" rev-parse HEAD 2>/dev/null || echo unknown)"
+  build_short="$(git -C "$ROOT" rev-parse --short HEAD 2>/dev/null || echo unknown)"
+  build_branch="$(git -C "$ROOT" rev-parse --abbrev-ref HEAD 2>/dev/null || echo unknown)"
+  build_time="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
 
   plist_set "$plist" CFBundleIdentifier "$BUNDLE_ID"
   plist_set "$plist" CFBundleDisplayName "otto staging"
@@ -38,6 +44,16 @@ stamp_bundle() {
   plist_env_set "$plist" OTTO_HOME "$OTTO_HOME_DIR"
   plist_env_set "$plist" OTTO_SMOKE "1"
   plist_env_set "$plist" ELECTRON_ENABLE_LOGGING "1"
+  plist_env_set "$plist" OTTO_BUILD_SHA "$build_sha"
+  plist_env_set "$plist" OTTO_BUILD_SHORT_SHA "$build_short"
+  plist_env_set "$plist" OTTO_BUILD_TIME "$build_time"
+  plist_env_set "$plist" OTTO_BUILD_BRANCH "$build_branch"
+  build_info_path="$bundle/Contents/Resources/app/build-info.json"
+  printf '{"sha":"%s","shortSha":"%s","builtAt":"%s","branch":"%s"}\n' \
+    "$build_sha" "$build_short" "$build_time" "$build_branch" > "$build_info_path"
+  echo "build_marker=$build_short"
+  echo "build_sha=$build_sha"
+  echo "build_time=$build_time"
   # Letta discovery reads ~/.letta under isolated HOME — point at real settings for staging proof.
   if [[ -f "${HOME}/.letta/settings.json" ]]; then
     plist_env_set "$plist" OTTO_LETTA_SETTINGS_PATH "${HOME}/.letta/settings.json"
