@@ -26,7 +26,7 @@ const electronDir = join(appRoot, 'electron');
 
 const has = (...p) => existsSync(join(...p));
 const storePresent = (name) => has(electronDir, `${name}-store.ts`);
-// Home-relativize so the committed readiness.json never leaks an absolute /Users/... path.
+// Keep committed output source-neutral; only local diagnostic renders may expose a home-relative repo path.
 const tilde = (p) => (p && p.startsWith(homedir()) ? '~' + p.slice(homedir().length) : p);
 
 // optional, machine-local, never committed
@@ -40,6 +40,7 @@ const hasConfig = includeLocalConfig && existsSync(configPath);
 if (hasConfig) {
   try { cfg = JSON.parse(readFileSync(configPath, 'utf8')); } catch { cfg = {}; }
 }
+const repoSource = includeLocalConfig ? tilde(repoRoot) : 'repo root';
 
 // --- real repo checks ---
 let isOttoRepo = false;
@@ -92,7 +93,7 @@ const items = [
     action: 'Available once the runtime connects' },
   { key: 'workspace', label: 'Workspace root', required: false,
     status: isOttoRepo ? 'configured' : (existsSync(repoRoot) ? 'file' : 'missing'),
-    detail: isOttoRepo ? 'Otto repo detected' : 'repo root', source: tilde(repoRoot),
+    detail: isOttoRepo ? 'Otto repo detected' : 'repo root', source: repoSource,
     action: 'Override with OTTO_HOME' },
   { key: 'skills', label: 'Skills', required: false,
     status: skillsPresent.length ? 'file' : 'missing',

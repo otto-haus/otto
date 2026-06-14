@@ -1,0 +1,31 @@
+---
+title: "DevEx"
+description: "Contributor workflow for local otto development."
+---
+
+otto development is local-first. The useful loop is:
+
+```txt
+clean worktree -> focused change -> local gate -> proof -> PR
+```
+
+Use this Mintlify site for contributor-facing workflow notes. Product truth still lives in
+the repo files it points to:
+
+- `AGENTS.md`
+- `README.md`
+- `scripts/ci-local-gate.sh`
+- `planning/hq-tickets/`
+
+## Run the docs
+
+```sh
+task docs:dev
+```
+
+Validate before sending a PR:
+
+```sh
+task docs:validate
+task docs:links
+```

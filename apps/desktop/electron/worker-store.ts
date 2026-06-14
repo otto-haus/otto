@@ -5,6 +5,14 @@ import type { WorkerListResult, WorkerRecord, WorkerStatus } from '@otto-haus/co
 import { OTTO_DIR } from './config-store';
 
 export const WORKERS_DIR = join(OTTO_DIR, 'workers');
+const WORKER_STATUSES: Record<WorkerStatus, true> = {
+  draft: true,
+  running: true,
+  blocked: true,
+  review: true,
+  done: true,
+  failed: true,
+};
 
 export class WorkerStore {
   constructor(private dir = WORKERS_DIR) {}
@@ -50,11 +58,12 @@ export class WorkerStore {
   }
 
   updateStatus(id: string, status: WorkerStatus, receiptId?: string): WorkerRecord | null {
+    const nextStatus = normalizeStatus(status);
     const worker = this.list().workers.find((entry) => entry.id === id);
     if (!worker) return null;
     const updated: WorkerRecord = {
       ...worker,
-      status,
+      status: nextStatus,
       updated_at: new Date().toISOString(),
       receipt_ids: receiptId ? [...new Set([...worker.receipt_ids, receiptId])] : worker.receipt_ids,
     };
@@ -76,4 +85,11 @@ export class WorkerStore {
 function timestampMs(value: string): number {
   const ms = Date.parse(value);
   return Number.isFinite(ms) ? ms : 0;
+}
+
+function normalizeStatus(value: unknown): WorkerStatus {
+  if (typeof value === 'string' && value in WORKER_STATUSES) {
+    return value as WorkerStatus;
+  }
+  throw new Error(`Invalid worker status: ${String(value)}`);
 }

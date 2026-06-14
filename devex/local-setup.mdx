@@ -1,0 +1,36 @@
+---
+title: "Local setup"
+description: "Install and verify the otto developer environment."
+---
+
+## Requirements
+
+- Bun
+- go-task
+- Letta Desktop or a local Letta runtime for live chat work
+
+## Install
+
+```sh
+git clone https://github.com/otto-haus/otto.git
+cd otto
+bun install --frozen-lockfile
+```
+
+## First checks
+
+```sh
+bun run typecheck
+bun test
+bun run verify:v0
+```
+
+## Agent extension
+
+```sh
+bun run install-extension
+```
+
+Then run `/reload` in Letta Code.
+
+Provider credentials belong in Letta, not otto.
