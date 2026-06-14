@@ -1,0 +1,81 @@
+schema: otto.autonomy.policy.v1
+version: "0.1"
+summary: Conservative v1 policy — reversible work is autonomous; one-way doors escalate.
+doctrine: |
+  Otto owns orchestration. Workers own bounded execution. Sebastian owns consequences.
+  Own reversible work. Gate consequential work. Approve doors, not steps.
+zones:
+  green:
+    label: Reversible local work
+    requires_approval: false
+    summary: Otto may act without asking when work is internal and reversible.
+    examples:
+      - create worktrees and worker conversations
+      - run tests, typecheck, and local retries
+      - draft specs, docs, and receipts
+      - open PRs when merge policy still requires approval
+  yellow:
+    label: Prompt once
+    requires_approval: true
+    prompt_kind: confirm_once
+    summary: Operational steps with limited blast radius get a one-time prompt.
+    examples:
+      - install dependencies or run migrations locally
+      - fetch external docs or registry metadata
+      - rebase a worker branch after checks pass
+  red:
+    label: One-way doors
+    requires_approval: true
+    prompt_kind: explicit_approval
+    summary: Consequential actions always require explicit approval before execution.
+    examples:
+      - send, post, or publish externally
+      - spend money or move funds
+      - deploy to production or customer systems
+      - merge protected main or force-push
+      - delete or destroy durable data
+      - change credentials, security, or permissions
+      - activate recurring routines or ratify Standards changes
+doors:
+  - id: send
+    label: Send / post / publish
+    zone: red
+    requirement: send-or-publish
+  - id: spend
+    label: Spend / charge / transfer
+    zone: red
+    requirement: spend
+  - id: deploy
+    label: Deploy / publish live
+    zone: red
+    requirement: deploy
+  - id: merge
+    label: Merge protected main / force-push
+    zone: red
+    requirement: external-side-effects
+  - id: delete
+    label: Delete / destroy
+    zone: red
+    requirement: delete-or-destroy
+  - id: security
+    label: Credential / security change
+    zone: red
+    requirement: credential-or-security-change
+  - id: permission
+    label: Permission expansion
+    zone: red
+    requirement: permission-expansion
+  - id: recurring
+    label: Recurring routine activation
+    zone: red
+    requirement: enabling-globally
+settings:
+  worker_creation: allowed
+  worktree_creation: allowed
+  pr_creation: allowed
+  safe_auto_merge: disabled
+  require_receipts: true
+  max_parallel_workers: 3
+limitations:
+  - Ticketcraft compile/assign orchestration is not automated in v1 — policy governs classification only.
+  - Charter-gates overlay enforces tool patterns separately; this surface reads policy.yaml.
