@@ -13,6 +13,14 @@ import { RunStore } from './run-store';
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), '../../..');
 const practicesDir = join(repoRoot, 'practices');
 
+function restoreOttoHome(value: string | undefined) {
+  if (value === undefined) {
+    delete process.env.OTTO_HOME;
+  } else {
+    process.env.OTTO_HOME = value;
+  }
+}
+
 describe('PracticeRunner', () => {
   test('charter step writes receipt with practice reference and run id', () => {
     const tmp = mkdtempSync(join(tmpdir(), 'otto-practice-test-'));
@@ -122,7 +130,32 @@ describe('PracticeRunner', () => {
       expect(result.receipt.action).toBe('practice.field_note.capture');
       expect(result.receipt.evidence.some((e) => e.ref === result.artifactPath)).toBe(true);
     } finally {
-      process.env.OTTO_HOME = priorHome;
+      restoreOttoHome(priorHome);
+      rmSync(tmp, { recursive: true, force: true });
+    }
+  });
+
+  test('default field note stores honor runtime OTTO_HOME', () => {
+    const tmp = mkdtempSync(join(tmpdir(), 'otto-practice-runtime-'));
+    const priorHome = process.env.OTTO_HOME;
+    process.env.OTTO_HOME = tmp;
+    try {
+      const runner = new PracticeRunner();
+      const result = runner.run({
+        slug: 'field-note',
+        invocation: '/field-note capture',
+        payload: {
+          raw_note: 'Runtime home should contain every field-note artifact.',
+          source: { who: 'Operator A', role: 'escrow officer', where: 'runtime home test', when: '2026-06-14' },
+        },
+      });
+
+      expect(result.artifactPath?.startsWith(join(tmp, 'field-notes'))).toBe(true);
+      expect(result.run.path.startsWith(join(tmp, 'runs'))).toBe(true);
+      expect(result.receipt.path.startsWith(join(tmp, 'receipts'))).toBe(true);
+      expect(runner.metricsFor('field-note').last_receipt_path?.startsWith(join(tmp, 'receipts'))).toBe(true);
+    } finally {
+      restoreOttoHome(priorHome);
       rmSync(tmp, { recursive: true, force: true });
     }
   });

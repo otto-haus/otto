@@ -52,9 +52,9 @@ const EXTERNAL_INVOCATION = /\b(send|publish|post|deploy|enable globally|merge)\
 export class PracticeRunner {
   constructor(
     private practices = new PracticeStore(),
-    private runs = new RunStore(),
-    private receipts = new ReceiptWriter(),
-    private metrics = new PracticeMetricsStore(),
+    private runs = defaultRunStore(),
+    private receipts = defaultReceiptWriter(),
+    private metrics = defaultPracticeMetricsStore(),
     private autonomy = new AutonomyStore(),
     private checks = new CheckRunner(),
   ) {}
@@ -335,6 +335,18 @@ export class PracticeRunner {
 
     return { receipt, artifactPath };
   }
+}
+
+function defaultRunStore(): RunStore {
+  return new RunStore(join(defaultOttoDir(), 'runs'));
+}
+
+function defaultReceiptWriter(): ReceiptWriter {
+  return new ReceiptWriter(join(defaultOttoDir(), 'receipts'));
+}
+
+function defaultPracticeMetricsStore(): PracticeMetricsStore {
+  return new PracticeMetricsStore(join(defaultOttoDir(), 'practice-metrics'));
 }
 
 function isRuntimePractice(slug: string): slug is RuntimePracticeSlug {
