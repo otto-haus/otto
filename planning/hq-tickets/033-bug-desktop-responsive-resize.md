@@ -42,12 +42,12 @@ bash apps/desktop/scripts/deploy-staging.sh
 
 ## Execution receipt (2026-06-14)
 
-- **Repo:** `/Users/seb/Code/otto` (uncommitted)
-- **Files:** `apps/desktop/src/App.tsx`, `apps/desktop/src/styles.css`
-- **Changes:** `app--sidebar-compact` class syncs grid 68px column; `.main`/`.content` flex 1 + min-height 0; removed duplicate CSS-only 900px grid override
-- **Staging:** `/Applications/otto-staging.app` deployed
-- **Verify:** `bun run verify:v0` 5/5 pass
-- **Reviewer:** pending Sebastian +1
+- **Branch:** `ship/v0.3-integration` (PR #6)
+- **Commit:** `6bf74cd` — `apps/desktop/src/App.tsx`, `apps/desktop/src/styles.css`
+- **Changes:** `app--sidebar-compact` syncs grid 68px column with JS collapse; `.main`/`.content` flex 1 + min-height 0; removed duplicate CSS-only 900px grid override
+- **Staging:** `/Applications/otto-staging.app` via `apps/desktop/scripts/deploy-staging.sh`
+- **Verify:** `bun run verify:v0` 5/5; `bun test ./apps/desktop/electron/*.test.ts` 37+ pass
+- **Reviewer:** pending Sebastian resize smoke +1
 
 ## Blocker log
 

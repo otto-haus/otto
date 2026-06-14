@@ -35,7 +35,7 @@ Default to Cursor unless the hardest irreducible part is Codex-grade reasoning o
 
 ## Active queue
 
-**Current head (2026-06-14):** **033–038** bug wave → **076** embedded Letta → **045–048** + **081** Chat → **054–056** → compound through **066**; **082** otto cloud spec (done when reviewed); **083–088** parked; adapters **021–022/074–075** parked. Full DAG: `000-parallel-map.md`.
+**Current head (2026-06-14):** **033–038** → **076** → **045–048** + **081** → **054–056** → **092** cathedral spec (P1); **091** staging runbook; **082** otto cloud slice; **094–099** parked impl; **083–090** cloud parked; adapters **021–022/074–075** parked.
 
 Work the lowest-numbered dependency-safe wave in root.
 
@@ -139,6 +139,22 @@ See `_Done/` folder. Craft 026–032 complete.
 | 086 | Remote env VM template | Cursor | 085 | `_Parked/` — `otto-cloud` env |
 | 087 | Discord webhooks on Workers | Cursor | 084, 056 | `_Parked/` — extends 020 |
 | 088 | WorkOS orgs | Codex | 087 | `_Parked/` — multi-user later |
+| 089 | Desktop ↔ Cloud sync contract | Codex | 082, 084 | `_Parked/` — after 084 stub |
+| 090 | Cloud monorepo layout ADR | Codex | 082 | `_Parked/` — before 083 |
+| 091 | Live vs staging deploy runbook | Cursor | none | operator runbook — P1 now |
+
+### Cathedral / always-on control plane
+
+| # | Ticket | Owner | Depends on | Proof |
+|---:|---|---|---|---|
+| 092 | Agent Control Plane / Always-On (spec) | Codex | 017, 051, 082 | `docs/v1/agent-control-plane-spec.md` + +1 |
+| 093 | Multi-agent workspace policy ADR | Codex | 076, 092 | `_Parked/` — one primary default |
+| 094 | Command queue contract | Codex | 092, 084 | `_Parked/` |
+| 095 | Execution leases | Codex | 094, 060 | `_Parked/` |
+| 096 | Audit export bundle | Cursor | 092, 084 | `_Parked/` |
+| 097 | Runner heartbeat | Cursor | 092, 086, 085 | `_Parked/` |
+| 098 | Replay & recovery | Codex | 094, 095, 039 | `_Parked/` |
+| 099 | Notification policy | Claude | 092, 020, 087 | `_Parked/` |
 
 ## Parked queue
 
@@ -158,6 +174,15 @@ Tickets in `_Parked/` are valid, but not active. They become active only by movi
 086 Remote env VM — unpark after 085
 087 Discord webhooks (cloud) — unpark after 084, 056
 088 WorkOS orgs — unpark after 087 (multi-user)
+089 Desktop ↔ Cloud sync contract — unpark after 082 reviewed, 084 D1 stub
+090 Cloud monorepo layout ADR — unpark after 082 reviewed (before 083)
+093 Multi-agent policy ADR — unpark after 092 reviewed
+094 Command queue — unpark after 092, 084
+095 Execution leases — unpark after 094
+096 Audit export — unpark after 092, 084
+097 Runner heartbeat — unpark after 092, 086/085
+098 Replay/recovery — unpark after 094, 095
+099 Notification policy — unpark after 092, 020/087
 023 Stacks Source Packets — unpark after 019, 040
 024 People Context Packs — unpark after 044, 023
 025 Pinned Chat List — SUPERSEDED by 046 (reference only)

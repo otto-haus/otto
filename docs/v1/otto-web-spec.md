@@ -2,6 +2,7 @@
 
 **Status:** proposed (2026-06-14)  
 **Scope:** always-on otto beyond the desktop shell  
+**Umbrella:** `agent-control-plane-spec.md` (**092**) — this doc is the **Cloudflare + Letta topology slice**  
 **Depends on:** desktop substrate **076** (embedded Letta) for parity; does not block spec  
 **Supersedes:** ad-hoc “Render app + Cloudflare + WorkOS + Letta Cloud” four-authority stack
 
@@ -289,8 +290,9 @@ Conflict rule: **folder/ticket state on disk remains truth** until explicit clou
 
 1. **Subdomain:** `app.otto.haus` vs `cloud.otto.haus` (coordinate **065**).
 2. **Single-tenant v1:** one D1 tenant row vs multi-tenant schema day one.
-3. **Bi-directional sync:** desktop push-only v1 vs full merge (defer).
-4. **Letta schedule API:** official REST vs CLI wrapper in VM — spike in **085**.
+3. **Bi-directional sync:** **089** — contract doc; implementation after **084**.
+4. **Monorepo layout:** **090** — ADR before **083** scaffold.
+5. **Letta schedule API:** official REST vs CLI wrapper in VM — spike in **085**.
 
 ---
 
@@ -303,3 +305,6 @@ Conflict rule: **folder/ticket state on disk remains truth** until explicit clou
 - `planning/hq-tickets/076-embedded-letta-one-app-distribution.md`
 - `planning/hq-tickets/_Parked/077-letta-cloud-remote-mode.md`
 - `planning/hq-tickets/079-runtime-transport-mode-matrix-doc.md`
+- `planning/hq-tickets/_Parked/089-desktop-cloud-sync-contract.md`
+- `planning/hq-tickets/_Parked/090-otto-cloud-monorepo-layout-adr.md`
+- `planning/hq-tickets/091-live-vs-staging-deploy-runbook.md`

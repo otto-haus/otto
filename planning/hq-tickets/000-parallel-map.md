@@ -2,7 +2,7 @@
 
 Throughput principle: maximize **accepted** tickets per unit time. Parallelize independent chains; preserve isolated worktrees and independent review gates.
 
-Updated: 2026-06-14 (root queue 033–082; parked 019–025, 077, 083–088)
+Updated: 2026-06-14 (root 033–082, 091–092; parked 019–025, 077, 083–099)
 
 ## Staging runtime (all lanes)
 
@@ -21,8 +21,8 @@ All runtime/UI proof uses staging with isolated HOME/OTTO_HOME. Do not close liv
 ```txt
 _Done:     001–018, 026–032
 _InReview: 067 (one-pagers — staging smoke pending)
-Root:      033–082 (queued)
-_Parked:   019–025, 077, 083–088 (025→046; 077 after 076+039; cloud after 082+065)
+Root:      033–082, 091–092 (queued)
+_Parked:   019–025, 077, 083–099
 ```
 
 ## Wave 1 — Bug fix (parallel-safe)
@@ -133,7 +133,23 @@ Separate track: Cloudflare control plane + Letta Cloud broker + optional VM. **D
 | 087 | Cursor | 084, 056 | Discord webhooks on Workers — parked |
 | 088 | Codex | 087 | WorkOS — parked until multi-user |
 
-082 can complete while desktop waves run. **083** unparks after **065** picks `app.otto.haus` (or equivalent).
+082 can complete while desktop waves run. **083** unparks after **065** picks `app.otto.haus` (or equivalent). **090** unparks after **082** reviewed, before **083**. **089** after **084**.
+
+## Wave 9b — Ops clarity (parallel)
+
+| Ticket | Owner | Depends | Notes |
+|--------|-------|---------|-------|
+| 091 | Cursor | none | Live vs staging runbook — **P1**; reduces stale-app confusion |
+
+## Wave 10 — Cathedral control plane
+
+| Ticket | Owner | Depends | Notes |
+|--------|-------|---------|-------|
+| 092 | Codex | 017, 051, 082 | **Umbrella spec** — queue, leases, heartbeat, replay, export |
+| 093 | Codex | 076, 092 | Multi-agent ADR — one default, parked |
+| 094–099 | mixed | 092+ | Implementation slices — all parked |
+
+**082** is the Cloudflare/Letta **topology** slice. **092** is the **semantics** layer. Both required for cathedral.
 
 ## Unpark queue (from `_Parked/`)
 
@@ -152,6 +168,15 @@ Separate track: Cloudflare control plane + Letta Cloud broker + optional VM. **D
 | 086 Remote env VM | 085 |
 | 087 Discord (cloud) | 084, 056 |
 | 088 WorkOS | 087 |
+| 089 Sync contract | 082 reviewed, 084 |
+| 090 Monorepo ADR | 082 reviewed |
+| 093 Multi-agent ADR | 092 reviewed |
+| 094 Command queue | 092, 084 |
+| 095 Leases | 094 |
+| 096 Audit export | 092, 084 |
+| 097 Heartbeat | 092, 085/086 |
+| 098 Replay | 094, 095 |
+| 099 Notifications | 092, 020/087 |
 | 023 Stacks | 019, 040 |
 | 024 People packs | 044, 023 |
 | 025 Pinned chat | **cancelled → 046** |
@@ -177,8 +202,18 @@ Separate track: Cloudflare control plane + Letta Cloud broker + optional VM. **D
 033–038 → 076 → 078 → 045 → 046–048 → 081 → 054 → 055–056
 → 051 → 049 → 039 + 079 → 047 → 080 → 041–044/068 → 063 → 065
 → unpark 021 → 074 → 022 → 075; 019 → 020; 077 after 039
-→ parallel track: 082 → (065) → 083 → 084 → 085 → 086; 087 with 056; 088 later
+→ parallel track: 082 → 090 → (065) → 083 → 084 → 089 → 085 → 086; 087 with 056; 088 later
+→ parallel: 091 anytime; 092 after 051+082 reviewed → 094–099 chain
 ```
+
+## Cathedral vs v0.1
+
+```txt
+v0.1 ship (001–091 impl):     local otto + governance loop + cloud scaffold
+Cathedral (092 + 094–099):    always-on control plane semantics + cloud CP live
+```
+
+**Shipping all tickets through 091 does NOT complete cathedral.** It completes honest v0.1 + parked cloud/cathedral impl.
 
 ## Blocked / not ready
 

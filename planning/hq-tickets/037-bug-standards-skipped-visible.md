@@ -34,6 +34,13 @@ cd /Users/seb/Code/otto
 bun run verify:v0
 ```
 
+## Execution receipt (2026-06-14)
+
+- **Branch:** `ship/v0.3-integration` (PR #6)
+- **Fix:** `SkippedLoaderPanel` on Behavior panes (Standards, Practices, Routines, Skills) lists skipped files with reasons even when primary list is empty
+- **Verify:** `bun run verify:v0` 5/5; staging Standards/Skills with intentional skip fixture
+- **Reviewer:** pending +1
+
 ## Blocker log
 
 Leave blank unless blocked.

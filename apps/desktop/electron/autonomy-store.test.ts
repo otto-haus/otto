@@ -43,6 +43,15 @@ describe('AutonomyStore', () => {
     expect(tests.allowed_without_approval).toBe(true);
   });
 
+  test('classifies unknown actions as yellow, not green', () => {
+    const store = new AutonomyStore(join(repoRoot, 'autonomy'));
+    const policy = store.getPolicy();
+    const unknown = classifyAction('do something completely unmapped xyz123', policy, policyPath);
+    expect(unknown.zone).toBe('yellow');
+    expect(unknown.requires_approval).toBe(true);
+    expect(unknown.allowed_without_approval).toBe(false);
+  });
+
   test('evaluateAction writes autonomy decision receipt', () => {
     const tmp = mkdtempSync(join(tmpdir(), 'otto-autonomy-test-'));
     const receiptsDir = join(tmp, 'receipts');
