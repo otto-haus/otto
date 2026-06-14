@@ -141,9 +141,6 @@ function AppShell() {
 
   const surfaceContent = () => {
     const gate = labsSurfaceGate(active, labs.labs, labs.hydrated);
-    // #region agent log
-    fetch('http://127.0.0.1:7262/ingest/27e77873-c4b9-4cec-8448-3989be566278',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'5134c1'},body:JSON.stringify({sessionId:'5134c1',location:'App.tsx:surfaceContent',message:'render surface branch',data:{active,gate,labsHydrated:labs.hydrated,runtimeReady:!!rt.status?.ready,runtimeCode:rt.status?.code??null,electron:rt.electron},timestamp:Date.now(),hypothesisId:'H2',runId:'post-fix'})}).catch(()=>{});
-    // #endregion
     if (gate === 'loading') {
       return (
         <div className="comingSoonShell" aria-busy="true">

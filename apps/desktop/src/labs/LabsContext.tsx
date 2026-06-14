@@ -39,12 +39,8 @@ export const LabsProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return;
     }
     void api.labs.get().then((cfg) => {
-      const normalized = normalize(cfg);
-      setLabs(normalized);
+      setLabs(normalize(cfg));
       setHydrated(true);
-      // #region agent log
-      fetch('http://127.0.0.1:7262/ingest/27e77873-c4b9-4cec-8448-3989be566278',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'5134c1'},body:JSON.stringify({sessionId:'5134c1',location:'LabsContext.tsx:hydrate',message:'labs hydrated',data:{enabled:normalized.enabled,featureCount:Object.keys(normalized.features??{}).length},timestamp:Date.now(),hypothesisId:'H2',runId:'pre-fix'})}).catch(()=>{});
-      // #endregion
     }).catch(() => setHydrated(true));
   }, []);
 
