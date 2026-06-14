@@ -199,14 +199,24 @@ cd otto
 bun install
 ```
 
-Install the Letta Code extension and skills:
+Install the Letta Code command files:
 
 ```sh
 bun run install-extension
 # then run /reload in Letta Code
 ```
 
-This installs Charter/Routine commands, skills, and one-way-door permission gates.
+This installs Charter/Routine command files and one-way-door permission gates under
+`~/.letta/extensions/`.
+
+Skill installation is optional and needs an agent memory directory:
+
+```sh
+MEMORY_DIR=/path/to/agent/memory bun run install-extension
+```
+
+If `MEMORY_DIR` is not set, the command still installs the Letta Code command files and
+prints the manual copy paths for `skill/SKILL.md` and `skill/routine/SKILL.md`.
 
 Local desktop app:
 
