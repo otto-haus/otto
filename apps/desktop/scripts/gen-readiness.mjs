@@ -10,7 +10,7 @@
 // v1 is local-only: Otto does not store model provider keys. Letta owns provider auth.
 // Set OTTO_READINESS_IGNORE_LOCAL_CONFIG=1 to regenerate the committed preview baseline
 // without reading machine-local config. We never read API keys here.
-import { existsSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
+import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { homedir } from 'node:os';
@@ -40,16 +40,6 @@ try { isOttoRepo = JSON.parse(readFileSync(join(repoRoot, 'package.json'), 'utf8
 const skillMain = has(repoRoot, 'skill', 'SKILL.md');
 const skillRoutine = has(repoRoot, 'skill', 'routine', 'SKILL.md');
 const skillsPresent = [skillMain && 'SKILL.md', skillRoutine && 'routine/SKILL.md'].filter(Boolean);
-
-let practiceCount = 0;
-try {
-  practiceCount = JSON.parse(readFileSync(join(appRoot, 'src/data/practices.json'), 'utf8')).length;
-} catch {
-  try {
-    const pdir = join(repoRoot, 'practices');
-    practiceCount = readdirSync(pdir).filter((d) => has(pdir, d, 'practice.yaml')).length;
-  } catch {}
-}
 
 const permissionsDoc = has(repoRoot, 'docs', 'autonomy.md');
 
@@ -86,10 +76,10 @@ const items = [
     detail: skillsPresent.length ? skillsPresent.join(' · ') : 'none found', source: 'skill/',
     action: 'Install into a live agent via scripts/install.sh' },
   { key: 'practices', label: 'Practices', required: false,
-    status: practiceCount > 0 ? 'configured' : 'missing',
-    detail: `${practiceCount} practice spec${practiceCount === 1 ? '' : 's'}`,
-    source: 'apps/desktop/src/data/practices.json',
-    action: practiceCount ? 'validated via otto-practices' : 'run gen:practices' },
+    status: 'not-wired',
+    detail: 'Coming soon; not loaded in the v0.1 desktop',
+    source: null,
+    action: 'Ship a real Practices loader before marking this surface done' },
   { key: 'mcp', label: 'MCP servers', required: false,
     status: mcpCount > 0 ? 'configured' : 'missing',
     detail: mcpCount > 0 ? `${mcpCount} configured` : 'None configured',

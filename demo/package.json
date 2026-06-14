@@ -1,6 +1,6 @@
 {
   "name": "@otto-haus/demo",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "private": true,
   "description": "Remotion feature demos for Otto v0.1. One ~60s video per feature.",
   "type": "module",

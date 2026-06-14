@@ -2,12 +2,14 @@ import { contextBridge, ipcRenderer } from 'electron';
 import type {
   ConnectionInfo,
   ConnectionInput,
+  AttachmentInput,
   OttoConfig,
   OttoEvent,
   PermissionRequest,
   PermissionResponse,
   RuntimePreferences,
   RuntimeStatus,
+  SavedAttachment,
 } from './shared/types';
 
 const api = {
@@ -22,6 +24,9 @@ const api = {
   config: {
     get: (): Promise<OttoConfig> => ipcRenderer.invoke('otto:config:get'),
     set: (patch: Partial<OttoConfig>): Promise<OttoConfig> => ipcRenderer.invoke('otto:config:set', patch),
+  },
+  attachments: {
+    save: (input: AttachmentInput): Promise<SavedAttachment> => ipcRenderer.invoke('otto:attachment:save', input),
   },
   connection: {
     get: (): Promise<ConnectionInfo> => ipcRenderer.invoke('otto:connection:get'),

@@ -1,6 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import type { PracticeSpec } from '@otto-haus/core';
-import practicesData from '../data/practices.json';
+import type React from 'react';
+import { useEffect, useState } from 'react';
 import {
   readiness,
   requiredMissing,
@@ -11,14 +10,6 @@ import { Icon } from '../components/icons';
 import { ottoApi, type RuntimeStatus, type StatusCode } from '../runtime';
 import { useRuntimeContext } from '../RuntimeContext';
 
-const practices = practicesData as PracticeSpec[];
-
-const statusPill = (s: string) => {
-  const cls = s === 'active' || s === 'success' || s === 'complete' ? 'pill--ok'
-    : s === 'blocked' || s === 'pending' ? 'pill--warn'
-    : s === 'proposed' || s === 'running' || s === 'draft' ? 'pill--info' : '';
-  return <span className={`pill ${cls}`}>{s}</span>;
-};
 
 const EmptySurface: React.FC<{
   eyebrow: string;
@@ -36,124 +27,67 @@ const EmptySurface: React.FC<{
   </div>
 );
 
-/* ---------- Charters ---------- */
+/* ---------- Coming-soon surfaces ---------- */
 export const Charters: React.FC = () => (
   <EmptySurface
     eyebrow="charters"
-    title="Charters are not shipped in the desktop yet."
-    body="No example contracts are shown here. This pane will stay empty until Otto can read real Charter records from the file/runtime store."
-    path="~/.otto/charters/"
-    next="Wire real Charter records before calling this surface done."
+    title="Charters are coming soon."
+    body="This surface is not finished yet. For v0.1, otto keeps it empty instead of showing sample contracts."
+    next="Soon: real Charter records, status, approvals, and receipts."
   />
 );
 
-/* ---------- Standards ---------- */
 export const Standards: React.FC = () => (
   <EmptySurface
     eyebrow="standards"
-    title="Standards exist in repo canon, but this pane has no loader yet."
-    body="The desktop should show real Markdown/YAML Standards from the repo/runtime, not a recreated list. Until then this stays empty."
-    path="standards/*.md"
-    next="Add a generated standards.json or v2 runtime view export."
+    title="Standards are coming soon."
+    body="This surface is not finished yet. otto will show real Standards here once the loader is wired."
+    next="Soon: source-backed Standards and the behaviors they govern."
   />
 );
 
-/* ---------- Practices (real data) ---------- */
-export const Practices: React.FC = () => {
-  const [slug, setSlug] = useState(practices[0]?.slug ?? '');
-  const sel = practices.find((p) => p.slug === slug) ?? practices[0];
-  return (
-    <div className="split">
-      <div className="cards">
-        {practices.map((p) => (
-          <button
-            key={p.slug}
-            className={`card${p.slug === sel?.slug ? ' is-selected' : ''}`}
-            onClick={() => setSlug(p.slug)}
-          >
-            <div className="between">
-              <span className="card__title">{p.name}</span>
-              {statusPill(p.status)}
-            </div>
-            <span className="card__sub">{p.summary}</span>
-          </button>
-        ))}
-      </div>
-      {sel && (
-        <div className="detail">
-          <div className="panel">
-            <div className="between">
-              <div className="h-sec">{sel.name}</div>
-              {statusPill(sel.status)}
-            </div>
-            <p className="lede" style={{ marginTop: 6 }}>{sel.summary}</p>
-            <div className="row" style={{ flexWrap: 'wrap', gap: 8, marginTop: 12 }}>
-              {sel.invocations?.map((i) => <span className="filechip" key={i}>{i}</span>)}
-            </div>
-          </div>
-          <div className="grid grid--2">
-            <div className="panel">
-              <div className="eyebrow">guardrails</div>
-              <ul className="list">{sel.guardrails?.map((g, i) => <li key={i}>{g}</li>)}</ul>
-            </div>
-            <div className="panel">
-              <div className="eyebrow">evidence standard</div>
-              <ul className="list">{sel.evidence_standard?.map((g, i) => <li key={i}>{g}</li>)}</ul>
-            </div>
-          </div>
-          <div className="panel">
-            <div className="eyebrow">approval floor · cannot be bypassed</div>
-            <div className="row" style={{ flexWrap: 'wrap', gap: 8, marginTop: 10 }}>
-              {sel.approval_required_for?.map((a) => <span className="pill pill--warn" key={a}>{a}</span>)}
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-};
+export const Practices: React.FC = () => (
+  <EmptySurface
+    eyebrow="practices"
+    title="Practices are coming soon."
+    body="This surface is not finished yet. The placeholder Practice list is hidden so v0.1 does not imply these workflows are live."
+    next="Soon: approved Practices backed by real files, runs, and receipts."
+  />
+);
 
-/* ---------- Routines ---------- */
 export const Routines: React.FC = () => (
   <EmptySurface
     eyebrow="routines"
-    title="No live Routines are wired yet."
-    body="This pane will show repeatable bundles only after Otto can read real routine files."
-    path="routines/"
-    next="Wire routine.yaml loading; no sample morning routine."
+    title="Routines are coming soon."
+    body="This surface is not finished yet. Repeated bundles of work are not wired into the desktop today."
+    next="Soon: real Routine definitions, activation gates, and run history."
   />
 );
 
-/* ---------- Curation (proposals + approvals) ---------- */
 export const Curation: React.FC = () => (
   <EmptySurface
     eyebrow="curation"
-    title="No live proposals or approvals are wired yet."
-    body="Curation should display real Proposal / Classification / Approval records from the runtime, not fabricated pending gates."
-    path="~/.otto/curation/"
-    next="Bind to v2 export-view or runtime JSON store after the human ink moment is designed."
+    title="Curation is coming soon."
+    body="This surface is not finished yet. The proposal and approval queue is not part of the v0.1 desktop."
+    next="Soon: real proposals, approvals, and decisions about what compounds."
   />
 );
 
-/* ---------- Receipts (runs + proof) ---------- */
 export const Receipts: React.FC = () => (
   <EmptySurface
     eyebrow="receipts"
-    title="No live receipts are wired yet."
-    body="Runs and receipts should come from real JSONL/runtime records. Empty is more honest than a fake proof trail."
-    path="~/.otto/runs/"
-    next="Parse real trace files or consume v2 ReceiptRecord exports."
+    title="Receipts are coming soon."
+    body="This surface is not finished yet. Proof and run history are not loaded into the desktop today."
+    next="Soon: real receipts mapped to completed work."
   />
 );
 
-/* ---------- Autonomy ---------- */
 export const Autonomy: React.FC = () => (
   <EmptySurface
     eyebrow="autonomy"
-    title="No live autonomy policy is wired yet."
-    body="This pane should read explicit policy from Standards/Curation, not show hardcoded green/yellow/red examples."
-    path="standards/ · ~/.otto/curation/"
-    next="Wire policy from canonical files after Standards loading exists."
+    title="Autonomy is coming soon."
+    body="This surface is not finished yet. Policy visibility is not wired into the desktop today."
+    next="Soon: real autonomy boundaries from Standards, approvals, and runtime policy."
   />
 );
 
@@ -233,16 +167,16 @@ Local Letta URL and Agent ID are set here in the desktop app — this is the web
         <div className="eyebrow">connect letta</div>
         <span className={`pill ${cls}`}>{label}</span>
       </div>
-      <div className="h-sec" style={{ marginTop: 6 }}>Connect local Letta</div>
+      <div className="h-sec" style={{ marginTop: 6 }}>Local Letta connection</div>
       <p className="muted" style={{ marginTop: 4 }}>
-        Point Otto at your local Letta runtime and agent. Local Letta owns provider auth; Otto does not ask for an API key in v1.
+        otto tries to discover Letta Desktop and your current local agent automatically. These fields are advanced overrides for the rare case discovery picks the wrong runtime or agent.
       </p>
       {displayStatus && !displayStatus.ready && displayStatus.reason && (
         <p className="faint" style={{ marginTop: 6 }}>↳ {displayStatus.reason}</p>
       )}
       <div className="grid" style={{ gap: 12, marginTop: 12 }}>
         <label>
-          <span className="faint" style={{ fontSize: 12 }}>Local Letta URL</span>
+          <span className="faint" style={{ fontSize: 12 }}>Local Letta URL · advanced override</span>
           <input
             style={inputStyle}
             value={baseUrl}
@@ -252,7 +186,7 @@ Local Letta URL and Agent ID are set here in the desktop app — this is the web
           />
         </label>
         <label>
-          <span className="faint" style={{ fontSize: 12 }}>Agent ID</span>
+          <span className="faint" style={{ fontSize: 12 }}>Agent ID · advanced override</span>
           <input
             className="mono"
             style={inputStyle}
@@ -264,12 +198,13 @@ Local Letta URL and Agent ID are set here in the desktop app — this is the web
         </label>
       </div>
       <div className="row" style={{ marginTop: 14, gap: 12, alignItems: 'center' }}>
-        <button className="btn btn--primary" onClick={connect} disabled={busy}>
-          {busy ? 'Connecting…' : 'Save & Connect'}
+        <button type="button" className="btn btn--primary" onClick={connect} disabled={busy}>
+          {busy ? 'Connecting…' : 'Save overrides & reconnect'}
         </button>
         {displayStatus?.ready && (
           <span className="muted" style={{ fontSize: 13 }}>
             {displayStatus.agentId}
+            {displayStatus.baseUrl ? ` · ${displayStatus.baseUrl}` : ''}
             {displayStatus.model ? ` · ${displayStatus.model}` : ''}
           </span>
         )}
@@ -292,7 +227,7 @@ const readyPill = (s: ReadyStatus) => {
 };
 
 const ReadyRow: React.FC<{ item: ReadyItem }> = ({ item }) => (
-  <div className="zone" style={{ gridTemplateColumns: '190px 1fr auto', gap: 16 }}>
+  <div className="zone" style={{ gridTemplateColumns: '190px minmax(0, 1fr) auto', gap: 16 }}>
     <span style={{ fontWeight: 600, fontSize: 14 }}>
       {item.label}
       {item.required && <span className="faint" style={{ fontWeight: 400, fontSize: 12 }}> · required</span>}
@@ -343,12 +278,12 @@ const ModelProviders: React.FC = () => {
             otto does not collect provider keys. Connect providers in Letta, then choose model and effort from the chat composer.
           </p>
         </div>
-        <button className="btn btn--primary" onClick={openLetta}>Open Letta</button>
+        <button type="button" className="btn btn--primary" onClick={openLetta}>Open Letta</button>
       </div>
 
       <div className="segmented" role="tablist" aria-label="Provider type">
-        <button className={tab === 'local' ? 'is-active' : ''} onClick={() => setTab('local')}>Local</button>
-        <button className={tab === 'cloud' ? 'is-active' : ''} onClick={() => setTab('cloud')}>Cloud</button>
+        <button type="button" className={tab === 'local' ? 'is-active' : ''} onClick={() => setTab('local')}>Local</button>
+        <button type="button" className={tab === 'cloud' ? 'is-active' : ''} onClick={() => setTab('cloud')}>Cloud</button>
       </div>
 
       <div className="providerList">
@@ -364,7 +299,7 @@ const ModelProviders: React.FC = () => {
                 </div>
                 <p className="muted" style={{ marginTop: 4 }}>{provider.detail}</p>
               </div>
-              <button className="btn" onClick={openLetta}>{active ? 'Manage' : 'Connect'}</button>
+              <button type="button" className="btn" onClick={openLetta}>{active ? 'Manage' : 'Connect'}</button>
             </div>
           );
         })}
@@ -389,10 +324,10 @@ export const Settings: React.FC = () => {
   return (
     <div className="settingsShell">
       <aside className="settingsNav" aria-label="Settings sections">
-        <button className={section === 'general' ? 'is-active' : ''} onClick={() => setSection('general')}>
+        <button type="button" className={section === 'general' ? 'is-active' : ''} onClick={() => setSection('general')}>
           {Icon.settings}<span>General</span>
         </button>
-        <button className={section === 'providers' ? 'is-active' : ''} onClick={() => setSection('providers')}>
+        <button type="button" className={section === 'providers' ? 'is-active' : ''} onClick={() => setSection('providers')}>
           {Icon.lock}<span>Model providers</span>
         </button>
       </aside>
@@ -413,7 +348,7 @@ export const Settings: React.FC = () => {
             </div>
             {liveConnected ? (
               <p className="muted" style={{ marginTop: 6 }}>
-                Live Letta runtime connected. The file-backed checks below describe local config only.
+                Live Letta runtime connected. The file-backed checks below describe local config only; runtime and agent may have been discovered from Letta settings.
               </p>
             ) : (
               !ready && (

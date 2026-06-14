@@ -1,6 +1,6 @@
-# Otto Desktop
+# otto Desktop
 
-A v0 Desktop workspace for viewing Otto Practices, mock Runs, and pending Approvals.
+A v0 Desktop workspace for local otto chat, setup, and honest coming-soon workspace panes.
 
 ## Install
 
@@ -14,7 +14,7 @@ bun install
 bun run --cwd apps/desktop dev
 ```
 
-The dev script regenerates `src/data/practices.json` from `practices/*/practice.yaml` before starting Vite.
+The non-chat workspace panes are placeholders in v0.1 until their real loaders land.
 
 ## Build
 
@@ -22,4 +22,12 @@ The dev script regenerates `src/data/practices.json` from `practices/*/practice.
 bun run --cwd apps/desktop build
 ```
 
-This regenerates Practice data, typechecks the app, and builds the Vite bundle.
+This typechecks the app and builds the Vite bundle.
+
+## Release gate
+
+```sh
+task release:gate
+```
+
+Runs lint, typechecks, unit tests, `verify:v0`, Electron build, and regression guards for icon rendering, coming-soon placeholders, and local Letta discovery copy.

@@ -37,6 +37,10 @@ export interface RuntimeStatus {
   sessionMode?: 'default' | 'smoke';
   memfsEnabled?: boolean;
   tools?: string[];
+  /** Effective local/self-hosted base URL used after discovery/config. */
+  baseUrl?: string | null;
+  /** Human-readable source for runtime/agent discovery. */
+  discoverySource?: string;
   cliPath: string;
   cliResolved: boolean;
 }
@@ -58,6 +62,23 @@ export type EffortLevel = 'off' | 'low' | 'medium' | 'high' | 'max';
 export interface RuntimePreferences {
   modelHandle?: string | null;
   effort?: EffortLevel;
+}
+
+/** Renderer-provided pasted/dropped image. Saved locally before being referenced in chat. */
+export interface AttachmentInput {
+  name: string;
+  mime: string;
+  dataUrl: string;
+}
+
+/** Local attachment persisted under ~/.otto/attachments. */
+export interface SavedAttachment {
+  id: string;
+  name: string;
+  mime: string;
+  path: string;
+  url: string;
+  size: number;
 }
 
 /** A loosely-typed SDK message forwarded straight to the renderer. */

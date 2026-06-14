@@ -3,18 +3,20 @@ import { homedir } from 'node:os';
 import { join } from 'node:path';
 import type { EffortLevel, OttoConfig } from './shared/types';
 
-export const OTTO_DIR = join(homedir(), '.otto');
-const CONFIG_FILE = join(OTTO_DIR, 'config.json');
+export const defaultOttoDir = () => process.env.OTTO_CONFIG_DIR || join(homedir(), '.otto');
 
-/** Local-first config store at ~/.otto/config.json. No hardcoded agent — Otto stays generic. */
+/** Local-first config store at ~/.otto/config.json by default. No hardcoded agent — Otto stays generic. */
 export class ConfigStore {
   private cfg: OttoConfig = {};
+  private readonly configFile: string;
 
   constructor() {
-    mkdirSync(OTTO_DIR, { recursive: true });
-    if (existsSync(CONFIG_FILE)) {
+    const ottoDir = defaultOttoDir();
+    this.configFile = join(ottoDir, 'config.json');
+    mkdirSync(ottoDir, { recursive: true });
+    if (existsSync(this.configFile)) {
       try {
-        this.cfg = JSON.parse(readFileSync(CONFIG_FILE, 'utf8')) as OttoConfig;
+        this.cfg = JSON.parse(readFileSync(this.configFile, 'utf8')) as OttoConfig;
       } catch {
         this.cfg = {};
       }
@@ -27,7 +29,7 @@ export class ConfigStore {
 
   update(patch: Partial<OttoConfig>): OttoConfig {
     this.cfg = { ...this.cfg, ...patch };
-    writeFileSync(CONFIG_FILE, `${JSON.stringify(this.cfg, null, 2)}\n`);
+    writeFileSync(this.configFile, `${JSON.stringify(this.cfg, null, 2)}\n`);
     return this.cfg;
   }
 

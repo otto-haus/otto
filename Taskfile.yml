@@ -88,11 +88,27 @@ tasks:
         node {{.LETTA_CLI}} --agent "${LETTA_AGENT_ID:?set LETTA_AGENT_ID}" --new --no-memfs --no-skills --no-system-info-reminder -p 'Reply exactly: OTTO_SMOKE_OK' --output-format json
 
   smoke:desktop:
-    desc: Launch installed app in smoke mode and verify the process stays alive
+    desc: Non-destructive desktop smoke — launches a temporary second instance, leaves live otto.app alone
+    cmds:
+      - |
+        bash -lc 'set -euo pipefail
+        SMOKE_DATA="$(mktemp -d /tmp/otto-smoke-data.XXXXXX)"
+        SMOKE_CONFIG="$(mktemp -d /tmp/otto-smoke-config.XXXXXX)"
+        OTTO_SMOKE=1 OTTO_CONFIG_DIR="$SMOKE_CONFIG" env -u ELECTRON_RUN_AS_NODE {{.OTTO_APP}}/Contents/MacOS/otto --user-data-dir="$SMOKE_DATA" >/tmp/otto_desktop_smoke.log 2>&1 &
+        SMOKE_PID="$!"
+        sleep 3
+        ps -p "$SMOKE_PID" >/dev/null
+        ps -p "$SMOKE_PID" -o pid=,command=
+        /bin/kill "$SMOKE_PID" >/dev/null 2>&1 || true
+        pkill -P "$SMOKE_PID" >/dev/null 2>&1 || true
+        pkill -f "letta.js --output-format stream-json --input-format stream-json --agent .* --new" >/dev/null 2>&1 || true'
+
+  smoke:desktop:live:
+    desc: DANGEROUS — quits/reopens the live installed app; use only when Sebastian is not chatting in it
     cmds:
       - task: quit
       - |
-        OTTO_SMOKE=1 env -u ELECTRON_RUN_AS_NODE {{.OTTO_APP}}/Contents/MacOS/otto >/tmp/otto_desktop_smoke.log 2>&1 &
+        OTTO_SMOKE=1 env -u ELECTRON_RUN_AS_NODE {{.OTTO_APP}}/Contents/MacOS/otto >/tmp/otto_desktop_smoke_live.log 2>&1 &
       - sleep 3
       - pgrep -f '/Applications/otto.app/Contents/MacOS/otto' >/dev/null
       - task: ps
@@ -100,12 +116,12 @@ tasks:
   lint:
     desc: Lint with Biome (no install — via bunx)
     cmds:
-      - bunx --bun @biomejs/biome lint {{.DESKTOP}}/src {{.DESKTOP}}/electron packages
+      - bunx --bun @biomejs/biome@1.9.4 lint {{.DESKTOP}}/src {{.DESKTOP}}/electron packages
 
   format:
     desc: Format with Biome (writes changes)
     cmds:
-      - bunx --bun @biomejs/biome format --write {{.DESKTOP}}/src {{.DESKTOP}}/electron packages
+      - bunx --bun @biomejs/biome@1.9.4 format --write {{.DESKTOP}}/src {{.DESKTOP}}/electron packages
 
   check:
     aliases: [ci]
@@ -114,6 +130,10 @@ tasks:
       - task: typecheck
       - task: test
       - task: verify
+
+  release:gate:
+    desc: Pre-release gate — lint + checks + tests + electron build + regression guards
+    cmds: [bun run release:gate]
 
   clean:
     desc: Remove build artifacts (out/, dist/, dist-app/)
