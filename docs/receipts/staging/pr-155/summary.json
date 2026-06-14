@@ -5,14 +5,16 @@
   "branch": "fix/issue-96-provider-mirror-audit",
   "base": "ship/functional-labs",
   "status": "ready_for_sebastian_review",
-  "review_result": "Production fix is correct. Codex added a 0600 permission assertion and recorded no-leak proof without printing the submitted fake key value.",
+  "review_result": "Production fix is correct. Codex added a 0600 permission assertion, recorded no-leak proof without printing the submitted fake key value, and resolved the later conflict against ship/functional-labs.",
   "changed_files": [
     "apps/desktop/electron/secret-store.ts",
     "apps/desktop/electron/provider-mirror.test.ts",
     "docs/receipts/staging/pr-155/codex-review-provider-secret-boundary.json",
-    "docs/receipts/staging/pr-155/summary.json"
+    "docs/receipts/staging/pr-155/summary.json",
+    "docs/receipts/staging/pr-155/codex-review-conflict-resolution.json"
   ],
   "data_receipt": "docs/receipts/staging/pr-155/codex-review-provider-secret-boundary.json",
+  "conflict_resolution_receipt": "docs/receipts/staging/pr-155/codex-review-conflict-resolution.json",
   "verification": [
     "bun install --frozen-lockfile",
     "bun test apps/desktop/electron/provider-mirror.test.ts",

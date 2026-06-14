@@ -2,18 +2,33 @@ import { chmodSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'n
 import { join } from 'node:path';
 import { defaultOttoDir } from './config-store';
 
-// Local secret store for Otto Desktop. Values live in ~/.otto/secrets.env, owner-only
-// (0600), one KEY=VALUE per line — kept out of config.json and out of the repo. The Letta
-// API key never reaches the renderer: it is read here in main and injected into the CLI's
-// spawn environment. (A macOS Keychain backend is the planned hardening; this is the v0.1
-// fallback the file's perms make safe enough for a single-user local app.)
+// Local secret store for otto Desktop. Values live under the resolved otto home,
+// owner-only (0600), one KEY=VALUE per line — kept out of config.json and out of the
+// repo. The Letta API key never reaches the renderer: it is read here in main and
+// injected into the CLI's spawn environment. (A macOS Keychain backend is the planned
+// hardening; this is the v0.1 fallback the file's perms make safe enough for a
+// single-user local app.)
 
-export function secretStorePath(): string {
+const SECRET_NAME = /^[A-Z_][A-Z0-9_]*$/;
+
+export function secretsFilePath(): string {
   return join(defaultOttoDir(), 'secrets.env');
 }
 
+export function secretStorePath(): string {
+  return secretsFilePath();
+}
+
+function assertSecretName(name: string): void {
+  if (!SECRET_NAME.test(name)) throw new Error(`Invalid secret name: ${name}`);
+}
+
+function assertSecretValue(value: string): void {
+  if (/[\r\n]/.test(value)) throw new Error('Secret values must be single-line');
+}
+
 function readAll(): Record<string, string> {
-  const file = secretStorePath();
+  const file = secretsFilePath();
   if (!existsSync(file)) return {};
   const out: Record<string, string> = {};
   for (const line of readFileSync(file, 'utf8').split('\n')) {
@@ -21,15 +36,16 @@ function readAll(): Record<string, string> {
     if (!t || t.startsWith('#')) continue;
     const eq = t.indexOf('=');
     if (eq <= 0) continue;
-    out[t.slice(0, eq)] = t.slice(eq + 1);
+    const name = t.slice(0, eq);
+    if (!SECRET_NAME.test(name)) continue;
+    out[name] = t.slice(eq + 1);
   }
   return out;
 }
 
 function writeAll(map: Record<string, string>): void {
-  const ottoDir = defaultOttoDir();
-  const file = join(ottoDir, 'secrets.env');
-  mkdirSync(ottoDir, { recursive: true });
+  const file = secretsFilePath();
+  mkdirSync(defaultOttoDir(), { recursive: true });
   const body = Object.entries(map)
     .filter(([, v]) => v != null && v !== '')
     .map(([k, v]) => `${k}=${v}`)
@@ -43,10 +59,13 @@ function writeAll(map: Record<string, string>): void {
 }
 
 export function getSecret(name: string): string | null {
+  assertSecretName(name);
   return readAll()[name] ?? null;
 }
 
 export function setSecret(name: string, value: string | null): void {
+  assertSecretName(name);
+  if (value != null && value !== '') assertSecretValue(value);
   const map = readAll();
   if (value == null || value === '') delete map[name];
   else map[name] = value;

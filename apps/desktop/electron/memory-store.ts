@@ -5,12 +5,15 @@ import type { MemoryBlockRecord, MemoryListResult } from './shared/types';
 
 export type { MemoryBlockRecord, MemoryListResult };
 
-const BLOCK_PATHS = (agentId: string) => [
-  `/v1/blocks?agent_id=${encodeURIComponent(agentId)}`,
-  `/v1/agents/${agentId}/core-memory/blocks`,
-  `/v1/agents/${agentId}/memory/blocks`,
-  `/v1/agents/${agentId}/blocks`,
-];
+const BLOCK_PATHS = (agentId: string) => {
+  const encoded = encodeURIComponent(agentId);
+  return [
+    `/v1/blocks?agent_id=${encoded}`,
+    `/v1/agents/${encoded}/core-memory/blocks`,
+    `/v1/agents/${encoded}/memory/blocks`,
+    `/v1/agents/${encoded}/blocks`,
+  ];
+};
 
 function authHeaders(): Record<string, string> {
   const key = getSecret('LETTA_API_KEY') || process.env.LETTA_API_KEY;

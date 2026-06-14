@@ -1,0 +1,53 @@
+{
+  "pr": 158,
+  "reviewer": "Codex PR review agent",
+  "target": "ChannelStore.listResult malformed root handling",
+  "results": [
+    {
+      "case": "channels_scalar",
+      "yaml": "channels: nope\n",
+      "storage": "files",
+      "channelIds": [],
+      "skipped": [
+        {
+          "index": 0,
+          "reason": "channels must be an array"
+        }
+      ]
+    },
+    {
+      "case": "root_scalar",
+      "yaml": "nope\n",
+      "storage": "files",
+      "channelIds": [],
+      "skipped": [
+        {
+          "index": 0,
+          "reason": "channels.yaml root must be an object"
+        }
+      ]
+    },
+    {
+      "case": "missing_file",
+      "yaml": null,
+      "storage": "default",
+      "channelIds": [
+        "desktop-chat"
+      ],
+      "skipped": []
+    }
+  ],
+  "expected": {
+    "malformed_config_storage": "files",
+    "malformed_config_channels": [],
+    "malformed_config_skipped_count": 1,
+    "missing_config_storage": "default",
+    "missing_config_channel_ids": [
+      "desktop-chat"
+    ]
+  },
+  "targeted_test": "bun test apps/desktop/electron/channel-store.test.ts -> 6 pass, 0 fail, 27 expect() calls",
+  "full_tests": "bun test -> 223 pass, 1 skip, 0 fail, 748 expect() calls",
+  "verify_v0": "5 passed, 0 failed",
+  "staging": "task staging passed and refreshed /Applications/otto-staging.app only"
+}
