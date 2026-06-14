@@ -1,14 +1,14 @@
 <p align="center">
-  <img src=".github/assets/otto-avatar.png" width="144" alt="Otto" />
+  <img src=".github/assets/otto-avatar.png" width="144" alt="otto" />
 </p>
 
-# Otto
+# otto
 
-**Letta remembers. Otto improves.**
+**Letta remembers. otto improves.**
 
-Otto is the behavior layer for persistent AI agents.
+otto is the behavior layer for persistent AI agents.
 
-Memory is what an agent knows. Culture is what it reliably does under pressure. Otto turns
+Memory is what an agent knows. Culture is what it reliably does under pressure. otto turns
 Standards, Practices, Routines, approvals, receipts, and corrections into better future
 behavior.
 
@@ -18,11 +18,11 @@ behavior.
 
 ## What this looks like
 
-Without Otto, an agent can remember a correction and still repeat the same mistake.
+Without otto, an agent can remember a correction and still repeat the same mistake.
 
 Example: the agent says “done” without proof. You correct it.
 
-With Otto, that correction should become a proposal:
+With otto, that correction should become a proposal:
 
 ```txt
 Pattern:        “done” claimed without evidence
@@ -34,20 +34,20 @@ Gate:           human ratifies before it becomes canon
 Once ratified, the correction becomes a Standard, Practice, or receipt requirement.
 The next run changes.
 
-Search finds pages. Memory remembers facts. Otto changes behavior.
+Search finds pages. Memory remembers facts. otto changes behavior.
 
 ---
 
 ## North star
 
-Otto exists to make agent behavior compound.
+otto exists to make agent behavior compound.
 
 ```txt
 correction -> proposal -> ratification -> standard/practice/routine -> receipt -> better next action
 ```
 
 If a feature does not gate irreversibility or make behavior compound, it is probably not
-Otto.
+otto.
 
 ---
 
@@ -62,14 +62,14 @@ Otto.
 
 ---
 
-## What Otto is not
+## What otto is not
 
-- **Not a memory engine.** Letta owns canonical agent memory. Otto owns the culture loop
+- **Not a memory engine.** Letta owns canonical agent memory. otto owns the culture loop
   around memory: what gets proposed, ratified, rejected, repeated, and turned into future
   behavior.
-- **Not an orchestrator.** Paperclip can own work orchestration. Otto owns behavior
+- **Not an orchestrator.** Paperclip can own work orchestration. otto owns behavior
   governance.
-- **Not a chat app or RAG product.** Otto Shell is a workspace for behavior, approvals,
+- **Not a chat app or RAG product.** otto Shell is a workspace for behavior, approvals,
   receipts, and work state.
 - **Not a values poster.** A value that cannot refuse you is decoration.
 
@@ -86,28 +86,28 @@ Otto.
 | **Approvals** | Scoped, time-bound human ratification for one-way doors. |
 | **Receipts** | Proof artifacts. No artifact, no progress. |
 | **Curation** | The future engine that decides what compounds into canon. Not built in v0.1. |
-| **Otto Desktop** | Workspace over runtime readiness, chat, approvals, receipts, and surfaces. |
+| **otto Desktop** | Workspace over runtime readiness, chat, approvals, receipts, and surfaces. |
 
 ---
 
 ## Reference operating stack
 
-This is the first Otto deployment stack, not the definition of Otto:
+This is the first otto deployment stack, not the definition of otto:
 
 ```txt
 Letta remembers.      Persistent agent memory and runtime continuity.
-Otto improves.        Standards, Practices, Curation, Routines, Receipts.
+otto improves.        Standards, Practices, Curation, Routines, Receipts.
 Paperclip manages.    Goals, tickets, budgets, heartbeats, approvals, audit.
 Discord reaches.      Mobile blockers, approvals, field notes, status.
 ```
 
-Otto should survive replacement of any substrate except its own behavior layer.
+otto should survive replacement of any substrate except its own behavior layer.
 
 ---
 
 ## Status
 
-Otto is early. v0.1 is a local-first, file-backed release artifact.
+otto is early. v0.1 is a local-first, file-backed release artifact.
 
 Source of truth:
 
@@ -131,14 +131,14 @@ Source of truth:
 
 The first falsifiable desktop done test:
 
-> Otto Shell launches over Letta and truthfully reports its own state — connected,
+> otto Shell launches over Letta and truthfully reports its own state — connected,
 > blocked, stale, or ready. No fake live chat.
 
 ---
 
 ## Roadmap
 
-- **Now:** Otto Shell over Letta, Practices, Charters, Standards, receipts.
+- **Now:** otto Shell over Letta, Practices, Charters, Standards, receipts.
 - **Next:** Curation, approval records, Long-Run Practice, Paperclip work-state bridge.
 - **Then:** Intake for AI-chat exports, source-corpus hooks, relationship-state hooks, packaged install.
 
@@ -150,10 +150,13 @@ The roadmap only matters if each step makes behavior compound or gates irreversi
 
 Agents: start with [`INSTALL_FOR_AGENTS.md`](INSTALL_FOR_AGENTS.md).
 
-Humans: requires [Bun](https://bun.sh).
+Humans need [Bun](https://bun.sh), [go-task](https://taskfile.dev) for the `task` shortcuts, and [Letta Desktop / Letta Code](https://letta.com) for the local runtime.
 
 ```sh
-git clone https://github.com/otto-haus/otto
+# macOS
+brew install go-task
+
+git clone https://github.com/otto-haus/otto.git
 cd otto
 bun install
 ```
@@ -166,6 +169,33 @@ Install the Letta Code extension and skills:
 ```
 
 This installs Charter/Routine commands, skills, and one-way-door permission gates.
+
+Local desktop app:
+
+```sh
+# development Electron app
+task electron
+
+# build, package, install to /Applications/otto.app, and open
+task refresh
+```
+
+Connect the desktop app to Letta:
+
+A fresh clone does not include a hosted agent. Live chat requires a local Letta runtime, provider auth configured in Letta, and a target Letta agent.
+
+1. Open `/Applications/otto.app`.
+2. Go to **Settings → General**.
+3. Confirm or paste the local Letta URL and target agent id.
+4. Provider/model credentials stay in Letta. otto does not ask for provider API keys in v1.
+
+Useful checks:
+
+```sh
+bun run --cwd apps/desktop typecheck
+bun run --cwd apps/desktop electron:typecheck
+task smoke:cli   # disposable conversation; never writes to default
+```
 
 ---
 
@@ -185,14 +215,21 @@ bun packages/practices/src/cli.ts
 
 ---
 
-## Otto Desktop
+## otto Desktop
+
+Common commands:
 
 ```sh
-bun run --cwd apps/desktop dev
-bun run --cwd apps/desktop build
-bun run --cwd apps/desktop typecheck
+task dev          # Vite web preview; no desktop bridge
+task electron     # Electron app wired to local Letta
+task refresh      # build/package/install/open /Applications/otto.app
+task ps           # show otto + spawned Letta CLI processes
+```
 
-bun run --cwd apps/desktop electron:dev
+Package scripts:
+
+```sh
+bun run --cwd apps/desktop typecheck
 bun run --cwd apps/desktop electron:typecheck
 bun run --cwd apps/desktop electron:build
 ```
@@ -200,13 +237,11 @@ bun run --cwd apps/desktop electron:build
 Runtime truth:
 
 - `OTTO_AGENT_ID` selects the target Letta agent.
-- `~/.otto` stores local Otto runtime/config/traces.
+- `~/.otto` stores local otto runtime/config/traces.
 - `LETTA_CLI_PATH` may point at a specific Letta CLI bundle.
 - Chat stays gated until `session.initialize()` succeeds.
 
 Do not claim “connected” unless the SDK initializes against a live agent/session.
-
----
 
 ---
 
@@ -215,7 +250,7 @@ Do not claim “connected” unless the SDK initializes against a live agent/ses
 ```txt
 otto/
   packages/       shared contracts + PracticeSpec tooling
-  apps/desktop/   Otto Desktop: Vite + Electron workspace shell
+  apps/desktop/   otto Desktop: Vite + Electron workspace shell
   extension/      Letta Code commands and permission gates
   skill/          Charter and Routine skills
   practices/      practice.yaml specs
@@ -228,6 +263,15 @@ otto/
   receipts/       proof artifacts for v0.1
   SHIP_CHECKS/    per-surface acceptance checks
 ```
+
+
+---
+
+## Community
+
+- Website: <https://otto.haus>
+- Discord: <https://discord.gg/hab9ZvbPH>
+- GitHub: <https://github.com/otto-haus/otto>
 
 ---
 
