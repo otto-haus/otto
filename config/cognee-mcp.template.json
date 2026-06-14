@@ -1,0 +1,31 @@
+{
+  "mcpServers": {
+    "cognee-local-http": {
+      "url": "http://127.0.0.1:8001/mcp",
+      "env": {
+        "OTTO_COGNEE_ENABLED": "1",
+        "OTTO_COGNEE_BASE_URL": "http://127.0.0.1:8000"
+      }
+    },
+    "cognee-local-stdio": {
+      "command": "cognee-cli",
+      "args": ["mcp"],
+      "env": {
+        "OTTO_COGNEE_ENABLED": "1",
+        "OTTO_COGNEE_BASE_URL": "http://127.0.0.1:8000"
+      }
+    }
+  },
+  "_otto_notes": {
+    "when": "Only register when OTTO_COGNEE_ENABLED=1 and scripts/cognee-home.sh health returns ready",
+    "preferred_transport": "cognee 1.1.x exposes HTTP MCP on :8001 when started via `cognee-cli -ui` or uvicorn API on :8000",
+    "legacy_stdio": "cognee-local-stdio — use only when upstream ships `cognee-cli mcp` on your install",
+    "read_tools": ["search", "recall", "read_graph"],
+    "gated_tools": ["ingest", "remember", "delete", "admin"],
+    "autonomy": {
+      "cognee.recall": "green",
+      "cognee.capture": "yellow",
+      "cognee.delete": "red"
+    }
+  }
+}

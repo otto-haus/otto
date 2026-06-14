@@ -1,0 +1,120 @@
+{
+  "runId": "20260614064649",
+  "gitHead": "fff0152",
+  "stagingApp": "/Applications/otto-staging.app",
+  "cdpPort": 9445,
+  "viewport": {
+    "width": 1280,
+    "height": 720
+  },
+  "screenshots": {
+    "sidebar046": "/Users/seb/Code/otto/docs/receipts/staging/046-sidebar-thread-list.png",
+    "chat081": "/Users/seb/Code/otto/docs/receipts/staging/081-chat-shell-craft-product-polish.png",
+    "commandStation059": "/Users/seb/Code/otto/docs/receipts/staging/059-command-station-live.png"
+  },
+  "checks": {
+    "runtimeReady": true,
+    "conversationId": "local-conv-0f1fc871-593c-4704-bc97-9782c660c555",
+    "sessionMode": "smoke",
+    "notDefaultConversation": true,
+    "threadIsolation": true,
+    "threadCountGte2": true,
+    "noCliString": true,
+    "noMemFsString": true,
+    "workingPulseCopy": true,
+    "commandStationVisible": true,
+    "checkBlockBanner": false,
+    "checkBlockBannerNote": "no block result"
+  },
+  "runtimeStatus": {
+    "ready": true,
+    "code": "ready",
+    "agentId": "agent-local-d8e35a2a-a89f-45dd-b117-5eae5df8c8f2",
+    "baseUrl": "http://127.0.0.1:51398",
+    "discoverySource": "otto config/env",
+    "conversationId": "local-conv-0f1fc871-593c-4704-bc97-9782c660c555",
+    "model": "chatgpt-plus-pro/gpt-5.5",
+    "modelHandle": null,
+    "effort": "max",
+    "sessionMode": "smoke",
+    "memfsEnabled": false,
+    "tools": [
+      "Bash",
+      "TaskOutput",
+      "Edit",
+      "EnterPlanMode",
+      "ExitPlanMode",
+      "Glob",
+      "Grep",
+      "TaskStop",
+      "memory",
+      "Read",
+      "Skill",
+      "Task",
+      "TodoWrite",
+      "Write"
+    ],
+    "transportMode": "sdk",
+    "effectiveTransport": "sdk subprocess",
+    "transportFallbackReason": null,
+    "cliPath": "/Applications/otto-staging.app/Contents/Resources/app/node_modules/@letta-ai/letta-code/letta.js",
+    "cliResolved": true
+  },
+  "threads": {
+    "ok": true,
+    "alphaId": "local_4ff4c683-2442-46cb-be6e-9db951a08186",
+    "betaId": "local_a484dd88-23da-49d5-986f-8e1ade037c51",
+    "alphaText": "046-alpha: isolated message A",
+    "betaText": "046-beta: isolated message B",
+    "isolationOk": true,
+    "threadCount": 10,
+    "activeThreadId": "local_a484dd88-23da-49d5-986f-8e1ade037c51",
+    "titles": [
+      {
+        "id": "local_a484dd88-23da-49d5-986f-8e1ade037c51",
+        "title": "046-beta-thread"
+      },
+      {
+        "id": "local_4ff4c683-2442-46cb-be6e-9db951a08186",
+        "title": "046-alpha-thread"
+      },
+      {
+        "id": "local_036b0544-4a4e-4f17-a7db-a23d4c32e693",
+        "title": "046-beta-thread"
+      },
+      {
+        "id": "local_4c6b8157-baee-49c2-94f5-8654726a947d",
+        "title": "046-alpha-thread"
+      },
+      {
+        "id": "local_f435e2e6-3916-4ca7-8328-ba6ac06aed62",
+        "title": "046-beta-thread"
+      },
+      {
+        "id": "local_46d14db5-5260-41f1-b717-fef91eb690c3",
+        "title": "046-alpha-thread"
+      },
+      {
+        "id": "local_6aee9e7c-7e0a-467a-9fd1-136142881e0e",
+        "title": "046-beta-thread"
+      },
+      {
+        "id": "local_351abfc8-c879-4f4e-ae05-010e1afe34d6",
+        "title": "046-alpha-thread"
+      },
+      {
+        "id": "local_07fa6204-a765-489e-9a17-8eef358a190b",
+        "title": "New chat"
+      },
+      {
+        "id": "local_3d53883e-c4ea-463b-95d8-4925e592aa4a",
+        "title": "New chat"
+      }
+    ]
+  },
+  "block": {
+    "ok": false,
+    "reason": "no block result",
+    "results": []
+  }
+}

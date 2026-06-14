@@ -10,13 +10,17 @@ import type {
   AutonomyPolicySettings,
   AutonomyZone,
   AutonomyZoneId,
+  CheckRunResult,
   EvaluateAutonomyActionInput,
 } from '@otto-haus/core';
+import { CheckRunner } from './check-runner';
 import { ReceiptWriter, type WrittenReceipt } from './receipt-writer';
+import { KnowledgeStore } from './knowledge-store';
 
 export interface EvaluateAutonomyActionResult {
   evaluation: AutonomyActionEvaluation;
   receipt: WrittenReceipt;
+  check_results?: CheckRunResult[];
 }
 
 const DEFAULT_POLICY: Omit<AutonomyPolicy, 'file'> = {
@@ -89,12 +93,15 @@ const YELLOW_MATCHERS = [
 
 const GREEN_MATCHERS = [
   /\b(test|typecheck|lint|receipt|worktree|draft|open pr|retry check)\b/i,
+  /\b(orchestrate(?:\s+ticket)?|compile ticket|status workers|ticket compile|ticket\.orchestrate)\b/i,
 ];
 
 export class AutonomyStore {
   constructor(
     private dir = resolveAutonomyDir(),
     private receipts = new ReceiptWriter(),
+    private knowledge = new KnowledgeStore(),
+    private checks = new CheckRunner(),
   ) {}
 
   loadResult(): AutonomyPolicyResult {
@@ -123,7 +130,30 @@ export class AutonomyStore {
 
   evaluateAction(input: EvaluateAutonomyActionInput): EvaluateAutonomyActionResult {
     const loaded = this.loadResult();
-    const evaluation = classifyAction(input.action, loaded.policy, loaded.policyPath);
+    let evaluation = withKnowledgeRouting(
+      classifyAction(input.action, loaded.policy, loaded.policyPath),
+      input.context,
+      this.knowledge,
+    );
+
+    let checkResults: CheckRunResult[] = [];
+    if (evaluation.zone === 'red' || evaluation.door_id) {
+      checkResults = this.checks.evaluateOneWayDoor({
+        approved: input.approved,
+        session_allowed: input.session_allowed,
+        autonomy_allowed: !evaluation.requires_approval,
+      });
+      const blockedCheck = checkResults.find((r) => r.blocked && !r.passed);
+      if (blockedCheck) {
+        evaluation = {
+          ...evaluation,
+          requires_approval: true,
+          allowed_without_approval: false,
+          reason: blockedCheck.message,
+        };
+      }
+    }
+
     const receipt = this.receipts.write({
       status: evaluation.requires_approval ? 'blocked' : 'success',
       subject: { type: 'autonomy', id: evaluation.door_id ?? evaluation.zone },
@@ -133,6 +163,7 @@ export class AutonomyStore {
         context: input.context ?? null,
         policy_path: loaded.policyPath,
         policy_storage: loaded.storage,
+        check_receipt_ids: checkResults.filter((r) => r.receipt_id).map((r) => r.receipt_id),
       },
       result: {
         summary: evaluation.requires_approval
@@ -143,6 +174,8 @@ export class AutonomyStore {
           door_id: evaluation.door_id,
           requires_approval: evaluation.requires_approval,
           allowed_without_approval: evaluation.allowed_without_approval,
+          knowledge_routing: evaluation.knowledge_routing ?? null,
+          check_results: checkResults.length ? checkResults : null,
         },
       },
       evidence: [
@@ -162,13 +195,48 @@ export class AutonomyStore {
         : null,
     });
 
-    return { evaluation, receipt };
+    return { evaluation, receipt, check_results: checkResults.length ? checkResults : undefined };
   }
+}
+
+function withKnowledgeRouting(
+  evaluation: AutonomyActionEvaluation,
+  context: string | undefined,
+  knowledge: KnowledgeStore,
+): AutonomyActionEvaluation {
+  const role = inferKnowledgeRole(evaluation.action, context);
+  const resolved = knowledge.resolveModelForRole(role);
+  const registryPath = knowledge.listResult().registryPath;
+  if (!resolved) return evaluation;
+  return {
+    ...evaluation,
+    knowledge_routing: {
+      role,
+      provider: resolved.provider,
+      model: resolved.model,
+      status: resolved.status,
+      registry_path: registryPath,
+    },
+  };
+}
+
+function inferKnowledgeRole(action: string, context?: string): string {
+  const haystack = `${action} ${context ?? ''}`.toLowerCase();
+  if (/standard|review|fake done|quality/.test(haystack)) return 'standards_review';
+  if (/curat|proposal|ratif/.test(haystack)) return 'curation_decisions';
+  if (/autonomy|policy|door/.test(haystack)) return 'autonomy_policy';
+  if (/doc|spec|write|readme/.test(haystack)) return 'docs_worker';
+  if (/code|implement|refactor|typescript|test/.test(haystack)) return 'code_worker';
+  if (/orchestr|ticket|worker|worktree/.test(haystack)) return 'ticket_worker';
+  return 'main_otto';
 }
 
 export function classifyAction(action: string, policy: AutonomyPolicy, policyPath: string): AutonomyActionEvaluation {
   const text = action.trim();
   const lower = text.toLowerCase();
+
+  const cognee = classifyCogneeAction(lower, text, policy, policyPath);
+  if (cognee) return cognee;
 
   for (const matcher of DOOR_MATCHERS) {
     if (!matcher.pattern.test(lower)) continue;
@@ -198,7 +266,7 @@ export function classifyAction(action: string, policy: AutonomyPolicy, policyPat
     };
   }
 
-  if (GREEN_MATCHERS.some((pattern) => pattern.test(lower)) || text.length > 0) {
+  if (GREEN_MATCHERS.some((pattern) => pattern.test(lower))) {
     return {
       action: text,
       zone: 'green',
@@ -219,6 +287,53 @@ export function classifyAction(action: string, policy: AutonomyPolicy, policyPat
     reason: 'Unclassified actions default to prompt-once until policy maps them explicitly.',
     policy_path: policyPath,
   };
+}
+
+function classifyCogneeAction(
+  lower: string,
+  text: string,
+  policy: AutonomyPolicy,
+  policyPath: string,
+): AutonomyActionEvaluation | null {
+  if (!/\bcognee[\s.]/.test(lower) && !/\bcognee\b/.test(lower)) return null;
+
+  if (/\bcognee[\s.]?(delete|admin|purge|drop)\b/i.test(lower)) {
+    return {
+      action: text,
+      zone: 'red',
+      door_id: 'delete',
+      requires_approval: true,
+      allowed_without_approval: false,
+      reason: 'cognee.delete is a consequential graph mutation — explicit approval required (policy actions.cognee.delete).',
+      policy_path: policyPath,
+    };
+  }
+
+  if (/\bcognee[\s.]?(capture|ingest|remember|apply|index|cognify|add)\b/i.test(lower)) {
+    return {
+      action: text,
+      zone: 'yellow',
+      door_id: null,
+      requires_approval: true,
+      allowed_without_approval: false,
+      reason: zoneForId('yellow', policy).summary + ' (cognee.capture)',
+      policy_path: policyPath,
+    };
+  }
+
+  if (/\bcognee[\s.]?(recall|search|read|query|context)\b/i.test(lower)) {
+    return {
+      action: text,
+      zone: 'green',
+      door_id: null,
+      requires_approval: false,
+      allowed_without_approval: true,
+      reason: 'cognee.recall is read-only internal recall (policy actions.cognee.recall).',
+      policy_path: policyPath,
+    };
+  }
+
+  return null;
 }
 
 function zoneForId(id: AutonomyZoneId, policy: AutonomyPolicy): AutonomyZone {

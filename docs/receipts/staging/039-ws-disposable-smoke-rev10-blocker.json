@@ -1,0 +1,19 @@
+{
+  "ok": false,
+  "runId": "20260614T071416Z",
+  "ticket": "039-cathedral-ws-runtime-transport",
+  "gitHead": "fff0152",
+  "code": "letta_api_key_absent",
+  "smokeRun": false,
+  "reason": "LETTA_API_KEY not present in task environment — ws-disposable-smoke.ts not executed",
+  "operatorRunbook": "docs/receipts/staging/039-ws-rev10-operator-runbook.md",
+  "priorFailReceipt": "docs/receipts/staging/039-ws-disposable-smoke-20260614064452.json",
+  "scorecard": {
+    "path": "docs/receipts/staging/039-scorecard-template.json",
+    "runId": "20260614T071358Z",
+    "checksPass": 4,
+    "checksSkip": 4,
+    "transportUnitTests": 21
+  },
+  "defaultTransport": "sdk"
+}

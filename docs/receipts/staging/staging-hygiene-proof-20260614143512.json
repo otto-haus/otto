@@ -1,0 +1,108 @@
+{
+  "ok": true,
+  "runId": "20260614143512",
+  "gitHead": "19a821c",
+  "stagingApp": "/Applications/otto-staging.app",
+  "cdpPort": 9445,
+  "tickets": {
+    "054": {
+      "stagingApp": "/Applications/otto-staging.app",
+      "gitHead": "19a821c",
+      "runtimeReady": true,
+      "ok": true
+    },
+    "055": {
+      "paneLoaded": true,
+      "hasRegistryOrEmpty": true,
+      "api": {
+        "ok": true,
+        "modelCount": 0,
+        "registryStatus": "proposed"
+      },
+      "snippet": "AI FRONTIER\nExpectations must update.\n\nModel routing hints for Autonomy and ticket workers — not a second memory store.\n\nThe test: Did a Knowledge update change model routing, ticket sizing, or Autonomy policy?\n\nAutonomy should track actual capability. Not inherited human-era assumptions.\n\nStale caution can be as wrong as reckless speed.\n\n3\nMODELS\n7\nROUTING ROLES\nRegistry status is proposed — rout",
+      "ok": true
+    },
+    "056": {
+      "surfaces": {
+        "skills": {
+          "loaded": true,
+          "snippet": "CAPABILITY PACKAGES\nSkills provide capability.\n\nReusable packages with triggers and scope — culture sets the standard, skills provide the how.\n\nThe test: Does this Skill reduce repeated setup mistakes or safety footguns?\n\nCulture sets the standard. Skills provide the capability.\n\nPassword management"
+        },
+        "tickets": {
+          "loaded": true,
+          "snippet": "WORKER SLICES\nTickets define the slice.\n\nCompile bounded packets, orchestrate workers in worktrees, track status with receipts.\n\nThe test: Can Main Otto orchestrate worker tickets, write receipts, and ask only for consequential gates?\n\nCharters define the bet. Tickets define the slice.\n\nOne worktree"
+        },
+        "channels": {
+          "loaded": true,
+          "snippet": "REACHABILITY\nChannels reach the human.\n\nDiscord is the ambient console backend in v1. Outbound sends are external side effects.\n\nThe test: Can a Discord reply map to a pending Curation proposal without becoming the database?\n\nChannels notify and collect input. They do not replace the record.\n\nA tool"
+        }
+      },
+      "ok": true
+    },
+    "058": {
+      "settingsLoaded": true,
+      "transportOrStatusVisible": true,
+      "ok": true
+    },
+    "053": {
+      "ok": true,
+      "receiptId": "receipt-0f1e8fdc-f3c4-4a93-8163-4ad3aba82e37",
+      "runId": "run_20260614_7b6445ec",
+      "slug": "charter",
+      "paneVisible": true
+    },
+    "049": {
+      "gateAllowed": true,
+      "gateZone": "green",
+      "gateReceipt": "receipt-52ca1492-fff8-4799-811f-8ef94a30c4e1",
+      "orchestrated": false,
+      "orchestrateError": "Error: Error invoking remote method 'otto:tickets:orchestrate-existing': Error: Active worker already exists for ticket_035: worker_20260614_f6b33db1 (running).",
+      "workerId": "worker_20260614_f6b33db1",
+      "workerCount": 1,
+      "ok": true
+    }
+  },
+  "screenshots": {
+    "055": "/Users/seb/Code/otto/docs/receipts/staging/055-knowledge-20260614143512.png",
+    "056_skills": "/Users/seb/Code/otto/docs/receipts/staging/056-skills-20260614143512.png",
+    "056_tickets": "/Users/seb/Code/otto/docs/receipts/staging/056-tickets-20260614143512.png",
+    "056_channels": "/Users/seb/Code/otto/docs/receipts/staging/056-channels-20260614143512.png",
+    "058": "/Users/seb/Code/otto/docs/receipts/staging/058-settings-20260614143512.png",
+    "053": "/Users/seb/Code/otto/docs/receipts/staging/053-practices-charter-20260614143512.png",
+    "049": "/Users/seb/Code/otto/docs/receipts/staging/049-orchestrate-20260614143512.png"
+  },
+  "runtimeStatus": {
+    "ready": true,
+    "code": "ready",
+    "agentId": "agent-local-d8e35a2a-a89f-45dd-b117-5eae5df8c8f2",
+    "baseUrl": "http://127.0.0.1:51398",
+    "discoverySource": "otto config/env",
+    "conversationId": "local-conv-e2850bda-c877-4e49-bdb1-26e02597122c",
+    "model": "chatgpt-plus-pro/gpt-5.5",
+    "modelHandle": null,
+    "effort": "max",
+    "sessionMode": "smoke",
+    "memfsEnabled": false,
+    "tools": [
+      "Bash",
+      "TaskOutput",
+      "Edit",
+      "EnterPlanMode",
+      "ExitPlanMode",
+      "Glob",
+      "Grep",
+      "TaskStop",
+      "memory",
+      "Read",
+      "Skill",
+      "Task",
+      "TodoWrite",
+      "Write"
+    ],
+    "transportMode": "sdk",
+    "effectiveTransport": "sdk subprocess",
+    "transportFallbackReason": null,
+    "cliPath": "/Applications/otto-staging.app/Contents/Resources/app/node_modules/@letta-ai/letta-code/letta.js",
+    "cliResolved": true
+  }
+}

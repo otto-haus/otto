@@ -1,0 +1,25 @@
+# Otto Channels — communication surfaces (v1)
+# Discord is the v0/v1 backend: mobile + ambient console, not source of truth.
+# Outbound messages are external side effects → approval-gated via Autonomy + Curation.
+
+version: 0.1
+status: proposed
+
+channels:
+  - id: discord-main
+    kind: discord
+    label: Discord #otto
+    address: "${DISCORD_CHANNEL_ID}"
+    enabled: false
+    requires_approval_to_send: true
+
+  - id: desktop-chat
+    kind: desktop
+    label: Otto Desktop Chat
+    address: local
+    enabled: true
+    requires_approval_to_send: false
+
+defaults:
+  approval_required_for_outbound: true
+  files_are_source_of_truth: true

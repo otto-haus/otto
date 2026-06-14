@@ -79,3 +79,16 @@ settings:
 limitations:
   - Ticketcraft compile/assign orchestration is not automated in v1 — policy governs classification only.
   - Charter-gates overlay enforces tool patterns separately; this surface reads policy.yaml.
+actions:
+  cognee.recall:
+    zone: green
+    requires_approval: false
+    summary: Read-only graph recall via MCP (search, read_graph, context packs).
+  cognee.capture:
+    zone: yellow
+    requires_approval: true
+    summary: Index ingest — requires approval or scripts/cognee-capture.sh batch job (043).
+  cognee.delete:
+    zone: red
+    requires_approval: true
+    summary: Graph delete/admin tools denied in v1 without explicit approval.

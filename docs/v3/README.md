@@ -1,8 +1,9 @@
 # Otto v3 — Relationship and Source Graph Layer
 
-**Status:** parking lot / future spec stub.
+**Status:** parking lot for product surfaces; **Cognee implementation tracked by HQ 040–044**.
 
-v3 is where Otto gains optional graph/context sidecars after v1 and v2 are real.
+v3 is where Otto gains optional graph/context sidecars after v1 and v2 are real. The
+Cognee contract (**040**) is merged; local home, MCP, capture, and UI follow **041–044**.
 
 ```txt
 Letta     = memory/runtime
@@ -20,6 +21,8 @@ Files     = durable truth
 - **Graph context** — who/what is connected to whom, with evidence and confidence.
 
 ## Cognee boundary
+
+Canonical contract: [`docs/cognee.md`](../cognee.md) (**040**).
 
 Cognee is a derived relationship graph, not truth.
 

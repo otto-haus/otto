@@ -6,28 +6,63 @@ Knowledge is maintained external-world understanding. v1 focuses on AI Frontier 
 
 ## Required file contract
 
-- [ ] `docs/knowledge.md` exists.
-- [ ] Model registry exists.
-- [ ] Capability notes exist.
-- [ ] Provider costs exist.
-- [ ] Observed performance template exists.
-- [ ] Knowledge update receipt template exists.
-- [ ] Curation proposal template exists.
+- [x] `docs/knowledge.md` exists.
+  - Evidence: `docs/knowledge.md`
+
+- [x] Model registry exists.
+  - Evidence: `knowledge/ai-frontier/model-registry.yaml` — `status: proposed`
+
+- [x] Capability notes exist.
+  - Evidence: `knowledge/ai-frontier/capability-notes.md`
+
+- [x] Provider costs exist.
+  - Evidence: `knowledge/ai-frontier/provider-costs.md` — pricing placeholders per No Fake Done
+
+- [x] Observed performance template exists.
+  - Evidence: `knowledge/_templates/observed-performance.md`
+
+- [x] Knowledge update receipt template exists.
+  - Evidence: `knowledge/_templates/knowledge-update-receipt.md`
+
+- [x] Curation proposal template exists.
+  - Evidence: `knowledge/_templates/knowledge-curation-proposal.yaml`
 
 ## Required runtime behavior
 
-- [ ] Knowledge updates write receipts.
-- [ ] Knowledge can propose Curation changes.
-- [ ] Model-routing policy is not silently changed by Knowledge alone.
+- [~] Knowledge updates write receipts.
+  - Partial: AI Frontier Review Routine is YAML-only; no automated executor (062). Receipt template ready.
+
+- [~] Knowledge can propose Curation changes.
+  - Partial: Template + doctrine exist; Curation ratification path is desktop proposal flow, not full queue.
+
+- [x] Model-routing policy is not silently changed by Knowledge alone.
+  - Evidence: `KnowledgeStore` reads `routing.status` as `proposed|active`; desktop Knowledge pane shows proposed warning; `AutonomyStore` and `TicketOrchestrator` read routing via `resolveModelForRole` — no silent mutation path.
 
 ## Required status
 
-- [ ] Registry status is `proposed` unless ratified.
-- [ ] Public claims say Proposed, not Shipped.
+- [x] Registry status is `proposed` unless ratified.
+  - Evidence: `model-registry.yaml` → `status: proposed`; routing block `status: proposed`
+
+- [x] Public claims say Proposed, not Shipped.
+  - Evidence: `receipts/otto-v01/knowledge.md` header — PROPOSED
 
 ## Required demo
 
-- [ ] `demo/out/otto-v01-knowledge.mp4` clearly says Proposed if unratified.
+- [~] `demo/out/otto-v01-knowledge.mp4` clearly says Proposed if unratified.
+  - Evidence: file exists; Remotion re-enactment per v0.1 demo policy
+
+## Automated verification
+
+- [x] `KnowledgeStore` tests green.
+  - Evidence: `apps/desktop/electron/knowledge-store.test.ts` — registry load + `resolveModelForRole('ticket_worker')`
+  - Command: `bun test ./apps/desktop/electron/knowledge-store.test.ts`
+
+## Staging smoke (desktop pane)
+
+- Load: Knowledge pane reads `knowledge/ai-frontier/model-registry.yaml` via IPC `otto:knowledge:list`
+- Empty: missing registry shows "Registry not found" with path
+- Proposed: status pill + notice when `registry.status === 'proposed'`
+- Routing: assignments table visible; Autonomy evaluation cross-link shows `knowledge_routing` when classified
 
 ## Status legend
 
@@ -37,11 +72,7 @@ Knowledge is maintained external-world understanding. v1 focuses on AI Frontier 
 
 ## Ship decision
 
-Choose one:
-- Ship in v0.1
-- Ship as Proposed
-- Defer
-- Cut from public claims
+**Ship in v0.1** — file-backed registry + desktop surface + Autonomy/ticket routing read path. Registry and routing remain **proposed** until Curation ratification; claims must say Proposed.
 
 ## Truth rule
 

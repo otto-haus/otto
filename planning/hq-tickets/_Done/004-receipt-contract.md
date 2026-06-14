@@ -208,3 +208,74 @@ Ticket 004 is proven against the contract and may move to `_Done` after this rev
 ### Final call needed from Sebastian
 
 None for ticket acceptance. A later commit/push still needs Sebastian's normal approval boundary.
+
+## Review rev8
+
+Reviewer: independent subagent (batch 001-045)
+Date: 2026-06-14
+Verdict: +1
+
+### Checked against
+
+- Receipt has timestamp, input, action, result, evidence, blocker: **PASS** — `packages/core/src/types.ts`, `receipt-writer.ts`, writer tests.
+- Successful chat/run writes receipt: **PASS** — transport `writeChatReceipt` on success; smoke success receipt `status: success`.
+- Blocked/failed writes truthful receipt: **PASS** — blocked smoke with `no-agent` blocker; failed branch in transports.
+- Durable for future adapters: **PASS** — JSON files under `OTTO_HOME/receipts`; stable schema/id.
+
+### Evidence inspected
+
+- Files: `receipt-writer.ts`, `receipt-writer.test.ts`, transports, `types.ts`
+- Commands: `bun test receipt-writer.test.ts` (in 42-test batch); `jq` on `otto-004-receipt-smoke-20260614T032125Z.json`
+- Artifacts: success/blocked receipt paths inside smoke JSON
+
+### Defects
+
+None blocking.
+
+### Required changes
+
+None.
+
+### Finding
+
+Contract and live smoke both map to every Done-when item.
+
+## Review rev9
+
+Reviewer: independent subagent (batch 001-045 rev9)
+Date: 2026-06-14
+Verdict: +1
+
+### Checked against
+
+All Done-when items: **PASS** — rev8 mapping stands; no rev9 regression identified in code or cited receipts.
+
+### Evidence inspected
+
+- Prior `## Review rev8` Done-when mapping
+- Execution receipt(s) already in ticket
+- Rev9 cross-check focused on 001/017/018/033/036/037/039/041-044/045 only
+
+### Finding
+
+Rev8 +1 reaffirmed. No new blockers.
+
+## Review rev10
+
+Reviewer: independent reviewer (batch 001-045 rev10)
+Date: 2026-06-14
+Verdict: +1
+Delta vs rev9: unchanged
+
+### Checked against Done when
+
+- All Done-when: **PASS** (rev9 evidence; no regression in rev10 pass).
+
+### Evidence inspected
+
+- Execution rev10 receipts + `docs/receipts/staging/` (focus: 001/017/018 rev9; 033/036/037 rev9 staging; 026/039/041-044/045 rev10)
+- Prior `## Review rev9` mappings
+
+### Finding
+
+No rev10 execution receipt; rev9 Done-when mapping and artifacts hold.

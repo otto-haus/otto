@@ -138,16 +138,26 @@ and it is held to **Quality / No Fake Done** (sourced claims, `verified` flags,
 receipts) and **First-Principles Reasoning** (reason from current facts, not inherited
 assumptions).
 
-## Deferred (NOT in v1)
+## Deferred in v1 (tracked wave)
 
 ```txt
-Cognee · relationship graph · automatic market intelligence · broad corpus graph ·
+relationship graph runtime · automatic market intelligence · broad corpus graph ·
 large Knowledge dashboard
 ```
 
-Do not build a Knowledge graph in v1. **Cognee later becomes an implementation under
-Knowledge** — a backend for Knowledge, not a parallel system. (Consistent with the
-stack doctrine: Cognee is deferred until a real query forces it.)
+Do not build a Knowledge graph in v1. **Cognee is unparked as an optional implementation
+under Knowledge** — a derived recall sidecar, not a parallel memory system.
+
+| Item | Status | HQ |
+|------|--------|-----|
+| Contract + adapter seam | **040** (spec) | [`docs/cognee.md`](cognee.md) |
+| Local self-host | **041** | loopback health |
+| MCP recall bridge | **042** | read-first |
+| Canon capture | **043** | provenance + receipts |
+| Graph surface | **044** | thin Knowledge pane |
+
+`model-registry.yaml` keeps `cognee` in `deferred` until **041** proves local home.
+See also [`v3/README.md`](v3/README.md) — implementation tracked, not "never."
 
 ## Desktop surface (v1, small)
 
@@ -175,7 +185,7 @@ No giant dashboard.
 6. AI Frontier Review Routine specified — `routines/ai-frontier-review/`.
 7. Knowledge updates can propose Curation changes — `type: knowledge_update` + template.
 8. Autonomy / model routing reads from Knowledge — `routing` block + this doc + autonomy.md.
-9. Cognee / graph explicitly deferred — above.
+9. Cognee contract exists; runtime deferred to **041–044** — [`cognee.md`](cognee.md).
 10. Desktop can show current model routing + assumptions — desktop.md Knowledge view.
 
 ## Final principle

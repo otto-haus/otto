@@ -1,0 +1,28 @@
+{
+  "threads": {
+    "a": {
+      "id": "local_fa98442c-c557-4f32-85c1-682370cdc2c9",
+      "title": "New chat"
+    },
+    "b": {
+      "id": "local_144e92ac-85bd-42ca-95f2-a673dd1615f3",
+      "title": "New chat"
+    }
+  },
+  "checks": {
+    "threadASent": true,
+    "threadAComposerEnabled": true,
+    "distinctThreadIds": true,
+    "threadBSent": true,
+    "threadAShowsMarker": true,
+    "threadAHidesMarkerB": false,
+    "threadBShowsMarker": true,
+    "threadBHidesMarkerA": false,
+    "composerSendUsed": true
+  },
+  "markers": {
+    "threadA": "046-rev10-thread-a-20260614001330",
+    "threadB": "046-rev10-thread-b-20260614001330"
+  },
+  "ok": false
+}

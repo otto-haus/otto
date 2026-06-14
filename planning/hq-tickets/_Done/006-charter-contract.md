@@ -242,3 +242,74 @@ Ticket 006 is proven against the contract and may move to `_Done` after this rev
 ### Final call needed from Sebastian
 
 None for ticket acceptance. Commit/push/release remains a separate approval boundary.
+
+## Review rev8
+
+Reviewer: independent subagent (batch 001-045)
+Date: 2026-06-14
+Verdict: +1
+
+### Checked against
+
+- Charter creatable in data layer: **PASS** — `charter-store.test.ts` create → `otto.charter.v1`.
+- Run/receipt can reference charter: **PASS** — `run_ids`, `receipt_ids`, `Receipt.subject`.
+- Charter has clear status: **PASS** — `CharterStatus` transitions tested.
+- Changes produce receipts: **PASS** — create/link/status receipts + `change_receipt_ids`.
+
+### Evidence inspected
+
+- Files: `charter-store.ts`, `charter-store.test.ts`, `packages/core/src/types.ts`
+- Commands: 42-test spot-check batch (pass)
+- Artifacts: `otto-006-charter-contract-proof-20260613T204900.json`
+
+### Defects
+
+None blocking.
+
+### Required changes
+
+None.
+
+### Finding
+
+Data-layer contract fully proven by tests and proof artifact.
+
+## Review rev9
+
+Reviewer: independent subagent (batch 001-045 rev9)
+Date: 2026-06-14
+Verdict: +1
+
+### Checked against
+
+All Done-when items: **PASS** — rev8 mapping stands; no rev9 regression identified in code or cited receipts.
+
+### Evidence inspected
+
+- Prior `## Review rev8` Done-when mapping
+- Execution receipt(s) already in ticket
+- Rev9 cross-check focused on 001/017/018/033/036/037/039/041-044/045 only
+
+### Finding
+
+Rev8 +1 reaffirmed. No new blockers.
+
+## Review rev10
+
+Reviewer: independent reviewer (batch 001-045 rev10)
+Date: 2026-06-14
+Verdict: +1
+Delta vs rev9: unchanged
+
+### Checked against Done when
+
+- All Done-when: **PASS** (rev9 evidence; no regression in rev10 pass).
+
+### Evidence inspected
+
+- Execution rev10 receipts + `docs/receipts/staging/` (focus: 001/017/018 rev9; 033/036/037 rev9 staging; 026/039/041-044/045 rev10)
+- Prior `## Review rev9` mappings
+
+### Finding
+
+No rev10 execution receipt; rev9 Done-when mapping and artifacts hold.

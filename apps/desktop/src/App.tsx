@@ -1,8 +1,10 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { RuntimeProvider, useRuntimeContext } from './RuntimeContext';
+import { ToastProvider } from './components/Toast';
 import { Sidebar, type SurfaceId } from './components/Sidebar';
 import { Icon } from './components/icons';
 import { Chat } from './surfaces/Chat';
+import { useChatThreads } from './chat/useChatThreads';
 import {
   Charters,
   Standards,
@@ -11,21 +13,20 @@ import {
   Curation,
   Receipts,
   Autonomy,
+  Skills,
+  Knowledge,
+  Tickets,
+  Channels,
   Settings,
 } from './surfaces/Panes';
+import { ChecksSurfaceShell } from './surfaces/ChecksSurfaceShell';
 import { Onboarding } from './Onboarding';
-
-const META: Record<SurfaceId, { title: string; sub: string }> = {
-  chat: { title: 'Chat', sub: '' },
-  charters: { title: 'Charters', sub: 'Not done yet — real operating contracts will land soon.' },
-  standards: { title: 'Standards', sub: 'Not done yet — source-backed Standards will land soon.' },
-  practices: { title: 'Practices', sub: 'Not done yet — real Practices will land soon.' },
-  routines: { title: 'Routines', sub: 'Not done yet — repeatable bundles will land soon.' },
-  curation: { title: 'Curation', sub: 'Not done yet — proposals and approvals will land soon.' },
-  receipts: { title: 'Receipts', sub: 'Not done yet — proof and run history will land soon.' },
-  autonomy: { title: 'Autonomy', sub: 'Not done yet — policy visibility will land soon.' },
-  settings: { title: 'Settings', sub: 'Setup & readiness — what is configured vs missing.' },
-};
+import { LabsProvider, useLabs } from './labs/LabsContext';
+import { ComingSoonSurface } from './labs/ComingSoonSurface';
+import { surfaceGate } from './surface-tiers';
+import { EmptyState } from './components/ui';
+import { VALID_SURFACES } from './surface-meta';
+import { labsCopy } from './copy/surfaces';
 
 function renderSurface(id: SurfaceId) {
   switch (id) {
@@ -35,70 +36,150 @@ function renderSurface(id: SurfaceId) {
     case 'routines': return <Routines />;
     case 'curation': return <Curation />;
     case 'receipts': return <Receipts />;
+    case 'checks': return <ChecksSurfaceShell />;
     case 'autonomy': return <Autonomy />;
+    case 'skills': return <Skills />;
+    case 'knowledge': return <Knowledge />;
+    case 'tickets': return <Tickets />;
+    case 'channels': return <Channels />;
     case 'settings': return <Settings />;
     default: return null;
   }
 }
 
-const VALID: SurfaceId[] = ['chat', 'charters', 'standards', 'practices', 'routines', 'curation', 'receipts', 'autonomy', 'settings'];
+const VALID = VALID_SURFACES;
 const initialSurface = (): SurfaceId => {
   const h = typeof location !== 'undefined' ? (location.hash.slice(1) as SurfaceId) : 'chat';
   return VALID.includes(h) ? h : 'chat';
 };
 
-// Honest per-surface status: only Settings is live in v0.1; workspace panes are placeholders.
+// Per-surface data source for topbar pills (file-backed canon vs live runtime).
 const DATA_SOURCE: Partial<Record<SurfaceId, 'live' | 'coming-soon' | 'file'>> = {
   settings: 'live',
+  chat: 'live',
   charters: 'file',
   standards: 'file',
   practices: 'file',
   routines: 'file',
   curation: 'file',
   receipts: 'file',
+  checks: 'file',
   autonomy: 'file',
+  skills: 'file',
+  knowledge: 'file',
+  tickets: 'file',
+  channels: 'file',
 };
 
 export function App() {
   return (
     <RuntimeProvider>
-      <AppShell />
+      <ToastProvider>
+        <LabsProvider>
+          <AppShell />
+        </LabsProvider>
+      </ToastProvider>
     </RuntimeProvider>
   );
 }
 
 function AppShell() {
   const rt = useRuntimeContext();
+  const labs = useLabs();
+  const { threads, refresh: refreshThreads, pinThread } = useChatThreads(rt.activeThreadId);
   const [active, setActiveState] = useState<SurfaceId>(initialSurface());
   const [sidebarHidden, setSidebarHidden] = useState(false);
+  const [sidebarCompact, setSidebarCompact] = useState(
+    () => typeof window !== 'undefined' && window.matchMedia('(max-width: 900px)').matches,
+  );
+
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 900px)');
+    const sync = () => setSidebarCompact(mq.matches);
+    sync();
+    mq.addEventListener('change', sync);
+    return () => mq.removeEventListener('change', sync);
+  }, []);
+
+  useEffect(() => {
+    const onHash = () => {
+      const h = location.hash.slice(1) as SurfaceId;
+      if (VALID.includes(h)) setActiveState(h);
+    };
+    window.addEventListener('hashchange', onHash);
+    return () => window.removeEventListener('hashchange', onHash);
+  }, []);
+
   const setActive = (id: SurfaceId) => {
     setActiveState(id);
     if (typeof location !== 'undefined') location.hash = id;
   };
   const counts: Partial<Record<SurfaceId, number>> = {};
-  const meta = META[active];
+
+  const openLabsSettings = () => {
+    try {
+      sessionStorage.setItem('otto.settings.section', 'labs');
+    } catch { /* best effort */ }
+    setActive('settings');
+  };
 
   const sourcePill = () => {
+    if (labs.isComingSoon(active)) return <span className="pill">coming soon</span>;
     if (active === 'settings' && rt.electron) {
       if (rt.status?.ready) return <span className="pill pill--ok">live runtime</span>;
       if (rt.status) return <span className="pill pill--warn">runtime setup</span>;
       return <span className="pill">connecting runtime</span>;
     }
-    if (DATA_SOURCE[active] === 'live') return <span className="pill pill--ok">live runtime</span>;
+    if (DATA_SOURCE[active] === 'live') {
+      if (rt.electron && rt.status?.ready) return <span className="pill pill--ok">live runtime</span>;
+      return <span className="pill pill--warn">runtime setup</span>;
+    }
     if (DATA_SOURCE[active] === 'file') return <span className="pill">file-backed</span>;
     if (DATA_SOURCE[active] === 'coming-soon') return <span className="pill">coming soon</span>;
     return null;
   };
 
+  const surfaceContent = () => {
+    const gate = surfaceGate(active, labs.labs, labs.hydrated);
+    if (gate === 'loading') {
+      return (
+        <div className="comingSoonShell" aria-busy="true">
+          <EmptyState eyebrow={labsCopy.eyebrow} title={labsCopy.loadingTitle} body={labsCopy.loadingBody} />
+        </div>
+      );
+    }
+    if (gate === 'coming-soon') {
+      return <ComingSoonSurface id={active} onOpenLabs={openLabsSettings} />;
+    }
+    return renderSurface(active);
+  };
+
   return (
     <>
-      <div className={`app${sidebarHidden ? ' app--sidebar-hidden' : ''}`}>
+      <div className={`app${sidebarHidden ? ' app--sidebar-hidden' : ''}${sidebarCompact ? ' app--sidebar-compact' : ''}`}>
         {!sidebarHidden && (
           <Sidebar
             active={active}
             onSelect={setActive}
+            onNewChat={() => {
+              void rt.newChat().then(() => refreshThreads());
+            }}
             counts={counts}
+            compact={sidebarCompact}
             onToggleCollapsed={() => setSidebarHidden(true)}
+            threads={threads}
+            activeThreadId={rt.activeThreadId}
+            onSelectThread={(thread) => {
+              setActive('chat');
+              void rt.switchThread(thread.id).then(() => refreshThreads());
+            }}
+            onPinThread={(thread, pinned) => {
+              void pinThread(thread.id, pinned);
+            }}
+            onArchiveThread={(thread) => {
+              void rt.archiveThread(thread.id).then(() => refreshThreads());
+            }}
+            isComingSoon={labs.isComingSoon}
           />
         )}
         <main className="main">
@@ -106,35 +187,32 @@ function AppShell() {
             <div className="content content--chat">
               <Chat
                 onOpenSettings={() => setActive('settings')}
+                onNavigate={setActive}
                 sidebarHidden={sidebarHidden}
                 onToggleSidebar={() => setSidebarHidden(false)}
               />
             </div>
           ) : (
             <>
-              <header className="topbar">
+              <header className="topbar topbar--slim">
                 <div className="topbar__title">
                   {sidebarHidden && (
                     <button type="button" className="topbar__sidebarButton" onClick={() => setSidebarHidden(false)} aria-label="Open sidebar">
                       {Icon.panel}
                     </button>
                   )}
-                  <div>
-                    <div className="eyebrow">otto workspace</div>
-                    <h1>{meta.title}</h1>
-                    {meta.sub && <div className="topbar__sub">{meta.sub}</div>}
-                  </div>
+                  <div className="eyebrow">otto workspace</div>
                 </div>
                 <div className="topbar__right">
                   {sourcePill()}
                 </div>
               </header>
-              <div className="content">{renderSurface(active)}</div>
+              <div className="content">{surfaceContent()}</div>
             </>
           )}
         </main>
       </div>
-      <Onboarding onNavigate={setActive} />
+      <Onboarding onNavigate={setActive} activeSurface={active} />
     </>
   );
 }

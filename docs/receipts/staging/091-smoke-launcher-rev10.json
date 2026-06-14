@@ -1,0 +1,24 @@
+{
+  "ok": true,
+  "runId": "rev10",
+  "date": "2026-06-14",
+  "command": "bash scripts/launch-otto-staging-smoke.sh",
+  "gitHead": "fff0152",
+  "exitCode": 0,
+  "alreadyRunning": false,
+  "pid": "57802",
+  "app": "/Users/seb/.codex/admin/otto-staging/otto-staging.app/Contents/MacOS/otto",
+  "home": "/Users/seb/.codex/admin/otto-staging/home",
+  "otto_home": "/Users/seb/.codex/admin/otto-staging/otto-home",
+  "profile": "/Users/seb/.codex/admin/otto-staging/profile",
+  "log": "/Users/seb/.codex/admin/otto-staging/logs/otto-staging-20260614T004016.log",
+  "port": "9445",
+  "deploy": {
+    "command": "bash apps/desktop/scripts/deploy-staging.sh",
+    "staging_pid": "8751",
+    "staging_app": "/Applications/otto-staging.app",
+    "gitHead": "fff0152"
+  },
+  "rev10Proof": "docs/receipts/staging/staging-rev10-proof-20260614074028.json",
+  "rawOutput": "pid=57802\napp=/Users/seb/.codex/admin/otto-staging/otto-staging.app/Contents/MacOS/otto\nhome=/Users/seb/.codex/admin/otto-staging/home\notto_home=/Users/seb/.codex/admin/otto-staging/otto-home\nprofile=/Users/seb/.codex/admin/otto-staging/profile\nlog=/Users/seb/.codex/admin/otto-staging/logs/otto-staging-20260614T004016.log\nport=9445\n"
+}

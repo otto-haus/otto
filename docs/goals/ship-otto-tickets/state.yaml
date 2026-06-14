@@ -13,7 +13,7 @@ goal:
     cadence: "after each ticket's Worker package and at final audit"
     final_proof: "Every active root ticket 001..018 is in _Done (Done-when proven + reviewer +1 receipts) or in root with an exact written blocker; _Parked untouched; no fake state."
   intake:
-    original_request: "Ship every active ticket in '/Users/seb/Library/CloudStorage/Dropbox/HQ/Otto Tickets' using 000-canonical.md as the operating contract; lowest-numbered first; prove every Done-when; move to _Done only when proven; blocked stay in root with exact blocker; do not touch _Parked."
+    original_request: "Ship every active ticket in planning/hq-tickets/ using 000-canonical.md as the operating contract; lowest-numbered first; prove every Done-when; move to _Done only when proven; blocked stay in root with exact blocker; do not touch _Parked."
     interpreted_outcome: "Each active root ticket 001..018 is implemented, proven, independently reviewed +1, and moved to _Done — or left in root with an exact blocker."
     input_shape: existing_plan
     audience: "Sebastian / Otto users"
@@ -23,7 +23,7 @@ goal:
     likely_misfire: "Marking a ticket Done on implementer say-so without the independent reviewer +1; faking connected/receipt/readiness state; implementing more than one ticket; touching _Parked."
     blind_spots_considered:
       - "Known bug: chat turn returns 429 agent-not-found (lsof discovery hits the wrong Letta server) — fold into the ticket whose Done-when needs a real turn, else record as that ticket's blocker."
-      - "Tickets live in Dropbox; implementation in the otto-v01-integration worktree — two roots."
+      - "Tickets live in the repo at planning/hq-tickets/; implementation on ship/v0.3-integration (or active worktree)."
     existing_plan_facts:
       - "Active root tickets: 001..018, lowest-numbered first, dependency-gated."
       - "Review gate: Claude implements; an INDEPENDENT agent reviews +1/-1/blocked. Claude may not certify its own ticket."
@@ -74,9 +74,9 @@ tasks:
     reasoning_hint: default
     objective: "Read 000-canonical.md + 000-workflow.md + 000-index.md; enumerate active root tickets 001..018; confirm the lowest-numbered dependency-satisfied ticket (expected 001) and read it fully (Outcome + every Done-when + the mapped section of docs/otto-v1-surface-contracts.md)."
     inputs:
-      - "/Users/seb/Library/CloudStorage/Dropbox/HQ/Otto Tickets/000-canonical.md"
-      - "/Users/seb/Library/CloudStorage/Dropbox/HQ/Otto Tickets/000-workflow.md"
-      - "/Users/seb/Library/CloudStorage/Dropbox/HQ/Otto Tickets/001-settings-letta-readiness.md"
+      - "planning/hq-tickets/000-canonical.md"
+      - "planning/hq-tickets/000-workflow.md"
+      - "planning/hq-tickets/_Done/001-settings-letta-readiness.md"
     constraints:
       - "Read-only. Do not implement. Do not touch _Parked."
     expected_output:
@@ -111,9 +111,9 @@ tasks:
     reasoning_hint: default
     objective: "Write the implementer proof block into the ticket (each Done-when -> concrete evidence: command output, file:line, screenshot path), then move the ticket file from root to _InReview."
     allowed_files:
-      - "/Users/seb/Library/CloudStorage/Dropbox/HQ/Otto Tickets/**"
+      - "planning/hq-tickets/**"
     verify:
-      - "test -f '/Users/seb/Library/CloudStorage/Dropbox/HQ/Otto Tickets/_InReview/001-settings-letta-readiness.md'"
+      - "test -f planning/hq-tickets/_InReview/001-settings-letta-readiness.md || test -f planning/hq-tickets/_Done/001-settings-letta-readiness.md"
     stop_if:
       - "Any Done-when lacks real proof -> leave in root, record blocker."
     receipt: null

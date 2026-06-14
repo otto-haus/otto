@@ -1,0 +1,86 @@
+## ship/functional-labs...origin/ship/functional-labs
+ M AGENTS.md
+ M apps/desktop/electron/ai-frontier-review-executor.test.ts
+ M apps/desktop/electron/ai-frontier-review-executor.ts
+ M apps/desktop/electron/channel-store.test.ts
+ M apps/desktop/electron/channel-store.ts
+ M apps/desktop/electron/chat-message-keys.test.ts
+ M apps/desktop/electron/config-store.test.ts
+ M apps/desktop/electron/config-store.ts
+ M apps/desktop/electron/ipc.ts
+ M apps/desktop/electron/preload.ts
+ M apps/desktop/electron/proposal-store.test.ts
+ M apps/desktop/electron/proposal-store.ts
+ M apps/desktop/electron/runtime-transport/letta-discovery.ts
+ M apps/desktop/electron/runtime-transport/runtime-common.test.ts
+ M apps/desktop/electron/runtime-transport/runtime-common.ts
+ M apps/desktop/electron/runtime-transport/runtime-supervisor.test.ts
+ M apps/desktop/electron/runtime-transport/sdk-subprocess-transport.ts
+ M apps/desktop/electron/runtime-transport/transport-mode.test.ts
+ M apps/desktop/electron/runtime-transport/transport-mode.ts
+ M apps/desktop/electron/runtime-transport/ws-runtime-transport.ts
+ M apps/desktop/electron/shared/types.ts
+ M apps/desktop/electron/thread-store.test.ts
+ M apps/desktop/electron/thread-store.ts
+ M apps/desktop/index.html
+ M apps/desktop/scripts/gen-readiness.mjs
+ M apps/desktop/src/App.tsx
+ M apps/desktop/src/Onboarding.tsx
+ M apps/desktop/src/chat/message-storage.ts
+ M apps/desktop/src/chat/queue-storage.test.ts
+ M apps/desktop/src/chat/queue-storage.ts
+ M apps/desktop/src/chat/useChatThreads.ts
+ M apps/desktop/src/components/Sidebar.tsx
+ M apps/desktop/src/components/icons.tsx
+ M apps/desktop/src/components/ui/EmptyState.tsx
+ M apps/desktop/src/components/ui/ThreadList.tsx
+ M apps/desktop/src/copy/surfaces.ts
+ M apps/desktop/src/data/readiness.json
+ M apps/desktop/src/labs/ComingSoonSurface.tsx
+ M apps/desktop/src/labs/LabsContext.tsx
+ M apps/desktop/src/runtime.ts
+ M apps/desktop/src/styles.css
+ M apps/desktop/src/surface-tiers.test.ts
+ M apps/desktop/src/surface-tiers.ts
+ M apps/desktop/src/surfaces/Chat.tsx
+ M apps/desktop/src/surfaces/ChecksSurfaceShell.tsx
+ M apps/desktop/src/surfaces/Panes.tsx
+ M docs/receipts/staging/craft-checklist-v03-20260614.md
+ M docs/runtime-transport.md
+ M knowledge/_receipts/knowledge-update-2026-06-14.md
+ M knowledge/ai-frontier/capability-notes.md
+ M packages/core/src/types.ts
+ M planning/hq-tickets/000-audit-status.md
+ M planning/hq-tickets/000-index.md
+ M scripts/audit-hq-tickets.sh
+ M scripts/otto-staging-proof-capture.cjs
+ M scripts/otto-staging-two-thread-smoke.cjs
+ M standards/standards/quality.md
+?? .worktrees/
+?? apps/desktop/scripts/gen-readiness.test.ts
+?? apps/desktop/src/components/OttoMark.tsx
+?? docs/receipts/staging/046-after-quit-20260614152943.png
+?? docs/receipts/staging/046-after-quit-20260614153054.png
+?? docs/receipts/staging/046-two-thread-a-20260614152943.png
+?? docs/receipts/staging/046-two-thread-a-20260614153054.png
+?? docs/receipts/staging/046-two-thread-b-20260614152943.png
+?? docs/receipts/staging/046-two-thread-b-20260614153054.png
+?? docs/receipts/staging/054-dirty-tree-snapshot.md
+?? docs/receipts/staging/craft-12-item-pass-202606141532Z.md
+?? docs/receipts/staging/design-pass-20260613/
+?? docs/receipts/staging/design-review-20260613/
+?? docs/receipts/staging/two-thread-smoke-20260614152943.json
+?? docs/receipts/staging/two-thread-smoke-20260614153054.json
+?? planning/hq-tickets/159-chat-core-working-loop-ws.md
+?? planning/hq-tickets/_InReview/151-chat-unsent-queue-hardening.md
+?? planning/hq-tickets/_InReview/152-ai-frontier-review-idempotent-note.md
+?? planning/hq-tickets/_InReview/153-readiness-generator-local-config-opt-in.md
+?? planning/hq-tickets/_InReview/154-channel-store-malformed-row-guard.md
+?? planning/hq-tickets/_InReview/155-proposal-canon-ratification-idempotency.md
+?? planning/hq-tickets/_InReview/156-curation-decision-record-language.md
+?? planning/hq-tickets/_InReview/157-runtime-model-fallback-effort-floor.md
+?? planning/hq-tickets/_InReview/158-thread-index-duplicate-id-normalization.md
+?? receipts/otto-v01/demo-release-asset-202606141532Z.md
+
+Captured: 2026-06-14T15:36Z UTC
+Branch: ship/functional-labs @ 404f2f0

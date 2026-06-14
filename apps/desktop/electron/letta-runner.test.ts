@@ -3,7 +3,7 @@ import { mkdtempSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { ConfigStore } from './config-store';
-import { discoverLocalLettaContext } from './letta-runner';
+import { discoverLocalLettaContext } from './runtime-transport/letta-discovery';
 
 const envKeys = ['OTTO_CONFIG_DIR', 'OTTO_LETTA_SETTINGS_PATH', 'OTTO_SKIP_LETTA_LSOF', 'OTTO_AGENT_ID', 'LETTA_BASE_URL'] as const;
 const originalEnv = new Map(envKeys.map((k) => [k, process.env[k]]));

@@ -4,7 +4,7 @@
 
 Lane 001–009 are **done** in the worktree. This Cycle tickets and Ship Checks synced.
 
-- Tickets + proof: `../tickets/` (see `000-index.md`, `000-hq-sync.md`)
+- Tickets + proof: `planning/hq-tickets/` (see `000-index.md`, `000-parallel-map.md`); lane archive: `planning/lane-tickets/`
 - Ship status master: `SHIP_STATUS.md`
 - Worktree: `/Users/seb/Code/otto/.letta/worktrees/ticket-004-receipt-contract-codex-20260613`
 - Gate 016 / HQ 018: **review** — do not start Intake/Discord/Paperclip until accepted

@@ -1,8 +1,10 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { flushMessages, migrateLegacyMessagesToThread, readStoredMessages, type StoredChatMsg } from './chat/message-storage';
 import type {
   Charter,
   CharterRef,
   CharterStatus,
+  CheckRunResult,
   PracticeRecord,
   PracticeReference,
   Receipt,
@@ -10,12 +12,30 @@ import type {
   CurationProposalRecord,
   CreateProposalFromCorrectionInput,
   DecideProposalInput,
+  ProposalClassification,
+  ProposalTarget,
   AutonomyPolicy,
   AutonomyPolicyResult,
   AutonomyActionEvaluation,
   StandardCitation,
   StandardRecord,
   StandardsRegistry,
+  KnowledgeListResult,
+  KnowledgeRegistrySummary,
+  SkillListResult,
+  SkillRecord,
+  ChannelListResult,
+  ChannelRecord,
+  TicketListResult,
+  TicketRecord,
+  TicketCompileInput,
+  WorkerListResult,
+  WorkerRecord,
+  WorkerStatus,
+  RunListResult,
+  RunSummary,
+  ApprovalListResult,
+  ApprovalRecord,
 } from '@otto-haus/core';
 
 // Renderer-side view of the window.otto bridge exposed by electron/preload.ts.
@@ -44,6 +64,11 @@ export type RuntimeStatus = {
   tools?: string[];
   baseUrl?: string | null;
   discoverySource?: string;
+  transportMode?: 'sdk' | 'ws' | 'auto';
+  effectiveTransport?: 'sdk subprocess' | 'websocket local';
+  transportFallbackReason?: string | null;
+  lastReconnectAt?: string | null;
+  wsListenerPort?: number | null;
   cliPath: string;
   cliResolved: boolean;
 };
@@ -52,6 +77,7 @@ export type ConnectionInfo = { baseUrl: string | null; agentId: string | null };
 export type ConnectionInput = { baseUrl?: string | null; agentId?: string | null };
 export type EffortLevel = 'off' | 'low' | 'medium' | 'high' | 'max';
 export type RuntimePreferences = { modelHandle?: string | null; effort?: EffortLevel };
+export type LettaModelOption = { handle: string; label: string; provider?: string | null; displayName?: string | null };
 export type AttachmentInput = { name: string; mime: string; dataUrl: string };
 export type SavedAttachment = { id: string; name: string; mime: string; path: string; url: string; size: number };
 export type ReceiptStatus = 'success' | 'blocked' | 'failed';
@@ -120,6 +146,44 @@ export type PracticeListResult = {
   storage: 'files';
 };
 
+export type PracticeMetricsSnapshot = {
+  slug: string;
+  uses: number;
+  last_used_at: string | null;
+  successful_runs: number;
+  blocked_runs: number;
+  last_run_id?: string;
+  last_receipt_id?: string;
+  last_receipt_path?: string;
+};
+
+export type PracticeRunPayload = {
+  note?: string;
+  raw_note?: string;
+  source?: { who?: string; role?: string; where?: string; when?: string };
+  acceptance_criteria?: Array<{ id: string; text: string; proof?: string; receipts?: string[] }>;
+  review?: { verdict?: string; evidence?: string[]; reviewed_at?: string };
+  evidence?: string[];
+  artifacts?: string[];
+  intent?: string;
+};
+
+export type PracticeRunInput = {
+  slug: string;
+  invocation?: string;
+  payload?: PracticeRunPayload;
+  approved?: boolean;
+};
+
+export type PracticeRunResult = {
+  practice: PracticeRecord;
+  invocation: string;
+  run: RunSummary;
+  receipt: Receipt & { path: string };
+  artifactPath?: string;
+  blocked: boolean;
+};
+
 export type RoutineListResult = {
   dir: string;
   routines: RoutineRecord[];
@@ -156,77 +220,69 @@ export type DecideProposalResult = {
   proposal: CurationProposalRecord;
   receipt: Receipt & { path: string };
   blocked?: boolean;
+  compiledCheckId?: string | null;
 };
 
 export type EvaluateAutonomyActionResult = {
   evaluation: AutonomyActionEvaluation;
   receipt: Receipt & { path: string };
+  check_results?: CheckRunResult[];
 };
 
-export type { StandardCitation, StandardRecord, StandardsRegistry, PracticeRecord, PracticeReference, RoutineRecord, CurationProposalRecord, CreateProposalFromCorrectionInput, DecideProposalInput, AutonomyPolicy, AutonomyPolicyResult, AutonomyActionEvaluation };
+export type {
+  StandardCitation,
+  StandardRecord,
+  StandardsRegistry,
+  PracticeRecord,
+  PracticeReference,
+  RoutineRecord,
+  CurationProposalRecord,
+  CreateProposalFromCorrectionInput,
+  DecideProposalInput,
+  ProposalClassification,
+  ProposalTarget,
+  AutonomyPolicy,
+  AutonomyPolicyResult,
+  AutonomyActionEvaluation,
+  KnowledgeListResult,
+  KnowledgeRegistrySummary,
+  SkillListResult,
+  SkillRecord,
+  ChannelListResult,
+  ChannelRecord,
+  TicketListResult,
+  TicketRecord,
+  TicketCompileInput,
+  WorkerListResult,
+  WorkerRecord,
+  WorkerStatus,
+  RunListResult,
+  RunSummary,
+  ApprovalListResult,
+  ApprovalRecord,
+} from '@otto-haus/core';
+
+export type {
+  CogneeHealth,
+  CogneeCaptureReceipt,
+} from '@otto-haus/core';
+
+export type { OttoConfig, LabsConfig, LabFeatureId, TicketReviewRecord, ProviderMirrorSnapshot } from '../electron/shared/types';
+export type {
+  StandardConflictResult,
+  MemoryListResult,
+  MemoryBlockRecord,
+  CogneeRecallSmokeResult,
+  PgvectorStatus,
+} from '../electron/shared/types';
+
+import type { OttoApi } from '../electron/preload';
+
+export type { OttoApi };
 
 export type OttoEvent =
   | { message: { type: string; [k: string]: unknown } }
   | { status: RuntimeStatus };
-
-type OttoApi = {
-  runtime: {
-    init(): Promise<RuntimeStatus>;
-    status(): Promise<RuntimeStatus>;
-    send(text: string): Promise<void>;
-    abort(): Promise<void>;
-    configure(input: RuntimePreferences): Promise<RuntimeStatus>;
-    openLetta(): Promise<string>;
-  };
-  config: { get(): Promise<unknown>; set(patch: unknown): Promise<unknown> };
-  attachments: { save(input: AttachmentInput): Promise<SavedAttachment> };
-  connection: {
-    get(): Promise<ConnectionInfo>;
-    save(input: ConnectionInput): Promise<RuntimeStatus>;
-  };
-  receipts: {
-    list(): Promise<ReceiptListResult>;
-    get(id: string): Promise<ReceiptDetail | null>;
-  };
-  charters: {
-    list(): Promise<CharterListResult>;
-    get(slug: string): Promise<CharterDetail | null>;
-    create(input: CharterCreateInput): Promise<CharterMutationResult>;
-    updateStatus(slug: string, status: CharterStatus, summary?: string): Promise<CharterMutationResult>;
-    linkRunReceipt(slug: string, input: { runId?: string; receiptId?: string; summary?: string }): Promise<CharterMutationResult>;
-  };
-  standards: {
-    list(): Promise<StandardListResult>;
-    get(slug: string): Promise<StandardRecord | null>;
-    citationsForText(text: string): Promise<StandardCitation[]>;
-  };
-  practices: {
-    list(): Promise<PracticeListResult>;
-    get(slug: string): Promise<PracticeRecord | null>;
-    resolveForText(text: string): Promise<PracticeReference | null>;
-  };
-  routines: {
-    list(): Promise<RoutineListResult>;
-    get(slug: string): Promise<RoutineRecord | null>;
-    activationGate(slug: string): Promise<RoutineActivationGate>;
-    runManual(slug: string): Promise<RoutineManualRunResult>;
-  };
-  curation: {
-    proposals: {
-      list(): Promise<ProposalListResult>;
-      get(id: string): Promise<CurationProposalRecord | null>;
-      createFromCorrection(input: CreateProposalFromCorrectionInput): Promise<CreateProposalResult>;
-      decide(id: string, input: DecideProposalInput): Promise<DecideProposalResult>;
-    };
-  };
-  autonomy: {
-    policy(): Promise<AutonomyPolicyResult>;
-    evaluateAction(input: { action: string; context?: string }): Promise<EvaluateAutonomyActionResult>;
-  };
-  permission: { respond(requestId: string, response: unknown): void };
-  onEvent(cb: (e: OttoEvent) => void): () => void;
-  onPermission(cb: (req: unknown) => void): () => void;
-};
 
 declare global {
   interface Window {
@@ -234,25 +290,27 @@ declare global {
   }
 }
 
+export type OttoBridge = OttoApi;
+
 export const ottoApi = (): OttoApi | null =>
   typeof window !== 'undefined' && window.otto ? window.otto : null;
 export const isElectron = (): boolean => ottoApi() !== null;
 
-export type ChatMsg = { id: string; who: 'user' | 'otto' | 'error'; text: string; streamId?: string };
-
-const MESSAGES_KEY = 'otto.chat.messages.v1';
-
-function readStoredMessages(): ChatMsg[] {
-  try {
-    const parsed = JSON.parse(localStorage.getItem(MESSAGES_KEY) ?? '[]') as ChatMsg[];
-    if (!Array.isArray(parsed)) return [];
-    return parsed
-      .filter((m) => typeof m?.id === 'string' && typeof m.text === 'string' && (m.who === 'user' || m.who === 'otto' || m.who === 'error'))
-      .slice(-200);
-  } catch {
-    return [];
-  }
-}
+export type ChatMsg = StoredChatMsg & {
+  checkBlock?: {
+    checkName: string;
+    message: string;
+    receiptId?: string;
+    standardId?: string;
+  };
+  receiptInline?: {
+    id: string;
+    status: 'success' | 'blocked' | 'failed';
+    action: string;
+    summary: string;
+    authority?: string;
+  };
+};
 
 // Best-effort text extraction from a loosely-typed SDK assistant message.
 function assistantText(m: Record<string, unknown>): string | null {
@@ -268,19 +326,131 @@ function assistantText(m: Record<string, unknown>): string | null {
   return null;
 }
 
+function loadThreadMessages(
+  threadId: string | null,
+  cache: Map<string, ChatMsg[]>,
+): ChatMsg[] {
+  if (!threadId) return [];
+  const cached = cache.get(threadId);
+  if (cached) return cached;
+  migrateLegacyMessagesToThread(threadId);
+  const loaded = readStoredMessages(threadId);
+  cache.set(threadId, loaded);
+  return loaded;
+}
+
 export function useRuntime() {
   const api = ottoApi();
   const [status, setStatus] = useState<RuntimeStatus | null>(null);
-  const [messages, setMessages] = useState<ChatMsg[]>(readStoredMessages);
+  const [activeThreadId, setActiveThreadId] = useState<string | null>(null);
+  const [messages, setMessages] = useState<ChatMsg[]>([]);
   const [busy, setBusy] = useState(false);
   const activeAssistantStream = useRef<string | null>(null);
   const sendError = useRef<string | null>(null);
+  const activeThreadRef = useRef<string | null>(null);
+  const messagesRef = useRef<ChatMsg[]>([]);
+  const threadHydrated = useRef(false);
+  const threadMessagesCache = useRef(new Map<string, ChatMsg[]>());
+  /** Thread that owns the in-flight Letta turn — events route here, not to the active view. */
+  const inflightThreadRef = useRef<string | null>(null);
+
+  const applyThreadView = (threadId: string, opts?: { persistLeaving?: boolean }) => {
+    const leaving = activeThreadRef.current;
+    if (opts?.persistLeaving !== false && leaving && leaving !== threadId) {
+      threadMessagesCache.current.set(leaving, messagesRef.current);
+      flushMessages(leaving, messagesRef.current);
+    }
+    const loaded = loadThreadMessages(threadId, threadMessagesCache.current);
+    activeThreadRef.current = threadId;
+    messagesRef.current = loaded;
+    setActiveThreadId(threadId);
+    setMessages(loaded);
+  };
+
+  useEffect(() => {
+    activeThreadRef.current = activeThreadId;
+  }, [activeThreadId]);
+
+  useEffect(() => {
+    messagesRef.current = messages;
+  }, [messages]);
+
+  useEffect(() => {
+    if (!api) {
+      setMessages(readStoredMessages(null));
+      return;
+    }
+    let cancelled = false;
+    void api.threads.list().then((result) => {
+      if (cancelled || threadHydrated.current) return;
+      threadHydrated.current = true;
+      const threadId = result.activeThreadId;
+      activeThreadRef.current = threadId;
+      const loaded = loadThreadMessages(threadId, threadMessagesCache.current);
+      messagesRef.current = loaded;
+      setActiveThreadId(threadId);
+      setMessages(loaded);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [api]);
+
+  useEffect(() => {
+    if (!api?.onActiveThread) return;
+    return api.onActiveThread(({ threadId, status }) => {
+      threadHydrated.current = true;
+      if (status) setStatus(status);
+      if (activeThreadRef.current === threadId) {
+        const loaded = loadThreadMessages(threadId, threadMessagesCache.current);
+        messagesRef.current = loaded;
+        setMessages(loaded);
+        return;
+      }
+      applyThreadView(threadId);
+    });
+  }, [api]);
 
   useEffect(() => {
     if (!api) return;
+    setStatus((current) => current ?? {
+      ready: false,
+      reason: 'Booting local Letta session…',
+      cliPath: '',
+      cliResolved: false,
+    });
+    const patchInflightMessages = (updater: (msgs: ChatMsg[]) => ChatMsg[]) => {
+      const threadId = inflightThreadRef.current ?? activeThreadRef.current;
+      if (!threadId) return;
+      const prev = loadThreadMessages(threadId, threadMessagesCache.current);
+      const next = updater(prev);
+      threadMessagesCache.current.set(threadId, next);
+      flushMessages(threadId, next);
+      if (activeThreadRef.current === threadId) {
+        messagesRef.current = next;
+        setMessages(next);
+      }
+    };
+
     api.runtime
       .init()
-      .then(setStatus)
+      .then(async (nextStatus) => {
+        setStatus(nextStatus);
+        if (threadHydrated.current) return;
+        try {
+          const result = await api.threads.list();
+          threadHydrated.current = true;
+          const threadId = result.activeThreadId;
+          if (!threadId) return;
+          activeThreadRef.current = threadId;
+          const loaded = loadThreadMessages(threadId, threadMessagesCache.current);
+          messagesRef.current = loaded;
+          setActiveThreadId(threadId);
+          setMessages(loaded);
+        } catch {
+          // threads.list is retried by the dedicated hydration effect.
+        }
+      })
       .catch((e) => setStatus({ ready: false, reason: String(e), cliPath: '', cliResolved: false }));
     const off = api.onEvent((e) => {
       if ('status' in e) {
@@ -292,7 +462,7 @@ export function useRuntime() {
         const t = assistantText(m);
         if (t) {
           const streamId = String(m.uuid ?? m.runId ?? 'assistant');
-          setMessages((x) => {
+          patchInflightMessages((x) => {
             const last = x[x.length - 1];
             if (activeAssistantStream.current === streamId && last?.who === 'otto') {
               return [...x.slice(0, -1), { ...last, text: `${last.text}${t}` }];
@@ -302,21 +472,26 @@ export function useRuntime() {
           });
         }
       } else if (m.type === 'error') {
+        const ownedTurn = inflightThreadRef.current;
         sendError.current = String((m as { message?: unknown }).message ?? 'error');
         activeAssistantStream.current = null;
-        setMessages((x) => [...x, { id: `error-${Date.now()}`, who: 'error', text: String((m as { message?: unknown }).message ?? 'error') }]);
-        setBusy(false);
+        patchInflightMessages((x) => [
+          ...x,
+          { id: `error-${Date.now()}`, who: 'error', text: String((m as { message?: unknown }).message ?? 'error') },
+        ]);
+        inflightThreadRef.current = null;
+        if (!ownedTurn) setBusy(false);
       } else if (m.type === 'result') {
         activeAssistantStream.current = null;
-        setBusy(false);
+        inflightThreadRef.current = null;
+        const conversationId = typeof m.conversationId === 'string' ? m.conversationId : null;
+        if (conversationId) {
+          void api.threads.touch({ lettaConversationId: conversationId });
+        }
       }
     });
     return off;
   }, [api]);
-
-  useEffect(() => {
-    try { localStorage.setItem(MESSAGES_KEY, JSON.stringify(messages.slice(-200))); } catch { /* best effort */ }
-  }, [messages]);
 
   const retry = async () => {
     if (api) setStatus(await api.runtime.init());
@@ -326,20 +501,40 @@ export function useRuntime() {
     setStatus(next);
   };
 
-  const send = async (text: string) => {
-    if (!api || !status?.ready || busy) return;
+  const send = useCallback(async (text: string) => {
+    if (!api) throw new Error('Chat is unavailable outside the desktop app.');
+    if (!status?.ready) throw new Error(status?.reason ?? 'Runtime not ready — finish setup in Settings.');
+    if (busy) throw new Error('Wait for the current reply to finish.');
+    const sendThreadId = activeThreadRef.current;
+    if (!sendThreadId) throw new Error('No active conversation thread yet.');
     sendError.current = null;
     activeAssistantStream.current = null;
-    setMessages((x) => [...x, { id: `user-${Date.now()}`, who: 'user', text }]);
+    inflightThreadRef.current = sendThreadId;
+    const snippet = text.trim().replace(/\s+/g, ' ');
+    if (snippet) {
+      void api.threads.touch({ title: snippet.length > 56 ? `${snippet.slice(0, 53)}…` : snippet });
+    }
+    const prev = loadThreadMessages(sendThreadId, threadMessagesCache.current);
+    const next: ChatMsg[] = [...prev, { id: `user-${Date.now()}`, who: 'user', text }];
+    threadMessagesCache.current.set(sendThreadId, next);
+    flushMessages(sendThreadId, next);
+    messagesRef.current = next;
+    setMessages(next);
     setBusy(true);
-    await api.runtime.send(text);
-    if (sendError.current) throw new Error(sendError.current);
-  };
+    try {
+      await api.runtime.send(text);
+      if (sendError.current) throw new Error(sendError.current);
+    } finally {
+      inflightThreadRef.current = null;
+      setBusy(false);
+    }
+  }, [api, status, busy]);
 
   const abort = async () => {
     if (!api) return;
     await api.runtime.abort();
     activeAssistantStream.current = null;
+    inflightThreadRef.current = null;
     setBusy(false);
   };
 
@@ -350,5 +545,84 @@ export function useRuntime() {
     return next;
   };
 
-  return { electron: !!api, status, messages, busy, send, abort, retry, updateStatus, configure };
+  const newChat = async () => {
+    if (!api) return;
+    if (busy) await abort();
+    threadHydrated.current = true;
+    sendError.current = null;
+    activeAssistantStream.current = null;
+    inflightThreadRef.current = null;
+    setBusy(false);
+    if (activeThreadRef.current) {
+      applyThreadView(activeThreadRef.current, { persistLeaving: true });
+    }
+    const { thread, status: next } = await api.threads.create();
+    applyThreadView(thread.id, { persistLeaving: false });
+    setStatus(next);
+  };
+
+  const switchThread = async (threadId: string) => {
+    if (!api) return;
+    if (threadId === activeThreadRef.current) {
+      applyThreadView(threadId, { persistLeaving: false });
+      return;
+    }
+    if (busy) await abort();
+    threadHydrated.current = true;
+    sendError.current = null;
+    activeAssistantStream.current = null;
+    inflightThreadRef.current = null;
+    setBusy(false);
+    if (activeThreadRef.current) {
+      threadMessagesCache.current.set(activeThreadRef.current, messagesRef.current);
+      flushMessages(activeThreadRef.current, messagesRef.current);
+    }
+    applyThreadView(threadId, { persistLeaving: false });
+    try {
+      const { thread, status: next } = await api.threads.switch(threadId);
+      applyThreadView(thread.id, { persistLeaving: false });
+      setStatus(next);
+    } catch {
+      // Still swap local history even if Letta reconnect fails mid-switch.
+      applyThreadView(threadId, { persistLeaving: false });
+    }
+  };
+
+  const archiveThread = async (threadId: string) => {
+    if (!api) return;
+    if (busy) await abort();
+    await api.threads.archive(threadId);
+    const result = await api.threads.list();
+    const nextThreadId = result.activeThreadId;
+    if (nextThreadId) {
+      applyThreadView(nextThreadId, { persistLeaving: false });
+      setStatus(await api.runtime.init());
+      return;
+    }
+    const { thread, status: next } = await api.threads.create();
+    applyThreadView(thread.id, { persistLeaving: false });
+    setStatus(next);
+  };
+
+  const refreshThreads = async () => {
+    if (!api) return null;
+    return api.threads.list();
+  };
+
+  return {
+    electron: !!api,
+    status,
+    messages,
+    busy,
+    activeThreadId,
+    send,
+    abort,
+    retry,
+    newChat,
+    switchThread,
+    archiveThread,
+    refreshThreads,
+    updateStatus,
+    configure,
+  };
 }

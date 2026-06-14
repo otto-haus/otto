@@ -2,26 +2,30 @@
 
 Owner: Claude
 Priority: P3
-Depends on: 018
+Depends on: 044, 023
+Release bucket: v3 relationships
 
-<!-- Owner rerouted Codex→Claude (2026-06-13 routing update): the hard output is relationship-context writing/craft. Source/proof and curated-update invariants remain reviewer gates. -->
-
+**Unpark when:** Cognee Knowledge graph surface (044) proves recall; optional Stacks (023) for citations.
 
 ## Outcome
 
-Otto can prepare source-backed relationship context for one person/account.
+First v3 feature: **People Context Pack** inside Otto (see `docs/v3/README.md`).
+
+```txt
+person → org → last interactions → open loops → objections → next ask → sources
+```
 
 ## Scope
 
-- People notes.
-- Relationship context pack.
-- Open loops.
-- Next ask.
-- What not to say.
+- Thin UI in Knowledge or dedicated v3 pane
+- Backed by Cognee recall + file canon citations
+- Propose Curation updates, never auto-commit
 
 ## Done when
 
-- Search one person.
-- Get source-backed context pack.
-- Pack improves one real interaction.
-- Updates remain proposed/curated, not automatic.
+- One real relationship (Veto/sales or Otto HQ) renders context pack with sources
+- Empty state when graph lacks person
+
+## Blocker log
+
+Leave blank unless blocked.

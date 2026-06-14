@@ -1,0 +1,43 @@
+{
+  "threads": {
+    "a": {
+      "id": "local_dcf19c21-0009-406c-8bd5-8cd7fe887846",
+      "title": "New chat"
+    },
+    "b": {
+      "id": "local_0a3aa695-cce0-42b8-9227-39037f8fd25f",
+      "title": "New chat"
+    }
+  },
+  "checks": {
+    "threadASent": true,
+    "threadAComposerEnabled": true,
+    "threadAMarkerVisible": true,
+    "threadAPersisted": false,
+    "distinctThreadIds": true,
+    "threadBSent": true,
+    "threadBMarkerVisible": true,
+    "threadBPersisted": false,
+    "sessionAShowsMarker": false,
+    "sessionAHidesMarkerB": false,
+    "sessionAActiveId": "local_dcf19c21-0009-406c-8bd5-8cd7fe887846",
+    "sessionBShowsMarker": false,
+    "sessionBHidesMarkerA": true,
+    "sessionBActiveId": "local_0a3aa695-cce0-42b8-9227-39037f8fd25f",
+    "reloadAActiveId": "local_dcf19c21-0009-406c-8bd5-8cd7fe887846",
+    "reloadAStorageKey": "otto.chat.messages.local_dcf19c21-0009-406c-8bd5-8cd7fe887846.v1",
+    "threadAShowsMarker": false,
+    "threadAHidesMarkerB": false,
+    "reloadBActiveId": "local_0a3aa695-cce0-42b8-9227-39037f8fd25f",
+    "threadBShowsMarker": false,
+    "threadBHidesMarkerA": false,
+    "composerSendUsed": true,
+    "sessionIsolation": false,
+    "reloadIsolation": false
+  },
+  "markers": {
+    "threadA": "046-rev10-thread-a-20260614004150",
+    "threadB": "046-rev10-thread-b-20260614004150"
+  },
+  "ok": false
+}

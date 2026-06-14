@@ -1,0 +1,187 @@
+{
+  "ok": false,
+  "runId": "20260614075420",
+  "gitHead": "fff0152",
+  "stagingApp": "/Applications/otto-staging.app",
+  "cdpPort": 9445,
+  "stagingRoot": "/Users/seb/.codex/admin/otto-staging",
+  "home": "/Users/seb/.codex/admin/otto-staging/home",
+  "ottoHome": "/Users/seb/.codex/admin/otto-staging/otto-home",
+  "profile": "/Users/seb/.codex/admin/otto-staging/profile",
+  "screenshots": {
+    "046_a": "/Users/seb/Code/otto/docs/receipts/staging/046-rev10-thread-a-20260614075420.png",
+    "046_b": "/Users/seb/Code/otto/docs/receipts/staging/046-rev10-thread-b-20260614075420.png",
+    "049": "/Users/seb/Code/otto/docs/receipts/staging/049-chat-ticket-commands-rev10-20260614075420.png",
+    "047": "/Users/seb/Code/otto/docs/receipts/staging/047-memory-search-rev10-20260614075420.png",
+    "045": "/Users/seb/Code/otto/docs/receipts/staging/045-permission-modal-rev10-20260614075420.png"
+  },
+  "tickets": {
+    "046": {
+      "threads": {
+        "a": {
+          "id": "local_c3acaf18-c4e7-40b1-a69c-3a6f943afaa1",
+          "title": "New chat"
+        },
+        "b": {
+          "id": "local_0600f9a9-7234-4e04-8b8f-6a1528505a99",
+          "title": "New chat"
+        }
+      },
+      "checks": {
+        "threadASent": true,
+        "threadAComposerEnabled": true,
+        "threadAMarkerVisible": true,
+        "threadAPersisted": false,
+        "distinctThreadIds": true,
+        "threadBSent": true,
+        "threadBMarkerVisible": true,
+        "threadBPersisted": false,
+        "sessionAShowsMarker": false,
+        "sessionAHidesMarkerB": false,
+        "sessionAActiveId": "local_c3acaf18-c4e7-40b1-a69c-3a6f943afaa1",
+        "sessionBShowsMarker": false,
+        "sessionBHidesMarkerA": true,
+        "sessionBActiveId": "local_0600f9a9-7234-4e04-8b8f-6a1528505a99",
+        "reloadAActiveId": "local_c3acaf18-c4e7-40b1-a69c-3a6f943afaa1",
+        "reloadAStorageKey": "otto.chat.messages.local_c3acaf18-c4e7-40b1-a69c-3a6f943afaa1.v1",
+        "threadAShowsMarker": false,
+        "threadAHidesMarkerB": false,
+        "reloadBActiveId": "local_0600f9a9-7234-4e04-8b8f-6a1528505a99",
+        "threadBShowsMarker": false,
+        "threadBHidesMarkerA": false,
+        "composerSendUsed": true,
+        "sessionIsolation": false,
+        "reloadIsolation": false
+      },
+      "markers": {
+        "threadA": "046-rev10-thread-a-20260614075420",
+        "threadB": "046-rev10-thread-b-20260614075420"
+      },
+      "ok": false
+    },
+    "049": {
+      "commands": {
+        "compile034": {
+          "text": "compile ticket 034 Staging rev10 proof packet for charter AC gate",
+          "composerEnabled": true,
+          "sent": true,
+          "userMessagePersisted": false,
+          "transcriptAfter": "COMMAND STATION\nWhat needs you\n1\nCuration\nPending proposals\n3\nRecent proof\nLatest receipts\n4\nTickets\nOpen worker slices\n6\nDoors\nAwaiting approval\n→\nConstitution\nSource of culture\n→\nChangelog\nWhat changed\nOTTO\n\nCompiled ticket_034. Receipt: receipt-2e5ed094-a55d-4cc3-b86c-31db999c4640 Packet: /Users/seb/.codex/admin/otto-staging/otto-home/tickets/034/worker-packet.md\n\nPropose from correction\nCorrect this",
+          "matched": true
+        },
+        "compile035": {
+          "text": "compile ticket 035 Staging rev10 proof packet for orchestrate-existing",
+          "composerEnabled": true,
+          "sent": true,
+          "userMessagePersisted": false,
+          "transcriptAfter": "COMMAND STATION\nWhat needs you\n1\nCuration\nPending proposals\n3\nRecent proof\nLatest receipts\n4\nTickets\nOpen worker slices\n6\nDoors\nAwaiting approval\n→\nConstitution\nSource of culture\n→\nChangelog\nWhat changed\nOTTO\n\nCompiled ticket_034. Receipt: receipt-2e5ed094-a55d-4cc3-b86c-31db999c4640 Packet: /Users/seb/.codex/admin/otto-staging/otto-home/tickets/034/worker-packet.md\n\nPropose from correction\nCorrect this\n\nCompiled ticket_035. Receipt: receipt-ab8c06b1-50f0-4f2e-a01f-29182edb5601 Packet: /Users/seb/.codex/admin/otto-staging/otto-home/tickets/035/worker-packet.md\n\nPropose from correction\nCorrect this",
+          "matched": true
+        },
+        "orchestrate035": {
+          "text": "orchestrate ticket 035",
+          "composerEnabled": true,
+          "sent": true,
+          "userMessagePersisted": false,
+          "transcriptAfter": "COMMAND STATION\nWhat needs you\n1\nCuration\nPending proposals\n3\nRecent proof\nLatest receipts\n4\nTickets\nOpen worker slices\n6\nDoors\nAwaiting approval\n→\nConstitution\nSource of culture\n→\nChangelog\nWhat changed\nOTTO\n\nCompiled ticket_034. Receipt: receipt-2e5ed094-a55d-4cc3-b86c-31db999c4640 Packet: /Users/seb/.codex/admin/otto-staging/otto-home/tickets/034/worker-packet.md\n\nPropose from correction\nCorrect this\n\nCompiled ticket_035. Receipt: receipt-ab8c06b1-50f0-4f2e-a01f-29182edb5601 Packet: /Users/seb/.codex/admin/otto-staging/otto-home/tickets/035/worker-packet.md\n\nPropose from correction\nCorrect this\n\nOrchestrated ticket_035. Worker: worker_20260614_f6b33db1 (running) Run: run_worker_20260614_f6b33db1 Worktree: /Users/seb/Code/otto/.letta/worktrees/035 Receipt: receipt-85aee90a-23d1-4576-bee4",
+          "matched": true
+        },
+        "statusWorkers": {
+          "text": "status workers",
+          "composerEnabled": true,
+          "sent": true,
+          "userMessagePersisted": false,
+          "transcriptAfter": "COMMAND STATION\nWhat needs you\n1\nCuration\nPending proposals\n3\nRecent proof\nLatest receipts\n4\nTickets\nOpen worker slices\n6\nDoors\nAwaiting approval\n→\nConstitution\nSource of culture\n→\nChangelog\nWhat changed\nOTTO\n\nCompiled ticket_034. Receipt: receipt-2e5ed094-a55d-4cc3-b86c-31db999c4640 Packet: /Users/seb/.codex/admin/otto-staging/otto-home/tickets/034/worker-packet.md\n\nPropose from correction\nCorrect this\n\nCompiled ticket_035. Receipt: receipt-ab8c06b1-50f0-4f2e-a01f-29182edb5601 Packet: /Users/seb/.codex/admin/otto-staging/otto-home/tickets/035/worker-packet.md\n\nPropose from correction\nCorrect this\n\nOrchestrated ticket_035. Worker: worker_20260614_f6b33db1 (running) Run: run_worker_20260614_f6b33db1 Worktree: /Users/seb/Code/otto/.letta/worktrees/035 Receipt: receipt-85aee90a-23d1-4576-bee4",
+          "matched": true
+        }
+      },
+      "transcript": "COMMAND STATION\nWhat needs you\n1\nCuration\nPending proposals\n3\nRecent proof\nLatest receipts\n4\nTickets\nOpen worker slices\n6\nDoors\nAwaiting approval\n→\nConstitution\nSource of culture\n→\nChangelog\nWhat changed\nOTTO\n\nCompiled ticket_034. Receipt: receipt-2e5ed094-a55d-4cc3-b86c-31db999c4640 Packet: /Users/seb/.codex/admin/otto-staging/otto-home/tickets/034/worker-packet.md\n\nPropose from correction\nCorrect this\n\nCompiled ticket_035. Receipt: receipt-ab8c06b1-50f0-4f2e-a01f-29182edb5601 Packet: /Users/seb/.codex/admin/otto-staging/otto-home/tickets/035/worker-packet.md\n\nPropose from correction\nCorrect this\n\nOrchestrated ticket_035. Worker: worker_20260614_f6b33db1 (running) Run: run_worker_20260614_f6b33db1 Worktree: /Users/seb/Code/otto/.letta/worktrees/035 Receipt: receipt-85aee90a-23d1-4576-bee4-0baff1846749\n\nPropose from correction\nCorrect this\n\nWorker status: worker_20260614_f6b33db1 · running · ticket ticket_035 · .letta/worktrees/035\n\nPropose from correction\nCorrect this",
+      "ok": true
+    },
+    "047": {
+      "api": {
+        "connected": false,
+        "blockCount": 20,
+        "labels": [
+          "system/onboarding",
+          "system/human",
+          "system/persona",
+          "skills/1password",
+          "skills/doc",
+          "skills/image-generation",
+          "skills/discord",
+          "skills/frontend-skill",
+          "skills/gog",
+          "skills/pdf",
+          "skills/playwright",
+          "skills/remotion",
+          "skills/screenshot",
+          "skills/slides",
+          "skills/speech",
+          "skills/spreadsheet",
+          "skills/transcribe",
+          "reference/corrections",
+          "reference/doctrine",
+          "reference/veto"
+        ],
+        "apiPath": "/v1/blocks?agent_id=agent-local-d8e35a2a-a89f-45dd-b117-5eae5df8c8f2",
+        "error": null
+      },
+      "searchTerm": "onboar",
+      "visibleBlockPanels": 3,
+      "searchNarrows": true,
+      "noMatchEmpty": true,
+      "ok": true
+    },
+    "045": {
+      "attempted": true,
+      "modalCaptured": true,
+      "checks": {
+        "modalVisible": true
+      },
+      "trigger": {
+        "ok": true,
+        "requestId": "smoke-perm-1781424026886",
+        "toolName": "smoke.read_file"
+      },
+      "ok": true
+    }
+  },
+  "checks": {
+    "runtimeReady": true,
+    "notDefaultConversation": true
+  },
+  "runtimeStatus": {
+    "ready": true,
+    "code": "ready",
+    "agentId": "agent-local-d8e35a2a-a89f-45dd-b117-5eae5df8c8f2",
+    "baseUrl": "http://127.0.0.1:51398",
+    "discoverySource": "otto config/env",
+    "conversationId": "local-conv-1476cd6c-5207-45c4-9c18-d5da35de52df",
+    "model": "chatgpt-plus-pro/gpt-5.5",
+    "modelHandle": null,
+    "effort": "max",
+    "sessionMode": "smoke",
+    "memfsEnabled": false,
+    "tools": [
+      "Bash",
+      "TaskOutput",
+      "Edit",
+      "EnterPlanMode",
+      "ExitPlanMode",
+      "Glob",
+      "Grep",
+      "TaskStop",
+      "memory",
+      "Read",
+      "Skill",
+      "Task",
+      "TodoWrite",
+      "Write"
+    ],
+    "transportMode": "sdk",
+    "effectiveTransport": "sdk subprocess",
+    "transportFallbackReason": null,
+    "cliPath": "/Applications/otto-staging.app/Contents/Resources/app/node_modules/@letta-ai/letta-code/letta.js",
+    "cliResolved": true
+  }
+}

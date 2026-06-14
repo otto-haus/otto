@@ -15,12 +15,17 @@ import type {
   CurationProposalRecord,
   CreateProposalFromCorrectionInput,
   DecideProposalInput,
+  ProposalClassification,
+  ProposalTarget,
+  RunSummary,
 } from '@otto-haus/core';
 
 export type { CharterStatus };
 
+export type PermissionScope = 'once' | 'session';
+
 export type PermissionResponse =
-  | { behavior: 'allow'; updatedInput?: Record<string, unknown> | null }
+  | { behavior: 'allow'; scope?: PermissionScope; updatedInput?: Record<string, unknown> | null }
   | { behavior: 'deny'; message: string };
 
 export interface PermissionRequest {
@@ -41,6 +46,9 @@ export type StatusCode =
   | 'stale'
   | 'error';
 
+export type RuntimeTransportMode = 'sdk' | 'ws' | 'auto';
+export type EffectiveTransport = 'sdk subprocess' | 'websocket local';
+
 /** The single source of truth for whether chat may be enabled. */
 export interface RuntimeStatus {
   ready: boolean;
@@ -60,6 +68,16 @@ export interface RuntimeStatus {
   baseUrl?: string | null;
   /** Human-readable source for runtime/agent discovery. */
   discoverySource?: string;
+  /** Configured transport mode (sdk | ws | auto). */
+  transportMode?: RuntimeTransportMode;
+  /** Active transport after selection/fallback. */
+  effectiveTransport?: EffectiveTransport;
+  /** Visible reason when auto mode fell back to SDK. */
+  transportFallbackReason?: string | null;
+  /** ISO timestamp of last runtime socket reconnect. */
+  lastReconnectAt?: string | null;
+  /** Loopback BYOR listener port when WS transport is active. */
+  wsListenerPort?: number | null;
   cliPath: string;
   cliResolved: boolean;
 }
@@ -81,6 +99,13 @@ export type EffortLevel = 'off' | 'low' | 'medium' | 'high' | 'max';
 export interface RuntimePreferences {
   modelHandle?: string | null;
   effort?: EffortLevel;
+}
+
+export interface LettaModelOption {
+  handle: string;
+  label: string;
+  provider?: string | null;
+  displayName?: string | null;
 }
 
 /** Renderer-provided pasted/dropped image. Saved locally before being referenced in chat. */
@@ -164,6 +189,44 @@ export interface PracticeListResult {
   storage: 'files';
 }
 
+export interface PracticeMetricsSnapshot {
+  slug: string;
+  uses: number;
+  last_used_at: string | null;
+  successful_runs: number;
+  blocked_runs: number;
+  last_run_id?: string;
+  last_receipt_id?: string;
+  last_receipt_path?: string;
+}
+
+export interface PracticeRunPayload {
+  note?: string;
+  raw_note?: string;
+  source?: { who?: string; role?: string; where?: string; when?: string };
+  acceptance_criteria?: Array<{ id: string; text: string; proof?: string; receipts?: string[] }>;
+  review?: { verdict?: string; evidence?: string[]; reviewed_at?: string };
+  evidence?: string[];
+  artifacts?: string[];
+  intent?: string;
+}
+
+export interface PracticeRunInput {
+  slug: string;
+  invocation?: string;
+  payload?: PracticeRunPayload;
+  approved?: boolean;
+}
+
+export interface PracticeRunResult {
+  practice: PracticeRecord;
+  invocation: string;
+  run: RunSummary;
+  receipt: Receipt & { path: string };
+  artifactPath?: string;
+  blocked: boolean;
+}
+
 export interface RoutineListResult {
   dir: string;
   routines: RoutineRecord[];
@@ -182,9 +245,12 @@ export interface RoutineActivationGate {
 export interface RoutineManualRunResult {
   routine: RoutineRecord;
   receipt: Receipt & { path: string };
+  knowledgeReceiptId?: string;
+  observeReceiptId?: string;
+  proposalIds?: string[];
 }
 
-export type { RoutineRecord, RoutineReference, CurationProposalRecord, CreateProposalFromCorrectionInput, DecideProposalInput };
+export type { RoutineRecord, RoutineReference, CurationProposalRecord, CreateProposalFromCorrectionInput, DecideProposalInput, ProposalClassification, ProposalTarget };
 
 export interface ProposalListResult {
   dir: string;
@@ -202,6 +268,54 @@ export interface DecideProposalResult {
   proposal: CurationProposalRecord;
   receipt: Receipt & { path: string };
   blocked?: boolean;
+  compiledCheckId?: string | null;
+}
+
+export type { StandardConflictResult } from '@otto-haus/core';
+
+/** Local chat thread index (046). */
+export interface ChatThreadRecord {
+  id: string;
+  lettaConversationId: string | null;
+  agentId: string | null;
+  title: string;
+  createdAt: string;
+  updatedAt: string;
+  pinned: boolean;
+  archived: boolean;
+}
+
+export interface ThreadListResult {
+  dir: string;
+  activeThreadId: string | null;
+  threads: ChatThreadRecord[];
+}
+
+/** Provider capability mirror — boolean presence only (078). */
+export interface ProviderMirrorSnapshot {
+  lettaConnected: boolean;
+  hasApiKey: boolean;
+  modelHandle: string | null;
+  agentId: string | null;
+  note: string;
+}
+
+/** Letta core-memory block (047) — read-only observatory. */
+export interface MemoryBlockRecord {
+  id: string;
+  label: string;
+  value: string;
+  limit: number | null;
+  updated_at: string | null;
+  description: string | null;
+}
+
+export interface MemoryListResult {
+  agentId: string | null;
+  baseUrl: string | null;
+  blocks: MemoryBlockRecord[];
+  apiPath: string;
+  error?: string;
 }
 
 export type {
@@ -214,7 +328,41 @@ export type {
 export interface EvaluateAutonomyActionResult {
   evaluation: import('@otto-haus/core').AutonomyActionEvaluation;
   receipt: Receipt & { path: string };
+  check_results?: import('@otto-haus/core').CheckRunResult[];
 }
+
+export type {
+  KnowledgeListResult,
+  KnowledgeRegistrySummary,
+  KnowledgeModelEntry,
+  KnowledgeRoutingHint,
+  CogneeHealth,
+  CogneeHealthStatus,
+  CogneeCaptureReceipt,
+  SkillListResult,
+  SkillRecord,
+  ChannelListResult,
+  ChannelRecord,
+  TicketListResult,
+  TicketRecord,
+  TicketCompileInput,
+  WorkerListResult,
+  WorkerRecord,
+  WorkerStatus,
+  RunListResult,
+  RunSummary,
+  ApprovalListResult,
+  ApprovalRecord,
+} from '@otto-haus/core';
+
+export type { PgvectorStatus } from '../pgvector-store';
+
+export type CogneeRecallSmokeResult = {
+  ok: boolean;
+  query: string;
+  citations: Array<{ path: string; snippet: string }>;
+  error: string | null;
+};
 
 /** A loosely-typed SDK message forwarded straight to the renderer. */
 export interface OttoMessageEvent {
@@ -228,17 +376,83 @@ export interface OttoStatusEvent {
 
 export type OttoEvent = OttoMessageEvent | OttoStatusEvent;
 
+/** Local thread index row — persisted under ~/.otto/threads/index.json (046). */
+export interface ChatThreadRecord {
+  id: string;
+  lettaConversationId: string | null;
+  agentId: string | null;
+  title: string;
+  createdAt: string;
+  updatedAt: string;
+  pinned: boolean;
+  archived: boolean;
+}
+
+export interface ThreadListResult {
+  dir: string;
+  activeThreadId: string | null;
+  threads: ChatThreadRecord[];
+}
+
+export interface ThreadSwitchResult {
+  thread: ChatThreadRecord;
+  status: RuntimeStatus;
+}
+
+export interface TicketReviewRecord {
+  verdict?: '+1' | '-1' | 'blocked';
+  evidence?: string[];
+  reviewed_at?: string;
+  blocker?: string;
+}
+
 /** Local-first config at ~/.otto/config.json (shared with gen-readiness.mjs). */
 export interface OttoConfig {
   agentId?: string | null;
   conversationId?: string | null;
+  /** Active local thread id from ~/.otto/threads/index.json (046). */
+  activeThreadId?: string | null;
   modelHandle?: string | null;
   effort?: EffortLevel;
   /** Letta base URL for local / self-hosted backends (cloud uses the default). */
   baseUrl?: string | null;
+  /** Preferred default agent when multiple are available (119). */
+  primaryAgentId?: string | null;
+  /** Connection UX mode — embedded vs bring-your-own vs cloud. */
+  connectionMode?: 'embedded' | 'existing' | 'cloud';
   /** Legacy / generated readiness shape; modelHandle is the v1 desktop control. */
   model?: { provider?: string; model?: string };
   mcpServers?: unknown[];
   functions?: unknown[];
   runtime?: { connected?: boolean };
+  /** Local Cognee sidecar (041) — env vars still override when set. */
+  cognee?: {
+    enabled?: boolean;
+    baseUrl?: string | null;
+  };
+  /** Labs gate — master off by default; per-feature opt-in (137). */
+  labs?: LabsConfig;
 }
+
+/** Lab feature ids — must match docs/v1/ship-tier-matrix.md */
+export type LabFeatureId =
+  | 'knowledge_cognee'
+  | 'pgvector_recall'
+  | 'channels_outbound'
+  | 'memory_observatory'
+  | 'worker_autonomous_loop'
+  | 'practice_mining'
+  | 'culture_export'
+  | 'remote_letta_cloud'
+  | 'command_station_full';
+
+export type LabsConfig = {
+  /** Master Labs switch — default false on fresh profile. */
+  enabled?: boolean;
+  features?: Partial<Record<LabFeatureId, boolean>>;
+};
+
+export type CogneeSettings = {
+  enabled: boolean;
+  baseUrl: string;
+};

@@ -1,7 +1,9 @@
-import { join } from 'node:path';
+import { mkdirSync, writeFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
 import { homedir } from 'node:os';
 import { BrowserWindow, app } from 'electron';
 import { registerIpc } from './ipc';
+import { resolveDevRendererUrl } from './main-security';
 
 let mainWindow: BrowserWindow | null = null;
 
@@ -28,7 +30,7 @@ function createWindow() {
     title: 'otto',
     webPreferences: {
       preload: join(__dirname, '../preload/index.cjs'),
-      sandbox: false,
+      sandbox: true,
       contextIsolation: true,
       nodeIntegration: false,
     },
@@ -37,8 +39,9 @@ function createWindow() {
   registerIpc(win);
 
   // Dev: load the running Vite renderer; Prod: load the built renderer.
-  if (process.env.ELECTRON_RENDERER_URL) {
-    win.loadURL(process.env.ELECTRON_RENDERER_URL);
+  const devRendererUrl = resolveDevRendererUrl(process.env.ELECTRON_RENDERER_URL, app.isPackaged);
+  if (devRendererUrl) {
+    win.loadURL(devRendererUrl);
   } else {
     win.loadFile(join(__dirname, '../renderer/index.html'));
   }
@@ -47,6 +50,29 @@ function createWindow() {
     if (mainWindow === win) mainWindow = null;
   });
   mainWindow = win;
+
+  const capturePath = process.env.OTTO_CAPTURE_README?.trim();
+  if (capturePath) {
+    win.webContents.once('did-finish-load', () => {
+      const hash = process.env.OTTO_CAPTURE_HASH?.trim() || 'chat';
+      if (hash !== 'chat') win.webContents.executeJavaScript(`location.hash = ${JSON.stringify(hash)}`);
+      const delayMs = Number(process.env.OTTO_CAPTURE_DELAY_MS ?? 3500);
+      setTimeout(async () => {
+        try {
+          mkdirSync(dirname(capturePath), { recursive: true });
+          const image = await win.capturePage();
+          writeFileSync(capturePath, image.toPNG());
+          console.log(`[otto] README screenshot saved: ${capturePath}`);
+        } catch (err) {
+          console.error('[otto] README screenshot failed:', err);
+          process.exitCode = 1;
+        } finally {
+          app.quit();
+        }
+      }, Number.isFinite(delayMs) ? delayMs : 3500);
+    });
+  }
+
   return win;
 }
 

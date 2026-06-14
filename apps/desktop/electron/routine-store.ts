@@ -9,7 +9,10 @@ import type {
   RoutineStep,
   Schedule,
 } from '@otto-haus/core';
-import { ReceiptWriter, type WrittenReceipt } from './receipt-writer';
+import { AiFrontierReviewExecutor } from './ai-frontier-review-executor';
+import { KnowledgeStore } from './knowledge-store';
+import { PracticeMiningLoop } from './practice-mining';
+import { RECEIPTS_DIR, ReceiptWriter, type WrittenReceipt } from './receipt-writer';
 
 export interface RoutineListResult {
   dir: string;
@@ -29,12 +32,16 @@ export interface RoutineActivationGate {
 export interface RoutineManualRunResult {
   routine: RoutineRecord;
   receipt: WrittenReceipt;
+  knowledgeReceiptId?: string;
+  observeReceiptId?: string;
+  proposalIds?: string[];
 }
 
 export class RoutineStore {
   constructor(
     private dir = resolveRoutinesDir(),
     private receipts = new ReceiptWriter(),
+    private knowledge = new KnowledgeStore(),
   ) {}
 
   listResult(): RoutineListResult {
@@ -104,6 +111,30 @@ export class RoutineStore {
     const routine = this.get(slug);
     if (!routine) throw new Error(`Routine not found: ${slug}`);
 
+    let knowledgeReceiptId: string | undefined;
+    let observeReceiptId: string | undefined;
+    let proposalIds: string[] | undefined;
+    const evidence: WrittenReceipt['evidence'] = [{ kind: 'file', ref: routine.file, note: 'Canonical routine.yaml' }];
+
+    if (slug === 'ai-frontier-review') {
+      const frontier = new AiFrontierReviewExecutor(this.knowledge, this.receipts);
+      const run = frontier.run();
+      knowledgeReceiptId = run.receipt.id;
+      evidence.push({ kind: 'log', ref: run.receipt.id, note: 'knowledge.frontier_review.manual' });
+      for (const ref of run.touched) {
+        evidence.push({ kind: 'file', ref, note: 'knowledge update' });
+      }
+    }
+
+    if (slug === 'practice-mining') {
+      const mining = new PracticeMiningLoop(undefined, undefined, this.receipts);
+      const observed = mining.observe(RECEIPTS_DIR);
+      observeReceiptId = observed.receipt_id;
+      proposalIds = observed.proposals.map((p) => p.id);
+      evidence.push({ kind: 'log', ref: observed.receipt_id, note: 'practice.mining.observe' });
+      evidence.push({ kind: 'file', ref: RECEIPTS_DIR, note: 'observed receipts dir' });
+    }
+
     const receipt = this.receipts.write({
       status: 'success',
       subject: { type: 'routine', id: routine.id },
@@ -113,18 +144,26 @@ export class RoutineStore {
         mode: 'manual',
         steps: routine.steps,
         schedule: routine.schedule ?? null,
+        knowledgeReceiptId: knowledgeReceiptId ?? null,
+        observeReceiptId: observeReceiptId ?? null,
+        proposalIds: proposalIds ?? [],
       },
       result: {
         summary: `Manual routine run recorded: ${routine.name}`,
-        data: { stepCount: routine.steps.length },
+        data: {
+          stepCount: routine.steps.length,
+          knowledgeReceiptId: knowledgeReceiptId ?? null,
+          observeReceiptId: observeReceiptId ?? null,
+          proposalCount: proposalIds?.length ?? 0,
+        },
       },
-      evidence: [{ kind: 'file', ref: routine.file, note: 'Canonical routine.yaml' }],
+      evidence,
       routine: referenceFor(routine, 'manual'),
       practice: null,
       blocker: null,
     });
 
-    return { routine, receipt };
+    return { routine, receipt, knowledgeReceiptId, observeReceiptId, proposalIds };
   }
 }
 

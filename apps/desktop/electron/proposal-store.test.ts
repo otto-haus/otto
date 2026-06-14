@@ -1,9 +1,11 @@
 import { describe, expect, test } from 'bun:test';
+import { parse } from 'yaml';
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { ReceiptWriter } from './receipt-writer';
+import { ReceiptStore } from './receipt-store';
 import { ProposalStore, classifyProposal } from './proposal-store';
 
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), '../../..');
@@ -41,6 +43,64 @@ describe('ProposalStore', () => {
       const afterCanon = statSync(practiceCanon).mtimeMs;
       expect(afterCanon).toBe(beforeCanon);
       expect(readFileSync(practiceCanon, 'utf8')).not.toContain('receipt linkage on every status change');
+    } finally {
+      rmSync(tmp, { recursive: true, force: true });
+    }
+  });
+
+  test('createFromCorrection preserves Chat message evidence refs', () => {
+    const tmp = mkdtempSync(join(tmpdir(), 'otto-proposal-test-'));
+    const proposalsDir = join(tmp, 'curation', 'proposals');
+    const receiptsDir = join(tmp, 'receipts');
+    try {
+      const store = new ProposalStore(proposalsDir, new ReceiptWriter(receiptsDir));
+      const result = store.createFromCorrection({
+        correction: 'Always cite precedent before improvising on Standards conflicts.',
+        rationale: 'Chat correction from assistant mistake.',
+        target: { kind: 'standard', id: 'candor-kindness', action: 'update' },
+        evidence: [{ kind: 'message', ref: 'msg-abc-123', note: 'Otto guessed instead of citing case law.' }],
+      });
+
+      expect(result.proposal.evidence.some((e) => e.kind === 'message' && e.ref === 'msg-abc-123')).toBe(true);
+      expect(result.proposal.summary).toContain('precedent');
+      expect(result.receipt.action).toBe('curation.proposal.create');
+      expect(store.list().proposals.some((p) => p.id === result.proposal.id)).toBe(true);
+    } finally {
+      rmSync(tmp, { recursive: true, force: true });
+    }
+  });
+
+  test('classify preview matches IPC handler contract', () => {
+    const classification = classifyProposal(
+      { kind: 'memory', action: 'update' },
+      'Remember to always write a receipt after manual routine runs.',
+    );
+    expect(classification.route).toBe('ask');
+    expect(classification.required_gate).toBe('human_ratification');
+  });
+
+  test('memory_writeback proposals cannot skip Curation', () => {
+    const tmp = mkdtempSync(join(tmpdir(), 'otto-proposal-test-'));
+    const proposalsDir = join(tmp, 'curation', 'proposals');
+    const receiptsDir = join(tmp, 'receipts');
+    try {
+      const store = new ProposalStore(proposalsDir, new ReceiptWriter(receiptsDir));
+      const result = store.createFromCorrection({
+        correction: 'Remember to cite precedent before answering Standards questions.',
+        rationale: 'Memory writeback from correction flow.',
+        target: { kind: 'memory', action: 'update' },
+      });
+
+      expect(result.proposal.kind).toBe('memory_writeback');
+      expect(result.proposal.status).toBe('needs_approval');
+      expect(result.proposal.classification.route).toBe('ask');
+      expect(result.proposal.classification.required_gate).toBe('human_ratification');
+      expect(result.proposal.classification.canon_impact).toBe('memory');
+
+      const accepted = store.decide(result.proposal.id, { decision: 'accept', note: 'Ratified memory writeback.' });
+      expect(accepted.blocked).toBeUndefined();
+      expect(accepted.proposal.status).toBe('applied');
+      expect(accepted.receipt.action).toBe('curation.proposal.accept');
     } finally {
       rmSync(tmp, { recursive: true, force: true });
     }
@@ -85,6 +145,46 @@ describe('ProposalStore', () => {
       const reloaded = new ProposalStore(proposalsDir, new ReceiptWriter(receiptsDir)).get(created.proposal.id);
       expect(reloaded?.status).toBe('applied');
       expect(reloaded?.decision_note).toBe('Ratified by user.');
+    } finally {
+      rmSync(tmp, { recursive: true, force: true });
+    }
+  });
+
+  test('accepting duplicate yaml practice rationale does not append duplicate ratified entries or guardrails', () => {
+    const tmp = mkdtempSync(join(tmpdir(), 'otto-proposal-yaml-'));
+    const proposalsDir = join(tmp, 'curation', 'proposals');
+    const receiptsDir = join(tmp, 'receipts');
+    const canonPath = join(tmp, 'practice.yaml');
+    const rationale = 'Accepted changes must appear in the next file-backed practice load.';
+    writeFileSync(canonPath, 'slug: charter\nname: Charter\nguardrails: []\n');
+    try {
+      const store = new ProposalStore(proposalsDir, new ReceiptWriter(receiptsDir));
+      const first = store.createFromCorrection({
+        correction: 'Charter practice should require explicit receipt linkage on every status change.',
+        rationale,
+        target: { kind: 'practice', id: 'charter', path: canonPath, action: 'update' },
+      });
+      const second = store.createFromCorrection({
+        correction: 'Charter practice should require explicit receipt linkage on every status change.',
+        rationale,
+        target: { kind: 'practice', id: 'charter', path: canonPath, action: 'update' },
+      });
+
+      const firstDecision = store.decide(first.proposal.id, { decision: 'accept', note: 'Ratified.' });
+      const secondDecision = store.decide(second.proposal.id, { decision: 'accept', note: 'Ratified again.' });
+      const doc = parse(readFileSync(canonPath, 'utf8')) as { otto_ratified?: Array<Record<string, unknown>>; guardrails?: string[] };
+      const ratified = Array.isArray(doc.otto_ratified) ? doc.otto_ratified : [];
+      const guardrails = Array.isArray(doc.guardrails) ? doc.guardrails : [];
+
+      expect(firstDecision.receipt.result.data?.canonChanged).toBe(true);
+      expect(secondDecision.proposal.status).toBe('applied');
+      expect(secondDecision.receipt.result.data?.canonApplied).toBe(true);
+      expect(secondDecision.receipt.result.data?.canonChanged).toBe(false);
+      expect(secondDecision.receipt.result.data?.canonApplyReason).toBe('already_ratified');
+      expect(ratified.filter((entry) => entry.rationale === rationale)).toHaveLength(1);
+      expect(ratified.map((entry) => entry.proposal_id)).toContain(first.proposal.id);
+      expect(ratified.map((entry) => entry.proposal_id)).not.toContain(second.proposal.id);
+      expect(guardrails.filter((guardrail) => guardrail.includes(rationale))).toHaveLength(1);
     } finally {
       rmSync(tmp, { recursive: true, force: true });
     }
@@ -191,6 +291,120 @@ describe('ProposalStore', () => {
       const store = new ProposalStore(proposalsDir);
       const proposal = store.get('prop_test');
       expect(proposal?.summary).toBe('Test proposal');
+    } finally {
+      rmSync(tmp, { recursive: true, force: true });
+    }
+  });
+
+  test('accepting a standard proposal compiles check and writes check.compiled receipt', () => {
+    const tmp = mkdtempSync(join(tmpdir(), 'otto-proposal-standard-'));
+    const proposalsDir = join(tmp, 'curation', 'proposals');
+    const receiptsDir = join(tmp, 'receipts');
+    const checksDir = join(tmp, 'checks');
+    const standardPath = join(tmp, 'quality.md');
+    writeFileSync(standardPath, '# Quality\n\nslug: quality\n');
+    try {
+      process.env.OTTO_CHECKS_DIR = checksDir;
+      const store = new ProposalStore(proposalsDir, new ReceiptWriter(receiptsDir));
+      const created = store.createFromCorrection({
+        correction: 'Quality standard must block fake done claims.',
+        rationale: 'Ratify quality standard for Culture CI compile path.',
+        target: { kind: 'standard', id: 'quality', path: standardPath, action: 'update' },
+      });
+
+      const decided = store.decide(created.proposal.id, { decision: 'accept', note: 'Ratified.' });
+      expect(decided.blocked).toBeUndefined();
+      expect(decided.compiledCheckId).toBe('completion-requires-receipts');
+      expect(existsSync(join(checksDir, 'completion-requires-receipts.yaml'))).toBe(true);
+
+      const receipts = new ReceiptStore(receiptsDir).list();
+      const compiledSummary = receipts.receipts.find((r) => r.action === 'check.compiled');
+      expect(compiledSummary?.status).toBe('success');
+      expect(compiledSummary?.subjectId).toBe('completion-requires-receipts');
+      const compiledReceipt = new ReceiptStore(receiptsDir).get(compiledSummary!.id);
+      expect(compiledReceipt?.input?.proposal_id).toBe(created.proposal.id);
+    } finally {
+      rmSync(tmp, { recursive: true, force: true });
+      delete process.env.OTTO_CHECKS_DIR;
+    }
+  });
+
+  test('accepting duplicate markdown standard rationale does not append duplicate canon blocks', () => {
+    const tmp = mkdtempSync(join(tmpdir(), 'otto-proposal-standard-'));
+    const proposalsDir = join(tmp, 'curation', 'proposals');
+    const receiptsDir = join(tmp, 'receipts');
+    const checksDir = join(tmp, 'checks');
+    const standardPath = join(tmp, 'quality.md');
+    const rationale = 'Ratify quality standard for Culture CI compile path.';
+    writeFileSync(standardPath, '# Quality\n\nslug: quality\n');
+    try {
+      process.env.OTTO_CHECKS_DIR = checksDir;
+      const store = new ProposalStore(proposalsDir, new ReceiptWriter(receiptsDir));
+      const first = store.createFromCorrection({
+        correction: 'Quality standard must block fake done claims.',
+        rationale,
+        target: { kind: 'standard', id: 'quality', path: standardPath, action: 'update' },
+      });
+      const second = store.createFromCorrection({
+        correction: 'Quality standard must block fake done claims.',
+        rationale,
+        target: { kind: 'standard', id: 'quality', path: standardPath, action: 'update' },
+      });
+
+      const firstDecision = store.decide(first.proposal.id, { decision: 'accept', note: 'Ratified.' });
+      const secondDecision = store.decide(second.proposal.id, { decision: 'accept', note: 'Ratified again.' });
+      const canon = readFileSync(standardPath, 'utf8');
+
+      expect(firstDecision.receipt.result.data?.canonChanged).toBe(true);
+      expect(secondDecision.proposal.status).toBe('applied');
+      expect(secondDecision.receipt.result.data?.canonApplied).toBe(true);
+      expect(secondDecision.receipt.result.data?.canonChanged).toBe(false);
+      expect(secondDecision.receipt.result.data?.canonApplyReason).toBe('already_ratified');
+      expect((canon.match(new RegExp(rationale, 'g')) ?? [])).toHaveLength(1);
+      expect(canon).toContain(first.proposal.id);
+      expect(canon).not.toContain(second.proposal.id);
+    } finally {
+      rmSync(tmp, { recursive: true, force: true });
+      delete process.env.OTTO_CHECKS_DIR;
+    }
+  });
+
+  test('listApprovals derives decision records from applied rejected and deferred proposals', () => {
+    const tmp = mkdtempSync(join(tmpdir(), 'otto-proposal-test-'));
+    const proposalsDir = join(tmp, 'curation', 'proposals');
+    const receiptsDir = join(tmp, 'receipts');
+    const canonPath = join(tmp, 'practice.yaml');
+    writeFileSync(canonPath, 'slug: charter\nname: Charter\nguardrails: []\n');
+    try {
+      const receipts = new ReceiptWriter(receiptsDir);
+      const store = new ProposalStore(proposalsDir, receipts, new ReceiptStore(receiptsDir));
+      const created = store.createFromCorrection({
+        correction: 'Charter practice should require explicit receipt linkage on every status change.',
+        target: { kind: 'practice', id: 'charter', path: canonPath, action: 'update' },
+      });
+      store.decide(created.proposal.id, { decision: 'accept', note: 'Ratified.' });
+      const rejected = store.createFromCorrection({
+        correction: 'Quality standard should not add this rejected behavior.',
+        target: { kind: 'standard', id: 'quality', action: 'update' },
+      });
+      store.decide(rejected.proposal.id, { decision: 'reject', note: 'Do not ratify.' });
+      const deferred = store.createFromCorrection({
+        correction: 'Routine activation should wait for more context.',
+        target: { kind: 'routine', id: 'morning', action: 'activate' },
+      });
+      store.decide(deferred.proposal.id, { decision: 'defer', note: 'Needs more review.' });
+
+      const approvals = store.listApprovals();
+      expect(approvals.approvals).toHaveLength(3);
+      expect(approvals.approvals).toEqual(expect.arrayContaining([
+        expect.objectContaining({ proposal_id: created.proposal.id, status: 'approved' }),
+        expect.objectContaining({ proposal_id: rejected.proposal.id, status: 'denied' }),
+        expect.objectContaining({ proposal_id: deferred.proposal.id, status: 'deferred' }),
+      ]));
+      for (const approval of approvals.approvals) {
+        expect(approval.receipt_id).toBeTruthy();
+        expect(approval.receipt_path).toContain(receiptsDir);
+      }
     } finally {
       rmSync(tmp, { recursive: true, force: true });
     }

@@ -22,7 +22,9 @@ Cursor = everything else / default implementation
 
 If you are not the routed executor, stop and hand off instead of improvising.
 
-## Rules
+## Model (wave 136–141)
+
+Tickets **136–141** (functional ship: Ship / Labs / Cut): implement with **`Composer 2.5 Fast` only**. Do not run Codex, Claude, or other models as the implementer for these tickets. Review subagents remain allowed and should stay unbiased.
 
 1. Read `000-canonical.md`.
 2. Read `000-index.md`.
@@ -36,8 +38,9 @@ git diff --stat
 
 5. Do not overwrite user changes.
 6. **Do not quit, replace, or verify against live `/Applications/otto.app`.** Use Otto staging only:
+   - canonical runbook: `docs/v1/runbooks/live-vs-staging.md` (dev vs staging vs live refresh)
    - smoke: `/Users/seb/.codex/admin/otto-staging/launch-otto-staging-smoke.sh`
-   - deploy: `apps/desktop/scripts/deploy-staging.sh` → `/Applications/otto-staging.app`
+   - deploy: `task staging` or `apps/desktop/scripts/deploy-staging.sh` → `/Applications/otto-staging.app`
 7. Do not push, tag, publish, rename remotes, or commit unless explicitly approved.
 8. Build only the ticket scope.
 9. If unclear, write the ambiguity into the ticket and stop.

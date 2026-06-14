@@ -191,3 +191,73 @@ Verdict: **+1**
 - Source: `apps/desktop/src/Onboarding.tsx` in `otto-v01-integration` worktree
 
 Ticket may move to `_Done`.
+
+## Review rev8
+
+Reviewer: independent subagent (batch 001-045)
+Date: 2026-06-14
+Verdict: +1
+
+### Checked against
+
+- `typecheck` + `electron:build` pass: **PASS** — documented in receipt; `Onboarding.tsx` present in repo.
+- Onboarding shows on first run, advances only on real connection, dismisses forever: **PASS** — smoke JSON `otto-032-onboarding-smoke-20260613T211200.json` (`ok: true`).
+- Review subagent passes (voice/lexicon, prove-then-proceed, no forbidden claims): **PASS** — `resolveOnboardingStep` gates on `connected`.
+
+### Evidence inspected
+
+- `apps/desktop/src/Onboarding.tsx`, `onboarding-step.ts`, `onboarding-storage.ts`
+- `/Users/seb/.codex/admin/otto-032-onboarding-smoke-20260613T211200.json`
+- Ticket ## Execution receipt, ## Review (+1 tick 3)
+
+### Defects
+
+Staging proof lives outside `docs/receipts/staging/` (admin path only).
+
+### Required changes
+
+None blocking.
+
+### Finding
+
+Runtime prove-then-proceed is evidenced; code matches scope. +1.
+
+## Review rev9
+
+Reviewer: independent subagent (batch 001-045 rev9)
+Date: 2026-06-14
+Verdict: +1
+
+### Checked against
+
+All Done-when items: **PASS** — rev8 mapping stands; no rev9 regression identified in code or cited receipts.
+
+### Evidence inspected
+
+- Prior `## Review rev8` Done-when mapping
+- Execution receipt(s) already in ticket
+- Rev9 cross-check focused on 001/017/018/033/036/037/039/041-044/045 only
+
+### Finding
+
+Rev8 +1 reaffirmed. No new blockers.
+
+## Review rev10
+
+Reviewer: independent reviewer (batch 001-045 rev10)
+Date: 2026-06-14
+Verdict: +1
+Delta vs rev9: unchanged
+
+### Checked against Done when
+
+- All Done-when: **PASS** (rev9 mapping holds).
+
+### Evidence inspected
+
+- Execution rev10 receipts + `docs/receipts/staging/` (focus: 001/017/018 rev9; 033/036/037 rev9 staging; 026/039/041-044/045 rev10)
+- Prior `## Review rev9` mappings
+
+### Finding
+
+No rev10 receipt; craft/doc tickets satisfied at rev9.

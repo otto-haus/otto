@@ -66,6 +66,7 @@ Independent chains in parallel → reviewed capabilities out faster.
 root       = active queue
 _InReview  = built; waiting for independent review
 _Done      = finished and proven
+_Backlog   = not done; reopened from fake _Done or proof-deferred
 _Parked    = valid but not active
 ```
 
@@ -165,6 +166,7 @@ isolated worktree/session per implementer
 independent reviewer for each ticket
 clear merge order if shared app shell files may be touched
 runtime/UI proof via Otto staging only — never live /Applications/otto.app
+see docs/v1/runbooks/live-vs-staging.md for deploy commands and isolated paths
 ```
 
 Safe to parallelize:
@@ -226,7 +228,6 @@ Do not build these before ticket 018 is done:
 
 ```txt
 Paperclip
-Cognee
 Stacks
 voice
 cloud
@@ -234,6 +235,8 @@ multi-user auth
 plugin marketplace
 beautiful generic dashboard
 ```
+
+Cognee is unparked by tickets **040–044** (implementation under Knowledge, local-first). Do not start Cognee before **040** contract lands and bug wave **033–038** clears.
 
 ## Version rule
 

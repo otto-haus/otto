@@ -1,71 +1,76 @@
 # Otto v1 — Ship Status
 
-Updated: 2026-06-13
+Updated: 2026-06-14 (tickets **140** / **142**)
 
-Worktree (uncommitted): `/Users/seb/Code/otto/.letta/worktrees/ticket-004-receipt-contract-codex-20260613`
+Integration branch: `ship/functional-labs` (codename — not product semver)
 
-Lane tickets (This Cycle): `/Users/seb/Library/CloudStorage/Dropbox/This Cycle/otto/tickets` — 001–009 + 016 **done**
+**Product line:** **`v0.1.x`** — target tag **`v0.1.3`** (pre-release until Sebastian gate).
+**Staging proof:** `/Applications/otto-staging.app` only — live app unchanged.
 
-HQ conveyor: `~/Library/CloudStorage/Dropbox/HQ/Otto Tickets` — 001–018 **_Done**
-
-Smoke root: `/Users/seb/.codex/admin/`
-
-Shared verification (2026-06-13):
-
-```sh
-cd /Users/seb/Code/otto/.letta/worktrees/ticket-004-receipt-contract-codex-20260613/apps/desktop
-bun test ./electron/*.test.ts   # 25 pass
-bun run typecheck               # pass
+```txt
+NOT PUSHED — no main merge, no tag, no live app promotion until Sebastian sign-off.
 ```
 
-## Lane completion
+Tier truth: [`docs/v1/ship-tier-matrix.md`](ship-tier-matrix.md) · Release tables: [`RELEASE_CHECKLIST.md`](../../RELEASE_CHECKLIST.md) · Ceremony: [`docs/v1/runbooks/sebastian-release-sign-off.md`](runbooks/sebastian-release-sign-off.md)
+
+HQ conveyor: `planning/hq-tickets/` — **138** core-path proof still in root (staging gaps logged). **139** Labs shells in `_Done/`.
+
+Shared verification (2026-06-14, **140**):
+
+```sh
+cd /Users/seb/Code/otto
+bun run verify:v0          # 5/5, 208 unit tests
+bash scripts/release-gate.sh
+```
+
+## Ship tier (Labs off)
+
+Public claims must match this table only. Full matrix: [`ship-tier-matrix.md`](ship-tier-matrix.md).
+
+| Surface | Staging | Gap |
+|---------|:-------:|-----|
+| Chat, Settings, Onboarding | partial | real turn + onboarding dock visuals (**071–073**) |
+| Charters, Standards, Practices, Routines | pass (hygiene) | live walk optional |
+| Curation, Receipts, Checks, Autonomy, Skills, Tickets | pass (hygiene/unit) | Culture CI demo **135** not re-run session |
+| Knowledge, Channels | n/a (Labs) | coming soon when Labs off — **137** |
+
+**138** receipt bundle: [`staging-hygiene-proof-20260614143512.json`](../receipts/staging/staging-hygiene-proof-20260614143512.json) — not full Ship declare.
+
+## Labs tier
+
+Default **off**. [`docs/v1/labs.md`](labs.md). **139** receipt: [`124-126-123-139-ui-wedge-20260614.md`](../receipts/staging/124-126-123-139-ui-wedge-20260614.md).
+
+| Feature | Public claim |
+|---------|--------------|
+| Cognee / pgvector / Channels / worker loop / Cloud | **Not shipped** — Labs or Cut |
+
+## Cut
+
+Otto Cloud live stack, Paperclip write, extension `/ticket` as primary UX — spec/parked only.
+
+## Lane completion (historical smoke)
 
 | Lane | Surface | Status | Primary smoke |
 |---:|---|---|---|
 | 001 | Chat | done | `otto-002-chat-send-smoke-20260614T023917Z.json` |
 | 002 | Settings + Letta | done | `otto-001-connected-settings-smoke-20260614T023015Z.json` |
 | 003 | Receipts | done | `otto-004-receipt-smoke-20260614T032125Z.json` |
-| 004 | Charters | done | `otto-007-charters-smoke-20260613T210700.json` |
-| 005 | Standards | done | `otto-008-standards-smoke-20260613T220000.json` |
-| 006 | Practices | done | `otto-010-practices-smoke-20260613T221500.json` |
-| 007 | Routines | done | `otto-012-routines-contract-smoke-20260613T223000.json` |
-| 008 | Curation | done | `otto-016-curation-decisions-smoke-20260613T230000.json` |
-| 009 | Autonomy | done | `otto-017-autonomy-policy-smoke-20260613T231500.json` |
-| 016 | Readiness gate | done | `otto-018-readiness-gate-smoke-20260614T040000.json` |
+| 004–009 | Canon surfaces | done | lane receipts under smoke root |
 
-Mapping: `tickets/000-hq-sync.md`
+Mapping: `planning/lane-tickets/000-hq-sync.md`
 
-## Ship Check summary
-
-| Surface | Check | Decision | Gap |
-|---|---|---|---|
-| Desktop | `[~]` | Ship as Proposed | No demo video; staging worktree only |
-| Runs/Receipts | `[x]` | Ship in v0.1 | Repo `receipts/otto-v01/*.md` not refreshed |
-| Charter | `[~]` | Ship as Proposed | Desktop surface yes; full extension CLI partial |
-| Standards | `[x]` | Ship in v0.1 | File-backed + surface; no demo |
-| Practices | `[~]` | Ship as Proposed | Surface + specs; CLI path partial |
-| Routines | `[~]` | Ship as Proposed | Manual run yes; no automated executor |
-| Curation | `[x]` | Ship in v0.1 | Proposal + accept/reject/defer + canon ratify |
-| Autonomy | `[x]` | Ship in v0.1 | `v1/contracts/autonomy-policy.yaml` + desktop classifier |
-| Approvals | `[~]` | Defer | Folded into curation/autonomy gates |
-| Tickets | `[~]` | Ship as Proposed | HQ conveyor active; ticketcraft runtime partial |
-| Skills | `[ ]` | Defer | Not in lane 001–009 |
-| Knowledge | `[ ]` | Defer | Not in lane 001–009 |
-| Channels | `[ ]` | Defer | 010–011 blocked on gate |
-| Worker orchestration | `[~]` | Defer | Policy only; no automated workers |
-| Release gate | `[ ]` | Blocked | No push/tag; Sebastian approval required |
-
-Detail per surface: `SHIP_CHECKS/*.md`
+Detail per surface: `docs/v1/SHIP_CHECKS/*.md` · PR split: `docs/v1/runbooks/pr-stack-ship-v03.md`
 
 ## Not shipped (honest)
 
-- Demos (`demo/out/*.mp4`) not refreshed for this wave
-- Public push / tag / npm publish
-- Intake, Discord, Paperclip (lane 010–013) — blocked on gate 016
+- Live Discord bot, Otto Cloud sync, always-on cloud
+- Public push / tag / npm publish (**NOT PUSHED**)
 - Live `/Applications/otto.app` — staging worktree only
+- **076** fresh-Mac embedded Letta proof
+- Culture CI end-to-end demo on staging (**135**) — pending re-run
 
 ## Next
 
-1. Unpark HQ `019` Intake (or This Cycle `010`) when Sebastian chooses next adapter
-2. Commit worktree when approved
-3. Refresh repo demos/receipts (still gap)
+1. Close **138** Ship core-path gaps with dated staging receipts
+2. Sebastian runs [`sebastian-release-sign-off.md`](runbooks/sebastian-release-sign-off.md) (**142**)
+3. Record verdict in [`063-sebastian-gate-packet-v03-20260614.md`](../receipts/staging/063-sebastian-gate-packet-v03-20260614.md)

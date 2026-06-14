@@ -38,6 +38,25 @@ stamp_bundle() {
   plist_env_set "$plist" OTTO_HOME "$OTTO_HOME_DIR"
   plist_env_set "$plist" OTTO_SMOKE "1"
   plist_env_set "$plist" ELECTRON_ENABLE_LOGGING "1"
+  # Letta discovery reads ~/.letta under isolated HOME — point at real settings for staging proof.
+  if [[ -f "${HOME}/.letta/settings.json" ]]; then
+    plist_env_set "$plist" OTTO_LETTA_SETTINGS_PATH "${HOME}/.letta/settings.json"
+  fi
+  if [[ -d "${ROOT}/checks" ]]; then
+    plist_env_set "$plist" OTTO_ROOT "${ROOT}"
+  fi
+  if [[ -n "${OTTO_AGENT_ID:-}" ]]; then
+    plist_env_set "$plist" OTTO_AGENT_ID "$OTTO_AGENT_ID"
+  fi
+  if [[ -n "${LETTA_BASE_URL:-}" ]]; then
+    plist_env_set "$plist" LETTA_BASE_URL "$LETTA_BASE_URL"
+  else
+    local letta_port=""
+    letta_port="$(lsof -nP -iTCP -sTCP:LISTEN 2>/dev/null | rg -i 'letta' | rg -o '127\.0\.0\.1:[0-9]+|localhost:[0-9]+' | head -1 | cut -d: -f2 || true)"
+    if [[ -n "$letta_port" ]]; then
+      plist_env_set "$plist" LETTA_BASE_URL "http://127.0.0.1:${letta_port}"
+    fi
+  fi
 
   plist_set "$bundle/Contents/Frameworks/otto Helper.app/Contents/Info.plist" CFBundleIdentifier "$BUNDLE_ID.helper"
   plist_set "$bundle/Contents/Frameworks/otto Helper (GPU).app/Contents/Info.plist" CFBundleIdentifier "$BUNDLE_ID.helper.GPU"
@@ -56,6 +75,12 @@ if [[ ! -d "$BUILT_APP" ]]; then
 fi
 
 mkdir -p "$HOME_DIR" "$OTTO_HOME_DIR" "$PROFILE_DIR"
+
+if [[ -d "${ROOT}/checks" ]]; then
+  mkdir -p "$OTTO_HOME_DIR/checks"
+  /usr/bin/ditto "${ROOT}/checks" "$OTTO_HOME_DIR/checks"
+  echo "seeded_checks=$OTTO_HOME_DIR/checks"
+fi
 
 echo "==> Replacing staging app only: $TARGET_APP"
 if pgrep -f "$TARGET_APP/Contents/MacOS/otto" >/dev/null 2>&1; then

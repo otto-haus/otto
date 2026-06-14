@@ -1,0 +1,82 @@
+{
+  "ok": true,
+  "ticket": "076",
+  "runId": "20260614074004",
+  "gitHead": "fff0152",
+  "path": [
+    "open staging otto.app (disposable profile via deploy-staging.sh)",
+    "skip onboarding overlay",
+    "runtime.init() on disposable smoke conversation",
+    "one chat turn via runtime.send"
+  ],
+  "stagingApp": "/Applications/otto-staging.app",
+  "stagingOttoHome": "/Users/seb/.codex/admin/otto-staging/otto-home",
+  "stagingHome": "/Users/seb/.codex/admin/otto-staging/home",
+  "cdpPort": 9445,
+  "viewport": {
+    "width": 1280,
+    "height": 720
+  },
+  "bundledCliPath": "/Applications/otto-staging.app/Contents/Resources/app/node_modules/@letta-ai/letta-code/letta.js",
+  "bundledCliExists": true,
+  "checks": {
+    "onboardingSkipped": true,
+    "runtimeReady": true,
+    "cliResolved": true,
+    "bundledCliUsed": true,
+    "sessionModeSmoke": true,
+    "notDefaultConversation": true,
+    "configHasNoProviderSecret": true,
+    "ottoHomeConfigNoProviderSecret": true,
+    "lettaStateUnderIsolatedHome": false,
+    "bootstrapTurnCompleted": true
+  },
+  "bootstrap": {
+    "ok": true,
+    "elapsedMs": 4213,
+    "conversationId": "local-conv-fbe3dcde-aeb3-4069-9ace-9f3f52932425",
+    "agentId": "agent-local-d8e35a2a-a89f-45dd-b117-5eae5df8c8f2"
+  },
+  "runtimeStatus": {
+    "ready": true,
+    "code": "ready",
+    "agentId": "agent-local-d8e35a2a-a89f-45dd-b117-5eae5df8c8f2",
+    "baseUrl": "http://127.0.0.1:51398",
+    "discoverySource": "otto config/env",
+    "conversationId": "local-conv-fbe3dcde-aeb3-4069-9ace-9f3f52932425",
+    "model": "chatgpt-plus-pro/gpt-5.5",
+    "modelHandle": null,
+    "effort": "max",
+    "sessionMode": "smoke",
+    "memfsEnabled": false,
+    "tools": [
+      "Bash",
+      "TaskOutput",
+      "Edit",
+      "EnterPlanMode",
+      "ExitPlanMode",
+      "Glob",
+      "Grep",
+      "TaskStop",
+      "memory",
+      "Read",
+      "Skill",
+      "Task",
+      "TodoWrite",
+      "Write"
+    ],
+    "transportMode": "sdk",
+    "effectiveTransport": "sdk subprocess",
+    "transportFallbackReason": null,
+    "cliPath": "/Applications/otto-staging.app/Contents/Resources/app/node_modules/@letta-ai/letta-code/letta.js",
+    "cliResolved": true
+  },
+  "config": {
+    "activeThreadId": "local_3c143cc9-0624-40ef-927e-9ca003f55028",
+    "conversationId": null
+  },
+  "screenshots": {
+    "bootstrap076": "/Users/seb/Code/otto/docs/receipts/staging/076-embedded-bootstrap-20260614074004.png"
+  },
+  "bootstrapTurnCompleted": true
+}

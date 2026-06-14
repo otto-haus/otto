@@ -1,0 +1,15 @@
+{
+  "schema": "otto.039-ws-disposable-smoke.v1",
+  "ok": false,
+  "runId": "20260614070030",
+  "gitHead": "fff0152",
+  "blocker": "LETTA_API_KEY absent from task environment",
+  "command": "OTTO_SMOKE=1 OTTO_AGENT_ID=<agent> bun scripts/ws-disposable-smoke.ts",
+  "notRun": true,
+  "scorecard": "docs/receipts/staging/039-ws-promotion-scorecard.md",
+  "priorAttempt": "docs/receipts/staging/039-ws-disposable-smoke-20260614064452.json",
+  "notes": [
+    "WS unit tests pass (mock BYOR); live letta remote init requires LETTA_API_KEY.",
+    "Default transport remains sdk until live disposable smoke receipts land."
+  ]
+}

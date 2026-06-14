@@ -1,0 +1,41 @@
+{
+  "ok": false,
+  "runId": "20260614T065758Z",
+  "repo": "/Users/seb/Code/otto",
+  "gitHead": "fff0152",
+  "tickets": [
+    "041",
+    "042",
+    "043",
+    "044"
+  ],
+  "health": {
+    "disabled": {
+      "ok": false,
+      "status": "disabled",
+      "baseUrl": null,
+      "error": "OTTO_COGNEE_ENABLED is off"
+    },
+    "enabledNoDaemon": {
+      "ok": false,
+      "status": "stopped",
+      "baseUrl": "http://127.0.0.1:8000",
+      "error": "Cognee not reachable on loopback"
+    }
+  },
+  "dryRun": {
+    "count": 107,
+    "samplePaths": [
+      "/Users/seb/Code/otto/receipts/otto-v01/embedded-letta-smoke-20260614T063553Z.md",
+      "/Users/seb/Code/otto/receipts/otto-v01/knowledge.md",
+      "/Users/seb/Code/otto/receipts/otto-v01/desktop.md",
+      "/Users/seb/Code/otto/receipts/otto-v01/routines.md",
+      "/Users/seb/Code/otto/receipts/otto-v01/channels.md"
+    ]
+  },
+  "unitTests": {
+    "cogneeStore": "bun test apps/desktop/electron/cognee-store.test.ts → 6 pass"
+  },
+  "blocker": "Cognee CLI not installed; loopback daemon not reachable at http://127.0.0.1:8000",
+  "liveReadyRequired": "OTTO_COGNEE_ENABLED=1 + cognee api on 127.0.0.1:8000"
+}

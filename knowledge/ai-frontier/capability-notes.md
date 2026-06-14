@@ -56,3 +56,443 @@ When capability moves, these inherited assumptions must move with it:
 | end-to-end reliability up | "AI can't own that end to end" |
 
 Each "re-examine" that changes behavior → Curation proposal, not a silent edit.
+
+
+<!-- ai-frontier-review 2026-06-14 -->
+_Last manual review run: 2026-06-14. Paste external benchmark notes here; routing changes go to Curation._
+
+
+<!-- ai-frontier-review 2026-06-14 -->
+_Last manual review run: 2026-06-14. Paste external benchmark notes here; routing changes go to Curation._
+
+
+<!-- ai-frontier-review 2026-06-14 -->
+_Last manual review run: 2026-06-14. Paste external benchmark notes here; routing changes go to Curation._
+
+
+<!-- ai-frontier-review 2026-06-14 -->
+_Last manual review run: 2026-06-14. Paste external benchmark notes here; routing changes go to Curation._
+
+
+<!-- ai-frontier-review 2026-06-14 -->
+_Last manual review run: 2026-06-14. Paste external benchmark notes here; routing changes go to Curation._
+
+
+<!-- ai-frontier-review 2026-06-14 -->
+_Last manual review run: 2026-06-14. Paste external benchmark notes here; routing changes go to Curation._
+
+
+<!-- ai-frontier-review 2026-06-14 -->
+_Last manual review run: 2026-06-14. Paste external benchmark notes here; routing changes go to Curation._
+
+
+<!-- ai-frontier-review 2026-06-14 -->
+_Last manual review run: 2026-06-14. Paste external benchmark notes here; routing changes go to Curation._
+
+
+<!-- ai-frontier-review 2026-06-14 -->
+_Last manual review run: 2026-06-14. Paste external benchmark notes here; routing changes go to Curation._
+
+
+<!-- ai-frontier-review 2026-06-14 -->
+_Last manual review run: 2026-06-14. Paste external benchmark notes here; routing changes go to Curation._
+
+
+<!-- ai-frontier-review 2026-06-14 -->
+_Last manual review run: 2026-06-14. Paste external benchmark notes here; routing changes go to Curation._
+
+
+<!-- ai-frontier-review 2026-06-14 -->
+_Last manual review run: 2026-06-14. Paste external benchmark notes here; routing changes go to Curation._
+
+
+<!-- ai-frontier-review 2026-06-14 -->
+_Last manual review run: 2026-06-14. Paste external benchmark notes here; routing changes go to Curation._
+
+
+<!-- ai-frontier-review 2026-06-14 -->
+_Last manual review run: 2026-06-14. Paste external benchmark notes here; routing changes go to Curation._
+
+
+<!-- ai-frontier-review 2026-06-14 -->
+_Last manual review run: 2026-06-14. Paste external benchmark notes here; routing changes go to Curation._
+
+
+<!-- ai-frontier-review 2026-06-14 -->
+_Last manual review run: 2026-06-14. Paste external benchmark notes here; routing changes go to Curation._
+
+
+<!-- ai-frontier-review 2026-06-14 -->
+_Last manual review run: 2026-06-14. Paste external benchmark notes here; routing changes go to Curation._
+
+
+<!-- ai-frontier-review 2026-06-14 -->
+_Last manual review run: 2026-06-14. Paste external benchmark notes here; routing changes go to Curation._
+
+
+<!-- ai-frontier-review 2026-06-14 -->
+_Last manual review run: 2026-06-14. Paste external benchmark notes here; routing changes go to Curation._
+
+
+<!-- ai-frontier-review 2026-06-14 -->
+_Last manual review run: 2026-06-14. Paste external benchmark notes here; routing changes go to Curation._
+
+
+<!-- ai-frontier-review 2026-06-14 -->
+_Last manual review run: 2026-06-14. Paste external benchmark notes here; routing changes go to Curation._
+
+
+<!-- ai-frontier-review 2026-06-14 -->
+_Last manual review run: 2026-06-14. Paste external benchmark notes here; routing changes go to Curation._
+
+
+<!-- ai-frontier-review 2026-06-14 -->
+_Last manual review run: 2026-06-14. Paste external benchmark notes here; routing changes go to Curation._
+
+
+<!-- ai-frontier-review 2026-06-14 -->
+_Last manual review run: 2026-06-14. Paste external benchmark notes here; routing changes go to Curation._
+
+
+<!-- ai-frontier-review 2026-06-14 -->
+_Last manual review run: 2026-06-14. Paste external benchmark notes here; routing changes go to Curation._
+
+
+<!-- ai-frontier-review 2026-06-14 -->
+_Last manual review run: 2026-06-14. Paste external benchmark notes here; routing changes go to Curation._
+
+
+<!-- ai-frontier-review 2026-06-14 -->
+_Last manual review run: 2026-06-14. Paste external benchmark notes here; routing changes go to Curation._
+
+
+<!-- ai-frontier-review 2026-06-14 -->
+_Last manual review run: 2026-06-14. Paste external benchmark notes here; routing changes go to Curation._
+
+
+<!-- ai-frontier-review 2026-06-14 -->
+_Last manual review run: 2026-06-14. Paste external benchmark notes here; routing changes go to Curation._
+
+
+<!-- ai-frontier-review 2026-06-14 -->
+_Last manual review run: 2026-06-14. Paste external benchmark notes here; routing changes go to Curation._
+
+
+<!-- ai-frontier-review 2026-06-14 -->
+_Last manual review run: 2026-06-14. Paste external benchmark notes here; routing changes go to Curation._
+
+
+<!-- ai-frontier-review 2026-06-14 -->
+_Last manual review run: 2026-06-14. Paste external benchmark notes here; routing changes go to Curation._
+
+
+<!-- ai-frontier-review 2026-06-14 -->
+_Last manual review run: 2026-06-14. Paste external benchmark notes here; routing changes go to Curation._
+
+
+<!-- ai-frontier-review 2026-06-14 -->
+_Last manual review run: 2026-06-14. Paste external benchmark notes here; routing changes go to Curation._
+
+
+<!-- ai-frontier-review 2026-06-14 -->
+_Last manual review run: 2026-06-14. Paste external benchmark notes here; routing changes go to Curation._
+
+
+<!-- ai-frontier-review 2026-06-14 -->
+_Last manual review run: 2026-06-14. Paste external benchmark notes here; routing changes go to Curation._
+
+
+<!-- ai-frontier-review 2026-06-14 -->
+_Last manual review run: 2026-06-14. Paste external benchmark notes here; routing changes go to Curation._
+
+
+<!-- ai-frontier-review 2026-06-14 -->
+_Last manual review run: 2026-06-14. Paste external benchmark notes here; routing changes go to Curation._
+
+
+<!-- ai-frontier-review 2026-06-14 -->
+_Last manual review run: 2026-06-14. Paste external benchmark notes here; routing changes go to Curation._
+
+
+<!-- ai-frontier-review 2026-06-14 -->
+_Last manual review run: 2026-06-14. Paste external benchmark notes here; routing changes go to Curation._
+
+
+<!-- ai-frontier-review 2026-06-14 -->
+_Last manual review run: 2026-06-14. Paste external benchmark notes here; routing changes go to Curation._
+
+
+<!-- ai-frontier-review 2026-06-14 -->
+_Last manual review run: 2026-06-14. Paste external benchmark notes here; routing changes go to Curation._
+
+
+<!-- ai-frontier-review 2026-06-14 -->
+_Last manual review run: 2026-06-14. Paste external benchmark notes here; routing changes go to Curation._
+
+
+<!-- ai-frontier-review 2026-06-14 -->
+_Last manual review run: 2026-06-14. Paste external benchmark notes here; routing changes go to Curation._
+
+
+<!-- ai-frontier-review 2026-06-14 -->
+_Last manual review run: 2026-06-14. Paste external benchmark notes here; routing changes go to Curation._
+
+
+<!-- ai-frontier-review 2026-06-14 -->
+_Last manual review run: 2026-06-14. Paste external benchmark notes here; routing changes go to Curation._
+
+
+<!-- ai-frontier-review 2026-06-14 -->
+_Last manual review run: 2026-06-14. Paste external benchmark notes here; routing changes go to Curation._
+
+
+<!-- ai-frontier-review 2026-06-14 -->
+_Last manual review run: 2026-06-14. Paste external benchmark notes here; routing changes go to Curation._
+
+
+<!-- ai-frontier-review 2026-06-14 -->
+_Last manual review run: 2026-06-14. Paste external benchmark notes here; routing changes go to Curation._
+
+
+<!-- ai-frontier-review 2026-06-14 -->
+_Last manual review run: 2026-06-14. Paste external benchmark notes here; routing changes go to Curation._
+
+
+<!-- ai-frontier-review 2026-06-14 -->
+_Last manual review run: 2026-06-14. Paste external benchmark notes here; routing changes go to Curation._
+
+
+<!-- ai-frontier-review 2026-06-14 -->
+_Last manual review run: 2026-06-14. Paste external benchmark notes here; routing changes go to Curation._
+
+
+<!-- ai-frontier-review 2026-06-14 -->
+_Last manual review run: 2026-06-14. Paste external benchmark notes here; routing changes go to Curation._
+
+
+<!-- ai-frontier-review 2026-06-14 -->
+_Last manual review run: 2026-06-14. Paste external benchmark notes here; routing changes go to Curation._
+
+
+<!-- ai-frontier-review 2026-06-14 -->
+_Last manual review run: 2026-06-14. Paste external benchmark notes here; routing changes go to Curation._
+
+
+<!-- ai-frontier-review 2026-06-14 -->
+_Last manual review run: 2026-06-14. Paste external benchmark notes here; routing changes go to Curation._
+
+
+<!-- ai-frontier-review 2026-06-14 -->
+_Last manual review run: 2026-06-14. Paste external benchmark notes here; routing changes go to Curation._
+
+
+<!-- ai-frontier-review 2026-06-14 -->
+_Last manual review run: 2026-06-14. Paste external benchmark notes here; routing changes go to Curation._
+
+
+<!-- ai-frontier-review 2026-06-14 -->
+_Last manual review run: 2026-06-14. Paste external benchmark notes here; routing changes go to Curation._
+
+
+<!-- ai-frontier-review 2026-06-14 -->
+_Last manual review run: 2026-06-14. Paste external benchmark notes here; routing changes go to Curation._
+
+
+<!-- ai-frontier-review 2026-06-14 -->
+_Last manual review run: 2026-06-14. Paste external benchmark notes here; routing changes go to Curation._
+
+
+<!-- ai-frontier-review 2026-06-14 -->
+_Last manual review run: 2026-06-14. Paste external benchmark notes here; routing changes go to Curation._
+
+
+<!-- ai-frontier-review 2026-06-14 -->
+_Last manual review run: 2026-06-14. Paste external benchmark notes here; routing changes go to Curation._
+
+
+<!-- ai-frontier-review 2026-06-14 -->
+_Last manual review run: 2026-06-14. Paste external benchmark notes here; routing changes go to Curation._
+
+
+<!-- ai-frontier-review 2026-06-14 -->
+_Last manual review run: 2026-06-14. Paste external benchmark notes here; routing changes go to Curation._
+
+
+<!-- ai-frontier-review 2026-06-14 -->
+_Last manual review run: 2026-06-14. Paste external benchmark notes here; routing changes go to Curation._
+
+
+<!-- ai-frontier-review 2026-06-14 -->
+_Last manual review run: 2026-06-14. Paste external benchmark notes here; routing changes go to Curation._
+
+
+<!-- ai-frontier-review 2026-06-14 -->
+_Last manual review run: 2026-06-14. Paste external benchmark notes here; routing changes go to Curation._
+
+
+<!-- ai-frontier-review 2026-06-14 -->
+_Last manual review run: 2026-06-14. Paste external benchmark notes here; routing changes go to Curation._
+
+
+<!-- ai-frontier-review 2026-06-14 -->
+_Last manual review run: 2026-06-14. Paste external benchmark notes here; routing changes go to Curation._
+
+
+<!-- ai-frontier-review 2026-06-14 -->
+_Last manual review run: 2026-06-14. Paste external benchmark notes here; routing changes go to Curation._
+
+
+<!-- ai-frontier-review 2026-06-14 -->
+_Last manual review run: 2026-06-14. Paste external benchmark notes here; routing changes go to Curation._
+
+
+<!-- ai-frontier-review 2026-06-14 -->
+_Last manual review run: 2026-06-14. Paste external benchmark notes here; routing changes go to Curation._
+
+
+<!-- ai-frontier-review 2026-06-14 -->
+_Last manual review run: 2026-06-14. Paste external benchmark notes here; routing changes go to Curation._
+
+
+<!-- ai-frontier-review 2026-06-14 -->
+_Last manual review run: 2026-06-14. Paste external benchmark notes here; routing changes go to Curation._
+
+
+<!-- ai-frontier-review 2026-06-14 -->
+_Last manual review run: 2026-06-14. Paste external benchmark notes here; routing changes go to Curation._
+
+
+<!-- ai-frontier-review 2026-06-14 -->
+_Last manual review run: 2026-06-14. Paste external benchmark notes here; routing changes go to Curation._
+
+
+<!-- ai-frontier-review 2026-06-14 -->
+_Last manual review run: 2026-06-14. Paste external benchmark notes here; routing changes go to Curation._
+
+
+<!-- ai-frontier-review 2026-06-14 -->
+_Last manual review run: 2026-06-14. Paste external benchmark notes here; routing changes go to Curation._
+
+
+<!-- ai-frontier-review 2026-06-14 -->
+_Last manual review run: 2026-06-14. Paste external benchmark notes here; routing changes go to Curation._
+
+
+<!-- ai-frontier-review 2026-06-14 -->
+_Last manual review run: 2026-06-14. Paste external benchmark notes here; routing changes go to Curation._
+
+
+<!-- ai-frontier-review 2026-06-14 -->
+_Last manual review run: 2026-06-14. Paste external benchmark notes here; routing changes go to Curation._
+
+
+<!-- ai-frontier-review 2026-06-14 -->
+_Last manual review run: 2026-06-14. Paste external benchmark notes here; routing changes go to Curation._
+
+
+<!-- ai-frontier-review 2026-06-14 -->
+_Last manual review run: 2026-06-14. Paste external benchmark notes here; routing changes go to Curation._
+
+
+<!-- ai-frontier-review 2026-06-14 -->
+_Last manual review run: 2026-06-14. Paste external benchmark notes here; routing changes go to Curation._
+
+
+<!-- ai-frontier-review 2026-06-14 -->
+_Last manual review run: 2026-06-14. Paste external benchmark notes here; routing changes go to Curation._
+
+
+<!-- ai-frontier-review 2026-06-14 -->
+_Last manual review run: 2026-06-14. Paste external benchmark notes here; routing changes go to Curation._
+
+
+<!-- ai-frontier-review 2026-06-14 -->
+_Last manual review run: 2026-06-14. Paste external benchmark notes here; routing changes go to Curation._
+
+
+<!-- ai-frontier-review 2026-06-14 -->
+_Last manual review run: 2026-06-14. Paste external benchmark notes here; routing changes go to Curation._
+
+
+<!-- ai-frontier-review 2026-06-14 -->
+_Last manual review run: 2026-06-14. Paste external benchmark notes here; routing changes go to Curation._
+
+
+<!-- ai-frontier-review 2026-06-14 -->
+_Last manual review run: 2026-06-14. Paste external benchmark notes here; routing changes go to Curation._
+
+
+<!-- ai-frontier-review 2026-06-14 -->
+_Last manual review run: 2026-06-14. Paste external benchmark notes here; routing changes go to Curation._
+
+
+<!-- ai-frontier-review 2026-06-14 -->
+_Last manual review run: 2026-06-14. Paste external benchmark notes here; routing changes go to Curation._
+
+
+<!-- ai-frontier-review 2026-06-14 -->
+_Last manual review run: 2026-06-14. Paste external benchmark notes here; routing changes go to Curation._
+
+
+<!-- ai-frontier-review 2026-06-14 -->
+_Last manual review run: 2026-06-14. Paste external benchmark notes here; routing changes go to Curation._
+
+
+<!-- ai-frontier-review 2026-06-14 -->
+_Last manual review run: 2026-06-14. Paste external benchmark notes here; routing changes go to Curation._
+
+
+<!-- ai-frontier-review 2026-06-14 -->
+_Last manual review run: 2026-06-14. Paste external benchmark notes here; routing changes go to Curation._
+
+
+<!-- ai-frontier-review 2026-06-14 -->
+_Last manual review run: 2026-06-14. Paste external benchmark notes here; routing changes go to Curation._
+
+
+<!-- ai-frontier-review 2026-06-14 -->
+_Last manual review run: 2026-06-14. Paste external benchmark notes here; routing changes go to Curation._
+
+
+<!-- ai-frontier-review 2026-06-14 -->
+_Last manual review run: 2026-06-14. Paste external benchmark notes here; routing changes go to Curation._
+
+
+<!-- ai-frontier-review 2026-06-14 -->
+_Last manual review run: 2026-06-14. Paste external benchmark notes here; routing changes go to Curation._
+
+
+<!-- ai-frontier-review 2026-06-14 -->
+_Last manual review run: 2026-06-14. Paste external benchmark notes here; routing changes go to Curation._
+
+
+<!-- ai-frontier-review 2026-06-14 -->
+_Last manual review run: 2026-06-14. Paste external benchmark notes here; routing changes go to Curation._
+
+
+<!-- ai-frontier-review 2026-06-14 -->
+_Last manual review run: 2026-06-14. Paste external benchmark notes here; routing changes go to Curation._
+
+
+<!-- ai-frontier-review 2026-06-14 -->
+_Last manual review run: 2026-06-14. Paste external benchmark notes here; routing changes go to Curation._
+
+
+<!-- ai-frontier-review 2026-06-14 -->
+_Last manual review run: 2026-06-14. Paste external benchmark notes here; routing changes go to Curation._
+
+
+<!-- ai-frontier-review 2026-06-14 -->
+_Last manual review run: 2026-06-14. Paste external benchmark notes here; routing changes go to Curation._
+
+
+<!-- ai-frontier-review 2026-06-14 -->
+_Last manual review run: 2026-06-14. Paste external benchmark notes here; routing changes go to Curation._
+
+
+<!-- ai-frontier-review 2026-06-14 -->
+_Last manual review run: 2026-06-14. Paste external benchmark notes here; routing changes go to Curation._
+
+
+<!-- ai-frontier-review 2026-06-14 -->
+_Last manual review run: 2026-06-14. Paste external benchmark notes here; routing changes go to Curation._

@@ -2,7 +2,29 @@
 
 Throughput principle: maximize **accepted** tickets per unit time. Parallelize independent chains; preserve isolated worktrees and independent review gates.
 
-Updated: 2026-06-13 (loop tick 10 — 017 `_Done`; wave 5 head 018)
+Updated: 2026-06-14 (swarm 3 armed; `_InReview` 143–150 + 151–157; root 140–142 + integration)
+
+## Agent swarms (parallel lanes)
+
+Non-overlapping write boundaries. Each swarm ends with `bun run verify:v0`, staging-only proof, commit on `ship/functional-labs`, push to `otto-haus/otto`. **No tag, no merge to main, no live `/Applications/otto.app`.**
+
+| Swarm | Agents | Tickets | Start gate |
+|-------|--------|---------|------------|
+| **1** | 4 | Ops (GitHub semver cleanup); **045/046**; culture **051–052/070/122/125/128**; **136–137** Labs gate | integration branch |
+| **2** | 3 | Cognee/runtime **039/041–044/076**; UI wedge **124/126/123/139**; hygiene **049–058/138/063** + `release-gate.sh` | swarm 1 `verify:v0` green |
+| **3** | 3 | **141** agent-native Labs IPC; **140 + 142** release docs + ceremony; **143–150** onboarding/settings craft review → `_Done` | wave 2 landed (`verify:v0` green; **138** proof receipt or explicit defer in **140**) |
+
+**Swarm 3 implementer model:** `Composer 2.5 Fast` for **141**; Claude-grade craft for **143–150** review/screenshots; Cursor+Claude for **140/142** docs.
+
+**Swarm 3 file boundaries**
+
+| Agent | Owns | Do not touch |
+|-------|------|--------------|
+| Labs parity | `labs-config.ts`, `preload.ts`, `docs/v1/labs.md`, labs tests | `Onboarding.tsx`, `Panes.tsx` bulk |
+| Release + ceremony | `RELEASE_CHECKLIST.md`, `README.md`, `docs/v1/runbooks/sebastian-release-sign-off.md`, tickets **140/142** | `Chat.tsx`, runtime transport |
+| Onboarding craft | `Onboarding.tsx`, `OnboardingStepLayout.tsx`, onboarding CSS, `_InReview/143–150`, `docs/receipts/staging/onboarding-craft-*` | `labs-config`, release checklists |
+
+Reconcile parent commit after swarm 3 before Sebastian gate.
 
 ## Staging runtime (all lanes)
 
@@ -19,136 +41,271 @@ All runtime/UI proof uses staging with isolated HOME/OTTO_HOME. Do not close liv
 ## Current state
 
 ```txt
-_Done:     001, 002, 003, 004, 005, 006, 007, 008, 009, 010, 011, 012, 013, 014, 015, 016, 017, 032, 026, 027, 028, 029, 030, 031
-_InReview: (none)
-Root:      018
-_Parked:   019, 020, 021, 022, 023, 024, 025
+_Done:     62 tickets — foundation 001–018, craft 026–032, bug 033–038, proven integration subset, culture 131/133, spec-only, onboarding subset, …
+_InReview: 15 tickets (143–150 craft + 151–157 reliability)
+Root:      140–142 release lane + reopened integration + 159 chat core
+_Parked:   019–025, 077, 083–099, 117–118, 120, 130
+Audit:     planning/hq-tickets/000-audit-status.md (131 files scanned; 29 reopened 2026-06-14)
+Canonical: git `planning/hq-tickets/` — rsync one-way to Dropbox HQ/Otto Tickets after each wave
 ```
 
-## Dependency DAG
+## Post-audit execution waves (reopened + active)
 
-```mermaid
-flowchart TD
-  subgraph done ["_Done"]
-    D001[001 Settings · Cursor]
-    D002[002 Chat adapter · Cursor]
-    D003[003 Chat states · Claude]
-    D004[004 Receipt contract · Codex]
-    D005[005 Receipts surface · Claude]
-    D006[006 Charter contract · Codex]
-    D008[008 Standards canon · Codex]
-  end
+Lowest safe parallel waves after reopen. Tickets still in `_Done/` are omitted.
 
-  subgraph wave2 ["Wave 2 — ready now"]
-    T009[009 Standards surface · Claude]
-    T010[010 Practices contract · Codex]
-  end
+| Wave | Tickets | Notes |
+|------|---------|-------|
+| A | 069, 071, 073, 046, 067 | Onboarding + threads (`046` reopened) |
+| B | 076 → 039 → 060 | Embedded Letta → WS transport → worker loop |
+| C | 041 → 042 → 043 → 044 | Cognee chain (all reopened) |
+| D | 068, 047 | pgvector + memory observatory (`068`, `047` in `_Done/` — wave when unparked from proven set) |
+| E | 132, 134, 135 | Culture CI UX (`132` reopened; 134/135 remain `_Done/` until re-audit) |
+| F | 063 → 142 → 064, 065, 115, 141 | Release + marketing (`141` = apex/Lighthouse when unblocked) |
+| Parallel head | 136–141 | Ship/Labs/Cut — Composer 2.5 Fast implementer per 136–141 table below |
 
-  subgraph wave1 ["Wave 1 — complete"]
-    T008done[008 done]
-  end
+Root queue sort (numeric): 039, 041–046, 049, 051–056, 058, 060–062, 066, 070, 076, 121–128, 132, 136–142.
 
-  subgraph wave3 ["Wave 3 — after 010"]
-    T011[011 Practices surface · Claude]
-    T012[012 Routines contract · Codex]
-    T014[014 Curation proposal contract · Codex]
-  end
+## Functional ship loop (136–141)
 
-  subgraph wave4 ["Wave 4 — after 012 / 014"]
-    T013[013 Routines surface · Claude]
-    T015[015 Curation inbox · Claude]
-  end
-
-  subgraph wave5 ["Wave 5 — serial authority chain"]
-    T016[016 Curation decisions · Codex]
-    T017[017 Autonomy policy · Codex]
-    T018[018 Next-layer readiness gate · Codex]
-  end
-
-  D006 --> T007
-  D004 --> D008
-  D008 --> T009
-  D008 --> T010
-  T010 --> T011
-  T010 --> T012
-  T010 --> T014
-  D004 --> T014
-  D008 --> T014
-  T012 --> T013
-  T014 --> T015
-  T015 --> T016
-  T016 --> T017
-  T017 --> T018
-  D001 --> T018
-  D002 --> T018
-  D003 --> T018
-  D004 --> T018
-  D005 --> T018
-  D006 --> T018
-  T007 --> T018
-  D008 --> T018
-  T009 --> T018
-  T010 --> T018
-  T011 --> T018
-  T012 --> T018
-  T013 --> T018
-  T014 --> T018
-  T015 --> T018
-  T016 --> T018
-  T017 --> T018
+```txt
+Ship rule:  works OR Coming soon (Labs off) OR Labs unlock
+136 audit → 137 gate → 138 Ship proof → 139 Labs UX → 141 parity → 140 release
 ```
 
-## Ready now
+**Implementer model (136–141 only):** `Composer 2.5 Fast` — mandatory for all implementation in this wave. Do not dispatch Codex/Claude/other models as implementers. Independent reviewers stay unbiased (any lane).
 
-| Lane | Ticket | Why ready | Guardrail |
-|---|---|---|---|
-| Codex | 017 Autonomy Policy | 016 `_Done` | gates from Standards/Curation; no fake autonomy |
+| Ticket | Owner | Model | Depends | Notes |
+|--------|-------|-------|---------|-------|
+| 136 | Codex | Composer 2.5 Fast | none | Tier matrix + Sebastian sign-off |
+| 137 | Cursor | Composer 2.5 Fast | 136 | `labs` config, IPC, Settings, nav tiers |
+| 138 | Codex+Cursor | Composer 2.5 Fast | 136, 076, 137 | Embedded bootstrap + 135 + Ship smokes |
+| 139 | Claude | Composer 2.5 Fast | 137, 136 | ComingSoonShell + LabsBlockedShell |
+| 141 | Cursor | Composer 2.5 Fast | 137 | Agent-native IPC parity |
+| 140 | Cursor+Claude | Composer 2.5 Fast | 136–139, 063 | README + RELEASE_CHECKLIST; NOT PUSHED |
 
-## Parallel waves
+## Category wedge loop
 
-| Wave | Can run in parallel | Waits for | Conflict notes |
-|---|---|---|---|
-| 5 | 017 → 018 Codex | 016 done ✓ | Serial authority/proof chain |
+```txt
+123 Correct this → 048 propose → Curation accept → 126 Behavior updated → 132 compile check → 133 enforce → 134 block UX → 135 demo
+124 receipt · 121 changelog · 122 constitution · 125 export · 128 gates memory · 127 on 059
+```
+
+## Culture CI loop (131–135)
+
+```txt
+131 contract → 132 compile on ratify → 133 runtime (no-fake-done + one-way-door) → 134 UI → 135 30s demo
+Category: Letta = memory · Paperclip = management · Otto = behavior CI
+```
+
+## Wave 1 — Bug fix (parallel-safe)
+
+| Ticket | Owner | Depends | Notes |
+|--------|-------|---------|-------|
+| 033 | Claude | none | Responsive resize |
+| 034 | Codex | none | Charter AC gate |
+| 035 | Cursor | none | Orchestrate without re-compile |
+| 036 | Claude | none | Curation deferred filter (may be fixed) |
+| 037 | Claude | none | Skipped loader reasons |
+| 038 | Cursor | none | readiness.json sync |
+
+## Wave 1b — Onboarding polish (parallel after 033)
+
+| Ticket | Owner | Depends | Notes |
+|--------|-------|---------|-------|
+| 069 | Claude | none | Welcome always first on fresh profile |
+| 070 | Cursor | 069 | Step vs stale chat localStorage |
+| 071 | Claude | 005, 032 | Step 4 + sample receipt |
+| 072 | Claude | 069, 071 partial | Receipts CTA path |
+| 073 | Claude | 069, 033 | Dock UX + Settings reset |
+| 080 | Claude | 076, 069–073 | Onboarding one-app narrative |
+| 081 | Claude | 033, 045 | Chat shell craft polish |
+
+069 first; 070–073 can parallelize with care on `Onboarding.tsx`. **080** after **076**.
+
+## Wave 2 — Behavior loop (Chat trust)
+
+| Ticket | Owner | Depends | Notes |
+|--------|-------|---------|-------|
+| 045 | Cursor | 002, 003 | Permission modal + abort fix — **P0** |
+| 046 | Claude | 002, 003 | Multi-thread list — **P0 ship blocker** |
+| 047 | Cursor | 001, 002, **076** | Memory observatory |
+| 048 | Cursor | 014, 016, 002 | Propose from correction (mechanical) |
+| 123 | Claude | 048, 002, 014 | **Correction Button** — product loop |
+| 126 | Claude | 048, 123, 016 | **Ratification moment** — Behavior updated |
+| 128 | Codex | 048, 016, 122 | Memory writeback gate UI |
+
+## Wave 3 — Integration hygiene
+
+| Ticket | Owner | Depends | Notes |
+|--------|-------|---------|-------|
+| 054 | Cursor | 033–038 | Commit + split PRs |
+| 055 | Cursor | 054, 017 | Knowledge baseline ship |
+| 056 | Cursor | 054, 055 | Skills/Tickets/Channels/Workers ship |
+| 129 | Cursor | 054, 063 | CI verify on main — after **054** |
+
+## Wave 4 — Compound behavior
+
+| Ticket | Owner | Depends | Notes |
+|--------|-------|---------|-------|
+| 049 | Cursor | 035, 048 | Chat ticket commands |
+| 050 | Codex+Claude | 009 | Precedent conflict path |
+| 051 | Codex | 004, 035, 050 | No Fake Done review gate |
+| 052 | Cursor | 012, 013 | Routine manual executor |
+| 053 | Cursor | 010, 011, 052 | Practice runtime |
+
+## Wave 5 — Runtime substrate + cathedral
+
+| Ticket | Owner | Depends | Notes |
+|--------|-------|---------|-------|
+| 076 | Codex | 033–038 | **P0** Embedded Letta one-app |
+| 078 | Claude | 076 | Provider mirror — write-only BYOK |
+| 079 | Codex | 076, 039 | Runtime transport mode matrix doc |
+| 039 | Codex | 033–038, **076** | WS/BYOR transport |
+| 058 | Cursor | 045, 039 | Craft P1 robustness |
+| 119 | Claude | 076, 080 | Primary agent default UX |
+
+## Wave 6 — Cognee under Knowledge
+
+| Ticket | Owner | Depends | Notes |
+|--------|-------|---------|-------|
+| 040 | Codex | 018, 033–038 | Contract + seam |
+| 041 | Cursor | 040 | Local home |
+| 042 | Cursor | 041 | MCP recall |
+| 043 | Cursor | 041, 016 | Capture canon |
+| 044 | Claude | 042, 043 | Knowledge graph UI |
+| 068 | Codex | 040, 055 | pgvector local recall (optional) |
+
+## Wave 7 — Desktop polish + autonomy depth
+
+| Ticket | Owner | Depends | Notes |
+|--------|-------|---------|-------|
+| 057 | Claude | 030, 056 | Distinct system icons (Launch Polish) |
+| 059 | Claude | 049, 056, 045 | Command station dashboard shell |
+| 127 | Claude | 059, 121, 122, 124 | Culture home cards on **059** |
+| 060 | Codex | 049, 051, 039 | Worker autonomous loop |
+| 061 | Codex | 053, 016, 052 | Practice mining observe |
+| 062 | Cursor | 055, 052 | AI Frontier review executor |
+| 066 | Cursor | 056, 041 | Skills library seed |
+
+## Wave 7b — Culture wedge
+
+| Ticket | Owner | Depends | Notes |
+|--------|-------|---------|-------|
+| 122 | Codex | 008, 009, 017 | Constitution — culture source file |
+| 124 | Claude | 045, 059 | Receipts first-class UI |
+| 121 | Claude | 048, 051, 126 | Behavior Changelog |
+| 125 | Codex | 122, 124 | Culture export bundle |
+
+## Wave 7c — Culture CI (Checks)
+
+| Ticket | Owner | Depends | Notes |
+|--------|-------|---------|-------|
+| 131 | Codex | 008, 009, 016 | Check contract + `docs/v1/checks.md` — **P0 thesis** |
+| 132 | Codex | 131, 048, 126 | Compile Standard → Check on ratification |
+| 133 | Codex | 131, 132, 051, 045 | Check runtime + No Fake Done + One-Way Door; `checks.list`/`checks.get` |
+| 134 | Claude | 131, 133, 124 | Checks surface + block UX — after **133** IPC |
+| 135 | Claude | 123–126, 132–134 | 30s demo runbook — **primary launch proof** |
+
+**131** can start after **016**; **132** after **126** accept path stable; **133** unblocks **135**; **134** parallel with **133** once IPC list exists.
+
+## Wave 8 — Release + public surface
+
+| Ticket | Owner | Depends | Notes |
+|--------|-------|---------|-------|
+| 063 | Cursor+Claude | 033–038, 045, 048, 051, 054–056 | Release lane — Sebastian gate |
+| 064 | Claude | 063, 033, 057 | Remotion/demo refresh |
+| 065 | Claude | 063 | Marketing site otto.haus |
+| 115 | Claude | 063 | `/pricing` managed pilot |
+| 116 | Codex | 115 | Pilot claim boundary |
+
+## Wave 9 — Otto Cloud (parallel to desktop after 076)
+
+| Ticket | Owner | Depends | Notes |
+|--------|-------|---------|-------|
+| 082 | Codex | 018 | Architecture spec |
+| 083 | Claude | 082, 065 | Pages shell — parked |
+| 084 | Cursor | 083 | D1 records — parked |
+| 085 | Codex | 084, 079 | Letta read — parked |
+| 086 | Cursor | 085 | VM template — parked |
+| 087 | Cursor | 084, 056 | Discord webhooks — parked |
+| 088 | Codex | 087 | WorkOS — parked |
+
+## Wave 9b — Ops clarity (parallel)
+
+| Ticket | Owner | Depends | Notes |
+|--------|-------|---------|-------|
+| 091 | Cursor | none | Live vs staging runbook — **P1** |
+
+## Wave 10 — Cathedral control plane
+
+| Ticket | Owner | Depends | Notes |
+|--------|-------|---------|-------|
+| 092 | Codex | 017, 051, 082 | Umbrella spec |
+| 093 | Codex | 076, 092 | Multi-agent ADR — parked |
+| 094–099 | mixed | 092+ | Implementation — parked |
+
+## Unpark queue (from `_Parked/`)
+
+| Ticket | Unpark after |
+|--------|----------------|
+| 019 Intake | 048 |
+| 020 Discord | 045, 048, 056 |
+| 021 Paperclip read | 048, 051 |
+| 074 Paperclip intake | 021, 056 |
+| 022 Paperclip task create | 021, 049, 051 |
+| 075 Paperclip status | 022, 051 |
+| 077 Letta Cloud remote | 076, 039 |
+| 083 Otto Cloud Pages | 082 reviewed, 065 |
+| 084 D1 records | 083 |
+| 085 Letta read proxy | 084, 079 |
+| 086 Remote env VM | 085 |
+| 087 Discord (cloud) | 084, 056 |
+| 088 WorkOS | 087 |
+| 089 Sync contract | 082 reviewed, 084 |
+| 090 Monorepo ADR | 082 reviewed |
+| 093 Multi-agent ADR | 092 reviewed |
+| 094 Command queue | 092, 084 |
+| 095 Leases | 094 |
+| 096 Audit export | 092, 084 |
+| 097 Heartbeat | 092, 085/086 |
+| 098 Replay | 094, 095 |
+| 099 Notifications | 092, 020/087 |
+| 117 Pilot intake | 115, 116 |
+| 118 Culture vs memory | optional after 115 |
+| 120 Isolated second agent | 119, 093 +1 |
+| 130 Extension CLI parity | 053, 076 stable |
+| 023 Stacks | 019, 040 |
+| 024 People packs | 044, 023 |
+| 025 Pinned chat | **cancelled → 046** |
 
 ## File / domain conflicts
 
 | Boundary | Tickets | Rule |
 |---|---|---|
-| App shell / nav / surface registry | 009, 011, 013, 015 | Parallel only with separate worktrees and explicit merge order |
-| Canon loaders / schemas | 008, 010, 012, 014 | Codex owns contracts; avoid same files in parallel |
-| Receipt/proof semantics | 004 done, 006, 014, 016, 018 | No fake proof; reviewer must map proof to `Done when` |
-| Curation authority | 014, 016, 017 | Proposal → decision → autonomy is serial unless explicitly split by file/domain |
-| Electron/adapter plumbing | 001, 002 done; future 020-022 | Cursor lane; one mechanical blocker at a time unless files split |
+| Electron/runtime | 039, 045, 058, **076** | Codex owns 076+039 |
+| Chat.tsx / shell | 033, 045, 046, 048, 123, 049, 069–073, **081** | Serialize onboarding edits |
+| Curation accept UX | 126, 128, 016 | Claude UI + Codex gate logic |
+| Panes.tsx | 037, 044, 055, 056, 057, 059, 127, 121, 124, **134** | Claude UI — avoid parallel edits |
+| proposal-store | 048, 128, 050, 051, 021, **132** | Codex review for gate + compile logic |
+| check-* (compiler, runner) | **131–133** | Codex owns runtime; IPC `checks.*`; no renderer bypass |
+| `.github/workflows/` | 129 | Cursor only |
+| extension/ | 130 | Parked; after 053 |
 
-## Blocked / not ready
-
-| Ticket | Blocked on |
-|---|---|
-| 017 | (ready) |
-| 018 | 001-017 all `_Done` |
-| 019-025 | `_Parked`; do not touch unless explicitly unparked |
-
-## Cursor lane
-
-Active root has no Cursor-owned ticket right now. Cursor can still clear isolated mechanical blockers that block active work, but must not take over Claude/Codex scope.
-
-Future Cursor-owned parked tickets after 018/unpark:
+## Recommended execution order (single lane)
 
 ```txt
-020 Discord Approval Bridge
-021 Paperclip Readonly Import
-022 Paperclip Task Creation
+**136 → 137 → 138 → 139 → 141 → 140**
+(historical integration 033–135 assumed in tree; 138 re-proves Ship tier on staging)
+→ unpark Cloud/Paperclip/Discord only after 140 + explicit Sebastian unpark
+```
+
+## Functional ship vs Cathedral
+
+```txt
+Functional ship (136–141):  Ship tier works (Labs off) + Labs tier honest (Coming soon / unlock)
+Cathedral / Cloud:          Cut from default UI — parked 083–099, 094–099
 ```
 
 ## Recompute trigger
 
-Refresh this file after any:
-
-```txt
-_Done move
-_InReview move
-review -1 / blocked / fake-done
-unpark / reorder
-new ticket
-shared-file conflict discovered
-```
+Refresh after any `_Done` move, `_InReview` move, review -1, unpark, or shared-file conflict.

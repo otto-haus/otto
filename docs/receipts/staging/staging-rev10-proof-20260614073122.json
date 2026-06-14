@@ -1,0 +1,175 @@
+{
+  "ok": false,
+  "runId": "20260614073122",
+  "gitHead": "fff0152",
+  "stagingApp": "/Applications/otto-staging.app",
+  "cdpPort": 9445,
+  "stagingRoot": "/Users/seb/.codex/admin/otto-staging",
+  "home": "/Users/seb/.codex/admin/otto-staging/home",
+  "ottoHome": "/Users/seb/.codex/admin/otto-staging/otto-home",
+  "profile": "/Users/seb/.codex/admin/otto-staging/profile",
+  "screenshots": {
+    "046_a": "/Users/seb/Code/otto/docs/receipts/staging/046-rev10-thread-a-20260614073122.png",
+    "046_b": "/Users/seb/Code/otto/docs/receipts/staging/046-rev10-thread-b-20260614073122.png",
+    "049": "/Users/seb/Code/otto/docs/receipts/staging/049-chat-ticket-commands-rev10-20260614073122.png",
+    "047": "/Users/seb/Code/otto/docs/receipts/staging/047-memory-search-rev10-20260614073122.png"
+  },
+  "tickets": {
+    "046": {
+      "threads": {
+        "a": {
+          "id": "local_3a6356e4-b62e-46fc-9d58-645ec95a4caf",
+          "title": "New chat"
+        },
+        "b": {
+          "id": "local_086f892b-2a80-44fd-b5ec-2f185cb51ce8",
+          "title": "New chat"
+        }
+      },
+      "checks": {
+        "threadASent": true,
+        "threadAComposerEnabled": true,
+        "threadAMarkerVisible": false,
+        "threadAPersisted": false,
+        "distinctThreadIds": true,
+        "threadBSent": true,
+        "threadBMarkerVisible": false,
+        "threadBPersisted": false,
+        "sessionAShowsMarker": false,
+        "sessionAHidesMarkerB": false,
+        "sessionAActiveId": "local_3a6356e4-b62e-46fc-9d58-645ec95a4caf",
+        "sessionBShowsMarker": false,
+        "sessionBHidesMarkerA": true,
+        "sessionBActiveId": "local_086f892b-2a80-44fd-b5ec-2f185cb51ce8",
+        "reloadAActiveId": "local_3a6356e4-b62e-46fc-9d58-645ec95a4caf",
+        "reloadAStorageKey": "otto.chat.messages.local_3a6356e4-b62e-46fc-9d58-645ec95a4caf.v1",
+        "threadAShowsMarker": false,
+        "threadAHidesMarkerB": false,
+        "reloadBActiveId": "local_086f892b-2a80-44fd-b5ec-2f185cb51ce8",
+        "threadBShowsMarker": false,
+        "threadBHidesMarkerA": false,
+        "composerSendUsed": true,
+        "sessionIsolation": false,
+        "reloadIsolation": false
+      },
+      "markers": {
+        "threadA": "046-rev10-thread-a-20260614073122",
+        "threadB": "046-rev10-thread-b-20260614073122"
+      },
+      "ok": false
+    },
+    "049": {
+      "commands": {
+        "compile034": {
+          "text": "compile ticket 034 Staging rev10 proof packet for charter AC gate",
+          "composerEnabled": true,
+          "sent": true,
+          "transcriptAfter": "COMMAND STATION\nWhat needs you\n1\nCuration\nPending proposals\n3\nRecent proof\nLatest receipts\n4\nTickets\nOpen worker slices\n6\nDoors\nAwaiting approval\n→\nConstitution\nSource of culture\n→\nChangelog\nWhat changed\nYOU\n\n046-rev10-thread-a-20260614073122\n\nPropose from correction\nOTTO\n\nCompiled ticket_034. Receipt: receipt-77bf7427-f3e2-4a0a-81a5-5b50efc64a32 Packet: /Users/seb/.codex/admin/otto-staging/otto-home/tickets/034/worker-packet.md\n\nPropose from correction\nCorrect this",
+          "matched": true
+        },
+        "compile035": {
+          "text": "compile ticket 035 Staging rev10 proof packet for orchestrate-existing",
+          "composerEnabled": true,
+          "sent": true,
+          "transcriptAfter": "COMMAND STATION\nWhat needs you\n1\nCuration\nPending proposals\n3\nRecent proof\nLatest receipts\n4\nTickets\nOpen worker slices\n6\nDoors\nAwaiting approval\n→\nConstitution\nSource of culture\n→\nChangelog\nWhat changed\nYOU\n\n046-rev10-thread-a-20260614073122\n\nPropose from correction\nOTTO\n\nCompiled ticket_034. Receipt: receipt-77bf7427-f3e2-4a0a-81a5-5b50efc64a32 Packet: /Users/seb/.codex/admin/otto-staging/otto-home/tickets/034/worker-packet.md\n\nPropose from correction\nCorrect this\n\nCompiled ticket_035. Receipt: receipt-32d4d89c-01c2-4df8-be41-55265d1ff49b Packet: /Users/seb/.codex/admin/otto-staging/otto-home/tickets/035/worker-packet.md\n\nPropose from correction\nCorrect this",
+          "matched": true
+        },
+        "orchestrate035": {
+          "text": "orchestrate ticket 035",
+          "composerEnabled": true,
+          "sent": true,
+          "transcriptAfter": "RUNTIME NOT READY\notto can't connect yet\nSaved Letta agent or conversation was stale — choose a valid Agent ID override in Settings or clear the override. (500 {\"error\":\"Conversation local-conv-a6285343-2ecc-4ef8-ba5e-23fdb378048f not found\"})\nRetry\nOpen Settings\nERROR\n\n500 {\"error\":\"Conversation local-conv-a6285343-2ecc-4ef8-ba5e-23fdb378048f not found\"}\n\nOTTO\n\nCompiled ticket_034. Receipt: receipt-77bf7427-f3e2-4a0a-81a5-5b50efc64a32 Packet: /Users/seb/.codex/admin/otto-staging/otto-home/tickets/034/worker-packet.md\n\nPropose from correction\nCorrect this\n\nCompiled ticket_035. Receipt: receipt-32d4d89c-01c2-4df8-be41-55265d1ff49b Packet: /Users/seb/.codex/admin/otto-staging/otto-home/tickets/035/worker-packet.md\n\nPropose from correction\nCorrect this\n\nOrchestration blocked by autonomy polic",
+          "matched": true
+        },
+        "statusWorkers": {
+          "text": "status workers",
+          "composerEnabled": false,
+          "sent": false,
+          "transcriptAfter": "RUNTIME NOT READY\notto can't connect yet\nSaved Letta agent or conversation was stale — choose a valid Agent ID override in Settings or clear the override. (500 {\"error\":\"Conversation local-conv-a6285343-2ecc-4ef8-ba5e-23fdb378048f not found\"})\nRetry\nOpen Settings\nERROR\n\n500 {\"error\":\"Conversation local-conv-a6285343-2ecc-4ef8-ba5e-23fdb378048f not found\"}\n\nOTTO\n\nCompiled ticket_034. Receipt: receipt-77bf7427-f3e2-4a0a-81a5-5b50efc64a32 Packet: /Users/seb/.codex/admin/otto-staging/otto-home/tickets/034/worker-packet.md\n\nPropose from correction\nCorrect this\n\nCompiled ticket_035. Receipt: receipt",
+          "matched": false
+        }
+      },
+      "transcript": "RUNTIME NOT READY\notto can't connect yet\nSaved Letta agent or conversation was stale — choose a valid Agent ID override in Settings or clear the override. (500 {\"error\":\"Conversation local-conv-a6285343-2ecc-4ef8-ba5e-23fdb378048f not found\"})\nRetry\nOpen Settings\nERROR\n\n500 {\"error\":\"Conversation local-conv-a6285343-2ecc-4ef8-ba5e-23fdb378048f not found\"}\n\nOTTO\n\nCompiled ticket_034. Receipt: receipt-77bf7427-f3e2-4a0a-81a5-5b50efc64a32 Packet: /Users/seb/.codex/admin/otto-staging/otto-home/tickets/034/worker-packet.md\n\nPropose from correction\nCorrect this\n\nCompiled ticket_035. Receipt: receipt-32d4d89c-01c2-4df8-be41-55265d1ff49b Packet: /Users/seb/.codex/admin/otto-staging/otto-home/tickets/035/worker-packet.md\n\nPropose from correction\nCorrect this\n\nOrchestration blocked by autonomy policy (yellow). Unclassified actions default to prompt-once until policy maps them explicitly. Receipt: receipt-9e55464f-a982-4537-b96f-3d5596b37786\n\nPropose from correction\nCorrect this",
+      "ok": false
+    },
+    "047": {
+      "api": {
+        "connected": false,
+        "blockCount": 20,
+        "labels": [
+          "system/onboarding",
+          "system/human",
+          "system/persona",
+          "skills/1password",
+          "skills/doc",
+          "skills/image-generation",
+          "skills/discord",
+          "skills/frontend-skill",
+          "skills/gog",
+          "skills/pdf",
+          "skills/playwright",
+          "skills/remotion",
+          "skills/screenshot",
+          "skills/slides",
+          "skills/speech",
+          "skills/spreadsheet",
+          "skills/transcribe",
+          "reference/corrections",
+          "reference/doctrine",
+          "reference/veto"
+        ],
+        "apiPath": "/v1/blocks?agent_id=agent-local-d8e35a2a-a89f-45dd-b117-5eae5df8c8f2",
+        "error": null
+      },
+      "searchTerm": "onboar",
+      "visibleBlockPanels": 3,
+      "searchNarrows": true,
+      "noMatchEmpty": true,
+      "ok": true
+    },
+    "045": {
+      "attempted": false,
+      "modalCaptured": false,
+      "blocker": "No OTTO_SMOKE permission simulate hook or read-only tool gate in preload. Real modal requires consequential tool (e.g. run_shell) during live chat turn — unsafe for automated staging capture.",
+      "unitProof": "sdk-subprocess-transport.test.ts 3/3 (timeout, abort terminal, resolvePermission)"
+    }
+  },
+  "checks": {
+    "runtimeReady": true,
+    "notDefaultConversation": true
+  },
+  "runtimeStatus": {
+    "ready": true,
+    "code": "ready",
+    "agentId": "agent-local-d8e35a2a-a89f-45dd-b117-5eae5df8c8f2",
+    "baseUrl": "http://127.0.0.1:51398",
+    "discoverySource": "otto config/env",
+    "conversationId": "local-conv-0685de5f-cbce-4c66-852b-f2beb1a2bc0b",
+    "model": "chatgpt-plus-pro/gpt-5.5",
+    "modelHandle": null,
+    "effort": "max",
+    "sessionMode": "smoke",
+    "memfsEnabled": false,
+    "tools": [
+      "Bash",
+      "TaskOutput",
+      "Edit",
+      "EnterPlanMode",
+      "ExitPlanMode",
+      "Glob",
+      "Grep",
+      "TaskStop",
+      "memory",
+      "Read",
+      "Skill",
+      "Task",
+      "TodoWrite",
+      "Write"
+    ],
+    "transportMode": "sdk",
+    "effectiveTransport": "sdk subprocess",
+    "transportFallbackReason": null,
+    "cliPath": "/Applications/otto-staging.app/Contents/Resources/app/node_modules/@letta-ai/letta-code/letta.js",
+    "cliResolved": true
+  }
+}

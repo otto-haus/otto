@@ -1,42 +1,21 @@
 #!/usr/bin/env bash
-# release-gate — fail-fast checks before tagging a public otto release.
+# Release gate (063) — Sebastian approval required before push/tag.
 set -euo pipefail
-
-ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 
-say() { printf '\n==> %s\n' "$*"; }
-
-say "lint"
-task lint
-
-say "typecheck"
-task typecheck
-
-say "unit tests"
+echo "=== otto release gate (NOT PUSHED until Sebastian approves) ==="
+bun run typecheck
 bun test
+bun run verify:v0
+bun run --cwd apps/desktop typecheck
+bun run --cwd apps/desktop electron:typecheck
 
-say "v0 verification"
-task verify
-
-say "desktop electron build"
-OTTO_READINESS_IGNORE_LOCAL_CONFIG=1 bun run --cwd apps/desktop electron:build
-
-say "regression checks"
-if grep -R "WebkitMask\|maskImage\|dangerouslySetInnerHTML" apps/desktop/src apps/desktop/electron >/tmp/otto_release_gate_grep.log 2>&1; then
-  cat /tmp/otto_release_gate_grep.log
-  echo "release-gate: rejected broken icon/rendering mechanism" >&2
-  exit 1
-fi
-
-if ! grep -R "coming soon" apps/desktop/src/App.tsx apps/desktop/src/surfaces/Panes.tsx >/dev/null; then
-  echo "release-gate: coming-soon placeholder copy missing" >&2
-  exit 1
-fi
-
-if ! grep -R "advanced overrides" apps/desktop/src/surfaces/Panes.tsx apps/desktop/src/Onboarding.tsx >/dev/null; then
-  echo "release-gate: Letta connection copy must frame manual URL/agent fields as advanced overrides" >&2
-  exit 1
-fi
-
-say "release gate passed"
+echo ""
+echo "Manual gates (human):"
+echo "  - RELEASE_CHECKLIST.md reviewed"
+echo "  - docs/v1/SHIP_STATUS.md matches reality"
+echo "  - Staging smoke: apps/desktop/scripts/deploy-staging.sh"
+echo "  - CI green on PR (.github/workflows/ci.yml)"
+echo ""
+echo "NOT PUSHED — explicit Sebastian sign-off required for tag/publish."

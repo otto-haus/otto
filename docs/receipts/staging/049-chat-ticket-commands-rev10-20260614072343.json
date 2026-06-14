@@ -1,0 +1,34 @@
+{
+  "commands": {
+    "compile034": {
+      "text": "compile ticket 034 Staging rev10 proof packet for charter AC gate",
+      "composerEnabled": true,
+      "sent": true,
+      "transcriptAfter": "COMMAND STATION\nWhat needs you\n1\nCuration\nPending proposals\n3\nRecent proof\nLatest receipts\n4\nTickets\nOpen worker slices\n6\nDoors\nAwaiting approval\n→\nConstitution\nSource of culture\n→\nChangelog\nWhat changed\nYOU\n\n046-rev10-thread-b-20260614072343\n\nPropose from correction\nOTTO\n\nCompiled ticket_034. Receipt: receipt-7521bed8-b472-4655-a218-333118dde607 Packet: /Users/seb/.codex/admin/otto-staging/otto-home/tickets/034/worker-packet.md\n\nPropose from correction\nCorrect this",
+      "matched": true
+    },
+    "compile035": {
+      "text": "compile ticket 035 Staging rev10 proof packet for orchestrate-existing",
+      "composerEnabled": true,
+      "sent": true,
+      "transcriptAfter": "COMMAND STATION\nWhat needs you\n1\nCuration\nPending proposals\n3\nRecent proof\nLatest receipts\n4\nTickets\nOpen worker slices\n6\nDoors\nAwaiting approval\n→\nConstitution\nSource of culture\n→\nChangelog\nWhat changed\nYOU\n\n046-rev10-thread-b-20260614072343\n\nPropose from correction\nOTTO\n\nCompiled ticket_034. Receipt: receipt-7521bed8-b472-4655-a218-333118dde607 Packet: /Users/seb/.codex/admin/otto-staging/otto-home/tickets/034/worker-packet.md\n\nPropose from correction\nCorrect this\n\nCompiled ticket_035. Receipt: receipt-1a633823-63c3-4cfb-a630-b10e09465657 Packet: /Users/seb/.codex/admin/otto-staging/otto-home/tickets/035/worker-packet.md\n\nPropose from correction\nCorrect this",
+      "matched": true
+    },
+    "orchestrate035": {
+      "text": "orchestrate ticket 035",
+      "composerEnabled": true,
+      "sent": true,
+      "transcriptAfter": "RUNTIME NOT READY\notto can't connect yet\nSaved Letta agent or conversation was stale — choose a valid Agent ID override in Settings or clear the override. (500 {\"error\":\"Conversation local-conv-41cc304b-57c2-41ea-ba65-e9023e24d876 not found\"})\nRetry\nOpen Settings\nERROR\n\n500 {\"error\":\"Conversation local-conv-41cc304b-57c2-41ea-ba65-e9023e24d876 not found\"}\n\nOTTO\n\nCompiled ticket_034. Receipt: receipt-7521bed8-b472-4655-a218-333118dde607 Packet: /Users/seb/.codex/admin/otto-staging/otto-home/tickets/034/worker-packet.md\n\nPropose from correction\nCorrect this\n\nCompiled ticket_035. Receipt: receipt-1a633823-63c3-4cfb-a630-b10e09465657 Packet: /Users/seb/.codex/admin/otto-staging/otto-home/tickets/035/worker-packet.md\n\nPropose from correction\nCorrect this\n\nOrchestration blocked by autonomy polic",
+      "matched": true
+    },
+    "statusWorkers": {
+      "text": "status workers",
+      "composerEnabled": false,
+      "sent": false,
+      "transcriptAfter": "RUNTIME NOT READY\notto can't connect yet\nSaved Letta agent or conversation was stale — choose a valid Agent ID override in Settings or clear the override. (500 {\"error\":\"Conversation local-conv-41cc304b-57c2-41ea-ba65-e9023e24d876 not found\"})\nRetry\nOpen Settings\nERROR\n\n500 {\"error\":\"Conversation local-conv-41cc304b-57c2-41ea-ba65-e9023e24d876 not found\"}\n\nOTTO\n\nCompiled ticket_034. Receipt: receipt-7521bed8-b472-4655-a218-333118dde607 Packet: /Users/seb/.codex/admin/otto-staging/otto-home/tickets/034/worker-packet.md\n\nPropose from correction\nCorrect this\n\nCompiled ticket_035. Receipt: receipt",
+      "matched": false
+    }
+  },
+  "transcript": "RUNTIME NOT READY\notto can't connect yet\nSaved Letta agent or conversation was stale — choose a valid Agent ID override in Settings or clear the override. (500 {\"error\":\"Conversation local-conv-41cc304b-57c2-41ea-ba65-e9023e24d876 not found\"})\nRetry\nOpen Settings\nERROR\n\n500 {\"error\":\"Conversation local-conv-41cc304b-57c2-41ea-ba65-e9023e24d876 not found\"}\n\nOTTO\n\nCompiled ticket_034. Receipt: receipt-7521bed8-b472-4655-a218-333118dde607 Packet: /Users/seb/.codex/admin/otto-staging/otto-home/tickets/034/worker-packet.md\n\nPropose from correction\nCorrect this\n\nCompiled ticket_035. Receipt: receipt-1a633823-63c3-4cfb-a630-b10e09465657 Packet: /Users/seb/.codex/admin/otto-staging/otto-home/tickets/035/worker-packet.md\n\nPropose from correction\nCorrect this\n\nOrchestration blocked by autonomy policy (yellow). Unclassified actions default to prompt-once until policy maps them explicitly. Receipt: receipt-1615eed7-3ecc-49a5-83af-bae5e4890033\n\nPropose from correction\nCorrect this",
+  "ok": false
+}

@@ -262,6 +262,14 @@ export interface StandardConflict {
   precedent: string | null;
 }
 
+/** Enriched registry conflict for Standards UI (050) — precedent excerpt + tie-breaker. */
+export interface StandardConflictResult {
+  between: Slug[];
+  message: string;
+  tie_breaker?: string;
+  precedent?: { excerpt?: string; file?: string };
+}
+
 export interface StandardsRegistry {
   version: SemVer;
   status: StandardStatus;
@@ -337,8 +345,12 @@ export type ReceiptSubjectType =
   | 'charter'
   | 'standard'
   | 'proposal'
+  | 'check'
   | 'autonomy'
-  | 'task';
+  | 'task'
+  | 'worker'
+  | 'constitution'
+  | 'knowledge';
 
 export type ReceiptEvidenceKind = 'file' | 'link' | 'log' | 'screenshot' | 'commit' | 'message' | 'status';
 
@@ -571,6 +583,10 @@ export interface AutonomyPolicyResult {
 export interface EvaluateAutonomyActionInput {
   action: string;
   context?: string;
+  /** Explicit human approval for one-way door checks (045 permission modal). */
+  approved?: boolean;
+  /** Session-scoped allow from permission modal (045). */
+  session_allowed?: boolean;
 }
 
 export interface AutonomyActionEvaluation {
@@ -581,6 +597,300 @@ export interface AutonomyActionEvaluation {
   allowed_without_approval: boolean;
   reason: string;
   policy_path: string;
+  /** Proposed or active model routing from Knowledge (does not override policy alone). */
+  knowledge_routing?: KnowledgeRoutingHint | null;
+}
+
+export interface KnowledgeRoutingHint {
+  role: string;
+  provider: string;
+  model: string;
+  status: 'proposed' | 'active';
+  registry_path: string;
+}
+
+export interface KnowledgeModelEntry {
+  provider: string;
+  model: string;
+  handle_note?: string;
+  cost_tier?: string;
+  default_roles: string[];
+  verified: boolean;
+  last_verified?: string;
+}
+
+export interface KnowledgeRegistrySummary {
+  schema: 'otto.knowledge.registry.v1';
+  version: string;
+  status: 'proposed' | 'active';
+  last_reviewed?: string;
+  next_review_due?: string;
+  roles: string[];
+  models: KnowledgeModelEntry[];
+  routing: {
+    status: 'proposed' | 'active';
+    assignments: Record<string, string>;
+  };
+  provider_allowlist: {
+    status: 'proposed' | 'active';
+    providers: string[];
+  };
+  file: string;
+}
+
+export interface KnowledgeListResult {
+  dir: string;
+  registryPath: string;
+  registry: KnowledgeRegistrySummary | null;
+  capabilityNotesPath: string | null;
+  providerCostsPath: string | null;
+  observedPerformanceDir: string | null;
+  storage: 'files';
+}
+
+export interface SkillRecord {
+  slug: string;
+  name: string;
+  description: string;
+  file: string;
+  triggers: string[];
+}
+
+export interface SkillListResult {
+  dir: string;
+  skills: SkillRecord[];
+  skipped: Array<{ slug: string; file: string; reason: string }>;
+  storage: 'files';
+}
+
+export interface ChannelRecord extends Channel {
+  file: string;
+}
+
+export interface ChannelSkip {
+  index: number;
+  reason: string;
+  file: string;
+}
+
+export interface ChannelListResult {
+  dir: string;
+  configPath: string;
+  channels: ChannelRecord[];
+  skipped: ChannelSkip[];
+  storage: 'files' | 'default';
+}
+
+export type TicketStatus = 'proposed' | 'active' | 'blocked' | 'review' | 'merged' | 'cancelled';
+
+export interface TicketRecord {
+  schema: 'otto.ticket.v1';
+  ticket_id: string;
+  status: TicketStatus;
+  charter?: string;
+  owner?: string;
+  model?: string;
+  worktree?: string;
+  branch?: string;
+  objective: string;
+  why?: string;
+  owned_paths: string[];
+  shared_paths: string[];
+  non_goals: string[];
+  acceptance_criteria: Array<{ id: string; text: string; proof?: string }>;
+  checks: string[];
+  stop_conditions: string[];
+  requires_approval_for: string[];
+  receipt_path?: string;
+  integration_notes?: string;
+  root: string;
+  ticketPath: string;
+  packetPath?: string;
+  updated_at: ISO8601;
+}
+
+export interface TicketCompileInput {
+  slug: string;
+  objective: string;
+  why?: string;
+  charter?: string;
+  owned_paths?: string[];
+  shared_paths?: string[];
+  acceptance_criteria?: Array<{ id: string; text: string; proof?: string }>;
+  checks?: string[];
+}
+
+export interface TicketListResult {
+  dir: string;
+  tickets: TicketRecord[];
+  skipped: number;
+  storage: 'files';
+}
+
+export type WorkerStatus = 'draft' | 'running' | 'blocked' | 'review' | 'done' | 'failed';
+
+export interface WorkerRecord {
+  schema: 'otto.worker.v1';
+  id: string;
+  ticket_id: string;
+  status: WorkerStatus;
+  model?: string;
+  worktree?: string;
+  branch?: string;
+  started_at: ISO8601;
+  updated_at: ISO8601;
+  receipt_ids: string[];
+  summary?: string;
+  path: string;
+}
+
+export interface WorkerListResult {
+  dir: string;
+  workers: WorkerRecord[];
+  skipped: number;
+  storage: 'files';
+}
+
+export interface RunSummary {
+  id: string;
+  practice: string;
+  charter?: string;
+  routine?: string;
+  status: RunStatus;
+  started_at: ISO8601;
+  ended_at: ISO8601 | null;
+  summary?: string;
+  receipt_count: number;
+  path: string;
+}
+
+export interface RunListResult {
+  dir: string;
+  runs: RunSummary[];
+  skipped: number;
+  storage: 'files';
+}
+
+/** Legacy approval ledger name; records include approved, denied, and deferred Curation decisions. */
+export interface ApprovalRecord {
+  id: string;
+  proposal_id: string;
+  requirement: ApprovalRequirement;
+  status: 'approved' | 'denied' | 'deferred';
+  scope: string;
+  decided_at: ISO8601;
+  receipt_id: string;
+  receipt_path: string;
+}
+
+export interface ApprovalListResult {
+  dir: string;
+  approvals: ApprovalRecord[];
+  storage: 'files';
+}
+
+// ---------------------------------------------------------------------------
+// Culture — constitution, changelog, export (121–122, 125)
+// ---------------------------------------------------------------------------
+
+export interface ConstitutionWritebackPolicy {
+  mode: 'proposal_only';
+  requires_curation_accept: boolean;
+  silent_apply_forbidden: boolean;
+}
+
+export interface ConstitutionDocument {
+  schema: 'otto.constitution.v1';
+  version: string;
+  values: string[];
+  forbidden_actions: string[];
+  approval_rules: string[];
+  standards_refs: string[];
+  writeback_policy: ConstitutionWritebackPolicy;
+  ratification_requirements: string[];
+  amended_at?: ISO8601;
+  amended_by?: string;
+}
+
+export interface ConstitutionResult {
+  dir: string;
+  yamlPath: string;
+  mdPath: string;
+  document: ConstitutionDocument;
+  rawYaml: string;
+  storage: 'files';
+}
+
+export interface ConstitutionAmendResult {
+  document: ConstitutionDocument;
+  receipt: Receipt & { path: string };
+}
+
+export type BehaviorChangelogSource =
+  | 'proposal_ratified'
+  | 'constitution_amend'
+  | 'autonomy_policy';
+
+export interface BehaviorChangelogEntry {
+  id: string;
+  timestamp: ISO8601;
+  what: string;
+  why: string;
+  authority: string;
+  receipt_id: string;
+  source: BehaviorChangelogSource;
+}
+
+export interface BehaviorChangelogResult {
+  dir: string;
+  entries: BehaviorChangelogEntry[];
+  window_days: number;
+  empty_message: string;
+}
+
+export interface CultureExportManifest {
+  schema: 'otto.culture-export.v1';
+  exported_at: ISO8601;
+  workspace: string;
+  includes: string[];
+  excludes: string[];
+  receipt_index_count: number;
+  constitution_hash: string | null;
+}
+
+export interface CultureExportResult {
+  bundlePath: string;
+  manifest: CultureExportManifest;
+  receipt: Receipt & { path: string };
+}
+
+export interface CultureImportPreview {
+  valid: boolean;
+  manifest: CultureExportManifest | null;
+  diff: Array<{ path: string; action: 'add' | 'update'; note: string }>;
+  blocked_reason?: string;
+}
+
+// ---------------------------------------------------------------------------
+// Cognee — local knowledge graph stubs (041–044)
+// ---------------------------------------------------------------------------
+
+export type CogneeHealthStatus = 'disabled' | 'ready' | 'stopped' | 'error';
+
+export interface CogneeHealth {
+  status: CogneeHealthStatus;
+  baseUrl: string | null;
+  lastError: string | null;
+  lastCheckedAt: ISO8601 | null;
+}
+
+export interface CogneeCaptureReceipt {
+  id: string;
+  at: ISO8601;
+  paths?: string[];
+  count?: number;
+  mode?: 'dry-run' | 'apply';
+  [key: string]: unknown;
 }
 
 // ---------------------------------------------------------------------------

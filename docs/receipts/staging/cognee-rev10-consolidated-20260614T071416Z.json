@@ -1,0 +1,68 @@
+{
+  "ok": false,
+  "runId": "20260614T071416Z",
+  "repo": "/Users/seb/Code/otto",
+  "gitHead": "fff0152",
+  "tickets": ["041", "042", "043", "044"],
+  "venv": {
+    "path": "/Users/seb/.otto/cognee/venv",
+    "cogneeVersion": "1.1.2",
+    "cliBinary": "cognee-cli",
+    "legacyBinaryExpected": "cognee",
+    "pipInstall": "pass"
+  },
+  "health": {
+    "disabled": {
+      "ok": false,
+      "status": "disabled",
+      "baseUrl": null,
+      "error": "OTTO_COGNEE_ENABLED is off"
+    },
+    "enabledWithDaemon": {
+      "ok": true,
+      "status": "ready",
+      "baseUrl": "http://127.0.0.1:8000",
+      "note": "Daemon started manually via uvicorn cognee.api.client:app — scripts/cognee-home.sh start still expects `cognee` binary"
+    },
+    "enabledNoDaemon": {
+      "ok": false,
+      "status": "stopped",
+      "baseUrl": "http://127.0.0.1:8000",
+      "error": "Cognee not reachable on loopback"
+    }
+  },
+  "scripts": {
+    "cognee-home.sh health": "pass (disabled + ready when daemon up)",
+    "cognee-home.sh start": "partial — succeeds only if health already ready; fails with `cognee CLI not installed` when daemon down",
+    "cognee-capture.sh dry-run": {
+      "count": 109,
+      "kinds": "receipt,charter,ticket,precedent"
+    },
+    "cognee-capture.sh apply": {
+      "receipt": "/Users/seb/Code/otto/receipts/cognee/capture/capture-20260614T071416Z.json",
+      "docCount": 1,
+      "ingest": "stub — cognee binary absent; cognee-cli remember blocked on LLM API key"
+    }
+  },
+  "mcp": {
+    "template": "config/cognee-mcp.template.json",
+    "templateCommand": "cognee mcp (stdio)",
+    "upstreamReality": "cognee 1.1.2 exposes HTTP MCP on :8001 via `cognee-cli -ui`, not stdio `cognee mcp`",
+    "liveMcpSmoke": "not run — template/command mismatch + no disposable MCP session"
+  },
+  "recall": {
+    "cognee-cli recall": "0 results (empty graph; LLMAPIKeyNotSetError on remember)",
+    "otto recallSmoke IPC": "not exercised headless — unit tests prove honest disabled/stopped paths"
+  },
+  "unitTests": {
+    "cogneeStore": "bun test apps/desktop/electron/cognee-store.test.ts → 6 pass",
+    "autonomyCognee": "bun test apps/desktop/electron/autonomy-store.test.ts → 11 pass (cognee actions)"
+  },
+  "blockers": [
+    "Otto scripts expect `cognee` CLI; pip package ships `cognee-cli` only",
+    "Cognee cognify/recall requires LLM API key (OPENAI_API_KEY or provider per Cognee docs)",
+    "MCP template targets stdio `cognee mcp`; upstream 1.1.x uses HTTP MCP on port 8001",
+    "Named smoke receipt `receipts/cognee/otto-041-local-home-smoke-*.json` not written — health ready proven only in staging bundle"
+  ],
+  "operatorRunbook": "docs/receipts/staging/cognee-live-blocker-rev10.md"
+}

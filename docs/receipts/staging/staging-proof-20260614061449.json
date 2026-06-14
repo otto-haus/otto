@@ -1,0 +1,61 @@
+{
+  "ok": true,
+  "runId": "20260614061449",
+  "gitHead": "fff0152",
+  "stagingApp": "/Applications/otto-staging.app",
+  "cdpPort": 9445,
+  "home": "/Users/seb/.codex/admin/otto-staging/home",
+  "screenshots": {
+    "commandStation": "/Users/seb/Code/otto/docs/receipts/staging/127-command-station-culture-home.png",
+    "sidebarThreads": "/Users/seb/Code/otto/docs/receipts/staging/046-sidebar-thread-list.png",
+    "standardsFooter": "/Users/seb/Code/otto/docs/receipts/staging/067-standards-test-footer.png",
+    "memoryObservatory": "/Users/seb/Code/otto/docs/receipts/staging/047-memory-observatory.png",
+    "settingsFooter": "/Users/seb/Code/otto/docs/receipts/staging/067-settings-test-footer.png"
+  },
+  "checks": {
+    "runtimeReady": true,
+    "transportMode": null,
+    "commandStationVisible": true,
+    "constitutionCard": true,
+    "changelogCard": true,
+    "threadListRendered": true,
+    "standardsTestLine": true,
+    "precedentConflictBanner": false,
+    "memoryObservatorySection": true,
+    "settingsTestLine": true,
+    "settingsTransportLine": true,
+    "siteIndexExists": true,
+    "siteResponsiveMeta": true
+  },
+  "runtimeStatus": {
+    "ready": true,
+    "code": "ready",
+    "agentId": "agent-local-d8e35a2a-a89f-45dd-b117-5eae5df8c8f2",
+    "baseUrl": "http://localhost:51087",
+    "discoverySource": "Letta local settings/discovery",
+    "conversationId": "local-conv-80",
+    "model": "chatgpt-plus-pro/gpt-5.5",
+    "modelHandle": null,
+    "effort": "max",
+    "sessionMode": "smoke",
+    "memfsEnabled": true,
+    "tools": [
+      "CreateWorktree",
+      "memory_apply_patch",
+      "Agent",
+      "TaskOutput",
+      "TaskStop",
+      "Skill",
+      "exec_command",
+      "write_stdin",
+      "ViewImage",
+      "ApplyPatch",
+      "UpdatePlan"
+    ],
+    "transportMode": "sdk",
+    "effectiveTransport": "sdk subprocess",
+    "transportFallbackReason": null,
+    "cliPath": "/Applications/Letta.app/Contents/Resources/app.asar.unpacked/node_modules/@letta-ai/letta-code/letta.js",
+    "cliResolved": true
+  }
+}

@@ -1,6 +1,10 @@
 # Otto v0.1 — Claims Audit
 
+**Public claims boundary (ticket 140):** Marketing copy, README, and release tables may describe **Ship tier only** (Labs off). Labs features must be labeled experimental / coming soon — never as v0.1 shipped. **Cut** items must not appear as product UI. Forbidden as shipped: live Discord bot, Otto Cloud sync, always-on cloud, Paperclip write integration.
+
 Otto v0.1 claims audit: 8 substantive claims reviewed. All major claims are accurately classified. Charter gates implement real Letta permission-check hooks (working-code). Practices, Routines, Standards, Autonomy are specs + templates (file-artifact) with manual tests; none have central runtime engines. Desktop is a working Vite shell (working-code) but chat is prototype-only, unconnected to Letta runtime. Knowledge is explicitly marked "proposed" with qualitative ratings—correctly labeled as not-shipped. Curation/Approvals/Channels correctly deferred; Approval types exist in core but no runtime engine. All documentation is honest about limitations and demo re-enactments. No overclaims found; status markers align with evidence.
+
+**2026-06-14 refresh:** README + RELEASE_CHECKLIST aligned to [`docs/v1/ship-tier-matrix.md`](docs/v1/ship-tier-matrix.md). Knowledge + Channels reclassified to **Labs** in public tables (not Ship). Reviewer +1 on ceremony: pending (**142**).
 
 Classification: `working-code` · `file-artifact` · `demo-reenactment` · `unsupported`.
 
@@ -17,4 +21,4 @@ Classification: `working-code` · `file-artifact` · `demo-reenactment` · `unsu
 | receipts/otto-v01/desktop.md line 13 & demo/src/features.tsx line 212: 'preview — file-backed panes; chat not yet wired to the Letta runtime' | working-code | keep |
 | receipts/otto-v01/knowledge.md lines 1, 9: 'PROPOSED' + 'Built, not Shipped. Capability ratings are qualitative, not freshly benchmarked; routing is unratified.' | file-artifact | keep |
 | extension/charter.ts lines 16-19, 410-426: Charter Gates implement Letta permissions.register hook with classify() function that matches BASH_GATES regex patterns and returns 'ask' decision for one-way doors | working-code | keep |
-| RELEASE_CHECKLIST.md line 21: 'Knowledge \\| proposed \\| — \\| ✅ \\| **Built, not Shipped** — proposed AI-frontier surface, routing unratified' | file-artifact | keep |
+| RELEASE_CHECKLIST.md line 21: 'Knowledge \\| proposed \\| — \\| ✅ \\| **Built, not Shipped** — proposed AI-frontier surface, routing unratified' | file-artifact | keep — **Labs tier in public tables (140)** |

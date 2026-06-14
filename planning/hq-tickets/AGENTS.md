@@ -54,6 +54,18 @@ No fake done.
 No proof, no reviewer +1, no _Done.
 ```
 
+## Review gate (051)
+
+Ticket and charter **merged/done** transitions are enforced in Electron stores — not honor-system prose:
+
+```txt
+active|blocked → review → merged
+merged requires reviewer_verdict: +1 and evidence refs (ticket-store)
+charter complete still blocked without AC proof (charter-store, 034)
+```
+
+Implementers cannot self-certify: `ticket-store.updateStatus` throws without reviewer +1 + evidence. UI surfaces blocked reason via Tickets lifecycle buttons.
+
 
 ## Staging runtime (mandatory)
 
@@ -96,6 +108,7 @@ See `000-workflow.md` for the full invariant list.
 root       = active queue; implementer may build
 _InReview  = built; waiting for independent review
 _Done      = finished, proven, reviewer +1
+_Backlog   = was wrongly _Done or deferred; not active sprint; not done
 _Parked    = valid future work; do not touch unless explicitly unparked
 ```
 

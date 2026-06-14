@@ -1,5 +1,7 @@
 # 025 — Pinned Chat List
 
+**Superseded by 046** (Conversation List & Thread Switcher). Keep for pin/archive field spec reference only.
+
 Owner: Claude
 Priority: P2
 Depends on: 002, 003

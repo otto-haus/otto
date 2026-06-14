@@ -1,0 +1,29 @@
+{
+  "runId": "20260614063245",
+  "gitHead": "fff0152",
+  "checks": {
+    "commandStationCounts": [],
+    "commandStationNote": "CommandStationStrip hidden until runtime.ready",
+    "checksSurfaceVisible": true,
+    "checksSurfaceHasContent": true,
+    "checksNoLogWording": true,
+    "chat081NoDevChrome": false
+  },
+  "screenshots": {
+    "checks134": "/Users/seb/Code/otto/docs/receipts/staging/134-checks-surface.png",
+    "chat081": "/Users/seb/Code/otto/docs/receipts/staging/081-chat-shell-staging.png"
+  },
+  "chatChrome": {
+    "hasCliString": false,
+    "hasMemFsOn": false,
+    "hasConnectedPill": true,
+    "hasCommandStation": false,
+    "hasThreadList": true
+  },
+  "runtimeInit": {
+    "ok": true,
+    "status": {}
+  },
+  "disposableConversation": null,
+  "runtimeReady": false
+}

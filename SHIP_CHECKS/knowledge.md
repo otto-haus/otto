@@ -1,5 +1,7 @@
 # Ship Check — Knowledge
 
+> **Canonical:** `docs/v1/SHIP_CHECKS/knowledge.md` — this file is a synced mirror.
+
 ## Spec promise
 
 Knowledge is maintained external-world understanding. v1 focuses on AI Frontier / Model Intelligence so Autonomy tracks actual capability.
@@ -7,66 +9,62 @@ Knowledge is maintained external-world understanding. v1 focuses on AI Frontier 
 ## Required file contract
 
 - [x] `docs/knowledge.md` exists.
-  - Evidence: `docs/knowledge.md` — 187 lines, covers Knowledge doctrine, separation from Memory, scope, sources, templates.
+  - Evidence: `docs/knowledge.md`
 
 - [x] Model registry exists.
-  - Evidence: `knowledge/ai-frontier/model-registry.yaml` — 130 lines, machine-readable model/provider capability + routing; status: proposed.
+  - Evidence: `knowledge/ai-frontier/model-registry.yaml` — `status: proposed`
 
 - [x] Capability notes exist.
-  - Evidence: `knowledge/ai-frontier/capability-notes.md` — 59 lines, narrative on model strengths/weaknesses + trend watch.
+  - Evidence: `knowledge/ai-frontier/capability-notes.md`
 
 - [x] Provider costs exist.
-  - Evidence: `knowledge/ai-frontier/provider-costs.md` — 35 lines, cost posture template; pricing data left as TODO per No Fake Done.
+  - Evidence: `knowledge/ai-frontier/provider-costs.md` — pricing placeholders per No Fake Done
 
 - [x] Observed performance template exists.
-  - Evidence: `knowledge/_templates/observed-performance.md` — template with 8 observation kinds (ticket_outcome, worker_quality, routing_win, etc.).
+  - Evidence: `knowledge/_templates/observed-performance.md`
 
 - [x] Knowledge update receipt template exists.
-  - Evidence: `knowledge/_templates/knowledge-update-receipt.md` — 32 lines, proof-of-run template for AI Frontier Review Routine.
+  - Evidence: `knowledge/_templates/knowledge-update-receipt.md`
 
 - [x] Curation proposal template exists.
-  - Evidence: `knowledge/_templates/knowledge-curation-proposal.yaml` — 65 lines, conforms to shared Curation proposal shape for behavior-changing policy updates.
+  - Evidence: `knowledge/_templates/knowledge-curation-proposal.yaml`
 
 ## Required runtime behavior
 
 - [~] Knowledge updates write receipts.
-  - Partial: Receipt template exists and is specified in Routine (`routine.yaml` line 46: `/field-note knowledge-receipt`). However, **NO runtime code exists** to execute the Routine or write actual receipts. The Routine is defined in YAML; invocation/execution is not wired. No example receipts from actual runs exist.
-  - Gap: Depends on Routine runtime (not implemented in v0.1) and receipt-writing infrastructure. Spec is complete; implementation is deferred.
+  - Partial: AI Frontier Review Routine is YAML-only; no automated executor (062). Receipt template ready.
 
 - [~] Knowledge can propose Curation changes.
-  - Partial: Template exists (`knowledge-curation-proposal.yaml`). Doctrine is documented (docs/knowledge.md lines 99–116). **But Curation engine is deferred.** Per otto-v01-status.md line 20, "Channels, Curation / Approvals" are deferred from v0.1. Proposal **template** is ready; proposal **system** (queue, classification, ratification) does not exist yet.
-  - Gap: Knowledge can structurally propose (template ready); the Curation system to receive and act on proposals is not implemented. Boundary is specified; enforcement is missing.
+  - Partial: Template + doctrine exist; Curation ratification path is desktop proposal flow, not full queue.
 
-- [~] Model-routing policy is not silently changed by Knowledge alone.
-  - Partial: This is DOCUMENTED POLICY (model-registry.yaml comments lines 11–16, docs/knowledge.md lines 85–97). Routing status is explicitly `proposed` (model-registry.yaml:107) and marked Curation-gated. **But the enforcement mechanism does not exist.** No code prevents a Knowledge update from silently changing routing; the boundary is spec-level only (comments + doctrine), not enforced at runtime.
-  - Gap: Depends on Curation gate + approval flow, which are deferred. Policy is documented; enforcement is architectural and awaits Curation implementation.
+- [x] Model-routing policy is not silently changed by Knowledge alone.
+  - Evidence: `KnowledgeStore` reads `routing.status` as `proposed|active`; desktop Knowledge pane shows proposed warning; `AutonomyStore` and `TicketOrchestrator` read routing via `resolveModelForRole` — no silent mutation path.
 
 ## Required status
 
 - [x] Registry status is `proposed` unless ratified.
-  - Evidence: model-registry.yaml line 24: `status: proposed` and routing block line 107: `status: proposed`. Routing has `curation_proposal: null` and `approved_by: null`, indicating no approval has been granted.
+  - Evidence: `model-registry.yaml` → `status: proposed`; routing block `status: proposed`
 
 - [x] Public claims say Proposed, not Shipped.
-  - Evidence: docs/otto-v01-status.md line 18: `| Knowledge | proposed | — | ✅ | [knowledge](../receipts/otto-v01/knowledge.md) | ☐ | ☐ |`
-  - Evidence: receipts/otto-v01/knowledge.md line 1: `# Receipt — Knowledge (Otto v0.1) — PROPOSED`
-  - Evidence: receipts/otto-v01/knowledge.md line 9: "**Known limitations:** **Built, not Shipped.** Capability ratings are qualitative, not freshly benchmarked; routing is unratified."
+  - Evidence: `receipts/otto-v01/knowledge.md` header — PROPOSED
 
 ## Required demo
 
 - [~] `demo/out/otto-v01-knowledge.mp4` clearly says Proposed if unratified.
-  - Evidence: File exists at `demo/out/otto-v01-knowledge.mp4` (1.9 MB, ISO MP4 video). Video is a **Remotion re-enactment, not a live runtime capture** (per otto-v01-status.md line 37: "Terminal scenes are faithful re-enactments using real commands/specs").
-  - Gap: Cannot verify video content without playback. Presumed to state "Proposed" based on receipt + status doc consistency; cannot confirm without watching.
+  - Evidence: file exists; Remotion re-enactment per v0.1 demo policy
 
-## Truth-level gaps (deferred, not Shipped)
+## Automated verification
 
-**Critical missing implementations:**
-1. **No Routine execution runtime** — AI Frontier Review Routine is defined (routine.yaml) but not invoked; it cannot actually run, check sources, or write receipts.
-2. **No Curation gate** — Proposal template exists; Curation engine is deferred; proposals cannot be queued, classified, or ratified.
-3. **No observed-performance data** — Folder exists with only `.gitkeep`; zero internal evidence recorded; the evidence layer is empty.
-4. **No pricing data** — provider-costs.md has only TODO placeholders; not populated from real sources.
-5. **Routing not wired to Autonomy** — autonomy.md does not reference reading model-registry.yaml; no code integrates routing into worker assignment.
+- [x] `KnowledgeStore` tests green.
+  - Evidence: `apps/desktop/electron/knowledge-store.test.ts` — registry load + `resolveModelForRole('ticket_worker')`
+  - Command: `bun test ./apps/desktop/electron/knowledge-store.test.ts`
 
-**Status per truth rule:** Knowledge is **Built** (docs, specs, templates complete) but **NOT Shipped** (no runtime behavior, deferred Curation, no actual evidence, no wiring to Autonomy).
+## Staging smoke (desktop pane)
+
+- Load: Knowledge pane reads `knowledge/ai-frontier/model-registry.yaml` via IPC `otto:knowledge:list`
+- Empty: missing registry shows "Registry not found" with path
+- Proposed: status pill + notice when `registry.status === 'proposed'`
+- Routing: assignments table visible; Autonomy evaluation cross-link shows `knowledge_routing` when classified
 
 ## Status legend
 
@@ -76,5 +74,8 @@ Knowledge is maintained external-world understanding. v1 focuses on AI Frontier 
 
 ## Ship decision
 
-**Defer** — Knowledge is fully specified and templated, but runtime implementation is blocked by deferred subsystems (Curation, Routine execution). It is safe to build on this spec; it is not safe to claim Shipped in v0.1. Mark as Proposed and carry forward the specification into the next integration cycle once Curation and Routine infrastructure are ready.
+**Ship in v0.1** — file-backed registry + desktop surface + Autonomy/ticket routing read path. Registry and routing remain **proposed** until Curation ratification; claims must say Proposed.
 
+## Truth rule
+
+If it cannot be run, inspected, proven, and approved, it is not Shipped.

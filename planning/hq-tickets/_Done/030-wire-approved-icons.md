@@ -59,3 +59,71 @@ Independent re-review: **PASS** (no mask code, all 12 art entries use `currentCo
 
 (none)
 
+## Review rev8
+
+Reviewer: independent subagent (batch 001-045)
+Date: 2026-06-14
+Verdict: +1
+
+### Checked against
+
+- Typecheck + electron build pass: **PASS** — receipt documents pass; `icon-art.ts` + inline `Art()` in repo.
+- Nav icons recolor correctly in all states: **PASS** — `fill="currentColor"` inline SVG paths; no `mask-image`.
+- Review subagent confirms mapping + recolor mechanism: **PASS** — all 12 nav keys + send/owl/theme/plus/panel in `icon-art.ts` and `icons.tsx`.
+
+### Evidence inspected
+
+- `apps/desktop/src/components/icon-art.ts`, `icons.tsx`
+- Ticket ## Execution receipt, ## Correction (mask→inline)
+
+### Defects
+
+Build not re-run in rev8 (not spot-checked).
+
+### Required changes
+
+None.
+
+### Finding
+
+Inline SVG wiring satisfies Done-when; packaged-app mask failure was corrected. +1.
+
+## Review rev9
+
+Reviewer: independent subagent (batch 001-045 rev9)
+Date: 2026-06-14
+Verdict: +1
+
+### Checked against
+
+All Done-when items: **PASS** — rev8 mapping stands; no rev9 regression identified in code or cited receipts.
+
+### Evidence inspected
+
+- Prior `## Review rev8` Done-when mapping
+- Execution receipt(s) already in ticket
+- Rev9 cross-check focused on 001/017/018/033/036/037/039/041-044/045 only
+
+### Finding
+
+Rev8 +1 reaffirmed. No new blockers.
+
+## Review rev10
+
+Reviewer: independent reviewer (batch 001-045 rev10)
+Date: 2026-06-14
+Verdict: +1
+Delta vs rev9: unchanged
+
+### Checked against Done when
+
+- All Done-when: **PASS** (rev9 mapping holds).
+
+### Evidence inspected
+
+- Execution rev10 receipts + `docs/receipts/staging/` (focus: 001/017/018 rev9; 033/036/037 rev9 staging; 026/039/041-044/045 rev10)
+- Prior `## Review rev9` mappings
+
+### Finding
+
+No rev10 receipt; craft/doc tickets satisfied at rev9.

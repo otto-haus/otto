@@ -1,0 +1,19 @@
+{
+  "schema": "otto.068-pgvector-integration.v1",
+  "ok": true,
+  "runId": "20260614065900",
+  "gitHead": "fff0152",
+  "dockerContainer": "otto-pgvector-recall",
+  "databaseUrl": "postgresql://otto:otto@127.0.0.1:5433/otto_recall",
+  "command": "OTTO_PGVECTOR_INTEGRATION=1 OTTO_PGVECTOR=1 bun test apps/desktop/electron/pgvector-store.test.ts",
+  "result": {
+    "pass": 8,
+    "fail": 0,
+    "skip": 0,
+    "integrationTest": "indexSource is idempotent and query returns provenance"
+  },
+  "notes": [
+    "Docker compose already healthy on port 5433.",
+    "Integration test exercises healthCheck, indexSource idempotency, and query with provenance."
+  ]
+}

@@ -1,0 +1,23 @@
+# Opt-in local pgvector stack for Otto recall experiments (068).
+# Not started by otto.app — run manually: docker compose up -d
+services:
+  postgres:
+    image: pgvector/pgvector:pg16
+    container_name: otto-pgvector-recall
+    restart: unless-stopped
+    ports:
+      - '5433:5432'
+    environment:
+      POSTGRES_USER: otto
+      POSTGRES_PASSWORD: otto
+      POSTGRES_DB: otto_recall
+    volumes:
+      - otto_pgvector_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U otto -d otto_recall']
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  otto_pgvector_data:

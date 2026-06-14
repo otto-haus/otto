@@ -6,6 +6,38 @@ import {
   type ReadyStatus,
 } from '../readiness';
 import { Icon } from '../components/icons';
+import { useToast } from '../components/Toast';
+import { EmptyState, StatusPill, statusPill, statusCodePill, readyStatusPill, SurfaceProof, SurfacePage, SurfaceHero, InkBlock, SurfaceInk, SurfaceStatStrip, SurfaceMeta, SplitLayout, FilterBar, InlineEmpty, WebPreviewFrame, ReceiptCard, CheckBlockBanner } from '../components/ui';
+import {
+  toastCopy,
+  curationCopy,
+  receiptsCopy,
+  chartersCopy,
+  standardsCopy,
+  practicesCopy,
+  routinesCopy,
+  autonomyCopy,
+  skillsCopy,
+  knowledgeCopy,
+  ticketsCopy,
+  channelsCopy,
+  settingsCopy,
+  listEmpty,
+  cultureSettingsCopy,
+  labsCopy,
+  loaderCopy,
+} from '../copy/surfaces';
+import { resetOnboardingForReplay } from '../onboarding-storage';
+import { LabsBlockedShell } from '../labs/LabsBlockedShell';
+import {
+  getSampleReceiptDetail,
+  isSampleReceiptPreview,
+  sampleReceiptSummary,
+  sampleReceiptCard,
+  SAMPLE_RECEIPT_LABEL,
+} from '../onboarding-sample-receipt';
+import { useLabs, LAB_FEATURE_IDS, LAB_FEATURE_META } from '../labs/LabsContext';
+import type { LabFeatureId } from '../../electron/shared/types';
 import {
   ottoApi,
   type CharterDetail,
@@ -13,6 +45,7 @@ import {
   type CharterStatus,
   type CurationProposalRecord,
   type PracticeListResult,
+  type PracticeMetricsSnapshot,
   type PracticeRecord,
   type ReceiptDetail,
   type ReceiptListResult,
@@ -28,32 +61,57 @@ import {
   type StandardListResult,
   type StandardRecord,
   type StatusCode,
+  type ApprovalListResult,
+  type KnowledgeListResult,
+  type SkillListResult,
+  type SkillRecord,
+  type ChannelListResult,
+  type ChannelRecord,
+  type TicketListResult,
+  type TicketRecord,
+  type TicketReviewRecord,
+  type WorkerListResult,
+  type WorkerRecord,
+  type RunListResult,
+  type RunSummary,
+  type StandardConflictResult,
+  type CogneeHealth,
+  type CogneeCaptureReceipt,
+  type CogneeRecallSmokeResult,
+  type PgvectorStatus,
+  type MemoryListResult,
+  type MemoryBlockRecord,
+  type ProviderMirrorSnapshot,
 } from '../runtime';
 import { useRuntimeContext } from '../RuntimeContext';
+import type { SurfaceId } from '../components/Sidebar';
 
-const statusPill = (s: string) => {
-  const cls = s === 'active' || s === 'success' || s === 'complete' ? 'pill--ok'
-    : s === 'blocked' || s === 'pending' ? 'pill--warn'
-    : s === 'failed' ? 'pill--stop'
-    : s === 'proposed' || s === 'running' || s === 'draft' ? 'pill--info' : '';
-  return <span className={`pill ${cls}`}>{s}</span>;
+const EmptySurface = EmptyState;
+
+type SkippedFile = { slug: string; file: string; reason: string };
+
+const SkippedLoaderPanel: React.FC<{ skipped: SkippedFile[]; noun?: string }> = ({ skipped, noun = 'file' }) => {
+  if (!skipped.length) return null;
+  return (
+    <details className="detailSection skippedPanel" open={skipped.length <= 3}>
+      <summary className="between">
+        <div>
+          <div className="eyebrow">{loaderCopy.eyebrow}</div>
+          <div className="h-sec">{loaderCopy.skippedTitle(skipped.length, noun)}</div>
+        </div>
+        <span className="pill pill--warn">{loaderCopy.validationPill}</span>
+      </summary>
+      <div className="skippedList">
+        {skipped.map((item) => (
+          <div className="skippedRow" key={`${item.file}-${item.slug}`}>
+            <span className="filechip">{Icon.file} {item.file}</span>
+            <span className="muted">{item.reason}</span>
+          </div>
+        ))}
+      </div>
+    </details>
+  );
 };
-
-const EmptySurface: React.FC<{
-  eyebrow: string;
-  title: string;
-  body: string;
-  path?: string;
-  next?: string;
-}> = ({ eyebrow, title, body, path, next }) => (
-  <div className="emptySurface">
-    <div className="eyebrow">{eyebrow}</div>
-    <h2>{title}</h2>
-    <p>{body}</p>
-    {path && <span className="filechip">{Icon.file} {path}</span>}
-    {next && <div className="notice"><span className="dot dot--idle" /> {next}</div>}
-  </div>
-);
 
 /* ---------- Charters ---------- */
 const CHARTER_STATUSES: CharterStatus[] = ['proposed', 'draft', 'active', 'blocked', 'complete', 'cancelled'];
@@ -110,29 +168,19 @@ export const Charters: React.FC = () => {
         setDetail(next);
         if (next) setStatusDraft(next.status);
       }
-    }).catch(() => {
-      if (!cancelled) setDetail(null);
+    }).catch((e) => {
+      if (!cancelled) {
+        setDetail(null);
+        setError(String(e));
+      }
     });
     return () => {
       cancelled = true;
     };
   }, [api, selectedSlug]);
 
-  if (!api) {
-    return (
-      <EmptySurface
-        eyebrow="charters"
-        title="Charters are available in the desktop app."
-        body="The web preview cannot read the local charter store. The desktop app reads real otto.charter.v1 files."
-        path="~/.otto/charters/"
-        next="Open the packaged desktop app to create and inspect Charters."
-      />
-    );
-  }
-
-  const charters = result?.charters ?? [];
-
   const createCharter = async () => {
+    if (!api) return;
     const cleanObjective = objective.trim();
     const cleanCriterion = criterion.trim();
     if (!cleanObjective || !cleanCriterion) return;
@@ -157,7 +205,7 @@ export const Charters: React.FC = () => {
   };
 
   const updateStatus = async () => {
-    if (!detail || detail.status === statusDraft) return;
+    if (!api || !detail || detail.status === statusDraft) return;
     setBusy(true);
     setError(null);
     try {
@@ -174,7 +222,7 @@ export const Charters: React.FC = () => {
   };
 
   const linkRunReceipt = async () => {
-    if (!detail || (!runId.trim() && !receiptId.trim())) return;
+    if (!api || !detail || (!runId.trim() && !receiptId.trim())) return;
     setBusy(true);
     setError(null);
     try {
@@ -195,88 +243,118 @@ export const Charters: React.FC = () => {
     }
   };
 
+  if (!api) {
+    return <WebPreviewFrame surface="charters" />;
+  }
+
+  const charters = result?.charters ?? [];
+  const activeCount = charters.filter((c) => c.status === 'active').length;
+  const completeCount = charters.filter((c) => c.status === 'complete').length;
+
   return (
-    <div className="charterSurface">
-      <div className="panel charterCreate">
-        <div>
-          <div className="eyebrow">new charter</div>
-          <div className="h-sec" style={{ marginTop: 6 }}>Operating contract</div>
-        </div>
-        <label className="charterField">
-          <span>Objective</span>
-          <input
-            className="charterInput"
-            value={objective}
-            onChange={(e) => setObjective(e.target.value)}
-            placeholder="Represent an explicit goal/run contract"
-          />
-        </label>
-        <label className="charterField">
-          <span>Acceptance criterion</span>
-          <input
-            className="charterInput"
-            value={criterion}
-            onChange={(e) => setCriterion(e.target.value)}
-            placeholder="A concrete proof condition"
-          />
-        </label>
-        <label className="charterField">
-          <span>Slug</span>
-          <input
-            className="charterInput mono"
-            value={slug}
-            onChange={(e) => setSlug(e.target.value)}
-            placeholder={objective ? slugify(objective) : 'auto'}
-          />
-        </label>
-        <button className="btn btn--primary" onClick={createCharter} disabled={busy || !objective.trim() || !criterion.trim()}>
-          Create charter
-        </button>
-      </div>
+    <SurfacePage className="charterSurface">
+      <SurfaceHero
+        eyebrow={chartersCopy.eyebrow}
+        title={chartersCopy.title}
+        lede={chartersCopy.lede}
+      />
+      <SurfaceInk lead={chartersCopy.inkLead} muted={chartersCopy.inkMuted} sub={chartersCopy.inkSub} />
+      <SurfaceStatStrip
+        stats={[
+          { label: chartersCopy.statTotal, value: charters.length },
+          { label: chartersCopy.statActive, value: activeCount, tone: activeCount ? 'ok' : 'neutral' },
+          { label: chartersCopy.statComplete, value: completeCount },
+        ]}
+      />
       {error && <div className="notice"><span className="dot dot--warn" /> {error}</div>}
 
-      <div className="split">
-        <div className="cards charterList" aria-label="Charters list">
-          {charters.map((charter) => (
-            <button
-              key={charter.slug}
-              className={`card${charter.slug === selectedSlug ? ' is-selected' : ''}`}
-              onClick={() => setSelectedSlug(charter.slug)}
-            >
-              <div className="between">
-                <span className="card__title">{charter.slug}</span>
-                {statusPill(charter.status)}
-              </div>
-              <span className="card__sub">
-                {charter.acceptance_criteria.length} AC · {charter.run_ids.length} run{charter.run_ids.length === 1 ? '' : 's'} · {charter.receipt_ids.length} receipt{charter.receipt_ids.length === 1 ? '' : 's'}
-              </span>
-            </button>
-          ))}
-          {!charters.length && (
-            <div className="panel charterEmptyList">
-              <div className="h-sec">No charters yet</div>
-              <p className="muted" style={{ marginTop: 6 }}>Create one to start the local proof trail.</p>
-            </div>
-          )}
-          <span className="filechip">{Icon.file} {result?.dir ?? '~/.otto/charters'}</span>
+      <div className="panel charterCreatePanel">
+        <div className="eyebrow">{chartersCopy.createEyebrow}</div>
+        <div className="h-sec" style={{ marginTop: 6 }}>{chartersCopy.createTitle}</div>
+        <div className="charterCreate">
+          <label className="charterField">
+            <span>{chartersCopy.objectiveLabel}</span>
+            <input
+              className="charterInput"
+              value={objective}
+              onChange={(e) => setObjective(e.target.value)}
+              placeholder={chartersCopy.objectivePlaceholder}
+            />
+          </label>
+          <label className="charterField">
+            <span>{chartersCopy.criterionLabel}</span>
+            <input
+              className="charterInput"
+              value={criterion}
+              onChange={(e) => setCriterion(e.target.value)}
+              placeholder={chartersCopy.criterionPlaceholder}
+            />
+          </label>
+          <label className="charterField">
+            <span>{chartersCopy.slugLabel}</span>
+            <input
+              className="charterInput mono"
+              value={slug}
+              onChange={(e) => setSlug(e.target.value)}
+              placeholder={objective ? slugify(objective) : 'auto'}
+            />
+          </label>
+          <button className="btn btn--primary" onClick={createCharter} disabled={busy || !objective.trim() || !criterion.trim()}>
+            {chartersCopy.createButton}
+          </button>
         </div>
-
-        <CharterDetailView
-          detail={detail}
-          statusDraft={statusDraft}
-          statusSummary={statusSummary}
-          runId={runId}
-          receiptId={receiptId}
-          busy={busy}
-          setStatusDraft={setStatusDraft}
-          setStatusSummary={setStatusSummary}
-          setRunId={setRunId}
-          setReceiptId={setReceiptId}
-          onUpdateStatus={updateStatus}
-          onLinkRunReceipt={linkRunReceipt}
-        />
       </div>
-    </div>
+
+      <SplitLayout
+        list={
+          <>
+            {charters.map((charter) => (
+              <button
+                key={charter.slug}
+                className={`card${charter.slug === selectedSlug ? ' is-selected' : ''}`}
+                onClick={() => setSelectedSlug(charter.slug)}
+              >
+                <div className="between">
+                  <span className="card__title">{charter.slug}</span>
+                  {statusPill(charter.status)}
+                </div>
+                <span className="card__sub">
+                  {charter.acceptance_criteria.length} AC · {charter.run_ids.length} run{charter.run_ids.length === 1 ? '' : 's'} · {charter.receipt_ids.length} receipt{charter.receipt_ids.length === 1 ? '' : 's'}
+                </span>
+              </button>
+            ))}
+            {result === null ? (
+              <div className="detailSection charterEmptyList">
+                <p className="muted">{chartersCopy.loadingList}</p>
+              </div>
+            ) : !charters.length ? (
+              <InlineEmpty title={listEmpty.charters?.title ?? 'No charters yet'} body={listEmpty.charters?.body ?? ''} />
+            ) : null}
+          </>
+        }
+        detail={
+          <CharterDetailView
+            detail={detail}
+            statusDraft={statusDraft}
+            statusSummary={statusSummary}
+            runId={runId}
+            receiptId={receiptId}
+            busy={busy}
+            setStatusDraft={setStatusDraft}
+            setStatusSummary={setStatusSummary}
+            setRunId={setRunId}
+            setReceiptId={setReceiptId}
+            onUpdateStatus={updateStatus}
+            onLinkRunReceipt={linkRunReceipt}
+          />
+        }
+      />
+
+      <SurfaceMeta label={chartersCopy.metaLabel}>
+        <span className="filechip">{Icon.file} {result?.dir ?? '~/.otto/charters'}</span>
+      </SurfaceMeta>
+      <SurfaceProof surface="charters" />
+    </SurfacePage>
   );
 };
 
@@ -310,9 +388,9 @@ const CharterDetailView: React.FC<{
   if (!detail) {
     return (
       <div className="detail">
-        <div className="panel">
-          <div className="h-sec">Select a charter</div>
-          <p className="muted" style={{ marginTop: 6 }}>Charter state appears after creation.</p>
+        <div className="detailSection">
+          <div className="h-sec">{chartersCopy.selectTitle}</div>
+          <p className="muted" style={{ marginTop: 6 }}>{chartersCopy.selectBody}</p>
         </div>
       </div>
     );
@@ -320,10 +398,10 @@ const CharterDetailView: React.FC<{
 
   return (
     <div className="detail charterDetail">
-      <div className="panel">
+      <div className="detailSection">
         <div className="between">
           <div>
-            <div className="eyebrow">charter detail</div>
+            <div className="eyebrow">{chartersCopy.detailEyebrow}</div>
             <div className="h-sec" style={{ marginTop: 6 }}>{detail.title}</div>
           </div>
           {statusPill(detail.status)}
@@ -337,9 +415,9 @@ const CharterDetailView: React.FC<{
         </dl>
       </div>
 
-      <div className="grid grid--2">
-        <div className="panel">
-          <div className="eyebrow">acceptance criteria</div>
+      <div className="detailGrid detailGrid--2">
+        <div className="detailSection">
+          <div className="eyebrow">{chartersCopy.acEyebrow}</div>
           <ul className="list">
             {detail.acceptance_criteria.map((ac) => (
               <li key={ac.id}>
@@ -349,44 +427,49 @@ const CharterDetailView: React.FC<{
             ))}
           </ul>
         </div>
-        <div className="panel">
-          <div className="eyebrow">approval boundary</div>
+        <div className="detailSection">
+          <div className="eyebrow">{chartersCopy.approvalEyebrow}</div>
           <div className="row" style={{ flexWrap: 'wrap', gap: 8, marginTop: 10 }}>
             {detail.approval_required_for_changes.map((gate) => <span className="pill pill--warn" key={gate}>{gate}</span>)}
           </div>
         </div>
       </div>
 
-      <div className="grid grid--2">
-        <div className="panel">
-          <div className="eyebrow">linked runs</div>
-          <ChipList values={detail.run_ids} empty="No run linked" />
+      <div className="detailGrid detailGrid--2">
+        <div className="detailSection">
+          <div className="eyebrow">{chartersCopy.linkedRunsEyebrow}</div>
+          <ChipList values={detail.run_ids} empty={chartersCopy.noRunLinked} />
         </div>
-        <div className="panel">
-          <div className="eyebrow">linked receipts</div>
-          <ChipList values={detail.receipt_ids} empty="No receipt linked" />
+        <div className="detailSection">
+          <div className="eyebrow">{chartersCopy.linkedReceiptsEyebrow}</div>
+          <ChipList values={detail.receipt_ids} empty={chartersCopy.noReceiptLinked} />
         </div>
       </div>
 
-      <div className="grid grid--2">
-        <div className="panel charterAction">
-          <div className="eyebrow">attach run / receipt</div>
-          <input className="charterInput mono" value={runId} onChange={(e) => setRunId(e.target.value)} placeholder="run id" aria-label="Run ID" />
-          <input className="charterInput mono" value={receiptId} onChange={(e) => setReceiptId(e.target.value)} placeholder="receipt id" aria-label="Receipt ID" />
-          <button className="btn" onClick={onLinkRunReceipt} disabled={busy || (!runId.trim() && !receiptId.trim())}>Attach</button>
+      <div className="detailGrid detailGrid--2">
+        <div className="detailSection charterAction">
+          <div className="eyebrow">{chartersCopy.attachEyebrow}</div>
+          <input className="charterInput mono" value={runId} onChange={(e) => setRunId(e.target.value)} placeholder={chartersCopy.runIdPlaceholder} aria-label="Run ID" />
+          <input className="charterInput mono" value={receiptId} onChange={(e) => setReceiptId(e.target.value)} placeholder={chartersCopy.receiptIdPlaceholder} aria-label="Receipt ID" />
+          <button className="btn" onClick={onLinkRunReceipt} disabled={busy || (!runId.trim() && !receiptId.trim())}>{chartersCopy.attachButton}</button>
         </div>
-        <div className="panel charterAction">
-          <div className="eyebrow">update status</div>
+        <div className="detailSection charterAction">
+          <div className="eyebrow">{chartersCopy.statusEyebrow}</div>
           <select className="charterInput" value={statusDraft} onChange={(e) => setStatusDraft(e.target.value as CharterStatus)} aria-label="Charter status">
             {CHARTER_STATUSES.map((status) => <option key={status} value={status}>{status}</option>)}
           </select>
-          <input className="charterInput" value={statusSummary} onChange={(e) => setStatusSummary(e.target.value)} placeholder="change summary" aria-label="Status change summary" />
-          <button className="btn" onClick={onUpdateStatus} disabled={busy || statusDraft === detail.status}>Update</button>
+          {statusDraft === 'complete' && detail.acceptance_criteria.some((ac) => !ac.receipts.length) && (
+            <p className="muted" style={{ marginTop: 8 }}>
+              {chartersCopy.completeRequiresReceipt(detail.acceptance_criteria.filter((ac) => !ac.receipts.length).map((ac) => ac.id).join(', '))}
+            </p>
+          )}
+          <input className="charterInput" value={statusSummary} onChange={(e) => setStatusSummary(e.target.value)} placeholder={chartersCopy.statusSummaryPlaceholder} aria-label="Status change summary" />
+          <button className="btn" onClick={onUpdateStatus} disabled={busy || statusDraft === detail.status}>{chartersCopy.updateButton}</button>
         </div>
       </div>
 
-      <div className="panel">
-        <div className="eyebrow">changes</div>
+      <div className="detailSection">
+        <div className="eyebrow">{chartersCopy.changesEyebrow}</div>
         <div className="charterChanges">
           {detail.changes.map((change) => (
             <div className="zone charterChangeRow" key={change.id}>
@@ -437,82 +520,114 @@ export const Standards: React.FC = () => {
   }, [api]);
 
   if (!api) {
-    return (
-      <EmptySurface
-        eyebrow="standards"
-        title="Standards are available in the desktop app."
-        body="The web preview cannot read the local Standards files. The desktop app loads the repo or packaged file-backed canon."
-        path="standards/registry.yaml"
-        next="Open the packaged desktop app to inspect current Standards."
-      />
-    );
+    return <WebPreviewFrame surface="standards" />;
   }
 
   const standards = result?.standards ?? [];
   const selected = standards.find((standard) => standard.slug === selectedSlug) ?? standards[0] ?? null;
+  const activeCount = standards.filter((s) => s.status === 'active').length;
 
   return (
-    <div className="standardsSurface">
-      <div className="panel">
-        <div className="between">
-          <div>
-            <div className="eyebrow">file-backed canon</div>
-            <div className="h-sec">Standards registry</div>
-          </div>
-          <span className="pill pill--ok">files</span>
+    <SurfacePage>
+      <SurfaceHero
+        eyebrow={standardsCopy.eyebrow}
+        title={standardsCopy.title}
+        lede={standardsCopy.lede}
+      />
+      <SurfaceInk lead={standardsCopy.inkLead} muted={standardsCopy.inkMuted} sub={standardsCopy.inkSub} />
+      <SurfaceStatStrip
+        stats={[
+          { label: standardsCopy.statLoaded, value: standards.length },
+          { label: standardsCopy.statActive, value: activeCount, tone: activeCount ? 'ok' : 'neutral' },
+        ]}
+      />
+      {result && (
+        <div className="ratificationStrip">
+          <span className="zone__tag">ratification</span>
+          <span className="muted">
+            {standardsCopy.ratificationOwner} {result.registry.ratification.owner} · {standardsCopy.ratificationAutoApply} {String(result.registry.ratification.auto_apply ?? false)}
+          </span>
+          <span className="filechip">{Icon.file} {result.registryPath ?? 'standards/registry.yaml'}</span>
         </div>
-        <p className="lede" style={{ marginTop: 8 }}>
-          Current Standards load from `standards/registry.yaml` and the Markdown/YAML files it references.
-        </p>
-        <div className="row" style={{ flexWrap: 'wrap', gap: 8, marginTop: 12 }}>
-          <span className="filechip">{Icon.file} {result?.registryPath ?? 'standards/registry.yaml'}</span>
-          <span className="filechip">{result?.standards.length ?? 0} standards</span>
-          <span className="filechip">{result?.skipped.length ?? 0} skipped</span>
-        </div>
-        {result && (
-          <div className="zone" style={{ marginTop: 14 }}>
-            <span className="zone__tag">ratification</span>
-            <span>
-              {result.registry.ratification.owner} owns changes · auto apply {String(result.registry.ratification.auto_apply ?? false)}
-            </span>
-          </div>
-        )}
-      </div>
-
+      )}
       {error && <div className="notice"><span className="dot dot--warn" /> {error}</div>}
-
-      <div className="split">
-        <div className="cards">
-          {standards.map((standard) => (
-            <button
-              key={standard.slug}
-              className={`card${standard.slug === selected?.slug ? ' is-selected' : ''}`}
-              onClick={() => setSelectedSlug(standard.slug)}
-            >
-              <div className="between">
-                <span className="card__title">{standard.name}</span>
-                {statusPill(standard.status)}
+      <SkippedLoaderPanel skipped={result?.skipped ?? []} />
+      <SplitLayout
+        list={
+          <>
+            {standards.map((standard) => (
+              <button
+                key={standard.slug}
+                className={`card${standard.slug === selected?.slug ? ' is-selected' : ''}`}
+                onClick={() => setSelectedSlug(standard.slug)}
+              >
+                <div className="between">
+                  <span className="card__title">{standard.name}</span>
+                  {statusPill(standard.status)}
+                </div>
+                <span className="card__sub">{standard.meaning}</span>
+              </button>
+            ))}
+            {result === null ? (
+              <div className="listEmpty">
+                <p className="muted">{standardsCopy.loadingTitle}</p>
               </div>
-              <span className="card__sub">{standard.meaning}</span>
-            </button>
-          ))}
-          {!standards.length && (
-            <div className="panel">
-              <div className="h-sec">No Standards loaded</div>
-              <p className="muted" style={{ marginTop: 6 }}>The loader could not read file-backed Standards.</p>
-            </div>
-          )}
-        </div>
-
-        {selected && <StandardDetail standard={selected} />}
-      </div>
-    </div>
+            ) : !standards.length ? (
+              <InlineEmpty title={listEmpty.standards?.title ?? 'No Standards loaded'} body={listEmpty.standards?.body ?? ''} />
+            ) : null}
+          </>
+        }
+        detail={selected ? <StandardDetail standard={selected} /> : null}
+      />
+      {result && (
+        <SurfaceMeta label={standardsCopy.metaLabel}>
+          <span className="filechip">{standards.length} loaded</span>
+        </SurfaceMeta>
+      )}
+      <SurfaceProof surface="standards" />
+    </SurfacePage>
   );
 };
 
-const StandardDetail: React.FC<{ standard: StandardRecord }> = ({ standard }) => (
+const StandardDetail: React.FC<{ standard: StandardRecord }> = ({ standard }) => {
+  const api = ottoApi();
+  const [conflict, setConflict] = useState<StandardConflictResult | null>(null);
+
+  useEffect(() => {
+    if (!api?.standards.conflictForStandard) return;
+    let cancelled = false;
+    api.standards.conflictForStandard(standard.slug)
+      .then((next) => { if (!cancelled) setConflict(next); })
+      .catch(() => { if (!cancelled) setConflict(null); });
+    return () => { cancelled = true; };
+  }, [api, standard.slug]);
+
+  return (
   <div className="detail">
-    <div className="panel">
+    {conflict && (
+      <div className="detailSection detailSection--warn">
+        <div className="eyebrow">{standardsCopy.conflictEyebrow}</div>
+        <div className="h-sec conflictTitle">
+          {conflict.between.length > 1 ? conflict.between.join(' vs ') : conflict.between[0]}
+        </div>
+        <p className="muted conflictMessage">{conflict.message}</p>
+        {conflict.tie_breaker && (
+          <p className="conflictTieBreaker">
+            <strong>{standardsCopy.conflictTieBreaker}</strong> {conflict.tie_breaker}
+          </p>
+        )}
+        {conflict.precedent?.excerpt && (
+          <pre className="mono conflictExcerpt">{conflict.precedent.excerpt}</pre>
+        )}
+        {conflict.precedent?.file && (
+          <span className="filechip conflictFile">{conflict.precedent.file}</span>
+        )}
+        {!conflict.precedent && (
+          <p className="muted conflictPropose">{standardsCopy.conflictProposeCuration}</p>
+        )}
+      </div>
+    )}
+    <div className="detailSection">
       <div className="between">
         <div>
           <div className="eyebrow">standard detail</div>
@@ -529,38 +644,76 @@ const StandardDetail: React.FC<{ standard: StandardRecord }> = ({ standard }) =>
       </dl>
     </div>
 
-    <div className="grid grid--2">
-      <div className="panel">
+    <div className="detailGrid detailGrid--2">
+      <div className="detailSection">
         <div className="eyebrow">under pressure · do</div>
         <ul className="list">{standard.under_pressure.do.map((item) => <li key={item}>{item}</li>)}</ul>
       </div>
-      <div className="panel">
+      <div className="detailSection">
         <div className="eyebrow">under pressure · refuse</div>
         <ul className="list">{standard.under_pressure.refuse.map((item) => <li key={item}>{item}</li>)}</ul>
       </div>
     </div>
 
-    <div className="grid grid--2">
-      <div className="panel">
+    <div className="detailGrid detailGrid--2">
+      <div className="detailSection">
         <div className="eyebrow">evidence</div>
         <ul className="list">{standard.evidence.map((item) => <li key={item}>{item}</li>)}</ul>
       </div>
-      <div className="panel">
+      <div className="detailSection">
         <div className="eyebrow">citation path</div>
         <p className="muted">Receipts cite this file by slug and path.</p>
         <span className="filechip" style={{ marginTop: 10 }}>{standard.slug} · {standard.file}</span>
       </div>
     </div>
   </div>
-);
+  );
+};
 
 /* ---------- Practices ---------- */
+const RUNTIME_PRACTICE_SLUGS = new Set(['charter', 'review', 'field-note']);
+
+function formatPracticeLastRun(iso: string | null | undefined): string {
+  if (!iso) return 'Never run';
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return iso;
+  return date.toLocaleString();
+}
+
+function trialPayloadForPractice(slug: string): { invocation?: string; payload?: Record<string, unknown> } {
+  switch (slug) {
+    case 'charter':
+      return { invocation: '/charter step', payload: { intent: 'Practices surface trial run' } };
+    case 'review':
+      return {
+        invocation: '/review done',
+        payload: {
+          acceptance_criteria: [{ id: 'AC1', text: 'Practice run emits receipt with practice ref' }],
+          evidence: [],
+        },
+      };
+    case 'field-note':
+      return {
+        invocation: '/field-note capture',
+        payload: {
+          raw_note: 'Trial field note from Practices surface Run.',
+          source: { who: 'operator', role: 'practices-surface', where: 'desktop', when: new Date().toISOString().slice(0, 10) },
+        },
+      };
+    default:
+      return {};
+  }
+}
+
 export const Practices: React.FC = () => {
   const api = ottoApi();
   const [result, setResult] = useState<PracticeListResult | null>(null);
   const [receipts, setReceipts] = useState<ReceiptSummary[]>([]);
+  const [metrics, setMetrics] = useState<PracticeMetricsSnapshot | null>(null);
   const [selectedSlug, setSelectedSlug] = useState<string | null>(null);
+  const [runMessage, setRunMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
 
   useEffect(() => {
     if (!api) return;
@@ -580,16 +733,49 @@ export const Practices: React.FC = () => {
     };
   }, [api]);
 
+  useEffect(() => {
+    if (!api || !selectedSlug) {
+      setMetrics(null);
+      return;
+    }
+    let cancelled = false;
+    api.practices.metrics(selectedSlug)
+      .then((next) => {
+        if (!cancelled) setMetrics(next);
+      })
+      .catch((e) => {
+        if (!cancelled) setError(String(e));
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [api, selectedSlug, runMessage]);
+
+  const runPractice = async () => {
+    if (!api || !selectedSlug || busy || !RUNTIME_PRACTICE_SLUGS.has(selectedSlug)) return;
+    setBusy(true);
+    setRunMessage(null);
+    setError(null);
+    try {
+      const trial = trialPayloadForPractice(selectedSlug);
+      const run = await api.practices.run({ slug: selectedSlug, ...trial });
+      const status = run.blocked ? 'blocked' : 'recorded';
+      setRunMessage(`Practice run ${status}: ${run.receipt.id}`);
+      const [receiptResult, nextMetrics] = await Promise.all([
+        api.receipts.list(),
+        api.practices.metrics(selectedSlug),
+      ]);
+      setReceipts(receiptResult.receipts);
+      setMetrics(nextMetrics);
+    } catch (e) {
+      setError(String(e));
+    } finally {
+      setBusy(false);
+    }
+  };
+
   if (!api) {
-    return (
-      <EmptySurface
-        eyebrow="practices"
-        title="Practices are available in the desktop app."
-        body="The web preview cannot read local practice files. The desktop app loads the repo or packaged file-backed canon."
-        path="practices/"
-        next="Open the packaged desktop app to inspect current Practices."
-      />
-    );
+    return <WebPreviewFrame surface="practices" />;
   }
 
   const practices = result?.practices ?? [];
@@ -597,90 +783,139 @@ export const Practices: React.FC = () => {
   const relatedReceipts = selected
     ? receipts.filter((receipt) => receipt.practiceSlug === selected.slug).slice(0, 8)
     : [];
+  const withProofCount = practices.filter((p) =>
+    receipts.some((r) => r.practiceSlug === p.slug),
+  ).length;
+  const runnableCount = practices.filter((p) => RUNTIME_PRACTICE_SLUGS.has(p.slug)).length;
 
   return (
-    <div className="standardsSurface">
-      <div className="panel">
-        <div className="between">
-          <div>
-            <div className="eyebrow">file-backed canon</div>
-            <div className="h-sec">Practices registry</div>
-          </div>
-          <span className="pill pill--ok">files</span>
-        </div>
-        <p className="lede" style={{ marginTop: 8 }}>
-          Practices load from `practices/*/practice.yaml`. Consequential edits go through Curation — no silent canon changes.
-        </p>
-        <div className="row" style={{ flexWrap: 'wrap', gap: 8, marginTop: 12 }}>
-          <span className="filechip">{Icon.file} {result?.dir ?? 'practices/'}</span>
-          <span className="filechip">{practices.length} practices</span>
-          <span className="filechip">{result?.skipped.length ?? 0} skipped</span>
-        </div>
-        <div className="zone" style={{ marginTop: 14 }}>
-          <span className="zone__tag">curation gate</span>
-          <span>
-            Practice promotion, activation, and publish remain approval-gated. Edit `practice.yaml` through a Curation proposal — not inline here.
-          </span>
-        </div>
-      </div>
-
+    <SurfacePage>
+      <SurfaceHero
+        eyebrow={practicesCopy.eyebrow}
+        title={practicesCopy.title}
+        lede={practicesCopy.lede}
+      />
+      <SurfaceInk lead={practicesCopy.inkLead} muted={practicesCopy.inkMuted} sub={practicesCopy.inkSub} />
+      <SurfaceStatStrip
+        stats={[
+          { label: practicesCopy.statLoaded, value: practices.length },
+          { label: practicesCopy.statWithReceipts, value: withProofCount },
+          { label: practicesCopy.statRunnable, value: runnableCount },
+        ]}
+      />
       {error && <div className="notice"><span className="dot dot--warn" /> {error}</div>}
-
-      <div className="split">
-        <div className="cards">
-          {practices.map((practice) => (
-            <button
-              key={practice.slug}
-              className={`card${practice.slug === selected?.slug ? ' is-selected' : ''}`}
-              onClick={() => setSelectedSlug(practice.slug)}
-            >
-              <div className="between">
-                <span className="card__title">{practice.name}</span>
-                {statusPill(practice.status)}
+      {runMessage && <div className="notice"><span className="dot dot--ok" /> {runMessage}</div>}
+      <SkippedLoaderPanel skipped={result?.skipped ?? []} />
+      <SplitLayout
+        list={
+          <>
+            {practices.map((practice) => (
+              <button
+                key={practice.slug}
+                className={`card${practice.slug === selected?.slug ? ' is-selected' : ''}`}
+                onClick={() => setSelectedSlug(practice.slug)}
+              >
+                <div className="between">
+                  <span className="card__title">{practice.name}</span>
+                  {statusPill(practice.status)}
+                </div>
+                <span className="card__sub">{practice.summary}</span>
+              </button>
+            ))}
+            {result === null ? (
+              <div className="panel">
+                <p className="muted">Loading practices…</p>
               </div>
-              <span className="card__sub">{practice.summary}</span>
-            </button>
-          ))}
-          {!practices.length && <div className="faint">No practices loaded.</div>}
+            ) : !practices.length ? (
+              <InlineEmpty title={listEmpty.practices?.title ?? 'No practices loaded'} body={listEmpty.practices?.body ?? ''} />
+            ) : null}
+          </>
+        }
+        detail={selected ? (
+          <PracticeDetail
+            practice={selected}
+            relatedReceipts={relatedReceipts}
+            metrics={metrics}
+            runnable={RUNTIME_PRACTICE_SLUGS.has(selected.slug)}
+            busy={busy}
+            onRun={runPractice}
+          />
+        ) : null}
+      />
+      <SurfaceMeta label={practicesCopy.metaLabel}>
+        <span className="filechip">{Icon.file} {result?.dir ?? 'practices/'}</span>
+        <div className="zone" style={{ marginTop: 12 }}>
+          <span className="zone__tag">curation gate</span>
+          <span>{practicesCopy.curationGate}</span>
         </div>
-        {selected && <PracticeDetail practice={selected} relatedReceipts={relatedReceipts} />}
-      </div>
-    </div>
+      </SurfaceMeta>
+      <SurfaceProof surface="practices" />
+    </SurfacePage>
   );
 };
 
-const PracticeDetail: React.FC<{ practice: PracticeRecord; relatedReceipts: ReceiptSummary[] }> = ({ practice, relatedReceipts }) => (
+const PracticeDetail: React.FC<{
+  practice: PracticeRecord;
+  relatedReceipts: ReceiptSummary[];
+  metrics: PracticeMetricsSnapshot | null;
+  runnable: boolean;
+  busy: boolean;
+  onRun: () => void;
+}> = ({ practice, relatedReceipts, metrics, runnable, busy, onRun }) => (
   <div className="detail">
-    <div className="panel">
+    <div className="detailSection">
       <div className="between">
         <div className="h-sec">{practice.name}</div>
         {statusPill(practice.status)}
       </div>
       <p className="lede" style={{ marginTop: 6 }}>{practice.summary}</p>
-      <ChipList values={practice.invocations ?? []} empty="No invocations declared." />
+      <ChipList values={practice.invocations ?? []} empty={practicesCopy.noInvocations} />
     </div>
-    <div className="grid grid--2">
-      <div className="panel">
+    {runnable && (
+      <div className="detailSection">
+        <div className="between">
+          <div>
+            <div className="eyebrow">practice run</div>
+            <p className="muted" style={{ marginTop: 6 }}>
+              Records run id + receipt under ~/.otto. Last run: {formatPracticeLastRun(metrics?.last_used_at)}
+            </p>
+            {metrics?.last_receipt_id && (
+              <span className="filechip" style={{ marginTop: 8 }}>receipt: {metrics.last_receipt_id}</span>
+            )}
+          </div>
+          <button className="btn btn--primary" disabled={busy} onClick={onRun}>
+            {busy ? 'Running…' : 'Run'}
+          </button>
+        </div>
+        <div className="row" style={{ flexWrap: 'wrap', gap: 8, marginTop: 12 }}>
+          <span className="filechip">uses: {metrics?.uses ?? 0}</span>
+          <span className="filechip">success: {metrics?.successful_runs ?? 0}</span>
+          <span className="filechip">blocked: {metrics?.blocked_runs ?? 0}</span>
+        </div>
+      </div>
+    )}
+    <div className="detailGrid detailGrid--2">
+      <div className="detailSection">
         <div className="eyebrow">guardrails</div>
         <ul className="list">{(practice.guardrails ?? []).map((item, index) => <li key={index}>{item}</li>)}</ul>
       </div>
-      <div className="panel">
+      <div className="detailSection">
         <div className="eyebrow">evidence standard</div>
         <ul className="list">{(practice.evidence_standard ?? []).map((item, index) => <li key={index}>{item}</li>)}</ul>
       </div>
     </div>
-    <div className="panel">
+    <div className="detailSection">
       <div className="eyebrow">approval floor · cannot be bypassed</div>
       <div className="row" style={{ flexWrap: 'wrap', gap: 8, marginTop: 10 }}>
         {(practice.approval_required_for ?? []).map((item) => <span className="pill pill--warn" key={item}>{item}</span>)}
       </div>
     </div>
-    <div className="panel">
+    <div className="detailSection">
       <div className="eyebrow">citation path</div>
       <p className="muted">Receipts link invocations back to this file by slug and path.</p>
       <span className="filechip" style={{ marginTop: 10 }}>{practice.slug} · {practice.file}</span>
     </div>
-    <div className="panel">
+    <div className="detailSection">
       <div className="eyebrow">related receipts</div>
       {relatedReceipts.length ? (
         <div className="receiptEvidence" style={{ marginTop: 12 }}>
@@ -743,28 +978,13 @@ export const Routines: React.FC = () => {
     };
   }, [api, selectedSlug]);
 
-  if (!api) {
-    return (
-      <EmptySurface
-        eyebrow="routines"
-        title="Routines are available in the desktop app."
-        body="The web preview cannot read local routine files. The desktop app loads the repo or packaged file-backed canon."
-        path="routines/"
-        next="Open the packaged desktop app to inspect and manually run Routines."
-      />
-    );
-  }
-
-  const routines = result?.routines ?? [];
-  const selected = routines.find((routine) => routine.slug === selectedSlug) ?? routines[0] ?? null;
-
   const runManual = async () => {
-    if (!api || !selected || busy) return;
+    if (!api || !selectedSlug || busy) return;
     setBusy(true);
     setRunMessage(null);
     setError(null);
     try {
-      const run = await api.routines.runManual(selected.slug);
+      const run = await api.routines.runManual(selectedSlug);
       setRunMessage(`Manual run recorded: ${run.receipt.id}`);
     } catch (e) {
       setError(String(e));
@@ -773,49 +993,65 @@ export const Routines: React.FC = () => {
     }
   };
 
-  return (
-    <div className="standardsSurface">
-      <div className="panel">
-        <div className="between">
-          <div>
-            <div className="eyebrow">file-backed canon</div>
-            <div className="h-sec">Routines</div>
-          </div>
-          <span className="pill pill--ok">files</span>
-        </div>
-        <p className="lede" style={{ marginTop: 8 }}>
-          Routines bundle Practice invocations. Manual runs write receipts immediately; recurring activation stays approval-gated.
-        </p>
-        <div className="row" style={{ flexWrap: 'wrap', gap: 8, marginTop: 12 }}>
-          <span className="filechip">{Icon.file} {result?.dir ?? 'routines/'}</span>
-          <span className="filechip">{routines.length} routines</span>
-        </div>
-      </div>
+  if (!api) {
+    return <WebPreviewFrame surface="routines" />;
+  }
 
+  const routines = result?.routines ?? [];
+  const selected = routines.find((routine) => routine.slug === selectedSlug) ?? routines[0] ?? null;
+  const activeCount = routines.filter((r) => r.status === 'active').length;
+
+  return (
+    <SurfacePage>
+      <SurfaceHero
+        eyebrow={routinesCopy.eyebrow}
+        title={routinesCopy.title}
+        lede={routinesCopy.lede}
+      />
+      <SurfaceInk lead={routinesCopy.inkLead} muted={routinesCopy.inkMuted} sub={routinesCopy.inkSub} />
+      <SurfaceStatStrip
+        stats={[
+          { label: routinesCopy.statLoaded, value: routines.length },
+          { label: routinesCopy.statActive, value: activeCount, tone: activeCount ? 'ok' : 'neutral' },
+        ]}
+      />
       {error && <div className="notice"><span className="dot dot--warn" /> {error}</div>}
       {runMessage && <div className="notice"><span className="dot dot--ok" /> {runMessage}</div>}
-
-      <div className="split">
-        <div className="cards">
-          {routines.map((routine) => (
-            <button
-              key={routine.slug}
-              className={`card${routine.slug === selected?.slug ? ' is-selected' : ''}`}
-              onClick={() => setSelectedSlug(routine.slug)}
-            >
-              <div className="between">
-                <span className="card__title">{routine.name}</span>
-                {statusPill(routine.status)}
+      <SkippedLoaderPanel skipped={result?.skipped ?? []} />
+      <SplitLayout
+        list={
+          <>
+            {result === null ? (
+              <div className="panel">
+                <p className="muted">Loading routines…</p>
               </div>
-              <span className="card__sub">{routine.summary}</span>
-            </button>
-          ))}
-        </div>
-        {selected && (
+            ) : routines.map((routine) => (
+              <button
+                key={routine.slug}
+                className={`card${routine.slug === selected?.slug ? ' is-selected' : ''}`}
+                onClick={() => setSelectedSlug(routine.slug)}
+              >
+                <div className="between">
+                  <span className="card__title">{routine.name}</span>
+                  {statusPill(routine.status)}
+                </div>
+                <span className="card__sub">{routine.summary}</span>
+              </button>
+            ))}
+            {result && !routines.length && (
+              <InlineEmpty title={listEmpty.routines?.title ?? 'No routines loaded'} body={listEmpty.routines?.body ?? ''} />
+            )}
+          </>
+        }
+        detail={selected ? (
           <RoutineDetail routine={selected} gate={gate} busy={busy} onRunManual={runManual} />
-        )}
-      </div>
-    </div>
+        ) : null}
+      />
+      <SurfaceMeta label={routinesCopy.metaLabel}>
+        <span className="filechip">{Icon.file} {result?.dir ?? 'routines/'}</span>
+      </SurfaceMeta>
+      <SurfaceProof surface="routines" />
+    </SurfacePage>
   );
 };
 
@@ -826,7 +1062,7 @@ const RoutineDetail: React.FC<{
   onRunManual: () => void;
 }> = ({ routine, gate, busy, onRunManual }) => (
   <div className="detail">
-    <div className="panel">
+    <div className="detailSection">
       <div className="between">
         <div className="h-sec">{routine.name}</div>
         {statusPill(routine.status)}
@@ -837,7 +1073,7 @@ const RoutineDetail: React.FC<{
         {routine.schedule?.cron && <span className="filechip">cron: {routine.schedule.cron}</span>}
       </div>
     </div>
-    <div className="panel">
+    <div className="detailSection">
       <div className="eyebrow">steps</div>
       <div className="receiptEvidence" style={{ marginTop: 12 }}>
         {routine.steps.map((step, index) => (
@@ -850,7 +1086,7 @@ const RoutineDetail: React.FC<{
         ))}
       </div>
     </div>
-    <div className="panel">
+    <div className="detailSection">
       <div className="eyebrow">activation gate</div>
       <p className="lede" style={{ marginTop: 8 }}>{gate?.reason ?? 'Checking activation gate…'}</p>
       <div className="row" style={{ flexWrap: 'wrap', gap: 8, marginTop: 12 }}>
@@ -860,7 +1096,7 @@ const RoutineDetail: React.FC<{
         {gate?.requiresApproval && <span className="pill pill--warn">approval required</span>}
       </div>
     </div>
-    <div className="panel">
+    <div className="detailSection">
       <div className="between">
         <div>
           <div className="eyebrow">manual run</div>
@@ -878,33 +1114,43 @@ const RoutineDetail: React.FC<{
 /* ---------- Curation (proposals + approvals) ---------- */
 
 type ProposalInboxFilter = 'pending' | 'decided' | 'all';
+type CurationMainPanel = 'inbox' | 'changelog';
 
-const PENDING_STATUSES = new Set(['proposed', 'needs_approval', 'deferred']);
+const PENDING_STATUSES = new Set(['proposed', 'needs_approval']);
 const isPendingProposal = (status: string) => PENDING_STATUSES.has(status);
-const canDecideProposal = (status: string) => status === 'proposed' || status === 'needs_approval' || status === 'deferred';
+const canDecideProposal = (status: string) => status === 'proposed' || status === 'needs_approval';
+const isMemoryWritebackProposal = (kind: string) => kind === 'memory_writeback';
 
-export const Curation: React.FC = () => {
+export const Curation: React.FC<{ initialPanel?: CurationMainPanel }> = ({ initialPanel = 'inbox' }) => {
   const api = ottoApi();
+  const { push: pushToast } = useToast();
   const [result, setResult] = useState<ProposalListResult | null>(null);
+  const [approvals, setApprovals] = useState<ApprovalListResult | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [filter, setFilter] = useState<ProposalInboxFilter>('pending');
+  const [mainPanel, setMainPanel] = useState<CurationMainPanel>(initialPanel);
   const [error, setError] = useState<string | null>(null);
-  const [decisionMessage, setDecisionMessage] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
   const reload = () => {
     if (!api) return Promise.resolve();
-    return api.curation.proposals.list()
-      .then((next) => setResult(next))
-      .catch((e) => setError(String(e)));
+    return Promise.all([
+      api.curation.proposals.list().then((next) => setResult(next)),
+      api.curation.approvals.list().then((next) => setApprovals(next)),
+    ]).catch((e) => setError(String(e)));
   };
 
   useEffect(() => {
     if (!api) return;
     let cancelled = false;
-    api.curation.proposals.list()
-      .then((next) => {
-        if (!cancelled) setResult(next);
+    Promise.all([
+      api.curation.proposals.list(),
+      api.curation.approvals.list(),
+    ])
+      .then(([proposals, approvalList]) => {
+        if (cancelled) return;
+        setResult(proposals);
+        setApprovals(approvalList);
       })
       .catch((e) => {
         if (!cancelled) setError(String(e));
@@ -913,6 +1159,10 @@ export const Curation: React.FC = () => {
       cancelled = true;
     };
   }, [api]);
+
+  useEffect(() => {
+    setMainPanel(initialPanel);
+  }, [initialPanel]);
 
   const proposals = result?.proposals ?? [];
   const filtered = useMemo(() => {
@@ -928,15 +1178,7 @@ export const Curation: React.FC = () => {
     ?? null;
 
   if (!api) {
-    return (
-      <EmptySurface
-        eyebrow="curation"
-        title="Curation inbox is available in the desktop app."
-        body="The web preview cannot read local proposal files. The desktop app loads proposals from ~/.otto/curation/proposals/."
-        path="~/.otto/curation/proposals/"
-        next="Open the packaged desktop app to inspect pending canon proposals."
-      />
-    );
+    return <WebPreviewFrame surface="curation" />;
   }
 
   const pendingCount = proposals.filter((p) => isPendingProposal(p.status)).length;
@@ -945,14 +1187,49 @@ export const Curation: React.FC = () => {
   const decide = async (decision: 'accept' | 'reject' | 'defer') => {
     if (!api || !selected || busy || !canDecideProposal(selected.status)) return;
     setBusy(true);
-    setDecisionMessage(null);
     setError(null);
     try {
       const outcome = await api.curation.proposals.decide(selected.id, { decision });
       if (outcome.blocked) {
-        setError(outcome.receipt.blocker?.message ?? 'Decision blocked');
+        const blockedMessage = outcome.receipt.blocker?.message ?? 'Decision blocked';
+        setError(blockedMessage);
+        pushToast({ title: toastCopy.decisionBlocked, body: blockedMessage, tone: 'warn' });
+      } else if (decision === 'accept') {
+        const canonApplied = outcome.receipt.result?.data?.canonApplied === true;
+        const targetLabel = selected.target?.kind ?? 'canon';
+        const behaviorChanged = canonApplied || outcome.proposal.status === 'applied';
+        if (behaviorChanged) {
+          pushToast({
+            title: isMemoryWritebackProposal(selected.kind)
+              ? toastCopy.behaviorUpdatedMemory
+              : toastCopy.behaviorUpdated,
+            body: [
+              toastCopy.behaviorUpdatedBody(targetLabel, selected.summary, outcome.receipt.id),
+              outcome.compiledCheckId ? `${toastCopy.checkActive}: ${outcome.compiledCheckId}` : null,
+            ].filter(Boolean).join('\n'),
+            tone: 'ok',
+            actionLabel: toastCopy.openReceipt,
+            onAction: () => { if (typeof location !== 'undefined') location.hash = 'receipts'; },
+          });
+        } else {
+          pushToast({
+            title: toastCopy.proposalAccepted,
+            body: `receipt ${outcome.receipt.id}`,
+            tone: 'ok',
+          });
+        }
+      } else if (decision === 'reject') {
+        pushToast({
+          title: toastCopy.proposalRejected,
+          body: `receipt ${outcome.receipt.id}`,
+          tone: 'info',
+        });
       } else {
-        setDecisionMessage(`${decision}: ${outcome.receipt.id}`);
+        pushToast({
+          title: toastCopy.proposalDeferred,
+          body: `receipt ${outcome.receipt.id}`,
+          tone: 'info',
+        });
       }
       await reload();
     } catch (e) {
@@ -963,66 +1240,103 @@ export const Curation: React.FC = () => {
   };
 
   return (
-    <div className="standardsSurface">
-      <div className="panel">
-        <div className="between">
-          <div>
-            <div className="eyebrow">curation inbox</div>
-            <div className="h-sec">Proposals</div>
-          </div>
-          <span className="pill pill--ok">files</span>
-        </div>
-        <p className="lede" style={{ marginTop: 8 }}>
-          Corrections become explicit proposals. Accept applies ratified canon changes with a receipt; reject and defer leave canon unchanged.
-        </p>
-        <div className="row" style={{ flexWrap: 'wrap', gap: 8, marginTop: 12 }}>
+    <SurfacePage>
+      <SurfaceHero
+        eyebrow={curationCopy.eyebrow}
+        title={curationCopy.title}
+        lede={curationCopy.lede}
+      />
+
+      <InkBlock
+        headline={
+          <>
+            {curationCopy.inkHeadline}{' '}
+            <span className="inkBlock__muted">{curationCopy.inkHeadlineMuted}</span>
+          </>
+        }
+        sub={curationCopy.inkSub}
+      />
+
+      <SurfaceStatStrip
+        stats={[
+          { label: curationCopy.statPending, value: pendingCount, tone: pendingCount > 0 ? 'warn' : 'neutral' },
+          { label: curationCopy.statDecided, value: decidedCount, tone: 'ok' },
+        ]}
+      />
+
+      <div className="surfaceToolbar">
+        <FilterBar
+          options={[
+            { key: 'inbox', label: 'Inbox' },
+            { key: 'changelog', label: curationCopy.changelogTitle },
+          ]}
+          active={mainPanel}
+          onSelect={(key) => setMainPanel(key as CurationMainPanel)}
+        />
+        {mainPanel === 'inbox' ? (
+          <FilterBar
+            options={[
+              { key: 'pending', label: curationCopy.filterPending },
+              { key: 'decided', label: curationCopy.filterDecided },
+              { key: 'all', label: curationCopy.filterAll },
+            ]}
+            active={filter}
+            onSelect={(key) => setFilter(key as ProposalInboxFilter)}
+          />
+        ) : null}
+        {mainPanel === 'inbox' && selected ? (
+          <span className="filechip mono curationPathChip" title={selected.path}>{selected.path}</span>
+        ) : null}
+        {mainPanel === 'inbox' ? (
           <span className="filechip">{Icon.file} {result?.dir ?? '~/.otto/curation/proposals/'}</span>
-          <span className="filechip">{pendingCount} pending</span>
-          <span className="filechip">{decidedCount} decided</span>
-        </div>
-        <div className="row" style={{ flexWrap: 'wrap', gap: 8, marginTop: 12 }}>
-          {(['pending', 'decided', 'all'] as const).map((key) => (
-            <button
-              key={key}
-              className={`btn${filter === key ? ' btn--primary' : ''}`}
-              onClick={() => setFilter(key)}
-            >
-              {key}
-            </button>
-          ))}
-        </div>
+        ) : null}
       </div>
 
+      {mainPanel === 'changelog' ? (
+        <BehaviorChangelogPanel />
+      ) : (
+        <>
       {error && <div className="notice"><span className="dot dot--warn" /> {error}</div>}
-      {decisionMessage && <div className="notice"><span className="dot dot--ok" /> {decisionMessage}</div>}
 
       {filtered.length === 0 ? (
-        <div className="panel">
-          <div className="h-sec">No {filter === 'all' ? '' : `${filter} `}proposals</div>
-          <p className="muted" style={{ marginTop: 8 }}>
-            {filter === 'pending'
-              ? 'User corrections routed through createFromCorrection will appear here as needs_approval.'
-              : 'Decided proposals (applied, rejected) will appear in this view.'}
-          </p>
-        </div>
+        <InlineEmpty
+          title={
+            filter === 'pending'
+              ? curationCopy.emptyPendingTitle
+              : filter === 'decided'
+                ? curationCopy.emptyDecidedTitle
+                : (listEmpty.curation?.title ?? curationCopy.emptyPendingTitle)
+          }
+          body={
+            filter === 'pending'
+              ? curationCopy.emptyPendingBody
+              : filter === 'decided'
+                ? curationCopy.emptyDecidedBody
+                : (listEmpty.curation?.body ?? curationCopy.emptyPendingBody)
+          }
+        />
       ) : (
-        <div className="split">
-          <div className="cards">
-            {filtered.map((proposal) => (
-              <button
-                key={proposal.id}
-                className={`card${proposal.id === selected?.id ? ' is-selected' : ''}`}
-                onClick={() => setSelectedId(proposal.id)}
-              >
-                <div className="between">
-                  <span className="card__title">{proposal.summary}</span>
+        <SplitLayout
+          list={filtered.map((proposal) => (
+            <button
+              key={proposal.id}
+              type="button"
+              className={`card${proposal.id === selected?.id ? ' is-selected' : ''}`}
+              onClick={() => setSelectedId(proposal.id)}
+            >
+              <div className="between">
+                <span className="card__title">{proposal.summary}</span>
+                <div className="row" style={{ gap: 6, alignItems: 'center' }}>
+                  {isMemoryWritebackProposal(proposal.kind) ? (
+                    <span className="pill pill--info">{curationCopy.memoryBadge}</span>
+                  ) : null}
                   {statusPill(proposal.status)}
                 </div>
-                <span className="card__sub">{proposal.kind} · {proposal.classification.required_gate}</span>
-              </button>
-            ))}
-          </div>
-          {selected && (
+              </div>
+              <span className="card__sub">{proposal.kind} · {proposal.classification.required_gate}</span>
+            </button>
+          ))}
+          detail={selected ? (
             <ProposalDetail
               proposal={selected}
               busy={busy}
@@ -1031,7 +1345,105 @@ export const Curation: React.FC = () => {
               onReject={() => decide('reject')}
               onDefer={() => decide('defer')}
             />
-          )}
+          ) : null}
+        />
+      )}
+
+      <div className="panel" style={{ marginTop: 16 }}>
+        <div className="between">
+          <div>
+            <div className="eyebrow">{curationCopy.approvalsEyebrow}</div>
+            <div className="h-sec">{curationCopy.approvalsTitle}</div>
+          </div>
+          <span className="pill pill--info">emitted by curation</span>
+        </div>
+        <p className="muted" style={{ marginTop: 8 }}>{curationCopy.approvalsLede}</p>
+        {(approvals?.approvals ?? []).length === 0 ? (
+          <p className="muted" style={{ marginTop: 12 }}>{curationCopy.approvalsEmpty}</p>
+        ) : (
+          <div className="receiptEvidence" style={{ marginTop: 12 }}>
+            {(approvals?.approvals ?? []).slice(0, 12).map((approval) => (
+              <div className="zone receiptEvidenceRow" key={approval.id}>
+                <span className="zone__tag">{approval.status}</span>
+                <div>
+                  <div className="card__title">{approval.scope}</div>
+                  <div className="mono receiptEvidenceRef" style={{ marginTop: 4 }}>
+                    {approval.proposal_id} · {approval.receipt_id}
+                  </div>
+                  <div className="muted" style={{ marginTop: 4 }}>
+                    {approval.requirement} · {formatReceiptTime(approval.decided_at)}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      <SurfaceMeta label={curationCopy.metaStorage}>
+        <span className="filechip">{proposals.length} proposals</span>
+      </SurfaceMeta>
+        </>
+      )}
+      <SurfaceProof surface="curation" />
+    </SurfacePage>
+  );
+};
+
+const BehaviorChangelogPanel: React.FC = () => {
+  const api = ottoApi();
+  const [entries, setEntries] = useState<import('@otto-haus/core').BehaviorChangelogEntry[]>([]);
+  const [emptyMessage, setEmptyMessage] = useState('No behavior changes this week.');
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!api) return;
+    let cancelled = false;
+    setLoading(true);
+    api.changelog.list(7)
+      .then((result) => {
+        if (cancelled) return;
+        setEntries(result.entries);
+        setEmptyMessage(result.empty_message);
+      })
+      .catch((e) => {
+        if (!cancelled) setError(String(e));
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [api]);
+
+  if (!api) return null;
+
+  return (
+    <div className="panel" style={{ marginTop: 8 }}>
+      <div className="eyebrow">{curationCopy.changelogEyebrow}</div>
+      <div className="h-sec" style={{ marginTop: 6 }}>{curationCopy.changelogTitle}</div>
+      <p className="muted" style={{ marginTop: 6 }}>{curationCopy.changelogLede}</p>
+      {error ? <div className="notice" style={{ marginTop: 12 }}><span className="dot dot--warn" /> {error}</div> : null}
+      {loading ? (
+        <p className="muted" style={{ marginTop: 12 }}>Loading changelog…</p>
+      ) : entries.length === 0 ? (
+        <InlineEmpty title={emptyMessage} body="Ratify a proposal or amend the constitution to see culture changes here." />
+      ) : (
+        <div className="receiptEvidence" style={{ marginTop: 12 }}>
+          {entries.map((entry) => (
+            <div className="zone receiptEvidenceRow" key={`${entry.receipt_id}-${entry.timestamp}`}>
+              <span className="zone__tag">{entry.source}</span>
+              <div>
+                <div className="card__title">{entry.what}</div>
+                <p className="muted" style={{ marginTop: 4 }}>{entry.why}</p>
+                <div className="mono receiptEvidenceRef" style={{ marginTop: 6 }}>
+                  {entry.authority} · receipt {entry.receipt_id} · {formatReceiptTime(entry.timestamp)}
+                </div>
+              </div>
+            </div>
+          ))}
         </div>
       )}
     </div>
@@ -1047,7 +1459,7 @@ const ProposalDetail: React.FC<{
   onDefer: () => void;
 }> = ({ proposal, busy, canDecide, onAccept, onReject, onDefer }) => (
   <div className="detail">
-    <div className="panel">
+    <div className="detailSection">
       <div className="between">
         <div className="h-sec">{proposal.summary}</div>
         {statusPill(proposal.status)}
@@ -1060,29 +1472,29 @@ const ProposalDetail: React.FC<{
         {proposal.decision_receipt_id && <span className="filechip">decision: {proposal.decision_receipt_id}</span>}
       </div>
     </div>
-    <div className="panel">
-      <div className="eyebrow">classification</div>
+    <div className="detailSection">
+      <div className="eyebrow">{curationCopy.classificationEyebrow}</div>
       <div className="receiptEvidence" style={{ marginTop: 12 }}>
         <div className="zone receiptEvidenceRow">
-          <span className="zone__tag">risk</span>
+          <span className="zone__tag">{curationCopy.zoneRisk}</span>
           <div className="mono">{proposal.classification.risk} · {proposal.classification.route}</div>
         </div>
         <div className="zone receiptEvidenceRow">
-          <span className="zone__tag">gate</span>
+          <span className="zone__tag">{curationCopy.zoneGate}</span>
           <div className="mono">{proposal.classification.required_gate}</div>
         </div>
         <div className="zone receiptEvidenceRow">
-          <span className="zone__tag">canon</span>
+          <span className="zone__tag">{curationCopy.zoneCanon}</span>
           <div className="mono">{proposal.classification.canon_impact}{proposal.target.id ? ` · ${proposal.target.id}` : ''}</div>
         </div>
         <div className="zone receiptEvidenceRow">
-          <span className="zone__tag">reason</span>
+          <span className="zone__tag">{curationCopy.zoneReason}</span>
           <div>{proposal.classification.reason}</div>
         </div>
       </div>
     </div>
-    <div className="panel">
-      <div className="eyebrow">evidence</div>
+    <div className="detailSection">
+      <div className="eyebrow">{curationCopy.evidenceEyebrow}</div>
       <div className="receiptEvidence" style={{ marginTop: 12 }}>
         {proposal.evidence.map((item, index) => (
           <div className="zone receiptEvidenceRow" key={`${item.ref}-${index}`}>
@@ -1096,36 +1508,54 @@ const ProposalDetail: React.FC<{
       </div>
     </div>
     {canDecide && (
-      <div className="panel">
-        <div className="between">
-          <div>
-            <div className="eyebrow">decision</div>
-            <p className="muted" style={{ marginTop: 6 }}>Accept applies canon when a target path is set. Reject and defer write receipts without canon mutation.</p>
-          </div>
-        </div>
-        <div className="row" style={{ flexWrap: 'wrap', gap: 8, marginTop: 12 }}>
-          <button className="btn btn--primary" disabled={busy} onClick={onAccept}>Accept</button>
-          <button className="btn" disabled={busy} onClick={onReject}>Reject</button>
-          <button className="btn" disabled={busy} onClick={onDefer}>Defer</button>
+      <div className="detailSection ratificationPanel">
+        <div className="eyebrow">{curationCopy.ratificationTitle}</div>
+        <p className="lede" style={{ marginTop: 8 }}>{curationCopy.ratificationLede}</p>
+        <div className="row" style={{ flexWrap: 'wrap', gap: 8, marginTop: 14 }}>
+          <button type="button" className="btn btn--primary" disabled={busy} onClick={onAccept}>{curationCopy.accept}</button>
+          <button type="button" className="btn" disabled={busy} onClick={onReject}>{curationCopy.reject}</button>
+          <button type="button" className="btn" disabled={busy} onClick={onDefer}>{curationCopy.defer}</button>
         </div>
       </div>
     )}
-    <div className="panel">
-      <span className="filechip">{proposal.id} · {proposal.path}</span>
-    </div>
+    <SurfaceMeta label={curationCopy.metaStorage}>
+      <span className="filechip">{proposal.id}</span>
+    </SurfaceMeta>
   </div>
 );
 
 /* ---------- Receipts (runs + proof) ---------- */
 const RECEIPT_FILTERS: Array<'all' | ReceiptStatus> = ['all', 'success', 'blocked', 'failed'];
+type ReceiptAuthorityFilter = 'all' | 'human' | 'autonomy' | 'runtime';
+const RECEIPT_AUTHORITY_FILTERS: ReceiptAuthorityFilter[] = ['all', 'human', 'autonomy', 'runtime'];
+
+function receiptAuthorityBucket(receipt: ReceiptSummary): Exclude<ReceiptAuthorityFilter, 'all'> {
+  if (
+    receipt.action.startsWith('curation.')
+    || receipt.subjectType === 'proposal'
+    || receipt.action.startsWith('permission:')
+    || receipt.action.startsWith('constitution.')
+  ) return 'human';
+  if (receipt.action.startsWith('autonomy:') || receipt.action.startsWith('autonomy.')) return 'autonomy';
+  return 'runtime';
+}
+
+function receiptAuthorityFilterLabel(filter: ReceiptAuthorityFilter): string {
+  if (filter === 'all') return receiptsCopy.filterAuthorityAll;
+  if (filter === 'human') return receiptsCopy.filterAuthorityHuman;
+  if (filter === 'autonomy') return receiptsCopy.filterAuthorityAutonomy;
+  return receiptsCopy.filterAuthorityRuntime;
+}
 
 export const Receipts: React.FC = () => {
   const api = ottoApi();
   const [result, setResult] = useState<ReceiptListResult | null>(null);
+  const [runsResult, setRunsResult] = useState<RunListResult | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [detail, setDetail] = useState<ReceiptDetail | null>(null);
   const [query, setQuery] = useState('');
   const [filter, setFilter] = useState<'all' | ReceiptStatus>('all');
+  const [authorityFilter, setAuthorityFilter] = useState<ReceiptAuthorityFilter>('all');
   const [loading, setLoading] = useState(!!api);
   const [error, setError] = useState<string | null>(null);
 
@@ -1134,10 +1564,11 @@ export const Receipts: React.FC = () => {
     let cancelled = false;
     setLoading(true);
     setError(null);
-    api.receipts.list()
-      .then((next) => {
+    Promise.all([api.receipts.list(), api.runs.list()])
+      .then(([next, runList]) => {
         if (cancelled) return;
         setResult(next);
+        setRunsResult(runList);
         setSelectedId((current) =>
           current && next.receipts.some((receipt) => receipt.id === current)
             ? current
@@ -1174,10 +1605,12 @@ export const Receipts: React.FC = () => {
   }, [api, selectedId]);
 
   const receipts = result?.receipts ?? [];
+  const runs = runsResult?.runs ?? [];
   const filtered = useMemo(() => {
     const needle = query.trim().toLowerCase();
     return receipts.filter((receipt) => {
       if (filter !== 'all' && receipt.status !== filter) return false;
+      if (authorityFilter !== 'all' && receiptAuthorityBucket(receipt) !== authorityFilter) return false;
       if (!needle) return true;
       return [
         receipt.id,
@@ -1190,101 +1623,191 @@ export const Receipts: React.FC = () => {
         receipt.path,
       ].some((value) => value.toLowerCase().includes(needle));
     });
-  }, [filter, query, receipts]);
+  }, [authorityFilter, filter, query, receipts]);
   const selectedSummary = receipts.find((receipt) => receipt.id === selectedId) ?? null;
+  const statusCounts = useMemo(() => ({
+    success: receipts.filter((r) => r.status === 'success').length,
+    blocked: receipts.filter((r) => r.status === 'blocked').length,
+    failed: receipts.filter((r) => r.status === 'failed').length,
+  }), [receipts]);
 
   if (!api) {
+    return <WebPreviewFrame surface="receipts" />;
+  }
+
+  if (!loading && !receipts.length && isSampleReceiptPreview()) {
+    const sampleDetail = getSampleReceiptDetail();
     return (
-      <EmptySurface
-        eyebrow="receipts"
-        title="Receipts are available in the desktop app."
-        body="The web preview cannot read the local receipt directory. The desktop app reads real otto.receipt.v1 JSON files."
-        path="~/.otto/receipts/"
-        next="Open the packaged desktop app to inspect local proof."
-      />
+      <SurfacePage className="receiptsSurface">
+        <div className="onboardSampleBanner">{SAMPLE_RECEIPT_LABEL}</div>
+        <SurfaceHero
+          eyebrow={receiptsCopy.eyebrow}
+          title={receiptsCopy.emptyTitle}
+          lede={receiptsCopy.sampleLede}
+        />
+        <SplitLayout
+          list={(
+            <ReceiptCard
+              receipt={sampleReceiptCard}
+              selected
+              onSelect={() => {}}
+            />
+          )}
+          detail={<ReceiptDetailView detail={sampleDetail} summary={sampleReceiptSummary} />}
+        />
+        <SurfaceProof surface="receipts" />
+      </SurfacePage>
     );
   }
 
   if (!loading && !receipts.length) {
     return (
-      <div className="receiptsSurface">
-        <div className="panel receiptsToolbar">
-          <div>
-            <div className="eyebrow">local proof trail</div>
-            <div className="h-sec" style={{ marginTop: 6 }}>No receipts yet</div>
-            <p className="muted" style={{ marginTop: 6 }}>
-              This surface reads real receipt files only. Send or block a chat turn to create an `otto.receipt.v1` record.
-            </p>
+      <SurfacePage className="receiptsSurface">
+        <SurfaceHero
+          eyebrow={receiptsCopy.eyebrow}
+          title={receiptsCopy.emptyTitle}
+          lede={receiptsCopy.emptyBody}
+        />
+        {error && <div className="notice"><span className="dot dot--warn" /> {error}</div>}
+        {runs.length > 0 && (
+          <div className="panel">
+            <div className="between">
+              <div>
+                <div className="eyebrow">{receiptsCopy.runsEyebrow}</div>
+                <div className="h-sec">{receiptsCopy.runsTitle}</div>
+              </div>
+            </div>
+            <div className="receiptEvidence" style={{ marginTop: 12 }}>
+              {runs.slice(0, 8).map((run) => (
+                <div className="zone receiptEvidenceRow" key={run.id}>
+                  <span className="zone__tag">{run.status}</span>
+                  <div>
+                    <div className="card__title">{run.summary ?? run.practice}</div>
+                    <div className="mono receiptEvidenceRef" style={{ marginTop: 4 }}>{run.id} · {run.practice}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <SurfaceMeta label={receiptsCopy.recordMeta}>
+              <span className="filechip">{Icon.file} {runsResult?.dir ?? '~/.otto/runs'}</span>
+            </SurfaceMeta>
           </div>
+        )}
+        <SurfaceMeta label={receiptsCopy.recordMeta}>
           <span className="filechip">{Icon.file} {result?.dir ?? '~/.otto/receipts'}</span>
-        </div>
-      </div>
+        </SurfaceMeta>
+        <SurfaceProof surface="receipts" />
+      </SurfacePage>
     );
   }
 
   return (
-    <div className="receiptsSurface">
-      <div className="panel receiptsToolbar">
-        <div>
-          <div className="eyebrow">local proof trail</div>
-          <div className="h-sec" style={{ marginTop: 6 }}>
-            {loading ? 'Loading receipts...' : `${receipts.length} receipt${receipts.length === 1 ? '' : 's'}`}
-          </div>
-          <p className="muted" style={{ marginTop: 6 }}>
-            Real `otto.receipt.v1` JSON from the local desktop receipt directory.
-            {!!result?.skipped && ` ${result.skipped} malformed file${result.skipped === 1 ? '' : 's'} skipped.`}
-          </p>
-        </div>
+    <SurfacePage className="receiptsSurface">
+      <SurfaceHero
+        eyebrow={receiptsCopy.eyebrow}
+        title={receiptsCopy.title}
+        lede={loading ? receiptsCopy.loadingTitle : receiptsCopy.lede}
+      />
+
+      <SurfaceStatStrip
+        stats={[
+          { label: receiptsCopy.statTotal, value: receipts.length },
+          { label: receiptsCopy.statSuccess, value: statusCounts.success, tone: 'ok' },
+          { label: receiptsCopy.statBlocked, value: statusCounts.blocked, tone: statusCounts.blocked > 0 ? 'warn' : 'neutral' },
+          { label: receiptsCopy.statFailed, value: statusCounts.failed, tone: statusCounts.failed > 0 ? 'warn' : 'neutral' },
+        ]}
+      />
+
+      <div className="surfaceToolbar receiptToolbar">
         <div className="receiptControls">
           <input
             className="receiptSearch"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search receipts"
-            aria-label="Search receipts"
+            placeholder={receiptsCopy.searchPlaceholder}
+            aria-label={receiptsCopy.searchPlaceholder}
           />
-          <div className="segmented" role="tablist" aria-label="Receipt status filter">
-            {RECEIPT_FILTERS.map((item) => (
-              <button key={item} className={filter === item ? 'is-active' : ''} onClick={() => setFilter(item)}>
-                {item}
-              </button>
+          <FilterBar
+            options={RECEIPT_FILTERS.map((item) => ({
+              key: item,
+              label: item === 'all' ? receiptsCopy.filterAll : item,
+            }))}
+            active={filter}
+            onSelect={(key) => setFilter(key as typeof filter)}
+          />
+          <FilterBar
+            options={RECEIPT_AUTHORITY_FILTERS.map((item) => ({
+              key: item,
+              label: receiptAuthorityFilterLabel(item),
+            }))}
+            active={authorityFilter}
+            onSelect={(key) => setAuthorityFilter(key as ReceiptAuthorityFilter)}
+          />
+        </div>
+      </div>
+
+      {error && <div className="notice"><span className="dot dot--warn" /> {error}</div>}
+
+      {runs.length > 0 && (
+        <div className="panel">
+          <div className="between">
+            <div>
+              <div className="eyebrow">{receiptsCopy.runsEyebrow}</div>
+              <div className="h-sec">{receiptsCopy.runsTitle}</div>
+            </div>
+          </div>
+          <div className="receiptEvidence" style={{ marginTop: 12 }}>
+            {runs.slice(0, 8).map((run) => (
+              <div className="zone receiptEvidenceRow" key={run.id}>
+                <span className="zone__tag">{run.status}</span>
+                <div>
+                  <div className="card__title">{run.summary ?? run.practice}</div>
+                  <div className="mono receiptEvidenceRef" style={{ marginTop: 4 }}>{run.id} · {run.practice}</div>
+                </div>
+              </div>
             ))}
           </div>
+          <SurfaceMeta label={receiptsCopy.recordMeta}>
+            <span className="filechip">{Icon.file} {runsResult?.dir ?? '~/.otto/runs'}</span>
+          </SurfaceMeta>
         </div>
-        {error && <div className="notice"><span className="dot dot--warn" /> {error}</div>}
+      )}
+
+      <SplitLayout
+        list={
+          <>
+            {filtered.map((receipt) => (
+              <ReceiptCard
+                key={receipt.id}
+                receipt={{
+                  id: receipt.id,
+                  action: receipt.action,
+                  status: receipt.status,
+                  summary: receipt.summary,
+                  metaLine: `${formatReceiptTime(receipt.timestamp)} · ${receipt.subjectType}${receipt.subjectId ? `:${receipt.subjectId}` : ''}`,
+                  blockerCode: receipt.blockerCode,
+                }}
+                selected={receipt.id === selectedId}
+                onSelect={() => setSelectedId(receipt.id)}
+              />
+            ))}
+            {!filtered.length && receipts.length > 0 && (
+              <InlineEmpty title={receiptsCopy.noMatchTitle} body={receiptsCopy.noMatchBody} />
+            )}
+          </>
+        }
+        detail={<ReceiptDetailView detail={detail} summary={selectedSummary} />}
+      />
+
+      <SurfaceMeta label={receiptsCopy.recordMeta}>
         <span className="filechip">{Icon.file} {result?.dir ?? '~/.otto/receipts'}</span>
-      </div>
+        {result?.skipped ? (
+          <span className="filechip">{result.skipped} malformed skipped</span>
+        ) : null}
+      </SurfaceMeta>
 
-      <div className="split receiptsSplit">
-        <div className="cards receiptList" aria-label="Receipts list">
-          {filtered.map((receipt) => (
-            <button
-              key={receipt.id}
-              className={`card receiptCard${receipt.id === selectedId ? ' is-selected' : ''}`}
-              onClick={() => setSelectedId(receipt.id)}
-            >
-              <div className="between">
-                <span className="card__title">{receipt.action}</span>
-                {statusPill(receipt.status)}
-              </div>
-              <span className="card__sub">{receipt.summary}</span>
-              <span className="receiptCard__meta mono">
-                {formatReceiptTime(receipt.timestamp)} · {receipt.subjectType}{receipt.subjectId ? `:${receipt.subjectId}` : ''}
-              </span>
-              {receipt.blockerCode && <span className="filechip">{receipt.blockerCode}</span>}
-            </button>
-          ))}
-          {!filtered.length && (
-            <div className="panel">
-              <div className="h-sec">No matching receipts</div>
-              <p className="muted" style={{ marginTop: 6 }}>Clear the search or status filter to inspect the full proof trail.</p>
-            </div>
-          )}
-        </div>
-
-        <ReceiptDetailView detail={detail} summary={selectedSummary} />
-      </div>
-    </div>
+      <SurfaceProof surface="receipts" />
+    </SurfacePage>
   );
 };
 
@@ -1292,9 +1815,8 @@ const ReceiptDetailView: React.FC<{ detail: ReceiptDetail | null; summary: Recei
   if (!summary) {
     return (
       <div className="detail">
-        <div className="panel">
-          <div className="h-sec">Select a receipt</div>
-          <p className="muted" style={{ marginTop: 6 }}>The detail pane shows the exact receipt contract fields.</p>
+        <div className="detailSection">
+          <InlineEmpty title={receiptsCopy.selectTitle} body={receiptsCopy.selectBody} />
         </div>
       </div>
     );
@@ -1303,8 +1825,8 @@ const ReceiptDetailView: React.FC<{ detail: ReceiptDetail | null; summary: Recei
   if (!detail || detail.id !== summary.id) {
     return (
       <div className="detail">
-        <div className="panel">
-          <div className="h-sec">Loading receipt detail...</div>
+        <div className="detailSection">
+          <div className="h-sec">{receiptsCopy.loadingTitle}</div>
           <p className="muted" style={{ marginTop: 6 }}>{summary.id}</p>
         </div>
       </div>
@@ -1313,26 +1835,25 @@ const ReceiptDetailView: React.FC<{ detail: ReceiptDetail | null; summary: Recei
 
   return (
     <div className="detail receiptDetail">
-      <div className="panel">
+      <div className="detailSection receiptDetail__authority">
         <div className="between">
-          <div>
-            <div className="eyebrow">receipt detail</div>
-            <div className="h-sec" style={{ marginTop: 6 }}>{detail.result.summary}</div>
-          </div>
+          <div className="eyebrow">{receiptsCopy.authorityEyebrow}</div>
           {statusPill(detail.status)}
         </div>
-        <dl className="kv receiptKv">
-          <div><dt>schema</dt><dd>{detail.schema}</dd></div>
-          <div><dt>id</dt><dd className="mono">{detail.id}</dd></div>
-          <div><dt>timestamp</dt><dd>{formatReceiptTime(detail.timestamp)}</dd></div>
+        <div className="h-sec" style={{ marginTop: 8 }}>{detail.result.summary}</div>
+        <p className="receiptDetail__authorityLine">
+          Authority · <strong>{receiptAuthorityFromDetail(detail)}</strong>
+        </p>
+        <dl className="kv receiptKv" style={{ marginTop: 12 }}>
           <div><dt>action</dt><dd>{detail.action}</dd></div>
+          <div><dt>when</dt><dd>{formatReceiptTime(detail.timestamp)}</dd></div>
           <div><dt>subject</dt><dd>{detail.subject.type}{detail.subject.id ? `:${detail.subject.id}` : ''}</dd></div>
-          <div><dt>file</dt><dd className="mono">{detail.path}</dd></div>
+          <div><dt>id</dt><dd className="mono">{detail.id}</dd></div>
         </dl>
       </div>
 
       {detail.blocker && (
-        <div className="panel receiptBlocker">
+        <div className="detailSection receiptBlocker">
           <div className="between">
             <div className="eyebrow">blocker</div>
             <span className="pill pill--warn">{detail.blocker.code}</span>
@@ -1342,8 +1863,30 @@ const ReceiptDetailView: React.FC<{ detail: ReceiptDetail | null; summary: Recei
         </div>
       )}
 
+      {detail.evidence.length > 0 ? (
+        <div className="detailSection">
+          <div className="eyebrow">{receiptsCopy.evidenceEyebrow}</div>
+          <div className="receiptEvidence" style={{ marginTop: 12 }}>
+            {detail.evidence.map((entry, index) => (
+              <div className="zone receiptEvidenceRow" key={`${entry.kind}-${entry.ref}-${index}`}>
+                <span className="zone__tag">{entry.kind === 'log' ? 'record' : entry.kind}</span>
+                <div>
+                  <div className="mono receiptEvidenceRef">{entry.ref}</div>
+                  {entry.note && <p className="muted" style={{ marginTop: 4 }}>{entry.note}</p>}
+                  {!!entry.proves?.length && (
+                    <div className="row" style={{ flexWrap: 'wrap', gap: 8, marginTop: 8 }}>
+                      {entry.proves.map((proof) => <span className="filechip" key={proof}>{proof}</span>)}
+                    </div>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      ) : null}
+
       {!!detail.practice && (
-        <div className="panel">
+        <div className="detailSection">
           <div className="eyebrow">practice invoked</div>
           <dl className="kv receiptKv" style={{ marginTop: 10 }}>
             <div><dt>name</dt><dd>{detail.practice.name}</dd></div>
@@ -1355,7 +1898,7 @@ const ReceiptDetailView: React.FC<{ detail: ReceiptDetail | null; summary: Recei
       )}
 
       {!!detail.routine && (
-        <div className="panel">
+        <div className="detailSection">
           <div className="eyebrow">routine invoked</div>
           <dl className="kv receiptKv" style={{ marginTop: 10 }}>
             <div><dt>name</dt><dd>{detail.routine.name}</dd></div>
@@ -1367,7 +1910,7 @@ const ReceiptDetailView: React.FC<{ detail: ReceiptDetail | null; summary: Recei
       )}
 
       {!!detail.standards?.length && (
-        <div className="panel">
+        <div className="detailSection">
           <div className="eyebrow">standards cited</div>
           <p className="muted" style={{ marginTop: 6 }}>This receipt links to file-backed Standards cited at write time.</p>
           <div className="receiptEvidence" style={{ marginTop: 12 }}>
@@ -1390,41 +1933,41 @@ const ReceiptDetailView: React.FC<{ detail: ReceiptDetail | null; summary: Recei
         </div>
       )}
 
-      <div className="grid grid--2">
-        <JsonPanel title="input" value={detail.input} />
-        <JsonPanel title="result" value={detail.result} />
-      </div>
-
-      <div className="panel">
-        <div className="eyebrow">evidence</div>
-        <div className="receiptEvidence">
-          {detail.evidence.map((entry, index) => (
-            <div className="zone receiptEvidenceRow" key={`${entry.kind}-${entry.ref}-${index}`}>
-              <span className="zone__tag">{entry.kind}</span>
-              <div>
-                <div className="mono receiptEvidenceRef">{entry.ref}</div>
-                {entry.note && <p className="muted" style={{ marginTop: 4 }}>{entry.note}</p>}
-                {!!entry.proves?.length && (
-                  <div className="row" style={{ flexWrap: 'wrap', gap: 8, marginTop: 8 }}>
-                    {entry.proves.map((proof) => <span className="filechip" key={proof}>{proof}</span>)}
-                  </div>
-                )}
-                {entry.data !== undefined && <pre className="receiptJson mono">{pretty(entry.data)}</pre>}
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
+      <SurfaceMeta label={receiptsCopy.debugMeta}>
+        <span className="filechip">{detail.schema}</span>
+        <span className="filechip">{detail.path}</span>
+        <JsonPanel title="input" value={detail.input} compact />
+        <JsonPanel title="result" value={detail.result} compact />
+      </SurfaceMeta>
     </div>
   );
 };
 
-const JsonPanel: React.FC<{ title: string; value: unknown }> = ({ title, value }) => (
-  <div className="panel">
-    <div className="eyebrow">{title}</div>
-    <pre className="receiptJson mono">{pretty(value)}</pre>
-  </div>
+const JsonPanel: React.FC<{ title: string; value: unknown; compact?: boolean }> = ({ title, value, compact }) => (
+  compact ? (
+    <details className="surfaceMeta" style={{ flex: '1 1 100%', marginTop: 0 }}>
+      <summary>{title}</summary>
+      <div className="surfaceMeta__body">
+        <pre className="receiptJson mono">{pretty(value)}</pre>
+      </div>
+    </details>
+  ) : (
+    <div className="panel">
+      <div className="eyebrow">{title}</div>
+      <pre className="receiptJson mono">{pretty(value)}</pre>
+    </div>
+  )
 );
+
+function receiptAuthorityFromDetail(detail: ReceiptDetail): string {
+  const data = detail.result?.data;
+  if (data && typeof data.authority === 'string') return data.authority;
+  if (detail.subject.type === 'proposal' || detail.action.startsWith('curation.')) return 'human (curation)';
+  if (detail.action.startsWith('autonomy:') || detail.action.startsWith('autonomy.')) return 'autonomy policy';
+  if (detail.action.startsWith('permission:')) return 'human (permission gate)';
+  if (detail.action.startsWith('constitution.')) return 'human (constitution)';
+  return 'otto runtime';
+}
 
 function pretty(value: unknown): string {
   return JSON.stringify(value, null, 2);
@@ -1455,6 +1998,7 @@ const zoneClass = (zone: string) => {
 export const Autonomy: React.FC = () => {
   const api = ottoApi();
   const [loaded, setLoaded] = useState<AutonomyPolicyResult | null>(null);
+  const [knowledge, setKnowledge] = useState<KnowledgeListResult | null>(null);
   const [actionText, setActionText] = useState('run tests in worktree');
   const [evaluation, setEvaluation] = useState<AutonomyActionEvaluation | null>(null);
   const [receiptId, setReceiptId] = useState<string | null>(null);
@@ -1464,9 +2008,12 @@ export const Autonomy: React.FC = () => {
   useEffect(() => {
     if (!api) return;
     let cancelled = false;
-    api.autonomy.policy()
-      .then((next) => {
-        if (!cancelled) setLoaded(next);
+    Promise.all([api.autonomy.policy(), api.knowledge.list()])
+      .then(([policy, knowledgeList]) => {
+        if (!cancelled) {
+          setLoaded(policy);
+          setKnowledge(knowledgeList);
+        }
       })
       .catch((e) => {
         if (!cancelled) setError(String(e));
@@ -1475,20 +2022,6 @@ export const Autonomy: React.FC = () => {
       cancelled = true;
     };
   }, [api]);
-
-  if (!api) {
-    return (
-      <EmptySurface
-        eyebrow="autonomy"
-        title="Autonomy policy is available in the desktop app."
-        body="The web preview cannot read autonomy/policy.yaml. Open the packaged desktop app to inspect zones, doors, and action classification."
-        path="autonomy/policy.yaml"
-        next="Policy governs classification only — Ticketcraft orchestration is not automated in v1."
-      />
-    );
-  }
-
-  const policy = loaded?.policy;
 
   const evaluate = async () => {
     if (!api || busy || !actionText.trim()) return;
@@ -1506,99 +2039,912 @@ export const Autonomy: React.FC = () => {
     }
   };
 
-  return (
-    <div className="standardsSurface">
-      <div className="panel">
-        <div className="between">
-          <div>
-            <div className="eyebrow">file-backed policy</div>
-            <div className="h-sec">Autonomy</div>
-          </div>
-          <span className="pill pill--ok">{loaded?.storage ?? 'loading'}</span>
-        </div>
-        <p className="lede" style={{ marginTop: 8 }}>
-          {policy?.summary ?? 'Loading policy…'} Otto may act alone only inside visible green-zone boundaries; consequential doors always escalate.
-        </p>
-        <div className="row" style={{ flexWrap: 'wrap', gap: 8, marginTop: 12 }}>
-          <span className="filechip">{Icon.file} {loaded?.policyPath ?? 'autonomy/policy.yaml'}</span>
-          <span className="filechip">safe_auto_merge: {policy?.settings.safe_auto_merge ?? '…'}</span>
-        </div>
-      </div>
+  if (!api) {
+    return <WebPreviewFrame surface="autonomy" />;
+  }
 
+  const policy = loaded?.policy;
+  const zoneCount = policy?.zones.length ?? 0;
+  const doorCount = policy?.doors.length ?? 0;
+
+  return (
+    <SurfacePage>
+      <SurfaceHero
+        eyebrow={autonomyCopy.eyebrow}
+        title={autonomyCopy.title}
+        lede={policy?.summary ?? autonomyCopy.lede}
+      />
+      <SurfaceInk lead={autonomyCopy.inkLead} muted={autonomyCopy.inkMuted} sub={autonomyCopy.inkSub} />
+      <SurfaceStatStrip
+        stats={[
+          { label: autonomyCopy.statZones, value: zoneCount },
+          { label: autonomyCopy.statDoors, value: doorCount, tone: doorCount ? 'warn' : 'neutral' },
+        ]}
+      />
       {policy?.limitations.length ? (
         <div className="notice">
           <span className="dot dot--warn" />
           {policy.limitations[0]}
         </div>
       ) : null}
-
       {error && <div className="notice"><span className="dot dot--warn" /> {error}</div>}
 
-      <div className="grid grid--3">
+      <div className="detailGrid detailGrid--3 autonomyZones">
         {(policy?.zones ?? []).map((zone) => (
-          <div className="panel" key={zone.id}>
+          <div className="detailSection" key={zone.id}>
             <div className="between">
               <div className="eyebrow">{zone.id}</div>
-              <span className={`pill ${zoneClass(zone.id)}`}>{zone.requires_approval ? 'approval' : 'autonomous'}</span>
+              <span className={`pill ${zoneClass(zone.id)}`}>
+                {zone.requires_approval ? autonomyCopy.zoneApproval : autonomyCopy.zoneAutonomous}
+              </span>
             </div>
-            <div className="card__title" style={{ marginTop: 8 }}>{zone.label}</div>
-            <p className="muted" style={{ marginTop: 6 }}>{zone.summary}</p>
-            <ul className="list" style={{ marginTop: 10 }}>
+            <div className="card__title autonomyZone__title">{zone.label}</div>
+            <p className="muted autonomyZone__summary">{zone.summary}</p>
+            <ul className="list autonomyZone__examples">
               {zone.examples.slice(0, 4).map((example, index) => <li key={index}>{example}</li>)}
             </ul>
           </div>
         ))}
       </div>
 
-      <div className="panel">
-        <div className="eyebrow">consequential doors</div>
-        <div className="row" style={{ flexWrap: 'wrap', gap: 8, marginTop: 10 }}>
+      <div className="detailSection">
+        <div className="eyebrow">{autonomyCopy.doorsEyebrow}</div>
+        <div className="row autonomyDoors">
           {(policy?.doors ?? []).map((door) => (
             <span className="pill pill--warn" key={door.id}>{door.label}</span>
           ))}
         </div>
       </div>
 
-      <div className="panel">
-        <div className="eyebrow">check an action</div>
-        <p className="muted" style={{ marginTop: 6 }}>Classification writes an autonomy receipt — blocked when approval is required.</p>
+      <div className="detailSection autonomyEvaluate">
+        <div className="eyebrow">{autonomyCopy.evaluateEyebrow}</div>
+        <p className="muted autonomyEvaluate__hint">{autonomyCopy.evaluateHint}</p>
         <input
-          style={{ width: '100%', marginTop: 10, padding: '8px 10px', borderRadius: 8, border: '1px solid var(--line)' }}
+          className="charterInput autonomyEvaluate__input"
           value={actionText}
           onChange={(e) => setActionText(e.target.value)}
-          placeholder="Describe the proposed action…"
+          placeholder={autonomyCopy.evaluatePlaceholder}
+          aria-label={autonomyCopy.evaluatePlaceholder}
         />
-        <div className="row" style={{ marginTop: 12, gap: 8 }}>
+        <div className="row autonomyEvaluate__actions">
           <button type="button" className="btn" disabled={busy} onClick={evaluate}>
-            {busy ? 'Evaluating…' : 'Evaluate action'}
+            {busy ? autonomyCopy.evaluatingButton : autonomyCopy.evaluateButton}
           </button>
         </div>
         {evaluation && (
-          <div className="zone receiptEvidenceRow" style={{ marginTop: 14 }}>
+          <div className="zone receiptEvidenceRow autonomyEvaluate__result">
             <span className={`pill ${zoneClass(evaluation.zone)}`}>{evaluation.zone}</span>
             <div>
-              <div className="card__title">{evaluation.requires_approval ? 'Approval required' : 'May proceed autonomously'}</div>
-              <p className="muted" style={{ marginTop: 4 }}>{evaluation.reason}</p>
-              {receiptId && <div className="mono receiptEvidenceRef" style={{ marginTop: 6 }}>receipt · {receiptId}</div>}
+              <div className="card__title">
+                {evaluation.requires_approval ? autonomyCopy.evalApprovalRequired : autonomyCopy.evalMayProceed}
+              </div>
+              <p className="muted autonomyEvaluate__reason">{evaluation.reason}</p>
+              {evaluation.knowledge_routing && (
+                <p className="muted autonomyEvaluate__routing">
+                  {autonomyCopy.evalRoutingPrefix}{' '}
+                  {evaluation.knowledge_routing.role} → {evaluation.knowledge_routing.provider}/{evaluation.knowledge_routing.model} ({evaluation.knowledge_routing.status})
+                </p>
+              )}
+              {receiptId && (
+                <div className="mono receiptEvidenceRef autonomyEvaluate__receipt">
+                  {autonomyCopy.evalReceiptPrefix} {receiptId}
+                </div>
+              )}
             </div>
           </div>
         )}
       </div>
+
+      <SurfaceMeta label={autonomyCopy.metaLabel}>
+        <span className="filechip">{Icon.file} {loaded?.policyPath ?? 'autonomy/policy.yaml'}</span>
+        <span className="filechip">{autonomyCopy.safeAutoMergeLabel}: {policy?.settings.safe_auto_merge ?? '…'}</span>
+        {knowledge?.registry ? (
+          <p className="muted autonomyMeta__hint">{autonomyCopy.routingKnowledgeHint}</p>
+        ) : null}
+      </SurfaceMeta>
+      <SurfaceProof surface="autonomy" />
+    </SurfacePage>
+  );
+};
+
+/* ---------- Skills ---------- */
+export const Skills: React.FC = () => {
+  const api = ottoApi();
+  const [result, setResult] = useState<SkillListResult | null>(null);
+  const [selectedSlug, setSelectedSlug] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!api) return;
+    let cancelled = false;
+    api.skills.list()
+      .then((next) => {
+        if (cancelled) return;
+        setResult(next);
+        setSelectedSlug(next.skills[0]?.slug ?? null);
+      })
+      .catch((e) => {
+        if (!cancelled) setError(String(e));
+      });
+    return () => { cancelled = true; };
+  }, [api]);
+
+  if (!api) {
+    return <WebPreviewFrame surface="skills" />;
+  }
+
+  const skills = result?.skills ?? [];
+  const selected = skills.find((skill) => skill.slug === selectedSlug) ?? skills[0] ?? null;
+
+  return (
+    <SurfacePage>
+      <SurfaceHero
+        eyebrow={skillsCopy.eyebrow}
+        title={skillsCopy.title}
+        lede={skillsCopy.lede}
+      />
+      <SurfaceInk lead={skillsCopy.inkLead} muted={skillsCopy.inkMuted} sub={skillsCopy.inkSub} />
+      <SurfaceStatStrip stats={[{ label: skillsCopy.statLoaded, value: skills.length }]} />
+      {error && <div className="notice"><span className="dot dot--warn" /> {error}</div>}
+      <SkippedLoaderPanel skipped={result?.skipped ?? []} />
+      {!result && !error && (
+        <div className="detailSection">
+          <div className="h-sec">{skillsCopy.loadingTitle}</div>
+        </div>
+      )}
+      {result && !skills.length && !error && (
+        <InlineEmpty title={listEmpty.skills?.title ?? 'No skills loaded'} body={listEmpty.skills?.body ?? ''} />
+      )}
+      {skills.length > 0 && (
+        <SplitLayout
+          list={skills.map((skill) => (
+            <button
+              key={skill.slug}
+              className={`card${skill.slug === selected?.slug ? ' is-selected' : ''}`}
+              onClick={() => setSelectedSlug(skill.slug)}
+            >
+              <div className="card__title">{skill.name}</div>
+              <span className="card__sub">{skill.slug}</span>
+            </button>
+          ))}
+          detail={selected ? (
+            <div className="detail">
+              <div className="detailSection">
+                <div className="h-sec">{selected.name}</div>
+                <p className="lede" style={{ marginTop: 8 }}>{selected.description}</p>
+                <div className="eyebrow" style={{ marginTop: 16 }}>{skillsCopy.triggersEyebrow}</div>
+                <ChipList values={selected.triggers} empty={skillsCopy.noTriggers} />
+              </div>
+            </div>
+          ) : null}
+        />
+      )}
+      <SurfaceMeta label={skillsCopy.metaLabel}>
+        <span className="filechip">{Icon.file} {result?.dir ?? 'skill/'}</span>
+        {selected && <span className="filechip">{selected.file}</span>}
+      </SurfaceMeta>
+      <SurfaceProof surface="skills" />
+    </SurfacePage>
+  );
+};
+
+/* ---------- Knowledge — Cognee + pgvector ---------- */
+const CogneeKnowledgePanel: React.FC = () => {
+  const api = ottoApi();
+  const [health, setHealth] = useState<CogneeHealth | null>(null);
+  const [capture, setCapture] = useState<CogneeCaptureReceipt | null>(null);
+  const [recall, setRecall] = useState<CogneeRecallSmokeResult | null>(null);
+  const [busy, setBusy] = useState(false);
+
+  const reload = async () => {
+    if (!api?.cognee) return;
+    const [nextHealth, nextCapture] = await Promise.all([
+      api.cognee.health(),
+      api.cognee.latestCapture(),
+    ]);
+    setHealth(nextHealth);
+    setCapture(nextCapture);
+  };
+
+  useEffect(() => {
+    void reload();
+  }, [api]);
+
+  if (!api?.cognee) return null;
+
+  const runRecallSmoke = async () => {
+    setBusy(true);
+    try {
+      setRecall(await api.cognee!.recallSmoke('otto receipt precedent'));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <div className="detailSection knowledgePanel">
+      <div className="between">
+        <div>
+          <div className="eyebrow">{knowledgeCopy.cogneeEyebrow}</div>
+          <div className="h-sec">{knowledgeCopy.cogneeTitle}</div>
+        </div>
+        {health ? statusPill(health.status) : null}
+      </div>
+      {health?.status === 'disabled' && (
+        <LabsBlockedShell
+          title={labsCopy.cogneeBlockedTitle}
+          body={labsCopy.cogneeBlockedBody}
+          onAction={() => void reload()}
+          actionLabel={labsCopy.startSidecar}
+        />
+      )}
+      {health && health.status !== 'disabled' && (
+        <>
+          <p className="muted" style={{ marginTop: 8 }}>
+            {knowledgeCopy.cogneeLoopback(health.baseUrl ?? '—', health.lastCheckedAt ?? undefined)}
+          </p>
+          {health.lastError && health.status !== 'ready' && (
+            <div className="notice" style={{ marginTop: 12 }}>
+              <span className="dot dot--warn" /> {health.lastError}
+            </div>
+          )}
+          {capture ? (
+            <div className="receiptEvidence" style={{ marginTop: 12 }}>
+              <div className="zone receiptEvidenceRow">
+                <span className="zone__tag">{knowledgeCopy.zoneLastCapture}</span>
+                <div className="mono">{capture.id ?? capture.at}</div>
+              </div>
+              {typeof capture.count === 'number' && (
+                <div className="zone receiptEvidenceRow">
+                  <span className="zone__tag">{knowledgeCopy.zoneDocs}</span>
+                  <div>{capture.count}</div>
+                </div>
+              )}
+              {Array.isArray(capture.paths) && capture.paths.length > 0 && (
+                <div className="zone receiptEvidenceRow">
+                  <span className="zone__tag">{knowledgeCopy.zonePath}</span>
+                  <div className="mono">{capture.paths[0]}</div>
+                </div>
+              )}
+            </div>
+          ) : (
+            <p className="muted" style={{ marginTop: 12 }}>{knowledgeCopy.cogneeNoCapture}</p>
+          )}
+          <div className="between" style={{ marginTop: 12, gap: 8, flexWrap: 'wrap' }}>
+            <button type="button" className="btn" disabled={busy} onClick={() => void reload()}>{knowledgeCopy.cogneeRefresh}</button>
+            <button type="button" className="btn" disabled={busy || health.status !== 'ready'} onClick={() => void runRecallSmoke()}>
+              {knowledgeCopy.cogneeRecallSmoke}
+            </button>
+          </div>
+          {recall && (
+            <div style={{ marginTop: 12 }}>
+              {recall.ok && recall.citations.length > 0 ? (
+                recall.citations.map((c: { path: string; snippet: string }) => (
+                  <div className="zone receiptEvidenceRow" key={c.path}>
+                    <span className="zone__tag">{knowledgeCopy.zoneCitation}</span>
+                    <div>
+                      <div className="mono">{c.path}</div>
+                      <div className="muted">{c.snippet}</div>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="notice">
+                  <span className="dot dot--warn" /> {recall.error ?? knowledgeCopy.cogneeNoCitations}
+                </div>
+              )}
+            </div>
+          )}
+        </>
+      )}
+      <span className="filechip" style={{ marginTop: 12 }}>{Icon.file} docs/cognee.md</span>
     </div>
   );
 };
 
-/* ---------- Connect Letta (live setup) ---------- */
-const codePill: Record<StatusCode, [string, string]> = {
-  ready: ['pill--ok', 'connected'],
-  'no-api-key': ['pill--warn', 'auth needed'],
-  'no-agent': ['pill--warn', 'needs agent'],
-  unreachable: ['pill--warn', 'unreachable'],
-  'sdk-missing': ['pill--warn', 'SDK missing'],
-  stale: ['pill--warn', 'stale session'],
-  error: ['pill--warn', 'not connected'],
+const PgvectorKnowledgePanel: React.FC = () => {
+  const api = ottoApi();
+  const [status, setStatus] = useState<PgvectorStatus | null>(null);
+
+  useEffect(() => {
+    if (!api?.pgvector) return;
+    let cancelled = false;
+    api.pgvector.status().then((next) => { if (!cancelled) setStatus(next); });
+    return () => { cancelled = true; };
+  }, [api]);
+
+  if (!api?.pgvector || !status) return null;
+
+  return (
+    <div className="detailSection knowledgePanel">
+      <div className="between">
+        <div>
+          <div className="eyebrow">{knowledgeCopy.pgvectorEyebrow}</div>
+          <div className="h-sec">{knowledgeCopy.pgvectorTitle}</div>
+        </div>
+        {statusPill(
+          !status.enabled
+            ? 'disabled'
+            : status.state === 'ready'
+              ? 'ready'
+              : status.state === 'stopped'
+                ? 'stopped'
+                : 'error',
+        )}
+      </div>
+      {!status.enabled && (
+        <LabsBlockedShell
+          title={labsCopy.pgvectorBlockedTitle}
+          body={labsCopy.pgvectorBlockedBody}
+        />
+      )}
+      {status.enabled && status.state !== 'ready' && (
+        <div className="notice" style={{ marginTop: 12 }}>
+          <span className="dot dot--warn" /> {status.note}
+          {status.connectionHint ? ` · ${status.connectionHint}` : ''}
+        </div>
+      )}
+      {status.enabled && status.state === 'ready' && (
+        <p className="muted" style={{ marginTop: 12, fontSize: 13 }}>
+          {status.note}
+          {status.lastIndexedAt ? ` Last index: ${status.lastIndexedAt}.` : ' No index run yet.'}
+        </p>
+      )}
+    </div>
+  );
 };
 
+/* ---------- Knowledge ---------- */
+export const Knowledge: React.FC = () => {
+  const api = ottoApi();
+  const [result, setResult] = useState<KnowledgeListResult | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!api) return;
+    let cancelled = false;
+    api.knowledge.list()
+      .then((next) => { if (!cancelled) setResult(next); })
+      .catch((e) => { if (!cancelled) setError(String(e)); });
+    return () => { cancelled = true; };
+  }, [api]);
+
+  if (!api) {
+    return <WebPreviewFrame surface="knowledge" />;
+  }
+
+  const registry = result?.registry;
+  const roleCount = registry ? Object.keys(registry.routing.assignments).length : 0;
+
+  return (
+    <SurfacePage>
+      <SurfaceHero
+        eyebrow={knowledgeCopy.eyebrow}
+        title={knowledgeCopy.title}
+        lede={knowledgeCopy.lede}
+      />
+      <SurfaceInk lead={knowledgeCopy.inkLead} muted={knowledgeCopy.inkMuted} sub={knowledgeCopy.inkSub} />
+      <SurfaceStatStrip
+        stats={[
+          { label: knowledgeCopy.statModels, value: registry?.models.length ?? 0 },
+          { label: knowledgeCopy.statRoles, value: roleCount },
+        ]}
+      />
+      {error && <div className="notice"><span className="dot dot--warn" /> {error}</div>}
+      {result && !registry && !error && (
+        <InlineEmpty title={knowledgeCopy.registryNotFoundTitle} body={knowledgeCopy.registryNotFoundBody(result.registryPath)} />
+      )}
+      {!result && !error && (
+        <div className="detailSection">
+          <div className="h-sec">{knowledgeCopy.loadingTitle}</div>
+        </div>
+      )}
+      {registry && (
+        <>
+          {registry.status === 'proposed' && (
+            <div className="notice">
+              <span className="dot dot--warn" />
+              {knowledgeCopy.registryProposedPrefix}
+              {registry.last_reviewed ? ` Last reviewed ${registry.last_reviewed}.` : ''}
+            </div>
+          )}
+          <div className="detailSection">
+            <div className="between">
+              <div className="eyebrow">{knowledgeCopy.routingEyebrow}</div>
+              {statusPill(registry.status)}
+            </div>
+            <div className="receiptEvidence" style={{ marginTop: 12 }}>
+              {Object.entries(registry.routing.assignments).map(([role, handle]) => (
+                <div className="zone receiptEvidenceRow" key={role}>
+                  <span className="zone__tag">{role}</span>
+                  <div className="mono">{handle}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+          <div className="detailSection">
+            <div className="eyebrow">{knowledgeCopy.modelsEyebrow}</div>
+            <div className="cards" style={{ marginTop: 12 }}>
+              {registry.models.map((model) => (
+                <div className="card" key={`${model.provider}/${model.model}`}>
+                  <div className="between">
+                    <span className="card__title">{model.provider}/{model.model}</span>
+                    <span className="pill">{model.cost_tier ?? 'unknown'}</span>
+                  </div>
+                  <span className="card__sub">{model.default_roles.join(', ')}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </>
+      )}
+      <div className="detailGrid detailGrid--2 knowledgeRecallGrid">
+        <CogneeKnowledgePanel />
+        <PgvectorKnowledgePanel />
+      </div>
+      <SurfaceMeta label={knowledgeCopy.metaLabel}>
+        <span className="filechip">{Icon.file} {result?.registryPath ?? 'knowledge/ai-frontier/model-registry.yaml'}</span>
+      </SurfaceMeta>
+      <SurfaceProof surface="knowledge" />
+    </SurfacePage>
+  );
+};
+
+/* ---------- Tickets + workers ---------- */
+export const Tickets: React.FC = () => {
+  const api = ottoApi();
+  const [tickets, setTickets] = useState<TicketListResult | null>(null);
+  const [workers, setWorkers] = useState<WorkerListResult | null>(null);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [objective, setObjective] = useState('');
+  const [slug, setSlug] = useState('');
+  const [message, setMessage] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [checkBlock, setCheckBlock] = useState<{ checkName: string; message: string; receiptId?: string; standardId?: string } | null>(null);
+  const [busy, setBusy] = useState(false);
+
+  const reload = async () => {
+    if (!api) return;
+    const [ticketList, workerList] = await Promise.all([api.tickets.list(), api.workers.list()]);
+    setTickets(ticketList);
+    setWorkers(workerList);
+    setSelectedId((current) =>
+      current && ticketList.tickets.some((t) => t.ticket_id === current)
+        ? current
+        : ticketList.tickets[0]?.ticket_id ?? null,
+    );
+  };
+
+  useEffect(() => {
+    if (!api) return;
+    reload().catch((e) => setError(String(e)));
+  }, [api]);
+
+  if (!api) {
+    return <WebPreviewFrame surface="tickets" />;
+  }
+
+  const list = tickets?.tickets ?? [];
+  const selected = list.find((t) => t.ticket_id === selectedId) ?? list[0] ?? null;
+  const workerForTicket = workers?.workers.find((w) => w.ticket_id === selected?.ticket_id) ?? null;
+
+  const compile = async () => {
+    if (!api || busy || !objective.trim()) return;
+    setBusy(true);
+    setError(null);
+    setMessage(null);
+    try {
+      const result = await api.tickets.compile({
+        slug: slug.trim() || slugify(objective),
+        objective: objective.trim(),
+      });
+      setMessage(`Compiled ${result.ticket.ticket_id} · receipt ${result.receipt.id}`);
+      setObjective('');
+      setSlug('');
+      await reload();
+    } catch (e) {
+      setError(String(e));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const orchestrate = async () => {
+    if (!api || busy || !objective.trim()) return;
+    setBusy(true);
+    setError(null);
+    setMessage(null);
+    try {
+      const result = await api.tickets.orchestrate({
+        slug: slug.trim() || slugify(objective),
+        objective: objective.trim(),
+      });
+      setMessage(`Orchestrated ${result.ticket.ticket_id} · worker ${result.worker.id} · run ${result.run.id}`);
+      setObjective('');
+      setSlug('');
+      await reload();
+    } catch (e) {
+      setError(String(e));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const orchestrateSelected = async () => {
+    if (!api || busy || !selected) return;
+    setBusy(true);
+    setError(null);
+    setMessage(null);
+    try {
+      const result = await api.tickets.orchestrateExisting(selected.ticket_id);
+      setMessage(`Orchestrated ${result.ticket.ticket_id} · worker ${result.worker.id} · run ${result.run.id}`);
+      await reload();
+    } catch (e) {
+      setError(String(e));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const advanceStatus = async (
+    status: TicketRecord['status'],
+    review?: import('../runtime').TicketReviewRecord,
+  ) => {
+    if (!api || busy || !selected) return;
+    setBusy(true);
+    setError(null);
+    setCheckBlock(null);
+    try {
+      await api.tickets.updateStatus(selected.ticket_id, review ? { status, review } : { status });
+      await reload();
+    } catch (e) {
+      const raw = String(e);
+      const receiptMatch = raw.match(/\(receipt:\s*([^)]+)\)/);
+      if (receiptMatch || raw.toLowerCase().includes('not done')) {
+        setCheckBlock({
+          checkName: 'completion-requires-receipts',
+          message: raw.replace(/\s*\(receipt:[^)]+\)\s*$/, '').trim(),
+          receiptId: receiptMatch?.[1]?.trim(),
+          standardId: 'no-fake-done',
+        });
+      } else {
+        setError(raw);
+      }
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const activeWorker = workerForTicket && ['running', 'blocked', 'review'].includes(workerForTicket.status)
+    ? workerForTicket
+    : null;
+
+  const openCount = list.filter((t) => !['merged', 'cancelled'].includes(t.status)).length;
+  const reviewCount = list.filter((t) => t.status === 'review').length;
+
+  return (
+    <SurfacePage>
+      <SurfaceHero
+        eyebrow={ticketsCopy.eyebrow}
+        title={ticketsCopy.title}
+        lede={ticketsCopy.lede}
+      />
+      <SurfaceInk lead={ticketsCopy.inkLead} muted={ticketsCopy.inkMuted} sub={ticketsCopy.inkSub} />
+      <SurfaceStatStrip
+        stats={[
+          { label: ticketsCopy.statTotal, value: list.length },
+          { label: ticketsCopy.statOpen, value: openCount, tone: openCount ? 'ok' : 'neutral' },
+          { label: ticketsCopy.statReview, value: reviewCount, tone: reviewCount ? 'warn' : 'neutral' },
+        ]}
+      />
+      {error && <div className="notice"><span className="dot dot--warn" /> {error}</div>}
+      {checkBlock && (
+        <CheckBlockBanner
+          checkName={checkBlock.checkName}
+          message={checkBlock.message}
+          receiptId={checkBlock.receiptId}
+          standardId={checkBlock.standardId}
+          onOpenReceipt={checkBlock.receiptId ? () => { location.hash = 'receipts'; } : undefined}
+          onOpenStandard={checkBlock.standardId ? () => { location.hash = 'standards'; } : undefined}
+        />
+      )}
+      {message && <div className="notice"><span className="dot dot--ok" /> {message}</div>}
+      {!tickets && !error && (
+        <div className="panel">
+          <div className="h-sec">Loading tickets…</div>
+        </div>
+      )}
+      <div className="panel ticketCreatePanel">
+        <div className="eyebrow">{ticketsCopy.createEyebrow}</div>
+        <div className="h-sec" style={{ marginTop: 6 }}>{ticketsCopy.createTitle}</div>
+        <div className="charterCreate">
+          <label className="charterField">
+            <span>{ticketsCopy.objectiveLabel}</span>
+            <input
+              className="charterInput"
+              value={objective}
+              onChange={(e) => setObjective(e.target.value)}
+              placeholder={ticketsCopy.objectivePlaceholder}
+            />
+          </label>
+          <label className="charterField">
+            <span>{ticketsCopy.slugLabel}</span>
+            <input
+              className="charterInput mono"
+              value={slug}
+              onChange={(e) => setSlug(e.target.value)}
+              placeholder={ticketsCopy.slugPlaceholder}
+            />
+          </label>
+          <div className="row" style={{ gap: 8 }}>
+            <button type="button" className="btn" disabled={busy || !objective.trim()} onClick={compile}>{ticketsCopy.compile}</button>
+            <button type="button" className="btn btn--primary" disabled={busy || !objective.trim()} onClick={orchestrate}>{ticketsCopy.orchestrate}</button>
+          </div>
+        </div>
+      </div>
+      <SplitLayout
+        list={
+          <>
+            {list.map((ticket) => (
+              <button
+                key={ticket.ticket_id}
+                className={`card${ticket.ticket_id === selected?.ticket_id ? ' is-selected' : ''}`}
+                onClick={() => setSelectedId(ticket.ticket_id)}
+              >
+                <div className="between">
+                  <span className="card__title">{ticket.objective.slice(0, 72)}</span>
+                  {statusPill(ticket.status)}
+                </div>
+                <span className="card__sub">{ticket.ticket_id}</span>
+              </button>
+            ))}
+            {tickets && !list.length && (
+              <InlineEmpty title={listEmpty.tickets?.title ?? 'No tickets yet'} body={listEmpty.tickets?.body ?? ''} />
+            )}
+          </>
+        }
+        detail={selected ? (
+          <div className="detail">
+            <div className="detailSection">
+              <div className="between">
+                <div className="h-sec">{selected.ticket_id}</div>
+                {statusPill(selected.status)}
+              </div>
+              <p className="lede" style={{ marginTop: 8 }}>{selected.objective}</p>
+              <div className="row" style={{ marginTop: 12, gap: 8 }}>
+                <button
+                  type="button"
+                  className="btn btn--primary"
+                  disabled={busy || !!activeWorker}
+                  onClick={orchestrateSelected}
+                >
+                  Orchestrate selected
+                </button>
+                {selected.status === 'proposed' && (
+                  <button type="button" className="btn" disabled={busy} onClick={() => void advanceStatus('active')}>
+                    Start implementation
+                  </button>
+                )}
+                {selected.status === 'active' && (
+                  <button type="button" className="btn" disabled={busy} onClick={() => void advanceStatus('review')}>
+                    Send to review
+                  </button>
+                )}
+                {selected.status === 'review' && (
+                  <button
+                    type="button"
+                    className="btn"
+                    disabled={busy}
+                    onClick={() =>
+                      void advanceStatus('merged', {
+                        verdict: '+1',
+                        evidence: [selected.receipt_path ?? `receipts/${selected.ticket_id}.md`],
+                        reviewed_at: new Date().toISOString(),
+                      })
+                    }
+                  >
+                    Mark merged (reviewer +1)
+                  </button>
+                )}
+                {activeWorker && (
+                  <span className="muted">Active worker {activeWorker.id} — finish or fail before re-orchestrating.</span>
+                )}
+              </div>
+              <ChipList values={selected.checks} empty={ticketsCopy.noChecks} />
+              {selected.branch && <span className="filechip" style={{ marginTop: 10 }}>branch · {selected.branch}</span>}
+              {selected.model && <span className="filechip" style={{ marginTop: 10 }}>model · {selected.model}</span>}
+              {selected.worktree && <span className="filechip" style={{ marginTop: 10 }}>worktree · {selected.worktree}</span>}
+              {selected.owner && <span className="filechip" style={{ marginTop: 10 }}>owner · {selected.owner}</span>}
+            </div>
+            {!!selected.acceptance_criteria.length && (
+              <div className="detailSection">
+                <div className="eyebrow">acceptance criteria</div>
+                <ul className="list" style={{ marginTop: 8 }}>
+                  {selected.acceptance_criteria.map((ac) => (
+                    <li key={ac.id}><strong>{ac.id}</strong> {ac.text}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            {workerForTicket && (
+              <div className="detailSection">
+                <div className="eyebrow">worker status</div>
+                <div className="between" style={{ marginTop: 10 }}>
+                  <span className="mono">{workerForTicket.id}</span>
+                  {statusPill(workerForTicket.status)}
+                </div>
+                <p className="muted" style={{ marginTop: 8 }}>{workerForTicket.summary}</p>
+              </div>
+            )}
+          </div>
+        ) : null}
+      />
+      {!!tickets?.skipped && (
+        <p className="muted" style={{ marginTop: 8 }}>{tickets.skipped} malformed ticket folder{tickets.skipped === 1 ? '' : 's'} skipped.</p>
+      )}
+      {(workers?.workers.length ?? 0) > 0 && (
+        <div className="panel">
+          <div className="eyebrow">all workers</div>
+          <div className="receiptEvidence" style={{ marginTop: 12 }}>
+            {workers!.workers.slice(0, 10).map((worker) => (
+              <div className="zone receiptEvidenceRow" key={worker.id}>
+                <span className="zone__tag">{worker.status}</span>
+                <div>
+                  <div className="mono">{worker.id}</div>
+                  <div className="muted">{worker.ticket_id}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+      <SurfaceMeta label={ticketsCopy.metaLabel}>
+        <span className="filechip">{Icon.file} {tickets?.dir ?? '~/.otto/tickets'}</span>
+        {selected?.packetPath && <span className="filechip">{selected.packetPath}</span>}
+        {selected?.ticketPath && <span className="filechip">{selected.ticketPath}</span>}
+      </SurfaceMeta>
+      <SurfaceProof surface="tickets" />
+    </SurfacePage>
+  );
+};
+
+/* ---------- Channels ---------- */
+export const Channels: React.FC = () => {
+  const api = ottoApi();
+  const [result, setResult] = useState<ChannelListResult | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!api) return;
+    let cancelled = false;
+    api.channels.list()
+      .then((next) => { if (!cancelled) setResult(next); })
+      .catch((e) => { if (!cancelled) setError(String(e)); });
+    return () => { cancelled = true; };
+  }, [api]);
+
+  const channels = result?.channels ?? [];
+  const enabledCount = channels.filter((c) => c.enabled).length;
+
+  useEffect(() => {
+    if (!channels.length) {
+      setSelectedId(null);
+      return;
+    }
+    setSelectedId((prev) => (prev && channels.some((c) => c.id === prev) ? prev : channels[0]?.id ?? null));
+  }, [channels]);
+
+  const selected = channels.find((c) => c.id === selectedId) ?? null;
+
+  if (!api) {
+    return <WebPreviewFrame surface="channels" />;
+  }
+
+  return (
+    <SurfacePage>
+      <SurfaceHero
+        eyebrow={channelsCopy.eyebrow}
+        title={channelsCopy.title}
+        lede={channelsCopy.lede}
+      />
+      <SurfaceInk lead={channelsCopy.inkLead} muted={channelsCopy.inkMuted} sub={channelsCopy.inkSub} />
+      <SurfaceStatStrip
+        stats={[
+          { label: channelsCopy.statConfigured, value: channels.length },
+          { label: channelsCopy.statEnabled, value: enabledCount, tone: enabledCount ? 'ok' : 'neutral' },
+        ]}
+      />
+      {error && <div className="notice"><span className="dot dot--warn" /> {error}</div>}
+      {result && enabledCount === 0 && channels.length > 0 && (
+        <LabsBlockedShell
+          title={labsCopy.channelsBlockedTitle}
+          body={labsCopy.channelsBlockedBody}
+          next={labsCopy.channelsBlockedNext}
+        />
+      )}
+      {!result && !error && (
+        <div className="detailSection">
+          <div className="h-sec">{channelsCopy.loadingTitle}</div>
+        </div>
+      )}
+      {result && !channels.length && !error && (
+        <InlineEmpty title={listEmpty.channels?.title ?? 'No channels configured'} body={listEmpty.channels?.body ?? ''} />
+      )}
+      <SkippedLoaderPanel
+        noun="channel row"
+        skipped={(result?.skipped ?? []).map((item) => ({
+          slug: `row-${item.index}`,
+          file: `${item.file}#channels[${item.index}]`,
+          reason: item.reason,
+        }))}
+      />
+      {channels.length > 0 && (
+        <SplitLayout
+          list={
+            <>
+              {channels.map((channel) => (
+                <button
+                  type="button"
+                  key={channel.id}
+                  className={`card${channel.id === selectedId ? ' is-selected' : ''}`}
+                  onClick={() => setSelectedId(channel.id)}
+                >
+                  <div className="between">
+                    <span className="card__title">{channel.label}</span>
+                    <span className={`pill ${channel.enabled ? 'pill--ok' : 'pill--warn'}`}>{channel.enabled ? channelsCopy.enabledLabel : channelsCopy.disabledLabel}</span>
+                  </div>
+                  <span className="card__sub">{channel.kind} · {channel.address}</span>
+                </button>
+              ))}
+            </>
+          }
+          detail={
+            selected ? (
+              <div className="detail">
+                <div className="detailSection">
+                  <div className="between">
+                    <div>
+                      <div className="eyebrow">{selected.kind}</div>
+                      <div className="h-sec">{selected.label}</div>
+                    </div>
+                    <span className={`pill ${selected.enabled ? 'pill--ok' : 'pill--warn'}`}>{selected.enabled ? channelsCopy.enabledLabel : channelsCopy.disabledLabel}</span>
+                  </div>
+                  <dl className="kv" style={{ marginTop: 16 }}>
+                    <div>
+                      <dt>{channelsCopy.addressLabel}</dt>
+                      <dd className="mono">{selected.address}</dd>
+                    </div>
+                    <div>
+                      <dt>{channelsCopy.outboundLabel}</dt>
+                      <dd>{selected.requires_approval_to_send ? channelsCopy.outboundApproval : channelsCopy.outboundDirect}</dd>
+                    </div>
+                    <div>
+                      <dt>{channelsCopy.configFileLabel}</dt>
+                      <dd className="mono">{selected.file}</dd>
+                    </div>
+                  </dl>
+                  {selected.requires_approval_to_send && (
+                    <p className="muted" style={{ marginTop: 12 }}>{channelsCopy.approvalNote}</p>
+                  )}
+                </div>
+              </div>
+            ) : (
+              <InlineEmpty title={channelsCopy.selectTitle} body={channelsCopy.selectBody} />
+            )
+          }
+        />
+      )}
+      <SurfaceMeta label={channelsCopy.metaLabel}>
+        <span className="filechip">{Icon.file} {result?.configPath ?? 'channels/channels.yaml'}</span>
+        <span className="pill pill--ok">{result?.storage ?? 'files'}</span>
+      </SurfaceMeta>
+      <SurfaceProof surface="channels" />
+    </SurfacePage>
+  );
+};
+
+/* ---------- Connect Letta (live setup) ---------- */
 const inputStyle: React.CSSProperties = {
   border: '1px solid var(--line)',
   borderRadius: 8,
@@ -1616,7 +2962,10 @@ const ConnectLetta: React.FC = () => {
   const [status, setStatus] = useState<RuntimeStatus | null>(null);
   const [baseUrl, setBaseUrl] = useState('');
   const [agentId, setAgentId] = useState('');
+  const [primaryAgentId, setPrimaryAgentId] = useState('');
+  const [connectionMode, setConnectionMode] = useState<'embedded' | 'existing' | 'cloud'>('embedded');
   const [busy, setBusy] = useState(false);
+  const [connectError, setConnectError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!api) return;
@@ -1624,15 +2973,17 @@ const ConnectLetta: React.FC = () => {
       setBaseUrl(c.baseUrl ?? '');
       setAgentId(c.agentId ?? '');
     });
+    api.config.get().then((cfg) => {
+      setPrimaryAgentId(cfg.primaryAgentId ?? cfg.agentId ?? '');
+      setConnectionMode(cfg.connectionMode ?? 'embedded');
+    });
     api.runtime.status().then(setStatus).catch(() => {});
   }, [api]);
 
   if (!api) {
     return (
-      <div className="panel">
-        <div className="eyebrow">connect letta</div>
-        <div className="h-sec" style={{ marginTop: 6 }}>Local Letta connection</div>
-        <p className="muted" style={{ marginTop: 6 }}>
+      <div className="settingsBlock">
+        <p className="settingsFieldHint">
           The desktop app auto-detects the local Letta runtime and current/default agent.
           This web preview cannot open the Electron bridge, so manual overrides are disabled here.
         </p>
@@ -1642,13 +2993,21 @@ const ConnectLetta: React.FC = () => {
 
   const connect = async () => {
     setBusy(true);
+    setConnectError(null);
     try {
       const next = await api.connection.save({
         baseUrl: baseUrl.trim() || null,
         agentId: agentId.trim() || null,
       });
+      await api.config.set({
+        primaryAgentId: primaryAgentId.trim() || null,
+        connectionMode,
+      });
       setStatus(next);
       rt.updateStatus(next);
+    } catch (e) {
+      const message = e instanceof Error ? e.message : String(e);
+      setConnectError(message);
     } finally {
       setBusy(false);
     }
@@ -1656,89 +3015,278 @@ const ConnectLetta: React.FC = () => {
 
   const displayStatus = rt.status ?? status;
   const code: StatusCode = displayStatus?.ready ? 'ready' : displayStatus?.code ?? 'error';
-  const [cls, label] = codePill[code] ?? ['pill--warn', 'not connected'];
 
   return (
-    <div className="panel">
-      <div className="row" style={{ justifyContent: 'space-between', alignItems: 'center' }}>
-        <div className="eyebrow">connect letta</div>
-        <span className={`pill ${cls}`}>{label}</span>
+    <div className="settingsBlock">
+      <div className="row" style={{ justifyContent: 'space-between', alignItems: 'center', gap: 12 }}>
+        <p className="settingsFieldHint" style={{ margin: 0 }}>
+          {settingsCopy.primaryAgentHint}
+        </p>
+        {statusCodePill(code)}
       </div>
-      <div className="h-sec" style={{ marginTop: 6 }}>Local Letta connection</div>
-      <p className="muted" style={{ marginTop: 4 }}>
-        otto tries to discover Letta Desktop and your current local agent automatically. These fields are advanced overrides for the rare case discovery picks the wrong runtime or agent.
-      </p>
-      {displayStatus && !displayStatus.ready && displayStatus.reason && (
-        <p className="faint" style={{ marginTop: 6 }}>↳ {displayStatus.reason}</p>
-      )}
-      <div className="grid" style={{ gap: 12, marginTop: 12 }}>
+      <div className="settingsField">
         <label>
-          <span className="faint" style={{ fontSize: 12 }}>Local Letta URL · advanced override</span>
+          <span>{settingsCopy.primaryAgentLabel}</span>
+          <input
+            className="mono"
+            style={inputStyle}
+            value={primaryAgentId}
+            onChange={(e) => setPrimaryAgentId(e.target.value)}
+            placeholder="Default agent for this workspace"
+            spellCheck={false}
+          />
+        </label>
+      </div>
+      <div className="settingsField">
+        <label>
+          <span>{settingsCopy.connectionModeLabel}</span>
+          <select
+            style={inputStyle}
+            value={connectionMode}
+            onChange={(e) => setConnectionMode(e.target.value as 'embedded' | 'existing' | 'cloud')}
+          >
+            <option value="embedded">{settingsCopy.connectionEmbedded}</option>
+            <option value="existing">{settingsCopy.connectionExisting}</option>
+            <option value="cloud">{settingsCopy.connectionCloud}</option>
+          </select>
+        </label>
+      </div>
+      {displayStatus && !displayStatus.ready && displayStatus.reason && (
+        <p className="faint" style={{ margin: 0 }}>↳ {displayStatus.reason}</p>
+      )}
+      {connectError && (
+        <p className="faint" style={{ margin: 0, color: 'var(--warn)' }}>
+          ↳ {settingsCopy.connectionFailedPrefix} {connectError}
+        </p>
+      )}
+      <div className="settingsField">
+        <label>
+          <span>{settingsCopy.connectionLocalUrlLabel}</span>
           <input
             style={inputStyle}
             value={baseUrl}
             onChange={(e) => setBaseUrl(e.target.value)}
-            placeholder="Auto-detect local runtime"
+            placeholder={settingsCopy.connectionLocalUrlPlaceholder}
             spellCheck={false}
           />
         </label>
+      </div>
+      <div className="settingsField">
         <label>
-          <span className="faint" style={{ fontSize: 12 }}>Agent ID · advanced override</span>
+          <span>{settingsCopy.connectionAgentIdLabel}</span>
           <input
             className="mono"
             style={inputStyle}
             value={agentId}
             onChange={(e) => setAgentId(e.target.value)}
-            placeholder="Auto-detect current/default agent"
+            placeholder={settingsCopy.connectionAgentIdPlaceholder}
             spellCheck={false}
           />
         </label>
       </div>
-      <div className="row" style={{ marginTop: 14, gap: 12, alignItems: 'center' }}>
+      <div className="row" style={{ gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
         <button type="button" className="btn btn--primary" onClick={connect} disabled={busy}>
-          {busy ? 'Connecting…' : 'Save overrides & reconnect'}
+          {busy ? settingsCopy.connectionSaveBusy : settingsCopy.connectionSaveIdle}
         </button>
         {displayStatus?.ready && (
           <span className="muted" style={{ fontSize: 13 }}>
-            {displayStatus.agentId}
-            {displayStatus.baseUrl ? ` · ${displayStatus.baseUrl}` : ''}
-            {displayStatus.model ? ` · ${displayStatus.model}` : ''}
+            {`${settingsCopy.readinessConnected}${displayStatus.model ? ` · ${displayStatus.model}` : ''}${displayStatus.effectiveTransport ? ` · ${displayStatus.effectiveTransport}` : ''}`}
           </span>
         )}
       </div>
+      {displayStatus && (
+        <p className="faint" style={{ margin: 0, fontSize: 12 }}>
+          Transport: {displayStatus.transportMode ?? 'sdk'} → {displayStatus.effectiveTransport ?? 'sdk subprocess'}
+          {displayStatus.transportFallbackReason ? ` (fallback: ${displayStatus.transportFallbackReason})` : ''}
+        </p>
+      )}
+    </div>
+  );
+};
+
+const ConnectPgvector: React.FC = () => {
+  const api = ottoApi();
+  const [status, setStatus] = useState<PgvectorStatus | null>(null);
+  const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    if (!api?.pgvector) return;
+    api.pgvector.status().then(setStatus).catch(() => {});
+  }, [api]);
+
+  if (!api?.pgvector) return null;
+
+  const refresh = async () => {
+    setBusy(true);
+    try {
+      const next = await api.pgvector!.status();
+      setStatus(next);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const healthCode: StatusCode =
+    !status?.enabled
+      ? 'no-agent'
+      : status.state === 'ready'
+        ? 'ready'
+        : status.state === 'disabled'
+          ? 'no-agent'
+          : 'error';
+
+  return (
+    <div className="settingsOptionalBlock">
+      <div className="settingsOptionalBlock__head">
+        <div className="settingsOptionalBlock__title">pgvector</div>
+        <StatusPill status={healthCode} />
+      </div>
+      <p className="settingsOptionalBlock__lede">
+        {labsCopy.pgvectorBlockedBody} Advanced env toggles live in docs/pgvector.md.
+      </p>
+      {status && (
+        <p className="faint" style={{ marginTop: 8, fontSize: 12 }}>
+          {status.state}
+          {status.connectionHint ? ` · ${status.connectionHint}` : ''}
+          {status.lastIndexedAt ? ` · indexed ${status.lastIndexedAt}` : ''}
+        </p>
+      )}
+      {status?.error && status.enabled && (
+        <p className="faint" style={{ marginTop: 6, fontSize: 12 }}>↳ {status.error}</p>
+      )}
+      {!status?.enabled && status && (
+        <p className="muted" style={{ marginTop: 8, fontSize: 13 }}>{status.note}</p>
+      )}
+      <div className="row" style={{ marginTop: 14, gap: 12, alignItems: 'center' }}>
+        <button type="button" className="btn btn--primary" onClick={refresh} disabled={busy}>
+          {busy ? 'Checking…' : 'Check health'}
+        </button>
+        {status?.lastCheckedAt && (
+          <span className="muted" style={{ fontSize: 13 }}>
+            {status.available ? 'ready' : status.state}
+          </span>
+        )}
+      </div>
+      <span className="filechip" style={{ marginTop: 10 }}>{Icon.file} docs/pgvector.md</span>
+    </div>
+  );
+};
+
+const ConnectCognee: React.FC = () => {
+  const api = ottoApi();
+  const [enabled, setEnabled] = useState(false);
+  const [baseUrl, setBaseUrl] = useState('http://127.0.0.1:8000');
+  const [health, setHealth] = useState<CogneeHealth | null>(null);
+  const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    if (!api?.cognee?.settings) return;
+    api.cognee.settings.get().then((s) => {
+      setEnabled(s.enabled);
+      setBaseUrl(s.baseUrl);
+    });
+    api.cognee.health().then(setHealth).catch(() => {});
+  }, [api]);
+
+  if (!api?.cognee) return null;
+
+  const saveAndCheck = async () => {
+    setBusy(true);
+    try {
+      const next = await api.cognee!.settings.set({
+        enabled,
+        baseUrl: baseUrl.trim() || 'http://127.0.0.1:8000',
+      });
+      setHealth(next);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const healthCode: StatusCode = health?.status === 'ready' ? 'ready' : health?.status === 'disabled' ? 'no-agent' : 'error';
+
+  return (
+    <div className="settingsOptionalBlock">
+      <div className="settingsOptionalBlock__head">
+        <div className="settingsOptionalBlock__title">Cognee</div>
+        <StatusPill status={healthCode} />
+      </div>
+      <p className="settingsOptionalBlock__lede">
+        Local loopback sidecar for derived graph recall. Disabled by default — files remain canon.
+      </p>
+      <div className="grid" style={{ gap: 12, marginTop: 12 }}>
+        <label className="row" style={{ gap: 10, alignItems: 'center' }}>
+          <input
+            type="checkbox"
+            checked={enabled}
+            onChange={(e) => setEnabled(e.target.checked)}
+          />
+          <span style={{ fontSize: 13.5 }}>{labsCopy.featureEnableLabel}: Knowledge (Cognee)</span>
+        </label>
+        <label>
+          <span className="faint" style={{ fontSize: 12 }}>Base URL (loopback only)</span>
+          <input
+            style={inputStyle}
+            value={baseUrl}
+            onChange={(e) => setBaseUrl(e.target.value)}
+            placeholder="http://127.0.0.1:8000"
+            spellCheck={false}
+            disabled={!enabled}
+          />
+        </label>
+      </div>
+      {health?.lastError && enabled && (
+        <p className="faint" style={{ marginTop: 8, fontSize: 12 }}>↳ {health.lastError}</p>
+      )}
+      <div className="row" style={{ marginTop: 14, gap: 12, alignItems: 'center' }}>
+        <button type="button" className="btn btn--primary" onClick={saveAndCheck} disabled={busy}>
+          {busy ? 'Checking…' : 'Save & check health'}
+        </button>
+        {health?.lastCheckedAt && (
+          <span className="muted" style={{ fontSize: 13 }}>
+            {health.status}
+            {health.baseUrl ? ` · ${health.baseUrl}` : ''}
+          </span>
+        )}
+      </div>
+      <span className="filechip" style={{ marginTop: 10 }}>{Icon.file} docs/cognee.md</span>
     </div>
   );
 };
 
 /* ---------- Settings (Setup + Readiness) ---------- */
-const readyPill = (s: ReadyStatus) => {
-  const map: Record<ReadyStatus, [string, string]> = {
-    connected: ['pill--ok', 'connected'],
-    configured: ['pill--ok', 'configured'],
-    file: ['pill', 'file-backed'],
-    missing: ['pill--warn', 'missing'],
-    'not-wired': ['pill', 'not wired'],
-  };
-  const [cls, label] = map[s];
-  return <span className={`pill ${cls}`}>{label}</span>;
-};
+const SettingsSectionHeader: React.FC<{ title: string; lede: string }> = ({ title, lede }) => (
+  <header className="settingsSectionHeader">
+    <h2 className="settingsSectionHeader__title">{title}</h2>
+    <p className="settingsSectionHeader__lede">{lede}</p>
+  </header>
+);
 
 const ReadyRow: React.FC<{ item: ReadyItem }> = ({ item }) => (
-  <div className="zone" style={{ gridTemplateColumns: '190px minmax(0, 1fr) auto', gap: 16 }}>
-    <span style={{ fontWeight: 600, fontSize: 14 }}>
-      {item.label}
-      {item.required && <span className="faint" style={{ fontWeight: 400, fontSize: 12 }}> · required</span>}
-    </span>
+  <div className="settingsReadinessRow">
     <div>
-      <div className="muted" style={{ fontSize: 13.5 }}>{item.detail}</div>
-      {item.source && <span className="filechip" style={{ marginTop: 6 }}>{Icon.file} {item.source}</span>}
-      <div className="faint mono" style={{ fontSize: 11.5, marginTop: 6 }}>↳ {item.action}</div>
+      <div className="settingsReadinessRow__label">
+        {item.label}
+        {item.required && <span className="faint" style={{ fontWeight: 400, fontSize: 12 }}> · required</span>}
+      </div>
+      <div className="settingsReadinessRow__detail">{item.detail}</div>
+      {item.source && <span className="filechip" style={{ marginTop: 8 }}>{Icon.file} {item.source}</span>}
+      <div className="settingsReadinessRow__meta">↳ {item.action}</div>
     </div>
-    {readyPill(item.status)}
+    {readyStatusPill(item.status)}
   </div>
 );
 
 type ProviderKind = 'local' | 'cloud';
+const PROVIDER_TABS: Array<{
+  kind: ProviderKind;
+  label: string;
+  tabId: string;
+  panelId: string;
+}> = [
+  { kind: 'local', label: 'Local', tabId: 'provider-tab-local', panelId: 'provider-panel-local' },
+  { kind: 'cloud', label: 'Cloud', tabId: 'provider-tab-cloud', panelId: 'provider-panel-cloud' },
+];
 const MODEL_PROVIDERS: Array<{
   kind: ProviderKind;
   name: string;
@@ -1761,29 +3309,125 @@ const ModelProviders: React.FC = () => {
   const api = ottoApi();
   const rt = useRuntimeContext();
   const [tab, setTab] = useState<ProviderKind>('local');
+  const [mirror, setMirror] = useState<ProviderMirrorSnapshot | null>(null);
+  const [apiKeyDraft, setApiKeyDraft] = useState('');
+  const [keyBusy, setKeyBusy] = useState(false);
+  const [keyMessage, setKeyMessage] = useState<string | null>(null);
   const activeModel = `${rt.status?.modelHandle ?? ''} ${rt.status?.model ?? ''}`.toLowerCase();
   const openLetta = () => void api?.runtime.openLetta();
   const rows = MODEL_PROVIDERS.filter((p) => p.kind === tab);
+  const activeProviderTab = PROVIDER_TABS.find((providerTab) => providerTab.kind === tab) ?? PROVIDER_TABS[0];
+
+  const handleProviderTabKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
+    const activeIndex = PROVIDER_TABS.findIndex((providerTab) => providerTab.kind === tab);
+    const currentIndex = activeIndex === -1 ? 0 : activeIndex;
+    let nextIndex: number | null = null;
+
+    if (event.key === 'ArrowRight' || event.key === 'ArrowDown') {
+      nextIndex = (currentIndex + 1) % PROVIDER_TABS.length;
+    } else if (event.key === 'ArrowLeft' || event.key === 'ArrowUp') {
+      nextIndex = (currentIndex - 1 + PROVIDER_TABS.length) % PROVIDER_TABS.length;
+    } else if (event.key === 'Home') {
+      nextIndex = 0;
+    } else if (event.key === 'End') {
+      nextIndex = PROVIDER_TABS.length - 1;
+    }
+
+    if (nextIndex == null) return;
+    event.preventDefault();
+    setTab(PROVIDER_TABS[nextIndex].kind);
+    event.currentTarget.querySelectorAll<HTMLButtonElement>('[role="tab"]')[nextIndex]?.focus();
+  };
+
+  const refreshMirror = () => {
+    if (!api?.provider) return;
+    api.provider.mirror().then(setMirror).catch(() => setMirror(null));
+  };
+
+  useEffect(() => {
+    refreshMirror();
+  }, [api, rt.status?.ready]);
+
+  const submitApiKey = async () => {
+    if (!api?.provider || !apiKeyDraft.trim()) return;
+    setKeyBusy(true);
+    setKeyMessage(null);
+    try {
+      const result = await api.provider.setApiKey(apiKeyDraft);
+      setApiKeyDraft('');
+      setKeyMessage(result.hasApiKey ? settingsCopy.providerApiKeyPresent : settingsCopy.providerApiKeyMissing);
+      refreshMirror();
+      const next = await api.runtime.init();
+      rt.updateStatus(next);
+    } finally {
+      setKeyBusy(false);
+    }
+  };
 
   return (
-    <div className="providersScreen">
-      <div className="panel providersHero">
-        <div>
-          <div className="eyebrow">model providers</div>
-          <div className="h-sec" style={{ marginTop: 6 }}>Managed in Letta, selected in otto</div>
-          <p className="muted" style={{ marginTop: 6 }}>
-            otto does not collect provider keys. Connect providers in Letta, then choose model and effort from the chat composer.
-          </p>
-        </div>
+    <div className="settingsPage__content providersScreen">
+      <SettingsSectionHeader title={settingsCopy.providersTitle} lede={settingsCopy.providersLede} />
+      <div className="row" style={{ justifyContent: 'flex-end' }}>
         <button type="button" className="btn btn--primary" onClick={openLetta}>Open Letta</button>
       </div>
 
-      <div className="segmented" role="tablist" aria-label="Provider type">
-        <button type="button" className={tab === 'local' ? 'is-active' : ''} onClick={() => setTab('local')}>Local</button>
-        <button type="button" className={tab === 'cloud' ? 'is-active' : ''} onClick={() => setTab('cloud')}>Cloud</button>
+      <div className="providersMirror">
+        <div className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
+          <span className={`pill ${mirror?.lettaConnected ? 'pill--ok' : 'pill--warn'}`}>
+            Letta {mirror?.lettaConnected ? 'reachable' : 'not connected'}
+          </span>
+          <span className={`pill ${mirror?.hasApiKey ? 'pill--ok' : ''}`}>
+            {mirror?.hasApiKey ? settingsCopy.providerApiKeyPresent : settingsCopy.providerApiKeyMissing}
+          </span>
+          {mirror?.modelHandle && <span className="filechip mono">{mirror.modelHandle}</span>}
+        </div>
+        <p className="settingsFieldHint">{mirror?.note ?? settingsCopy.providerMirrorNote}</p>
+        <div className="settingsField">
+          <label>
+            <span>{settingsCopy.providerSubmitKey}</span>
+            <input
+              type="password"
+              autoComplete="off"
+              style={inputStyle}
+              value={apiKeyDraft}
+              onChange={(e) => setApiKeyDraft(e.target.value)}
+              placeholder="Paste key once — never shown again"
+            />
+          </label>
+        </div>
+        <div className="row" style={{ gap: 8, alignItems: 'center' }}>
+          <button type="button" className="btn btn--primary" onClick={submitApiKey} disabled={keyBusy || !apiKeyDraft.trim()}>
+            {keyBusy ? 'Saving…' : settingsCopy.providerSubmitKey}
+          </button>
+          {keyMessage && <span className="muted" style={{ fontSize: 13 }}>{keyMessage}</span>}
+        </div>
       </div>
 
-      <div className="providerList">
+      <div className="segmented" role="tablist" aria-label="Provider type" onKeyDown={handleProviderTabKeyDown}>
+        {PROVIDER_TABS.map((providerTab) => (
+          <button
+            key={providerTab.kind}
+            id={providerTab.tabId}
+            type="button"
+            role="tab"
+            aria-selected={tab === providerTab.kind}
+            aria-controls={providerTab.panelId}
+            tabIndex={tab === providerTab.kind ? 0 : -1}
+            className={tab === providerTab.kind ? 'is-active' : ''}
+            onClick={() => setTab(providerTab.kind)}
+          >
+            {providerTab.label}
+          </button>
+        ))}
+      </div>
+
+      <div
+        className="providerList"
+        id={activeProviderTab.panelId}
+        role="tabpanel"
+        aria-labelledby={activeProviderTab.tabId}
+        tabIndex={0}
+      >
         {rows.map((provider) => {
           const active = provider.matches.some((m) => activeModel.includes(m));
           return (
@@ -1809,9 +3453,144 @@ const ModelProviders: React.FC = () => {
   );
 };
 
+/* ---------- Settings (Setup + Readiness) ---------- */
+const MemoryObservatory: React.FC<{ connected: boolean; onOpenLetta: () => void }> = ({ connected, onOpenLetta }) => {
+  const api = ottoApi();
+  const [result, setResult] = useState<MemoryListResult | null>(null);
+  const [query, setQuery] = useState('');
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!api?.memory) return;
+    let cancelled = false;
+    api.memory.list()
+      .then((next) => { if (!cancelled) setResult(next); })
+      .catch((e) => { if (!cancelled) setError(String(e)); });
+    return () => { cancelled = true; };
+  }, [api]);
+
+  const blocks = result?.blocks ?? [];
+  const filtered = query.trim()
+    ? blocks.filter((b: MemoryBlockRecord) =>
+      b.label.toLowerCase().includes(query.toLowerCase())
+      || b.value.toLowerCase().includes(query.toLowerCase())
+      || (b.description?.toLowerCase().includes(query.toLowerCase()) ?? false),
+    )
+    : blocks;
+
+  return (
+    <>
+      <div className="row settingsGeneralSection__actions">
+        <button type="button" className="btn" onClick={onOpenLetta}>Open in Letta</button>
+      </div>
+      <p className="settingsFieldHint">
+        Inspects Letta core-memory blocks via `{result?.apiPath ?? '/v1/agents/{id}/core-memory/blocks'}`. Otto does not write memory here — use Curation proposals for writeback.
+      </p>
+        {!connected && (
+          <div className="settingsStatusBanner settingsStatusBanner--warn">
+            {settingsCopy.memoryConnectWarn}
+          </div>
+        )}
+        {(result?.error || error) && (
+          <div className="settingsStatusBanner settingsStatusBanner--warn">
+            {result?.error ?? error}
+          </div>
+        )}
+        <input
+          className="charterInput settingsGeneralSection__search"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder={settingsCopy.memorySearchPlaceholder}
+          disabled={!blocks.length}
+          aria-label={settingsCopy.memorySearchPlaceholder}
+        />
+      {filtered.map((block: MemoryBlockRecord) => (
+        <div className="detailSection settingsMemoryBlock" key={block.id}>
+          <div className="between">
+            <span className="h-sec">{block.label}</span>
+            {block.updated_at && <span className="faint mono">{block.updated_at}</span>}
+          </div>
+          {block.description && <p className="muted settingsMemoryBlock__desc">{block.description}</p>}
+          <pre className="mono settingsMemoryBlock__value">{block.value || '(empty)'}</pre>
+          {block.limit != null && <span className="filechip settingsMemoryBlock__limit">limit · {block.limit}</span>}
+        </div>
+      ))}
+      {result && !result.error && !filtered.length && (
+        <div className="listEmpty"><p className="muted">{settingsCopy.memoryNoMatch}</p></div>
+      )}
+    </>
+  );
+};
+
+const LabsSettingsPanel: React.FC = () => {
+  const { labs, setMasterEnabled, setFeatureEnabled, hydrated } = useLabs();
+
+  return (
+    <>
+      <div className="settingsLabsWarn">{settingsCopy.labsWarn}</div>
+      <div className="settingsFieldRow">
+        <div className="settingsFieldRow__main">
+          <div className="settingsFieldRow__title">{labsCopy.masterLabel}</div>
+          <p className="settingsFieldRow__hint">{labsCopy.masterWarning}</p>
+        </div>
+        <label className="labsRow__toggle">
+          <input
+            type="checkbox"
+            checked={labs.enabled === true}
+            disabled={!hydrated}
+            onChange={(e) => void setMasterEnabled(e.target.checked)}
+          />
+        </label>
+      </div>
+      <div className="labsList" style={{ marginTop: 0 }}>
+        {LAB_FEATURE_IDS.map((id: LabFeatureId) => {
+          const meta = LAB_FEATURE_META[id];
+          const enabled = labs.features?.[id] === true;
+          return (
+            <div key={id} className="settingsFieldRow">
+              <div className="settingsFieldRow__main">
+                <div className="settingsFieldRow__title">
+                  {meta.label}
+                  <span className="pill">{labsCopy.previewBadge}</span>
+                </div>
+                <p className="settingsFieldRow__hint">{meta.blurb}</p>
+              </div>
+              <label className="labsRow__toggle">
+                <input
+                  type="checkbox"
+                  checked={enabled}
+                  disabled={!hydrated || labs.enabled !== true}
+                  onChange={(e) => void setFeatureEnabled(id, e.target.checked)}
+                />
+              </label>
+            </div>
+          );
+        })}
+      </div>
+      <p className="faint mono settingsLabsFootnote">{labsCopy.matrixLink}</p>
+    </>
+  );
+};
+
 export const Settings: React.FC = () => {
   const rt = useRuntimeContext();
+  const api = ottoApi();
+  const { push: pushToast } = useToast();
   const [section, setSection] = useState<'general' | 'providers'>('general');
+
+  useEffect(() => {
+    try {
+      const pending = sessionStorage.getItem('otto.settings.section');
+      if (pending === 'memory' || pending === 'culture' || pending === 'labs') {
+        setSection('general');
+        sessionStorage.removeItem('otto.settings.section');
+        requestAnimationFrame(() => {
+          document.getElementById(`settings-${pending}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        });
+      }
+    } catch { /* best effort */ }
+  }, []);
+
   // Live runtime is the source of truth in Electron; the file-backed checklist describes local
   // config only. Never let the readiness panel say "Setup required" while the runtime is connected.
   const liveConnected = rt.electron && !!rt.status?.ready;
@@ -1830,7 +3609,7 @@ export const Settings: React.FC = () => {
       label: 'Agent identity',
       required: true,
       status: 'configured',
-      detail: rt.status?.agentId ? `agent ${rt.status.agentId}` : 'agent connected',
+      detail: 'Letta session active',
       source: 'RuntimeStatus',
       action: 'Resolved from the live Letta session',
     },
@@ -1866,61 +3645,260 @@ export const Settings: React.FC = () => {
   const ready = liveConnected || requiredMissing.length === 0;
   const group = (keys: string[]) => readiness.filter((r) => keys.includes(r.key)).map((r) => liveByKey.get(r.key) ?? r);
 
+  const settingsTabs: Array<{ id: typeof section; label: string; icon: React.ReactNode }> = [
+    { id: 'general', label: settingsCopy.tabGeneral, icon: Icon.settings },
+    { id: 'providers', label: settingsCopy.tabProviders, icon: Icon.lock },
+  ];
+
   return (
-    <div className="settingsShell">
-      <aside className="settingsNav" aria-label="Settings sections">
-        <button type="button" className={section === 'general' ? 'is-active' : ''} onClick={() => setSection('general')}>
-          {Icon.settings}<span>General</span>
-        </button>
-        <button type="button" className={section === 'providers' ? 'is-active' : ''} onClick={() => setSection('providers')}>
-          {Icon.lock}<span>Model providers</span>
-        </button>
-      </aside>
+    <SurfacePage className="settingsSurface">
+      <SurfaceHero
+        eyebrow={settingsCopy.eyebrow}
+        title={settingsCopy.pageTitle}
+        lede={settingsCopy.pageLede}
+      />
+      <div className="settingsPage">
+      <nav className="settingsTabs" role="tablist" aria-label="Settings sections">
+        {settingsTabs.map((tab) => (
+          <button
+            key={tab.id}
+            type="button"
+            role="tab"
+            aria-selected={section === tab.id}
+            className={section === tab.id ? 'is-active' : ''}
+            onClick={() => setSection(tab.id)}
+          >
+            {tab.icon}
+            <span>{tab.label}</span>
+          </button>
+        ))}
+      </nav>
 
       {section === 'providers' ? (
         <ModelProviders />
       ) : (
-        <div className="grid" style={{ maxWidth: 880, gap: 16 }}>
-          <ConnectLetta />
-          <div className="panel" style={ready ? undefined : { borderColor: '#e7dcc0', background: 'var(--warn-tint)' }}>
-            <div className="eyebrow">readiness</div>
-            <div className="h-sec" style={{ marginTop: 6 }}>
+        <div className="settingsPage__content">
+          <SettingsSectionHeader title={settingsCopy.generalTitle} lede={settingsCopy.generalLede} />
+
+          <section>
+            <SettingsSectionHeader title={settingsCopy.connectionTitle} lede={settingsCopy.connectionLede} />
+            <ConnectLetta />
+          </section>
+
+          {(api?.cognee || api?.pgvector) ? (
+            <section>
+              <SettingsSectionHeader title={settingsCopy.optionalRecallTitle} lede={settingsCopy.optionalRecallLede} />
+              <ConnectCognee />
+              <ConnectPgvector />
+            </section>
+          ) : null}
+
+          <section>
+            <SettingsSectionHeader title={settingsCopy.onboardingTitle} lede={settingsCopy.onboardingLede} />
+            <div className="settingsFieldRow">
+              <div className="settingsFieldRow__main">
+                <div className="settingsFieldRow__title">{settingsCopy.onboardingReplayTitle}</div>
+                <p className="settingsFieldRow__hint">{settingsCopy.onboardingReplayHint}</p>
+              </div>
+              <button
+                type="button"
+                className="btn"
+                onClick={() => {
+                  resetOnboardingForReplay();
+                  pushToast({
+                    title: settingsCopy.onboardingResetToastTitle,
+                    body: settingsCopy.onboardingResetToastBody,
+                    tone: 'ok',
+                  });
+                }}
+              >
+                {settingsCopy.onboardingReset}
+              </button>
+            </div>
+          </section>
+
+          <section>
+            <SettingsSectionHeader title={settingsCopy.readinessTitle} lede={settingsCopy.readinessLede} />
+            <div className={`settingsStatusBanner${!ready && !liveConnected ? ' settingsStatusBanner--warn' : ''}`}>
               {liveConnected
-                ? `Connected — ${rt.status?.agentId ?? 'agent'}${rt.status?.model ? ` · ${rt.status.model}` : ''}`
+                ? `${settingsCopy.readinessConnected}${rt.status?.model ? ` · ${rt.status.model}` : ''}`
                 : ready
-                  ? 'otto is ready to work'
-                  : 'Setup required — otto is not ready to work'}
+                  ? settingsCopy.readinessReadyFallback
+                  : `${settingsCopy.readinessNotReady} ${requiredMissing.map((r) => r.label).join(' · ')}`}
             </div>
-            {liveConnected ? (
-              <p className="muted" style={{ marginTop: 6 }}>
-                Live Letta runtime connected. The file-backed checks below describe local config only; runtime and agent may have been discovered from Letta settings.
-              </p>
-            ) : (
-              !ready && (
-                <p className="muted" style={{ marginTop: 6 }}>
-                  {requiredMissing.length} required {requiredMissing.length === 1 ? 'item' : 'items'} missing:{' '}
-                  {requiredMissing.map((r) => r.label).join(' · ')}. Configure them below — until then, Chat is disabled.
-                </p>
-              )
-            )}
-          </div>
-          <div className="panel">
-            <div className="eyebrow">runtime &amp; identity</div>
-            <div style={{ marginTop: 4 }}>
-              {group(['runtime', 'agent', 'model', 'memory', 'workspace']).map((r) => <ReadyRow key={r.key} item={r} />)}
-            </div>
-          </div>
-          <div className="panel">
-            <div className="eyebrow">capabilities</div>
-            <div style={{ marginTop: 4 }}>
-              {group(['skills', 'practices', 'mcp', 'functions', 'permissions']).map((r) => <ReadyRow key={r.key} item={r} />)}
-            </div>
-          </div>
-          <p className="faint mono" style={{ fontSize: 11.5 }}>
-            v1 is local-only: otto connects to a local Letta runtime. Cloud/self-host auth can come later as an advanced path.
-          </p>
+            <details className="settingsReadinessDetails">
+              <summary>{settingsCopy.readinessDetail}</summary>
+              <div className="settingsReadinessGroup">
+                <div className="faint settingsReadinessGroup__label">{settingsCopy.readinessGroupRuntime}</div>
+                {group(['runtime', 'agent', 'model', 'memory', 'workspace']).map((r) => <ReadyRow key={r.key} item={r} />)}
+              </div>
+              <div className="settingsReadinessGroup">
+                <div className="faint settingsReadinessGroup__label">{settingsCopy.readinessGroupCapabilities}</div>
+                {group(['skills', 'practices', 'mcp', 'functions', 'permissions']).map((r) => <ReadyRow key={r.key} item={r} />)}
+              </div>
+              <div className="settingsReadinessGroup">
+                <div className="faint settingsReadinessGroup__label">{settingsCopy.readinessGroupSurfaces}</div>
+                {group(['charters', 'standards', 'routines', 'curation', 'receipts', 'autonomy', 'knowledge', 'tickets', 'channels']).map((r) => (
+                  <ReadyRow key={r.key} item={r} />
+                ))}
+              </div>
+            </details>
+          </section>
+
+          <section className="settingsGeneralSection" id="settings-memory">
+            <SettingsSectionHeader title={settingsCopy.memoryTitle} lede={settingsCopy.memoryLede} />
+            <MemoryObservatory connected={liveConnected} onOpenLetta={() => void ottoApi()?.runtime.openLetta()} />
+          </section>
+
+          {api ? (
+            <section className="settingsGeneralSection" id="settings-culture">
+              <CultureSettingsPanel api={api} pushToast={pushToast} />
+            </section>
+          ) : null}
+
+          <section className="settingsGeneralSection settingsLabs" id="settings-labs">
+            <SettingsSectionHeader title={settingsCopy.sectionLabs} lede={labsCopy.lede} />
+            <LabsSettingsPanel />
+          </section>
+
+          <p className="faint mono settingsLocalFootnote">{settingsCopy.localOnlyFootnote}</p>
         </div>
       )}
-    </div>
+      </div>
+      <SurfaceProof surface="settings" />
+    </SurfacePage>
+  );
+};
+
+const CultureSettingsPanel: React.FC<{
+  api: NonNullable<ReturnType<typeof ottoApi>>;
+  pushToast: ReturnType<typeof useToast>['push'];
+}> = ({ api, pushToast }) => {
+  const [yamlDraft, setYamlDraft] = useState('');
+  const [bundlePath, setBundlePath] = useState('');
+  const [importPath, setImportPath] = useState('');
+  const [importPreview, setImportPreview] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    api.constitution.get()
+      .then((result) => {
+        if (!cancelled) setYamlDraft(result.rawYaml);
+      })
+      .catch((e) => {
+        if (!cancelled) setError(String(e));
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [api]);
+
+  const amend = async () => {
+    setBusy(true);
+    setError(null);
+    try {
+      const outcome = await api.constitution.amend(yamlDraft, 'operator');
+      if ('blocked' in outcome && outcome.blocked) {
+        setError(outcome.errors.join(' · '));
+        pushToast({
+          title: toastCopy.decisionBlocked,
+          body: outcome.receipt.blocker?.message ?? 'Constitution validation failed',
+          tone: 'warn',
+        });
+      } else if ('receipt' in outcome) {
+        pushToast({
+          title: toastCopy.behaviorUpdated,
+          body: `Constitution amended · receipt ${outcome.receipt.id}`,
+          tone: 'ok',
+        });
+        const fresh = await api.constitution.get();
+        setYamlDraft(fresh.rawYaml);
+      }
+    } catch (e) {
+      setError(String(e));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const exportCulture = async () => {
+    setBusy(true);
+    setError(null);
+    try {
+      const result = await api.culture.export();
+      setBundlePath(result.bundlePath);
+      pushToast({
+        title: cultureSettingsCopy.exportDone,
+        body: result.bundlePath,
+        tone: 'ok',
+      });
+    } catch (e) {
+      setError(String(e));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const previewImport = async () => {
+    if (!importPath.trim()) return;
+    setBusy(true);
+    setError(null);
+    try {
+      const preview = await api.culture.importPreview(importPath.trim());
+      setImportPreview(JSON.stringify(preview, null, 2));
+    } catch (e) {
+      setError(String(e));
+      setImportPreview(null);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <>
+      <SettingsSectionHeader title={cultureSettingsCopy.title} lede={cultureSettingsCopy.lede} />
+      <div className="row" style={{ flexWrap: 'wrap', gap: 8 }}>
+        <button type="button" className="btn" disabled={busy} onClick={() => void api.constitution.open()}>
+          {cultureSettingsCopy.openConstitution}
+        </button>
+        <button type="button" className="btn" disabled={busy} onClick={() => void exportCulture()}>
+          {cultureSettingsCopy.exportCulture}
+        </button>
+      </div>
+      {bundlePath ? <p className="mono faint" style={{ fontSize: 11.5 }}>{bundlePath}</p> : null}
+      <div className="settingsField" style={{ marginTop: 8 }}>
+        <span>{cultureSettingsCopy.amendTitle}</span>
+        <textarea
+          className="mono"
+          rows={14}
+          value={yamlDraft}
+          onChange={(e) => setYamlDraft(e.target.value)}
+          disabled={busy}
+          style={{ width: '100%' }}
+        />
+        <button type="button" className="btn btn--solid-d" style={{ marginTop: 12 }} disabled={busy} onClick={() => void amend()}>
+          {cultureSettingsCopy.amendSave}
+        </button>
+      </div>
+      <div className="settingsField">
+        <span>{cultureSettingsCopy.importPreview}</span>
+        <input
+          type="text"
+          className="mono"
+          placeholder="Path to otto-culture-export-….zip"
+          value={importPath}
+          onChange={(e) => setImportPath(e.target.value)}
+          disabled={busy}
+          style={{ width: '100%' }}
+        />
+        <button type="button" className="btn" style={{ marginTop: 12 }} disabled={busy || !importPath.trim()} onClick={() => void previewImport()}>
+          Preview import (dry-run)
+        </button>
+        {importPreview ? <pre className="receiptJson mono" style={{ marginTop: 12 }}>{importPreview}</pre> : null}
+      </div>
+      {error ? <div className="settingsStatusBanner settingsStatusBanner--warn">{error}</div> : null}
+    </>
   );
 };

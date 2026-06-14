@@ -4,6 +4,11 @@ directories:
   output: dist-app
 # Ship the built main/preload/renderer + the manifest. electron-builder also copies the
 # production dependencies (the Letta SDK + its CLI) into the app.
+#
+# Bundled Letta Code CLI (076) — resolved by resolveCli('embedded') in runtime-common.ts:
+#   macOS:  Otto.app/Contents/Resources/app/node_modules/@letta-ai/letta-code/letta.js
+#   (asar: false → plain files under Resources/app/, not extraResources/)
+# Smoke:    bash scripts/embedded-letta-smoke.sh  (OTTO_EMBEDDED_APP=/path/to/otto.app)
 files:
   - out/**/*
   - package.json
@@ -16,6 +21,16 @@ extraResources:
     to: routines
   - from: ../../autonomy
     to: autonomy
+  - from: ../../knowledge
+    to: knowledge
+  - from: ../../skill
+    to: skill
+  - from: ../../channels
+    to: channels
+  - from: ../../checks
+    to: checks
+  - from: ../../templates
+    to: templates
 # asar OFF on purpose: the Letta SDK spawns its CLI (`node …/letta.js`) as a subprocess,
 # which is unreliable from inside an asar archive. Plain files keep the spawn working.
 asar: false

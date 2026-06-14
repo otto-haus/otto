@@ -49,6 +49,7 @@ standards/
     respect-attention.md
     first-principles.md
     winning.md
+    earned-semver.md     Earned Semver — version numbers prove trust, not momentum
   anti-patterns/         named failure shapes Standards refuse
     fake-progress.md
     ceremony-without-signal.md
@@ -71,6 +72,7 @@ standards/
 | [Respect Attention](standards/respect-attention.md) | Attention is a finite one-way door. |
 | [First-Principles Reasoning](standards/first-principles.md) | Reason from facts, not cargo-cult or authority. |
 | [Winning / Outcomes Over Motion](standards/winning.md) | Finish. Ship proven outcomes, not motion. |
+| [Earned Semver](standards/earned-semver.md) | Public version numbers are earned by proof — not branch names or optimism. |
 
 Two deliberate merges: **Quality + No Fake Done** (broad bar + its enforceable edge) and
 **Candor + Kindness** (they only work together). The registry's `conflicts` map is the

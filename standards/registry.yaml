@@ -56,6 +56,12 @@ standards:
     version: 0.1
     file: standards/winning.md
     meaning: Finish. Ship proven outcomes, not motion.
+  - slug: earned-semver
+    name: Earned Semver
+    status: active
+    version: 0.1
+    file: standards/earned-semver.md
+    meaning: Public version numbers are earned by proof and Sebastian sign-off — not branch names or optimism.
 
 # Case law. Each entry is a recurring tension and its current tie-breaker.
 # `precedent: null` means the rule is asserted but has not yet been tested by a real case.
@@ -75,12 +81,19 @@ conflicts:
   - between: [quality, respect-attention]
     tie_breaker: evidence proportional to consequence
     precedent: null
+  - between: [earned-semver, winning]
+    tie_breaker: delay the tag or shrink the claim before inflating the version number
+    precedent: null
+  - between: [earned-semver, quality]
+    tie_breaker: no ship tag without gate proof; pre-release is allowed for integration lines
+    precedent: null
 
 anti_patterns:
   - fake-progress
   - ceremony-without-signal
   - harsh-candor
   - vague-approval
+  - semver-inflation
 
 canon:
   - slug: horowitz

@@ -1,0 +1,19 @@
+{
+  "schema": "otto.ws-promotion-scorecard.v1",
+  "ticket": "039-cathedral-ws-runtime-transport",
+  "runId": "20260614T073922Z",
+  "gitHead": "fff0152",
+  "defaultTransport": "sdk",
+  "promotionGate": "WS default only after reviewer +1 on filled scorecard",
+  "summary": {
+    "checksPass": 4,
+    "checksFail": 0,
+    "checksSkip": 4
+  },
+  "checks": [{"id":"typecheck","result":"pass","detail":"ok \u2014 see /tmp/otto-scorecard-typecheck.log"},{"id":"electron_typecheck","result":"pass","detail":"ok \u2014 see /tmp/otto-scorecard-electron_typecheck.log"},{"id":"transport_unit","result":"pass","detail":"ok \u2014 see /tmp/otto-scorecard-transport_unit.log"},{"id":"verify_v0","result":"pass","detail":"ok \u2014 see /tmp/otto-scorecard-verify_v0.log"},{"id":"smoke_cli_sdk","result":"skip","detail":"Set LETTA_AGENT_ID and install task to run disposable CLI smoke"},{"id":"smoke_cli_ws","result":"skip","detail":"Set LETTA_AGENT_ID and install task to run disposable CLI smoke"},{"id":"smoke_cli_auto","result":"skip","detail":"Set LETTA_AGENT_ID and install task to run disposable CLI smoke"},{"id":"staging_capture","result":"skip","detail":"Set OTTO_RUN_STAGING_CAPTURE=1 after deploy-staging.sh"}],
+  "dimensions": [{"key":"init_ready","label":"Init → ready","status":"pending","tracePath":null,"receiptPath":null,"latencyMs":null,"notes":null},{"key":"send_first_token","label":"Send → first token","status":"pending","tracePath":null,"receiptPath":null,"latencyMs":null,"notes":null},{"key":"full_turn","label":"Full disposable turn","status":"pending","tracePath":null,"receiptPath":null,"latencyMs":null,"notes":null},{"key":"approval_roundtrip","label":"Approval round-trip","status":"pending","tracePath":null,"receiptPath":null,"latencyMs":null,"notes":null},{"key":"abort","label":"Abort mid-turn","status":"pending","tracePath":null,"receiptPath":null,"latencyMs":null,"notes":null},{"key":"reconnect","label":"Reconnect / no false connected","status":"pending","tracePath":null,"receiptPath":null,"latencyMs":null,"notes":null},{"key":"trace_receipt","label":"Trace + receipt mappable","status":"pending","tracePath":null,"receiptPath":null,"latencyMs":null,"notes":null},{"key":"safety","label":"No conversation=default in smoke","status":"pending","tracePath":null,"receiptPath":null,"latencyMs":null,"notes":null},{"key":"fallback","label":"auto shows transportFallbackReason","status":"pending","tracePath":null,"receiptPath":null,"latencyMs":null,"notes":null}],
+  "stagingOnly": true,
+  "liveAppForbidden": "/Applications/otto.app",
+  "stagingApp": "/Applications/otto-staging.app",
+  "smokeLauncher": "/Users/seb/.codex/admin/otto-staging/launch-otto-staging-smoke.sh"
+}

@@ -3,6 +3,9 @@ import { randomUUID } from 'node:crypto';
 import { join } from 'node:path';
 import { parse, stringify } from 'yaml';
 import type {
+  ApprovalListResult,
+  ApprovalRecord,
+  ApprovalRequirement,
   CreateProposalFromCorrectionInput,
   CurationProposal,
   CurationProposalRecord,
@@ -14,7 +17,10 @@ import type {
   ProposalTarget,
 } from '@otto-haus/core';
 import { OTTO_DIR } from './config-store';
+import { CheckCompiler } from './check-compiler';
 import { ReceiptWriter, type WrittenReceipt } from './receipt-writer';
+import { ReceiptStore } from './receipt-store';
+import { StandardStore } from './standard-store';
 
 export const PROPOSALS_DIR = join(OTTO_DIR, 'curation', 'proposals');
 
@@ -30,17 +36,43 @@ export interface CreateProposalResult {
   receipt: WrittenReceipt;
 }
 
+export interface CreateProposalFromSystemInput {
+  summary: string;
+  rationale: string;
+  target: ProposalTarget;
+  evidence?: ProposalEvidenceRef[];
+  source?: CurationProposal['source'];
+  created_by?: CurationProposal['created_by'];
+}
+
 export interface DecideProposalResult {
   proposal: CurationProposalRecord;
   receipt: WrittenReceipt;
   blocked?: boolean;
+  compiledCheckId?: string | null;
 }
+
+export type CanonApplyResult = {
+  applied: boolean;
+  changed: boolean;
+  reason: 'not_required' | 'updated' | 'already_ratified' | 'missing_target' | 'unsupported_target';
+};
 
 export class ProposalStore {
   constructor(
     private dir = PROPOSALS_DIR,
     private receipts = new ReceiptWriter(),
+    private receiptLookup = new ReceiptStore(),
   ) {}
+
+  listApprovals(): ApprovalListResult {
+    const proposals = this.list().proposals.filter((proposal) => proposal.decision_receipt_id);
+    const approvals: ApprovalRecord[] = proposals
+      .map((proposal) => approvalFromProposal(proposal, this.receiptLookup))
+      .filter((record): record is ApprovalRecord => !!record);
+    approvals.sort((a, b) => timestampMs(b.decided_at) - timestampMs(a.decided_at));
+    return { dir: this.dir, approvals, storage: 'files' };
+  }
 
   list(): ProposalListResult {
     mkdirSync(this.dir, { recursive: true });
@@ -123,6 +155,65 @@ export class ProposalStore {
     return { proposal: record, receipt };
   }
 
+  createFromSystem(input: CreateProposalFromSystemInput): CreateProposalResult {
+    mkdirSync(this.dir, { recursive: true });
+    const now = new Date().toISOString();
+    const id = `prop_${now.slice(0, 10).replace(/-/g, '')}_${randomUUID().slice(0, 8)}`;
+    const classification = classifyProposal(input.target, input.rationale);
+    const kind = kindForTarget(input.target);
+    const evidence = input.evidence ?? [];
+    const rationale = input.rationale.trim();
+    const summary = input.summary.trim();
+    const status = classification.required_gate === 'none' ? 'proposed' : 'needs_approval';
+
+    const proposalBody: CurationProposal = {
+      schema: 'otto.proposal.v1',
+      id,
+      source: input.source ?? 'run_review',
+      kind,
+      summary,
+      rationale,
+      evidence,
+      target: input.target,
+      classification,
+      status,
+      created_at: now,
+      updated_at: now,
+      created_by: input.created_by ?? 'otto',
+    };
+
+    const receipt = this.receipts.write({
+      status: 'success',
+      subject: { type: 'proposal', id },
+      action: 'curation.proposal.create',
+      input: {
+        summary,
+        target: input.target,
+        classification,
+        source: proposalBody.source,
+      },
+      result: {
+        summary: `Proposal recorded: ${proposalBody.summary}`,
+        data: { proposalId: id, route: classification.route },
+      },
+      evidence: evidence.map((entry) => ({
+        kind: entry.kind === 'receipt' ? 'log' : entry.kind === 'file' ? 'file' : 'message',
+        ref: entry.ref,
+        note: entry.note,
+      })),
+      blocker: null,
+    });
+
+    const record: CurationProposalRecord = {
+      ...proposalBody,
+      receipt_id: receipt.id,
+      path: join(this.dir, `${safeId(id)}.json`),
+    };
+    writeFileSync(record.path, `${JSON.stringify(record, null, 2)}\n`);
+
+    return { proposal: record, receipt };
+  }
+
   decide(id: string, input: DecideProposalInput): DecideProposalResult {
     const existing = this.get(id);
     if (!existing) throw new Error(`Proposal not found: ${id}`);
@@ -151,6 +242,7 @@ export class ProposalStore {
     let nextStatus: CurationProposalRecord['status'] = existing.status;
     let appliedAt: string | undefined;
     let canonApplied = false;
+    let canonApply: CanonApplyResult = { applied: false, changed: false, reason: 'not_required' };
 
     if (input.decision === 'reject') {
       nextStatus = 'rejected';
@@ -158,7 +250,8 @@ export class ProposalStore {
       nextStatus = 'deferred';
     } else {
       const requiresCanonWrite = requiresCanonApply(existing.target);
-      canonApplied = applyAcceptedProposal(existing, now);
+      canonApply = applyAcceptedProposal(existing, now);
+      canonApplied = canonApply.applied;
       if (requiresCanonWrite && !canonApplied) {
         const receipt = this.receipts.write({
           status: 'blocked',
@@ -201,11 +294,13 @@ export class ProposalStore {
         target: existing.target,
       },
       result: {
-        summary: decisionSummary(input.decision, existing.summary, canonApplied),
+        summary: decisionSummary(input.decision, existing.summary, canonApply),
         data: {
           proposalId: id,
           status: nextStatus,
           canonApplied,
+          canonChanged: canonApply.changed,
+          canonApplyReason: canonApply.reason,
         },
       },
       evidence: existing.evidence.map((entry) => ({
@@ -226,7 +321,15 @@ export class ProposalStore {
     };
     writeFileSync(updated.path, `${JSON.stringify(updated, null, 2)}\n`);
 
-    return { proposal: updated, receipt };
+    let compiledCheckId: string | null = null;
+    if (input.decision === 'accept' && nextStatus === 'applied') {
+      const compiler = new CheckCompiler(undefined, this.receipts);
+      const standardsDir = new StandardStore().listResult().dir;
+      const compiled = compiler.compileFromProposal(updated, standardsDir);
+      if (compiled.compiled) compiledCheckId = compiled.compiled.id;
+    }
+
+    return { proposal: updated, receipt, compiledCheckId };
   }
 
   private read(path: string): CurationProposalRecord | null {
@@ -350,11 +453,15 @@ function decisionAction(decision: ProposalDecisionKind): string {
   return 'curation.proposal.defer';
 }
 
-function decisionSummary(decision: ProposalDecisionKind, summary: string, canonApplied: boolean): string {
+function decisionSummary(decision: ProposalDecisionKind, summary: string, canonApply: CanonApplyResult): string {
   if (decision === 'accept') {
-    return canonApplied
-      ? `Accepted and applied canon update: ${summary}`
-      : `Accepted proposal: ${summary}`;
+    if (canonApply.applied && canonApply.changed) {
+      return `Accepted and applied canon update: ${summary}`;
+    }
+    if (canonApply.applied) {
+      return `Accepted proposal; canon already reflected: ${summary}`;
+    }
+    return `Accepted proposal: ${summary}`;
   }
   if (decision === 'reject') return `Rejected proposal: ${summary}`;
   return `Deferred proposal: ${summary}`;
@@ -365,9 +472,11 @@ function requiresCanonApply(target: ProposalTarget): boolean {
 }
 
 /** Apply ratified proposal content to file-backed canon when target.path is set. */
-export function applyAcceptedProposal(proposal: CurationProposalRecord, appliedAt: string): boolean {
+export function applyAcceptedProposal(proposal: CurationProposalRecord, appliedAt: string): CanonApplyResult {
   const { target } = proposal;
-  if (!target.path || !existsSync(target.path)) return false;
+  if (!target.path || !existsSync(target.path)) {
+    return { applied: false, changed: false, reason: 'missing_target' };
+  }
 
   if (target.path.endsWith('.yaml') || target.path.endsWith('.yml')) {
     const raw = readFileSync(target.path, 'utf8');
@@ -380,26 +489,74 @@ export function applyAcceptedProposal(proposal: CurationProposalRecord, appliedA
     };
 
     const ratified = Array.isArray(doc.otto_ratified) ? [...doc.otto_ratified] : [];
-    ratified.push(ratifiedEntry);
-    doc.otto_ratified = ratified;
+    let changed = false;
+    if (!hasYamlRatification(ratified, proposal)) {
+      ratified.push(ratifiedEntry);
+      doc.otto_ratified = ratified;
+      changed = true;
+    }
 
     if (target.kind === 'practice' || target.kind === 'routine') {
       const guardrails = Array.isArray(doc.guardrails) ? [...doc.guardrails as string[]] : [];
-      guardrails.push(`[ratified:${proposal.id}] ${proposal.rationale}`);
-      doc.guardrails = guardrails;
+      if (!hasRatifiedGuardrail(guardrails, proposal)) {
+        guardrails.push(`[ratified:${proposal.id}] ${proposal.rationale}`);
+        doc.guardrails = guardrails;
+        changed = true;
+      }
+    }
+
+    if (!changed) {
+      return { applied: true, changed: false, reason: 'already_ratified' };
     }
 
     writeFileSync(target.path, stringify(doc));
-    return true;
+    return { applied: true, changed: true, reason: 'updated' };
   }
 
   if (target.path.endsWith('.md')) {
+    const raw = readFileSync(target.path, 'utf8');
+    if (hasMarkdownRatification(raw, proposal)) {
+      return { applied: true, changed: false, reason: 'already_ratified' };
+    }
     const block = `\n\n<!-- otto:ratified ${proposal.id} ${appliedAt} -->\n${proposal.rationale}\n`;
-    writeFileSync(target.path, `${readFileSync(target.path, 'utf8').trimEnd()}${block}`);
-    return true;
+    writeFileSync(target.path, `${raw.trimEnd()}${block}`);
+    return { applied: true, changed: true, reason: 'updated' };
   }
 
+  return { applied: false, changed: false, reason: 'unsupported_target' };
+}
+
+function hasYamlRatification(ratified: unknown[], proposal: CurationProposalRecord): boolean {
+  const rationale = normalizeRatificationText(proposal.rationale);
+  return ratified.some((entry) => {
+    if (!isRecord(entry)) return false;
+    if (entry.proposal_id === proposal.id) return true;
+    return rationale !== '' && normalizeRatificationText(String(entry.rationale ?? '')) === rationale;
+  });
+}
+
+function hasRatifiedGuardrail(guardrails: unknown[], proposal: CurationProposalRecord): boolean {
+  const rationale = normalizeRatificationText(proposal.rationale);
+  return guardrails.some((guardrail) => {
+    if (typeof guardrail !== 'string') return false;
+    if (guardrail.includes(`[ratified:${proposal.id}]`)) return true;
+    const text = guardrail.replace(/^\[ratified:[^\]]+\]\s*/, '');
+    return rationale !== '' && normalizeRatificationText(text) === rationale;
+  });
+}
+
+function hasMarkdownRatification(raw: string, proposal: CurationProposalRecord): boolean {
+  if (raw.includes(`<!-- otto:ratified ${proposal.id} `)) return true;
+  const rationale = normalizeRatificationText(proposal.rationale);
+  if (!rationale) return false;
+  for (const match of raw.matchAll(/<!-- otto:ratified\s+[^>]+-->\r?\n([\s\S]*?)(?=\r?\n\r?\n<!-- otto:ratified\s+|\s*$)/g)) {
+    if (normalizeRatificationText(match[1] ?? '') === rationale) return true;
+  }
   return false;
+}
+
+function normalizeRatificationText(value: string): string {
+  return value.trim().replace(/\r\n/g, '\n').replace(/[ \t]+$/gm, '');
 }
 
 function isProposalSource(value: unknown): value is CurationProposal['source'] {
@@ -423,6 +580,40 @@ function isEvidenceRef(value: unknown): value is ProposalEvidenceRef {
 
 function safeId(value: string): string {
   return value.replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 64) || 'proposal';
+}
+
+function approvalFromProposal(
+  proposal: CurationProposalRecord,
+  receiptLookup: ReceiptStore,
+): ApprovalRecord | null {
+  if (!proposal.decision_receipt_id) return null;
+  if (proposal.status !== 'applied' && proposal.status !== 'rejected' && proposal.status !== 'deferred') {
+    return null;
+  }
+  const receipt = receiptLookup.get(proposal.decision_receipt_id);
+  const status = proposal.status === 'applied'
+    ? 'approved'
+    : proposal.status === 'rejected'
+      ? 'denied'
+      : 'deferred';
+  return {
+    id: proposal.decision_receipt_id,
+    proposal_id: proposal.id,
+    requirement: requirementForProposal(proposal),
+    status,
+    scope: proposal.classification.scope,
+    decided_at: proposal.applied_at ?? proposal.updated_at,
+    receipt_id: proposal.decision_receipt_id,
+    receipt_path: receipt?.path ?? join(OTTO_DIR, 'receipts', proposal.decision_receipt_id),
+  };
+}
+
+function requirementForProposal(proposal: CurationProposalRecord): ApprovalRequirement {
+  if (proposal.classification.scope === 'spend') return 'spend';
+  if (proposal.classification.scope === 'security') return 'credential-or-security-change';
+  if (proposal.classification.scope === 'external') return 'send-or-publish';
+  if (proposal.target.kind === 'routine') return 'enabling-globally';
+  return 'external-side-effects';
 }
 
 function timestampMs(value: string): number {

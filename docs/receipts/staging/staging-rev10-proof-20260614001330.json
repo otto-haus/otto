@@ -1,0 +1,160 @@
+{
+  "ok": false,
+  "runId": "20260614001330",
+  "gitHead": "fff0152",
+  "stagingApp": "/Applications/otto-staging.app",
+  "cdpPort": 9445,
+  "stagingRoot": "/Users/seb/.codex/admin/otto-staging",
+  "home": "/Users/seb/.codex/admin/otto-staging/home",
+  "ottoHome": "/Users/seb/.codex/admin/otto-staging/otto-home",
+  "profile": "/Users/seb/.codex/admin/otto-staging/profile",
+  "screenshots": {
+    "049": "/Users/seb/Code/otto/docs/receipts/staging/049-chat-ticket-commands-rev10-20260614001330.png",
+    "046_a": "/Users/seb/Code/otto/docs/receipts/staging/046-rev10-thread-a-20260614001330.png",
+    "046_b": "/Users/seb/Code/otto/docs/receipts/staging/046-rev10-thread-b-20260614001330.png",
+    "047": "/Users/seb/Code/otto/docs/receipts/staging/047-memory-search-rev10-20260614001330.png"
+  },
+  "tickets": {
+    "049": {
+      "commands": {
+        "compile034": {
+          "text": "compile ticket 034 Staging rev10 proof packet for charter AC gate",
+          "composerEnabled": false,
+          "sent": false,
+          "transcriptAfter": "RUNTIME NOT READY\notto can't connect yet\nSaved Letta agent or conversation was stale — choose a valid Agent ID override in Settings or clear the override. (500 {\"error\":\"Conversation local-conv-5b46728c-de8b-443e-ad97-735ec85b7ff8 not found\"})\nRetry\nOpen Settings",
+          "matched": false
+        },
+        "compile035": {
+          "text": "compile ticket 035 Staging rev10 proof packet for orchestrate-existing",
+          "composerEnabled": false,
+          "sent": false,
+          "transcriptAfter": "RUNTIME NOT READY\notto can't connect yet\nSaved Letta agent or conversation was stale — choose a valid Agent ID override in Settings or clear the override. (500 {\"error\":\"Conversation local-conv-5b46728c-de8b-443e-ad97-735ec85b7ff8 not found\"})\nRetry\nOpen Settings",
+          "matched": false
+        },
+        "orchestrate035": {
+          "text": "orchestrate ticket 035",
+          "composerEnabled": false,
+          "sent": false,
+          "transcriptAfter": "RUNTIME NOT READY\notto can't connect yet\nSaved Letta agent or conversation was stale — choose a valid Agent ID override in Settings or clear the override. (500 {\"error\":\"Conversation local-conv-5b46728c-de8b-443e-ad97-735ec85b7ff8 not found\"})\nRetry\nOpen Settings",
+          "matched": true
+        },
+        "statusWorkers": {
+          "text": "status workers",
+          "composerEnabled": false,
+          "sent": false,
+          "transcriptAfter": "RUNTIME NOT READY\notto can't connect yet\nSaved Letta agent or conversation was stale — choose a valid Agent ID override in Settings or clear the override. (500 {\"error\":\"Conversation local-conv-5b46728c-de8b-443e-ad97-735ec85b7ff8 not found\"})\nRetry\nOpen Settings",
+          "matched": false
+        }
+      },
+      "transcript": "COMMAND STATION\nWhat needs you\n1\nCuration\nPending proposals\n3\nRecent proof\nLatest receipts\n2\nTickets\nOpen worker slices\n6\nDoors\nAwaiting approval\n→\nConstitution\nSource of culture\n→\nChangelog\nWhat changed\nSESSION\nReady when you are.\n\nMessage otto to start a session. Corrections become proposals you ratify.\n\nCommands: compile ticket <slug> <objective> · orchestrate ticket <slug> · check ticket <slug> · merge ticket <slug> · status workers",
+      "ok": false
+    },
+    "046": {
+      "threads": {
+        "a": {
+          "id": "local_fa98442c-c557-4f32-85c1-682370cdc2c9",
+          "title": "New chat"
+        },
+        "b": {
+          "id": "local_144e92ac-85bd-42ca-95f2-a673dd1615f3",
+          "title": "New chat"
+        }
+      },
+      "checks": {
+        "threadASent": true,
+        "threadAComposerEnabled": true,
+        "distinctThreadIds": true,
+        "threadBSent": true,
+        "threadAShowsMarker": true,
+        "threadAHidesMarkerB": false,
+        "threadBShowsMarker": true,
+        "threadBHidesMarkerA": false,
+        "composerSendUsed": true
+      },
+      "markers": {
+        "threadA": "046-rev10-thread-a-20260614001330",
+        "threadB": "046-rev10-thread-b-20260614001330"
+      },
+      "ok": false
+    },
+    "047": {
+      "api": {
+        "connected": false,
+        "blockCount": 20,
+        "labels": [
+          "system/onboarding",
+          "system/human",
+          "system/persona",
+          "skills/1password",
+          "skills/doc",
+          "skills/image-generation",
+          "skills/discord",
+          "skills/frontend-skill",
+          "skills/gog",
+          "skills/pdf",
+          "skills/playwright",
+          "skills/remotion",
+          "skills/screenshot",
+          "skills/slides",
+          "skills/speech",
+          "skills/spreadsheet",
+          "skills/transcribe",
+          "reference/corrections",
+          "reference/doctrine",
+          "reference/veto"
+        ],
+        "apiPath": "/v1/blocks?agent_id=agent-local-d8e35a2a-a89f-45dd-b117-5eae5df8c8f2",
+        "error": null
+      },
+      "searchTerm": "onboar",
+      "visibleBlockPanels": 3,
+      "searchNarrows": true,
+      "noMatchEmpty": true,
+      "ok": true
+    },
+    "045": {
+      "attempted": false,
+      "modalCaptured": false,
+      "blocker": "No OTTO_SMOKE permission simulate hook or read-only tool gate in preload. Real modal requires consequential tool (e.g. run_shell) during live chat turn — unsafe for automated staging capture.",
+      "unitProof": "sdk-subprocess-transport.test.ts 3/3 (timeout, abort terminal, resolvePermission)"
+    }
+  },
+  "checks": {
+    "runtimeReady": true,
+    "notDefaultConversation": true
+  },
+  "runtimeStatus": {
+    "ready": true,
+    "code": "ready",
+    "agentId": "agent-local-d8e35a2a-a89f-45dd-b117-5eae5df8c8f2",
+    "baseUrl": "http://127.0.0.1:51398",
+    "discoverySource": "otto config/env",
+    "conversationId": "local-conv-4ff81e2d-21e2-4230-8537-ce104b509c1d",
+    "model": "chatgpt-plus-pro/gpt-5.5",
+    "modelHandle": null,
+    "effort": "max",
+    "sessionMode": "smoke",
+    "memfsEnabled": false,
+    "tools": [
+      "Bash",
+      "TaskOutput",
+      "Edit",
+      "EnterPlanMode",
+      "ExitPlanMode",
+      "Glob",
+      "Grep",
+      "TaskStop",
+      "memory",
+      "Read",
+      "Skill",
+      "Task",
+      "TodoWrite",
+      "Write"
+    ],
+    "transportMode": "sdk",
+    "effectiveTransport": "sdk subprocess",
+    "transportFallbackReason": null,
+    "cliPath": "/Applications/otto-staging.app/Contents/Resources/app/node_modules/@letta-ai/letta-code/letta.js",
+    "cliResolved": true
+  }
+}

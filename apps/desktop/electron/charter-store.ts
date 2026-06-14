@@ -15,6 +15,14 @@ import { OTTO_DIR } from './config-store';
 import { ReceiptWriter, type WrittenReceipt } from './receipt-writer';
 
 export const CHARTERS_DIR = join(OTTO_DIR, 'charters');
+const CHARTER_STATUSES: Record<CharterStatus, true> = {
+  proposed: true,
+  draft: true,
+  active: true,
+  blocked: true,
+  complete: true,
+  cancelled: true,
+};
 
 export interface CharterCreateInput {
   slug: string;
@@ -46,7 +54,7 @@ export class CharterStore {
     const path = this.pathFor(slug);
     if (existsSync(path)) throw new Error(`Charter already exists: ${slug}`);
     const now = new Date().toISOString();
-    const status = input.status ?? 'proposed';
+    const status = normalizeStatus(input.status ?? 'proposed');
     const base: Charter = {
       schema: 'otto.charter.v1',
       id: `charter-${slug}`,
@@ -108,30 +116,55 @@ export class CharterStore {
   }
 
   updateStatus(slug: string, status: CharterStatus, summary = `Charter status changed to ${status}.`): CharterUpdateResult {
+    const nextStatus = normalizeStatus(status);
     const current = this.require(slug);
+    if (nextStatus === 'complete') {
+      const missing = current.acceptance_criteria.filter((ac) => ac.receipts.length === 0);
+      if (missing.length) {
+        const ids = missing.map((ac) => ac.id).join(', ');
+        throw new Error(
+          `Cannot mark charter complete: ${missing.length} acceptance ${missing.length === 1 ? 'criterion' : 'criteria'} missing receipt proof (${ids}). Link a receipt to each AC first.`,
+        );
+      }
+    }
     const receipt = this.writeChangeReceipt(current, {
       kind: 'status-changed',
       summary,
       from_status: current.status,
-      to_status: status,
+      to_status: nextStatus,
       approval_id: null,
     });
-    const charter = this.applyChange({ ...current, status }, receipt, {
+    const charter = this.applyChange({ ...current, status: nextStatus }, receipt, {
       kind: 'status-changed',
       summary,
       from_status: current.status,
-      to_status: status,
+      to_status: nextStatus,
       approval_id: null,
     });
     this.write(charter);
     return { charter, path: this.pathFor(charter.slug), receipt };
   }
 
-  linkRunReceipt(slug: string, input: { runId?: Run['id']; receiptId?: Receipt['id']; summary?: string }): CharterUpdateResult {
+  linkRunReceipt(
+    slug: string,
+    input: { runId?: Run['id']; receiptId?: Receipt['id']; acId?: string; summary?: string },
+  ): CharterUpdateResult {
     if (!input.runId && !input.receiptId) throw new Error('runId or receiptId is required.');
     const current = this.require(slug);
+    const acId = input.acId?.trim();
+    const acceptance_criteria = acId
+      ? current.acceptance_criteria.map((ac) =>
+          ac.id === acId && input.receiptId
+            ? { ...ac, receipts: unique([...ac.receipts, input.receiptId]) }
+            : ac,
+        )
+      : current.acceptance_criteria;
+    if (acId && !acceptance_criteria.some((ac) => ac.id === acId)) {
+      throw new Error(`Acceptance criterion not found: ${acId}`);
+    }
     const next: Charter = {
       ...current,
+      acceptance_criteria,
       run_ids: unique([...current.run_ids, input.runId]),
       receipt_ids: unique([...current.receipt_ids, input.receiptId]),
     };
@@ -251,4 +284,11 @@ function unique(values: Array<string | null | undefined>): string[] {
 
 function safeSlug(value: string): string {
   return value.trim().toLowerCase().replace(/[^a-z0-9-]+/g, '-').replace(/^-+|-+$/g, '');
+}
+
+function normalizeStatus(value: unknown): CharterStatus {
+  if (typeof value === 'string' && value in CHARTER_STATUSES) {
+    return value as CharterStatus;
+  }
+  throw new Error(`Invalid charter status: ${String(value)}`);
 }

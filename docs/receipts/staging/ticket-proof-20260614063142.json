@@ -1,0 +1,42 @@
+{
+  "ok": true,
+  "runId": "20260614063142",
+  "gitHead": "fff0152",
+  "stagingApp": "/Applications/otto-staging.app",
+  "cdpPort": 9445,
+  "viewport": {
+    "width": 1280,
+    "height": 720
+  },
+  "screenshots": {
+    "chat081": "/Users/seb/Code/otto/docs/receipts/staging/081-chat-shell-polish.png",
+    "checks135": "/Users/seb/Code/otto/docs/receipts/staging/135-culture-ci-demo/01-checks-surface.png",
+    "curation135": "/Users/seb/Code/otto/docs/receipts/staging/135-culture-ci-demo/02-curation-surface.png",
+    "standards135": "/Users/seb/Code/otto/docs/receipts/staging/135-culture-ci-demo/03-standards-surface.png",
+    "chatRepeat135": "/Users/seb/Code/otto/docs/receipts/staging/135-culture-ci-demo/04-chat-ready-for-block-demo.png"
+  },
+  "checks": {
+    "runtimeReady": false,
+    "noCliString": true,
+    "noMemFsString": true,
+    "checksSurfaceVisible": true,
+    "checkBlockBanner": false,
+    "checkBlockBannerNote": "Block banner not triggered in automated capture — runbook steps 1–7 for live block shot."
+  },
+  "runtimeStatus": {
+    "ready": false,
+    "code": "error",
+    "reason": "Failed to initialize session - no init message received\nCLI stderr:\nFailed to connect to Letta server\nBase URL: http://localhost:51087\nYour credentials may be invalid or the server may be unreachable.\nDelete ~/.letta/settings.json then run 'letta' to re-authenticate",
+    "agentId": "agent-local-d8e35a2a-a89f-45dd-b117-5eae5df8c8f2",
+    "baseUrl": "http://localhost:51087",
+    "discoverySource": "Letta local settings/discovery",
+    "modelHandle": null,
+    "effort": "max",
+    "sessionMode": "smoke",
+    "cliPath": "/Applications/otto-staging.app/Contents/Resources/app/node_modules/@letta-ai/letta-code/letta.js",
+    "cliResolved": true,
+    "transportMode": "sdk",
+    "effectiveTransport": "sdk subprocess",
+    "transportFallbackReason": null
+  }
+}

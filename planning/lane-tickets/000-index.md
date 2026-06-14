@@ -1,8 +1,10 @@
-# Otto Tickets
+# Otto lane tickets (historical)
 
 Rule: ticket order is build order. Status is truth. Release labels come later.
 
-Canonical HQ conveyor (folder status, reviews): `~/Library/CloudStorage/Dropbox/HQ/Otto Tickets`
+**Canonical HQ conveyor:** `planning/hq-tickets/` in the otto repo (folder status, reviews).
+
+This folder is the archived **lane-numbered** view. Do not add new lane tickets.
 
 Lane ↔ HQ mapping: `000-hq-sync.md`
 
