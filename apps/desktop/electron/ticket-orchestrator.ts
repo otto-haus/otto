@@ -1,6 +1,6 @@
 import { execFileSync } from 'node:child_process';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
-import { join, resolve } from 'node:path';
+import { isAbsolute, join, relative, resolve, sep } from 'node:path';
 import { parse, stringify } from 'yaml';
 import type { RunSummary, TicketCompileInput, TicketRecord, WorkerRecord } from '@otto-haus/core';
 import { AutonomyStore } from './autonomy-store';
@@ -62,7 +62,7 @@ export class TicketOrchestrator {
 
     const repoRoot = resolveRepoRoot(options.repoRoot);
     const worktreeRel = ticket.worktree ?? `.letta/worktrees/${slugFromTicket(ticket)}`;
-    const worktreePath = join(repoRoot, worktreeRel);
+    const worktreePath = resolveWorktreePath(repoRoot, worktreeRel);
     const branch = ticket.branch ?? `feat/${slugFromTicket(ticket)}`;
 
     ensureWorktree(repoRoot, worktreePath, branch);
@@ -159,6 +159,16 @@ function resolveRepoRoot(explicit?: string): string {
   }
 
   return candidates[0] ?? process.cwd();
+}
+
+function resolveWorktreePath(repoRoot: string, worktreeRel: string): string {
+  const root = resolve(repoRoot);
+  const worktreePath = resolve(root, worktreeRel);
+  const rel = relative(root, worktreePath);
+  if (!rel || rel === '..' || rel.startsWith(`..${sep}`) || isAbsolute(rel)) {
+    throw new Error(`Invalid worktree path outside repo root: ${worktreeRel}`);
+  }
+  return worktreePath;
 }
 
 function ensureWorktree(repoRoot: string, worktreePath: string, branch: string): void {
