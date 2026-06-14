@@ -2,8 +2,7 @@ import { createRequire } from 'node:module';
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 import type { BrowserWindow } from 'electron';
-import type { OttoConfig } from '../shared/types';
-import type { StatusCode } from '../shared/types';
+import type { EffortLevel, OttoConfig, StatusCode } from '../shared/types';
 
 export function smokeMode(): boolean {
   return process.env.OTTO_SMOKE === '1' || process.env.OTTO_SMOKE === 'true';
@@ -187,6 +186,64 @@ export function nextActionFor(code: StatusCode): string {
     default:
       return 'Review the trace and retry after fixing the runtime error.';
   }
+}
+
+export function isInvalidModelError(e: unknown): boolean {
+  const m = (e instanceof Error ? e.message : String(e)).toLowerCase();
+  return m.includes('invalid model');
+}
+
+export type ModelInitAttempt = {
+  effort: EffortLevel;
+  cliModel: string;
+  /** When set, persist this handle after a successful connect (alternate provider path). */
+  modelHandle?: string | null;
+};
+
+const EFFORT_FALLBACK_ORDER: EffortLevel[] = ['max', 'high', 'medium', 'low', 'off'];
+const ALTERNATE_EFFORT_CEILING = new Set<EffortLevel>(['medium', 'low', 'off']);
+
+/** Ordered model/effort attempts when the user's preset is rejected by their Letta build. */
+export function modelInitAttempts(modelHandle: string | null, effort: EffortLevel): ModelInitAttempt[] {
+  if (!modelHandle) return [];
+
+  const attempts: ModelInitAttempt[] = [];
+  const seenCli = new Set<string>();
+
+  const push = (attempt: ModelInitAttempt) => {
+    if (!attempt.cliModel || seenCli.has(attempt.cliModel)) return;
+    seenCli.add(attempt.cliModel);
+    attempts.push(attempt);
+  };
+
+  for (const e of fallbackEffortsFrom(effort)) {
+    push({ effort: e, cliModel: modelSelectionForCli(modelHandle, e), modelHandle });
+  }
+
+  // Some Letta builds accept the provider handle but not named presets.
+  push({ effort, cliModel: modelHandle, modelHandle });
+
+  const alternates: Record<string, string[]> = {
+    'chatgpt-plus-pro/gpt-5.5': ['openai-codex/gpt-5.5', 'anthropic/claude-sonnet-4-6'],
+  };
+  for (const alt of alternates[modelHandle] ?? []) {
+    const alternateEfforts = alternateFallbackEffortsFrom(effort);
+    for (const e of alternateEfforts) {
+      push({ effort: e, cliModel: modelSelectionForCli(alt, e), modelHandle: alt });
+    }
+    push({ effort: alternateEfforts[0] ?? 'off', cliModel: alt, modelHandle: alt });
+  }
+
+  return attempts;
+}
+
+function fallbackEffortsFrom(effort: EffortLevel): EffortLevel[] {
+  const start = EFFORT_FALLBACK_ORDER.indexOf(effort);
+  return EFFORT_FALLBACK_ORDER.slice(start >= 0 ? start : 0);
+}
+
+function alternateFallbackEffortsFrom(effort: EffortLevel): EffortLevel[] {
+  return fallbackEffortsFrom(effort).filter((candidate) => ALTERNATE_EFFORT_CEILING.has(candidate));
 }
 
 export function modelSelectionForCli(modelHandle: string, effort: string): string {

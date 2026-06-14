@@ -92,18 +92,19 @@ async function main() {
     proof.screenshots.standardsFooter = join(RECEIPT_DIR, '067-standards-test-footer.png');
     await page.screenshot({ path: proof.screenshots.standardsFooter, fullPage: false });
 
-    // Remove duplicate standards navigation below
-    // 047 — Memory observatory in Settings
+    // 047 — Memory observatory nested under Settings → General
     await page.getByRole('button', { name: 'Settings' }).click();
-    await page.getByRole('button', { name: /Memory observatory/i }).click();
-    await page.waitForTimeout(1500);
-    proof.checks.memoryObservatorySection = (await page.getByText(/Memory observatory|memory block/i).count()) > 0;
-    proof.checks.memoryBlockRows = await page.locator('.panel .h-sec').filter({ hasText: /system\/|human|persona/i }).count();
+    const memorySection = page.locator('#settings-memory');
+    await memorySection.scrollIntoViewIfNeeded();
+    await page.waitForTimeout(800);
+    proof.checks.memoryObservatorySection = (await memorySection.count()) > 0;
+    proof.checks.memoryBlockRows = await page.locator('.settingsMemoryBlock .h-sec').count();
     proof.screenshots.memoryObservatory = join(RECEIPT_DIR, '047-memory-observatory.png');
-    await page.screenshot({ path: proof.screenshots.memoryObservatory, fullPage: false });
+    await memorySection.screenshot({ path: proof.screenshots.memoryObservatory }).catch(async () => {
+      await page.screenshot({ path: proof.screenshots.memoryObservatory, fullPage: false });
+    });
 
-    // Settings footer for 067
-    await page.getByRole('button', { name: 'General' }).click();
+    // Settings footer for 067 (General tab — no separate Memory/Culture/Labs tabs)
     proof.checks.settingsTestLine = (await page.getByText('The test:').count()) > 0;
     proof.screenshots.settingsFooter = join(RECEIPT_DIR, '067-settings-test-footer.png');
     await page.screenshot({ path: proof.screenshots.settingsFooter, fullPage: false });

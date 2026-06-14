@@ -73,11 +73,11 @@ describe('RuntimeSupervisor auto fallback', () => {
 });
 
 describe('promotion gate defaults', () => {
-  test('default transport mode remains sdk until scorecard passes', async () => {
+  test('default transport mode is auto for functional chat fallback', async () => {
     const { resolveTransportMode } = await import('./transport-mode');
     const original = process.env.OTTO_RUNTIME_TRANSPORT;
     delete process.env.OTTO_RUNTIME_TRANSPORT;
-    expect(resolveTransportMode()).toBe('sdk');
+    expect(resolveTransportMode()).toBe('auto');
     if (original === undefined) delete process.env.OTTO_RUNTIME_TRANSPORT;
     else process.env.OTTO_RUNTIME_TRANSPORT = original;
   });

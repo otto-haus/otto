@@ -23,9 +23,9 @@ import { ChecksSurfaceShell } from './surfaces/ChecksSurfaceShell';
 import { Onboarding } from './Onboarding';
 import { LabsProvider, useLabs } from './labs/LabsContext';
 import { ComingSoonSurface } from './labs/ComingSoonSurface';
-import { labsSurfaceGate } from './surface-tiers';
+import { surfaceGate } from './surface-tiers';
 import { EmptyState } from './components/ui';
-import { META, VALID_SURFACES } from './surface-meta';
+import { VALID_SURFACES } from './surface-meta';
 import { labsCopy } from './copy/surfaces';
 
 function renderSurface(id: SurfaceId) {
@@ -86,7 +86,7 @@ export function App() {
 function AppShell() {
   const rt = useRuntimeContext();
   const labs = useLabs();
-  const { threads, refresh: refreshThreads } = useChatThreads(rt.activeThreadId);
+  const { threads, refresh: refreshThreads, pinThread } = useChatThreads(rt.activeThreadId);
   const [active, setActiveState] = useState<SurfaceId>(initialSurface());
   const [sidebarHidden, setSidebarHidden] = useState(false);
   const [sidebarCompact, setSidebarCompact] = useState(
@@ -115,7 +115,6 @@ function AppShell() {
     if (typeof location !== 'undefined') location.hash = id;
   };
   const counts: Partial<Record<SurfaceId, number>> = {};
-  const meta = META[active];
 
   const openLabsSettings = () => {
     try {
@@ -141,7 +140,7 @@ function AppShell() {
   };
 
   const surfaceContent = () => {
-    const gate = labsSurfaceGate(active, labs.labs, labs.hydrated);
+    const gate = surfaceGate(active, labs.labs, labs.hydrated);
     if (gate === 'loading') {
       return (
         <div className="comingSoonShell" aria-busy="true">
@@ -171,7 +170,14 @@ function AppShell() {
             threads={threads}
             activeThreadId={rt.activeThreadId}
             onSelectThread={(thread) => {
+              setActive('chat');
               void rt.switchThread(thread.id).then(() => refreshThreads());
+            }}
+            onPinThread={(thread, pinned) => {
+              void pinThread(thread.id, pinned);
+            }}
+            onArchiveThread={(thread) => {
+              void rt.archiveThread(thread.id).then(() => refreshThreads());
             }}
             isComingSoon={labs.isComingSoon}
           />
@@ -188,18 +194,14 @@ function AppShell() {
             </div>
           ) : (
             <>
-              <header className="topbar">
+              <header className="topbar topbar--slim">
                 <div className="topbar__title">
                   {sidebarHidden && (
                     <button type="button" className="topbar__sidebarButton" onClick={() => setSidebarHidden(false)} aria-label="Open sidebar">
                       {Icon.panel}
                     </button>
                   )}
-                  <div>
-                    <div className="eyebrow">otto workspace</div>
-                    <h1>{meta.title}</h1>
-                    {meta.sub && <div className="topbar__sub">{meta.sub}</div>}
-                  </div>
+                  <div className="eyebrow">otto workspace</div>
                 </div>
                 <div className="topbar__right">
                   {sourcePill()}

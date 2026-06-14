@@ -19,9 +19,13 @@ fi
 echo "==> Replacing $TARGET_APP"
 osascript -e 'tell application "otto" to quit' >/dev/null 2>&1 || true
 osascript -e 'tell application "Otto" to quit' >/dev/null 2>&1 || true
+if pgrep -f "$TARGET_APP/Contents/MacOS/otto" >/dev/null 2>&1; then
+  pkill -f "$TARGET_APP/Contents/MacOS/otto" || true
+  sleep 1
+fi
 rm -rf "/Applications/Otto.app"
 rm -rf "$TARGET_APP"
-cp -R "$BUILT_APP" "$TARGET_APP"
+/usr/bin/ditto "$BUILT_APP" "$TARGET_APP"
 
 echo "==> Ad-hoc signing"
 codesign --force --deep --sign - "$TARGET_APP" >/dev/null

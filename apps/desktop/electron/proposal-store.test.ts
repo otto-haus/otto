@@ -1,4 +1,5 @@
 import { describe, expect, test } from 'bun:test';
+import { parse } from 'yaml';
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
@@ -149,6 +150,46 @@ describe('ProposalStore', () => {
     }
   });
 
+  test('accepting duplicate yaml practice rationale does not append duplicate ratified entries or guardrails', () => {
+    const tmp = mkdtempSync(join(tmpdir(), 'otto-proposal-yaml-'));
+    const proposalsDir = join(tmp, 'curation', 'proposals');
+    const receiptsDir = join(tmp, 'receipts');
+    const canonPath = join(tmp, 'practice.yaml');
+    const rationale = 'Accepted changes must appear in the next file-backed practice load.';
+    writeFileSync(canonPath, 'slug: charter\nname: Charter\nguardrails: []\n');
+    try {
+      const store = new ProposalStore(proposalsDir, new ReceiptWriter(receiptsDir));
+      const first = store.createFromCorrection({
+        correction: 'Charter practice should require explicit receipt linkage on every status change.',
+        rationale,
+        target: { kind: 'practice', id: 'charter', path: canonPath, action: 'update' },
+      });
+      const second = store.createFromCorrection({
+        correction: 'Charter practice should require explicit receipt linkage on every status change.',
+        rationale,
+        target: { kind: 'practice', id: 'charter', path: canonPath, action: 'update' },
+      });
+
+      const firstDecision = store.decide(first.proposal.id, { decision: 'accept', note: 'Ratified.' });
+      const secondDecision = store.decide(second.proposal.id, { decision: 'accept', note: 'Ratified again.' });
+      const doc = parse(readFileSync(canonPath, 'utf8')) as { otto_ratified?: Array<Record<string, unknown>>; guardrails?: string[] };
+      const ratified = Array.isArray(doc.otto_ratified) ? doc.otto_ratified : [];
+      const guardrails = Array.isArray(doc.guardrails) ? doc.guardrails : [];
+
+      expect(firstDecision.receipt.result.data?.canonChanged).toBe(true);
+      expect(secondDecision.proposal.status).toBe('applied');
+      expect(secondDecision.receipt.result.data?.canonApplied).toBe(true);
+      expect(secondDecision.receipt.result.data?.canonChanged).toBe(false);
+      expect(secondDecision.receipt.result.data?.canonApplyReason).toBe('already_ratified');
+      expect(ratified.filter((entry) => entry.rationale === rationale)).toHaveLength(1);
+      expect(ratified.map((entry) => entry.proposal_id)).toContain(first.proposal.id);
+      expect(ratified.map((entry) => entry.proposal_id)).not.toContain(second.proposal.id);
+      expect(guardrails.filter((guardrail) => guardrail.includes(rationale))).toHaveLength(1);
+    } finally {
+      rmSync(tmp, { recursive: true, force: true });
+    }
+  });
+
   test('rejecting a proposal writes a receipt, leaves canon unchanged, and blocks retry', () => {
     const tmp = mkdtempSync(join(tmpdir(), 'otto-proposal-test-'));
     const proposalsDir = join(tmp, 'curation', 'proposals');
@@ -260,7 +301,8 @@ describe('ProposalStore', () => {
     const proposalsDir = join(tmp, 'curation', 'proposals');
     const receiptsDir = join(tmp, 'receipts');
     const checksDir = join(tmp, 'checks');
-    const standardPath = join(repoRoot, 'standards/standards/quality.md');
+    const standardPath = join(tmp, 'quality.md');
+    writeFileSync(standardPath, '# Quality\n\nslug: quality\n');
     try {
       process.env.OTTO_CHECKS_DIR = checksDir;
       const store = new ProposalStore(proposalsDir, new ReceiptWriter(receiptsDir));
@@ -287,7 +329,47 @@ describe('ProposalStore', () => {
     }
   });
 
-  test('listApprovals derives ratification records from decided proposals', () => {
+  test('accepting duplicate markdown standard rationale does not append duplicate canon blocks', () => {
+    const tmp = mkdtempSync(join(tmpdir(), 'otto-proposal-standard-'));
+    const proposalsDir = join(tmp, 'curation', 'proposals');
+    const receiptsDir = join(tmp, 'receipts');
+    const checksDir = join(tmp, 'checks');
+    const standardPath = join(tmp, 'quality.md');
+    const rationale = 'Ratify quality standard for Culture CI compile path.';
+    writeFileSync(standardPath, '# Quality\n\nslug: quality\n');
+    try {
+      process.env.OTTO_CHECKS_DIR = checksDir;
+      const store = new ProposalStore(proposalsDir, new ReceiptWriter(receiptsDir));
+      const first = store.createFromCorrection({
+        correction: 'Quality standard must block fake done claims.',
+        rationale,
+        target: { kind: 'standard', id: 'quality', path: standardPath, action: 'update' },
+      });
+      const second = store.createFromCorrection({
+        correction: 'Quality standard must block fake done claims.',
+        rationale,
+        target: { kind: 'standard', id: 'quality', path: standardPath, action: 'update' },
+      });
+
+      const firstDecision = store.decide(first.proposal.id, { decision: 'accept', note: 'Ratified.' });
+      const secondDecision = store.decide(second.proposal.id, { decision: 'accept', note: 'Ratified again.' });
+      const canon = readFileSync(standardPath, 'utf8');
+
+      expect(firstDecision.receipt.result.data?.canonChanged).toBe(true);
+      expect(secondDecision.proposal.status).toBe('applied');
+      expect(secondDecision.receipt.result.data?.canonApplied).toBe(true);
+      expect(secondDecision.receipt.result.data?.canonChanged).toBe(false);
+      expect(secondDecision.receipt.result.data?.canonApplyReason).toBe('already_ratified');
+      expect((canon.match(new RegExp(rationale, 'g')) ?? [])).toHaveLength(1);
+      expect(canon).toContain(first.proposal.id);
+      expect(canon).not.toContain(second.proposal.id);
+    } finally {
+      rmSync(tmp, { recursive: true, force: true });
+      delete process.env.OTTO_CHECKS_DIR;
+    }
+  });
+
+  test('listApprovals derives decision records from applied rejected and deferred proposals', () => {
     const tmp = mkdtempSync(join(tmpdir(), 'otto-proposal-test-'));
     const proposalsDir = join(tmp, 'curation', 'proposals');
     const receiptsDir = join(tmp, 'receipts');
@@ -295,17 +377,34 @@ describe('ProposalStore', () => {
     writeFileSync(canonPath, 'slug: charter\nname: Charter\nguardrails: []\n');
     try {
       const receipts = new ReceiptWriter(receiptsDir);
-      const store = new ProposalStore(proposalsDir, receipts);
+      const store = new ProposalStore(proposalsDir, receipts, new ReceiptStore(receiptsDir));
       const created = store.createFromCorrection({
         correction: 'Charter practice should require explicit receipt linkage on every status change.',
         target: { kind: 'practice', id: 'charter', path: canonPath, action: 'update' },
       });
       store.decide(created.proposal.id, { decision: 'accept', note: 'Ratified.' });
+      const rejected = store.createFromCorrection({
+        correction: 'Quality standard should not add this rejected behavior.',
+        target: { kind: 'standard', id: 'quality', action: 'update' },
+      });
+      store.decide(rejected.proposal.id, { decision: 'reject', note: 'Do not ratify.' });
+      const deferred = store.createFromCorrection({
+        correction: 'Routine activation should wait for more context.',
+        target: { kind: 'routine', id: 'morning', action: 'activate' },
+      });
+      store.decide(deferred.proposal.id, { decision: 'defer', note: 'Needs more review.' });
 
       const approvals = store.listApprovals();
-      expect(approvals.approvals.length).toBeGreaterThan(0);
-      expect(approvals.approvals[0].proposal_id).toBe(created.proposal.id);
-      expect(approvals.approvals[0].receipt_id).toBeTruthy();
+      expect(approvals.approvals).toHaveLength(3);
+      expect(approvals.approvals).toEqual(expect.arrayContaining([
+        expect.objectContaining({ proposal_id: created.proposal.id, status: 'approved' }),
+        expect.objectContaining({ proposal_id: rejected.proposal.id, status: 'denied' }),
+        expect.objectContaining({ proposal_id: deferred.proposal.id, status: 'deferred' }),
+      ]));
+      for (const approval of approvals.approvals) {
+        expect(approval.receipt_id).toBeTruthy();
+        expect(approval.receipt_path).toContain(receiptsDir);
+      }
     } finally {
       rmSync(tmp, { recursive: true, force: true });
     }

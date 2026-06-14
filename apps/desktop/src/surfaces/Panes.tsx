@@ -25,8 +25,8 @@ import {
   listEmpty,
   cultureSettingsCopy,
   labsCopy,
+  loaderCopy,
 } from '../copy/surfaces';
-import { SURFACE_TESTS } from '../canon-briefs';
 import { resetOnboardingForReplay } from '../onboarding-storage';
 import { LabsBlockedShell } from '../labs/LabsBlockedShell';
 import {
@@ -90,16 +90,16 @@ const EmptySurface = EmptyState;
 
 type SkippedFile = { slug: string; file: string; reason: string };
 
-const SkippedLoaderPanel: React.FC<{ skipped: SkippedFile[] }> = ({ skipped }) => {
+const SkippedLoaderPanel: React.FC<{ skipped: SkippedFile[]; noun?: string }> = ({ skipped, noun = 'file' }) => {
   if (!skipped.length) return null;
   return (
-    <details className="panel skippedPanel" open={skipped.length <= 3}>
+    <details className="detailSection skippedPanel" open={skipped.length <= 3}>
       <summary className="between">
         <div>
-          <div className="eyebrow">loader</div>
-          <div className="h-sec">{skipped.length} malformed file{skipped.length === 1 ? '' : 's'} skipped</div>
+          <div className="eyebrow">{loaderCopy.eyebrow}</div>
+          <div className="h-sec">{loaderCopy.skippedTitle(skipped.length, noun)}</div>
         </div>
-        <span className="pill pill--warn">validation</span>
+        <span className="pill pill--warn">{loaderCopy.validationPill}</span>
       </summary>
       <div className="skippedList">
         {skipped.map((item) => (
@@ -257,7 +257,6 @@ export const Charters: React.FC = () => {
         eyebrow={chartersCopy.eyebrow}
         title={chartersCopy.title}
         lede={chartersCopy.lede}
-        proof={SURFACE_TESTS.charters}
       />
       <SurfaceInk lead={chartersCopy.inkLead} muted={chartersCopy.inkMuted} sub={chartersCopy.inkSub} />
       <SurfaceStatStrip
@@ -268,6 +267,43 @@ export const Charters: React.FC = () => {
         ]}
       />
       {error && <div className="notice"><span className="dot dot--warn" /> {error}</div>}
+
+      <div className="panel charterCreatePanel">
+        <div className="eyebrow">{chartersCopy.createEyebrow}</div>
+        <div className="h-sec" style={{ marginTop: 6 }}>{chartersCopy.createTitle}</div>
+        <div className="charterCreate">
+          <label className="charterField">
+            <span>{chartersCopy.objectiveLabel}</span>
+            <input
+              className="charterInput"
+              value={objective}
+              onChange={(e) => setObjective(e.target.value)}
+              placeholder={chartersCopy.objectivePlaceholder}
+            />
+          </label>
+          <label className="charterField">
+            <span>{chartersCopy.criterionLabel}</span>
+            <input
+              className="charterInput"
+              value={criterion}
+              onChange={(e) => setCriterion(e.target.value)}
+              placeholder={chartersCopy.criterionPlaceholder}
+            />
+          </label>
+          <label className="charterField">
+            <span>{chartersCopy.slugLabel}</span>
+            <input
+              className="charterInput mono"
+              value={slug}
+              onChange={(e) => setSlug(e.target.value)}
+              placeholder={objective ? slugify(objective) : 'auto'}
+            />
+          </label>
+          <button className="btn btn--primary" onClick={createCharter} disabled={busy || !objective.trim() || !criterion.trim()}>
+            {chartersCopy.createButton}
+          </button>
+        </div>
+      </div>
 
       <SplitLayout
         list={
@@ -288,8 +324,8 @@ export const Charters: React.FC = () => {
               </button>
             ))}
             {result === null ? (
-              <div className="panel charterEmptyList">
-                <p className="muted">Loading charters…</p>
+              <div className="detailSection charterEmptyList">
+                <p className="muted">{chartersCopy.loadingList}</p>
               </div>
             ) : !charters.length ? (
               <InlineEmpty title={listEmpty.charters?.title ?? 'No charters yet'} body={listEmpty.charters?.body ?? ''} />
@@ -315,42 +351,6 @@ export const Charters: React.FC = () => {
       />
 
       <SurfaceMeta label={chartersCopy.metaLabel}>
-        <div className="charterCreate">
-          <div>
-            <div className="eyebrow">{chartersCopy.createEyebrow}</div>
-            <div className="h-sec" style={{ marginTop: 6 }}>{chartersCopy.createTitle}</div>
-          </div>
-          <label className="charterField">
-            <span>Objective</span>
-            <input
-              className="charterInput"
-              value={objective}
-              onChange={(e) => setObjective(e.target.value)}
-              placeholder="Represent an explicit goal/run contract"
-            />
-          </label>
-          <label className="charterField">
-            <span>Acceptance criterion</span>
-            <input
-              className="charterInput"
-              value={criterion}
-              onChange={(e) => setCriterion(e.target.value)}
-              placeholder="A concrete proof condition"
-            />
-          </label>
-          <label className="charterField">
-            <span>Slug</span>
-            <input
-              className="charterInput mono"
-              value={slug}
-              onChange={(e) => setSlug(e.target.value)}
-              placeholder={objective ? slugify(objective) : 'auto'}
-            />
-          </label>
-          <button className="btn btn--primary" onClick={createCharter} disabled={busy || !objective.trim() || !criterion.trim()}>
-            Create charter
-          </button>
-        </div>
         <span className="filechip">{Icon.file} {result?.dir ?? '~/.otto/charters'}</span>
       </SurfaceMeta>
       <SurfaceProof surface="charters" />
@@ -388,9 +388,9 @@ const CharterDetailView: React.FC<{
   if (!detail) {
     return (
       <div className="detail">
-        <div className="panel">
-          <div className="h-sec">Select a charter</div>
-          <p className="muted" style={{ marginTop: 6 }}>Charter state appears after creation.</p>
+        <div className="detailSection">
+          <div className="h-sec">{chartersCopy.selectTitle}</div>
+          <p className="muted" style={{ marginTop: 6 }}>{chartersCopy.selectBody}</p>
         </div>
       </div>
     );
@@ -398,10 +398,10 @@ const CharterDetailView: React.FC<{
 
   return (
     <div className="detail charterDetail">
-      <div className="panel">
+      <div className="detailSection">
         <div className="between">
           <div>
-            <div className="eyebrow">charter detail</div>
+            <div className="eyebrow">{chartersCopy.detailEyebrow}</div>
             <div className="h-sec" style={{ marginTop: 6 }}>{detail.title}</div>
           </div>
           {statusPill(detail.status)}
@@ -415,9 +415,9 @@ const CharterDetailView: React.FC<{
         </dl>
       </div>
 
-      <div className="grid grid--2">
-        <div className="panel">
-          <div className="eyebrow">acceptance criteria</div>
+      <div className="detailGrid detailGrid--2">
+        <div className="detailSection">
+          <div className="eyebrow">{chartersCopy.acEyebrow}</div>
           <ul className="list">
             {detail.acceptance_criteria.map((ac) => (
               <li key={ac.id}>
@@ -427,49 +427,49 @@ const CharterDetailView: React.FC<{
             ))}
           </ul>
         </div>
-        <div className="panel">
-          <div className="eyebrow">approval boundary</div>
+        <div className="detailSection">
+          <div className="eyebrow">{chartersCopy.approvalEyebrow}</div>
           <div className="row" style={{ flexWrap: 'wrap', gap: 8, marginTop: 10 }}>
             {detail.approval_required_for_changes.map((gate) => <span className="pill pill--warn" key={gate}>{gate}</span>)}
           </div>
         </div>
       </div>
 
-      <div className="grid grid--2">
-        <div className="panel">
-          <div className="eyebrow">linked runs</div>
-          <ChipList values={detail.run_ids} empty="No run linked" />
+      <div className="detailGrid detailGrid--2">
+        <div className="detailSection">
+          <div className="eyebrow">{chartersCopy.linkedRunsEyebrow}</div>
+          <ChipList values={detail.run_ids} empty={chartersCopy.noRunLinked} />
         </div>
-        <div className="panel">
-          <div className="eyebrow">linked receipts</div>
-          <ChipList values={detail.receipt_ids} empty="No receipt linked" />
+        <div className="detailSection">
+          <div className="eyebrow">{chartersCopy.linkedReceiptsEyebrow}</div>
+          <ChipList values={detail.receipt_ids} empty={chartersCopy.noReceiptLinked} />
         </div>
       </div>
 
-      <div className="grid grid--2">
-        <div className="panel charterAction">
-          <div className="eyebrow">attach run / receipt</div>
-          <input className="charterInput mono" value={runId} onChange={(e) => setRunId(e.target.value)} placeholder="run id" aria-label="Run ID" />
-          <input className="charterInput mono" value={receiptId} onChange={(e) => setReceiptId(e.target.value)} placeholder="receipt id" aria-label="Receipt ID" />
-          <button className="btn" onClick={onLinkRunReceipt} disabled={busy || (!runId.trim() && !receiptId.trim())}>Attach</button>
+      <div className="detailGrid detailGrid--2">
+        <div className="detailSection charterAction">
+          <div className="eyebrow">{chartersCopy.attachEyebrow}</div>
+          <input className="charterInput mono" value={runId} onChange={(e) => setRunId(e.target.value)} placeholder={chartersCopy.runIdPlaceholder} aria-label="Run ID" />
+          <input className="charterInput mono" value={receiptId} onChange={(e) => setReceiptId(e.target.value)} placeholder={chartersCopy.receiptIdPlaceholder} aria-label="Receipt ID" />
+          <button className="btn" onClick={onLinkRunReceipt} disabled={busy || (!runId.trim() && !receiptId.trim())}>{chartersCopy.attachButton}</button>
         </div>
-        <div className="panel charterAction">
-          <div className="eyebrow">update status</div>
+        <div className="detailSection charterAction">
+          <div className="eyebrow">{chartersCopy.statusEyebrow}</div>
           <select className="charterInput" value={statusDraft} onChange={(e) => setStatusDraft(e.target.value as CharterStatus)} aria-label="Charter status">
             {CHARTER_STATUSES.map((status) => <option key={status} value={status}>{status}</option>)}
           </select>
           {statusDraft === 'complete' && detail.acceptance_criteria.some((ac) => !ac.receipts.length) && (
             <p className="muted" style={{ marginTop: 8 }}>
-              Complete requires receipt proof on every acceptance criterion ({detail.acceptance_criteria.filter((ac) => !ac.receipts.length).map((ac) => ac.id).join(', ')} missing).
+              {chartersCopy.completeRequiresReceipt(detail.acceptance_criteria.filter((ac) => !ac.receipts.length).map((ac) => ac.id).join(', '))}
             </p>
           )}
-          <input className="charterInput" value={statusSummary} onChange={(e) => setStatusSummary(e.target.value)} placeholder="change summary" aria-label="Status change summary" />
-          <button className="btn" onClick={onUpdateStatus} disabled={busy || statusDraft === detail.status}>Update</button>
+          <input className="charterInput" value={statusSummary} onChange={(e) => setStatusSummary(e.target.value)} placeholder={chartersCopy.statusSummaryPlaceholder} aria-label="Status change summary" />
+          <button className="btn" onClick={onUpdateStatus} disabled={busy || statusDraft === detail.status}>{chartersCopy.updateButton}</button>
         </div>
       </div>
 
-      <div className="panel">
-        <div className="eyebrow">changes</div>
+      <div className="detailSection">
+        <div className="eyebrow">{chartersCopy.changesEyebrow}</div>
         <div className="charterChanges">
           {detail.changes.map((change) => (
             <div className="zone charterChangeRow" key={change.id}>
@@ -533,7 +533,6 @@ export const Standards: React.FC = () => {
         eyebrow={standardsCopy.eyebrow}
         title={standardsCopy.title}
         lede={standardsCopy.lede}
-        proof={SURFACE_TESTS.standards}
       />
       <SurfaceInk lead={standardsCopy.inkLead} muted={standardsCopy.inkMuted} sub={standardsCopy.inkSub} />
       <SurfaceStatStrip
@@ -542,6 +541,15 @@ export const Standards: React.FC = () => {
           { label: standardsCopy.statActive, value: activeCount, tone: activeCount ? 'ok' : 'neutral' },
         ]}
       />
+      {result && (
+        <div className="ratificationStrip">
+          <span className="zone__tag">ratification</span>
+          <span className="muted">
+            {standardsCopy.ratificationOwner} {result.registry.ratification.owner} · {standardsCopy.ratificationAutoApply} {String(result.registry.ratification.auto_apply ?? false)}
+          </span>
+          <span className="filechip">{Icon.file} {result.registryPath ?? 'standards/registry.yaml'}</span>
+        </div>
+      )}
       {error && <div className="notice"><span className="dot dot--warn" /> {error}</div>}
       <SkippedLoaderPanel skipped={result?.skipped ?? []} />
       <SplitLayout
@@ -561,8 +569,8 @@ export const Standards: React.FC = () => {
               </button>
             ))}
             {result === null ? (
-              <div className="panel">
-                <p className="muted">Loading standards…</p>
+              <div className="listEmpty">
+                <p className="muted">{standardsCopy.loadingTitle}</p>
               </div>
             ) : !standards.length ? (
               <InlineEmpty title={listEmpty.standards?.title ?? 'No Standards loaded'} body={listEmpty.standards?.body ?? ''} />
@@ -573,13 +581,7 @@ export const Standards: React.FC = () => {
       />
       {result && (
         <SurfaceMeta label={standardsCopy.metaLabel}>
-          <span className="filechip">{Icon.file} {result.registryPath ?? 'standards/registry.yaml'}</span>
-          <div className="zone" style={{ marginTop: 12 }}>
-            <span className="zone__tag">ratification</span>
-            <span>
-              {result.registry.ratification.owner} owns changes · auto apply {String(result.registry.ratification.auto_apply ?? false)}
-            </span>
-          </div>
+          <span className="filechip">{standards.length} loaded</span>
         </SurfaceMeta>
       )}
       <SurfaceProof surface="standards" />
@@ -603,25 +605,29 @@ const StandardDetail: React.FC<{ standard: StandardRecord }> = ({ standard }) =>
   return (
   <div className="detail">
     {conflict && (
-      <div className="panel" style={{ borderColor: 'var(--warn)', background: 'var(--warn-tint)' }}>
-        <div className="eyebrow">conflict · case law</div>
-        <div className="h-sec" style={{ marginTop: 6 }}>
+      <div className="detailSection detailSection--warn">
+        <div className="eyebrow">{standardsCopy.conflictEyebrow}</div>
+        <div className="h-sec conflictTitle">
           {conflict.between.length > 1 ? conflict.between.join(' vs ') : conflict.between[0]}
         </div>
-        <p className="muted" style={{ marginTop: 8 }}>{conflict.message}</p>
-        {conflict.tie_breaker && <p style={{ marginTop: 8 }}><strong>Tie-breaker:</strong> {conflict.tie_breaker}</p>}
+        <p className="muted conflictMessage">{conflict.message}</p>
+        {conflict.tie_breaker && (
+          <p className="conflictTieBreaker">
+            <strong>{standardsCopy.conflictTieBreaker}</strong> {conflict.tie_breaker}
+          </p>
+        )}
         {conflict.precedent?.excerpt && (
-          <pre className="mono" style={{ marginTop: 10, whiteSpace: 'pre-wrap', fontSize: 12 }}>{conflict.precedent.excerpt}</pre>
+          <pre className="mono conflictExcerpt">{conflict.precedent.excerpt}</pre>
         )}
         {conflict.precedent?.file && (
-          <span className="filechip" style={{ marginTop: 10 }}>{conflict.precedent.file}</span>
+          <span className="filechip conflictFile">{conflict.precedent.file}</span>
         )}
         {!conflict.precedent && (
-          <p className="muted" style={{ marginTop: 8 }}>Propose a Curation Standards change instead of improvising in chat.</p>
+          <p className="muted conflictPropose">{standardsCopy.conflictProposeCuration}</p>
         )}
       </div>
     )}
-    <div className="panel">
+    <div className="detailSection">
       <div className="between">
         <div>
           <div className="eyebrow">standard detail</div>
@@ -638,23 +644,23 @@ const StandardDetail: React.FC<{ standard: StandardRecord }> = ({ standard }) =>
       </dl>
     </div>
 
-    <div className="grid grid--2">
-      <div className="panel">
+    <div className="detailGrid detailGrid--2">
+      <div className="detailSection">
         <div className="eyebrow">under pressure · do</div>
         <ul className="list">{standard.under_pressure.do.map((item) => <li key={item}>{item}</li>)}</ul>
       </div>
-      <div className="panel">
+      <div className="detailSection">
         <div className="eyebrow">under pressure · refuse</div>
         <ul className="list">{standard.under_pressure.refuse.map((item) => <li key={item}>{item}</li>)}</ul>
       </div>
     </div>
 
-    <div className="grid grid--2">
-      <div className="panel">
+    <div className="detailGrid detailGrid--2">
+      <div className="detailSection">
         <div className="eyebrow">evidence</div>
         <ul className="list">{standard.evidence.map((item) => <li key={item}>{item}</li>)}</ul>
       </div>
-      <div className="panel">
+      <div className="detailSection">
         <div className="eyebrow">citation path</div>
         <p className="muted">Receipts cite this file by slug and path.</p>
         <span className="filechip" style={{ marginTop: 10 }}>{standard.slug} · {standard.file}</span>
@@ -788,7 +794,6 @@ export const Practices: React.FC = () => {
         eyebrow={practicesCopy.eyebrow}
         title={practicesCopy.title}
         lede={practicesCopy.lede}
-        proof={SURFACE_TESTS.practices}
       />
       <SurfaceInk lead={practicesCopy.inkLead} muted={practicesCopy.inkMuted} sub={practicesCopy.inkSub} />
       <SurfaceStatStrip
@@ -858,16 +863,16 @@ const PracticeDetail: React.FC<{
   onRun: () => void;
 }> = ({ practice, relatedReceipts, metrics, runnable, busy, onRun }) => (
   <div className="detail">
-    <div className="panel">
+    <div className="detailSection">
       <div className="between">
         <div className="h-sec">{practice.name}</div>
         {statusPill(practice.status)}
       </div>
       <p className="lede" style={{ marginTop: 6 }}>{practice.summary}</p>
-      <ChipList values={practice.invocations ?? []} empty="No invocations declared." />
+      <ChipList values={practice.invocations ?? []} empty={practicesCopy.noInvocations} />
     </div>
     {runnable && (
-      <div className="panel">
+      <div className="detailSection">
         <div className="between">
           <div>
             <div className="eyebrow">practice run</div>
@@ -889,28 +894,28 @@ const PracticeDetail: React.FC<{
         </div>
       </div>
     )}
-    <div className="grid grid--2">
-      <div className="panel">
+    <div className="detailGrid detailGrid--2">
+      <div className="detailSection">
         <div className="eyebrow">guardrails</div>
         <ul className="list">{(practice.guardrails ?? []).map((item, index) => <li key={index}>{item}</li>)}</ul>
       </div>
-      <div className="panel">
+      <div className="detailSection">
         <div className="eyebrow">evidence standard</div>
         <ul className="list">{(practice.evidence_standard ?? []).map((item, index) => <li key={index}>{item}</li>)}</ul>
       </div>
     </div>
-    <div className="panel">
+    <div className="detailSection">
       <div className="eyebrow">approval floor · cannot be bypassed</div>
       <div className="row" style={{ flexWrap: 'wrap', gap: 8, marginTop: 10 }}>
         {(practice.approval_required_for ?? []).map((item) => <span className="pill pill--warn" key={item}>{item}</span>)}
       </div>
     </div>
-    <div className="panel">
+    <div className="detailSection">
       <div className="eyebrow">citation path</div>
       <p className="muted">Receipts link invocations back to this file by slug and path.</p>
       <span className="filechip" style={{ marginTop: 10 }}>{practice.slug} · {practice.file}</span>
     </div>
-    <div className="panel">
+    <div className="detailSection">
       <div className="eyebrow">related receipts</div>
       {relatedReceipts.length ? (
         <div className="receiptEvidence" style={{ marginTop: 12 }}>
@@ -1002,7 +1007,6 @@ export const Routines: React.FC = () => {
         eyebrow={routinesCopy.eyebrow}
         title={routinesCopy.title}
         lede={routinesCopy.lede}
-        proof={SURFACE_TESTS.routines}
       />
       <SurfaceInk lead={routinesCopy.inkLead} muted={routinesCopy.inkMuted} sub={routinesCopy.inkSub} />
       <SurfaceStatStrip
@@ -1058,7 +1062,7 @@ const RoutineDetail: React.FC<{
   onRunManual: () => void;
 }> = ({ routine, gate, busy, onRunManual }) => (
   <div className="detail">
-    <div className="panel">
+    <div className="detailSection">
       <div className="between">
         <div className="h-sec">{routine.name}</div>
         {statusPill(routine.status)}
@@ -1069,7 +1073,7 @@ const RoutineDetail: React.FC<{
         {routine.schedule?.cron && <span className="filechip">cron: {routine.schedule.cron}</span>}
       </div>
     </div>
-    <div className="panel">
+    <div className="detailSection">
       <div className="eyebrow">steps</div>
       <div className="receiptEvidence" style={{ marginTop: 12 }}>
         {routine.steps.map((step, index) => (
@@ -1082,7 +1086,7 @@ const RoutineDetail: React.FC<{
         ))}
       </div>
     </div>
-    <div className="panel">
+    <div className="detailSection">
       <div className="eyebrow">activation gate</div>
       <p className="lede" style={{ marginTop: 8 }}>{gate?.reason ?? 'Checking activation gate…'}</p>
       <div className="row" style={{ flexWrap: 'wrap', gap: 8, marginTop: 12 }}>
@@ -1092,7 +1096,7 @@ const RoutineDetail: React.FC<{
         {gate?.requiresApproval && <span className="pill pill--warn">approval required</span>}
       </div>
     </div>
-    <div className="panel">
+    <div className="detailSection">
       <div className="between">
         <div>
           <div className="eyebrow">manual run</div>
@@ -1241,7 +1245,6 @@ export const Curation: React.FC<{ initialPanel?: CurationMainPanel }> = ({ initi
         eyebrow={curationCopy.eyebrow}
         title={curationCopy.title}
         lede={curationCopy.lede}
-        proof={SURFACE_TESTS.curation}
       />
 
       <InkBlock
@@ -1261,7 +1264,7 @@ export const Curation: React.FC<{ initialPanel?: CurationMainPanel }> = ({ initi
         ]}
       />
 
-      <div className="panel" style={{ marginTop: 16 }}>
+      <div className="surfaceToolbar">
         <FilterBar
           options={[
             { key: 'inbox', label: 'Inbox' },
@@ -1280,6 +1283,12 @@ export const Curation: React.FC<{ initialPanel?: CurationMainPanel }> = ({ initi
             active={filter}
             onSelect={(key) => setFilter(key as ProposalInboxFilter)}
           />
+        ) : null}
+        {mainPanel === 'inbox' && selected ? (
+          <span className="filechip mono curationPathChip" title={selected.path}>{selected.path}</span>
+        ) : null}
+        {mainPanel === 'inbox' ? (
+          <span className="filechip">{Icon.file} {result?.dir ?? '~/.otto/curation/proposals/'}</span>
         ) : null}
       </div>
 
@@ -1372,7 +1381,7 @@ export const Curation: React.FC<{ initialPanel?: CurationMainPanel }> = ({ initi
       </div>
 
       <SurfaceMeta label={curationCopy.metaStorage}>
-        <span className="filechip">{Icon.file} {result?.dir ?? '~/.otto/curation/proposals/'}</span>
+        <span className="filechip">{proposals.length} proposals</span>
       </SurfaceMeta>
         </>
       )}
@@ -1450,7 +1459,7 @@ const ProposalDetail: React.FC<{
   onDefer: () => void;
 }> = ({ proposal, busy, canDecide, onAccept, onReject, onDefer }) => (
   <div className="detail">
-    <div className="panel">
+    <div className="detailSection">
       <div className="between">
         <div className="h-sec">{proposal.summary}</div>
         {statusPill(proposal.status)}
@@ -1463,29 +1472,29 @@ const ProposalDetail: React.FC<{
         {proposal.decision_receipt_id && <span className="filechip">decision: {proposal.decision_receipt_id}</span>}
       </div>
     </div>
-    <div className="panel">
-      <div className="eyebrow">classification</div>
+    <div className="detailSection">
+      <div className="eyebrow">{curationCopy.classificationEyebrow}</div>
       <div className="receiptEvidence" style={{ marginTop: 12 }}>
         <div className="zone receiptEvidenceRow">
-          <span className="zone__tag">risk</span>
+          <span className="zone__tag">{curationCopy.zoneRisk}</span>
           <div className="mono">{proposal.classification.risk} · {proposal.classification.route}</div>
         </div>
         <div className="zone receiptEvidenceRow">
-          <span className="zone__tag">gate</span>
+          <span className="zone__tag">{curationCopy.zoneGate}</span>
           <div className="mono">{proposal.classification.required_gate}</div>
         </div>
         <div className="zone receiptEvidenceRow">
-          <span className="zone__tag">canon</span>
+          <span className="zone__tag">{curationCopy.zoneCanon}</span>
           <div className="mono">{proposal.classification.canon_impact}{proposal.target.id ? ` · ${proposal.target.id}` : ''}</div>
         </div>
         <div className="zone receiptEvidenceRow">
-          <span className="zone__tag">reason</span>
+          <span className="zone__tag">{curationCopy.zoneReason}</span>
           <div>{proposal.classification.reason}</div>
         </div>
       </div>
     </div>
-    <div className="panel">
-      <div className="eyebrow">evidence</div>
+    <div className="detailSection">
+      <div className="eyebrow">{curationCopy.evidenceEyebrow}</div>
       <div className="receiptEvidence" style={{ marginTop: 12 }}>
         {proposal.evidence.map((item, index) => (
           <div className="zone receiptEvidenceRow" key={`${item.ref}-${index}`}>
@@ -1499,7 +1508,7 @@ const ProposalDetail: React.FC<{
       </div>
     </div>
     {canDecide && (
-      <div className="panel ratificationPanel">
+      <div className="detailSection ratificationPanel">
         <div className="eyebrow">{curationCopy.ratificationTitle}</div>
         <p className="lede" style={{ marginTop: 8 }}>{curationCopy.ratificationLede}</p>
         <div className="row" style={{ flexWrap: 'wrap', gap: 8, marginTop: 14 }}>
@@ -1511,7 +1520,6 @@ const ProposalDetail: React.FC<{
     )}
     <SurfaceMeta label={curationCopy.metaStorage}>
       <span className="filechip">{proposal.id}</span>
-      <span className="filechip">{proposal.path}</span>
     </SurfaceMeta>
   </div>
 );
@@ -1635,8 +1643,7 @@ export const Receipts: React.FC = () => {
         <SurfaceHero
           eyebrow={receiptsCopy.eyebrow}
           title={receiptsCopy.emptyTitle}
-          lede="Inspect the sample structure below — it is not live proof from your workspace."
-          proof={SURFACE_TESTS.receipts}
+          lede={receiptsCopy.sampleLede}
         />
         <SplitLayout
           list={(
@@ -1660,7 +1667,6 @@ export const Receipts: React.FC = () => {
           eyebrow={receiptsCopy.eyebrow}
           title={receiptsCopy.emptyTitle}
           lede={receiptsCopy.emptyBody}
-          proof={SURFACE_TESTS.receipts}
         />
         {error && <div className="notice"><span className="dot dot--warn" /> {error}</div>}
         {runs.length > 0 && (
@@ -1701,7 +1707,6 @@ export const Receipts: React.FC = () => {
         eyebrow={receiptsCopy.eyebrow}
         title={receiptsCopy.title}
         lede={loading ? receiptsCopy.loadingTitle : receiptsCopy.lede}
-        proof={SURFACE_TESTS.receipts}
       />
 
       <SurfaceStatStrip
@@ -1713,7 +1718,7 @@ export const Receipts: React.FC = () => {
         ]}
       />
 
-      <div className="panel" style={{ marginTop: 16 }}>
+      <div className="surfaceToolbar receiptToolbar">
         <div className="receiptControls">
           <input
             className="receiptSearch"
@@ -1810,7 +1815,7 @@ const ReceiptDetailView: React.FC<{ detail: ReceiptDetail | null; summary: Recei
   if (!summary) {
     return (
       <div className="detail">
-        <div className="panel">
+        <div className="detailSection">
           <InlineEmpty title={receiptsCopy.selectTitle} body={receiptsCopy.selectBody} />
         </div>
       </div>
@@ -1820,7 +1825,7 @@ const ReceiptDetailView: React.FC<{ detail: ReceiptDetail | null; summary: Recei
   if (!detail || detail.id !== summary.id) {
     return (
       <div className="detail">
-        <div className="panel">
+        <div className="detailSection">
           <div className="h-sec">{receiptsCopy.loadingTitle}</div>
           <p className="muted" style={{ marginTop: 6 }}>{summary.id}</p>
         </div>
@@ -1830,7 +1835,7 @@ const ReceiptDetailView: React.FC<{ detail: ReceiptDetail | null; summary: Recei
 
   return (
     <div className="detail receiptDetail">
-      <div className="panel receiptDetail__authority">
+      <div className="detailSection receiptDetail__authority">
         <div className="between">
           <div className="eyebrow">{receiptsCopy.authorityEyebrow}</div>
           {statusPill(detail.status)}
@@ -1848,7 +1853,7 @@ const ReceiptDetailView: React.FC<{ detail: ReceiptDetail | null; summary: Recei
       </div>
 
       {detail.blocker && (
-        <div className="panel receiptBlocker">
+        <div className="detailSection receiptBlocker">
           <div className="between">
             <div className="eyebrow">blocker</div>
             <span className="pill pill--warn">{detail.blocker.code}</span>
@@ -1859,7 +1864,7 @@ const ReceiptDetailView: React.FC<{ detail: ReceiptDetail | null; summary: Recei
       )}
 
       {detail.evidence.length > 0 ? (
-        <div className="panel">
+        <div className="detailSection">
           <div className="eyebrow">{receiptsCopy.evidenceEyebrow}</div>
           <div className="receiptEvidence" style={{ marginTop: 12 }}>
             {detail.evidence.map((entry, index) => (
@@ -1881,7 +1886,7 @@ const ReceiptDetailView: React.FC<{ detail: ReceiptDetail | null; summary: Recei
       ) : null}
 
       {!!detail.practice && (
-        <div className="panel">
+        <div className="detailSection">
           <div className="eyebrow">practice invoked</div>
           <dl className="kv receiptKv" style={{ marginTop: 10 }}>
             <div><dt>name</dt><dd>{detail.practice.name}</dd></div>
@@ -1893,7 +1898,7 @@ const ReceiptDetailView: React.FC<{ detail: ReceiptDetail | null; summary: Recei
       )}
 
       {!!detail.routine && (
-        <div className="panel">
+        <div className="detailSection">
           <div className="eyebrow">routine invoked</div>
           <dl className="kv receiptKv" style={{ marginTop: 10 }}>
             <div><dt>name</dt><dd>{detail.routine.name}</dd></div>
@@ -1905,7 +1910,7 @@ const ReceiptDetailView: React.FC<{ detail: ReceiptDetail | null; summary: Recei
       )}
 
       {!!detail.standards?.length && (
-        <div className="panel">
+        <div className="detailSection">
           <div className="eyebrow">standards cited</div>
           <p className="muted" style={{ marginTop: 6 }}>This receipt links to file-backed Standards cited at write time.</p>
           <div className="receiptEvidence" style={{ marginTop: 12 }}>
@@ -2048,7 +2053,6 @@ export const Autonomy: React.FC = () => {
         eyebrow={autonomyCopy.eyebrow}
         title={autonomyCopy.title}
         lede={policy?.summary ?? autonomyCopy.lede}
-        proof={SURFACE_TESTS.autonomy}
       />
       <SurfaceInk lead={autonomyCopy.inkLead} muted={autonomyCopy.inkMuted} sub={autonomyCopy.inkSub} />
       <SurfaceStatStrip
@@ -2065,86 +2069,78 @@ export const Autonomy: React.FC = () => {
       ) : null}
       {error && <div className="notice"><span className="dot dot--warn" /> {error}</div>}
 
-      <div className="grid grid--3">
+      <div className="detailGrid detailGrid--3 autonomyZones">
         {(policy?.zones ?? []).map((zone) => (
-          <div className="panel" key={zone.id}>
+          <div className="detailSection" key={zone.id}>
             <div className="between">
               <div className="eyebrow">{zone.id}</div>
-              <span className={`pill ${zoneClass(zone.id)}`}>{zone.requires_approval ? 'approval' : 'autonomous'}</span>
+              <span className={`pill ${zoneClass(zone.id)}`}>
+                {zone.requires_approval ? autonomyCopy.zoneApproval : autonomyCopy.zoneAutonomous}
+              </span>
             </div>
-            <div className="card__title" style={{ marginTop: 8 }}>{zone.label}</div>
-            <p className="muted" style={{ marginTop: 6 }}>{zone.summary}</p>
-            <ul className="list" style={{ marginTop: 10 }}>
+            <div className="card__title autonomyZone__title">{zone.label}</div>
+            <p className="muted autonomyZone__summary">{zone.summary}</p>
+            <ul className="list autonomyZone__examples">
               {zone.examples.slice(0, 4).map((example, index) => <li key={index}>{example}</li>)}
             </ul>
           </div>
         ))}
       </div>
 
-      <div className="panel">
-        <div className="eyebrow">consequential doors</div>
-        <div className="row" style={{ flexWrap: 'wrap', gap: 8, marginTop: 10 }}>
+      <div className="detailSection">
+        <div className="eyebrow">{autonomyCopy.doorsEyebrow}</div>
+        <div className="row autonomyDoors">
           {(policy?.doors ?? []).map((door) => (
             <span className="pill pill--warn" key={door.id}>{door.label}</span>
           ))}
         </div>
       </div>
 
-      {knowledge?.registry && (
-        <div className="panel">
-          <div className="between">
-            <div>
-              <div className="eyebrow">knowledge-informed routing</div>
-              <div className="h-sec">Model assignments</div>
-            </div>
-            <span className={`pill ${knowledge.registry.routing.status === 'active' ? 'pill--ok' : 'pill--info'}`}>
-              {knowledge.registry.routing.status}
-            </span>
-          </div>
-          <div className="receiptEvidence" style={{ marginTop: 12 }}>
-            {Object.entries(knowledge.registry.routing.assignments).map(([role, handle]) => (
-              <div className="zone receiptEvidenceRow" key={role}>
-                <span className="zone__tag">{role}</span>
-                <div className="mono">{handle}</div>
-              </div>
-            ))}
-          </div>
+      <div className="detailSection autonomyEvaluate">
+        <div className="eyebrow">{autonomyCopy.evaluateEyebrow}</div>
+        <p className="muted autonomyEvaluate__hint">{autonomyCopy.evaluateHint}</p>
+        <input
+          className="charterInput autonomyEvaluate__input"
+          value={actionText}
+          onChange={(e) => setActionText(e.target.value)}
+          placeholder={autonomyCopy.evaluatePlaceholder}
+          aria-label={autonomyCopy.evaluatePlaceholder}
+        />
+        <div className="row autonomyEvaluate__actions">
+          <button type="button" className="btn" disabled={busy} onClick={evaluate}>
+            {busy ? autonomyCopy.evaluatingButton : autonomyCopy.evaluateButton}
+          </button>
         </div>
-      )}
+        {evaluation && (
+          <div className="zone receiptEvidenceRow autonomyEvaluate__result">
+            <span className={`pill ${zoneClass(evaluation.zone)}`}>{evaluation.zone}</span>
+            <div>
+              <div className="card__title">
+                {evaluation.requires_approval ? autonomyCopy.evalApprovalRequired : autonomyCopy.evalMayProceed}
+              </div>
+              <p className="muted autonomyEvaluate__reason">{evaluation.reason}</p>
+              {evaluation.knowledge_routing && (
+                <p className="muted autonomyEvaluate__routing">
+                  {autonomyCopy.evalRoutingPrefix}{' '}
+                  {evaluation.knowledge_routing.role} → {evaluation.knowledge_routing.provider}/{evaluation.knowledge_routing.model} ({evaluation.knowledge_routing.status})
+                </p>
+              )}
+              {receiptId && (
+                <div className="mono receiptEvidenceRef autonomyEvaluate__receipt">
+                  {autonomyCopy.evalReceiptPrefix} {receiptId}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
 
       <SurfaceMeta label={autonomyCopy.metaLabel}>
         <span className="filechip">{Icon.file} {loaded?.policyPath ?? 'autonomy/policy.yaml'}</span>
-        <span className="filechip">safe_auto_merge: {policy?.settings.safe_auto_merge ?? '…'}</span>
-        <div style={{ marginTop: 16 }}>
-          <div className="eyebrow">{autonomyCopy.evaluateEyebrow}</div>
-          <p className="muted" style={{ marginTop: 6 }}>{autonomyCopy.evaluateHint}</p>
-          <input
-            style={{ width: '100%', marginTop: 10, padding: '8px 10px', borderRadius: 8, border: '1px solid var(--line)' }}
-            value={actionText}
-            onChange={(e) => setActionText(e.target.value)}
-            placeholder="Describe the proposed action…"
-          />
-          <div className="row" style={{ marginTop: 12, gap: 8 }}>
-            <button type="button" className="btn" disabled={busy} onClick={evaluate}>
-              {busy ? 'Evaluating…' : 'Evaluate action'}
-            </button>
-          </div>
-          {evaluation && (
-            <div className="zone receiptEvidenceRow" style={{ marginTop: 14 }}>
-              <span className={`pill ${zoneClass(evaluation.zone)}`}>{evaluation.zone}</span>
-              <div>
-                <div className="card__title">{evaluation.requires_approval ? 'Approval required' : 'May proceed autonomously'}</div>
-                <p className="muted" style={{ marginTop: 4 }}>{evaluation.reason}</p>
-                {evaluation.knowledge_routing && (
-                  <p className="muted" style={{ marginTop: 6 }}>
-                    Knowledge routing · {evaluation.knowledge_routing.role} → {evaluation.knowledge_routing.provider}/{evaluation.knowledge_routing.model} ({evaluation.knowledge_routing.status})
-                  </p>
-                )}
-                {receiptId && <div className="mono receiptEvidenceRef" style={{ marginTop: 6 }}>receipt · {receiptId}</div>}
-              </div>
-            </div>
-          )}
-        </div>
+        <span className="filechip">{autonomyCopy.safeAutoMergeLabel}: {policy?.settings.safe_auto_merge ?? '…'}</span>
+        {knowledge?.registry ? (
+          <p className="muted autonomyMeta__hint">{autonomyCopy.routingKnowledgeHint}</p>
+        ) : null}
       </SurfaceMeta>
       <SurfaceProof surface="autonomy" />
     </SurfacePage>
@@ -2186,15 +2182,14 @@ export const Skills: React.FC = () => {
         eyebrow={skillsCopy.eyebrow}
         title={skillsCopy.title}
         lede={skillsCopy.lede}
-        proof={SURFACE_TESTS.skills}
       />
       <SurfaceInk lead={skillsCopy.inkLead} muted={skillsCopy.inkMuted} sub={skillsCopy.inkSub} />
       <SurfaceStatStrip stats={[{ label: skillsCopy.statLoaded, value: skills.length }]} />
       {error && <div className="notice"><span className="dot dot--warn" /> {error}</div>}
       <SkippedLoaderPanel skipped={result?.skipped ?? []} />
       {!result && !error && (
-        <div className="panel">
-          <div className="h-sec">Loading skills…</div>
+        <div className="detailSection">
+          <div className="h-sec">{skillsCopy.loadingTitle}</div>
         </div>
       )}
       {result && !skills.length && !error && (
@@ -2214,10 +2209,11 @@ export const Skills: React.FC = () => {
           ))}
           detail={selected ? (
             <div className="detail">
-              <div className="panel">
+              <div className="detailSection">
                 <div className="h-sec">{selected.name}</div>
                 <p className="lede" style={{ marginTop: 8 }}>{selected.description}</p>
-                <ChipList values={selected.triggers} empty="No triggers parsed" />
+                <div className="eyebrow" style={{ marginTop: 16 }}>{skillsCopy.triggersEyebrow}</div>
+                <ChipList values={selected.triggers} empty={skillsCopy.noTriggers} />
               </div>
             </div>
           ) : null}
@@ -2266,11 +2262,11 @@ const CogneeKnowledgePanel: React.FC = () => {
   };
 
   return (
-    <div className="panel">
+    <div className="detailSection knowledgePanel">
       <div className="between">
         <div>
-          <div className="eyebrow">derived recall</div>
-          <div className="h-sec">Graph recall (Cognee)</div>
+          <div className="eyebrow">{knowledgeCopy.cogneeEyebrow}</div>
+          <div className="h-sec">{knowledgeCopy.cogneeTitle}</div>
         </div>
         {health ? statusPill(health.status) : null}
       </div>
@@ -2285,8 +2281,7 @@ const CogneeKnowledgePanel: React.FC = () => {
       {health && health.status !== 'disabled' && (
         <>
           <p className="muted" style={{ marginTop: 8 }}>
-            Loopback only · {health.baseUrl ?? '—'}
-            {health.lastCheckedAt ? ` · checked ${health.lastCheckedAt}` : ''}
+            {knowledgeCopy.cogneeLoopback(health.baseUrl ?? '—', health.lastCheckedAt ?? undefined)}
           </p>
           {health.lastError && health.status !== 'ready' && (
             <div className="notice" style={{ marginTop: 12 }}>
@@ -2296,29 +2291,29 @@ const CogneeKnowledgePanel: React.FC = () => {
           {capture ? (
             <div className="receiptEvidence" style={{ marginTop: 12 }}>
               <div className="zone receiptEvidenceRow">
-                <span className="zone__tag">last capture</span>
+                <span className="zone__tag">{knowledgeCopy.zoneLastCapture}</span>
                 <div className="mono">{capture.id ?? capture.at}</div>
               </div>
               {typeof capture.count === 'number' && (
                 <div className="zone receiptEvidenceRow">
-                  <span className="zone__tag">docs</span>
+                  <span className="zone__tag">{knowledgeCopy.zoneDocs}</span>
                   <div>{capture.count}</div>
                 </div>
               )}
               {Array.isArray(capture.paths) && capture.paths.length > 0 && (
                 <div className="zone receiptEvidenceRow">
-                  <span className="zone__tag">path</span>
+                  <span className="zone__tag">{knowledgeCopy.zonePath}</span>
                   <div className="mono">{capture.paths[0]}</div>
                 </div>
               )}
             </div>
           ) : (
-            <p className="muted" style={{ marginTop: 12 }}>No capture receipt yet — run scripts/cognee-capture.sh after Cognee is ready.</p>
+            <p className="muted" style={{ marginTop: 12 }}>{knowledgeCopy.cogneeNoCapture}</p>
           )}
           <div className="between" style={{ marginTop: 12, gap: 8, flexWrap: 'wrap' }}>
-            <button type="button" className="btn" disabled={busy} onClick={() => void reload()}>Refresh health</button>
+            <button type="button" className="btn" disabled={busy} onClick={() => void reload()}>{knowledgeCopy.cogneeRefresh}</button>
             <button type="button" className="btn" disabled={busy || health.status !== 'ready'} onClick={() => void runRecallSmoke()}>
-              Recall smoke
+              {knowledgeCopy.cogneeRecallSmoke}
             </button>
           </div>
           {recall && (
@@ -2326,7 +2321,7 @@ const CogneeKnowledgePanel: React.FC = () => {
               {recall.ok && recall.citations.length > 0 ? (
                 recall.citations.map((c: { path: string; snippet: string }) => (
                   <div className="zone receiptEvidenceRow" key={c.path}>
-                    <span className="zone__tag">citation</span>
+                    <span className="zone__tag">{knowledgeCopy.zoneCitation}</span>
                     <div>
                       <div className="mono">{c.path}</div>
                       <div className="muted">{c.snippet}</div>
@@ -2335,7 +2330,7 @@ const CogneeKnowledgePanel: React.FC = () => {
                 ))
               ) : (
                 <div className="notice">
-                  <span className="dot dot--warn" /> {recall.error ?? 'No citations — index capture or start Cognee daemon first.'}
+                  <span className="dot dot--warn" /> {recall.error ?? knowledgeCopy.cogneeNoCitations}
                 </div>
               )}
             </div>
@@ -2361,11 +2356,11 @@ const PgvectorKnowledgePanel: React.FC = () => {
   if (!api?.pgvector || !status) return null;
 
   return (
-    <div className="panel">
+    <div className="detailSection knowledgePanel">
       <div className="between">
         <div>
-          <div className="eyebrow">semantic recall</div>
-          <div className="h-sec">pgvector (optional)</div>
+          <div className="eyebrow">{knowledgeCopy.pgvectorEyebrow}</div>
+          <div className="h-sec">{knowledgeCopy.pgvectorTitle}</div>
         </div>
         {statusPill(
           !status.enabled
@@ -2427,7 +2422,6 @@ export const Knowledge: React.FC = () => {
         eyebrow={knowledgeCopy.eyebrow}
         title={knowledgeCopy.title}
         lede={knowledgeCopy.lede}
-        proof={SURFACE_TESTS.knowledge}
       />
       <SurfaceInk lead={knowledgeCopy.inkLead} muted={knowledgeCopy.inkMuted} sub={knowledgeCopy.inkSub} />
       <SurfaceStatStrip
@@ -2438,11 +2432,11 @@ export const Knowledge: React.FC = () => {
       />
       {error && <div className="notice"><span className="dot dot--warn" /> {error}</div>}
       {result && !registry && !error && (
-        <InlineEmpty title="Registry not found" body={`Could not read ${result.registryPath}. Knowledge routing falls back until the registry exists.`} />
+        <InlineEmpty title={knowledgeCopy.registryNotFoundTitle} body={knowledgeCopy.registryNotFoundBody(result.registryPath)} />
       )}
       {!result && !error && (
-        <div className="panel">
-          <div className="h-sec">Loading knowledge…</div>
+        <div className="detailSection">
+          <div className="h-sec">{knowledgeCopy.loadingTitle}</div>
         </div>
       )}
       {registry && (
@@ -2450,13 +2444,13 @@ export const Knowledge: React.FC = () => {
           {registry.status === 'proposed' && (
             <div className="notice">
               <span className="dot dot--warn" />
-              Registry status is proposed — routing assignments are defaults, not ratified policy.
+              {knowledgeCopy.registryProposedPrefix}
               {registry.last_reviewed ? ` Last reviewed ${registry.last_reviewed}.` : ''}
             </div>
           )}
-          <div className="panel">
+          <div className="detailSection">
             <div className="between">
-              <div className="eyebrow">routing assignments</div>
+              <div className="eyebrow">{knowledgeCopy.routingEyebrow}</div>
               {statusPill(registry.status)}
             </div>
             <div className="receiptEvidence" style={{ marginTop: 12 }}>
@@ -2468,8 +2462,8 @@ export const Knowledge: React.FC = () => {
               ))}
             </div>
           </div>
-          <div className="panel">
-            <div className="eyebrow">models</div>
+          <div className="detailSection">
+            <div className="eyebrow">{knowledgeCopy.modelsEyebrow}</div>
             <div className="cards" style={{ marginTop: 12 }}>
               {registry.models.map((model) => (
                 <div className="card" key={`${model.provider}/${model.model}`}>
@@ -2484,8 +2478,10 @@ export const Knowledge: React.FC = () => {
           </div>
         </>
       )}
-      <CogneeKnowledgePanel />
-      <PgvectorKnowledgePanel />
+      <div className="detailGrid detailGrid--2 knowledgeRecallGrid">
+        <CogneeKnowledgePanel />
+        <PgvectorKnowledgePanel />
+      </div>
       <SurfaceMeta label={knowledgeCopy.metaLabel}>
         <span className="filechip">{Icon.file} {result?.registryPath ?? 'knowledge/ai-frontier/model-registry.yaml'}</span>
       </SurfaceMeta>
@@ -2632,7 +2628,6 @@ export const Tickets: React.FC = () => {
         eyebrow={ticketsCopy.eyebrow}
         title={ticketsCopy.title}
         lede={ticketsCopy.lede}
-        proof={SURFACE_TESTS.tickets}
       />
       <SurfaceInk lead={ticketsCopy.inkLead} muted={ticketsCopy.inkMuted} sub={ticketsCopy.inkSub} />
       <SurfaceStatStrip
@@ -2659,6 +2654,34 @@ export const Tickets: React.FC = () => {
           <div className="h-sec">Loading tickets…</div>
         </div>
       )}
+      <div className="panel ticketCreatePanel">
+        <div className="eyebrow">{ticketsCopy.createEyebrow}</div>
+        <div className="h-sec" style={{ marginTop: 6 }}>{ticketsCopy.createTitle}</div>
+        <div className="charterCreate">
+          <label className="charterField">
+            <span>{ticketsCopy.objectiveLabel}</span>
+            <input
+              className="charterInput"
+              value={objective}
+              onChange={(e) => setObjective(e.target.value)}
+              placeholder={ticketsCopy.objectivePlaceholder}
+            />
+          </label>
+          <label className="charterField">
+            <span>{ticketsCopy.slugLabel}</span>
+            <input
+              className="charterInput mono"
+              value={slug}
+              onChange={(e) => setSlug(e.target.value)}
+              placeholder={ticketsCopy.slugPlaceholder}
+            />
+          </label>
+          <div className="row" style={{ gap: 8 }}>
+            <button type="button" className="btn" disabled={busy || !objective.trim()} onClick={compile}>{ticketsCopy.compile}</button>
+            <button type="button" className="btn btn--primary" disabled={busy || !objective.trim()} onClick={orchestrate}>{ticketsCopy.orchestrate}</button>
+          </div>
+        </div>
+      </div>
       <SplitLayout
         list={
           <>
@@ -2682,7 +2705,7 @@ export const Tickets: React.FC = () => {
         }
         detail={selected ? (
           <div className="detail">
-            <div className="panel">
+            <div className="detailSection">
               <div className="between">
                 <div className="h-sec">{selected.ticket_id}</div>
                 {statusPill(selected.status)}
@@ -2727,14 +2750,14 @@ export const Tickets: React.FC = () => {
                   <span className="muted">Active worker {activeWorker.id} — finish or fail before re-orchestrating.</span>
                 )}
               </div>
-              <ChipList values={selected.checks} empty="No checks" />
+              <ChipList values={selected.checks} empty={ticketsCopy.noChecks} />
               {selected.branch && <span className="filechip" style={{ marginTop: 10 }}>branch · {selected.branch}</span>}
               {selected.model && <span className="filechip" style={{ marginTop: 10 }}>model · {selected.model}</span>}
               {selected.worktree && <span className="filechip" style={{ marginTop: 10 }}>worktree · {selected.worktree}</span>}
               {selected.owner && <span className="filechip" style={{ marginTop: 10 }}>owner · {selected.owner}</span>}
             </div>
             {!!selected.acceptance_criteria.length && (
-              <div className="panel">
+              <div className="detailSection">
                 <div className="eyebrow">acceptance criteria</div>
                 <ul className="list" style={{ marginTop: 8 }}>
                   {selected.acceptance_criteria.map((ac) => (
@@ -2744,7 +2767,7 @@ export const Tickets: React.FC = () => {
               </div>
             )}
             {workerForTicket && (
-              <div className="panel">
+              <div className="detailSection">
                 <div className="eyebrow">worker status</div>
                 <div className="between" style={{ marginTop: 10 }}>
                   <span className="mono">{workerForTicket.id}</span>
@@ -2776,23 +2799,7 @@ export const Tickets: React.FC = () => {
         </div>
       )}
       <SurfaceMeta label={ticketsCopy.metaLabel}>
-        <input
-          style={{ width: '100%', marginTop: 4, padding: '8px 10px', borderRadius: 8, border: '1px solid var(--line)' }}
-          value={objective}
-          onChange={(e) => setObjective(e.target.value)}
-          placeholder="Objective for the worker slice…"
-        />
-        <input
-          style={{ width: '100%', marginTop: 8, padding: '8px 10px', borderRadius: 8, border: '1px solid var(--line)' }}
-          value={slug}
-          onChange={(e) => setSlug(e.target.value)}
-          placeholder="Optional slug (defaults from objective)"
-        />
-        <div className="row" style={{ marginTop: 12, gap: 8 }}>
-          <button type="button" className="btn" disabled={busy || !objective.trim()} onClick={compile}>Compile ticket</button>
-          <button type="button" className="btn btn--primary" disabled={busy || !objective.trim()} onClick={orchestrate}>Orchestrate in worktree</button>
-        </div>
-        <span className="filechip" style={{ marginTop: 12 }}>{Icon.file} {tickets?.dir ?? '~/.otto/tickets'}</span>
+        <span className="filechip">{Icon.file} {tickets?.dir ?? '~/.otto/tickets'}</span>
         {selected?.packetPath && <span className="filechip">{selected.packetPath}</span>}
         {selected?.ticketPath && <span className="filechip">{selected.ticketPath}</span>}
       </SurfaceMeta>
@@ -2806,6 +2813,7 @@ export const Channels: React.FC = () => {
   const api = ottoApi();
   const [result, setResult] = useState<ChannelListResult | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!api) return;
@@ -2816,12 +2824,22 @@ export const Channels: React.FC = () => {
     return () => { cancelled = true; };
   }, [api]);
 
+  const channels = result?.channels ?? [];
+  const enabledCount = channels.filter((c) => c.enabled).length;
+
+  useEffect(() => {
+    if (!channels.length) {
+      setSelectedId(null);
+      return;
+    }
+    setSelectedId((prev) => (prev && channels.some((c) => c.id === prev) ? prev : channels[0]?.id ?? null));
+  }, [channels]);
+
+  const selected = channels.find((c) => c.id === selectedId) ?? null;
+
   if (!api) {
     return <WebPreviewFrame surface="channels" />;
   }
-
-  const channels = result?.channels ?? [];
-  const enabledCount = channels.filter((c) => c.enabled).length;
 
   return (
     <SurfacePage>
@@ -2829,7 +2847,6 @@ export const Channels: React.FC = () => {
         eyebrow={channelsCopy.eyebrow}
         title={channelsCopy.title}
         lede={channelsCopy.lede}
-        proof={SURFACE_TESTS.channels}
       />
       <SurfaceInk lead={channelsCopy.inkLead} muted={channelsCopy.inkMuted} sub={channelsCopy.inkSub} />
       <SurfaceStatStrip
@@ -2847,27 +2864,77 @@ export const Channels: React.FC = () => {
         />
       )}
       {!result && !error && (
-        <div className="panel">
-          <div className="h-sec">Loading channels…</div>
+        <div className="detailSection">
+          <div className="h-sec">{channelsCopy.loadingTitle}</div>
         </div>
       )}
       {result && !channels.length && !error && (
         <InlineEmpty title={listEmpty.channels?.title ?? 'No channels configured'} body={listEmpty.channels?.body ?? ''} />
       )}
-      <div className="cards">
-        {channels.map((channel) => (
-          <div className="card" key={channel.id}>
-            <div className="between">
-              <span className="card__title">{channel.label}</span>
-              <span className={`pill ${channel.enabled ? 'pill--ok' : 'pill--warn'}`}>{channel.enabled ? 'enabled' : 'disabled'}</span>
-            </div>
-            <span className="card__sub">{channel.kind} · {channel.address}</span>
-            {channel.requires_approval_to_send && (
-              <span className="pill pill--warn" style={{ marginTop: 8 }}>approval required to send</span>
-            )}
-          </div>
-        ))}
-      </div>
+      <SkippedLoaderPanel
+        noun="channel row"
+        skipped={(result?.skipped ?? []).map((item) => ({
+          slug: `row-${item.index}`,
+          file: `${item.file}#channels[${item.index}]`,
+          reason: item.reason,
+        }))}
+      />
+      {channels.length > 0 && (
+        <SplitLayout
+          list={
+            <>
+              {channels.map((channel) => (
+                <button
+                  type="button"
+                  key={channel.id}
+                  className={`card${channel.id === selectedId ? ' is-selected' : ''}`}
+                  onClick={() => setSelectedId(channel.id)}
+                >
+                  <div className="between">
+                    <span className="card__title">{channel.label}</span>
+                    <span className={`pill ${channel.enabled ? 'pill--ok' : 'pill--warn'}`}>{channel.enabled ? channelsCopy.enabledLabel : channelsCopy.disabledLabel}</span>
+                  </div>
+                  <span className="card__sub">{channel.kind} · {channel.address}</span>
+                </button>
+              ))}
+            </>
+          }
+          detail={
+            selected ? (
+              <div className="detail">
+                <div className="detailSection">
+                  <div className="between">
+                    <div>
+                      <div className="eyebrow">{selected.kind}</div>
+                      <div className="h-sec">{selected.label}</div>
+                    </div>
+                    <span className={`pill ${selected.enabled ? 'pill--ok' : 'pill--warn'}`}>{selected.enabled ? channelsCopy.enabledLabel : channelsCopy.disabledLabel}</span>
+                  </div>
+                  <dl className="kv" style={{ marginTop: 16 }}>
+                    <div>
+                      <dt>{channelsCopy.addressLabel}</dt>
+                      <dd className="mono">{selected.address}</dd>
+                    </div>
+                    <div>
+                      <dt>{channelsCopy.outboundLabel}</dt>
+                      <dd>{selected.requires_approval_to_send ? channelsCopy.outboundApproval : channelsCopy.outboundDirect}</dd>
+                    </div>
+                    <div>
+                      <dt>{channelsCopy.configFileLabel}</dt>
+                      <dd className="mono">{selected.file}</dd>
+                    </div>
+                  </dl>
+                  {selected.requires_approval_to_send && (
+                    <p className="muted" style={{ marginTop: 12 }}>{channelsCopy.approvalNote}</p>
+                  )}
+                </div>
+              </div>
+            ) : (
+              <InlineEmpty title={channelsCopy.selectTitle} body={channelsCopy.selectBody} />
+            )
+          }
+        />
+      )}
       <SurfaceMeta label={channelsCopy.metaLabel}>
         <span className="filechip">{Icon.file} {result?.configPath ?? 'channels/channels.yaml'}</span>
         <span className="pill pill--ok">{result?.storage ?? 'files'}</span>
@@ -3363,47 +3430,46 @@ const MemoryObservatory: React.FC<{ connected: boolean; onOpenLetta: () => void 
     : blocks;
 
   return (
-    <div className="settingsPage__content">
-      <SettingsSectionHeader title={settingsCopy.memoryTitle} lede={settingsCopy.memoryLede} />
-      <div className="row" style={{ justifyContent: 'flex-end' }}>
+    <>
+      <div className="row settingsGeneralSection__actions">
         <button type="button" className="btn" onClick={onOpenLetta}>Open in Letta</button>
       </div>
       <p className="settingsFieldHint">
         Inspects Letta core-memory blocks via `{result?.apiPath ?? '/v1/agents/{id}/core-memory/blocks'}`. Otto does not write memory here — use Curation proposals for writeback.
       </p>
         {!connected && (
-          <div className="settingsStatusBanner settingsStatusBanner--warn" style={{ marginTop: 12 }}>
-            Connect Letta in General before expecting live blocks.
+          <div className="settingsStatusBanner settingsStatusBanner--warn">
+            {settingsCopy.memoryConnectWarn}
           </div>
         )}
         {(result?.error || error) && (
-          <div className="settingsStatusBanner settingsStatusBanner--warn" style={{ marginTop: 12 }}>
+          <div className="settingsStatusBanner settingsStatusBanner--warn">
             {result?.error ?? error}
           </div>
         )}
         <input
-          style={{ width: '100%', marginTop: 12, padding: '8px 10px', borderRadius: 8, border: '1px solid var(--line)' }}
+          className="charterInput settingsGeneralSection__search"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="Search blocks…"
+          placeholder={settingsCopy.memorySearchPlaceholder}
           disabled={!blocks.length}
+          aria-label={settingsCopy.memorySearchPlaceholder}
         />
       {filtered.map((block: MemoryBlockRecord) => (
-        <div className="panel" key={block.id} style={{ marginTop: 12 }}>
+        <div className="detailSection settingsMemoryBlock" key={block.id}>
           <div className="between">
             <span className="h-sec">{block.label}</span>
             {block.updated_at && <span className="faint mono">{block.updated_at}</span>}
           </div>
-          {block.description && <p className="muted" style={{ marginTop: 6 }}>{block.description}</p>}
-          <pre className="mono" style={{ marginTop: 10, whiteSpace: 'pre-wrap', fontSize: 12, maxHeight: 240, overflow: 'auto' }}>{block.value || '(empty)'}</pre>
-          {block.limit != null && <span className="filechip" style={{ marginTop: 8 }}>limit · {block.limit}</span>}
+          {block.description && <p className="muted settingsMemoryBlock__desc">{block.description}</p>}
+          <pre className="mono settingsMemoryBlock__value">{block.value || '(empty)'}</pre>
+          {block.limit != null && <span className="filechip settingsMemoryBlock__limit">limit · {block.limit}</span>}
         </div>
       ))}
       {result && !result.error && !filtered.length && (
-        <div className="panel"><p className="muted">No memory blocks match. Connect an agent or adjust search.</p></div>
+        <div className="listEmpty"><p className="muted">{settingsCopy.memoryNoMatch}</p></div>
       )}
-      <SurfaceProof surface="settings" />
-    </div>
+    </>
   );
 };
 
@@ -3411,8 +3477,7 @@ const LabsSettingsPanel: React.FC = () => {
   const { labs, setMasterEnabled, setFeatureEnabled, hydrated } = useLabs();
 
   return (
-    <div className="settingsPage__content settingsLabs">
-      <SettingsSectionHeader title={settingsCopy.tabLabs} lede={labsCopy.lede} />
+    <>
       <div className="settingsLabsWarn">{settingsCopy.labsWarn}</div>
       <div className="settingsFieldRow">
         <div className="settingsFieldRow__main">
@@ -3453,8 +3518,8 @@ const LabsSettingsPanel: React.FC = () => {
           );
         })}
       </div>
-      <p className="faint mono" style={{ marginTop: 8 }}>{labsCopy.matrixLink}</p>
-    </div>
+      <p className="faint mono settingsLabsFootnote">{labsCopy.matrixLink}</p>
+    </>
   );
 };
 
@@ -3462,14 +3527,17 @@ export const Settings: React.FC = () => {
   const rt = useRuntimeContext();
   const api = ottoApi();
   const { push: pushToast } = useToast();
-  const [section, setSection] = useState<'general' | 'providers' | 'memory' | 'culture' | 'labs'>('general');
+  const [section, setSection] = useState<'general' | 'providers'>('general');
 
   useEffect(() => {
     try {
       const pending = sessionStorage.getItem('otto.settings.section');
-      if (pending === 'memory' || pending === 'labs') {
-        setSection(pending);
+      if (pending === 'memory' || pending === 'culture' || pending === 'labs') {
+        setSection('general');
         sessionStorage.removeItem('otto.settings.section');
+        requestAnimationFrame(() => {
+          document.getElementById(`settings-${pending}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        });
       }
     } catch { /* best effort */ }
   }, []);
@@ -3492,7 +3560,7 @@ export const Settings: React.FC = () => {
       label: 'Agent identity',
       required: true,
       status: 'configured',
-      detail: rt.status?.agentId ? `agent ${rt.status.agentId}` : 'agent connected',
+      detail: 'Letta session active',
       source: 'RuntimeStatus',
       action: 'Resolved from the live Letta session',
     },
@@ -3528,18 +3596,21 @@ export const Settings: React.FC = () => {
   const ready = liveConnected || requiredMissing.length === 0;
   const group = (keys: string[]) => readiness.filter((r) => keys.includes(r.key)).map((r) => liveByKey.get(r.key) ?? r);
 
-  const settingsTabs: Array<{ id: typeof section; label: string; icon: React.ReactNode; hidden?: boolean }> = [
+  const settingsTabs: Array<{ id: typeof section; label: string; icon: React.ReactNode }> = [
     { id: 'general', label: settingsCopy.tabGeneral, icon: Icon.settings },
     { id: 'providers', label: settingsCopy.tabProviders, icon: Icon.lock },
-    { id: 'memory', label: settingsCopy.tabMemory, icon: Icon.theme },
-    { id: 'culture', label: settingsCopy.tabCulture, icon: Icon.file, hidden: !api },
-    { id: 'labs', label: settingsCopy.tabLabs, icon: Icon.owl },
   ];
 
   return (
-    <div className="settingsPage">
+    <SurfacePage className="settingsSurface">
+      <SurfaceHero
+        eyebrow={settingsCopy.eyebrow}
+        title={settingsCopy.pageTitle}
+        lede={settingsCopy.pageLede}
+      />
+      <div className="settingsPage">
       <nav className="settingsTabs" role="tablist" aria-label="Settings sections">
-        {settingsTabs.filter((t) => !t.hidden).map((tab) => (
+        {settingsTabs.map((tab) => (
           <button
             key={tab.id}
             type="button"
@@ -3556,12 +3627,6 @@ export const Settings: React.FC = () => {
 
       {section === 'providers' ? (
         <ModelProviders />
-      ) : section === 'memory' ? (
-        <MemoryObservatory connected={liveConnected} onOpenLetta={() => void ottoApi()?.runtime.openLetta()} />
-      ) : section === 'culture' && api ? (
-        <CultureSettingsPanel api={api} pushToast={pushToast} />
-      ) : section === 'labs' ? (
-        <LabsSettingsPanel />
       ) : (
         <div className="settingsPage__content">
           <SettingsSectionHeader title={settingsCopy.generalTitle} lede={settingsCopy.generalLede} />
@@ -3583,17 +3648,19 @@ export const Settings: React.FC = () => {
             <SettingsSectionHeader title={settingsCopy.onboardingTitle} lede={settingsCopy.onboardingLede} />
             <div className="settingsFieldRow">
               <div className="settingsFieldRow__main">
-                <div className="settingsFieldRow__title">Replay first-run</div>
-                <p className="settingsFieldRow__hint">
-                  Clears the first-run flag so Welcome and the getting-started dock return on next launch.
-                </p>
+                <div className="settingsFieldRow__title">{settingsCopy.onboardingReplayTitle}</div>
+                <p className="settingsFieldRow__hint">{settingsCopy.onboardingReplayHint}</p>
               </div>
               <button
                 type="button"
                 className="btn"
                 onClick={() => {
                   resetOnboardingForReplay();
-                  pushToast({ title: 'Onboarding reset', body: 'Relaunch otto to see Welcome again.', tone: 'ok' });
+                  pushToast({
+                    title: settingsCopy.onboardingResetToastTitle,
+                    body: settingsCopy.onboardingResetToastBody,
+                    tone: 'ok',
+                  });
                 }}
               >
                 {settingsCopy.onboardingReset}
@@ -3605,23 +3672,23 @@ export const Settings: React.FC = () => {
             <SettingsSectionHeader title={settingsCopy.readinessTitle} lede={settingsCopy.readinessLede} />
             <div className={`settingsStatusBanner${!ready && !liveConnected ? ' settingsStatusBanner--warn' : ''}`}>
               {liveConnected
-                ? `${settingsCopy.readinessConnected}${rt.status?.agentId ? ` · ${rt.status.agentId}` : ''}${rt.status?.model ? ` · ${rt.status.model}` : ''}`
+                ? `${settingsCopy.readinessConnected}${rt.status?.model ? ` · ${rt.status.model}` : ''}`
                 : ready
-                  ? 'otto is ready to work'
+                  ? settingsCopy.readinessReadyFallback
                   : `${settingsCopy.readinessNotReady} ${requiredMissing.map((r) => r.label).join(' · ')}`}
             </div>
-            <details className="settingsReadinessDetails" style={{ marginTop: 16 }}>
+            <details className="settingsReadinessDetails">
               <summary>{settingsCopy.readinessDetail}</summary>
               <div className="settingsReadinessGroup">
-                <div className="faint" style={{ fontSize: 12, fontWeight: 600, paddingTop: 8 }}>Runtime &amp; identity</div>
+                <div className="faint settingsReadinessGroup__label">{settingsCopy.readinessGroupRuntime}</div>
                 {group(['runtime', 'agent', 'model', 'memory', 'workspace']).map((r) => <ReadyRow key={r.key} item={r} />)}
               </div>
               <div className="settingsReadinessGroup">
-                <div className="faint" style={{ fontSize: 12, fontWeight: 600, paddingTop: 8 }}>Capabilities</div>
+                <div className="faint settingsReadinessGroup__label">{settingsCopy.readinessGroupCapabilities}</div>
                 {group(['skills', 'practices', 'mcp', 'functions', 'permissions']).map((r) => <ReadyRow key={r.key} item={r} />)}
               </div>
               <div className="settingsReadinessGroup">
-                <div className="faint" style={{ fontSize: 12, fontWeight: 600, paddingTop: 8 }}>v1 surfaces</div>
+                <div className="faint settingsReadinessGroup__label">{settingsCopy.readinessGroupSurfaces}</div>
                 {group(['charters', 'standards', 'routines', 'curation', 'receipts', 'autonomy', 'knowledge', 'tickets', 'channels']).map((r) => (
                   <ReadyRow key={r.key} item={r} />
                 ))}
@@ -3629,13 +3696,28 @@ export const Settings: React.FC = () => {
             </details>
           </section>
 
-          <p className="faint mono" style={{ fontSize: 11.5 }}>
-            v1 is local-only: otto connects to a local Letta runtime. Cloud auth stays an advanced path.
-          </p>
-          <SurfaceProof surface="settings" />
+          <section className="settingsGeneralSection" id="settings-memory">
+            <SettingsSectionHeader title={settingsCopy.memoryTitle} lede={settingsCopy.memoryLede} />
+            <MemoryObservatory connected={liveConnected} onOpenLetta={() => void ottoApi()?.runtime.openLetta()} />
+          </section>
+
+          {api ? (
+            <section className="settingsGeneralSection" id="settings-culture">
+              <CultureSettingsPanel api={api} pushToast={pushToast} />
+            </section>
+          ) : null}
+
+          <section className="settingsGeneralSection settingsLabs" id="settings-labs">
+            <SettingsSectionHeader title={settingsCopy.sectionLabs} lede={labsCopy.lede} />
+            <LabsSettingsPanel />
+          </section>
+
+          <p className="faint mono settingsLocalFootnote">{settingsCopy.localOnlyFootnote}</p>
         </div>
       )}
-    </div>
+      </div>
+      <SurfaceProof surface="settings" />
+    </SurfacePage>
   );
 };
 
@@ -3726,7 +3808,7 @@ const CultureSettingsPanel: React.FC<{
   };
 
   return (
-    <div className="settingsPage__content">
+    <>
       <SettingsSectionHeader title={cultureSettingsCopy.title} lede={cultureSettingsCopy.lede} />
       <div className="row" style={{ flexWrap: 'wrap', gap: 8 }}>
         <button type="button" className="btn" disabled={busy} onClick={() => void api.constitution.open()}>
@@ -3768,7 +3850,6 @@ const CultureSettingsPanel: React.FC<{
         {importPreview ? <pre className="receiptJson mono" style={{ marginTop: 12 }}>{importPreview}</pre> : null}
       </div>
       {error ? <div className="settingsStatusBanner settingsStatusBanner--warn">{error}</div> : null}
-      <SurfaceProof surface="settings" />
-    </div>
+    </>
   );
 };

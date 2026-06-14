@@ -54,6 +54,29 @@ describe('AiFrontierReviewExecutor', () => {
     }
   });
 
+  test('manual run records one daily capability note when run twice', () => {
+    const tmp = mkdtempSync(join(tmpdir(), 'otto-ai-frontier-'));
+    try {
+      seedKnowledge(tmp);
+      const notesPath = join(tmp, 'ai-frontier', 'capability-notes.md');
+      const today = new Date().toISOString().slice(0, 10);
+      const marker = `<!-- ai-frontier-review ${today} -->`;
+      const executor = new AiFrontierReviewExecutor(
+        new KnowledgeStore(tmp),
+        new ReceiptWriter(join(tmp, 'receipts')),
+        new ProposalStore(join(tmp, 'proposals')),
+      );
+
+      executor.run();
+      executor.run();
+
+      const notes = readFileSync(notesPath, 'utf8');
+      expect(notes.split(marker).length - 1).toBe(1);
+    } finally {
+      rmSync(tmp, { recursive: true, force: true });
+    }
+  });
+
   test('routing change creates knowledge proposal instead of silent routing edit', () => {
     const tmp = mkdtempSync(join(tmpdir(), 'otto-ai-frontier-'));
     try {

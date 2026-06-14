@@ -1,4 +1,4 @@
-import { appendFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { parse, stringify } from 'yaml';
 import type { ReceiptWriteInput } from './receipt-writer';
@@ -33,11 +33,18 @@ export class AiFrontierReviewExecutor {
     const today = new Date().toISOString().slice(0, 10);
 
     if (listing.capabilityNotesPath && existsSync(listing.capabilityNotesPath)) {
-      appendFileSync(
-        listing.capabilityNotesPath,
-        `\n\n<!-- ai-frontier-review ${today} -->\n_Last manual review run: ${today}. Paste external benchmark notes here; routing changes go to Curation._\n`,
-      );
-      touched.push(listing.capabilityNotesPath);
+      const reviewMarker = `<!-- ai-frontier-review ${today} -->`;
+      const capabilityNotes = readFileSync(listing.capabilityNotesPath, 'utf8');
+      if (!capabilityNotes.includes(reviewMarker)) {
+        const reviewNote = `${reviewMarker}\n_Last manual review run: ${today}. Paste external benchmark notes here; routing changes go to Curation._`;
+        const separator = capabilityNotes.endsWith('\n\n')
+          ? ''
+          : capabilityNotes.endsWith('\n')
+            ? '\n'
+            : '\n\n';
+        writeFileSync(listing.capabilityNotesPath, `${capabilityNotes}${separator}${reviewNote}\n`);
+        touched.push(listing.capabilityNotesPath);
+      }
     }
 
     if (listing.registryPath && existsSync(listing.registryPath)) {

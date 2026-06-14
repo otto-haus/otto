@@ -2,7 +2,7 @@ import React from 'react';
 import { EmptyState } from '../components/ui';
 import { labsCopy } from '../copy/surfaces';
 import type { SurfaceId } from '../components/Sidebar';
-import { surfaceLabel } from '../surface-tiers';
+import { isLabsTierSurface, surfaceLabel } from '../surface-tiers';
 import { META } from '../surface-meta';
 
 export const ComingSoonSurface: React.FC<{
@@ -11,16 +11,18 @@ export const ComingSoonSurface: React.FC<{
 }> = ({ id, onOpenLabs }) => {
   const meta = META[id];
   const label = meta?.title ?? surfaceLabel(id);
-  const blurb = meta?.sub ?? labsCopy.comingSoonNext;
+  const labsTier = isLabsTierSurface(id);
+  const blurb = meta?.sub ?? (labsTier ? labsCopy.comingSoonNext : labsCopy.comingSoonWorkspaceNext);
+  const next = labsTier ? labsCopy.comingSoonNext : labsCopy.comingSoonWorkspaceNext;
   return (
     <div className="comingSoonShell" data-surface={id}>
       <EmptyState
         eyebrow={labsCopy.comingSoonEyebrow}
         title={labsCopy.comingSoonTitle(label)}
         body={blurb}
-        next={labsCopy.comingSoonNext}
+        next={next}
       />
-      {onOpenLabs ? (
+      {onOpenLabs && labsTier ? (
         <div className="comingSoonShell__actions">
           <button type="button" className="btn btn--primary" onClick={onOpenLabs}>
             {labsCopy.openLabs}

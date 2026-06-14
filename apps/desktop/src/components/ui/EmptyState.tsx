@@ -25,6 +25,6 @@ export const EmptyState: React.FC<{
 export const InlineEmpty: React.FC<{ title: string; body?: string }> = ({ title, body }) => (
   <div className="listEmpty">
     <div className="h-sec">{title}</div>
-    {body ? <p className="muted" style={{ marginTop: 8 }}>{body}</p> : null}
+    {body ? <p className="muted">{body}</p> : null}
   </div>
 );

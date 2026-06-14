@@ -73,7 +73,7 @@ export class ConfigStore {
   }
 
   connectionMode(): NonNullable<OttoConfig['connectionMode']> {
-    return this.cfg.connectionMode ?? 'embedded';
+    return this.cfg.connectionMode ?? 'existing';
   }
 
   /** Isolated Letta settings root for embedded mode (076) — under ~/.otto/letta by default. */

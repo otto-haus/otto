@@ -3,12 +3,11 @@ import { useEffect, useRef, useState } from 'react';
 import { Icon } from '../components/icons';
 import { useToast } from '../components/Toast';
 import { requiredMissing, isReady } from '../readiness';
-import { isElectron, ottoApi, type EffortLevel, type SavedAttachment } from '../runtime';
+import { isElectron, ottoApi, type EffortLevel, type LettaModelOption, type SavedAttachment } from '../runtime';
 import { useRuntimeContext } from '../RuntimeContext';
-import ottoAvatar from '../assets/otto-avatar.png';
-
 import type { SurfaceId } from '../components/Sidebar';
-import { CheckBlockBanner, Modal, PermissionCard, ReceiptInlineCard, type PermissionDecision, type PermissionRequestView } from '../components/ui';
+import { OttoMark } from '../components/OttoMark';
+import { CheckBlockBanner, CommandStationStrip, MessageActions, Modal, PermissionCard, ReceiptInlineCard, type PermissionDecision, type PermissionRequestView } from '../components/ui';
 import { displayThreadTitle } from '../components/ui/ThreadList';
 import { chatCopy, permissionCopy, toastCopy } from '../copy/surfaces';
 import { useChatThreads } from '../chat/useChatThreads';
@@ -18,9 +17,11 @@ import { runTicketCommand } from '../chat/ticket-commands';
 import {
   clearInFlight,
   createQueueItem,
+  nextQueueItemForThread,
   persistInFlight,
   previewQueueText,
   QUEUE_KEY,
+  queueMatchesThread,
   readQueue,
   type QueueItem,
 } from '../chat/queue-storage';
@@ -50,13 +51,11 @@ type AttachmentDraft = SavedAttachment & { previewUrl: string };
 const DRAFT_KEY = 'otto.chat.draft.v1';
 const ATTACHMENTS_KEY = 'otto.chat.attachments.v1';
 
-const MODEL_OPTIONS = [
-  { label: 'GPT-5.5 (ChatGPT)', value: 'chatgpt-plus-pro/gpt-5.5' },
-  { label: 'GPT-5.5 (Codex)', value: 'openai-codex/gpt-5.5' },
-  { label: 'Opus 4.8', value: 'anthropic/claude-opus-4-8' },
-  { label: 'Sonnet 4.6', value: 'anthropic/claude-sonnet-4-6' },
-  { label: 'Haiku 4.5', value: 'anthropic/claude-haiku-4-5' },
-] as const;
+const FALLBACK_MODEL_OPTIONS: LettaModelOption[] = [
+  { label: 'GPT-5.5 (ChatGPT)', handle: 'chatgpt-plus-pro/gpt-5.5' },
+  { label: 'GPT-5.5 (OpenAI)', handle: 'openai/gpt-5.5' },
+  { label: 'Auto', handle: 'letta/auto' },
+];
 
 const EFFORT_OPTIONS: Array<{ label: string; value: EffortLevel }> = [
   { label: 'Off', value: 'off' },
@@ -66,7 +65,8 @@ const EFFORT_OPTIONS: Array<{ label: string; value: EffortLevel }> = [
   { label: 'Max', value: 'max' },
 ];
 
-const labelForModel = (value?: string | null) => MODEL_OPTIONS.find((m) => m.value === value)?.label ?? value ?? 'Agent default';
+const labelForModel = (value?: string | null, options: LettaModelOption[] = FALLBACK_MODEL_OPTIONS) =>
+  options.find((m) => m.handle === value)?.label ?? value ?? 'Agent default';
 const labelForEffort = (value?: EffortLevel) => EFFORT_OPTIONS.find((e) => e.value === value)?.label ?? 'High';
 
 const formatRuntimeSubtitle = (ready: boolean, reason: string | undefined, modelLabel: string): string => {
@@ -87,6 +87,7 @@ const ModelEffortPickers: React.FC<{
   onClose: () => void;
   onSelectModel: (value: string) => void;
   onSelectEffort: (value: EffortLevel) => void;
+  modelOptions: LettaModelOption[];
   compact?: boolean;
   menuPlacement?: 'up' | 'down';
 }> = ({
@@ -100,30 +101,31 @@ const ModelEffortPickers: React.FC<{
   onClose,
   onSelectModel,
   onSelectEffort,
+  modelOptions,
   compact = false,
   menuPlacement = 'up',
 }) => (
   <div className={`promptControls${compact ? ' promptControls--head' : ''}`} onClick={(e) => e.stopPropagation()}>
     <div className="picker" data-open={modelOpen ? 'true' : 'false'}>
       <button type="button" className="picker__button" onClick={onToggleModel} disabled={busy} aria-expanded={modelOpen}>
-        <span>{labelForModel(selectedModel)}</span>
+        <span>{labelForModel(selectedModel, modelOptions)}</span>
         <span className="picker__chev">›</span>
       </button>
       {modelOpen && (
         <div className={`picker__menu picker__menu--model${menuPlacement === 'down' ? ' picker__menu--down' : ''}`}>
-          <div className="picker__title">Select model</div>
-          {MODEL_OPTIONS.map((m) => (
+          <div className="picker__title">{chatCopy.selectModelTitle}</div>
+          {modelOptions.map((m) => (
             <button
               type="button"
-              key={m.value}
-              className={`picker__option${selectedModel === m.value ? ' is-selected' : ''}`}
+              key={m.handle}
+              className={`picker__option${selectedModel === m.handle ? ' is-selected' : ''}`}
               onClick={() => {
                 onClose();
-                onSelectModel(m.value);
+                onSelectModel(m.handle);
               }}
             >
               <span>{m.label}</span>
-              <span className="mono faint">{m.value}</span>
+              <span className="mono faint">{m.handle}</span>
             </button>
           ))}
         </div>
@@ -144,7 +146,7 @@ const ModelEffortPickers: React.FC<{
       </button>
       {effortOpen && (
         <div className={`picker__menu picker__menu--effort${menuPlacement === 'down' ? ' picker__menu--down' : ''}`}>
-          <div className="picker__title">Reasoning</div>
+          <div className="picker__title">{chatCopy.reasoningTitle}</div>
           {EFFORT_OPTIONS.map((e) => (
             <button
               type="button"
@@ -416,6 +418,7 @@ const LiveChat: React.FC<{
   const [attachmentError, setAttachmentError] = useState<string | null>(null);
   const [draggingImage, setDraggingImage] = useState(false);
   const [queue, setQueue] = useState<QueueItem[]>(readQueue);
+  const [modelOptions, setModelOptions] = useState<LettaModelOption[]>(FALLBACK_MODEL_OPTIONS);
   const [modelOpen, setModelOpen] = useState(false);
   const [effortOpen, setEffortOpen] = useState(false);
   const [permission, setPermission] = useState<PermissionRequestView | null>(null);
@@ -435,6 +438,29 @@ const LiveChat: React.FC<{
   const selectedEffort = st?.effort ?? 'high';
   const activeThreadTitle = threads.find((t) => t.id === rt.activeThreadId)?.title;
   const headTitle = displayThreadTitle(activeThreadTitle ?? 'New chat');
+
+  useEffect(() => {
+    if (!api) return;
+    let cancelled = false;
+    void api.models.list()
+      .then((models) => {
+        if (cancelled || !models.length) return;
+        setModelOptions(models);
+        if (!ready || rt.busy) return;
+        const current = selectedModel;
+        if (current && models.some((model) => model.handle === current)) return;
+        const fallback = models.find((model) => model.handle === 'letta/auto')
+          ?? models.find((model) => model.handle === 'openai/gpt-5.5')
+          ?? models[0];
+        if (fallback?.handle) void rt.configure({ modelHandle: fallback.handle });
+      })
+      .catch(() => {
+        if (!cancelled) setModelOptions(FALLBACK_MODEL_OPTIONS);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [api, ready, selectedModel, rt.busy]);
 
   useEffect(() => {
     if (!modelOpen && !effortOpen) return;
@@ -458,14 +484,14 @@ const LiveChat: React.FC<{
       const text = detail?.text?.trim();
       if (!text || !ready || !api) return;
       if (detail?.send) {
-        setQueue((items) => [...items, createQueueItem(text)]);
+        setQueue((items) => [...items, createQueueItem(text, 'queued', rt.activeThreadId)]);
         return;
       }
       setDraft(text);
     };
     window.addEventListener('otto-onboarding-starter', onStarter);
     return () => window.removeEventListener('otto-onboarding-starter', onStarter);
-  }, [api, ready]);
+  }, [api, ready, rt.activeThreadId]);
 
   const respondPermission = async (decision: PermissionDecision, denyMessage?: string) => {
     if (!api || !permission) return;
@@ -546,6 +572,7 @@ const LiveChat: React.FC<{
   };
 
   const streamMessages = [...rt.messages, ...cmdMessages];
+  const activeQueue = queue.filter((item) => queueMatchesThread(item, rt.activeThreadId));
 
   useEffect(() => {
     setCmdMessages([]);
@@ -572,7 +599,7 @@ const LiveChat: React.FC<{
 
   useEffect(() => {
     tailRef.current?.scrollIntoView({ behavior: streamMessages.length > 1 ? 'smooth' : 'auto', block: 'end' });
-  }, [streamMessages.length, rt.busy, queue.length]);
+  }, [streamMessages.length, rt.busy, activeQueue.length]);
 
   const attachImages = async (files: File[]) => {
     if (!api || !files.length) return;
@@ -606,15 +633,16 @@ const LiveChat: React.FC<{
         setAttachments([]);
         return;
       }
-      setQueue((items) => [...items, createQueueItem(text)]);
+      setQueue((items) => [...items, createQueueItem(text, 'queued', rt.activeThreadId)]);
+      if (rt.busy) void rt.abort();
       setDraft('');
       setAttachments([]);
     })();
   };
 
   useEffect(() => {
-    if (!ready || rt.busy || draining.current || queue.length === 0) return;
-    const next = queue.find((item) => item.state === 'queued');
+    if (!ready || !rt.activeThreadId || rt.busy || draining.current || queue.length === 0) return;
+    const next = nextQueueItemForThread(queue, rt.activeThreadId);
     if (!next) return;
     draining.current = true;
     persistInFlight({ ...next, state: 'sending' });
@@ -631,7 +659,7 @@ const LiveChat: React.FC<{
       .finally(() => {
         draining.current = false;
       });
-  }, [queue, ready, rt]);
+  }, [queue, ready, rt.activeThreadId, rt.busy, rt.send]);
 
   // Failed sends remain durable in the queue; the user can retry or remove them.
 
@@ -658,64 +686,77 @@ const LiveChat: React.FC<{
             {Icon.panel}
           </button>
         )}
-        <span className="brand__mark brand__mark--avatar chat__avatar"><img src={ottoAvatar} alt="" /></span>
+        <span className="chat__avatar"><OttoMark size={30} className="ottoMark" /></span>
         <div className="chat__titleBlock">
           <div className="chat__title">{headTitle}</div>
           <div className="chat__id">
             {st ? (
               <>
                 <span className={`dot ${ready ? 'dot--ok' : 'dot--warn'}`} aria-hidden="true" />
-                {ready ? labelForModel(selectedModel) : formatRuntimeSubtitle(ready, st.reason, labelForModel(selectedModel))}
+                {ready ? labelForModel(selectedModel, modelOptions) : formatRuntimeSubtitle(ready, st.reason, labelForModel(selectedModel, modelOptions))}
               </>
             ) : 'connecting…'}
           </div>
         </div>
-        {st ? (
-          <div className="chat__headActions" ref={pickerRef}>
-            <ModelEffortPickers
-              compact
-              menuPlacement="down"
-              busy={rt.busy}
-              selectedModel={selectedModel}
-              selectedEffort={selectedEffort}
-              modelOpen={modelOpen}
-              effortOpen={effortOpen}
-              onToggleModel={() => { setModelOpen((x) => !x); setEffortOpen(false); }}
-              onToggleEffort={() => { setEffortOpen((x) => !x); setModelOpen(false); }}
-              onClose={() => { setModelOpen(false); setEffortOpen(false); }}
-              onSelectModel={(value) => { void rt.configure({ modelHandle: value }); }}
-              onSelectEffort={(value) => { void rt.configure({ effort: value }); }}
-            />
-          </div>
-        ) : null}
+        <div className="chat__headActions">
+          {!st ? (
+            <>
+              <button type="button" className="btn btn--ghost-d" onClick={() => { void rt.retry(); }}>{chatCopy.pickerRetry}</button>
+              {onOpenSettings && (
+                <button type="button" className="btn btn--solid-d" onClick={onOpenSettings}>{chatCopy.pickerOpenSettings}</button>
+              )}
+            </>
+          ) : null}
+        </div>
       </div>
+
+      {ready && onNavigate ? (
+        <div className="chat__commandStation">
+          <CommandStationStrip onNavigate={onNavigate} />
+        </div>
+      ) : null}
 
       <div className="chat__stream" ref={streamRef}>
         <div className="chat__streamInner">
-          {!ready && st && (
+          {!ready && (
             <div className="inkblock chat__setup">
-              <div className="inkblock__eyebrow"><span className="dot dot--warn" /> {chatCopy.runtimeNotReadyEyebrow}</div>
-              <div className="inkblock__title">{chatCopy.runtimeNotReadyTitle}</div>
-              <div className="inkblock__meta">
-                <span>{st.reason ?? chatCopy.runtimeNotReadyBody}</span>
-              </div>
+              {!st ? (
+                <>
+                  <div className="inkblock__eyebrow"><span className="dot dot--idle" /> {chatCopy.runtimeConnectingEyebrow}</div>
+                  <div className="inkblock__title">{chatCopy.runtimeConnectingTitle}</div>
+                  <div className="inkblock__meta">
+                    <span>{chatCopy.runtimeConnectingBody}</span>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="inkblock__eyebrow"><span className="dot dot--warn" /> {chatCopy.runtimeNotReadyEyebrow}</div>
+                  <div className="inkblock__title">{chatCopy.runtimeNotReadyTitle}</div>
+                  <div className="inkblock__meta">
+                    <span>{st.reason ?? chatCopy.runtimeNotReadyBody}</span>
+                  </div>
+                </>
+              )}
               <div className="inkblock__actions">
-                <button type="button" className="btn btn--solid-d" onClick={rt.retry}>Retry</button>
+                <button type="button" className="btn btn--solid-d" onClick={() => { void rt.retry(); }}>Retry</button>
                 {onOpenSettings && <button type="button" className="btn btn--ghost-d" onClick={onOpenSettings}>Open Settings</button>}
               </div>
             </div>
           )}
-          {ready && streamMessages.length === 0 && (
-            <div className="chatEmpty">
+          {streamMessages.length === 0 && (
+            <div className={`chatEmpty${ready ? '' : ' chatEmpty--muted'}`}>
               <div className="eyebrow">{chatCopy.sessionEyebrow}</div>
               <h2 className="chatEmpty__title">{chatCopy.sessionTitle}</h2>
-              <p className="chatEmpty__lede">{chatCopy.sessionBody}</p>
+              <p className="chatEmpty__lede">
+                {ready ? chatCopy.sessionBody : 'Finish runtime setup above, then send your first message.'}
+              </p>
               <div className="chatStarters" aria-label="Starter prompts">
                 {chatCopy.starterPrompts.map((prompt) => (
                   <button
                     key={prompt}
                     type="button"
                     className="chatStarter"
+                    disabled={!ready}
                     onClick={() => setDraft(prompt)}
                   >
                     {prompt}
@@ -736,7 +777,7 @@ const LiveChat: React.FC<{
               >
                 {!isUser && showWho ? (
                   <span className="msgRow__avatar" aria-hidden="true">
-                    <img src={ottoAvatar} alt="" />
+                    <OttoMark size={26} className="ottoMark" />
                   </span>
                 ) : !isUser ? <span className="msgRow__avatar msgRow__avatar--spacer" aria-hidden="true" /> : null}
                 <div className={`msg${isUser ? ' msg--user' : ''}${showWho ? '' : ' msg--cont'}`}>
@@ -764,13 +805,23 @@ const LiveChat: React.FC<{
                   <div className="msg__body" style={isError ? { color: 'var(--stop)' } : undefined}>
                     {m.text ? <MarkdownText text={m.text} /> : null}
                   </div>
+                  {!isUser && !isError && m.text ? (
+                    <MessageActions
+                      disabled={proposeBusy}
+                      onCorrectThis={() => setProposeContext({
+                        messageId: m.id,
+                        messageText: m.text,
+                        who: 'otto',
+                      })}
+                    />
+                  ) : null}
                 </div>
               </div>
             );
           })}
           {rt.busy && (
             <div className="msgRow">
-              <span className="msgRow__avatar" aria-hidden="true"><img src={ottoAvatar} alt="" /></span>
+              <span className="msgRow__avatar" aria-hidden="true"><OttoMark size={26} className="ottoMark" /></span>
               <div className="chat__thinking" aria-live="polite">
                 <span className="chat__thinkingDots" aria-hidden="true">
                   <i /><i /><i />
@@ -784,11 +835,13 @@ const LiveChat: React.FC<{
       </div>
 
       <div className="promptbar">
-        {ready && queue.length > 0 && (
+        {ready && activeQueue.length > 0 && (
           <QueueStrip
-            queue={queue}
-            onClear={() => setQueue([])}
-            onRetryAll={() => setQueue((items) => items.map((item) => (item.state === 'failed' ? { ...item, state: 'queued' } : item)))}
+            queue={activeQueue}
+            onClear={() => setQueue((items) => items.filter((item) => !queueMatchesThread(item, rt.activeThreadId)))}
+            onRetryAll={() => setQueue((items) => items.map((item) => (
+              queueMatchesThread(item, rt.activeThreadId) && item.state === 'failed' ? { ...item, state: 'queued' } : item
+            )))}
             onRetryOne={(id) => setQueue((items) => items.map((item) => (item.id === id ? { ...item, state: 'queued' } : item)))}
             onRemove={(id) => setQueue((items) => items.filter((item) => item.id !== id))}
           />
@@ -810,6 +863,23 @@ const LiveChat: React.FC<{
           </div>
         )}
         {attachmentError && <div className="attachmentError">{attachmentError}</div>}
+        {ready && st ? (
+          <div className="promptbar__pickers" ref={pickerRef}>
+            <ModelEffortPickers
+              busy={rt.busy}
+              selectedModel={selectedModel}
+              selectedEffort={selectedEffort}
+              modelOpen={modelOpen}
+              effortOpen={effortOpen}
+              onToggleModel={() => { setModelOpen((x) => !x); setEffortOpen(false); }}
+              onToggleEffort={() => { setEffortOpen((x) => !x); setModelOpen(false); }}
+              onClose={() => { setModelOpen(false); setEffortOpen(false); }}
+              onSelectModel={(value) => { void rt.configure({ modelHandle: value }); }}
+              onSelectEffort={(value) => { void rt.configure({ effort: value }); }}
+              modelOptions={modelOptions}
+            />
+          </div>
+        ) : null}
         <div className="promptCompose">
           <div className={`promptbox${ready ? '' : ' promptbox--disabled'}`}>
             <input
@@ -828,7 +898,13 @@ const LiveChat: React.FC<{
             </button>
             <textarea
               ref={textareaRef}
-              placeholder={ready ? (rt.busy ? 'Queue a follow-up…' : 'Message otto…') : 'Runtime not ready — see Settings'}
+              placeholder={
+                ready
+                  ? (rt.busy ? 'Steer this reply…' : 'Message otto…')
+                  : st
+                    ? 'Runtime not ready — finish setup above'
+                    : 'Connecting to Letta…'
+              }
               aria-label="Message Otto"
               value={draft}
               onChange={(e) => setDraft(e.target.value)}
@@ -900,7 +976,7 @@ const LiveChat: React.FC<{
 const PreviewChat: React.FC = () => (
   <div className="chat">
     <div className="chat__head">
-      <span className="brand__mark brand__mark--avatar" style={{ width: 28, height: 28, borderRadius: 8 }}><img src={ottoAvatar} alt="" /></span>
+      <span className="chat__avatar" style={{ width: 28, height: 28, borderRadius: 8 }}><OttoMark size={24} className="ottoMark" /></span>
       <div>
         <div style={{ fontWeight: 600 }}>otto</div>
         <div className="chat__id">runtime not connected · desktop bridge unavailable</div>

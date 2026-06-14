@@ -2,7 +2,7 @@
 
 Updated: 2026-06-14
 
-Integration branch: `ship/functional-labs` @ `b3861d5` (codename — not product semver)
+Integration branch: `ship/functional-labs` (codename — not product semver; post-054 integration commit)
 
 **Product line:** **`v0.1.x`** — tag **`v0.1.3`** marks the integration/demo line (pre-release until Sebastian gate). Mistaken local tags `v0.2.x` / `v0.3.0` deleted; never use integration branch names as semver.
 **Staging proof:** `/Applications/otto-staging.app` only — live app unchanged.
@@ -13,7 +13,7 @@ HQ conveyor (canonical): `planning/hq-tickets/` — `_Done/` **62**, root **35**
 
 Smoke root: `/Users/seb/.codex/admin/`
 
-Shared verification (2026-06-13):
+Shared verification (2026-06-14):
 
 ```sh
 cd /Users/seb/Code/otto

@@ -3,6 +3,7 @@ import { readFileSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { join } from 'node:path';
 import type { ConfigStore } from '../config-store';
+import type { LettaModelOption } from '../shared/types';
 
 export type LocalLettaContext = {
   baseUrl: string | null;
@@ -66,6 +67,41 @@ export function resolveHttpBaseUrl(configured?: string | null): string | null {
   return discoverLocalLettaUrl();
 }
 
+export async function listLocalLettaModels(config: ConfigStore): Promise<LettaModelOption[]> {
+  const base = resolveHttpBaseUrl(config.baseUrl());
+  if (!base) return [];
+  const res = await fetch(`${base}/v1/models/`);
+  if (!res.ok) throw new Error(`Could not list Letta models (${res.status})`);
+  const raw = await res.json() as unknown;
+  const rows = modelRows(raw);
+  const seen = new Set<string>();
+  const out: LettaModelOption[] = [];
+  for (const row of rows) {
+    const handle = modelHandle(row);
+    if (!handle || seen.has(handle)) continue;
+    seen.add(handle);
+    const label = modelLabel(row, handle);
+    out.push({
+      handle,
+      label,
+      provider: stringField(row, 'provider_name') ?? stringField(row, 'provider_type'),
+      displayName: stringField(row, 'display_name') ?? stringField(row, 'name'),
+    });
+  }
+  return out;
+}
+
+export async function confirmedModelHandle(config: ConfigStore): Promise<string | null> {
+  const models = await listLocalLettaModels(config);
+  if (!models.length) return config.modelHandle();
+  const preferred = config.modelHandle();
+  if (preferred && models.some((model) => model.handle === preferred)) return preferred;
+  return models.find((model) => model.handle === 'letta/auto')?.handle
+    ?? models.find((model) => model.handle === 'openai/gpt-5.5')?.handle
+    ?? models[0]?.handle
+    ?? null;
+}
+
 function discoverSettingsHttpBaseUrl(settings: LettaSettings | null): string | null {
   if (!settings) return null;
   const sessionKeys = Object.keys(settings.sessionsByServer ?? {});
@@ -99,6 +135,35 @@ function discoverSettingsAgentId(settings: LettaSettings | null, baseUrl: string
     a.agentId?.startsWith('agent-') && (!a.baseUrl || a.baseUrl.startsWith('local:') || !!normalizeBaseUrl(a.baseUrl)),
   );
   return localAgent?.agentId ?? null;
+}
+
+function modelRows(raw: unknown): Record<string, unknown>[] {
+  if (Array.isArray(raw)) return raw.filter(isRecord);
+  if (!isRecord(raw)) return [];
+  for (const key of ['data', 'models', 'items']) {
+    const value = raw[key];
+    if (Array.isArray(value)) return value.filter(isRecord);
+  }
+  return [];
+}
+
+function modelHandle(row: Record<string, unknown>): string | null {
+  return stringField(row, 'handle') ?? stringField(row, 'id') ?? stringField(row, 'model');
+}
+
+function modelLabel(row: Record<string, unknown>, handle: string): string {
+  const display = stringField(row, 'display_name') ?? stringField(row, 'name');
+  if (display && display !== handle) return display;
+  return handle;
+}
+
+function stringField(row: Record<string, unknown>, key: string): string | null {
+  const value = row[key];
+  return typeof value === 'string' && value.trim() ? value.trim() : null;
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return !!value && typeof value === 'object';
 }
 
 function discoverLocalLettaUrl(): string | null {

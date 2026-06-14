@@ -257,7 +257,7 @@ export const Onboarding: React.FC<{ onNavigate: (id: SurfaceId) => void; activeS
               {statusReason}
             </p>
           ) : null}
-          {connected ? <p className="onboardInlineOk">otto is connected to Letta.</p> : null}
+          {connected ? <p className="onboardInlineOk">{onboardingCopy.connectedOk}</p> : null}
         </OnboardingStepLayout>
       );
     }
@@ -347,7 +347,7 @@ export const Onboarding: React.FC<{ onNavigate: (id: SurfaceId) => void; activeS
     return (
       <div className="onboardDock onboardDock--receipt">
         <div className="between" style={{ marginBottom: 10 }}>
-          <span className="onboardEyebrow onboardEyebrow--light">Getting started</span>
+          <span className="onboardEyebrow onboardEyebrow--light">{onboardingCopy.legacyDockEyebrow}</span>
           <div className="onboardDots" aria-hidden="true">
             {Array.from({ length: ONBOARDING_STEP_COUNT }, (_, i) => (
               <span key={i} className={`onboardDot${i === dotAt ? ' is-active' : ''}`} />

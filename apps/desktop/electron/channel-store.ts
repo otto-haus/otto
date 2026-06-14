@@ -1,7 +1,9 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { parse } from 'yaml';
-import type { ChannelKind, ChannelListResult, ChannelRecord } from '@otto-haus/core';
+import type { ChannelKind, ChannelListResult, ChannelRecord, ChannelSkip } from '@otto-haus/core';
+
+const CHANNEL_KINDS = new Set<ChannelKind>(['discord', 'imessage', 'slack', 'email', 'desktop', 'cli']);
 
 const DEFAULT_CHANNELS: ChannelRecord[] = [
   {
@@ -21,14 +23,18 @@ export class ChannelStore {
   listResult(): ChannelListResult {
     const configPath = join(this.dir, 'channels.yaml');
     if (!existsSync(configPath)) {
-      return { dir: this.dir, configPath, channels: DEFAULT_CHANNELS, storage: 'default' };
+      return { dir: this.dir, configPath, channels: DEFAULT_CHANNELS, skipped: [], storage: 'default' };
     }
 
-    const raw = parse(readFileSync(configPath, 'utf8')) as Record<string, unknown>;
-    const channelsRaw = Array.isArray(raw.channels) ? raw.channels : [];
-    const channels: ChannelRecord[] = channelsRaw.map((entry) => normalizeChannel(entry as Record<string, unknown>, configPath));
+    const raw = parse(readFileSync(configPath, 'utf8')) as unknown;
+    const channelsRaw = isRecord(raw) && Array.isArray(raw.channels) ? raw.channels : [];
+    const skipped: ChannelSkip[] = [];
+    const channels: ChannelRecord[] = channelsRaw.flatMap((entry, index) => {
+      const channel = normalizeChannel(entry, configPath, index, skipped);
+      return channel ? [channel] : [];
+    });
 
-    return { dir: this.dir, configPath, channels, storage: 'files' };
+    return { dir: this.dir, configPath, channels, skipped, storage: 'files' };
   }
 }
 
@@ -49,15 +55,47 @@ export function resolveChannelsDir(): string {
   return candidates[0] ?? resolve(process.cwd(), 'channels');
 }
 
-function normalizeChannel(raw: Record<string, unknown>, configPath: string): ChannelRecord {
-  const kind = raw.kind as ChannelKind;
+function normalizeChannel(raw: unknown, configPath: string, index: number, skipped: ChannelSkip[]): ChannelRecord | null {
+  if (!isRecord(raw)) {
+    skipped.push({ index, reason: 'channel entry must be an object', file: configPath });
+    return null;
+  }
+  const id = nonEmptyString(raw.id);
+  if (!id) {
+    skipped.push({ index, reason: 'channel id is required', file: configPath });
+    return null;
+  }
+  const kind = nonEmptyString(raw.kind);
+  if (!isChannelKind(kind)) {
+    skipped.push({ index, reason: `unsupported channel kind for ${id}`, file: configPath });
+    return null;
+  }
+  const address = nonEmptyString(raw.address);
+  if (!address) {
+    skipped.push({ index, reason: `channel address is required for ${id}`, file: configPath });
+    return null;
+  }
   return {
-    id: String(raw.id ?? 'unknown'),
-    kind: kind ?? 'desktop',
-    label: String(raw.label ?? raw.id ?? 'Channel'),
-    address: String(raw.address ?? ''),
-    enabled: raw.enabled !== false,
+    id,
+    kind,
+    label: nonEmptyString(raw.label) ?? id,
+    address,
+    enabled: raw.enabled === true,
     requires_approval_to_send: raw.requires_approval_to_send !== false,
     file: configPath,
   };
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return !!value && typeof value === 'object' && !Array.isArray(value);
+}
+
+function nonEmptyString(value: unknown): string | null {
+  if (typeof value !== 'string') return null;
+  const trimmed = value.trim();
+  return trimmed.length ? trimmed : null;
+}
+
+function isChannelKind(value: string | null): value is ChannelKind {
+  return !!value && CHANNEL_KINDS.has(value as ChannelKind);
 }

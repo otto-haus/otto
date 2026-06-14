@@ -4,7 +4,7 @@ import type { SurfaceId } from '../components/Sidebar';
 import { ottoApi } from '../runtime';
 import {
   isSurfaceAccessible,
-  labsSurfaceGate,
+  surfaceGate,
   LAB_FEATURE_META,
 } from '../surface-tiers';
 import { defaultLabsConfig } from '../../electron/labs-config';
@@ -64,7 +64,7 @@ export const LabsProvider: React.FC<{ children: React.ReactNode }> = ({ children
     labs,
     hydrated,
     isEnabled: (id) => isSurfaceAccessible(id, labs),
-    isComingSoon: (id) => labsSurfaceGate(id, labs, hydrated) === 'coming-soon',
+    isComingSoon: (id) => surfaceGate(id, labs, hydrated) === 'coming-soon',
     isFeatureEnabled: (id) => labs.enabled === true && labs.features?.[id] === true,
     setMasterEnabled,
     setFeatureEnabled,
@@ -81,7 +81,7 @@ export function useLabs(): LabsContextValue {
       labs: fallback,
       hydrated: true,
       isEnabled: (id) => isSurfaceAccessible(id, fallback),
-      isComingSoon: (id) => labsSurfaceGate(id, fallback, true) === 'coming-soon',
+      isComingSoon: (id) => surfaceGate(id, fallback, true) === 'coming-soon',
       isFeatureEnabled: () => false,
       setMasterEnabled: async () => {},
       setFeatureEnabled: async () => {},

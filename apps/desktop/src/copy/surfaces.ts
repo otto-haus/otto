@@ -188,10 +188,17 @@ export const chatCopy = {
   queueShow: 'Show',
   queueHide: 'Hide',
   queueRetryOne: 'Retry',
+  runtimeConnectingEyebrow: 'starting runtime',
+  runtimeConnectingTitle: 'Connecting to Letta…',
+  runtimeConnectingBody: 'Booting your local agent session. This usually takes a few seconds.',
   runtimeNotReadyEyebrow: 'runtime not ready',
   runtimeNotReadyTitle: "otto can't connect yet",
   runtimeNotReadyBody: 'Check Settings for Letta connection and required setup.',
   workingPulse: 'thinking…',
+  selectModelTitle: 'Select model',
+  reasoningTitle: 'Reasoning',
+  pickerRetry: 'Retry',
+  pickerOpenSettings: 'Open Settings',
   correctThis: 'Correct this',
   correctThisHint: 'Turn this moment into changed future behavior',
   correctionDefault: 'This response should change — describe the behavior you want instead.',
@@ -250,6 +257,15 @@ export const onboardingCopy = {
   receiptOpen: 'Open Receipts',
   receiptDone: 'Done',
   sampleOnlyNote: 'Sample path — does not count as live proof from your workspace.',
+  connectedOk: 'otto is connected to Letta.',
+  legacyDockEyebrow: 'Getting started',
+} as const;
+
+export const loaderCopy = {
+  eyebrow: 'loader',
+  validationPill: 'validation',
+  skippedTitle: (count: number, noun: string) =>
+    `${count} malformed ${noun}${count === 1 ? '' : 's'} skipped`,
 } as const;
 
 export const permissionCopy = {
@@ -268,7 +284,11 @@ export const threadCopy = {
   pinnedLabel: 'Pinned',
   recentsLabel: 'Recents',
   empty: 'No conversations yet.',
-} as const;
+    pinnedEmpty: 'Pin a thread to keep it here.',
+    pin: 'Pin conversation',
+    unpin: 'Unpin conversation',
+    archive: 'Archive conversation',
+  } as const;
 
 export const curationCopy = {
   eyebrow: 'curation',
@@ -291,12 +311,19 @@ export const curationCopy = {
   accept: 'Accept',
   reject: 'Reject',
   defer: 'Defer',
-  approvalsEyebrow: 'ratification records',
-  approvalsTitle: 'Approvals are records',
-  approvalsLede: 'Emitted by Curation — not a peer subsystem. Each decision ties proposal, approval, and receipt.',
-  approvalsEmpty: 'No approval records yet. Accept, reject, or defer a consequential proposal to emit one.',
+  approvalsEyebrow: 'decision records',
+  approvalsTitle: 'Curation decisions are records',
+  approvalsLede: 'Emitted by Curation — not a peer subsystem. Each decision ties proposal, outcome, and receipt.',
+  approvalsEmpty: 'No decision records yet. Accept, reject, or defer a consequential proposal to emit one.',
   memoryBadge: 'memory writeback',
   metaStorage: 'Proposal storage',
+  pathChipLabel: 'proposal file',
+  classificationEyebrow: 'classification',
+  evidenceEyebrow: 'evidence',
+  zoneRisk: 'risk',
+  zoneGate: 'gate',
+  zoneCanon: 'canon',
+  zoneReason: 'reason',
   changelogEyebrow: 'behavior changelog',
   changelogTitle: 'What changed this week',
   changelogLede: 'Culture changes only — ratified proposals, constitution edits, autonomy policy. Not chat activity.',
@@ -315,6 +342,32 @@ export const chartersCopy = {
   metaLabel: 'Create charter',
   createEyebrow: 'new charter',
   createTitle: 'Operating contract',
+  objectiveLabel: 'Objective',
+  objectivePlaceholder: 'Represent an explicit goal/run contract',
+  criterionLabel: 'Acceptance criterion',
+  criterionPlaceholder: 'A concrete proof condition',
+  slugLabel: 'Slug',
+  createButton: 'Create charter',
+  loadingList: 'Loading charters…',
+  selectTitle: 'Select a charter',
+  selectBody: 'Charter state appears after creation.',
+  detailEyebrow: 'charter detail',
+  acEyebrow: 'acceptance criteria',
+  approvalEyebrow: 'approval boundary',
+  linkedRunsEyebrow: 'linked runs',
+  linkedReceiptsEyebrow: 'linked receipts',
+  attachEyebrow: 'attach run / receipt',
+  runIdPlaceholder: 'run id',
+  receiptIdPlaceholder: 'receipt id',
+  attachButton: 'Attach',
+  statusEyebrow: 'update status',
+  statusSummaryPlaceholder: 'change summary',
+  updateButton: 'Update',
+  changesEyebrow: 'changes',
+  noRunLinked: 'No run linked',
+  noReceiptLinked: 'No receipt linked',
+  completeRequiresReceipt: (missingIds: string) =>
+    `Complete requires receipt proof on every acceptance criterion (${missingIds} missing).`,
 } as const;
 
 export const standardsCopy = {
@@ -326,7 +379,13 @@ export const standardsCopy = {
   inkSub: 'The first real Review should let No Fake Done block a premature completion.',
   statLoaded: 'Standards',
   statActive: 'Active',
-  metaLabel: 'Registry & ratification',
+  metaLabel: 'Registry',
+  ratificationOwner: 'Owner',
+  ratificationAutoApply: 'Auto apply',
+  loadingTitle: 'Loading standards…',
+  conflictEyebrow: 'conflict · case law',
+  conflictTieBreaker: 'Tie-breaker:',
+  conflictProposeCuration: 'Propose a Curation Standards change instead of improvising in chat.',
 } as const;
 
 export const practicesCopy = {
@@ -341,6 +400,7 @@ export const practicesCopy = {
   statRunnable: 'Runnable',
   metaLabel: 'Practice storage',
   curationGate: 'Practice promotion, activation, and publish remain approval-gated.',
+  noInvocations: 'No invocations declared.',
 } as const;
 
 export const routinesCopy = {
@@ -367,6 +427,18 @@ export const autonomyCopy = {
   metaLabel: 'Policy file',
   evaluateEyebrow: 'check an action',
   evaluateHint: 'Classification writes an autonomy receipt — blocked when approval is required.',
+  evaluatePlaceholder: 'Describe the proposed action…',
+  evaluateButton: 'Evaluate action',
+  evaluatingButton: 'Evaluating…',
+  doorsEyebrow: 'consequential doors',
+  zoneAutonomous: 'autonomous',
+  zoneApproval: 'approval',
+  evalApprovalRequired: 'Approval required',
+  evalMayProceed: 'May proceed autonomously',
+  evalRoutingPrefix: 'Knowledge routing ·',
+  evalReceiptPrefix: 'receipt ·',
+  safeAutoMergeLabel: 'safe_auto_merge',
+  routingKnowledgeHint: 'Full registry and model table live on Knowledge.',
 } as const;
 
 export const skillsCopy = {
@@ -378,6 +450,9 @@ export const skillsCopy = {
   inkSub: 'Password management is a Skill; Winning is a Standard.',
   statLoaded: 'Skills',
   metaLabel: 'Skill directory',
+  triggersEyebrow: 'triggers',
+  noTriggers: 'No triggers parsed',
+  loadingTitle: 'Loading skills…',
 } as const;
 
 export const knowledgeCopy = {
@@ -390,6 +465,27 @@ export const knowledgeCopy = {
   statModels: 'Models',
   statRoles: 'Routing roles',
   metaLabel: 'Registry path',
+  cogneeEyebrow: 'derived recall',
+  cogneeTitle: 'Graph recall (Cognee)',
+  cogneeLoopback: (baseUrl: string, checkedAt?: string) =>
+    `Loopback only · ${baseUrl}${checkedAt ? ` · checked ${checkedAt}` : ''}`,
+  cogneeNoCapture: 'No capture receipt yet — run scripts/cognee-capture.sh after Cognee is ready.',
+  cogneeRefresh: 'Refresh health',
+  cogneeRecallSmoke: 'Recall smoke',
+  cogneeNoCitations: 'No citations — index capture or start Cognee daemon first.',
+  zoneLastCapture: 'last capture',
+  zoneDocs: 'docs',
+  zonePath: 'path',
+  zoneCitation: 'citation',
+  pgvectorEyebrow: 'semantic recall',
+  pgvectorTitle: 'pgvector (optional)',
+  loadingTitle: 'Loading knowledge…',
+  registryNotFoundTitle: 'Registry not found',
+  registryNotFoundBody: (path: string) =>
+    `Could not read ${path}. Knowledge routing falls back until the registry exists.`,
+  registryProposedPrefix: 'Registry status is proposed — routing assignments are defaults, not ratified policy.',
+  routingEyebrow: 'routing assignments',
+  modelsEyebrow: 'models',
 } as const;
 
 export const ticketsCopy = {
@@ -402,7 +498,16 @@ export const ticketsCopy = {
   statOpen: 'Open',
   statReview: 'In review',
   statTotal: 'Tickets',
-  metaLabel: 'Create & orchestrate',
+  metaLabel: 'Ticket storage',
+  createEyebrow: 'new ticket',
+  createTitle: 'Worker slice',
+  objectiveLabel: 'Objective',
+  objectivePlaceholder: 'Objective for the worker slice…',
+  slugLabel: 'Slug',
+  slugPlaceholder: 'Optional slug (defaults from objective)',
+  compile: 'Compile ticket',
+  orchestrate: 'Orchestrate in worktree',
+  noChecks: 'No checks',
 } as const;
 
 export const channelsCopy = {
@@ -415,6 +520,17 @@ export const channelsCopy = {
   statConfigured: 'Channels',
   statEnabled: 'Enabled',
   metaLabel: 'Channel config',
+  selectTitle: 'Select a channel',
+  selectBody: 'Pick a reachability surface to review address, status, and send gates.',
+  enabledLabel: 'enabled',
+  disabledLabel: 'disabled',
+  addressLabel: 'Address',
+  outboundLabel: 'Outbound sends',
+  outboundApproval: 'Approval required',
+  outboundDirect: 'Direct send allowed',
+  configFileLabel: 'Config file',
+  approvalNote: 'External side effects on this channel stay gated until the operator approves.',
+  loadingTitle: 'Loading channels…',
 } as const;
 
 export const labsCopy = {
@@ -431,7 +547,8 @@ export const labsCopy = {
   enableLabel: 'Enable in this workspace',
   comingSoonEyebrow: 'coming soon',
   comingSoonTitle: (label: string) => `${label} is not enabled yet`,
-  comingSoonNext: 'Turn on Labs and this feature in Settings → Labs when you are ready to try it.',
+  comingSoonNext: 'Turn on Labs and this feature in Settings → General → Labs when you are ready to try it.',
+  comingSoonWorkspaceNext: 'Chat and Settings are live today. This workspace surface is still wiring up for v1.',
   openLabs: 'Open Labs settings',
   loadingTitle: 'Loading workspace features…',
   loadingBody: 'Reading Labs settings from this profile.',
@@ -441,16 +558,18 @@ export const labsCopy = {
   openSettings: 'Open Settings',
   startSidecar: 'Check sidecar health',
   cogneeBlockedTitle: 'Graph recall is off',
-  cogneeBlockedBody: 'Enable Knowledge (Cognee) in Settings → Labs, then start the local sidecar. See docs/cognee.md — no mock graph rows.',
+  cogneeBlockedBody: 'Enable Knowledge (Cognee) in Settings → General → Labs, then start the local sidecar. See docs/cognee.md — no mock graph rows.',
   pgvectorBlockedTitle: 'Vector recall is off',
-  pgvectorBlockedBody: 'Enable pgvector recall in Settings → Labs and start local Postgres. Files remain canon.',
+  pgvectorBlockedBody: 'Enable pgvector recall in Settings → General → Labs and start local Postgres. Files remain canon.',
   channelsBlockedTitle: 'Outbound sends are contract-only',
   channelsBlockedBody: 'Channel definitions load from files. Live bot sends stay off until outbound is configured and approved.',
-  channelsBlockedNext: 'Review channel config and enable outbound in Settings → Labs when ready.',
+  channelsBlockedNext: 'Review channel config and enable outbound in Settings → General → Labs when ready.',
 } as const;
 
 export const settingsCopy = {
   eyebrow: 'settings',
+  pageTitle: 'Settings',
+  pageLede: 'Connection, providers, and workspace defaults.',
   title: 'General',
   lede: 'How otto connects to Letta, what is ready, and workspace defaults.',
   inkLead: 'Connection truth lives here.',
@@ -474,6 +593,8 @@ export const settingsCopy = {
   onboardingTitle: 'Onboarding',
   onboardingLede: 'Replay the first-run walkthrough on next launch.',
   onboardingReset: 'Reset onboarding',
+  onboardingResetToastTitle: 'Onboarding reset',
+  onboardingResetToastBody: 'Relaunch otto to see Welcome again.',
   readinessTitle: 'Readiness',
   readinessLede: 'What must be true before Chat and irreversible actions unlock.',
   readinessDetail: 'Show readiness detail',
@@ -494,6 +615,19 @@ export const settingsCopy = {
   providerApiKeyPresent: 'API key on file (write-only)',
   providerApiKeyMissing: 'No API key on file',
   providerSubmitKey: 'Save API key (write-only)',
+  onboardingReplayTitle: 'Replay first-run',
+  onboardingReplayHint: 'Clears the first-run flag so Welcome and the getting-started dock return on next launch.',
+  readinessReadyFallback: 'otto is ready to work',
+  readinessGroupRuntime: 'Runtime & identity',
+  readinessGroupCapabilities: 'Capabilities',
+  readinessGroupSurfaces: 'v1 surfaces',
+  localOnlyFootnote: 'v1 is local-only: otto connects to a local Letta runtime. Cloud auth stays an advanced path.',
+  memoryConnectWarn: 'Connect Letta in General before expecting live blocks.',
+  memorySearchPlaceholder: 'Search blocks…',
+  memoryNoMatch: 'No memory blocks match. Connect an agent or adjust search.',
+  sectionMemory: 'Memory observatory',
+  sectionCulture: 'Culture import',
+  sectionLabs: 'Labs',
 } as const;
 
 export const receiptsCopy = {
@@ -511,6 +645,7 @@ export const receiptsCopy = {
   loadingTitle: 'Loading proof…',
   emptyTitle: 'No proof yet',
   emptyBody: 'Send or block a chat turn, ratify a proposal, or run a practice — otto writes a receipt when behavior completes.',
+  sampleLede: 'Inspect the sample structure below — it is not live proof from your workspace.',
   runsEyebrow: 'execution records',
   runsTitle: 'Runs',
   noMatchTitle: 'No matching receipts',
@@ -550,6 +685,13 @@ export const checksCopy = {
   blockPill: 'BLOCK',
   openReceipt: 'Open receipt',
   openStandard: 'Open standard',
+  loadingTitle: 'Loading checks…',
+  zoneTrigger: 'trigger',
+  zoneSource: 'source',
+  zoneInspect: 'inspect',
+  zoneCompiled: 'compiled',
+  zoneCompiledAt: 'compiled at',
+  zoneStandard: 'standard',
 } as const;
 
 export const cultureCiCopy = {

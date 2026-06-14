@@ -2,14 +2,15 @@
 //
 // Checks are file-backed and low-risk only — this never wires the Letta runtime/chat.
 // Repo state (workspace, skills, practices, permissions) is read directly. Runtime/agent/
-// MCP/functions come from an OPTIONAL machine-local config that is NOT committed:
+// MCP/functions can come from an OPTIONAL machine-local config that is NOT committed:
 //
 //     ~/.otto/config.json   { agent?: {id}, runtime?: {connected},
 //                             mcpServers?: [...], functions?: [...] }
 //
 // v1 is local-only: Otto does not store model provider keys. Letta owns provider auth.
-// Set OTTO_READINESS_IGNORE_LOCAL_CONFIG=1 to regenerate the committed preview baseline
-// without reading machine-local config. We never read API keys here.
+// By default this writes the committed preview baseline. Set
+// OTTO_READINESS_INCLUDE_LOCAL_CONFIG=1 for a machine-local diagnostic render.
+// We never read API keys here.
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -18,7 +19,9 @@ import { homedir } from 'node:os';
 const scriptDir = dirname(fileURLToPath(import.meta.url));
 const appRoot = resolve(scriptDir, '..');
 const repoRoot = resolve(appRoot, '../..');
-const outputPath = join(appRoot, 'src/data/readiness.json');
+const outputPath = process.env.OTTO_READINESS_OUTPUT_PATH
+  ? resolve(process.env.OTTO_READINESS_OUTPUT_PATH)
+  : join(appRoot, 'src/data/readiness.json');
 const electronDir = join(appRoot, 'electron');
 
 const has = (...p) => existsSync(join(...p));
@@ -28,9 +31,12 @@ const tilde = (p) => (p && p.startsWith(homedir()) ? '~' + p.slice(homedir().len
 
 // optional, machine-local, never committed
 let cfg = {};
-const configPath = join(homedir(), '.otto', 'config.json');
-const ignoreLocalConfig = process.env.OTTO_READINESS_IGNORE_LOCAL_CONFIG === '1';
-const hasConfig = !ignoreLocalConfig && existsSync(configPath);
+const customConfigPath = process.env.OTTO_READINESS_CONFIG_PATH;
+const configPath = customConfigPath ? resolve(customConfigPath) : join(homedir(), '.otto', 'config.json');
+const includeLocalConfig =
+  process.env.OTTO_READINESS_INCLUDE_LOCAL_CONFIG === '1' &&
+  process.env.OTTO_READINESS_IGNORE_LOCAL_CONFIG !== '1';
+const hasConfig = includeLocalConfig && existsSync(configPath);
 if (hasConfig) {
   try { cfg = JSON.parse(readFileSync(configPath, 'utf8')); } catch { cfg = {}; }
 }
@@ -61,7 +67,7 @@ const runtimeConnected = cfg.runtime?.connected === true;
 const agentId = cfg.agentId ?? cfg.agent?.id; // ConfigStore writes flat agentId; accept nested too
 const mcpCount = Array.isArray(cfg.mcpServers) ? cfg.mcpServers.length : 0;
 const fnCount = Array.isArray(cfg.functions) ? cfg.functions.length : 0;
-const cfgSrc = hasConfig ? '~/.otto/config.json' : null;
+const cfgSrc = hasConfig ? (customConfigPath ? 'local readiness config' : '~/.otto/config.json') : null;
 
 const items = [
   { key: 'runtime', label: 'Letta runtime', required: true,

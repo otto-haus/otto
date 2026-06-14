@@ -17,6 +17,7 @@ import type {
   ReceiptListResult,
   RuntimePreferences,
   RuntimeStatus,
+  LettaModelOption,
   SavedAttachment,
   StandardCitation,
   StandardListResult,
@@ -119,6 +120,9 @@ const api = {
     abort: (): Promise<void> => ipcRenderer.invoke('otto:abort'),
     configure: (input: RuntimePreferences): Promise<RuntimeStatus> => ipcRenderer.invoke('otto:configure', input),
     openLetta: (): Promise<string> => ipcRenderer.invoke('otto:open-letta'),
+  },
+  models: {
+    list: (): Promise<LettaModelOption[]> => ipcRenderer.invoke('otto:models:list'),
   },
   config: {
     get: (): Promise<OttoConfig> => ipcRenderer.invoke('otto:config:get'),

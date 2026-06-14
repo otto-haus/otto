@@ -101,6 +101,13 @@ export interface RuntimePreferences {
   effort?: EffortLevel;
 }
 
+export interface LettaModelOption {
+  handle: string;
+  label: string;
+  provider?: string | null;
+  displayName?: string | null;
+}
+
 /** Renderer-provided pasted/dropped image. Saved locally before being referenced in chat. */
 export interface AttachmentInput {
   name: string;

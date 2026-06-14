@@ -59,6 +59,14 @@ task refresh        # build/package/install/open /Applications/otto.app
 task smoke:cli      # isolated disposable conversation; never default
 ```
 
+After any `apps/desktop/` implementation turn, refresh **staging** (not only live):
+
+```sh
+task staging        # → /Applications/otto-staging.app (isolated HOME; never default conversation)
+```
+
+Use `task refresh` when Sebastian needs `/Applications/otto.app` updated; otherwise default end-of-turn deploy is **staging**.
+
 Staging smokes (never `/Applications/otto.app`):
 
 ```sh

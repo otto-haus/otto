@@ -1,7 +1,8 @@
 export type QueueState = 'queued' | 'sending' | 'failed';
-export type QueueItem = { id: string; text: string; createdAt: number; state: QueueState };
+export type QueueItem = { id: string; text: string; createdAt: number; state: QueueState; threadId?: string | null };
 
-export const QUEUE_KEY = 'otto.chat.queue.v2';
+export const QUEUE_KEY = 'otto.chat.queue.v3';
+export const LEGACY_QUEUE_V2_KEY = 'otto.chat.queue.v2';
 export const LEGACY_QUEUE_KEY = 'otto.chat.queue.v1';
 export const INFLIGHT_KEY = 'otto.chat.inflight.v1';
 
@@ -20,10 +21,18 @@ export const previewQueueText = (text: string): string => {
   return trimmed.length > 96 ? `${trimmed.slice(0, 96)}…` : trimmed;
 };
 
-export const createQueueItem = (text: string, state: QueueState = 'queued'): QueueItem => {
+export const createQueueItem = (text: string, state: QueueState = 'queued', threadId: string | null = null): QueueItem => {
   const id = globalThis.crypto?.randomUUID?.() ?? `queue-${Date.now()}-${fallbackQueueIdSequence += 1}`;
-  return { id, text, createdAt: Date.now(), state };
+  return { id, text, createdAt: Date.now(), state, threadId };
 };
+
+export const queueMatchesThread = (item: QueueItem, threadId: string | null | undefined): boolean =>
+  item.threadId == null || (!!threadId && item.threadId === threadId);
+
+export const nextQueueItemForThread = (
+  items: QueueItem[],
+  threadId: string | null | undefined,
+): QueueItem | undefined => items.find((item) => item.state === 'queued' && queueMatchesThread(item, threadId));
 
 const dedupeQueue = (items: Array<QueueItem | null>): QueueItem[] => {
   const out: QueueItem[] = [];
@@ -79,6 +88,7 @@ const parseStoredQueue = (raw: string | null): QueueItem[] => {
         text: item.text,
         createdAt: typeof item.createdAt === 'number' ? item.createdAt : Date.now(),
         state: item.state === 'failed' ? 'failed' : 'queued',
+        threadId: typeof item.threadId === 'string' ? item.threadId : null,
       }));
   } catch {
     return [];
@@ -87,17 +97,21 @@ const parseStoredQueue = (raw: string | null): QueueItem[] => {
 
 export const readQueue = (): QueueItem[] => {
   try {
-    const legacyRaw = localStorage.getItem(LEGACY_QUEUE_KEY);
+    const legacyV2Raw = localStorage.getItem(LEGACY_QUEUE_V2_KEY);
+    const legacyRaw = legacyV2Raw ?? localStorage.getItem(LEGACY_QUEUE_KEY);
     const currentRaw = localStorage.getItem(QUEUE_KEY);
-    const stored = parseStoredQueue(currentRaw ?? legacyRaw);
+    const current = parseStoredQueue(currentRaw);
+    const legacy = parseStoredQueue(legacyRaw);
     const items = sanitizeQueue(
       dedupeQueue([
         readInFlight(),
-        ...stored,
+        ...current,
+        ...legacy,
       ]),
     );
 
-    if (legacyRaw) localStorage.removeItem(LEGACY_QUEUE_KEY);
+    if (legacyV2Raw) localStorage.removeItem(LEGACY_QUEUE_V2_KEY);
+    if (localStorage.getItem(LEGACY_QUEUE_KEY)) localStorage.removeItem(LEGACY_QUEUE_KEY);
     localStorage.setItem(QUEUE_KEY, JSON.stringify(items));
 
     return items;

@@ -1,8 +1,8 @@
 # Craft checklist — staging proof for v0.1.3 gate (12 items)
 
-Date: 2026-06-14  
-Build: `ship/v0.3-integration` @ `0a07320`  
-App: `/Applications/otto-staging.app` (window title **otto staging**)  
+Date: 2026-06-14 (refreshed 15:45 UTC)  
+Build: `ship/functional-labs` @ integration commit (post-054 snapshot)  
+App: `/Applications/otto-staging.app` (window title **otto staging**, CDP **9445**)  
 Live `/Applications/otto.app` intentionally **not** updated.
 
 ## How to verify
@@ -26,7 +26,7 @@ Live `/Applications/otto.app` intentionally **not** updated.
 | 9 | Traced send icon | Custom Icon.send, not stock paper-plane | pass (source) | iconography bundle |
 | 10 | Toast/proposal UX | Propose correction modal + receipts inline | pass | `048`, `123` staging receipts |
 | 11 | Sidebar brand (031) | Left-align + padding per ticket 031 | pass | `.brand { padding: 0 40px 4px 8px }` |
-| 12 | Remotion walkthrough | Local `demo/out/otto-v01-desktop-walkthrough.mp4` rendered; GitHub release asset on hold until **`v0.1.3`** approval | pass | `receipts/otto-v01/demo-render-20260614T063531Z.md` |
+| 12 | Remotion walkthrough | Local MP4 + **`otto-haus/otto` v0.1.3** pre-release asset `otto-v01-desktop.mp4` (not Latest until gate) | pass | `receipts/otto-v01/demo-release-asset-202606141532Z.md` |
 
 ## Live vs staging (why screenshot looked old)
 
@@ -37,6 +37,23 @@ Live app still shows legacy chrome:
 - Window title **otto**
 
 That is expected until Sebastian approves promoting staging to live. **Do not deploy to live without explicit approval.**
+
+## Design pass (2026-06-13)
+
+Staging-only craft pass on `fix/windows-install` branch. Receipt: [`design-pass-20260613/design-pass-receipt.md`](design-pass-20260613/design-pass-receipt.md).
+
+| Check | Status |
+|-------|--------|
+| Slim topbar (no duplicate page title) | pass |
+| Single SurfaceProof footer per surface | pass |
+| Command Station on Chat when ready | pass |
+| Settings: no agent id in banner | pass |
+| Settings: single test footer | pass |
+| Charters create form above split | pass |
+| Channels list/detail split | pass |
+| Onboarding dock clears prompt | pass |
+| `verify:v0` green | pass (208 tests, 2026-06-14) |
+| Full-route screenshot bundle | pending (CDP capture timeout) |
 
 ## Automated capture (optional)
 

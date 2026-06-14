@@ -1,5 +1,5 @@
 import { type BrowserWindow, ipcMain, shell } from 'electron';
-import type { ConnectionInfo, ConnectionInput, CreateProposalFromCorrectionInput, DecideProposalInput, LabsConfig, OttoConfig, PermissionRequest, PermissionResponse, ProposalClassification, ProposalTarget, RuntimePreferences } from './shared/types';
+import type { ConnectionInfo, ConnectionInput, CreateProposalFromCorrectionInput, DecideProposalInput, LabsConfig, OttoConfig, PermissionRequest, PermissionResponse, ProposalClassification, ProposalTarget, RuntimePreferences, RuntimeStatus } from './shared/types';
 import { getLabsConfig, labsConfigToOttoPatch, patchLabsConfig } from './labs-config';
 import type { CharterCreateInput, CharterStatus } from './shared/types';
 import type { AttachmentInput } from './shared/types';
@@ -7,6 +7,7 @@ import { saveAttachment } from './attachments';
 import { CharterStore } from './charter-store';
 import { ConfigStore } from './config-store';
 import { discoverLocalLettaContext, LettaRunner } from './letta-runner';
+import { listLocalLettaModels } from './runtime-transport/letta-discovery';
 import { ReceiptStore } from './receipt-store';
 import { StandardStore } from './standard-store';
 import { PracticeStore } from './practice-store';
@@ -63,19 +64,45 @@ export function registerIpc(win: BrowserWindow) {
   const memory = new MemoryStore(config);
   const pgvector = new PgvectorStore();
 
+  const bindStatusToActiveThread = (status: RuntimeStatus) => {
+    if (!status.ready) return;
+    threads.touchActive({
+      agentId: status.agentId ?? null,
+      lettaConversationId: status.conversationId ?? null,
+    });
+  };
+
+  const initWithStaleRecovery = async (opts?: { freshConversation?: boolean }): Promise<RuntimeStatus> => {
+    const status = await runner.init(opts);
+    if (status.ready || status.code !== 'stale' || !config.get().conversationId) {
+      bindStatusToActiveThread(status);
+      return status;
+    }
+    config.update({ conversationId: null });
+    threads.touchActive({ lettaConversationId: null });
+    const recovered = await runner.init({ freshConversation: true });
+    bindStatusToActiveThread(recovered);
+    return recovered;
+  };
+
   ipcMain.handle('otto:init', async () => {
     threads.ensureActiveThread(config.agentId());
-    return runner.init();
+    return initWithStaleRecovery();
   });
   ipcMain.handle('otto:new-chat', async () => {
     permissionSessionStore.clear();
     threads.create();
-    return runner.init({ freshConversation: true });
+    return initWithStaleRecovery({ freshConversation: true });
   });
   ipcMain.handle('otto:status', () => runner.getStatus());
   ipcMain.handle('otto:send', (_e, text: string) => runner.send(text));
   ipcMain.handle('otto:abort', () => runner.abort());
-  ipcMain.handle('otto:configure', (_e, input: RuntimePreferences) => runner.configure(input));
+  ipcMain.handle('otto:configure', async (_e, input: RuntimePreferences) => {
+    const status = await runner.configure(input);
+    bindStatusToActiveThread(status);
+    return status;
+  });
+  ipcMain.handle('otto:models:list', () => listLocalLettaModels(config));
   ipcMain.handle('otto:open-letta', () => shell.openPath('/Applications/Letta.app'));
 
   ipcMain.handle('otto:config:get', () => config.get());
@@ -104,7 +131,7 @@ export function registerIpc(win: BrowserWindow) {
     if (input.baseUrl !== undefined) patch.baseUrl = input.baseUrl || null;
     if (input.agentId !== undefined) patch.agentId = input.agentId || null;
     if (Object.keys(patch).length) config.update(patch);
-    return runner.init(); // reconnect and return fresh status
+    return initWithStaleRecovery(); // reconnect and return fresh status
   });
 
   ipcMain.handle('otto:receipts:list', () => receipts.list());
@@ -241,17 +268,33 @@ export function registerIpc(win: BrowserWindow) {
   ipcMain.handle('otto:threads:create', async (_e, input?: { title?: string; agentId?: string | null }) => {
     permissionSessionStore.clear();
     const thread = threads.create(input);
-    const status = await runner.init({ freshConversation: true });
+    const status = await initWithStaleRecovery({ freshConversation: true });
+    const updatedThread = threads.touchActive({
+      agentId: status.agentId ?? thread.agentId,
+      lettaConversationId: status.conversationId ?? null,
+    }) ?? thread;
     safeWebContentsSend(win, 'otto:threads:active', { threadId: thread.id, status });
-    return { thread, status };
+    return { thread: updatedThread, status };
   });
   ipcMain.handle('otto:threads:switch', async (_e, threadId: string) => {
     const thread = threads.switch(threadId);
-    const status = await runner.init();
+    const status = await initWithStaleRecovery();
+    const updatedThread = threads.touchActive({
+      agentId: status.agentId ?? thread.agentId,
+      lettaConversationId: status.conversationId ?? thread.lettaConversationId,
+    }) ?? thread;
     safeWebContentsSend(win, 'otto:threads:active', { threadId: thread.id, status });
-    return { thread, status };
+    return { thread: updatedThread, status };
   });
-  ipcMain.handle('otto:threads:archive', (_e, threadId: string) => threads.archive(threadId));
+  ipcMain.handle('otto:threads:archive', async (_e, threadId: string) => {
+    const archived = threads.archive(threadId);
+    const activeThreadId = config.get().activeThreadId ?? null;
+    if (activeThreadId && activeThreadId !== threadId) {
+      const status = await initWithStaleRecovery();
+      safeWebContentsSend(win, 'otto:threads:active', { threadId: activeThreadId, status });
+    }
+    return archived;
+  });
   ipcMain.handle('otto:threads:pin', (_e, threadId: string, pinned: boolean) => threads.pin(threadId, pinned));
   ipcMain.handle(
     'otto:threads:touch',

@@ -13,7 +13,7 @@ Cross-links:
 
 ```txt
 Renderer  →  IPC (window.otto.runtime.*)  →  RuntimeSupervisor  →  OttoRuntimeTransport
-                                              ├─ SdkSubprocessTransport  (default)
+                                              ├─ SdkSubprocessTransport  (functional fallback)
                                               └─ WsRuntimeTransport      (loopback BYOR)
 ```
 
@@ -25,17 +25,17 @@ Renderer  →  IPC (window.otto.runtime.*)  →  RuntimeSupervisor  →  OttoRun
 
 | Mode | Env value | Default? | Behavior |
 |------|-----------|----------|----------|
-| **SDK subprocess** | `sdk` (or unset) | **Yes** | Spawns Letta Code via `@letta-ai/letta-code-sdk` session |
+| **SDK subprocess** | `sdk` | No | Spawns Letta Code via `@letta-ai/letta-code-sdk` session |
 | **WebSocket BYOR** | `ws` or `websocket` | No | Loopback WSS listener; `letta remote --backend local` connects inbound |
-| **Auto (local only)** | `auto` | No | Try WS init; on failure fall back to SDK with visible reason |
+| **Auto (local only)** | `auto` (or unset) | **Yes** | Use local SDK fallback unless WS promotion is explicitly approved; no cloud fallback |
 
 Resolution (`transport-mode.ts`):
 
 ```ts
-process.env.OTTO_RUNTIME_TRANSPORT ?? 'sdk'  // sdk | ws | websocket | auto
+process.env.OTTO_RUNTIME_TRANSPORT ?? 'auto'  // sdk | ws | websocket | auto
 ```
 
-Unknown values (including `cloud`) fall back to **`sdk`** — never to a remote/cloud path.
+Unknown values (including `cloud`) fall back to **`auto`** — never to a remote/cloud path.
 
 ### Planned / advanced (not in supervisor yet)
 
@@ -57,7 +57,7 @@ When adding a mode, extend `RuntimeSupervisor` — do not silently route `auto` 
 2. **Mode switch is operator-visible.** `RuntimeStatus` exposes `transportMode`, `effectiveTransport`, and `transportFallbackReason`.
 3. **Paperclip/Otto ticket Done ≠ Letta/Paperclip task done.** Transport proof is runtime receipts + traces, not ticket folder moves.
 4. **Secrets: boolean-only logging.** Never log `LETTA_API_KEY` or other secret values; code checks `hasSecret('LETTA_API_KEY')` only.
-5. **Default stays SDK** until WS promotion scorecard passes (039). Comment in `transport-mode.ts`: *"Default stays SDK until WS promotion proof is accepted."*
+5. **Default stays functional auto** until WS promotion scorecard passes (039). Strict `ws` is available for proof, but must not be the default while it blocks chat.
 6. **Smoke never uses `conversation=default`.** Both transports throw/refuse when `OTTO_SMOKE=1` and conversation would be `default`.
 
 ## Environment variables
@@ -169,7 +169,7 @@ WS may become default over SDK only after reviewer +1 on promotion scorecard evi
 | Reconnect | Documented recovery behavior |
 | Fallback | `auto` shows `transportFallbackReason` when WS unavailable |
 
-Until then: **default `OTTO_RUNTIME_TRANSPORT` is `sdk`**.
+Until then: **default `OTTO_RUNTIME_TRANSPORT` is `auto`**, which falls back to SDK while surfacing the reason WS is not active.
 
 ## Verification
 

@@ -21,7 +21,11 @@ function readIndex(): ChatThreadRecord[] {
   if (!existsSync(file)) return [];
   try {
     const parsed = JSON.parse(readFileSync(file, 'utf8')) as ChatThreadRecord[];
-    return Array.isArray(parsed) ? parsed.filter((t) => typeof t?.id === 'string') : [];
+    if (!Array.isArray(parsed)) return [];
+    const raw = parsed.filter((t) => typeof t?.id === 'string');
+    const normalized = normalizeThreads(raw);
+    if (normalized.length !== raw.length) writeIndex(normalized);
+    return normalized;
   } catch {
     return [];
   }
@@ -29,7 +33,7 @@ function readIndex(): ChatThreadRecord[] {
 
 function writeIndex(threads: ChatThreadRecord[]) {
   mkdirSync(threadsDir(), { recursive: true });
-  writeFileSync(indexFile(), `${JSON.stringify(threads, null, 2)}\n`);
+  writeFileSync(indexFile(), `${JSON.stringify(normalizeThreads(threads), null, 2)}\n`);
 }
 
 function sortThreads(threads: ChatThreadRecord[]): ChatThreadRecord[] {
@@ -39,12 +43,39 @@ function sortThreads(threads: ChatThreadRecord[]): ChatThreadRecord[] {
   });
 }
 
+function normalizeThreads(threads: ChatThreadRecord[]): ChatThreadRecord[] {
+  const seen = new Set<string>();
+  return sortThreads(threads).filter((thread) => {
+    if (isJunkThread(thread)) return false;
+    if (seen.has(thread.id)) return false;
+    seen.add(thread.id);
+    return true;
+  });
+}
+
+function isJunkThread(thread: ChatThreadRecord): boolean {
+  const title = thread.title.trim();
+  if (/^046-debug-/i.test(title)) return true;
+  if (/^\d{3}-(?:rev\d+-|smoke-)?thread-[ab]-\d{12,14}$/i.test(title)) return true;
+  return /^chat session$/i.test(title);
+}
+
 export class ThreadStore {
   constructor(private config: ConfigStore) {}
 
   list(includeArchived = false): ThreadListResult {
     const threads = sortThreads(readIndex()).filter((t) => includeArchived || !t.archived);
-    const activeThreadId = this.config.get().activeThreadId ?? threads[0]?.id ?? null;
+    const configuredActiveId = this.config.get().activeThreadId ?? null;
+    const activeThreadId = configuredActiveId && threads.some((t) => t.id === configuredActiveId)
+      ? configuredActiveId
+      : threads[0]?.id ?? null;
+    if (!includeArchived && configuredActiveId !== activeThreadId) {
+      const active = threads.find((t) => t.id === activeThreadId) ?? null;
+      this.config.update({
+        activeThreadId,
+        conversationId: active?.lettaConversationId ?? null,
+      });
+    }
     return { dir: threadsDir(), activeThreadId, threads };
   }
 
@@ -102,7 +133,15 @@ export class ThreadStore {
   }
 
   archive(threadId: string): ChatThreadRecord {
-    return this.update(threadId, { archived: true, pinned: false });
+    const archived = this.update(threadId, { archived: true, pinned: false });
+    if (this.config.get().activeThreadId === threadId) {
+      const next = sortThreads(readIndex()).find((t) => !t.archived) ?? null;
+      this.config.update({
+        activeThreadId: next?.id ?? null,
+        conversationId: next?.lettaConversationId ?? null,
+      });
+    }
+    return archived;
   }
 
   pin(threadId: string, pinned: boolean): ChatThreadRecord {
@@ -125,7 +164,7 @@ export class ThreadStore {
     const activeId = this.config.get().activeThreadId;
     if (activeId) {
       const existing = this.get(activeId);
-      if (existing) return existing;
+      if (existing && !existing.archived) return existing;
     }
     const threads = sortThreads(readIndex()).filter((t) => !t.archived);
     if (threads.length > 0) {

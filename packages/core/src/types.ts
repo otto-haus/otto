@@ -667,10 +667,17 @@ export interface ChannelRecord extends Channel {
   file: string;
 }
 
+export interface ChannelSkip {
+  index: number;
+  reason: string;
+  file: string;
+}
+
 export interface ChannelListResult {
   dir: string;
   configPath: string;
   channels: ChannelRecord[];
+  skipped: ChannelSkip[];
   storage: 'files' | 'default';
 }
 
@@ -764,7 +771,7 @@ export interface RunListResult {
   storage: 'files';
 }
 
-/** Approval records are ratification receipts emitted by Curation decisions. */
+/** Legacy approval ledger name; records include approved, denied, and deferred Curation decisions. */
 export interface ApprovalRecord {
   id: string;
   proposal_id: string;

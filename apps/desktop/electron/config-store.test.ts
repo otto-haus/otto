@@ -6,12 +6,12 @@ import { ConfigStore } from './config-store';
 import { getLabsConfig } from './labs-config';
 
 describe('ConfigStore', () => {
-  test('defaults connectionMode to embedded', () => {
+  test('defaults connectionMode to existing local Letta', () => {
     const tmp = mkdtempSync(join(tmpdir(), 'otto-config-test-'));
     try {
       process.env.OTTO_HOME = tmp;
       const store = new ConfigStore();
-      expect(store.connectionMode()).toBe('embedded');
+      expect(store.connectionMode()).toBe('existing');
     } finally {
       rmSync(tmp, { recursive: true, force: true });
       delete process.env.OTTO_HOME;

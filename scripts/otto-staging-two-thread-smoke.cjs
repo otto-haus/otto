@@ -13,7 +13,7 @@
  *     node scripts/otto-staging-two-thread-smoke.cjs
  */
 const { mkdirSync, rmSync, writeFileSync } = require('node:fs');
-const { tmpdir } = require('node:os');
+const { homedir, tmpdir } = require('node:os');
 const { join } = require('node:path');
 const { execFileSync, spawn } = require('node:child_process');
 const { chromium } = require('playwright');
@@ -25,6 +25,7 @@ const SMOKE_ROOT = join(tmpdir(), `otto-staging-two-thread-${RUN_ID}`);
 const APP_BUNDLE = join(SMOKE_ROOT, 'otto-staging-smoke.app');
 const APP_BIN = join(APP_BUNDLE, 'Contents/MacOS/otto');
 const CDP_BASE = Number(process.env.OTTO_STAGING_CDP_BASE ?? 9470);
+const REAL_LETTA_SETTINGS = process.env.OTTO_LETTA_SETTINGS_PATH ?? join(homedir(), '.letta', 'settings.json');
 
 const MSG_A = `046-smoke-thread-a-${RUN_ID}`;
 const MSG_B = `046-smoke-thread-b-${RUN_ID}`;
@@ -298,6 +299,7 @@ async function readActiveState(page) {
 
 async function runSession({ proof, profileDir, home, port, exercise }) {
   mkdirSync(home, { recursive: true });
+  const lettaBaseUrl = process.env.LETTA_BASE_URL ?? discoverLettaBaseUrl();
   const app = spawn(APP_BIN, [`--remote-debugging-port=${port}`, `--user-data-dir=${profileDir}`], {
     env: {
       ...process.env,
@@ -306,6 +308,8 @@ async function runSession({ proof, profileDir, home, port, exercise }) {
       OTTO_SMOKE: '1',
       OTTO_READINESS_IGNORE_LOCAL_CONFIG: '1',
       OTTO_SKIP_LETTA_LSOF: '1',
+      ...(REAL_LETTA_SETTINGS ? { OTTO_LETTA_SETTINGS_PATH: REAL_LETTA_SETTINGS } : {}),
+      ...(lettaBaseUrl ? { LETTA_BASE_URL: lettaBaseUrl } : {}),
     },
     stdio: ['ignore', 'pipe', 'pipe'],
   });
@@ -325,6 +329,20 @@ async function runSession({ proof, profileDir, home, port, exercise }) {
     if (browser) await browser.close().catch(() => {});
     app.kill('SIGTERM');
     await new Promise((r) => app.once('exit', r));
+  }
+}
+
+function discoverLettaBaseUrl() {
+  try {
+    const out = execFileSync('lsof', ['-nP', '-iTCP', '-sTCP:LISTEN'], {
+      timeout: 3000,
+      encoding: 'utf8',
+    });
+    const line = out.split('\n').find((row) => /letta/i.test(row) && /(?:127\.0\.0\.1|localhost):\d+/i.test(row));
+    const match = line?.match(/(?:127\.0\.0\.1|localhost):(\d+)/i);
+    return match ? `http://127.0.0.1:${match[1]}` : null;
+  } catch {
+    return null;
   }
 }
 

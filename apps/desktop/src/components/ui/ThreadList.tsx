@@ -44,18 +44,49 @@ const ConversationRow: React.FC<{
   active: boolean;
   variant: 'pinned' | 'recent';
   onSelect?: (thread: ThreadSummary) => void;
-}> = ({ thread, active, variant, onSelect }) => (
-  <button
-    key={thread.id}
-    type="button"
-    className={`sidebarConv thread${active ? ' is-active' : ''}`}
-    onClick={() => onSelect?.(thread)}
-    disabled={!onSelect}
-    aria-current={active ? 'true' : undefined}
-  >
-    <span className="sidebarConv__icon">{variant === 'pinned' ? Icon.pin : Icon.clock}</span>
-    <span className="sidebarConv__label">{displayThreadTitle(thread.title)}</span>
-  </button>
+  onPin?: (thread: ThreadSummary, pinned: boolean) => void;
+  onArchive?: (thread: ThreadSummary) => void;
+}> = ({ thread, active, variant, onSelect, onPin, onArchive }) => (
+  <div className={`sidebarConvWrap${active ? ' is-active' : ''}${thread.pinned ? ' is-pinned' : ''}`}>
+    <button
+      type="button"
+      className={`sidebarConv thread${active ? ' is-active' : ''}`}
+      onClick={() => onSelect?.(thread)}
+      disabled={!onSelect}
+      aria-current={active ? 'true' : undefined}
+    >
+      <span className="sidebarConv__icon">{variant === 'pinned' ? Icon.pin : Icon.clock}</span>
+      <span className="sidebarConv__label">{displayThreadTitle(thread.title)}</span>
+    </button>
+    {onPin ? (
+      <button
+        type="button"
+        className={`sidebarConv__pin${thread.pinned ? ' is-on' : ''}`}
+        aria-label={thread.pinned ? threadCopy.unpin : threadCopy.pin}
+        title={thread.pinned ? threadCopy.unpin : threadCopy.pin}
+        onClick={(event) => {
+          event.stopPropagation();
+          onPin(thread, !thread.pinned);
+        }}
+      >
+        {Icon.pin}
+      </button>
+    ) : null}
+    {onArchive ? (
+      <button
+        type="button"
+        className="sidebarConv__archive"
+        aria-label={threadCopy.archive}
+        title={threadCopy.archive}
+        onClick={(event) => {
+          event.stopPropagation();
+          onArchive(thread);
+        }}
+      >
+        {Icon.archive}
+      </button>
+    ) : null}
+  </div>
 );
 
 const Section: React.FC<{
@@ -88,7 +119,9 @@ export const ThreadList: React.FC<{
   activeThreadId?: string | null;
   activeConversationId?: string | null;
   onSelect?: (thread: ThreadSummary) => void;
-}> = ({ threads, activeThreadId, activeConversationId, onSelect }) => {
+  onPin?: (thread: ThreadSummary, pinned: boolean) => void;
+  onArchive?: (thread: ThreadSummary) => void;
+}> = ({ threads, activeThreadId, activeConversationId, onSelect, onPin, onArchive }) => {
   const pinned = threads.filter((t) => t.pinned);
   const recents = threads.filter((t) => !t.pinned);
 
@@ -107,19 +140,23 @@ export const ThreadList: React.FC<{
 
   return (
     <div className="sidebar__conversations sidebar__threads" aria-label="Conversations">
-      {pinned.length > 0 ? (
-        <Section label={threadCopy.pinnedLabel} storageKey="otto.sidebar.pinned" defaultOpen>
-          {pinned.map((thread) => (
+      <Section label={threadCopy.pinnedLabel} storageKey="otto.sidebar.pinned" defaultOpen>
+        {pinned.length > 0 ? (
+          pinned.map((thread) => (
             <ConversationRow
               key={thread.id}
               thread={thread}
               active={isActive(thread)}
               variant="pinned"
               onSelect={onSelect}
+              onPin={onPin}
+              onArchive={onArchive}
             />
-          ))}
-        </Section>
-      ) : null}
+          ))
+        ) : (
+          <p className="sidebarSection__empty">{threadCopy.pinnedEmpty}</p>
+        )}
+      </Section>
       {recents.length > 0 ? (
         <Section label={threadCopy.recentsLabel} storageKey="otto.sidebar.recents" defaultOpen>
           {recents.map((thread) => (
@@ -129,6 +166,8 @@ export const ThreadList: React.FC<{
               active={isActive(thread)}
               variant="recent"
               onSelect={onSelect}
+              onPin={onPin}
+              onArchive={onArchive}
             />
           ))}
         </Section>

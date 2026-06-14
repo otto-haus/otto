@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { flushMessages, migrateLegacyMessagesToThread, readStoredMessages, type StoredChatMsg } from './chat/message-storage';
 import type {
   Charter,
   CharterRef,
@@ -76,6 +77,7 @@ export type ConnectionInfo = { baseUrl: string | null; agentId: string | null };
 export type ConnectionInput = { baseUrl?: string | null; agentId?: string | null };
 export type EffortLevel = 'off' | 'low' | 'medium' | 'high' | 'max';
 export type RuntimePreferences = { modelHandle?: string | null; effort?: EffortLevel };
+export type LettaModelOption = { handle: string; label: string; provider?: string | null; displayName?: string | null };
 export type AttachmentInput = { name: string; mime: string; dataUrl: string };
 export type SavedAttachment = { id: string; name: string; mime: string; path: string; url: string; size: number };
 export type ReceiptStatus = 'success' | 'blocked' | 'failed';
@@ -294,11 +296,7 @@ export const ottoApi = (): OttoApi | null =>
   typeof window !== 'undefined' && window.otto ? window.otto : null;
 export const isElectron = (): boolean => ottoApi() !== null;
 
-export type ChatMsg = {
-  id: string;
-  who: 'user' | 'otto' | 'error';
-  text: string;
-  streamId?: string;
+export type ChatMsg = StoredChatMsg & {
   checkBlock?: {
     checkName: string;
     message: string;
@@ -314,25 +312,6 @@ export type ChatMsg = {
   };
 };
 
-import { LEGACY_MESSAGES_KEY, messagesKey } from './chat/message-storage';
-
-function readStoredMessages(threadId: string | null): ChatMsg[] {
-  try {
-    const key = messagesKey(threadId);
-    let raw = localStorage.getItem(key);
-    if (!raw && threadId && key !== LEGACY_MESSAGES_KEY) {
-      raw = localStorage.getItem(LEGACY_MESSAGES_KEY);
-    }
-    const parsed = JSON.parse(raw ?? '[]') as ChatMsg[];
-    if (!Array.isArray(parsed)) return [];
-    return parsed
-      .filter((m) => typeof m?.id === 'string' && typeof m.text === 'string' && (m.who === 'user' || m.who === 'otto' || m.who === 'error'))
-      .slice(-200);
-  } catch {
-    return [];
-  }
-}
-
 // Best-effort text extraction from a loosely-typed SDK assistant message.
 function assistantText(m: Record<string, unknown>): string | null {
   if (typeof m.text === 'string') return m.text;
@@ -347,14 +326,6 @@ function assistantText(m: Record<string, unknown>): string | null {
   return null;
 }
 
-function flushMessages(threadId: string | null, msgs: ChatMsg[]) {
-  try {
-    localStorage.setItem(messagesKey(threadId), JSON.stringify(msgs.slice(-200)));
-  } catch {
-    /* best effort */
-  }
-}
-
 function loadThreadMessages(
   threadId: string | null,
   cache: Map<string, ChatMsg[]>,
@@ -362,6 +333,7 @@ function loadThreadMessages(
   if (!threadId) return [];
   const cached = cache.get(threadId);
   if (cached) return cached;
+  migrateLegacyMessagesToThread(threadId);
   const loaded = readStoredMessages(threadId);
   cache.set(threadId, loaded);
   return loaded;
@@ -441,6 +413,12 @@ export function useRuntime() {
 
   useEffect(() => {
     if (!api) return;
+    setStatus((current) => current ?? {
+      ready: false,
+      reason: 'Booting local Letta session…',
+      cliPath: '',
+      cliResolved: false,
+    });
     const patchInflightMessages = (updater: (msgs: ChatMsg[]) => ChatMsg[]) => {
       const threadId = inflightThreadRef.current ?? activeThreadRef.current;
       if (!threadId) return;
@@ -456,7 +434,23 @@ export function useRuntime() {
 
     api.runtime
       .init()
-      .then(setStatus)
+      .then(async (nextStatus) => {
+        setStatus(nextStatus);
+        if (threadHydrated.current) return;
+        try {
+          const result = await api.threads.list();
+          threadHydrated.current = true;
+          const threadId = result.activeThreadId;
+          if (!threadId) return;
+          activeThreadRef.current = threadId;
+          const loaded = loadThreadMessages(threadId, threadMessagesCache.current);
+          messagesRef.current = loaded;
+          setActiveThreadId(threadId);
+          setMessages(loaded);
+        } catch {
+          // threads.list is retried by the dedicated hydration effect.
+        }
+      })
       .catch((e) => setStatus({ ready: false, reason: String(e), cliPath: '', cliResolved: false }));
     const off = api.onEvent((e) => {
       if ('status' in e) {
@@ -478,6 +472,7 @@ export function useRuntime() {
           });
         }
       } else if (m.type === 'error') {
+        const ownedTurn = inflightThreadRef.current;
         sendError.current = String((m as { message?: unknown }).message ?? 'error');
         activeAssistantStream.current = null;
         patchInflightMessages((x) => [
@@ -485,11 +480,10 @@ export function useRuntime() {
           { id: `error-${Date.now()}`, who: 'error', text: String((m as { message?: unknown }).message ?? 'error') },
         ]);
         inflightThreadRef.current = null;
-        setBusy(false);
+        if (!ownedTurn) setBusy(false);
       } else if (m.type === 'result') {
         activeAssistantStream.current = null;
         inflightThreadRef.current = null;
-        setBusy(false);
         const conversationId = typeof m.conversationId === 'string' ? m.conversationId : null;
         if (conversationId) {
           void api.threads.touch({ lettaConversationId: conversationId });
@@ -507,10 +501,12 @@ export function useRuntime() {
     setStatus(next);
   };
 
-  const send = async (text: string) => {
-    if (!api || !status?.ready || busy) return;
+  const send = useCallback(async (text: string) => {
+    if (!api) throw new Error('Chat is unavailable outside the desktop app.');
+    if (!status?.ready) throw new Error(status?.reason ?? 'Runtime not ready — finish setup in Settings.');
+    if (busy) throw new Error('Wait for the current reply to finish.');
     const sendThreadId = activeThreadRef.current;
-    if (!sendThreadId) return;
+    if (!sendThreadId) throw new Error('No active conversation thread yet.');
     sendError.current = null;
     activeAssistantStream.current = null;
     inflightThreadRef.current = sendThreadId;
@@ -525,9 +521,14 @@ export function useRuntime() {
     messagesRef.current = next;
     setMessages(next);
     setBusy(true);
-    await api.runtime.send(text);
-    if (sendError.current) throw new Error(sendError.current);
-  };
+    try {
+      await api.runtime.send(text);
+      if (sendError.current) throw new Error(sendError.current);
+    } finally {
+      inflightThreadRef.current = null;
+      setBusy(false);
+    }
+  }, [api, status, busy]);
 
   const abort = async () => {
     if (!api) return;
@@ -562,6 +563,10 @@ export function useRuntime() {
 
   const switchThread = async (threadId: string) => {
     if (!api) return;
+    if (threadId === activeThreadRef.current) {
+      applyThreadView(threadId, { persistLeaving: false });
+      return;
+    }
     if (busy) await abort();
     threadHydrated.current = true;
     sendError.current = null;
@@ -569,9 +574,32 @@ export function useRuntime() {
     inflightThreadRef.current = null;
     setBusy(false);
     if (activeThreadRef.current) {
-      applyThreadView(activeThreadRef.current, { persistLeaving: true });
+      threadMessagesCache.current.set(activeThreadRef.current, messagesRef.current);
+      flushMessages(activeThreadRef.current, messagesRef.current);
     }
-    const { thread, status: next } = await api.threads.switch(threadId);
+    applyThreadView(threadId, { persistLeaving: false });
+    try {
+      const { thread, status: next } = await api.threads.switch(threadId);
+      applyThreadView(thread.id, { persistLeaving: false });
+      setStatus(next);
+    } catch {
+      // Still swap local history even if Letta reconnect fails mid-switch.
+      applyThreadView(threadId, { persistLeaving: false });
+    }
+  };
+
+  const archiveThread = async (threadId: string) => {
+    if (!api) return;
+    if (busy) await abort();
+    await api.threads.archive(threadId);
+    const result = await api.threads.list();
+    const nextThreadId = result.activeThreadId;
+    if (nextThreadId) {
+      applyThreadView(nextThreadId, { persistLeaving: false });
+      setStatus(await api.runtime.init());
+      return;
+    }
+    const { thread, status: next } = await api.threads.create();
     applyThreadView(thread.id, { persistLeaving: false });
     setStatus(next);
   };
@@ -592,6 +620,7 @@ export function useRuntime() {
     retry,
     newChat,
     switchThread,
+    archiveThread,
     refreshThreads,
     updateStatus,
     configure,

@@ -40,14 +40,14 @@ Default to Cursor unless the hardest irreducible part is Codex-grade reasoning o
 
 ## Active queue
 
-Updated: 2026-06-14T14:20Z (audit: `scripts/audit-hq-tickets.sh` → `000-audit-status.md`)
+Updated: 2026-06-14 (chat core ticket 159 added; counts refreshed from folder state)
 
 ```txt
-_Done:     48 tickets
+_Done:     52 tickets
 _Backlog:  20 tickets (047, 059, 063, 068–073, 078, 080–081, 115–116, 119, 127, 129, 131, 134–135)
 _Parked:   29 tickets (019–025, 077, 083–099, 117–118, 120, 130)
-_InReview: 8 tickets (143–149 onboarding craft + 150 settings craft)
-Root:      36 tickets (136–141 ship/labs wave + reopened integration)
+_InReview: 16 tickets (143–150 craft + 151–158 reliability/review hardening)
+Root:      33 tickets (136–142 ship/labs/release + reopened integration + 159 chat core)
 Reopen:    6 premie-dones flagged in `_Done/`
 ```
 
@@ -56,6 +56,7 @@ Reopen:    6 premie-dones flagged in `_Done/`
 1. **136–141** — Ship / Labs / Cut (functional ship; IDs reserved — not the draft “gap” 136–142 list from early conveyor plan)
 2. **Reopened integration** — see `000-parallel-map.md` ## Post-audit execution waves
 3. **142** — Sebastian release sign-off ceremony (depends 063, 140)
+4. **159** — Chat core working loop (WS Letta + conversations) — current P0 product bar
 
 **Reserved IDs:** 100–114 intentionally unused (platform-ops block). Document gap here; do not invent filler tickets.
 
@@ -177,6 +178,7 @@ See `_Done/` folder. Craft 026–032 complete.
 |---:|---|---|---|---|
 | 045 | Chat: Permission Modal + Abort Fix | Cursor | 002, 003 | no deadlock; busy clears |
 | 046 | Chat: Multi-Thread List + Switcher | Claude | 002, 003 | `_Done/` — `scripts/otto-staging-two-thread-smoke.cjs` |
+| 159 | Chat Core Working Loop: WS Letta + Conversations | Codex | 039, 045, 046, 151, 157, 158 | **P0** — multiple conversations, pinned/recents/archive, WS Letta, model switch, queue + steering |
 | 047 | Letta Memory Observatory (read-only) | Cursor | 001, 002, **076** | blocks + search; Open in Letta |
 | 048 | Chat: Propose from Correction | Cursor | 014, 016, 002 | proposal in Curation |
 | 123 | Correction Button (product loop) | Claude | 048, 002, 014 | Correct this → Curation |

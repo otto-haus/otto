@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import { join } from 'node:path';
 import type { BrowserWindow } from 'electron';
-import type { PermissionRequest, PermissionResponse, RuntimePreferences, RuntimeStatus, StatusCode } from '../shared/types';
+import type { PermissionRequest, PermissionResponse, RuntimePreferences, RuntimeStatus, StatusCode, OttoConfig } from '../shared/types';
 import type { ConfigStore } from '../config-store';
 import { ReceiptWriter } from '../receipt-writer';
 import { getSecret, hasSecret } from '../secret-store';
@@ -14,12 +14,15 @@ import {
   WANT_MEMFS,
   classify,
   friendly,
+  isInvalidModelError,
   isNotFound,
+  modelInitAttempts,
   modelSelectionForCli,
   msg,
   nextActionFor,
   resolveCli,
   safeWebContentsSend,
+  type ModelInitAttempt,
 } from './runtime-common';
 import { permissionSessionStore } from '../permission-session-store';
 import type { OttoRuntimeTransport } from './types';
@@ -101,15 +104,19 @@ export class SdkSubprocessTransport implements OttoRuntimeTransport {
     };
   }
 
-  private options(): CreateSessionOptions {
+  private options(modelAttempt?: ModelInitAttempt): CreateSessionOptions {
     const o: CreateSessionOptions = {
       permissionMode: 'default',
       includePartialMessages: false,
       canUseTool: this.canUseTool(),
     };
-    const model = this.config.modelHandle();
-    const effort = this.config.effort();
-    if (model) o.model = modelSelectionForCli(model, effort);
+    const effort = modelAttempt?.effort ?? this.config.effort();
+    if (modelAttempt?.cliModel) {
+      o.model = modelAttempt.cliModel;
+    } else {
+      const model = this.config.modelHandle();
+      if (model) o.model = modelSelectionForCli(model, effort);
+    }
     // Newer SDKs may expose this directly. Current CLI builds also apply effort when `model`
     // is a preset id (see modelSelectionForCli), so this is only a forward-compatible hint.
     if (effort !== 'off') (o as CreateSessionOptions & { reasoningEffort?: string }).reasoningEffort = effort;
@@ -181,17 +188,36 @@ export class SdkSubprocessTransport implements OttoRuntimeTransport {
     }
 
     const fresh = !!opts?.freshConversation;
-    const tryOnce = async (resumeId: string | null) => {
+    const tryOnce = async (resumeId: string | null, modelAttempt?: ModelInitAttempt) => {
       this.session?.close();
+      const sessionOpts = this.options(modelAttempt);
       const session = resumeId
-        ? (fresh || SMOKE_MODE ? sdk.createSession(resumeId, this.options()) : sdk.resumeSession(resumeId, this.options()))
-        : sdk.createSession(undefined, this.options());
+        ? (fresh || SMOKE_MODE ? sdk.createSession(resumeId, sessionOpts) : sdk.resumeSession(resumeId, sessionOpts))
+        : sdk.createSession(undefined, sessionOpts);
       const init = await session.initialize();
       if (SMOKE_MODE && init.conversationId === 'default') {
         session.close();
         throw new Error('Smoke test refused to use conversation=default');
       }
-      return { session, init };
+      return { session, init, modelAttempt };
+    };
+
+    const tryWithModelFallback = async (resumeId: string | null) => {
+      const attempts = modelInitAttempts(this.config.modelHandle(), this.config.effort());
+      if (attempts.length === 0) return tryOnce(resumeId);
+      let lastModelError: unknown = null;
+      for (const attempt of attempts) {
+        try {
+          return await tryOnce(resumeId, attempt);
+        } catch (e) {
+          if (isInvalidModelError(e)) {
+            lastModelError = e;
+            continue;
+          }
+          throw e;
+        }
+      }
+      throw lastModelError ?? new Error('No supported model preset was found for this Letta build.');
     };
 
     try {
@@ -203,7 +229,7 @@ export class SdkSubprocessTransport implements OttoRuntimeTransport {
           // resumeSession's id is the AGENT id (maps to --agent); the conversation is the agent's
           // default. A stored conversationId is NOT a valid resume id — passing it would send
           // `--agent <conversationId>` and fail — so always resume with the agent id.
-          r = await tryOnce(candidate);
+          r = await tryWithModelFallback(candidate);
           break;
         } catch (e) {
           lastAgentError = e;
@@ -211,10 +237,19 @@ export class SdkSubprocessTransport implements OttoRuntimeTransport {
         }
       }
       if (!r && !SMOKE_MODE && !process.env.OTTO_AGENT_ID) {
-        r = await tryOnce(null);
+        r = await tryWithModelFallback(null);
       }
       if (!r) throw lastAgentError ?? new Error(context.reason ?? 'No local Letta agent candidate was available.');
       this.session = r.session;
+      const usedAttempt = r.modelAttempt;
+      if (usedAttempt && !SMOKE_MODE) {
+        const patch: Partial<OttoConfig> = {};
+        if (usedAttempt.effort !== this.config.effort()) patch.effort = usedAttempt.effort;
+        if (usedAttempt.modelHandle && usedAttempt.modelHandle !== this.config.modelHandle()) {
+          patch.modelHandle = usedAttempt.modelHandle;
+        }
+        if (Object.keys(patch).length) this.config.update(patch);
+      }
       if (!SMOKE_MODE) this.config.update({ agentId: r.init.agentId ?? primaryAgentId, baseUrl: context.baseUrl, conversationId: r.init.conversationId ?? null });
       this.status = {
         ready: true,

@@ -1,8 +1,8 @@
 # 063 — Sebastian gate packet (v0.1.3 draft — hold)
 
 Date: 2026-06-14 (updated 14:45 local)  
-Branch: `ship/functional-labs` @ `80c44dc`  
-Tag: **`v0.1.3`** (GitHub pre-release on integration line — **not tagged yet**). Sebastian gate sign-off still required before calling this **shipped**.
+Branch: `ship/functional-labs` (integration commit pending push)  
+Tag: **`v0.1.3`** pre-release on **otto-haus/otto** with asset `otto-v01-desktop.mp4` — **not Latest / not Shipped** until Sebastian approves.
 
 ## What to try (staging only)
 
@@ -15,12 +15,12 @@ Tag: **`v0.1.3`** (GitHub pre-release on integration line — **not tagged yet**
 
 | Gate | Result |
 |------|--------|
-| `bun run verify:v0` | 5/5 pass (188 unit tests) @ 2026-06-14 |
-| `bash scripts/release-gate.sh` | pass @ 2026-06-14 (typecheck + 188 pass / 1 skip) |
+| `bun run verify:v0` | 5/5 pass (208 unit tests) @ 2026-06-14 |
+| `bash scripts/release-gate.sh` | pass @ 2026-06-14 (verify:v0 + electron:typecheck) |
 | Staging deploy | `OTTO_STAGING_REFRESH=1 bash apps/desktop/scripts/deploy-staging.sh` — `/Applications/otto-staging.app`, CDP **9445**, profile `~/.codex/admin/otto-staging/profile` |
 | Hygiene staging proof | `scripts/otto-staging-hygiene-proof.cjs` → `staging-hygiene-proof-20260614143512.json` (054–058, 049, 053 all `ok: true`) |
 | Craft checklist | `docs/receipts/staging/craft-checklist-v03-20260614.md` |
-| Remotion | `demo/out/otto-v01-desktop-walkthrough.mp4` + `otto-v01-desktop.mp4` (local; attach to **`v0.1.3`** release when approved) |
+| Remotion | Local MP4 + https://github.com/otto-haus/otto/releases/tag/v0.1.3 (`otto-v01-desktop.mp4`, pre-release) |
 
 ### Staging smoke commands (138 / hygiene)
 

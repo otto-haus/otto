@@ -3,7 +3,7 @@ import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import type { BrowserWindow } from 'electron';
-import { classify, friendly, modelSelectionForCli, nextActionFor, resolveCli, safeWebContentsSend } from './runtime-common';
+import { classify, friendly, isInvalidModelError, modelInitAttempts, modelSelectionForCli, nextActionFor, resolveCli, safeWebContentsSend } from './runtime-common';
 
 describe('resolveCli connectionMode', () => {
   test('embedded prefers bundled resources path', () => {
@@ -37,6 +37,36 @@ describe('modelSelectionForCli', () => {
 
   test('passes through unknown handles', () => {
     expect(modelSelectionForCli('openai-codex/gpt-5.5', 'max')).toBe('openai-codex/gpt-5.5');
+  });
+});
+
+describe('modelInitAttempts', () => {
+  test('steps down effort presets before trying direct handle and alternates', () => {
+    const attempts = modelInitAttempts('chatgpt-plus-pro/gpt-5.5', 'high');
+    expect(attempts[0]?.cliModel).toBe('gpt-5.5-plus-pro-high');
+    expect(attempts.map((a) => a.cliModel)).toContain('gpt-5.5-plus-pro-medium');
+    expect(attempts.map((a) => a.cliModel)).toContain('chatgpt-plus-pro/gpt-5.5');
+    expect(attempts.some((a) => a.modelHandle === 'openai-codex/gpt-5.5')).toBe(true);
+  });
+
+  test('never retries above the selected effort', () => {
+    const lowAttempts = modelInitAttempts('chatgpt-plus-pro/gpt-5.5', 'low');
+    expect(lowAttempts.every((a) => a.effort === 'low' || a.effort === 'off')).toBe(true);
+    expect(lowAttempts.map((a) => a.cliModel)).not.toContain('gpt-5.5-plus-pro-medium');
+    expect(lowAttempts.map((a) => a.cliModel)).not.toContain('gpt-5.5-plus-pro-high');
+
+    const offAttempts = modelInitAttempts('chatgpt-plus-pro/gpt-5.5', 'off');
+    expect(offAttempts.every((a) => a.effort === 'off')).toBe(true);
+    expect(offAttempts.map((a) => a.cliModel)).not.toContain('gpt-5.5-plus-pro-low');
+    expect(offAttempts.map((a) => a.cliModel)).not.toContain('gpt-5.5-plus-pro-medium');
+    expect(offAttempts.map((a) => a.cliModel)).not.toContain('gpt-5.5-plus-pro-high');
+  });
+});
+
+describe('isInvalidModelError', () => {
+  test('detects invalid model failures', () => {
+    expect(isInvalidModelError(new Error("Invalid model 'gpt-5.5-plus-pro-high'"))).toBe(true);
+    expect(isInvalidModelError(new Error('ECONNREFUSED'))).toBe(false);
   });
 });
 

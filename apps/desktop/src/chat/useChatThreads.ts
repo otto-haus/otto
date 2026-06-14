@@ -30,12 +30,32 @@ export function useChatThreads(activeThreadId?: string | null) {
       return;
     }
     const result = await api.threads.list(showArchived);
-    setThreads(result.threads.map(mapThread));
+    const seen = new Set<string>();
+    const unique = result.threads.filter((thread) => {
+      if (seen.has(thread.id)) return false;
+      seen.add(thread.id);
+      return true;
+    });
+    setThreads(unique.map(mapThread));
   }, [showArchived]);
 
   useEffect(() => {
     void refresh();
   }, [refresh, activeThreadId]);
 
-  return { threads, showArchived, setShowArchived, refresh };
+  const pinThread = useCallback(async (threadId: string, pinned: boolean) => {
+    const api = ottoApi();
+    if (!api || !isElectron()) return;
+    await api.threads.pin(threadId, pinned);
+    await refresh();
+  }, [refresh]);
+
+  const archiveThread = useCallback(async (threadId: string) => {
+    const api = ottoApi();
+    if (!api || !isElectron()) return;
+    await api.threads.archive(threadId);
+    await refresh();
+  }, [refresh]);
+
+  return { threads, showArchived, setShowArchived, refresh, pinThread, archiveThread };
 }

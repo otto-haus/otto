@@ -10,7 +10,7 @@ import { getSecret, hasSecret } from '../secret-store';
 import { StandardStore } from '../standard-store';
 import { PracticeStore } from '../practice-store';
 import { TraceWriter } from '../trace-writer';
-import { discoverLocalLettaContext } from './letta-discovery';
+import { confirmedModelHandle, discoverLocalLettaContext } from './letta-discovery';
 import {
   smokeMode,
   classify,
@@ -98,7 +98,17 @@ export class WsRuntimeTransport implements OttoRuntimeTransport {
       await this.spawnRemote(cli.cliPath, context.baseUrl);
       await this.waitForRuntimeSocket();
       const conversationId = opts?.freshConversation ? null : this.config.get().conversationId;
-      await this.syncRuntime(agentId, conversationId ?? null);
+      const modelHandle = await confirmedModelHandle(this.config).catch(() => this.config.modelHandle());
+      if (modelHandle && modelHandle !== this.config.modelHandle() && !smokeMode()) {
+        this.config.update({ modelHandle });
+      }
+      try {
+        await this.syncRuntime(agentId, conversationId ?? null, modelHandle);
+      } catch (e) {
+        if (!conversationId || !this.isStaleConversationError(e)) throw e;
+        if (!smokeMode()) this.config.update({ conversationId: null });
+        await this.syncRuntime(agentId, null, modelHandle);
+      }
       if (smokeMode() && this.status.conversationId === 'default') {
         await this.close();
         throw new Error('Smoke test refused to use conversation=default');
@@ -110,7 +120,7 @@ export class WsRuntimeTransport implements OttoRuntimeTransport {
         baseUrl: context.baseUrl,
         discoverySource: context.source,
         conversationId: this.status.conversationId ?? conversationId,
-        modelHandle: this.config.modelHandle(),
+        modelHandle,
         effort: this.config.effort(),
         sessionMode: smokeMode() ? 'smoke' : 'default',
         transportMode: 'ws',
@@ -210,6 +220,8 @@ export class WsRuntimeTransport implements OttoRuntimeTransport {
         runtime: {
           agent_id: this.status.agentId,
           conversation_id: this.status.conversationId,
+          model: this.status.modelHandle ?? undefined,
+          reasoning_effort: this.status.effort,
         },
         payload: {
           kind: 'create_message',
@@ -389,7 +401,7 @@ export class WsRuntimeTransport implements OttoRuntimeTransport {
     this.runtimeSocket.send(JSON.stringify(command));
   }
 
-  private async syncRuntime(agentId: string, conversationId: string | null): Promise<void> {
+  private async syncRuntime(agentId: string, conversationId: string | null, modelHandle?: string | null): Promise<void> {
     return new Promise((resolve, reject) => {
       let online = false;
       let idle = false;
@@ -405,6 +417,11 @@ export class WsRuntimeTransport implements OttoRuntimeTransport {
           const conv = (event.conversation_id ?? event.conversationId) as string | undefined;
           if (conv) this.status.conversationId = conv;
         }
+        if (event.type === 'error') {
+          clearTimeout(timeout);
+          this.runtimeSocket?.off('message', handler);
+          reject(new Error(String(event.message ?? event.error ?? 'Runtime sync failed')));
+        }
         if (isDeviceOnline(event)) online = true;
         if (isLoopIdle(event)) idle = true;
         if (online && idle) {
@@ -416,10 +433,20 @@ export class WsRuntimeTransport implements OttoRuntimeTransport {
       this.runtimeSocket!.on('message', handler);
       this.sendCommand({
         type: 'sync',
-        runtime: { agent_id: agentId, conversation_id: conversationId ?? undefined },
+        runtime: {
+          agent_id: agentId,
+          conversation_id: conversationId ?? undefined,
+          model: modelHandle ?? undefined,
+          reasoning_effort: this.config.effort(),
+        },
         recover_approvals: true,
       });
     });
+  }
+
+  private isStaleConversationError(e: unknown): boolean {
+    const text = msg(e).toLowerCase();
+    return text.includes('conversation') && (text.includes('not found') || text.includes('not-found') || text.includes('404') || text.includes('500'));
   }
 
   private attachRuntimeHandler(onEvent: (event: WsRuntimeEvent) => void) {

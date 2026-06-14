@@ -13,7 +13,6 @@ import {
   WebPreviewFrame,
 } from '../components/ui';
 import { checksCopy, cultureCiCopy, listEmpty } from '../copy/surfaces';
-import { SURFACE_TESTS } from '../canon-briefs';
 import { ottoApi } from '../runtime';
 
 function triggerLabel(event: Check['trigger']['event']): string {
@@ -80,7 +79,6 @@ export const ChecksSurfaceShell: React.FC = () => {
         eyebrow={checksCopy.eyebrow}
         title={checksCopy.title}
         lede={checksCopy.lede}
-        proof={SURFACE_TESTS.checks}
       />
       <SurfaceInk lead={checksCopy.inkLead} muted={checksCopy.inkMuted} sub={cultureCiCopy.blockHint} />
       <SurfaceStatStrip
@@ -102,8 +100,8 @@ export const ChecksSurfaceShell: React.FC = () => {
         </div>
       )}
       {!result && !error && (
-        <div className="panel">
-          <div className="h-sec">Loading checks…</div>
+        <div className="detailSection">
+          <div className="h-sec">{checksCopy.loadingTitle}</div>
         </div>
       )}
       {result && !checks.length && !error && (
@@ -137,7 +135,7 @@ export const ChecksSurfaceShell: React.FC = () => {
           detail={
             selected ? (
               <div className="detail">
-                <div className="panel">
+                <div className="detailSection">
                   <div className="between">
                     <div className="h-sec">{selected.id}</div>
                     <span className={`pill ${selected.active !== false ? 'pill--ok' : 'pill--warn'}`}>
@@ -147,32 +145,32 @@ export const ChecksSurfaceShell: React.FC = () => {
                   <p className="lede" style={{ marginTop: 8 }}>{selected.on_fail.message}</p>
                   <div className="receiptEvidence" style={{ marginTop: 12 }}>
                     <div className="zone receiptEvidenceRow">
-                      <span className="zone__tag">trigger</span>
+                      <span className="zone__tag">{checksCopy.zoneTrigger}</span>
                       <div>{triggerLabel(selected.trigger.event)}</div>
                     </div>
                     <div className="zone receiptEvidenceRow">
-                      <span className="zone__tag">source</span>
+                      <span className="zone__tag">{checksCopy.zoneSource}</span>
                       <div className="mono">{selected.source}</div>
                     </div>
                     <div className="zone receiptEvidenceRow">
-                      <span className="zone__tag">inspect</span>
+                      <span className="zone__tag">{checksCopy.zoneInspect}</span>
                       <div>{selected.inspect.require.join(', ')}</div>
                     </div>
                     {selected.compiled_from_proposal_id ? (
                       <div className="zone receiptEvidenceRow">
-                        <span className="zone__tag">compiled</span>
+                        <span className="zone__tag">{checksCopy.zoneCompiled}</span>
                         <div className="mono">{selected.compiled_from_proposal_id}</div>
                       </div>
                     ) : null}
                     {selected.compiled_at ? (
                       <div className="zone receiptEvidenceRow">
-                        <span className="zone__tag">compiled at</span>
+                        <span className="zone__tag">{checksCopy.zoneCompiledAt}</span>
                         <div className="mono">{selected.compiled_at}</div>
                       </div>
                     ) : null}
                     {selected.standard_slug ? (
                       <div className="zone receiptEvidenceRow">
-                        <span className="zone__tag">standard</span>
+                        <span className="zone__tag">{checksCopy.zoneStandard}</span>
                         <div className="mono">{selected.standard_slug}</div>
                       </div>
                     ) : null}

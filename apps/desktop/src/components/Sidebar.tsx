@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { Icon } from './icons';
 import { useRuntimeContext } from '../RuntimeContext';
 import { ThreadList, type ThreadSummary } from './ui';
-import ottoAvatar from '../assets/otto-avatar.png';
+import { OttoMark } from './OttoMark';
 
 export type SurfaceId =
   | 'chat'
@@ -69,6 +69,8 @@ export const Sidebar: React.FC<{
   activeThreadId?: string | null;
   activeConversationId?: string | null;
   onSelectThread?: (thread: ThreadSummary) => void;
+  onPinThread?: (thread: ThreadSummary, pinned: boolean) => void;
+  onArchiveThread?: (thread: ThreadSummary) => void;
   isComingSoon?: (id: SurfaceId) => boolean;
 }> = ({
   active,
@@ -81,6 +83,8 @@ export const Sidebar: React.FC<{
   activeThreadId,
   activeConversationId,
   onSelectThread,
+  onPinThread,
+  onArchiveThread,
   isComingSoon,
 }) => {
   const rt = useRuntimeContext();
@@ -196,6 +200,8 @@ export const Sidebar: React.FC<{
         activeThreadId={activeThreadId}
         activeConversationId={activeConversationId}
         onSelect={onSelectThread}
+        onPin={onPinThread}
+        onArchive={onArchiveThread}
       />
 
       <div className="sidebar__spacer" />
@@ -218,7 +224,7 @@ export const Sidebar: React.FC<{
 
         <div className="sidebarProfile" aria-label="Operator profile">
           <span className="sidebarProfile__avatar">
-            <img src={ottoAvatar} alt="" />
+            <OttoMark size={32} className="ottoMark" />
           </span>
           <span className="sidebarProfile__text">
             <span className="sidebarProfile__name">Local operator</span>

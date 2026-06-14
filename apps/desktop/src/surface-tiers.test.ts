@@ -4,16 +4,20 @@ import {
   isSurfaceAccessible,
   isSurfaceComingSoon,
   labsSurfaceGate,
+  surfaceGate,
   surfaceTier,
 } from './surface-tiers';
 
 describe('surface-tiers', () => {
-  test('ship surfaces always accessible when labs off', () => {
+  test('ship workspace previews show coming soon in the product shell', () => {
     const labs = defaultLabsConfig();
     expect(surfaceTier('chat')).toBe('ship');
     expect(surfaceTier('tickets')).toBe('ship');
     expect(isSurfaceAccessible('charters', labs)).toBe(true);
-    expect(isSurfaceComingSoon('charters', labs)).toBe(false);
+    expect(isSurfaceComingSoon('charters', labs)).toBe(true);
+    expect(surfaceGate('charters', labs, true)).toBe('coming-soon');
+    expect(surfaceGate('chat', labs, true)).toBe('open');
+    expect(surfaceGate('settings', labs, true)).toBe('open');
   });
 
   test('labs surfaces blocked until master and feature enabled', () => {

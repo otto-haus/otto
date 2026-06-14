@@ -91,7 +91,22 @@ export function isSurfaceAccessible(id: SurfaceId, labs: LabsConfig): boolean {
   return labs.features?.[feature] === true;
 }
 
+/** Ship-tier workspace panes — file-backed canon exists, but the shell is not product-ready yet. */
+export const WORKSPACE_PREVIEW_SURFACES: ReadonlySet<SurfaceId> = new Set([
+  'charters',
+  'standards',
+  'practices',
+  'routines',
+  'curation',
+  'receipts',
+  'checks',
+  'autonomy',
+  'skills',
+  'tickets',
+]);
+
 export function isSurfaceComingSoon(id: SurfaceId, labs: LabsConfig): boolean {
+  if (WORKSPACE_PREVIEW_SURFACES.has(id)) return true;
   return isLabsTierSurface(id) && !isSurfaceAccessible(id, labs);
 }
 
@@ -102,6 +117,15 @@ export function labsSurfaceGate(id: SurfaceId, labs: LabsConfig, hydrated: boole
   if (!isLabsTierSurface(id)) return 'open';
   if (!hydrated) return 'loading';
   if (!isSurfaceAccessible(id, labs)) return 'coming-soon';
+  return 'open';
+}
+
+/** Product gate for sidebar badges and main-pane content (Chat + Settings stay live). */
+export function surfaceGate(id: SurfaceId, labs: LabsConfig, hydrated: boolean): LabsSurfaceGate {
+  if (id === 'chat' || id === 'settings') return 'open';
+  const labsGate = labsSurfaceGate(id, labs, hydrated);
+  if (labsGate !== 'open') return labsGate;
+  if (WORKSPACE_PREVIEW_SURFACES.has(id)) return 'coming-soon';
   return 'open';
 }
 

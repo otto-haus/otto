@@ -4,7 +4,7 @@
 it is Built, Tested (or failure documented), Demoed, Tried by Sebastian, and **explicitly
 approved by Sebastian**. Claude is execution lead; Sebastian is the only release approver.
 
-**NOT PUSHED to main / live app** — integration branch `ship/functional-labs` @ `0a07320` (integration codename — **not** product semver).
+**NOT PUSHED to main / live app** — integration branch `ship/functional-labs` (integration codename — **not** product semver).
 **Product line:** **`v0.1.x`** — **`v0.1.3`** tags the integration/demo line (GitHub pre-release). Mistaken tags `v0.2.0`, `v0.2.1`, `v0.3.0` removed locally; do not treat integration branch names as public semver.
 Mirror: `docs/v1/SHIP_STATUS.md`. Gate packet: `docs/receipts/staging/063-sebastian-gate-packet-v03-20260614.md`.
 
@@ -63,10 +63,10 @@ bun run verify:v0                        # 5/5 — typecheck, bun test, practice
 bash scripts/release-gate.sh           # verify:v0 + apps/desktop electron:typecheck
 ```
 
-Latest unit suite (2026-06-13):
+Latest unit suite (2026-06-14):
 
 ```
-bun test                               → 151 pass / 0 fail
+bun test                               → 208 pass / 0 fail (1 skip)
 bun run typecheck                      → exit 0
 bun run --cwd apps/desktop typecheck   → exit 0
 bun run --cwd apps/desktop electron:typecheck → exit 0 (via release-gate.sh)
