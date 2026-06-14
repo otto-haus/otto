@@ -99,7 +99,7 @@ export class LettaRunner {
     // server so a normal user never has to find a port. (Letta Code local mode is Otto's
     // one hard dependency; the spawned CLI otherwise defaults to Letta Cloud and fails for
     // a local agent.)
-    const baseUrl = this.config.baseUrl() ?? discoverLocalLettaUrl();
+    const baseUrl = normalizeBaseUrl(this.config.baseUrl() ?? discoverLocalLettaUrl());
     if (baseUrl && !process.env.LETTA_BASE_URL) process.env.LETTA_BASE_URL = baseUrl;
   }
 
@@ -111,19 +111,8 @@ export class LettaRunner {
   async init(): Promise<RuntimeStatus> {
     const cli = resolveCli();
     this.applyConnectionEnv();
-    const agentId = this.config.agentId();
-    if (!agentId) {
-      this.status = {
-        ready: false,
-        code: 'no-agent',
-        reason: 'No agent selected — add one in Settings → Connect Letta.',
-        modelHandle: this.config.modelHandle(),
-        effort: this.config.effort(),
-        sessionMode: SMOKE_MODE ? 'smoke' : 'default',
-        ...cli,
-      };
-      return this.status;
-    }
+    const agentCandidates = this.config.agentCandidates();
+    const primaryAgentId = agentCandidates[0] ?? null;
 
     let sdk: SDK;
     try {
@@ -133,7 +122,7 @@ export class LettaRunner {
         ready: false,
         code: 'sdk-missing',
         reason: `Letta SDK unavailable: ${msg(e)}`,
-        agentId,
+        agentId: primaryAgentId,
         modelHandle: this.config.modelHandle(),
         effort: this.config.effort(),
         sessionMode: SMOKE_MODE ? 'smoke' : 'default',
@@ -142,20 +131,40 @@ export class LettaRunner {
       return this.status;
     }
 
-    const tryOnce = async (resumeId: string) => {
+    const tryOnce = async (resumeId: string | null) => {
       this.session?.close();
-      const session = SMOKE_MODE ? sdk.createSession(resumeId, this.options()) : sdk.resumeSession(resumeId, this.options());
+      const session = resumeId
+        ? (SMOKE_MODE ? sdk.createSession(resumeId, this.options()) : sdk.resumeSession(resumeId, this.options()))
+        : sdk.createSession(undefined, this.options());
       const init = await session.initialize();
+      if (SMOKE_MODE && init.conversationId === 'default') {
+        session.close();
+        throw new Error('Smoke test refused to use conversation=default');
+      }
       return { session, init };
     };
 
     try {
-      // resumeSession's id is the AGENT id (maps to --agent); the conversation is the agent's
-      // default. A stored conversationId is NOT a valid resume id — passing it would send
-      // `--agent <conversationId>` and fail — so always resume with the agent id.
-      const r = await tryOnce(agentId);
+      let r: Awaited<ReturnType<typeof tryOnce>> | null = null;
+      let lastAgentError: unknown = null;
+      for (const candidate of agentCandidates) {
+        try {
+          // resumeSession's id is the AGENT id (maps to --agent); the conversation is the agent's
+          // default. A stored conversationId is NOT a valid resume id — passing it would send
+          // `--agent <conversationId>` and fail — so always resume with the agent id.
+          r = await tryOnce(candidate);
+          break;
+        } catch (e) {
+          lastAgentError = e;
+          if (!isNotFound(e)) throw e;
+        }
+      }
+      if (!r && !SMOKE_MODE && !process.env.OTTO_AGENT_ID) {
+        r = await tryOnce(null);
+      }
+      if (!r) throw lastAgentError ?? new Error('No local Letta agent candidate was available.');
       this.session = r.session;
-      if (!SMOKE_MODE) this.config.update({ agentId: r.init.agentId ?? agentId, conversationId: r.init.conversationId ?? null });
+      if (!SMOKE_MODE) this.config.update({ agentId: r.init.agentId ?? primaryAgentId, conversationId: r.init.conversationId ?? null });
       this.status = {
         ready: true,
         code: 'ready',
@@ -177,7 +186,7 @@ export class LettaRunner {
         ready: false,
         code,
         reason: friendly(code, reason),
-        agentId,
+        agentId: primaryAgentId,
         modelHandle: this.config.modelHandle(),
         effort: this.config.effort(),
         sessionMode: SMOKE_MODE ? 'smoke' : 'default',
@@ -212,7 +221,7 @@ export class LettaRunner {
       effort: this.config.effort(),
       sessionMode: SMOKE_MODE ? 'smoke' : 'default',
     };
-    if (code === 'stale') this.config.update({ conversationId: null });
+    if (code === 'stale' && !SMOKE_MODE) this.config.update({ conversationId: null });
     this.publishStatus();
   }
 
@@ -226,6 +235,8 @@ export class LettaRunner {
     trace.write('prompt', { text, agentId: this.status.agentId, conversationId: this.status.conversationId });
     try {
       let turnError: string | null = null;
+      let sawResult = false;
+      let markedNotReady = false;
       await this.session.send(text);
       for await (const message of this.session.stream()) {
         trace.write('event', message);
@@ -240,19 +251,28 @@ export class LettaRunner {
         };
         if (m.type === 'error') {
           turnError = String(m.message ?? m.error ?? m.reason ?? 'Adapter call failed.');
+          const code = classify(turnError, this.hasApiKey());
+          if (code !== 'error') {
+            this.markNotReady(turnError, code);
+            markedNotReady = true;
+          }
         }
         if (m.type === 'result') {
-          if (m.conversationId && m.conversationId !== this.status.conversationId) {
+          sawResult = true;
+          if (!SMOKE_MODE && !markedNotReady && m.conversationId && m.conversationId !== this.status.conversationId) {
             this.status.conversationId = m.conversationId;
             this.config.update({ conversationId: m.conversationId });
           }
           if (m.success === false) {
             const reason = turnError ?? String(m.error ?? m.reason ?? 'Adapter call failed.');
-            this.markNotReady(reason, classify(reason, this.hasApiKey()));
+            if (!markedNotReady) this.markNotReady(reason, classify(reason, this.hasApiKey()));
           }
           break;
         }
         if (this.aborted) break;
+      }
+      if (turnError && !sawResult && !markedNotReady) {
+        this.markNotReady(turnError, classify(turnError, this.hasApiKey()));
       }
     } catch (e) {
       trace.write('error', { message: msg(e) });
@@ -315,12 +335,21 @@ function discoverLocalLettaUrl(): string | null {
   return null;
 }
 
+function normalizeBaseUrl(value: string | null): string | null {
+  const trimmed = value?.trim();
+  if (!trimmed) return null;
+  if (/^https?:\/\//i.test(trimmed)) return trimmed.replace(/\/+$/, '');
+  return `http://${trimmed.replace(/\/+$/, '')}`;
+}
+
 /** Map a raw connect error to a diagnosis category for the Settings UI. */
 function classify(reason: string, hasKey: boolean): StatusCode {
   const r = reason.toLowerCase();
   void hasKey;
   if (r.includes('letta_api_key') || r.includes('api key') || r.includes('unauthorized') || r.includes('401'))
     return 'no-api-key';
+  if (r.includes('no agent') || r.includes('agent selector') || r.includes('agent-not-found') || r.includes('profile'))
+    return 'no-agent';
   if (r.includes('not found') || r.includes('not-found')) return 'stale';
   if (
     r.includes('econnrefused') ||
@@ -340,8 +369,10 @@ function friendly(code: StatusCode, reason: string): string {
       return `Letta auth failed. For local v1, configure provider auth inside Letta; Otto does not need its own API key. (${reason})`;
     case 'unreachable':
       return `Can't reach the Letta backend — check the base URL in Settings. (${reason})`;
+    case 'no-agent':
+      return `Can't find a default local Letta agent — open Letta once or choose an Agent ID override in Settings. (${reason})`;
     case 'stale':
-      return `Agent or conversation not found — pick a valid agent in Settings. (${reason})`;
+      return `Saved Letta agent or conversation was stale — choose a valid Agent ID override in Settings or clear the override. (${reason})`;
     default:
       return reason;
   }
