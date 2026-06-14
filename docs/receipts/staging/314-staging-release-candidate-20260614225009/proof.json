@@ -1,0 +1,44 @@
+{
+  "ok": true,
+  "issue": 314,
+  "runId": "20260614225009",
+  "gitHead": "8ce5b94",
+  "stagingApp": "/Applications/otto-314-rc-review.app",
+  "cdpPort": 9550,
+  "receiptDir": "/Users/seb/Code/otto/.worktrees/issue-314-staging-rc/docs/receipts/staging/314-staging-release-candidate-20260614225009",
+  "checks": {
+    "nonBlankUi": true,
+    "bootShellGone": true,
+    "commandStationAbsent": true,
+    "explicitReadinessWhenNotReady": true,
+    "buildMarkerPresent": true,
+    "buildMarkerMatchesGit": true,
+    "settingsBuildMarkerVisible": true
+  },
+  "uiState": {
+    "bodyLen": 463,
+    "bootShellGone": true,
+    "commandStationAbsent": true,
+    "setupVisible": true,
+    "setupHasRetry": true
+  },
+  "buildInfo": {
+    "sha": "8ce5b949792c5a7235cec99ad849ed380f553a89",
+    "shortSha": "8ce5b94",
+    "builtAt": "2026-06-14T22:50:18Z",
+    "branch": "fix/314-staging-release-candidate"
+  },
+  "runtimeStatus": {
+    "ready": false,
+    "reason": "not initialized",
+    "cliPath": "/Applications/otto-314-rc-review.app/Contents/Resources/app/node_modules/@letta-ai/letta-code/letta.js",
+    "cliResolved": true,
+    "transportMode": "auto",
+    "effectiveTransport": "sdk subprocess",
+    "transportFallbackReason": null
+  },
+  "screenshots": {
+    "chat": "/Users/seb/Code/otto/.worktrees/issue-314-staging-rc/docs/receipts/staging/314-staging-release-candidate-20260614225009/chat-default.png",
+    "settings": "/Users/seb/Code/otto/.worktrees/issue-314-staging-rc/docs/receipts/staging/314-staging-release-candidate-20260614225009/settings-build-marker.png"
+  }
+}

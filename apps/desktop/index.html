@@ -7,9 +7,35 @@
     <meta name="color-scheme" content="light" />
     <link rel="icon" type="image/png" href="/favicon.png" />
     <title>Otto Desktop</title>
+    <style>
+      #otto-boot-shell {
+        box-sizing: border-box;
+        min-height: 100vh;
+        margin: 0;
+        padding: 48px 24px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        background: oklch(0.975 0.012 85);
+        color: oklch(0.18 0.005 270);
+        font: 500 14px/1.4 Inter, system-ui, sans-serif;
+        letter-spacing: 0;
+      }
+      #otto-boot-shell small {
+        color: oklch(0.46 0.005 270);
+        font-size: 12px;
+      }
+    </style>
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <div id="otto-boot-shell" aria-live="polite">
+        <strong>otto</strong>
+        <small>Starting workspace…</small>
+      </div>
+    </div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

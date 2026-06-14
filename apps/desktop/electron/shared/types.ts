@@ -82,6 +82,14 @@ export interface RuntimeStatus {
   cliResolved: boolean;
 }
 
+/** Packaged app provenance — stamped by deploy-staging.sh or dev fallback. */
+export interface AppBuildInfo {
+  sha: string | null;
+  shortSha: string | null;
+  builtAt: string | null;
+  branch: string | null;
+}
+
 /** What the Settings "Connect Letta" card reads. v1 is local-only; provider auth lives in Letta. */
 export interface ConnectionInfo {
   baseUrl: string | null;

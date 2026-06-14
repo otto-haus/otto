@@ -1,0 +1,62 @@
+{
+  "ok": true,
+  "issue": 314,
+  "runId": "20260614223920",
+  "gitHead": "e453c2c",
+  "stagingApp": "/Applications/otto-314-rc.app",
+  "cdpPort": 9450,
+  "receiptDir": "/Users/seb/Code/otto/.worktrees/issue-314-staging-rc/docs/receipts/staging/314-staging-release-candidate-20260614223920",
+  "checks": {
+    "nonBlankUi": true,
+    "bootShellGone": true,
+    "commandStationAbsent": true,
+    "explicitReadinessWhenNotReady": true,
+    "buildMarkerPresent": true,
+    "buildMarkerMatchesGit": true,
+    "settingsBuildMarkerVisible": true
+  },
+  "buildInfo": {
+    "sha": "e453c2c6afba2d74559a265215f6f0bd987f0203",
+    "shortSha": "e453c2c",
+    "builtAt": "2026-06-14T22:39:07Z",
+    "branch": "fix/314-staging-release-candidate"
+  },
+  "runtimeStatus": {
+    "ready": true,
+    "code": "ready",
+    "agentId": "agent-local-d8e35a2a-a89f-45dd-b117-5eae5df8c8f2",
+    "baseUrl": "http://127.0.0.1:59647",
+    "discoverySource": "otto config/env",
+    "conversationId": "local-conv-553",
+    "model": "anthropic/claude-opus-4-8",
+    "modelHandle": null,
+    "effort": "high",
+    "sessionMode": "smoke",
+    "memfsEnabled": true,
+    "tools": [
+      "Bash",
+      "TaskOutput",
+      "CreateWorktree",
+      "Edit",
+      "TaskStop",
+      "memory",
+      "Read",
+      "Skill",
+      "Agent",
+      "TaskCreate",
+      "TaskGet",
+      "TaskList",
+      "TaskUpdate",
+      "Write"
+    ],
+    "transportMode": "auto",
+    "effectiveTransport": "sdk subprocess",
+    "transportFallbackReason": null,
+    "cliPath": "/Applications/Letta.app/Contents/Resources/app.asar.unpacked/node_modules/@letta-ai/letta-code/letta.js",
+    "cliResolved": true
+  },
+  "screenshots": {
+    "chat": "/Users/seb/Code/otto/.worktrees/issue-314-staging-rc/docs/receipts/staging/314-staging-release-candidate-20260614223920/chat-default.png",
+    "settings": "/Users/seb/Code/otto/.worktrees/issue-314-staging-rc/docs/receipts/staging/314-staging-release-candidate-20260614223920/settings-build-marker.png"
+  }
+}

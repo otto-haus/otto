@@ -36,6 +36,7 @@ import { CogneeStore } from './cognee-store';
 import { MemoryStore } from './memory-store';
 import { PgvectorStore } from './pgvector-store';
 import { safeWebContentsSend, smokeMode } from './runtime-transport/runtime-common';
+import { readAppBuildInfo } from './build-info';
 
 export function registerIpc(win: BrowserWindow) {
   const config = new ConfigStore();
@@ -95,6 +96,7 @@ export function registerIpc(win: BrowserWindow) {
     return initWithStaleRecovery({ freshConversation: true });
   });
   ipcMain.handle('otto:status', () => runner.getStatus());
+  ipcMain.handle('otto:app:build-info', () => readAppBuildInfo());
   ipcMain.handle('otto:send', (_e, text: string) => runner.send(text));
   ipcMain.handle('otto:abort', () => runner.abort());
   ipcMain.handle('otto:configure', async (_e, input: RuntimePreferences) => {
