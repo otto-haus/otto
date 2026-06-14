@@ -1,7 +1,7 @@
 # 063 — Sebastian gate packet (v0.1.3 draft — hold)
 
 Date: 2026-06-14 (updated 14:45 local)  
-Branch: `ship/functional-labs` (integration commit pending push)  
+Branch: `ship/functional-labs` @ `b8ed206`  
 Tag: **`v0.1.3`** pre-release on **otto-haus/otto** with asset `otto-v01-desktop.mp4` — **not Latest / not Shipped** until Sebastian approves.
 
 ## What to try (staging only)

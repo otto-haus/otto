@@ -2,7 +2,7 @@
 
 Updated: 2026-06-14
 
-Integration branch: `ship/functional-labs` (codename — not product semver; post-054 integration commit)
+Integration branch: `ship/functional-labs` @ `b8ed206` (codename — not product semver)
 
 **Product line:** **`v0.1.x`** — tag **`v0.1.3`** marks the integration/demo line (pre-release until Sebastian gate). Mistaken local tags `v0.2.x` / `v0.3.0` deleted; never use integration branch names as semver.
 **Staging proof:** `/Applications/otto-staging.app` only — live app unchanged.

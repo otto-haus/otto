@@ -1,7 +1,7 @@
 # Craft checklist — staging proof for v0.1.3 gate (12 items)
 
 Date: 2026-06-14 (refreshed 15:45 UTC)  
-Build: `ship/functional-labs` @ integration commit (post-054 snapshot)  
+Build: `ship/functional-labs` @ `b8ed206`  
 App: `/Applications/otto-staging.app` (window title **otto staging**, CDP **9445**)  
 Live `/Applications/otto.app` intentionally **not** updated.
 
