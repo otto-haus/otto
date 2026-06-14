@@ -1,14 +1,16 @@
 import type React from 'react';
 import { useEffect, useRef, useState } from 'react';
 import { Icon } from '../components/icons';
+import { useToast } from '../components/Toast';
 import { requiredMissing, isReady } from '../readiness';
 import { isElectron, ottoApi, type EffortLevel, type RuntimeStatus, type SavedAttachment } from '../runtime';
 import { useRuntimeContext } from '../RuntimeContext';
 import ottoAvatar from '../assets/otto-avatar.png';
 
 import type { SurfaceId } from '../components/Sidebar';
-import { CommandStationStrip } from '../components/ui';
-import { chatCopy } from '../copy/surfaces';
+import { CommandStationStrip, MessageActions, Modal, PermissionCard, type PermissionDecision, type PermissionRequestView } from '../components/ui';
+import { chatCopy, permissionCopy, toastCopy } from '../copy/surfaces';
+import { dismissOnboarding, notifyOnboardingFirstMessage, onOnboardingDismiss, onOnboardingFirstMessage, wasOnboarded } from '../onboarding-storage';
 
 // In Electron (window.otto present) → the runtime-wired LiveChat.
 // In the web preview → the file-backed PreviewChat (unchanged).
@@ -285,6 +287,7 @@ const LiveChat: React.FC<{
 }) => {
   const api = ottoApi();
   const rt = useRuntimeContext();
+  const toast = useToast();
   const [draft, setDraft] = useState(readDraft);
   const [attachments, setAttachments] = useState<AttachmentDraft[]>(readAttachments);
   const [attachmentError, setAttachmentError] = useState<string | null>(null);
@@ -292,12 +295,63 @@ const LiveChat: React.FC<{
   const [queue, setQueue] = useState<QueueItem[]>(readQueue);
   const [modelOpen, setModelOpen] = useState(false);
   const [effortOpen, setEffortOpen] = useState(false);
+  const [permission, setPermission] = useState<PermissionRequestView | null>(null);
+  const [permissionBusy, setPermissionBusy] = useState(false);
+  const [correctBusy, setCorrectBusy] = useState<string | null>(null);
+  const [onboardingHint, setOnboardingHint] = useState(() => !wasOnboarded());
   const draining = useRef(false);
   const fileInput = useRef<HTMLInputElement | null>(null);
   const st = rt.status;
   const ready = !!st?.ready;
   const selectedModel = st?.modelHandle ?? st?.model ?? null;
   const selectedEffort = st?.effort ?? 'max';
+
+  useEffect(() => {
+    if (!api) return;
+    return api.onPermission((req) => setPermission(req as PermissionRequestView));
+  }, [api]);
+
+  useEffect(() => onOnboardingDismiss(() => setOnboardingHint(false)), []);
+  useEffect(() => onOnboardingFirstMessage(() => setOnboardingHint(false)), []);
+
+  const respondPermission = (decision: PermissionDecision, denyMessage?: string) => {
+    if (!api || !permission) return;
+    setPermissionBusy(true);
+    if (decision === 'deny') {
+      api.permission.respond(permission.requestId, { behavior: 'deny', message: denyMessage ?? permissionCopy.deniedByUser });
+    } else {
+      // Session-scoped allow ships when runtime exposes it; both allow paths use allow today.
+      api.permission.respond(permission.requestId, { behavior: 'allow' });
+    }
+    setPermission(null);
+    setPermissionBusy(false);
+  };
+
+  const correctThis = async (messageText: string, messageId: string) => {
+    if (!api || correctBusy) return;
+    setCorrectBusy(messageId);
+    try {
+      const result = await api.curation.proposals.createFromCorrection({
+        correction: chatCopy.correctionDefault,
+        rationale: messageText.slice(0, 2000),
+        target: { kind: 'standard' },
+      });
+      toast.push({
+        title: toastCopy.proposalCreated,
+        body: `${result.proposal.summary} · ${toastCopy.openCuration}`,
+        tone: 'ok',
+      });
+      onNavigate?.('curation');
+    } catch (e) {
+      toast.push({
+        title: toastCopy.decisionBlocked,
+        body: e instanceof Error ? e.message : String(e),
+        tone: 'warn',
+      });
+    } finally {
+      setCorrectBusy(null);
+    }
+  };
 
   useEffect(() => {
     try { localStorage.setItem(DRAFT_KEY, draft); } catch { /* best effort */ }
@@ -345,6 +399,7 @@ const LiveChat: React.FC<{
     void rt.send(next.text)
       .then(() => {
         clearInFlight(next.id);
+        notifyOnboardingFirstMessage();
       })
       .catch(() => {
         clearInFlight(next.id);
@@ -403,8 +458,7 @@ const LiveChat: React.FC<{
             <div className="inkblock__eyebrow"><span className="dot dot--warn" /> {chatCopy.runtimeNotReadyEyebrow}</div>
             <div className="inkblock__title">{chatCopy.runtimeNotReadyTitle}</div>
             <div className="inkblock__meta">
-              <span>{st.reason ?? 'unknown reason'}</span>
-              <span>cli: {st.cliResolved ? st.cliPath : 'bundled @letta-ai/letta-code'}</span>
+              <span>{st.reason ?? chatCopy.runtimeNotReadyBody}</span>
             </div>
             <div className="inkblock__actions">
               <button type="button" className="btn btn--solid-d" onClick={rt.retry}>Retry</button>
@@ -421,14 +475,21 @@ const LiveChat: React.FC<{
         )}
         {rt.messages.map((m, i) => {
           const showWho = i === 0 || rt.messages[i - 1].who !== m.who;
+          const canCorrect = m.who === 'otto' && !!m.text.trim();
           return (
             <div key={m.id} className={`msg${m.who === 'user' ? ' msg--user' : ''}${showWho ? '' : ' msg--cont'}`}>
               {showWho && <div className="msg__who">{m.who === 'user' ? 'You' : m.who === 'error' ? 'error' : 'otto'}</div>}
               <div className="msg__body" style={m.who === 'error' ? { color: 'var(--stop)' } : undefined}><MarkdownText text={m.text} /></div>
+              {canCorrect ? (
+                <MessageActions
+                  disabled={!!correctBusy && correctBusy !== m.id}
+                  onCorrectThis={() => { void correctThis(m.text, m.id); }}
+                />
+              ) : null}
             </div>
           );
         })}
-        {rt.busy && <div className="chat__thinking"><span className="dot dot--idle" aria-hidden="true" /> thinking…</div>}
+        {rt.busy && <div className="chat__thinking"><span className="dot dot--idle" aria-hidden="true" /> {chatCopy.workingPulse}</div>}
       </div>
 
       <div className="promptbar">
@@ -481,6 +542,14 @@ const LiveChat: React.FC<{
           </div>
         )}
         {attachmentError && <div className="attachmentError">{attachmentError}</div>}
+        {ready && onboardingHint && (
+          <div className="onboardInlineHint" role="status">
+            <span>{chatCopy.onboardingHint}</span>
+            <button type="button" className="onboardInlineHint__skip" onClick={() => dismissOnboarding()}>
+              {chatCopy.onboardingSkip}
+            </button>
+          </div>
+        )}
         <div className="promptCompose">
           <div className="promptControls">
             <div className="picker" data-open={modelOpen ? 'true' : 'false'}>
@@ -577,6 +646,16 @@ const LiveChat: React.FC<{
           </div>
         </div>
       </div>
+
+      <Modal
+        open={!!permission}
+        title={permissionCopy.modalTitle}
+        onClose={() => { if (!permissionBusy) setPermission(null); }}
+      >
+        {permission ? (
+          <PermissionCard request={permission} busy={permissionBusy} onDecide={respondPermission} />
+        ) : null}
+      </Modal>
     </div>
   );
 };

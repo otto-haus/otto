@@ -4,6 +4,7 @@ import { ToastProvider } from './components/Toast';
 import { Sidebar, type SurfaceId } from './components/Sidebar';
 import { Icon } from './components/icons';
 import { Chat } from './surfaces/Chat';
+import { useChatThreads } from './chat/useChatThreads';
 import {
   Charters,
   Standards,
@@ -89,6 +90,7 @@ export function App() {
 
 function AppShell() {
   const rt = useRuntimeContext();
+  const { threads, archiveForNewChat, activeConversationId } = useChatThreads(rt.status?.conversationId, rt.messages);
   const [active, setActiveState] = useState<SurfaceId>(initialSurface());
   const [sidebarHidden, setSidebarHidden] = useState(false);
   const [sidebarCompact, setSidebarCompact] = useState(
@@ -141,10 +143,15 @@ function AppShell() {
           <Sidebar
             active={active}
             onSelect={setActive}
-            onNewChat={() => { void rt.newChat(); }}
+            onNewChat={() => {
+              archiveForNewChat();
+              void rt.newChat();
+            }}
             counts={counts}
             compact={sidebarCompact}
             onToggleCollapsed={() => setSidebarHidden(true)}
+            threads={threads}
+            activeConversationId={activeConversationId}
           />
         )}
         <main className="main">
@@ -181,7 +188,7 @@ function AppShell() {
           )}
         </main>
       </div>
-      <Onboarding onNavigate={setActive} />
+      <Onboarding onNavigate={setActive} activeSurface={active} />
     </>
   );
 }

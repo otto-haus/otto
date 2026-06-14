@@ -10,6 +10,13 @@ import { useToast } from '../components/Toast';
 import { EmptyState, statusPill, SurfaceProof } from '../components/ui';
 import { toastCopy } from '../copy/surfaces';
 import {
+  isSampleReceiptPreviewEnabled,
+  SAMPLE_RECEIPT_DETAIL,
+  SAMPLE_RECEIPT_LABEL,
+  SAMPLE_RECEIPT_SUMMARY,
+} from '../onboarding-sample-receipt';
+import { resetOnboardingForReplay } from '../onboarding-storage';
+import {
   ottoApi,
   type CharterDetail,
   type CharterListResult,
@@ -1335,6 +1342,40 @@ export const Receipts: React.FC = () => {
   }
 
   if (!loading && !receipts.length) {
+    if (isSampleReceiptPreviewEnabled()) {
+      return (
+        <div className="receiptsSurface">
+          <div className="panel receiptsToolbar">
+            <div>
+              <div className="eyebrow">onboarding sample</div>
+              <div className="h-sec" style={{ marginTop: 6 }}>Inspect a sample Receipt</div>
+              <p className="muted" style={{ marginTop: 6 }}>
+                This card shows the `otto.receipt.v1` structure otto writes after a real behavior loop.
+                Send a chat turn to create your first live proof record.
+              </p>
+            </div>
+            <span className="filechip pill pill--warn">{SAMPLE_RECEIPT_LABEL}</span>
+          </div>
+          <div className="split receiptsSplit">
+            <div className="cards receiptList" aria-label="Sample receipt">
+              <button type="button" className="card receiptCard is-selected" aria-current="true">
+                <div className="between">
+                  <span className="card__title">{SAMPLE_RECEIPT_SUMMARY.action}</span>
+                  {statusPill(SAMPLE_RECEIPT_SUMMARY.status)}
+                </div>
+                <span className="card__sub">{SAMPLE_RECEIPT_SUMMARY.summary}</span>
+                <span className="receiptCard__meta mono">
+                  sample · chat:onboarding-sample
+                </span>
+              </button>
+            </div>
+            <ReceiptDetailView detail={SAMPLE_RECEIPT_DETAIL} summary={SAMPLE_RECEIPT_SUMMARY} />
+          </div>
+          <SurfaceProof surface="receipts" />
+        </div>
+      );
+    }
+
     return (
       <div className="receiptsSurface">
         <div className="panel receiptsToolbar">
@@ -2545,6 +2586,7 @@ const ModelProviders: React.FC = () => {
 
 export const Settings: React.FC = () => {
   const rt = useRuntimeContext();
+  const { push: pushToast } = useToast();
   const [section, setSection] = useState<'general' | 'providers'>('general');
   // Live runtime is the source of truth in Electron; the file-backed checklist describes local
   // config only. Never let the readiness panel say "Setup required" while the runtime is connected.
@@ -2616,6 +2658,25 @@ export const Settings: React.FC = () => {
       ) : (
         <div className="grid" style={{ maxWidth: 880, gap: 16 }}>
           <ConnectLetta />
+          <div className="panel">
+            <div className="eyebrow">onboarding</div>
+            <div className="h-sec" style={{ marginTop: 6 }}>Show onboarding again</div>
+            <p className="muted" style={{ marginTop: 6 }}>
+              Clears the first-run flag so Welcome and the getting-started dock return on next launch.
+              Also clears the onboarding first-message marker so Done/Skip stays honest after a replay.
+            </p>
+            <button
+              type="button"
+              className="btn"
+              style={{ marginTop: 12 }}
+              onClick={() => {
+                resetOnboardingForReplay();
+                pushToast({ title: 'Onboarding reset', body: 'Relaunch otto to see Welcome again.', tone: 'ok' });
+              }}
+            >
+              Reset onboarding
+            </button>
+          </div>
           <div className="panel" style={ready ? undefined : { borderColor: '#e7dcc0', background: 'var(--warn-tint)' }}>
             <div className="eyebrow">readiness</div>
             <div className="h-sec" style={{ marginTop: 6 }}>

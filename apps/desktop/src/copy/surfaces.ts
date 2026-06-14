@@ -148,9 +148,30 @@ export const chatCopy = {
   sessionTitle: 'Ready when you are.',
   sessionBody: 'Message otto to start a session. Corrections become proposals you ratify.',
   runtimeNotReadyEyebrow: 'runtime not ready',
-  runtimeNotReadyTitle: "Otto can't connect yet",
+  runtimeNotReadyTitle: "otto can't connect yet",
+  runtimeNotReadyBody: 'Check Settings for Letta connection and required setup.',
+  workingPulse: 'otto is working',
   correctThis: 'Correct this',
   correctThisHint: 'Turn this moment into changed future behavior',
+  correctionDefault: 'This response should change — describe the behavior you want instead.',
+  onboardingHint: 'Send your first message — otto writes a Receipt when work completes with proof.',
+  onboardingSkip: 'Skip setup',
+} as const;
+
+export const permissionCopy = {
+  modalTitle: 'Permission required',
+  eyebrow: 'approval gate',
+  allowOnce: 'Allow once',
+  allowSession: 'Allow for session',
+  deny: 'Deny',
+  denyPlaceholder: 'Optional reason if you deny',
+  deniedByUser: 'Denied by operator',
+  interactiveNote: 'This tool needs a richer answer than yes/no — allow or deny for now; full interactive flow ships separately.',
+} as const;
+
+export const threadCopy = {
+  groupLabel: 'Recent',
+  empty: 'No prior chats yet.',
 } as const;
 
 export const commandStationCopy = {

@@ -1,6 +1,7 @@
 import React from 'react';
 import { Icon } from './icons';
 import { useRuntimeContext } from '../RuntimeContext';
+import { ThreadList, type ThreadSummary } from './ui';
 import ottoAvatar from '../assets/otto-avatar.png';
 
 export type SurfaceId =
@@ -57,7 +58,20 @@ export const Sidebar: React.FC<{
   counts: Partial<Record<SurfaceId, number>>;
   compact?: boolean;
   onToggleCollapsed: () => void;
-}> = ({ active, onSelect, onNewChat, counts, compact = false, onToggleCollapsed }) => {
+  threads?: ThreadSummary[];
+  activeConversationId?: string | null;
+  onSelectThread?: (thread: ThreadSummary) => void;
+}> = ({
+  active,
+  onSelect,
+  onNewChat,
+  counts,
+  compact = false,
+  onToggleCollapsed,
+  threads = [],
+  activeConversationId,
+  onSelectThread,
+}) => {
   const rt = useRuntimeContext();
   // Truthful readiness: only the live runtime can mark connected.
   const connected = rt.electron ? !!rt.status?.ready : false;
@@ -119,6 +133,12 @@ export const Sidebar: React.FC<{
         ))}
       </nav>
 
+      <ThreadList
+        threads={threads}
+        activeConversationId={activeConversationId}
+        onSelect={onSelectThread}
+      />
+
       <div className="sidebar__spacer" />
 
       <button type="button"
@@ -137,7 +157,7 @@ export const Sidebar: React.FC<{
 
       <div className="sidebar__foot">
         <div className="row"><span className={`dot ${connected ? 'dot--ok' : 'dot--warn'}`} /> runtime: {connected ? 'connected' : 'not connected'}</div>
-        <div className="row">{connected ? (rt.status?.agentId ?? '~/.otto') : 'setup required — see Settings'}</div>
+        <div className="row">{connected ? 'Letta session active' : 'setup required — see Settings'}</div>
       </div>
     </aside>
   );
