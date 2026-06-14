@@ -162,9 +162,18 @@ compare_app_bundle_outputs() {
 echo "deploy_log=$DEPLOY_LOG"
 echo "app_log=$APP_LOG"
 
+if [[ "${OTTO_ALLOW_LIVE_REFRESH:-}" != "1" ]]; then
+  cat >&2 <<'EOF'
+Refusing to replace /Applications/otto.app without OTTO_ALLOW_LIVE_REFRESH=1.
+Use `task staging` for the isolated app, or run:
+  OTTO_ALLOW_LIVE_REFRESH=1 task refresh
+EOF
+  exit 2
+fi
+
 echo "==> Building otto desktop"
 cd "$APP_DIR"
-bun run electron:build
+OTTO_READINESS_IGNORE_LOCAL_CONFIG=1 bun run electron:build
 bunx electron-builder --mac dir --arm64
 
 if [[ ! -d "$BUILT_APP" ]]; then

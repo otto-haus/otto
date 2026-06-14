@@ -44,7 +44,7 @@
       "required": false,
       "status": "configured",
       "detail": "Otto repo detected",
-      "source": "~/Code/otto",
+      "source": "repo root",
       "action": "Override with OTTO_HOME"
     },
     {

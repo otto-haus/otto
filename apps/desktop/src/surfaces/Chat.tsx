@@ -21,8 +21,11 @@ import {
   persistInFlight,
   previewQueueText,
   QUEUE_KEY,
+  queueDisplayItemsForThread,
   queueMatchesThread,
   readQueue,
+  retryFailedQueueItemsForThread,
+  type QueueDisplayItem,
   type QueueItem,
 } from '../chat/queue-storage';
 import type { ProposalTarget } from '@otto-haus/core';
@@ -252,7 +255,7 @@ const appendQueueItem = (items: QueueItem[], text: string, threadId: string | nu
 };
 
 const QueueStrip: React.FC<{
-  queue: QueueItem[];
+  queue: QueueDisplayItem[];
   onClear: () => void;
   onRetryAll: () => void;
   onRetryOne: (id: string) => void;
@@ -265,13 +268,15 @@ const QueueStrip: React.FC<{
     : failedCount
       ? chatCopy.queueFailed(failedCount)
       : chatCopy.queuePending(pendingCount);
+  const nextItem = queue.find((item) => item.isNext);
+  const summaryText = nextItem ? chatCopy.queueNextSummary(summary, previewQueueText(nextItem.text)) : summary;
   const [expanded, setExpanded] = useState(queue.length <= 2 && failedCount === 0);
 
   return (
     <div className={`queuebar${failedCount ? ' queuebar--warn' : ''}${expanded ? ' queuebar--expanded' : ' queuebar--compact'}`} aria-label="Unsent messages">
       <div className="queuebar__head">
         <span className={`dot ${failedCount ? 'dot--warn' : 'dot--idle'}`} aria-hidden="true" />
-        <span className="queuebar__summary">{summary}</span>
+        <span className="queuebar__summary">{summaryText}</span>
         <div className="queuebar__actions">
           {failedCount > 0 && (
             <button type="button" className="queuebar__action queuebar__action--primary" onClick={onRetryAll}>
@@ -292,8 +297,12 @@ const QueueStrip: React.FC<{
         <div className="queuebar__items">
           {queue.map((item) => (
             <div className="queueitem" key={item.id}>
-              <span className={`queueitem__pill queueitem__pill--${item.state}`}>
-                {item.state === 'failed' ? 'failed' : 'waiting'}
+              <span className={`queueitem__pill queueitem__pill--${item.isNext ? 'next' : item.state}`}>
+                {item.state === 'failed'
+                  ? chatCopy.queuePillFailed
+                  : item.isNext
+                    ? chatCopy.queuePillNext
+                    : chatCopy.queuePillWaiting}
               </span>
               <span className="queueitem__text">{previewQueueText(item.text)}</span>
               {item.state === 'failed' && (
@@ -691,7 +700,7 @@ const LiveChat: React.FC<{
   };
 
   const streamMessages = [...rt.messages, ...cmdMessages];
-  const activeQueue = queue.filter((item) => queueMatchesThread(item, rt.activeThreadId));
+  const activeQueue = queueDisplayItemsForThread(queue, rt.activeThreadId);
 
   useEffect(() => {
     setCmdMessages([]);
@@ -975,10 +984,8 @@ const LiveChat: React.FC<{
           <QueueStrip
             queue={activeQueue}
             onClear={() => setQueue((items) => items.filter((item) => !queueMatchesThread(item, rt.activeThreadId)))}
-            onRetryAll={() => setQueue((items) => items.map((item) => (
-              queueMatchesThread(item, rt.activeThreadId) && item.state === 'failed' ? { ...item, state: 'queued' } : item
-            )))}
-            onRetryOne={(id) => setQueue((items) => items.map((item) => (item.id === id ? { ...item, state: 'queued' } : item)))}
+            onRetryAll={() => setQueue((items) => retryFailedQueueItemsForThread(items, rt.activeThreadId))}
+            onRetryOne={(id) => setQueue((items) => retryFailedQueueItemsForThread(items, rt.activeThreadId, id))}
             onRemove={(id) => setQueue((items) => items.filter((item) => item.id !== id))}
           />
         )}
@@ -1145,13 +1152,13 @@ const PreviewChat: React.FC = () => (
         >
           <span className="dot dot--warn" />
           <span>
-            <strong>Setup required</strong> — Otto is not connected to a runtime ({requiredMissing.length} required items missing). Open <strong>Settings</strong> to configure.
+            <strong>Setup required</strong> — otto is not connected to a runtime ({requiredMissing.length} required items missing). Open <strong>Settings</strong> to configure.
           </span>
         </div>
       )}
       <div className="promptbox promptbox--disabled">
         <input
-          placeholder="Chat is not wired to the Letta runtime in this preview"
+          placeholder="Chat is disabled in this preview"
           aria-label="Chat input (disabled in preview)"
           disabled
           readOnly

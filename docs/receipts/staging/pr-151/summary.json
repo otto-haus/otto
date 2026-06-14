@@ -1,0 +1,17 @@
+{
+  "pr": 151,
+  "status": "ready_for_review_after_codex_verification",
+  "evidenceType": "ui-screenshot-and-focus-data",
+  "screenshot": "docs/receipts/staging/pr-151/modal-focus-open.png",
+  "focusProof": "docs/receipts/staging/pr-151/modal-focus-proof.json",
+  "browserFallback": "Browser plugin invocation previously failed in this review session, so local Playwright was used.",
+  "assertions": {
+    "focusStartedOnTrigger": true,
+    "focusMovedToDialog": true,
+    "dialogIsProgrammaticallyFocusable": true,
+    "dialogTitleAnnounceable": true,
+    "focusRestoredToTrigger": true,
+    "noConsoleErrors": true
+  },
+  "readyForSebastian": true
+}
