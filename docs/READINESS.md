@@ -13,8 +13,7 @@ to resolve it.
 
 Three items are **required**. otto keeps **Chat gated until they're satisfied** —
 the desktop done-test is *"Live chat unlocks only after `session.initialize()`
-succeeds."* Everything else is **optional** and never blocks Chat; several optional
-items are honestly marked as not-yet-shipped in v0.1.
+succeeds."* Everything else is **optional** and never blocks Chat.
 
 ## Status vocabulary
 
@@ -42,15 +41,26 @@ they move to **connected**.
 
 ## Optional — useful, but never blocks Chat
 
-| Item | What it is | How to resolve / status |
+These configure or extend your agent; none of them gate Chat:
+
+| Item | What it is | How to resolve |
 |---|---|---|
 | **Model provider** | The LLM provider for your agent. Provider auth lives in **Letta, not otto.** | Configure providers in Letta Desktop / your local Letta runtime. |
 | **Workspace root** | The otto project root otto operates over (the repo is auto-detected). | Override with the `OTTO_HOME` environment variable. |
 | **Skills** | Skill definitions (`SKILL.md`) otto can install into a live agent. | Install into a live agent via `scripts/install.sh`. |
-| **Practices** | The Practices catalog. | Coming soon — not loaded in the v0.1 desktop yet. |
 | **MCP servers** | Model Context Protocol servers available to your agent. | Add `mcpServers` in `~/.otto/config.json`. |
 | **Functions** | Local tools registered for your agent. | Register functions in `~/.otto/config.json`. |
-| **Permissions / autonomy** | The three-zone autonomy policy (green / yellow / red). Defined, but **not runtime-enforced** in v0.1. | See [`docs/autonomy.md`](./autonomy.md); enforced once Curation + runtime land. |
+| **Labs** | The master toggle for experimental Labs surfaces. | Toggle in Settings → Labs. |
+
+### Behavior surfaces
+
+otto's behavior surfaces — **Charters, Standards, Practices, Routines, Curation,
+Receipts, Autonomy, Knowledge, Tickets, Channels** — are file-backed and ready in
+v0.1. Each appears as its own optional readiness item, and each resolves the same
+way: **open that surface in the desktop app.** They never block Chat. The
+**Permissions / autonomy** policy (the three-zone green / yellow / red model) is
+visible in the Autonomy surface; see [`docs/autonomy.md`](./autonomy.md). A separate
+runtime permission modal ships independently.
 
 ## Why otto gates this
 
