@@ -45,7 +45,7 @@ OTTO_PAGES_BRANCH=ship/functional-labs bash site/deploy-pages.sh   # preview bra
 
 - Static root: `site/` — no build command
 - Default URL: `https://otto-haus.pages.dev`
-- **Apex `otto.haus`:** attach custom domain on **Pages → otto-haus**, not on Worker `otto` (empty Worker shows “Hello world” and steals the apex)
+- **Apex `otto.haus`:** attach custom domain on **Pages → otto-haus**, not on a Worker. If status is `pending` / “CNAME record not set” and the zone is already on Cloudflare, open the domain in the dashboard and choose **Activate domain** (or **Complete setup**) so Cloudflare writes the apex record. Remove any leftover Worker custom domain first.
 - Optional staging subdomain: `staging.otto.haus` when approved
 
 **GitHub Pages / Render static**

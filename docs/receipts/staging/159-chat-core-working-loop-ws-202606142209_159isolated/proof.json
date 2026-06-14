@@ -1,0 +1,507 @@
+{
+  "ok": true,
+  "runId": "202606142209_159isolated",
+  "stagingApp": "/Applications/otto-159-staging.app",
+  "cdpPort": 9461,
+  "receiptDir": "/Users/seb/code/otto/docs/receipts/staging/159-chat-core-working-loop-ws-202606142209_159isolated",
+  "markers": {
+    "a": "OTTO_159_A_202606142209_159isolated",
+    "b": "OTTO_159_B_202606142209_159isolated",
+    "model": "OTTO_159_MODEL_202606142209_159isolated",
+    "queue1": "OTTO_159_QUEUE_1_202606142209_159isolated",
+    "queue2": "OTTO_159_QUEUE_2_202606142209_159isolated",
+    "steer": "OTTO_159_STEER_202606142209_159isolated"
+  },
+  "expected": {
+    "titleA": "159 A 202606142209_159isolated",
+    "titleB": "159 B 202606142209_159isolated"
+  },
+  "checks": {
+    "notBlank": true,
+    "noSilentHang": true,
+    "commandStationAbsent": true,
+    "wsReady": true,
+    "modelRegistryHasGpt": true,
+    "modelRegistryHasClaude": true,
+    "renameNotOverwrittenByFirstSend": true,
+    "twoConversations": true,
+    "conversationIdsDistinct": true,
+    "notDefaultConversation": true,
+    "switchActiveRowMoves": true,
+    "noHistoryBleed": true,
+    "pinPersistsInStore": true,
+    "pinButtonLeft": true,
+    "archivePinnedWorks": true,
+    "archiveActiveFallback": true,
+    "archiveTwoClickSameLocation": true,
+    "modelSwitchSend": true,
+    "renameNotOverwrittenByNextSend": true,
+    "queueDrain": true,
+    "steerChangedCourse": true,
+    "queueFailureHonest": true,
+    "relaunchRestore": true,
+    "renamePersistsAfterRelaunch": true,
+    "renamePersistsAndNotOverwritten": true,
+    "unpinReturnsToRecents": true,
+    "recentsClean": true,
+    "workspaceSurfacesComingSoon": true
+  },
+  "threads": {
+    "a": {
+      "id": "local_81529dcd-2844-4681-b25a-420fce93d315",
+      "lettaConversationId": "local-conv-f002cab6-e441-4850-a0f1-23a3ca737cef",
+      "agentId": "agent-local-d8e35a2a-a89f-45dd-b117-5eae5df8c8f2",
+      "title": "159 A 202606142209_159isolated",
+      "createdAt": "2026-06-14T22:08:57.370Z",
+      "updatedAt": "2026-06-14T22:09:01.543Z",
+      "sortOrder": null,
+      "pinned": false,
+      "archived": false
+    },
+    "aAfterSend": {
+      "id": "local_81529dcd-2844-4681-b25a-420fce93d315",
+      "lettaConversationId": "local-conv-7dd36121-e9f6-44f3-aa20-3346b702fb76",
+      "agentId": "agent-local-d8e35a2a-a89f-45dd-b117-5eae5df8c8f2",
+      "title": "159 A 202606142209_159isolated",
+      "createdAt": "2026-06-14T22:08:57.370Z",
+      "updatedAt": "2026-06-14T22:09:47.618Z",
+      "sortOrder": null,
+      "pinned": false,
+      "archived": false
+    },
+    "b": {
+      "id": "local_c90bc0d3-0600-4c79-b1f8-3a5945b27b71",
+      "lettaConversationId": "local-conv-a240cb8c-37e1-46b9-acd3-9fa7d40b1712",
+      "agentId": "agent-local-d8e35a2a-a89f-45dd-b117-5eae5df8c8f2",
+      "title": "159 B 202606142209_159isolated",
+      "createdAt": "2026-06-14T22:09:50.980Z",
+      "updatedAt": "2026-06-14T22:09:54.629Z",
+      "sortOrder": null,
+      "pinned": false,
+      "archived": false
+    },
+    "bAfterSend": {
+      "id": "local_c90bc0d3-0600-4c79-b1f8-3a5945b27b71",
+      "lettaConversationId": "local-conv-a240cb8c-37e1-46b9-acd3-9fa7d40b1712",
+      "agentId": "agent-local-d8e35a2a-a89f-45dd-b117-5eae5df8c8f2",
+      "title": "159 B 202606142209_159isolated",
+      "createdAt": "2026-06-14T22:09:50.980Z",
+      "updatedAt": "2026-06-14T22:09:54.629Z",
+      "sortOrder": null,
+      "pinned": false,
+      "archived": false
+    },
+    "aPinned": {
+      "id": "local_81529dcd-2844-4681-b25a-420fce93d315",
+      "lettaConversationId": "local-conv-b0ecafe0-b1a6-417f-81a1-0ee744b3fd01",
+      "agentId": "agent-local-d8e35a2a-a89f-45dd-b117-5eae5df8c8f2",
+      "title": "159 A 202606142209_159isolated",
+      "createdAt": "2026-06-14T22:08:57.370Z",
+      "updatedAt": "2026-06-14T22:10:09.730Z",
+      "sortOrder": 0,
+      "pinned": true,
+      "archived": false
+    },
+    "bArchived": {
+      "id": "local_c90bc0d3-0600-4c79-b1f8-3a5945b27b71",
+      "lettaConversationId": "local-conv-45a36675-2b50-49c6-9bd6-975b4ca1bc46",
+      "agentId": "agent-local-d8e35a2a-a89f-45dd-b117-5eae5df8c8f2",
+      "title": "159 B 202606142209_159isolated",
+      "createdAt": "2026-06-14T22:09:50.980Z",
+      "updatedAt": "2026-06-14T22:10:11.512Z",
+      "sortOrder": 0,
+      "pinned": false,
+      "archived": true
+    },
+    "aAfterModelSend": {
+      "id": "local_81529dcd-2844-4681-b25a-420fce93d315",
+      "lettaConversationId": "local-conv-576bbe31-da4e-4645-a8ed-ea345aa29b46",
+      "agentId": "agent-local-d8e35a2a-a89f-45dd-b117-5eae5df8c8f2",
+      "title": "159 A 202606142209_159isolated",
+      "createdAt": "2026-06-14T22:08:57.370Z",
+      "updatedAt": "2026-06-14T22:11:01.955Z",
+      "sortOrder": 0,
+      "pinned": true,
+      "archived": false
+    },
+    "aUnpinned": {
+      "id": "local_81529dcd-2844-4681-b25a-420fce93d315",
+      "lettaConversationId": "local-conv-10219d92-1672-492e-a75a-b23d1f1dc7d5",
+      "agentId": "agent-local-d8e35a2a-a89f-45dd-b117-5eae5df8c8f2",
+      "title": "159 A 202606142209_159isolated",
+      "createdAt": "2026-06-14T22:08:57.370Z",
+      "updatedAt": "2026-06-14T22:11:22.599Z",
+      "sortOrder": 0,
+      "pinned": false,
+      "archived": false
+    }
+  },
+  "models": {
+    "count": 96,
+    "gpt": {
+      "handle": "openai/gpt-5.5",
+      "label": "GPT-5.5",
+      "provider": "openai",
+      "displayName": "GPT-5.5"
+    },
+    "claude": {
+      "handle": "anthropic/claude-opus-4-8",
+      "label": "Claude Opus 4.8",
+      "provider": "anthropic",
+      "displayName": "Claude Opus 4.8"
+    }
+  },
+  "workspace": {
+    "ok": true,
+    "items": {
+      "charters": {
+        "label": "Charters",
+        "navSoon": true,
+        "surfaceComingSoon": true,
+        "textSample": "COMING SOON Charters is not enabled yet Operating contracts — bets, acceptance criteria, linked runs and receipts. Chat and Settings are live today. This workspace surface is still"
+      },
+      "standards": {
+        "label": "Standards",
+        "navSoon": true,
+        "surfaceComingSoon": true,
+        "textSample": "COMING SOON Standards is not enabled yet Explicit canon — what we reward, refuse, and do under pressure. Chat and Settings are live today. This workspace surface is still wiring up"
+      },
+      "practices": {
+        "label": "Practices",
+        "navSoon": true,
+        "surfaceComingSoon": true,
+        "textSample": "COMING SOON Practices is not enabled yet Executable Standards with guardrails and receipt requirements. Chat and Settings are live today. This workspace surface is still wiring up "
+      },
+      "routines": {
+        "label": "Routines",
+        "navSoon": true,
+        "surfaceComingSoon": true,
+        "textSample": "COMING SOON Routines is not enabled yet Repeated bundles of Practices; recurring activation is approval-gated. Chat and Settings are live today. This workspace surface is still wir"
+      },
+      "curation": {
+        "label": "Curation",
+        "navSoon": true,
+        "surfaceComingSoon": true,
+        "textSample": "COMING SOON Curation is not enabled yet Proposal-and-ratification queue; Approvals are decision receipts emitted here. Chat and Settings are live today. This workspace surface is s"
+      },
+      "receipts": {
+        "label": "Receipts",
+        "navSoon": true,
+        "surfaceComingSoon": true,
+        "textSample": "COMING SOON Receipts is not enabled yet Proof of work — receipts and run summaries from ~/.otto. Chat and Settings are live today. This workspace surface is still wiring up for v1."
+      },
+      "checks": {
+        "label": "Checks",
+        "navSoon": true,
+        "surfaceComingSoon": true,
+        "textSample": "COMING SOON Checks is not enabled yet Culture CI — compiled regressions from Standards; blocks surface in Chat. Chat and Settings are live today. This workspace surface is still wi"
+      },
+      "autonomy": {
+        "label": "Autonomy",
+        "navSoon": true,
+        "surfaceComingSoon": true,
+        "textSample": "COMING SOON Autonomy is not enabled yet Policy zones, doors, and Knowledge-informed model routing. Chat and Settings are live today. This workspace surface is still wiring up for v"
+      },
+      "skills": {
+        "label": "Skills",
+        "navSoon": true,
+        "surfaceComingSoon": true,
+        "textSample": "COMING SOON Skills is not enabled yet Reusable capability packages loaded from skill/**/SKILL.md. Chat and Settings are live today. This workspace surface is still wiring up for v1"
+      },
+      "knowledge": {
+        "label": "Knowledge",
+        "navSoon": true,
+        "surfaceComingSoon": true,
+        "textSample": "COMING SOON Knowledge is not enabled yet AI Frontier model registry — routing Autonomy and ticket workers. Chat and Settings are live today. This workspace surface is still wiring "
+      },
+      "tickets": {
+        "label": "Tickets",
+        "navSoon": true,
+        "surfaceComingSoon": true,
+        "textSample": "COMING SOON Tickets is not enabled yet Bounded worker slices — compile, orchestrate in worktrees, track workers. Chat and Settings are live today. This workspace surface is still w"
+      },
+      "channels": {
+        "label": "Channels",
+        "navSoon": true,
+        "surfaceComingSoon": true,
+        "textSample": "COMING SOON Channels is not enabled yet Reachability surfaces; outbound sends are approval-gated. Chat and Settings are live today. This workspace surface is still wiring up for v1"
+      }
+    }
+  },
+  "status": {
+    "initial": {
+      "ready": true,
+      "code": "ready",
+      "agentId": "agent-local-d8e35a2a-a89f-45dd-b117-5eae5df8c8f2",
+      "baseUrl": "http://127.0.0.1:59647",
+      "discoverySource": "otto config/env",
+      "conversationId": "local-conv-b75bb5bc-9836-448e-ad80-18741e62bd78",
+      "modelHandle": "letta/auto",
+      "effort": "high",
+      "sessionMode": "smoke",
+      "transportMode": "ws",
+      "effectiveTransport": "websocket local",
+      "transportFallbackReason": null,
+      "wsListenerPort": 55688,
+      "lastReconnectAt": "2026-06-14T22:08:29.869Z",
+      "cliPath": "/Applications/Letta.app/Contents/Resources/app.asar.unpacked/node_modules/@letta-ai/letta-code/letta.js",
+      "cliResolved": true
+    },
+    "afterGptConfigure": {
+      "ready": true,
+      "code": "ready",
+      "agentId": "agent-local-d8e35a2a-a89f-45dd-b117-5eae5df8c8f2",
+      "baseUrl": "http://127.0.0.1:59647",
+      "discoverySource": "otto config/env",
+      "conversationId": "local-conv-7dd36121-e9f6-44f3-aa20-3346b702fb76",
+      "modelHandle": "openai/gpt-5.5",
+      "effort": "high",
+      "sessionMode": "smoke",
+      "transportMode": "ws",
+      "effectiveTransport": "websocket local",
+      "transportFallbackReason": null,
+      "wsListenerPort": 55878,
+      "lastReconnectAt": "2026-06-14T22:09:47.197Z",
+      "cliPath": "/Applications/Letta.app/Contents/Resources/app.asar.unpacked/node_modules/@letta-ai/letta-code/letta.js",
+      "cliResolved": true
+    },
+    "afterArchive": {
+      "ready": true,
+      "code": "ready",
+      "agentId": "agent-local-d8e35a2a-a89f-45dd-b117-5eae5df8c8f2",
+      "baseUrl": "http://127.0.0.1:59647",
+      "discoverySource": "otto config/env",
+      "conversationId": "local-conv-77773b56-6b7f-4441-8c21-f42ebfacb854",
+      "modelHandle": "openai/gpt-5.5",
+      "effort": "high",
+      "sessionMode": "smoke",
+      "transportMode": "ws",
+      "effectiveTransport": "websocket local",
+      "transportFallbackReason": null,
+      "wsListenerPort": 56053,
+      "lastReconnectAt": "2026-06-14T22:10:14.046Z",
+      "cliPath": "/Applications/Letta.app/Contents/Resources/app.asar.unpacked/node_modules/@letta-ai/letta-code/letta.js",
+      "cliResolved": true
+    },
+    "afterClaudeConfigure": {
+      "ready": true,
+      "code": "ready",
+      "agentId": "agent-local-d8e35a2a-a89f-45dd-b117-5eae5df8c8f2",
+      "baseUrl": "http://127.0.0.1:59647",
+      "discoverySource": "otto config/env",
+      "conversationId": "local-conv-576bbe31-da4e-4645-a8ed-ea345aa29b46",
+      "modelHandle": "anthropic/claude-opus-4-8",
+      "effort": "high",
+      "sessionMode": "smoke",
+      "transportMode": "ws",
+      "effectiveTransport": "websocket local",
+      "transportFallbackReason": null,
+      "wsListenerPort": 56167,
+      "lastReconnectAt": "2026-06-14T22:11:01.193Z",
+      "cliPath": "/Applications/Letta.app/Contents/Resources/app.asar.unpacked/node_modules/@letta-ai/letta-code/letta.js",
+      "cliResolved": true
+    },
+    "afterRelaunch": {
+      "ready": true,
+      "code": "ready",
+      "agentId": "agent-local-d8e35a2a-a89f-45dd-b117-5eae5df8c8f2",
+      "baseUrl": "http://127.0.0.1:59647",
+      "discoverySource": "otto config/env",
+      "conversationId": "local-conv-10219d92-1672-492e-a75a-b23d1f1dc7d5",
+      "modelHandle": "anthropic/claude-opus-4-8",
+      "effort": "high",
+      "sessionMode": "smoke",
+      "transportMode": "ws",
+      "effectiveTransport": "websocket local",
+      "transportFallbackReason": null,
+      "wsListenerPort": 56228,
+      "lastReconnectAt": "2026-06-14T22:11:21.458Z",
+      "cliPath": "/Applications/Letta.app/Contents/Resources/app.asar.unpacked/node_modules/@letta-ai/letta-code/letta.js",
+      "cliResolved": true
+    }
+  },
+  "errors": [],
+  "screenshots": {
+    "beforeRelaunch": "/Users/seb/code/otto/docs/receipts/staging/159-chat-core-working-loop-ws-202606142209_159isolated/before-relaunch.png",
+    "final": "/Users/seb/code/otto/docs/receipts/staging/159-chat-core-working-loop-ws-202606142209_159isolated/final.png"
+  },
+  "initial": {
+    "status": {
+      "ready": true,
+      "code": "ready",
+      "agentId": "agent-local-d8e35a2a-a89f-45dd-b117-5eae5df8c8f2",
+      "baseUrl": "http://127.0.0.1:59647",
+      "discoverySource": "otto config/env",
+      "conversationId": "local-conv-b75bb5bc-9836-448e-ad80-18741e62bd78",
+      "modelHandle": "letta/auto",
+      "effort": "high",
+      "sessionMode": "smoke",
+      "transportMode": "ws",
+      "effectiveTransport": "websocket local",
+      "transportFallbackReason": null,
+      "wsListenerPort": 55688,
+      "lastReconnectAt": "2026-06-14T22:08:29.869Z",
+      "cliPath": "/Applications/Letta.app/Contents/Resources/app.asar.unpacked/node_modules/@letta-ai/letta-code/letta.js",
+      "cliResolved": true
+    },
+    "bodyLen": 373,
+    "setupHasRetry": false,
+    "queue": [],
+    "activeThreadId": "local_1739bb3a-579d-493e-86ed-f8a5576939d6"
+  },
+  "archiveClick": {
+    "before": {
+      "x": 225,
+      "y": 281,
+      "width": 30,
+      "height": 32
+    },
+    "armed": {
+      "x": 225,
+      "y": 281,
+      "width": 30,
+      "height": 32
+    },
+    "beforeLabel": "Archive conversation",
+    "armedLabel": "Confirm archive"
+  },
+  "afterArchive": {
+    "dir": "/Users/seb/.codex/admin/otto-159-staging/otto-home/threads",
+    "activeThreadId": "local_81529dcd-2844-4681-b25a-420fce93d315",
+    "threads": [
+      {
+        "id": "local_81529dcd-2844-4681-b25a-420fce93d315",
+        "lettaConversationId": "local-conv-77773b56-6b7f-4441-8c21-f42ebfacb854",
+        "agentId": "agent-local-d8e35a2a-a89f-45dd-b117-5eae5df8c8f2",
+        "title": "159 A 202606142209_159isolated",
+        "createdAt": "2026-06-14T22:08:57.370Z",
+        "updatedAt": "2026-06-14T22:10:15.482Z",
+        "sortOrder": 0,
+        "pinned": true,
+        "archived": false
+      },
+      {
+        "id": "local_1739bb3a-579d-493e-86ed-f8a5576939d6",
+        "lettaConversationId": "local-conv-b75bb5bc-9836-448e-ad80-18741e62bd78",
+        "agentId": "agent-local-d8e35a2a-a89f-45dd-b117-5eae5df8c8f2",
+        "title": "New chat",
+        "createdAt": "2026-06-14T22:08:29.157Z",
+        "updatedAt": "2026-06-14T22:08:30.690Z",
+        "sortOrder": null,
+        "pinned": false,
+        "archived": false
+      }
+    ]
+  },
+  "queueState": {
+    "queue": [],
+    "assistant": "OTTO_159_A_202606142209_159isolated\nOTTO_159_MODEL_202606142209_159isolated\nOTTO_159_LONG_202606142209_159isolated\n\n1. Start with intent.\n2. Keep scope clear.\n3. Name the goal.\n4. Remove clutter.\n5. Choose one path.\n6. Move with speed.\n7. Verify the base.\n8. Protect user work.\n9. Inspect before edits.\n10. Prefer small diffs.\n11. Test the change.\n12. Record receipts.\n13. Surface blockers.\n14. Ask only when needed.\n15. Ship useful increments.\n16. Keep gates explicit.\n17. Avoid hidden risk.\n18. Preserve reversibility.\n19. Reduce complexity.\n20. Favor durable truth.\n21. Make decisions crisp.\n22. Separate caveats.\n23. Use tools directly.\n24. Keep memory clean.\n25. Parallelize safely.\n26. Review the result.\n27. Tighten wording.\n28. Close the loop.\n29. Leave next steps.\n30. Finish cleanly.\nOTTO_159_STEER_202606142209_159isolated\nOTTO_159_QUEUE_1_202606142209_159isolated\nOTTO_159_QUEUE_2_202606142209_159isolated",
+    "failedVisible": false
+  },
+  "preRelaunch": {
+    "dir": "/Users/seb/.codex/admin/otto-159-staging/otto-home/threads",
+    "activeThreadId": "local_81529dcd-2844-4681-b25a-420fce93d315",
+    "threads": [
+      {
+        "id": "local_81529dcd-2844-4681-b25a-420fce93d315",
+        "lettaConversationId": "local-conv-576bbe31-da4e-4645-a8ed-ea345aa29b46",
+        "agentId": "agent-local-d8e35a2a-a89f-45dd-b117-5eae5df8c8f2",
+        "title": "159 A 202606142209_159isolated",
+        "createdAt": "2026-06-14T22:08:57.370Z",
+        "updatedAt": "2026-06-14T22:11:15.229Z",
+        "sortOrder": 0,
+        "pinned": true,
+        "archived": false
+      },
+      {
+        "id": "local_c90bc0d3-0600-4c79-b1f8-3a5945b27b71",
+        "lettaConversationId": "local-conv-45a36675-2b50-49c6-9bd6-975b4ca1bc46",
+        "agentId": "agent-local-d8e35a2a-a89f-45dd-b117-5eae5df8c8f2",
+        "title": "159 B 202606142209_159isolated",
+        "createdAt": "2026-06-14T22:09:50.980Z",
+        "updatedAt": "2026-06-14T22:10:11.512Z",
+        "sortOrder": 0,
+        "pinned": false,
+        "archived": true
+      },
+      {
+        "id": "local_1739bb3a-579d-493e-86ed-f8a5576939d6",
+        "lettaConversationId": "local-conv-b75bb5bc-9836-448e-ad80-18741e62bd78",
+        "agentId": "agent-local-d8e35a2a-a89f-45dd-b117-5eae5df8c8f2",
+        "title": "New chat",
+        "createdAt": "2026-06-14T22:08:29.157Z",
+        "updatedAt": "2026-06-14T22:08:30.690Z",
+        "sortOrder": null,
+        "pinned": false,
+        "archived": false
+      }
+    ]
+  },
+  "afterRelaunch": {
+    "dir": "/Users/seb/.codex/admin/otto-159-staging/otto-home/threads",
+    "activeThreadId": "local_81529dcd-2844-4681-b25a-420fce93d315",
+    "threads": [
+      {
+        "id": "local_81529dcd-2844-4681-b25a-420fce93d315",
+        "lettaConversationId": "local-conv-10219d92-1672-492e-a75a-b23d1f1dc7d5",
+        "agentId": "agent-local-d8e35a2a-a89f-45dd-b117-5eae5df8c8f2",
+        "title": "159 A 202606142209_159isolated",
+        "createdAt": "2026-06-14T22:08:57.370Z",
+        "updatedAt": "2026-06-14T22:11:22.514Z",
+        "sortOrder": 0,
+        "pinned": true,
+        "archived": false
+      },
+      {
+        "id": "local_c90bc0d3-0600-4c79-b1f8-3a5945b27b71",
+        "lettaConversationId": "local-conv-45a36675-2b50-49c6-9bd6-975b4ca1bc46",
+        "agentId": "agent-local-d8e35a2a-a89f-45dd-b117-5eae5df8c8f2",
+        "title": "159 B 202606142209_159isolated",
+        "createdAt": "2026-06-14T22:09:50.980Z",
+        "updatedAt": "2026-06-14T22:10:11.512Z",
+        "sortOrder": 0,
+        "pinned": false,
+        "archived": true
+      },
+      {
+        "id": "local_1739bb3a-579d-493e-86ed-f8a5576939d6",
+        "lettaConversationId": "local-conv-b75bb5bc-9836-448e-ad80-18741e62bd78",
+        "agentId": "agent-local-d8e35a2a-a89f-45dd-b117-5eae5df8c8f2",
+        "title": "New chat",
+        "createdAt": "2026-06-14T22:08:29.157Z",
+        "updatedAt": "2026-06-14T22:08:30.690Z",
+        "sortOrder": null,
+        "pinned": false,
+        "archived": false
+      }
+    ]
+  },
+  "finalVisible": {
+    "dir": "/Users/seb/.codex/admin/otto-159-staging/otto-home/threads",
+    "activeThreadId": "local_81529dcd-2844-4681-b25a-420fce93d315",
+    "threads": [
+      {
+        "id": "local_81529dcd-2844-4681-b25a-420fce93d315",
+        "lettaConversationId": "local-conv-10219d92-1672-492e-a75a-b23d1f1dc7d5",
+        "agentId": "agent-local-d8e35a2a-a89f-45dd-b117-5eae5df8c8f2",
+        "title": "159 A 202606142209_159isolated",
+        "createdAt": "2026-06-14T22:08:57.370Z",
+        "updatedAt": "2026-06-14T22:11:22.599Z",
+        "sortOrder": 0,
+        "pinned": false,
+        "archived": false
+      },
+      {
+        "id": "local_1739bb3a-579d-493e-86ed-f8a5576939d6",
+        "lettaConversationId": "local-conv-b75bb5bc-9836-448e-ad80-18741e62bd78",
+        "agentId": "agent-local-d8e35a2a-a89f-45dd-b117-5eae5df8c8f2",
+        "title": "New chat",
+        "createdAt": "2026-06-14T22:08:29.157Z",
+        "updatedAt": "2026-06-14T22:08:30.690Z",
+        "sortOrder": null,
+        "pinned": false,
+        "archived": false
+      }
+    ]
+  }
+}
