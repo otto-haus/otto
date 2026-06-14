@@ -3373,8 +3373,8 @@ const ModelProviders: React.FC = () => {
       </div>
 
       <div className="segmented" role="tablist" aria-label="Provider type">
-        <button type="button" className={tab === 'local' ? 'is-active' : ''} onClick={() => setTab('local')}>Local</button>
-        <button type="button" className={tab === 'cloud' ? 'is-active' : ''} onClick={() => setTab('cloud')}>Cloud</button>
+        <button type="button" role="tab" aria-selected={tab === 'local'} className={tab === 'local' ? 'is-active' : ''} onClick={() => setTab('local')}>Local</button>
+        <button type="button" role="tab" aria-selected={tab === 'cloud'} className={tab === 'cloud' ? 'is-active' : ''} onClick={() => setTab('cloud')}>Cloud</button>
       </div>
 
       <div className="providerList">
