@@ -3,12 +3,23 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-REPO="${OTTO_RELEASE_REPO:-otto-haus/otto}"
+REPO="otto-haus/otto"
 TARGET_APP="${OTTO_APP:-/Applications/otto.app}"
-WORK_DIR="${OTTO_RELEASE_WORK_DIR:-$(mktemp -d "${TMPDIR:-/tmp}/otto-release-install.XXXXXX")}"
+if [[ -n "${OTTO_RELEASE_REPO:-}" && "${OTTO_RELEASE_REPO}" != "$REPO" ]]; then
+  echo "Refusing OTTO_RELEASE_REPO override for canonical otto.app install: ${OTTO_RELEASE_REPO}" >&2
+  exit 2
+fi
+
+if [[ -n "${OTTO_RELEASE_WORK_DIR:-}" ]]; then
+  WORK_DIR="$OTTO_RELEASE_WORK_DIR"
+  CLEAN_WORK_DIR=0
+else
+  WORK_DIR="$(mktemp -d "${TMPDIR:-/tmp}/otto-release-install.XXXXXX")"
+  CLEAN_WORK_DIR=1
+fi
 
 cleanup() {
-  if [[ -n "${WORK_DIR:-}" && -d "$WORK_DIR" && "${OTTO_RELEASE_KEEP_WORK_DIR:-}" != "1" ]]; then
+  if [[ "${CLEAN_WORK_DIR:-0}" == "1" && -n "${WORK_DIR:-}" && -d "$WORK_DIR" && "${OTTO_RELEASE_KEEP_WORK_DIR:-}" != "1" ]]; then
     rm -rf "$WORK_DIR"
   fi
 }

@@ -29,8 +29,7 @@ export function tagsMatch(installed, releaseTag) {
   const b = normalizeTag(releaseTag);
   if (!a || !b) return false;
   if (a === b) return true;
-  if (a.startsWith(b) || b.startsWith(a)) return true;
-  return false;
+  return a.startsWith(`${b}+`) || a.startsWith(`${b}-`);
 }
 
 export async function fetchLatestRelease(repo = DEFAULT_REPO, fetchImpl = fetch) {
@@ -62,7 +61,7 @@ function readPlistEnv(plistPath, key) {
 export function readInstalledMetadata(appPath = DEFAULT_APP) {
   const plistPath = `${appPath}/Contents/Info.plist`;
   if (!existsSync(plistPath)) {
-    return { installed: false, appPath, shortSha: null, sha: null, version: null, builtAt: null, branch: null };
+    return { installed: false, appPath, releaseTag: null, shortSha: null, sha: null, version: null, builtAt: null, branch: null };
   }
 
   let version = null;
@@ -78,6 +77,7 @@ export function readInstalledMetadata(appPath = DEFAULT_APP) {
   let sha = readPlistEnv(plistPath, 'OTTO_BUILD_SHA');
   let builtAt = readPlistEnv(plistPath, 'OTTO_BUILD_TIME');
   let branch = readPlistEnv(plistPath, 'OTTO_BUILD_BRANCH');
+  let releaseTag = readPlistEnv(plistPath, 'OTTO_RELEASE_TAG');
 
   const buildInfoPath = `${appPath}/Contents/Resources/app/build-info.json`;
   if (existsSync(buildInfoPath)) {
@@ -96,6 +96,7 @@ export function readInstalledMetadata(appPath = DEFAULT_APP) {
     installed: true,
     appPath,
     version,
+    releaseTag,
     shortSha,
     sha,
     builtAt,
@@ -110,11 +111,11 @@ export function evaluateReleaseMetadata({ release, installed, requireInstalled =
     desktopAssetPublished: !!desktopAsset,
     appInstalled: installed.installed,
     releaseTagMatchesInstalled: false,
-    buildMarkerPresent: !!(installed.shortSha || installed.version),
+    buildMarkerPresent: !!(installed.releaseTag || installed.version || installed.shortSha),
   };
 
   if (installed.installed) {
-    const marker = installed.shortSha || installed.version;
+    const marker = installed.releaseTag || installed.version || installed.shortSha;
     checks.releaseTagMatchesInstalled = tagsMatch(marker, release.tag);
   }
 

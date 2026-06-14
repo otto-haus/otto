@@ -1,7 +1,7 @@
 {
   "ok": true,
   "issue": 305,
-  "runId": "20260614230000",
+  "runId": "20260614230500",
   "repo": "otto-haus/otto",
   "appPath": "/tmp/nonexistent-otto-pr334.app",
   "requireInstalled": false,
@@ -27,11 +27,12 @@
   "installed": {
     "installed": false,
     "appPath": "/tmp/nonexistent-otto-pr334.app",
+    "releaseTag": null,
     "shortSha": null,
     "sha": null,
     "version": null,
     "builtAt": null,
     "branch": null
   },
-  "receiptDir": "/Users/seb/Code/otto/.worktrees/issue-305-release-app/docs/receipts/staging/305-release-metadata-20260614230000"
+  "receiptDir": "/Users/seb/Code/otto/.worktrees/issue-305-release-app/docs/receipts/staging/305-release-metadata-20260614230500"
 }
