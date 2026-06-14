@@ -24,27 +24,21 @@ function parseMessages(raw: string | null): StoredChatMsg[] {
   }
 }
 
-/** One-time: attach pre-046 history to the first active thread only. */
-export function migrateLegacyMessagesToThread(threadId: string | null): void {
-  if (!threadId) return;
-  const key = messagesKey(threadId);
+export function readStoredMessages(
+  threadId: string | null,
+  opts: { allowLegacyFallback?: boolean; storage?: Pick<Storage, 'getItem'> } = {},
+): StoredChatMsg[] {
   try {
-    if (localStorage.getItem(key)) return;
-    const legacy = localStorage.getItem(LEGACY_MESSAGES_KEY);
-    if (!legacy) return;
-    localStorage.setItem(key, legacy);
-  } catch {
-    /* best effort */
-  }
-}
-
-export function readStoredMessages(threadId: string | null): StoredChatMsg[] {
-  try {
+    const storage = opts.storage ?? localStorage;
     const key = messagesKey(threadId);
-    const raw = localStorage.getItem(key);
-    if (raw) return parseMessages(raw);
-    if (!threadId) return parseMessages(localStorage.getItem(LEGACY_MESSAGES_KEY));
-    return [];
+    let raw = storage.getItem(key);
+    if (!raw && opts.allowLegacyFallback && threadId && key !== LEGACY_MESSAGES_KEY) {
+      raw = storage.getItem(LEGACY_MESSAGES_KEY);
+    }
+    if (!raw && !threadId) {
+      raw = storage.getItem(LEGACY_MESSAGES_KEY);
+    }
+    return parseMessages(raw);
   } catch {
     return [];
   }
