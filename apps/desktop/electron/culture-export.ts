@@ -124,6 +124,13 @@ export class CultureExporter {
     if (manifest.schema !== 'otto.culture-export.v1') {
       return { valid: false, manifest, diff: [], blocked_reason: 'Unsupported manifest schema' };
     }
+    if (!Array.isArray(manifest.includes)) {
+      return { valid: false, manifest, diff: [], blocked_reason: 'Manifest includes must be an array' };
+    }
+    const unsafeInclude = manifest.includes.find((rel) => !isSafeManifestInclude(rel));
+    if (unsafeInclude) {
+      return { valid: false, manifest, diff: [], blocked_reason: `Manifest include path is unsafe: ${unsafeInclude}` };
+    }
 
     try {
       this.assertNoSecretsInDir(bundlePath);
@@ -166,6 +173,11 @@ export class CultureExporter {
       }
     }
   }
+}
+
+function isSafeManifestInclude(rel: string): boolean {
+  const normalized = rel.replace(/\\/g, '/');
+  return !!normalized && !normalized.startsWith('/') && !normalized.split('/').includes('..');
 }
 
 function walk(dir: string): string[] {

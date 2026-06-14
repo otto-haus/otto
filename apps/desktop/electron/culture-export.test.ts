@@ -1,4 +1,4 @@
-import { existsSync, mkdtempSync, readFileSync, rmSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { afterEach, describe, expect, test } from 'bun:test';
@@ -32,5 +32,26 @@ describe('CultureExporter', () => {
 
     const bundleText = readFileSync(join(stagingDir, 'manifest.json'), 'utf8');
     expect(/\b(api[_-]?key|secret|token|password|bearer)\b/i.test(bundleText)).toBe(false);
+  });
+
+  test('previewImport rejects manifest include paths that escape the workspace', () => {
+    ottoDir = mkdtempSync(join(tmpdir(), 'otto-culture-import-'));
+    const bundleDir = join(ottoDir, 'bundle');
+    mkdirSync(bundleDir, { recursive: true });
+    writeFileSync(join(bundleDir, 'manifest.json'), `${JSON.stringify({
+      schema: 'otto.culture-export.v1',
+      exported_at: '2026-06-14T00:00:00.000Z',
+      workspace: 'test',
+      includes: ['../outside.md'],
+      excludes: [],
+      receipt_index_count: 0,
+      constitution_hash: null,
+    }, null, 2)}\n`);
+
+    const preview = new CultureExporter(ottoDir).previewImport(bundleDir);
+
+    expect(preview.valid).toBe(false);
+    expect(preview.blocked_reason).toMatch(/escape|unsafe/i);
+    expect(preview.diff).toEqual([]);
   });
 });
