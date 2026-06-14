@@ -37,6 +37,37 @@ describe('BehaviorChangelog', () => {
     }
   });
 
+  test('default stores honor runtime OTTO_HOME', () => {
+    const tmp = mkdtempSync(join(tmpdir(), 'otto-changelog-runtime-'));
+    const originalOttoHome = process.env.OTTO_HOME;
+    process.env.OTTO_HOME = tmp;
+    try {
+      const proposalsDir = join(tmp, 'curation', 'proposals');
+      const receiptsDir = join(tmp, 'receipts');
+      const canonPath = join(tmp, 'practice.yaml');
+      writeFileSync(canonPath, 'slug: demo\nname: Demo\nguardrails: []\n');
+      const store = new ProposalStore(proposalsDir, new ReceiptWriter(receiptsDir), new ReceiptStore(receiptsDir));
+      const created = store.createFromCorrection({
+        correction: 'Always cite receipts when changing canon.',
+        rationale: 'Missing proof on last change.',
+        target: { kind: 'practice', id: 'demo', path: canonPath, action: 'update' },
+      });
+      const accepted = store.decide(created.proposal.id, { decision: 'accept' });
+
+      const result = new BehaviorChangelog().list();
+
+      expect(result.dir).toBe(tmp);
+      expect(result.entries.some((e) => e.receipt_id === accepted.receipt.id)).toBe(true);
+    } finally {
+      if (originalOttoHome === undefined) {
+        delete process.env.OTTO_HOME;
+      } else {
+        process.env.OTTO_HOME = originalOttoHome;
+      }
+      rmSync(tmp, { recursive: true, force: true });
+    }
+  });
+
   test('applied proposal appears in changelog with receipt id', () => {
     const tmp = mkdtempSync(join(tmpdir(), 'otto-changelog-'));
     const proposalsDir = join(tmp, 'curation', 'proposals');
