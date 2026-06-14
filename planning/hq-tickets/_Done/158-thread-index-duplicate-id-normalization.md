@@ -115,6 +115,8 @@ Known gaps:
 - No live Letta conversation smoke; this is pure local thread-index persistence.
 - PR not opened because remote publication is approval-gated and the worktree contains unrelated dirty files.
 
+- PR: https://github.com/otto-haus/otto/pull/35
+
 ## Review
 
 Reviewer: GoalBuddy Judge subagent (`019ec6b5-978e-7ea1-9c6f-46c287fc4548`)
