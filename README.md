@@ -1,5 +1,5 @@
 <p align="center">
-  <a href="#desktop-demo"><img alt="Watch the desktop demo" src="https://img.shields.io/badge/watch-v0.1%20desktop%20demo-14161a?style=for-the-badge" /></a>
+  <a href="https://github.com/otto-haus/otto/releases/latest/download/otto-v01-desktop.mp4"><img alt="Watch the desktop demo" src="https://img.shields.io/badge/watch-v0.1%20desktop%20demo-14161a?style=for-the-badge" /></a>
   <a href="https://discord.gg/hab9ZvbPH"><img alt="Join Discord" src="https://img.shields.io/badge/Discord-join%20otto-5865F2?style=for-the-badge&logo=discord&logoColor=white" /></a>
   <a href="https://otto.haus"><img alt="otto.haus" src="https://img.shields.io/badge/otto.haus-visit-2f855a?style=for-the-badge" /></a>
 </p>
@@ -8,9 +8,13 @@
 
 **Define the culture your AI agents run on.**
 
-<a id="desktop-demo"></a>
+<p align="center">
+  <a href="https://github.com/otto-haus/otto/releases/latest/download/otto-v01-desktop.mp4">
+    <img src=".github/assets/otto-desktop.png" alt="Otto Desktop — chat, behavior surfaces in the sidebar, and honest runtime state" width="920" />
+  </a>
+</p>
 
-https://github.com/otto-haus/otto/releases/latest/download/otto-v01-desktop.mp4
+<p align="center"><a href="https://github.com/otto-haus/otto/releases/latest/download/otto-v01-desktop.mp4">Watch the desktop demo →</a></p>
 
 Letta remembers. otto improves.
 

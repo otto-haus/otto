@@ -31,6 +31,32 @@ export const bodyFrames = (lineCount: number) =>
 export const totalFrames = (lineCount: number) =>
   INTRO + bodyFrames(lineCount) + OUTRO;
 
+// OttoV01DesktopWalkthrough (~44s @ 30fps)
+export const walkthroughHeroFrames = 90;
+export const walkthroughTitleFrames = 90;
+export const walkthroughClosingFrames = 105;
+export const walkthroughOutroFrames = 75;
+export const walkthroughTermStart = 8;
+export const walkthroughLineStep = 30;
+export const walkthroughBeatTail = 55;
+
+export const walkthroughBeatFrames = (lineCount: number) =>
+  walkthroughTermStart + lineCount * walkthroughLineStep + walkthroughBeatTail;
+
+/** Line counts must match OttoV01DesktopWalkthrough terminal beats. */
+const WALKTHROUGH_CONNECT_LINES = 10;
+const WALKTHROUGH_CHAT_LINES = 7;
+const WALKTHROUGH_SURFACES_LINES = 9;
+
+export const walkthroughTotalFrames =
+  walkthroughHeroFrames +
+  walkthroughTitleFrames +
+  walkthroughBeatFrames(WALKTHROUGH_CONNECT_LINES) +
+  walkthroughBeatFrames(WALKTHROUGH_CHAT_LINES) +
+  walkthroughBeatFrames(WALKTHROUGH_SURFACES_LINES) +
+  walkthroughClosingFrames +
+  walkthroughOutroFrames;
+
 const L = (kind: Line["kind"], text?: string): Line => ({ kind, text });
 
 // v0.1 cutline (approved): which demos are ship candidates vs proposed vs deferred.
@@ -42,6 +68,7 @@ export const v01Cutline: Record<string, "ship" | "proposed" | "deferred"> = {
   OttoV01Standards: "proposed",
   OttoV01Autonomy: "deferred",
   OttoV01Desktop: "ship",
+  OttoV01DesktopWalkthrough: "ship",
   OttoV01Knowledge: "deferred",
 };
 

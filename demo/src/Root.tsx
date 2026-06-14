@@ -1,7 +1,8 @@
 import React from "react";
 import { Composition } from "remotion";
 import { FeatureDemo } from "./FeatureDemo";
-import { features, totalFrames, FPS } from "./features";
+import { OttoV01DesktopWalkthrough } from "./OttoV01DesktopWalkthrough";
+import { features, totalFrames, FPS, walkthroughTotalFrames } from "./features";
 
 export const RemotionRoot: React.FC = () => {
   return (
@@ -18,6 +19,15 @@ export const RemotionRoot: React.FC = () => {
           defaultProps={{ feature: f }}
         />
       ))}
+      <Composition
+        id="OttoV01DesktopWalkthrough"
+        component={OttoV01DesktopWalkthrough}
+        durationInFrames={walkthroughTotalFrames}
+        fps={FPS}
+        width={1920}
+        height={1080}
+        defaultProps={{ hasScreenshot: false }}
+      />
     </>
   );
 };
