@@ -27,12 +27,14 @@ const pathFile = path.join(electronDir, "path.txt");
 const platformPath = getPlatformPath();
 
 if (electronReady()) {
+  warnIfLettaCliWillBootstrap();
   process.exit(0);
 }
 
 if (process.platform !== "darwin") {
   runElectronInstall();
   if (electronReady()) {
+    warnIfLettaCliWillBootstrap();
     process.exit(0);
   }
   fail(
@@ -61,6 +63,7 @@ if (!electronReady()) {
 }
 
 console.log("repaired Electron macOS bundle from Bun cache");
+warnIfLettaCliWillBootstrap();
 
 function electronReady() {
   try {
@@ -212,6 +215,30 @@ function getPlatformPath() {
     default:
       fail(`Electron builds are not available on platform: ${process.platform}`);
   }
+}
+
+function warnIfLettaCliWillBootstrap() {
+  const explicit = process.env.LETTA_CLI_PATH;
+  if (explicit) {
+    if (existsSync(explicit)) {
+      return;
+    }
+    console.warn(`LETTA_CLI_PATH is set but not found: ${explicit}`);
+    console.warn("Install or repair Letta Desktop / Letta Code before expecting live chat to connect.");
+    return;
+  }
+
+  const defaultMacCli =
+    "/Applications/Letta.app/Contents/Resources/app.asar.unpacked/node_modules/@letta-ai/letta-code/letta.js";
+  if (process.platform === "darwin" && existsSync(defaultMacCli)) {
+    console.warn("Letta Desktop CLI found; first runtime connection may still bootstrap Letta Code with npm.");
+    return;
+  }
+
+  console.warn("Letta CLI was not found at the default macOS app path.");
+  console.warn(
+    "First runtime connection may bootstrap Letta Code with npm; install Letta Desktop or set LETTA_CLI_PATH to avoid that fallback.",
+  );
 }
 
 function fail(message) {

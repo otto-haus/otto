@@ -66,6 +66,9 @@ task electron
 
 This opens a development app from the repo and runs the Electron install preflight first.
 It does not install `/Applications/otto.app`.
+If the preflight reports a Letta CLI bootstrap or missing CLI, record that exact state and
+let any scoped first-run bootstrap finish before stopping the dev process. Do not call the
+desktop connected until `session.initialize()` succeeds against a live Letta agent.
 Do not report the installed app as tested unless you deliberately ran the installed-app path
 (`task refresh`), which writes `/Applications/otto.app`.
 

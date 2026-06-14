@@ -232,11 +232,18 @@ task staging
 Bun's partial Electron bundle extraction from the local Electron cache before opening
 the development app.
 
+<<<<<<< HEAD
 Canonical app boundary:
 
 - `/Applications/otto.app` is the user-facing canonical app.
 - Update it only from the latest published GitHub Release artifact.
 - Do not use `task refresh` or local branch builds to overwrite `/Applications/otto.app`.
+=======
+`task electron` also reports the Letta CLI preflight state. The first runtime connection
+may still bootstrap Letta Code with npm; let that finish before stopping the dev app.
+Set `LETTA_CLI_PATH=/path/to/letta.js` when Letta is installed outside the default macOS
+app path.
+>>>>>>> 6812b44 (docs: surface letta bootstrap preflight)
 
 Connect the desktop app to Letta:
 
