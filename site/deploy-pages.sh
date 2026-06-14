@@ -7,16 +7,18 @@ SITE="$ROOT/site"
 PROJECT="${OTTO_PAGES_PROJECT:-otto-haus}"
 CURRENT_BRANCH="$(git -C "$ROOT" branch --show-current 2>/dev/null || true)"
 BRANCH="${OTTO_PAGES_BRANCH:-${CURRENT_BRANCH:-preview-local}}"
+PRODUCTION_BRANCH="${OTTO_PAGES_PRODUCTION_BRANCH:-main}"
 
 [[ -n "$PROJECT" ]] || { echo "OTTO_PAGES_PROJECT cannot be empty" >&2; exit 1; }
 [[ -n "$BRANCH" ]] || { echo "OTTO_PAGES_BRANCH cannot be empty" >&2; exit 1; }
+[[ -n "$PRODUCTION_BRANCH" ]] || { echo "OTTO_PAGES_PRODUCTION_BRANCH cannot be empty" >&2; exit 1; }
 
 for f in index.html pricing.html style.css; do
   [[ -f "$SITE/$f" ]] || { echo "missing $SITE/$f" >&2; exit 1; }
 done
 
-if [[ "$BRANCH" == "main" && "${OTTO_PAGES_ALLOW_PRODUCTION:-}" != "1" ]]; then
-  echo "Refusing production Pages deploy for branch=main." >&2
+if [[ "$BRANCH" == "$PRODUCTION_BRANCH" && "${OTTO_PAGES_ALLOW_PRODUCTION:-}" != "1" ]]; then
+  echo "Refusing production Pages deploy for branch=$BRANCH (production branch: $PRODUCTION_BRANCH)." >&2
   echo "Set OTTO_PAGES_ALLOW_PRODUCTION=1 only after Sebastian approves the production deploy." >&2
   exit 1
 fi
