@@ -98,7 +98,7 @@ const items = [
   { key: 'skills', label: 'Skills', required: false,
     status: skillsPresent.length ? 'file' : 'missing',
     detail: skillsPresent.length ? skillsPresent.join(' · ') : 'none found', source: 'skill/',
-    action: 'Install into a live agent via scripts/install.sh' },
+    action: 'Run bun run install-extension; set MEMORY_DIR for automatic skill copy' },
   { key: 'practices', label: 'Practices', required: false,
     status: storePresent('practice') && practicesBundled ? 'file' : 'missing',
     detail: storePresent('practice') && practicesBundled
