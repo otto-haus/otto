@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import type { PracticeSpec } from '@otto-haus/core';
+import { useState, useEffect } from 'react';
+import type { PracticeSpec, CurationProposal } from '@otto-haus/core';
 import practicesData from './data/practices.json';
 import { mockApprovals, mockRuns } from './mockData';
 import { Sidebar, type SurfaceId } from './components/Sidebar';
@@ -54,22 +54,34 @@ const DATA_SOURCE: Partial<Record<SurfaceId, 'file' | 'sample'>> = {
   charters: 'sample',
   standards: 'sample',
   routines: 'sample',
-  curation: 'sample',
+  curation: 'file',
   receipts: 'sample',
   autonomy: 'sample',
 };
 
 export function App() {
   const [active, setActiveState] = useState<SurfaceId>(initialSurface());
+  const [proposals, setProposals] = useState<CurationProposal[]>([]);
+
+  useEffect(() => {
+    const api = window.otto?.curation;
+    if (api) {
+      api.list().then(setProposals).catch(console.error);
+    }
+  }, [active]);
+
   const setActive = (id: SurfaceId) => {
     setActiveState(id);
     if (typeof location !== 'undefined') location.hash = id;
   };
   const counts: Partial<Record<SurfaceId, number>> = {
     practices: (practicesData as PracticeSpec[]).length,
-    curation: mockApprovals.filter((a) => a.status === 'pending').length,
+    curation: window.otto?.curation
+      ? proposals.filter((p) => p.status === 'pending').length
+      : mockApprovals.filter((a) => a.status === 'pending').length,
     receipts: mockRuns.length,
   };
+
   const meta = META[active];
 
   return (

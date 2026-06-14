@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import type { PracticeSpec } from '@otto-haus/core';
+import type { PracticeSpec, CurationProposal } from '@otto-haus/core';
 import practicesData from '../data/practices.json';
 import { mockRuns, mockApprovals } from '../mockData';
 import {
@@ -182,29 +182,122 @@ export const Routines: React.FC = () => (
 );
 
 /* ---------- Curation (proposals + approvals) ---------- */
-export const Curation: React.FC = () => (
-  <div className="grid" style={{ maxWidth: 820, gap: 14 }}>
-    <p className="lede">Curation decides what compounds. Consequential proposals become Approvals — human-ratification records. {mockApprovals.length} pending.</p>
-    {mockApprovals.map((a) => (
-      <div className="panel" key={a.id}>
-        <div className="between">
-          <div className="h-sec" style={{ fontSize: 15 }}>{a.requested_action}</div>
-          {statusPill(a.status)}
-        </div>
-        <div className="kv" style={{ marginTop: 12, gridTemplateColumns: 'repeat(2,1fr)', display: 'grid', gap: 12 }}>
-          <div><div className="k">scope</div><div className="v mono" style={{ fontSize: 12.5 }}>{a.scope}</div></div>
-          <div><div className="k">requirement</div><div className="v mono" style={{ fontSize: 12.5 }}>{a.requirement}</div></div>
-          <div style={{ gridColumn: '1 / -1' }}><div className="k">evidence required</div><div className="v">{a.evidence_required}</div></div>
-        </div>
-        <div className="row" style={{ gap: 10, marginTop: 14 }}>
-          <button className="btn btn--primary" disabled aria-disabled="true">Approve</button>
-          <button className="btn" disabled aria-disabled="true">Deny</button>
-          <span className="pill" style={{ marginLeft: 'auto' }}>preview — not wired · expires {new Date(a.expires_at).toLocaleDateString()}</span>
-        </div>
+export const Curation: React.FC = () => {
+  const [proposals, setProposals] = useState<CurationProposal[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const loadProposals = async () => {
+    const api = window.otto?.curation;
+    if (api) {
+      try {
+        const list = await api.list();
+        setProposals(list);
+      } catch (e) {
+        console.error(e);
+      } finally {
+        setLoading(false);
+      }
+    } else {
+      setLoading(false);
+    }
+  };
+
+  React.useEffect(() => {
+    loadProposals();
+  }, []);
+
+  const handleRatify = async (id: string, decision: 'approved' | 'rejected') => {
+    const api = window.otto?.curation;
+    if (api) {
+      try {
+        await api.ratify(id, decision);
+        await loadProposals();
+      } catch (e) {
+        alert(String(e));
+      }
+    }
+  };
+
+  const handleApply = async (id: string) => {
+    const api = window.otto?.curation;
+    if (api) {
+      try {
+        await api.apply(id);
+        await loadProposals();
+      } catch (e) {
+        alert(String(e));
+      }
+    }
+  };
+
+  if (!window.otto?.curation) {
+    return (
+      <div className="grid" style={{ maxWidth: 820, gap: 14 }}>
+        <p className="lede">Curation decides what compounds. Consequential proposals become Approvals — human-ratification records. {mockApprovals.length} pending.</p>
+        {mockApprovals.map((a) => (
+          <div className="panel" key={a.id}>
+            <div className="between">
+              <div className="h-sec" style={{ fontSize: 15 }}>{a.requested_action}</div>
+              {statusPill(a.status)}
+            </div>
+            <div className="kv" style={{ marginTop: 12, gridTemplateColumns: 'repeat(2,1fr)', display: 'grid', gap: 12 }}>
+              <div><div className="k">scope</div><div className="v mono" style={{ fontSize: 12.5 }}>{a.scope}</div></div>
+              <div><div className="k">requirement</div><div className="v mono" style={{ fontSize: 12.5 }}>{a.requirement}</div></div>
+              <div style={{ gridColumn: '1 / -1' }}><div className="k">evidence required</div><div className="v">{a.evidence_required}</div></div>
+            </div>
+            <div className="row" style={{ gap: 10, marginTop: 14 }}>
+              <button className="btn btn--primary" disabled aria-disabled="true">Approve</button>
+              <button className="btn" disabled aria-disabled="true">Deny</button>
+              <span className="pill" style={{ marginLeft: 'auto' }}>preview — not wired · expires {new Date(a.expires_at).toLocaleDateString()}</span>
+            </div>
+          </div>
+        ))}
       </div>
-    ))}
-  </div>
-);
+    );
+  }
+
+  return (
+    <div className="grid" style={{ maxWidth: 820, gap: 14 }}>
+      <p className="lede">Curation decides what compounds. Consequential proposals become Approvals — human-ratification records. {proposals.filter(p => p.status === 'pending').length} pending.</p>
+      {loading ? (
+        <div>Loading proposals...</div>
+      ) : proposals.length === 0 ? (
+        <div className="panel muted">No proposals in queue.</div>
+      ) : (
+        proposals.map((p) => (
+          <div className="panel" key={p.id}>
+            <div className="between">
+              <div className="h-sec" style={{ fontSize: 15 }}>{p.proposed_name} ({p.classification})</div>
+              {statusPill(p.status)}
+            </div>
+            <div className="kv" style={{ marginTop: 12, gridTemplateColumns: 'repeat(2,1fr)', display: 'grid', gap: 12 }}>
+              <div><div className="k">trigger reason</div><div className="v">{p.trigger_reason}</div></div>
+              <div><div className="k">risk level</div><div className="v mono" style={{ fontSize: 12.5 }}>{p.risk_level}</div></div>
+              <div style={{ gridColumn: '1 / -1' }}>
+                <div className="k">proposed content</div>
+                <pre className="v mono" style={{ fontSize: 11.5, background: '#f5f7f6', padding: 8, borderRadius: 4, overflowX: 'auto', maxHeight: 150 }}>
+                  {p.proposed_content}
+                </pre>
+              </div>
+            </div>
+            <div className="row" style={{ gap: 10, marginTop: 14 }}>
+              {p.status === 'pending' && (
+                <>
+                  <button className="btn btn--primary" onClick={() => handleRatify(p.id, 'approved')}>Approve</button>
+                  <button className="btn" onClick={() => handleRatify(p.id, 'rejected')}>Reject</button>
+                </>
+              )}
+              {p.status === 'ratified' && (
+                <button className="btn btn--primary" onClick={() => handleApply(p.id)}>Apply Change</button>
+              )}
+              <span className="pill" style={{ marginLeft: 'auto' }}>created {new Date(p.created_at).toLocaleString()}</span>
+            </div>
+          </div>
+        ))
+      )}
+    </div>
+  );
+};
 
 /* ---------- Receipts (runs + proof) ---------- */
 export const Receipts: React.FC = () => (

@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import type { CurationProposal } from '@otto-haus/core';
 
 // Renderer-side view of the window.otto bridge exposed by electron/preload.ts.
 // In the web preview window.otto is undefined → the app stays a file-backed shell.
@@ -26,9 +27,16 @@ type OttoApi = {
   };
   config: { get(): Promise<unknown>; set(patch: unknown): Promise<unknown> };
   permission: { respond(requestId: string, response: unknown): void };
+  curation: {
+    list(): Promise<CurationProposal[]>;
+    propose(payload: Omit<CurationProposal, 'id' | 'status' | 'created_at'>): Promise<CurationProposal>;
+    ratify(id: string, decision: 'approved' | 'rejected'): Promise<CurationProposal>;
+    apply(id: string): Promise<CurationProposal>;
+  };
   onEvent(cb: (e: OttoEvent) => void): () => void;
   onPermission(cb: (req: unknown) => void): () => void;
 };
+
 
 declare global {
   interface Window {

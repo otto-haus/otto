@@ -1,4 +1,5 @@
 import { contextBridge, ipcRenderer } from 'electron';
+import type { CurationProposal } from '@otto-haus/core';
 import type {
   OttoConfig,
   OttoEvent,
@@ -22,6 +23,15 @@ const api = {
     respond: (requestId: string, response: PermissionResponse): void =>
       ipcRenderer.send('otto:permission:respond', requestId, response),
   },
+  curation: {
+    list: (): Promise<CurationProposal[]> => ipcRenderer.invoke('otto:curation:list'),
+    propose: (payload: Omit<CurationProposal, 'id' | 'status' | 'created_at'>): Promise<CurationProposal> =>
+      ipcRenderer.invoke('otto:curation:propose', payload),
+    ratify: (id: string, decision: 'approved' | 'rejected'): Promise<CurationProposal> =>
+      ipcRenderer.invoke('otto:curation:ratify', id, decision),
+    apply: (id: string): Promise<CurationProposal> =>
+      ipcRenderer.invoke('otto:curation:apply', id),
+  },
   onEvent: (cb: (e: OttoEvent) => void): (() => void) => {
     const h = (_: unknown, e: OttoEvent) => cb(e);
     ipcRenderer.on('otto:event', h);
@@ -37,3 +47,4 @@ const api = {
 contextBridge.exposeInMainWorld('otto', api);
 
 export type OttoApi = typeof api;
+
