@@ -60,6 +60,11 @@ export type RuntimeStatus = {
   tools?: string[];
   baseUrl?: string | null;
   discoverySource?: string;
+  transportMode?: 'sdk' | 'ws' | 'auto';
+  effectiveTransport?: 'sdk subprocess' | 'websocket local';
+  transportFallbackReason?: string | null;
+  lastReconnectAt?: string | null;
+  wsListenerPort?: number | null;
   cliPath: string;
   cliResolved: boolean;
 };

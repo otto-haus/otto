@@ -41,6 +41,9 @@ export type StatusCode =
   | 'stale'
   | 'error';
 
+export type RuntimeTransportMode = 'sdk' | 'ws' | 'auto';
+export type EffectiveTransport = 'sdk subprocess' | 'websocket local';
+
 /** The single source of truth for whether chat may be enabled. */
 export interface RuntimeStatus {
   ready: boolean;
@@ -60,6 +63,16 @@ export interface RuntimeStatus {
   baseUrl?: string | null;
   /** Human-readable source for runtime/agent discovery. */
   discoverySource?: string;
+  /** Configured transport mode (sdk | ws | auto). */
+  transportMode?: RuntimeTransportMode;
+  /** Active transport after selection/fallback. */
+  effectiveTransport?: EffectiveTransport;
+  /** Visible reason when auto mode fell back to SDK. */
+  transportFallbackReason?: string | null;
+  /** ISO timestamp of last runtime socket reconnect. */
+  lastReconnectAt?: string | null;
+  /** Loopback BYOR listener port when WS transport is active. */
+  wsListenerPort?: number | null;
   cliPath: string;
   cliResolved: boolean;
 }

@@ -6,6 +6,7 @@ import {
   type ReadyStatus,
 } from '../readiness';
 import { Icon } from '../components/icons';
+import { useToast } from '../components/Toast';
 import {
   ottoApi,
   type CharterDetail,
@@ -965,12 +966,12 @@ const canDecideProposal = (status: string) => status === 'proposed' || status ==
 
 export const Curation: React.FC = () => {
   const api = ottoApi();
+  const { push: pushToast } = useToast();
   const [result, setResult] = useState<ProposalListResult | null>(null);
   const [approvals, setApprovals] = useState<ApprovalListResult | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [filter, setFilter] = useState<ProposalInboxFilter>('pending');
   const [error, setError] = useState<string | null>(null);
-  const [decisionMessage, setDecisionMessage] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
   const reload = () => {
@@ -1032,14 +1033,41 @@ export const Curation: React.FC = () => {
   const decide = async (decision: 'accept' | 'reject' | 'defer') => {
     if (!api || !selected || busy || !canDecideProposal(selected.status)) return;
     setBusy(true);
-    setDecisionMessage(null);
     setError(null);
     try {
       const outcome = await api.curation.proposals.decide(selected.id, { decision });
       if (outcome.blocked) {
-        setError(outcome.receipt.blocker?.message ?? 'Decision blocked');
+        const blockedMessage = outcome.receipt.blocker?.message ?? 'Decision blocked';
+        setError(blockedMessage);
+        pushToast({ title: 'Decision blocked', body: blockedMessage, tone: 'warn' });
+      } else if (decision === 'accept') {
+        const canonApplied = outcome.receipt.result?.data?.canonApplied === true;
+        const targetLabel = selected.target?.kind ?? 'canon';
+        if (canonApplied || outcome.proposal.status === 'applied') {
+          pushToast({
+            title: 'Behavior updated',
+            body: `${targetLabel}: ${selected.summary} · receipt ${outcome.receipt.id}`,
+            tone: 'ok',
+          });
+        } else {
+          pushToast({
+            title: 'Proposal accepted',
+            body: `receipt ${outcome.receipt.id}`,
+            tone: 'ok',
+          });
+        }
+      } else if (decision === 'reject') {
+        pushToast({
+          title: 'Proposal rejected',
+          body: `receipt ${outcome.receipt.id}`,
+          tone: 'info',
+        });
       } else {
-        setDecisionMessage(`${decision}: ${outcome.receipt.id}`);
+        pushToast({
+          title: 'Proposal deferred',
+          body: `receipt ${outcome.receipt.id}`,
+          tone: 'info',
+        });
       }
       await reload();
     } catch (e) {
@@ -1081,7 +1109,6 @@ export const Curation: React.FC = () => {
       </div>
 
       {error && <div className="notice"><span className="dot dot--warn" /> {error}</div>}
-      {decisionMessage && <div className="notice"><span className="dot dot--ok" /> {decisionMessage}</div>}
 
       {filtered.length === 0 ? (
         <div className="panel">
@@ -2392,9 +2419,16 @@ const ConnectLetta: React.FC = () => {
             {displayStatus.agentId}
             {displayStatus.baseUrl ? ` · ${displayStatus.baseUrl}` : ''}
             {displayStatus.model ? ` · ${displayStatus.model}` : ''}
+            {displayStatus.effectiveTransport ? ` · ${displayStatus.effectiveTransport}` : ''}
           </span>
         )}
       </div>
+      {displayStatus && (
+        <p className="faint" style={{ marginTop: 8, fontSize: 12 }}>
+          Transport: {displayStatus.transportMode ?? 'sdk'} → {displayStatus.effectiveTransport ?? 'sdk subprocess'}
+          {displayStatus.transportFallbackReason ? ` (fallback: ${displayStatus.transportFallbackReason})` : ''}
+        </p>
+      )}
     </div>
   );
 };

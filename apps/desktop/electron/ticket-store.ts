@@ -115,6 +115,7 @@ export class TicketStore {
       input: { slug, objective: input.objective },
       result: { summary: `Compiled ticket ${ticketId}`, data: { ticketPath, packetPath } },
       evidence: [{ kind: 'file', ref: ticketPath, note: 'ticket.yaml' }],
+      blocker: null,
     });
 
     return { ticket, receipt };
@@ -221,9 +222,10 @@ function acceptanceCriteria(value: unknown): Array<{ id: string; text: string; p
       const id = typeof raw.id === 'string' ? raw.id : '';
       const text = typeof raw.text === 'string' ? raw.text : '';
       if (!id || !text) return null;
-      return { id, text, proof: optionalString(raw.proof) };
+      const proof = optionalString(raw.proof);
+      return proof ? { id, text, proof } : { id, text };
     })
-    .filter((item): item is { id: string; text: string; proof?: string } => !!item);
+    .filter((item): item is { id: string; text: string; proof?: string } => item !== null);
 }
 
 function timestampMs(value: string): number {

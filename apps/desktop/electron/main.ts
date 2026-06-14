@@ -62,7 +62,7 @@ function createWindow() {
           console.log(`[otto] README screenshot saved: ${capturePath}`);
         } catch (err) {
           console.error('[otto] README screenshot failed:', err);
-          app.exitCode = 1;
+          process.exitCode = 1;
         } finally {
           app.quit();
         }

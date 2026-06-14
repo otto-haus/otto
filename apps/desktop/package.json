@@ -21,16 +21,18 @@
     "@letta-ai/letta-code-sdk": "^0.1.14",
     "@otto-haus/core": "workspace:*",
     "@vitejs/plugin-react": "latest",
-    "vite": "latest",
-    "typescript": "latest",
     "react": "latest",
     "react-dom": "latest",
+    "typescript": "latest",
+    "vite": "latest",
+    "ws": "^8.21.0",
     "yaml": "latest"
   },
   "devDependencies": {
     "@types/node": "^22.10.0",
     "@types/react": "latest",
     "@types/react-dom": "latest",
+    "@types/ws": "^8.18.1",
     "electron": "^33.2.0",
     "electron-vite": "^5.0.0"
   }

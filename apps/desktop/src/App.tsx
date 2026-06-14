@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { RuntimeProvider, useRuntimeContext } from './RuntimeContext';
+import { ToastProvider } from './components/Toast';
 import { Sidebar, type SurfaceId } from './components/Sidebar';
 import { Icon } from './components/icons';
 import { Chat } from './surfaces/Chat';
@@ -79,7 +80,9 @@ const DATA_SOURCE: Partial<Record<SurfaceId, 'live' | 'coming-soon' | 'file'>> =
 export function App() {
   return (
     <RuntimeProvider>
-      <AppShell />
+      <ToastProvider>
+        <AppShell />
+      </ToastProvider>
     </RuntimeProvider>
   );
 }

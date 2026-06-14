@@ -35,7 +35,7 @@ Default to Cursor unless the hardest irreducible part is Codex-grade reasoning o
 
 ## Active queue
 
-**Current head (2026-06-14):** **033–038** → **076** → **045–048** + **081** → **054–056** → **092** cathedral spec (P1); **091** staging runbook; **082** otto cloud slice; **094–099** parked impl; **083–090** cloud parked; adapters **021–022/074–075** parked.
+**Current head:** **033–038** → **076** → **045–048** + **123** + **126** → **054–056** → **122**/**124**/**128** → **063** → wedge **121**/**125**/**127**; **129** after **054**; **130** parked.
 
 Work the lowest-numbered dependency-safe wave in root.
 
@@ -92,6 +92,9 @@ See `_Done/` folder. Craft 026–032 complete.
 | 046 | Chat: Multi-Thread List + Switcher | Claude | 002, 003 | **P0 ship blocker** — sidebar thread list |
 | 047 | Letta Memory Observatory (read-only) | Cursor | 001, 002, **076** | blocks + search; Open in Letta |
 | 048 | Chat: Propose from Correction | Cursor | 014, 016, 002 | proposal in Curation |
+| 123 | Correction Button (product loop) | Claude | 048, 002, 014 | Correct this → Curation |
+| 126 | Ratification moment | Claude | 048, 123, 016, 051 | Behavior updated on accept |
+| 128 | Memory writeback gate UI | Codex | 048, 016, 047, 122 | no silent memory apply |
 | 049 | Chat: Ticket Orchestration Commands | Cursor | 035, 048 | compile/orchestrate from Chat |
 | 050 | Standards: Precedent Conflict Path | Codex+Claude | 009 | precedent surfaced on conflict |
 | 051 | Automated Review Gate (No Fake Done) | Codex | 004, 035, 050 | done blocked without +1 |
@@ -105,7 +108,6 @@ See `_Done/` folder. Craft 026–032 complete.
 | 054 | Repo Hygiene: Commit & Split PRs | Cursor | 033-038 | PR stack ready |
 | 055 | Knowledge Baseline Ship | Cursor | 054, 017 | ship check evidence |
 | 056 | System Surfaces Ship (Skills/Tickets/Channels) | Cursor | 054, 055 | per-surface smoke |
-| 057 | System Nav Distinct Icons | Claude | 030, 056 | Launch Polish |
 | 058 | Craft: Runtime Robustness Pack | Cursor | 045, 039 | punchlist P1 |
 | 059 | Command Station Dashboard (Thin) | Claude | 049, 056, 045 | unified status cards |
 
@@ -127,6 +129,26 @@ See `_Done/` folder. Craft 026–032 complete.
 | 063 | Release Lane v0.1 (Sebastian Gate) | Cursor+Claude | 033-038, 045, 048, 051, 054-056 | checklist honest; no push |
 | 064 | Remotion + Demo Asset Refresh | Claude | 063, 033, 057 | demo/out updated |
 | 065 | Marketing Site: otto.haus | Claude | 063 | static site + brand guide |
+| 115 | Marketing: `/pricing` pilot page | Claude | 063 | managed pilot, not SaaS |
+| 116 | Pilot offer claim boundary | Codex | 115 | forbidden claims doc |
+| 117 | Pilot intake flow | Claude | 115, 116 | `_Parked/` |
+| 118 | Culture vs memory page | Claude | 115 | `_Parked/` optional |
+| 119 | Primary agent default UX | Claude | 076, 080 | one agent; no fleet UI |
+| 129 | CI verify gate on main | Cursor | 054, 063 | AGENTS.md suite on PR |
+
+### Category wedge — culture compounding
+
+| # | Ticket | Owner | Depends on | Proof |
+|---:|---|---|---|---|
+| 121 | Behavior Changelog (weekly digest) | Claude | 048, 051, 016 | ratified changes visible |
+| 122 | Constitution file (source of culture) | Codex | 008, 009, 017 | plain file + validator |
+| 124 | Receipts first-class UI | Claude | 004, 005, 045, 059 | authority + proof, not logs |
+| 125 | Agent culture export (portable bundle) | Codex | 122, 051, 008, 124 | zip manifest; no secrets |
+| 127 | Command Station culture home | Claude | 059, 121, 122, 124 | culture cards on **059** |
+
+```txt
+123 → 048 → accept → 126 → 124 → 121 → 122 → 125 · 128 gates memory · 127 on 059
+```
 
 ### Otto Cloud (web control plane)
 
@@ -183,6 +205,10 @@ Tickets in `_Parked/` are valid, but not active. They become active only by movi
 097 Runner heartbeat — unpark after 092, 086/085
 098 Replay/recovery — unpark after 094, 095
 099 Notification policy — unpark after 092, 020/087
+117 Pilot intake — unpark after 115, 116
+118 Culture vs memory — optional after 115
+120 Isolated second agent — unpark after 119, 093 +1
+130 Extension CLI parity — unpark after 053, 076 stable
 023 Stacks Source Packets — unpark after 019, 040
 024 People Context Packs — unpark after 044, 023
 025 Pinned Chat List — SUPERSEDED by 046 (reference only)
@@ -198,9 +224,13 @@ Tickets in `_Parked/` are valid, but not active. They become active only by movi
 030 Wire approved icons     — Claude (done)
 031 Sidebar logo alignment  — Claude (done)
 032 Onboarding first-run    — Claude (done)
-057 System nav icons        — Claude (queued)
+057 System nav icons        — Claude (done — review pending)
 064 Remotion refresh        — Claude (queued)
 065 Marketing site          — Claude (queued)
+115 Pricing pilot page      — Claude (after 063)
+116 Pilot claim boundary    — Codex (with 115)
+121–128 Culture wedge       — see Category wedge section
+129 CI verify on main       — Cursor (after 054)
 067 One-pagers alignment    — Claude (InReview — staging smoke pending)
 ```
 

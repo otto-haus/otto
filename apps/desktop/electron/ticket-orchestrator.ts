@@ -100,6 +100,7 @@ export class TicketOrchestrator {
         { kind: 'file', ref: activeTicket.ticketPath, note: 'ticket.yaml' },
         { kind: 'file', ref: worktreePath, note: 'git worktree' },
       ],
+      blocker: null,
     });
 
     this.workers.updateStatus(worker.id, 'running', receipt.id);
