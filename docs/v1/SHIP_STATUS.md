@@ -47,12 +47,13 @@ Mapping: `tickets/000-hq-sync.md`
 | Routines | `[~]` | Ship as Proposed | Manual run yes; no automated executor |
 | Curation | `[x]` | Ship in v0.1 | Proposal + accept/reject/defer + canon ratify |
 | Autonomy | `[x]` | Ship in v0.1 | `v1/contracts/autonomy-policy.yaml` + desktop classifier |
-| Approvals | `[~]` | Defer | Folded into curation/autonomy gates |
-| Tickets | `[~]` | Ship as Proposed | HQ conveyor active; ticketcraft runtime partial |
-| Skills | `[ ]` | Defer | Not in lane 001–009 |
-| Knowledge | `[ ]` | Defer | Not in lane 001–009 |
-| Channels | `[ ]` | Defer | 010–011 blocked on gate |
-| Worker orchestration | `[~]` | Defer | Policy only; no automated workers |
+| Approvals | `[x]` | Ship in v0.1 | Records derived from Curation decisions + decision receipts |
+| Tickets | `[x]` | Ship in v0.1 | Compile + orchestrate in worktrees; desktop surface |
+| Skills | `[x]` | Ship in v0.1 | File-backed skill/**/SKILL.md loader + surface |
+| Knowledge | `[x]` | Ship in v0.1 | model-registry.yaml + Autonomy/ticket routing |
+| Channels | `[x]` | Ship in v0.1 | channels.yaml contract + surface; Discord bot deferred |
+| Otto Cloud (web) | `[ ]` | Proposed | Spec `docs/v1/otto-web-spec.md`; tickets 082–088; not implemented |
+| Worker orchestration | `[x]` | Ship in v0.1 | TicketOrchestrator spawns workers, worktrees, runs |
 | Release gate | `[ ]` | Blocked | No push/tag; Sebastian approval required |
 
 Detail per surface: `SHIP_CHECKS/*.md`
@@ -61,7 +62,8 @@ Detail per surface: `SHIP_CHECKS/*.md`
 
 - Demos (`demo/out/*.mp4`) not refreshed for this wave
 - Public push / tag / npm publish
-- Intake, Discord, Paperclip (lane 010–013) — blocked on gate 016
+- Live Discord bot runtime (channels file contract + approval gates only)
+- Intake, Paperclip adapters (lane 010–013) — optional next
 - Live `/Applications/otto.app` — staging worktree only
 
 ## Next

@@ -226,7 +226,6 @@ Do not build these before ticket 018 is done:
 
 ```txt
 Paperclip
-Cognee
 Stacks
 voice
 cloud
@@ -234,6 +233,8 @@ multi-user auth
 plugin marketplace
 beautiful generic dashboard
 ```
+
+Cognee is unparked by tickets **040–044** (implementation under Knowledge, local-first). Do not start Cognee before **040** contract lands and bug wave **033–038** clears.
 
 ## Version rule
 
