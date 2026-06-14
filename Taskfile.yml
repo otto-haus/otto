@@ -129,11 +129,9 @@ tasks:
 
   check:
     aliases: [ci]
-    desc: Full local gate — typecheck + test + verify
+    desc: Full local CI gate — mirrors .github/workflows/ci.yml
     cmds:
-      - task: typecheck
-      - task: test
-      - task: verify
+      - bash scripts/ci-local-gate.sh
 
   release:gate:
     desc: Pre-release gate — lint + checks + tests + electron build + regression guards
