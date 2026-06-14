@@ -62,13 +62,15 @@ export class RunStore {
       const raw = JSON.parse(readFileSync(path, 'utf8')) as Record<string, unknown>;
       const id = String(raw.id ?? '');
       const practice = String(raw.practice ?? 'unknown');
+      const normalizedStatus = status(raw.status);
       if (!id) return null;
+      if (!normalizedStatus) return null;
       return {
         id,
         practice,
         charter: optionalString(raw.charter),
         routine: optionalString(raw.routine),
-        status: status(raw.status),
+        status: normalizedStatus,
         started_at: String(raw.started_at ?? new Date().toISOString()),
         ended_at: raw.ended_at ? String(raw.ended_at) : null,
         summary: optionalString(raw.summary),
@@ -81,12 +83,12 @@ export class RunStore {
   }
 }
 
-function status(value: unknown): RunStatus {
+function status(value: unknown): RunStatus | null {
   if (value === 'running' || value === 'blocked' || value === 'success' || value === 'aborted' || value === 'failed') {
     return value;
   }
   if (value === 'completed') return 'success';
-  return 'success';
+  return null;
 }
 
 function optionalString(value: unknown): string | undefined {
