@@ -1,7 +1,7 @@
 {
   "schema": "otto.codex_pr_review_summary.v1",
   "pr": 312,
-  "status": "ready_after_codex_repairs_pending_full_gate",
+  "status": "ready_after_codex_repairs",
   "codeRecommendation": "ready_after_codex_repairs",
   "shipRecommendation": "ship_runtime_fix_hold_apex_custom_domain_move",
   "proof": "docs/receipts/staging/pr-312/codex-review-ws-idle-pages-deploy.json",
@@ -9,6 +9,8 @@
   "screenshots": [],
   "dataProof": [
     "WS targeted tests: 20 pass, 60 expects",
+    "Full local gate: 300 pass, 1 skip, verify:v0 5/5, docs checks, electron build, audit, and git diff checks passed",
+    "Desktop staging: /Applications/otto-pr-312-staging.app built, signed, installed, and launched",
     "Pages deploy helper dry-run proves preview command without remote deploy",
     "Unapproved main deploy is blocked",
     "otto-haus.pages.dev read-only check returned HTTP 200",
