@@ -263,8 +263,8 @@ OTTO_AGENT_ID=<agent-id> task smoke:cli   # disposable conversation; never write
 
 `task smoke:cli` is optional until you have a real local Letta agent. Replace
 `<agent-id>` with the agent id shown by your Letta runtime or otto Settings after
-auto-discovery. Running it before that point exits with a missing-agent message instead
-of performing a fake smoke. If Letta is installed outside the default macOS app path, set
+auto-discovery. Running it before that point reports `SKIP` instead of failing or
+performing a fake smoke. If Letta is installed outside the default macOS app path, set
 `LETTA_CLI_PATH=/path/to/letta.js`.
 
 DevEx docs:

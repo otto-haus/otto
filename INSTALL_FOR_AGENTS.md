@@ -83,7 +83,7 @@ Optional CLI smoke:
 OTTO_AGENT_ID=<agent-id> task smoke:cli
 ```
 
-If no real local Letta agent is available yet, record the missing-agent message instead of
+If no real local Letta agent is available yet, record the `SKIP` message instead of
 running a fake smoke or using `conversation=default`.
 
 ## Done receipt
