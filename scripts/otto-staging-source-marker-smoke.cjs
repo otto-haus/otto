@@ -8,9 +8,8 @@
  *     node scripts/otto-staging-source-marker-smoke.cjs
  */
 const { mkdirSync, writeFileSync } = require('node:fs');
-const { join } = require('node:path');
+const { join, resolve } = require('node:path');
 const { execFileSync } = require('node:child_process');
-const { chromium } = require('playwright');
 
 const RECEIPT_BASE = process.env.OTTO_RECEIPT_DIR ?? join(process.cwd(), 'docs/receipts/staging');
 const CDP_PORT = Number(process.env.OTTO_STAGING_PORT ?? 9445);
@@ -25,9 +24,11 @@ main().catch((error) => {
 });
 
 async function main() {
-  if (STAGING_APP === '/Applications/otto.app') {
+  const stagingAppPath = resolve(STAGING_APP);
+  if (stagingAppPath === '/Applications/otto.app' || stagingAppPath.startsWith('/Applications/otto.app/')) {
     throw new Error('Refusing live app path');
   }
+  const { chromium } = require('playwright');
 
   let originMainShort = process.env.OTTO_ORIGIN_MAIN_SHORT ?? null;
   if (!originMainShort) {

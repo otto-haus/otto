@@ -61,7 +61,7 @@ task staging:main
 # bash scripts/staging-refresh-from-main.sh
 ```
 
-If your checkout HEAD is not `origin/main`, deploy still runs but the UI shows **not latest main**. To build exact main:
+If your checkout HEAD is not `origin/main`, `task staging:main` refuses. To build exact main:
 
 ```sh
 git checkout main && git merge --ff-only origin/main && task staging:main

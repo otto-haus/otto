@@ -1,10 +1,11 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)"
 APP_DIR="$ROOT/apps/desktop"
 BUILT_APP="$APP_DIR/dist-app/mac-arm64/otto.app"
 TARGET_APP="${OTTO_STAGING_APP:-/Applications/otto-staging.app}"
+TARGET_APP_RESOLVED="$(node -e "const path = require('node:path'); console.log(path.resolve(process.argv[1]));" "$TARGET_APP")"
 STAGING_ROOT="${OTTO_STAGING_ROOT:-$HOME/.codex/admin/otto-staging}"
 HOME_DIR="$STAGING_ROOT/home"
 OTTO_HOME_DIR="$STAGING_ROOT/otto-home"
@@ -13,7 +14,7 @@ PORT="${OTTO_STAGING_PORT:-9445}"
 BUNDLE_ID="${OTTO_STAGING_BUNDLE_ID:-haus.otto.desktop.staging}"
 APP_VERSION="$(node -p "require('$ROOT/package.json').version" 2>/dev/null || echo unknown)"
 
-if [[ "$TARGET_APP" == "/Applications/otto.app" ]]; then
+if [[ "$TARGET_APP_RESOLVED" == "/Applications/otto.app" || "$TARGET_APP_RESOLVED" == "/Applications/otto.app/"* ]]; then
   echo "Refusing to deploy to live app path: $TARGET_APP" >&2
   exit 1
 fi

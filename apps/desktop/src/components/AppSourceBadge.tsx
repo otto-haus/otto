@@ -49,8 +49,8 @@ function buildTitle(info: AppBuildInfo): string {
 export function AppSourceDetails({ info }: { info: AppBuildInfo | null }) {
   if (!info?.shortSha && !info?.channel) return null;
   return (
-    <div className="settingsSourceDetails" data-testid="otto-source-details otto-build-marker">
-      <p className="faint mono settingsLocalFootnote">
+    <div className="settingsSourceDetails" data-testid="otto-source-details">
+      <p className="faint mono settingsLocalFootnote" data-testid="otto-build-marker">
         {info.channel ? `${info.channel}` : 'unknown channel'}
         {info.version ? ` · v${info.version}` : ''}
         {info.shortSha ? ` · ${info.shortSha}` : ''}
