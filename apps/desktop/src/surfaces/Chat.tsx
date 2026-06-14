@@ -17,6 +17,7 @@ import { ProposeCorrectionModal, type ProposeCorrectionContext } from '../chat/P
 import { runTicketCommand } from '../chat/ticket-commands';
 import {
   clearInFlight,
+  createQueueItem,
   persistInFlight,
   previewQueueText,
   QUEUE_KEY,
@@ -450,7 +451,7 @@ const LiveChat: React.FC<{
       const text = detail?.text?.trim();
       if (!text || !ready || !api) return;
       if (detail?.send) {
-        setQueue((items) => [...items, { id: `starter-${Date.now()}`, text, createdAt: Date.now(), state: 'queued' }]);
+        setQueue((items) => [...items, createQueueItem(text)]);
         return;
       }
       setDraft(text);
@@ -598,7 +599,7 @@ const LiveChat: React.FC<{
         setAttachments([]);
         return;
       }
-      setQueue((items) => [...items, { id: `${Date.now()}-${items.length}`, text, createdAt: Date.now(), state: 'queued' }]);
+      setQueue((items) => [...items, createQueueItem(text)]);
       setDraft('');
       setAttachments([]);
     })();
