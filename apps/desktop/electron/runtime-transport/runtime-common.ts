@@ -277,10 +277,15 @@ export function modelSelectionForCli(modelHandle: string, effort: string): strin
   return table[effortKey] ?? table.high ?? table.medium ?? table.off ?? modelHandle;
 }
 
-export function runtimeContextForPrompt(status: Partial<Pick<RuntimeStatus, 'model' | 'modelHandle' | 'effort' | 'sessionMode'>>): string {
+type PromptRuntimeContext = Partial<Pick<
+  RuntimeStatus,
+  'model' | 'modelHandle' | 'effort' | 'transportMode' | 'effectiveTransport' | 'sessionMode'
+>>;
+
+export function runtimeContextForPrompt(status: PromptRuntimeContext): string {
   const selectedModel = status.modelHandle ?? status.model ?? 'agent-default';
   const effort = status.effort ?? 'unknown';
-  const mode = status.sessionMode ?? 'unknown';
+  const mode = status.transportMode ?? status.effectiveTransport ?? status.sessionMode ?? 'unknown';
   return [
     '<otto_runtime_context>',
     'Use this context only when it is relevant or when the user asks about model, effort, provider path, or runtime setup.',
@@ -294,7 +299,7 @@ export function runtimeContextForPrompt(status: Partial<Pick<RuntimeStatus, 'mod
 
 export function promptWithRuntimeContext(
   text: string,
-  status: Partial<Pick<RuntimeStatus, 'model' | 'modelHandle' | 'effort' | 'sessionMode'>>,
+  status: PromptRuntimeContext,
 ): string {
   return `${runtimeContextForPrompt(status)}\n\n${text}`;
 }

@@ -168,6 +168,28 @@ describe('WsRuntimeTransport', () => {
     expect(JSON.parse(abortPayload!).run_id).toBe('run-abort-1');
   });
 
+  test('does not keep stale per-turn runtime handlers after send completes', async () => {
+    const { win, sent } = mockWindow();
+    const transport = new WsRuntimeTransport(win, mockConfig());
+    (transport as unknown as { spawnRemote: () => Promise<void> }).spawnRemote = async () => {};
+
+    const initPromise = transport.init({ freshConversation: true });
+    const socket = await connectMockRuntime(transport, 'conv-ws-disposable');
+    await initPromise;
+
+    await transport.send('first');
+    await transport.send('second');
+
+    const assistantEvents = sent.filter((event) => {
+      const message = (event.payload as { message?: { type?: string } }).message;
+      return event.channel === 'otto:event' && message?.type === 'assistant';
+    });
+    expect(assistantEvents.length).toBe(2);
+
+    socket.close();
+    await transport.close();
+  });
+
   test('resolvePermission emits control_response on runtime socket', async () => {
     const { win, sent } = mockWindow();
     const transport = new WsRuntimeTransport(win, mockConfig());

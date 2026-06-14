@@ -191,6 +191,7 @@ export class WsRuntimeTransport implements OttoRuntimeTransport {
     this.turnIdle = false;
     this.activeRunId = null;
     trace.write('prompt', { text, transport: 'ws', agentId: this.status.agentId, conversationId: this.status.conversationId });
+    let detachRuntimeHandler = () => {};
 
     try {
       let sawAssistant = false;
@@ -233,7 +234,7 @@ export class WsRuntimeTransport implements OttoRuntimeTransport {
         }
       };
 
-      this.attachRuntimeHandler(onRuntimeEvent);
+      detachRuntimeHandler = this.attachRuntimeHandler(onRuntimeEvent);
 
       this.sendCommand({
         type: 'input',
@@ -271,6 +272,7 @@ export class WsRuntimeTransport implements OttoRuntimeTransport {
       });
       this.emitError(msg(e));
     } finally {
+      detachRuntimeHandler();
       trace.close();
     }
   }
@@ -287,19 +289,41 @@ export class WsRuntimeTransport implements OttoRuntimeTransport {
 
   async close(): Promise<void> {
     this.runtimeSocket?.removeAllListeners();
-    this.runtimeSocket?.close();
+    this.runtimeSocket?.terminate();
     this.runtimeSocket = null;
+    this.server?.clients.forEach((client) => {
+      client.removeAllListeners();
+      client.terminate();
+    });
     if (this.remoteProc && !this.remoteProc.killed) {
       this.remoteProc.kill('SIGTERM');
     }
     this.remoteProc = null;
     await new Promise<void>((resolve) => {
       if (!this.server) return resolve();
-      this.server.close(() => resolve());
+      let done = false;
+      const finish = () => {
+        if (done) return;
+        done = true;
+        clearTimeout(timer);
+        resolve();
+      };
+      const timer = setTimeout(finish, 1000);
+      timer.unref?.();
+      this.server.close(finish);
     });
     await new Promise<void>((resolve) => {
       if (!this.registrationServer) return resolve();
-      this.registrationServer.close(() => resolve());
+      let done = false;
+      const finish = () => {
+        if (done) return;
+        done = true;
+        clearTimeout(timer);
+        resolve();
+      };
+      const timer = setTimeout(finish, 1000);
+      timer.unref?.();
+      this.registrationServer.close(finish);
     });
     this.server = null;
     this.listenerPort = null;
@@ -653,8 +677,9 @@ export class WsRuntimeTransport implements OttoRuntimeTransport {
     return text.includes('conversation') && (text.includes('not found') || text.includes('not-found') || text.includes('404') || text.includes('500'));
   }
 
-  private attachRuntimeHandler(onEvent: (event: WsRuntimeEvent) => void) {
-    if (!this.runtimeSocket) return;
+  private attachRuntimeHandler(onEvent: (event: WsRuntimeEvent) => void): () => void {
+    if (!this.runtimeSocket) return () => {};
+    const socket = this.runtimeSocket;
     const handler = (raw: Buffer | ArrayBuffer | Buffer[]) => {
       try {
         onEvent(JSON.parse(String(raw)) as WsRuntimeEvent);
@@ -662,7 +687,8 @@ export class WsRuntimeTransport implements OttoRuntimeTransport {
         // ignore malformed frames
       }
     };
-    this.runtimeSocket.on('message', handler);
+    socket.on('message', handler);
+    return () => socket.off('message', handler);
   }
 
   private waitForTurnComplete(timeoutMs: number, aborted: () => boolean): Promise<void> {

@@ -75,7 +75,7 @@ describe('runtime prompt context', () => {
     const context = runtimeContextForPrompt({
       modelHandle: 'anthropic/claude-opus-4-8',
       effort: 'max',
-      sessionMode: 'ws',
+      transportMode: 'ws',
     });
     expect(context).toContain('selected_model_handle: anthropic/claude-opus-4-8');
     expect(context).toContain('reasoning_effort: max');

@@ -12,6 +12,7 @@ APP_LOG="$LOG_DIR/refresh-$STAMP.app.log"
 APP_LOG_CAPTURE_SECONDS="${OTTO_LOG_CAPTURE_SECONDS:-12}"
 APP_LOG_PID=""
 DEPLOY_LOCK_DIR="${OTTO_REFRESH_LOCK_DIR:-${OTTO_DESKTOP_DEPLOY_LOCK_DIR:-$LOG_DIR/desktop-deploy.lock}}"
+REMOTE_ENV_NAME="${OTTO_WS_REMOTE_ENV:-otto-byor}"
 SNAPSHOT_DIR=""
 SNAPSHOT_APP=""
 TMP_TARGET_APP=""
@@ -21,6 +22,7 @@ ln -sfn "$DEPLOY_LOG" "$LOG_DIR/refresh-latest.deploy.log"
 ln -sfn "$APP_LOG" "$LOG_DIR/refresh-latest.app.log"
 exec > >(tee -a "$DEPLOY_LOG") 2>&1
 
+mkdir -p "$(dirname "$DEPLOY_LOCK_DIR")"
 if ! mkdir "$DEPLOY_LOCK_DIR" 2>/dev/null; then
   echo "Another task refresh is already running: $DEPLOY_LOCK_DIR" >&2
   exit 1
@@ -73,7 +75,7 @@ stamp_live_bundle() {
   if [[ -f "${HOME}/.letta/settings.json" ]]; then
     plist_env_set "$plist" OTTO_LETTA_SETTINGS_PATH "${HOME}/.letta/settings.json"
   fi
-  plist_env_set "$plist" OTTO_WS_REMOTE_ENV "${OTTO_WS_REMOTE_ENV:-otto-byor}"
+  plist_env_set "$plist" OTTO_WS_REMOTE_ENV "$REMOTE_ENV_NAME"
   if [[ -d "${ROOT}/checks" ]]; then
     plist_env_set "$plist" OTTO_ROOT "${ROOT}"
   fi
@@ -113,9 +115,9 @@ quit_live_app() {
 
 kill_orphan_live_servers() {
   local pids=""
-  pids="$(ps -axo pid=,ppid=,command= | awk '$2 == 1 && index($0, "letta-code/letta.js server --env-name otto-byor --debug") { print $1 }' || true)"
+  pids="$(ps -axo pid=,ppid=,command= | awk -v env_name="$REMOTE_ENV_NAME" '$2 == 1 && index($0, "letta-code/letta.js server --env-name " env_name " --debug") { print $1 }' || true)"
   if [[ -n "$pids" ]]; then
-    echo "==> Killing orphan otto-byor Letta server processes: $pids"
+    echo "==> Killing orphan $REMOTE_ENV_NAME Letta server processes: $pids"
     # shellcheck disable=SC2086
     kill $pids >/dev/null 2>&1 || true
   fi

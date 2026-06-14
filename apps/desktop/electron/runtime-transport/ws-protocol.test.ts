@@ -25,6 +25,14 @@ describe('ws-protocol', () => {
     expect(first?.uuid).toBe(second?.uuid);
   });
 
+  test('does not invent a duplicate-suppression id from assistant text', () => {
+    const event = normalizeWsEvent({
+      type: 'stream_delta',
+      delta: { message_type: 'assistant_message', content: 'again', otid: 'assistant-1', run_id: 'run-1' },
+    });
+    expect(event?.chunkId).toBeNull();
+  });
+
   test('normalizes Letta loop_error deltas as errors', () => {
     const event = normalizeWsEvent({
       type: 'stream_delta',
