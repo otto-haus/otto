@@ -236,6 +236,33 @@ export interface Receipt {
 }
 
 // ---------------------------------------------------------------------------
+// Curation proposal
+// ---------------------------------------------------------------------------
+
+export type ProposalStatus = 'pending' | 'ratified' | 'rejected' | 'applied';
+
+export type ProposalClassification =
+  | 'standard'  // A new canonical rule
+  | 'practice'  // A new executable workflow
+  | 'routine';  // A new recurring bundle
+
+export type RiskLevel = 'reversible' | 'one-way-door';
+
+export interface CurationProposal {
+  id: Id;
+  status: ProposalStatus;
+  classification: ProposalClassification;
+  risk_level: RiskLevel;
+  trigger_reason: string;
+  proposed_name: string;
+  proposed_content: string;
+  created_at: ISO8601;
+  ratified_at?: ISO8601;
+  applied_at?: ISO8601;
+  approval_id?: Id;
+}
+
+// ---------------------------------------------------------------------------
 // Approval & gates — the hard rule
 // ---------------------------------------------------------------------------
 
