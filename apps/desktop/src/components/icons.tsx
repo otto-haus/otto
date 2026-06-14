@@ -35,6 +35,7 @@ export const Icon = {
   send: <Art name="send" />,
   checks: <Art name="checks" />,
   knowledge: <Art name="knowledge" />,
+  skills: <Art name="skills" />,
   owl: <Art name="owl" />,
   theme: <Art name="theme" />,
   image: <S><rect x="3" y="4.5" width="18" height="15" rx="2" /><circle cx="8.5" cy="9.5" r="1.6" /><path d="M21 15l-5-5-11 11" /></S>,
