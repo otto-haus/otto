@@ -149,7 +149,7 @@ export class SdkSubprocessTransport implements OttoRuntimeTransport {
   }
 
   /** Connect; recover from stale agents/conversations; never throw to the renderer. */
-  async init(opts?: { freshConversation?: boolean }): Promise<RuntimeStatus> {
+  async init(opts?: { freshConversation?: boolean; strictModelHandle?: string | null }): Promise<RuntimeStatus> {
     const cli = resolveCli(this.config.connectionMode());
     const context = discoverLocalLettaContext(this.config);
     this.applyConnectionEnv(context.baseUrl);

@@ -308,7 +308,7 @@ const api = {
       ipcRenderer.invoke('otto:threads:create', input),
     switch: (threadId: string): Promise<ThreadSwitchResult> =>
       ipcRenderer.invoke('otto:threads:switch', threadId),
-    archive: (threadId: string): Promise<ChatThreadRecord> =>
+    archive: (threadId: string): Promise<ThreadSwitchResult> =>
       ipcRenderer.invoke('otto:threads:archive', threadId),
     pin: (threadId: string, pinned: boolean): Promise<ChatThreadRecord> =>
       ipcRenderer.invoke('otto:threads:pin', threadId, pinned),

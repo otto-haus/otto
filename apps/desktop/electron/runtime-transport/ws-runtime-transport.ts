@@ -26,6 +26,7 @@ import { permissionSessionStore } from '../permission-session-store';
 import type { OttoRuntimeTransport } from './types';
 
 const CONNECT_TIMEOUT_MS = 45_000;
+const REMOTE_SHUTDOWN_TIMEOUT_MS = 3_000;
 const REMOTE_ENV = process.env.OTTO_WS_REMOTE_ENV ?? 'otto-byor';
 const DEFAULT_WS_MODEL_FALLBACKS = ['openai/gpt-5.5', 'letta/auto'];
 
@@ -56,6 +57,9 @@ export class WsRuntimeTransport implements OttoRuntimeTransport {
   private practices = new PracticeStore();
   private lastReconnectAt: string | null = null;
   private remoteOutputChunks: string[] = [];
+  private remoteGeneration = 0;
+  private socketGeneration = 0;
+  private initSerial: Promise<RuntimeStatus> = Promise.resolve(this.status);
 
   constructor(
     private win: BrowserWindow,
@@ -87,7 +91,15 @@ export class WsRuntimeTransport implements OttoRuntimeTransport {
     }
   }
 
-  async init(opts?: { freshConversation?: boolean }): Promise<RuntimeStatus> {
+  async init(opts?: { freshConversation?: boolean; strictModelHandle?: string | null }): Promise<RuntimeStatus> {
+    const run = this.initSerial
+      .catch(() => this.status)
+      .then(() => this.initImpl(opts));
+    this.initSerial = run;
+    return run;
+  }
+
+  private async initImpl(opts?: { freshConversation?: boolean; strictModelHandle?: string | null }): Promise<RuntimeStatus> {
     await this.close();
     const cli = resolveCli(this.config.connectionMode());
     const context = discoverLocalLettaContext(this.config);
@@ -114,18 +126,24 @@ export class WsRuntimeTransport implements OttoRuntimeTransport {
       if (!opts?.freshConversation && !smokeMode() && savedConversationId === 'default') {
         this.config.update({ conversationId: null });
       }
-      const modelHandle = await confirmedModelHandle(this.config).catch(() => this.config.modelHandle());
+      const modelHandle = opts?.strictModelHandle !== undefined
+        ? opts.strictModelHandle
+        : await confirmedModelHandle(this.config).catch(() => this.config.modelHandle());
       if (modelHandle && modelHandle !== this.config.modelHandle() && !smokeMode()) {
         this.config.update({ modelHandle });
       }
       let activeModelHandle = modelHandle;
       try {
-        activeModelHandle = await this.syncRuntimeWithFallback(agentId, conversationId ?? null, modelHandle);
+        activeModelHandle = await this.syncRuntimeWithFallback(agentId, conversationId ?? null, modelHandle, {
+          allowFallback: opts?.strictModelHandle === undefined,
+        });
       } catch (e) {
         if (!conversationId || !this.isStaleConversationError(e)) throw e;
         if (!smokeMode()) this.config.update({ conversationId: null });
         const replacementConversationId = await this.createBackendConversation(agentId, context.baseUrl);
-        activeModelHandle = await this.syncRuntimeWithFallback(agentId, replacementConversationId, modelHandle);
+        activeModelHandle = await this.syncRuntimeWithFallback(agentId, replacementConversationId, modelHandle, {
+          allowFallback: opts?.strictModelHandle === undefined,
+        });
       }
       if (activeModelHandle && activeModelHandle !== this.config.modelHandle() && !smokeMode()) {
         this.config.update({ modelHandle: activeModelHandle });
@@ -137,6 +155,7 @@ export class WsRuntimeTransport implements OttoRuntimeTransport {
       this.status = {
         ready: true,
         code: 'ready',
+        reason: undefined,
         agentId,
         baseUrl: context.baseUrl,
         discoverySource: context.source,
@@ -158,6 +177,7 @@ export class WsRuntimeTransport implements OttoRuntimeTransport {
           conversationId: this.status.conversationId ?? null,
         });
       }
+      this.emitStatus();
     } catch (e) {
       await this.close();
       const reason = msg(e);
@@ -173,11 +193,45 @@ export class WsRuntimeTransport implements OttoRuntimeTransport {
   }
 
   async configure(input: RuntimePreferences): Promise<RuntimeStatus> {
+    const strictModelHandle = input.modelHandle !== undefined ? input.modelHandle || null : undefined;
     this.config.update({
       ...(input.modelHandle !== undefined ? { modelHandle: input.modelHandle || null } : {}),
       ...(input.effort !== undefined ? { effort: input.effort } : {}),
     });
-    return this.init();
+    if (this.status.ready && this.runtimeSocket?.readyState === WebSocket.OPEN && this.status.agentId) {
+      const conversationId = this.status.conversationId ?? this.config.get().conversationId ?? null;
+      try {
+        const activeModelHandle = await this.syncRuntimeWithFallback(
+          this.status.agentId,
+          conversationId,
+          this.config.modelHandle(),
+          { allowFallback: strictModelHandle === undefined },
+        );
+        this.status = {
+          ...this.status,
+          ready: true,
+          code: 'ready',
+          reason: undefined,
+          conversationId: this.status.conversationId ?? conversationId,
+          modelHandle: activeModelHandle,
+          effort: this.config.effort(),
+          transportMode: 'ws',
+          effectiveTransport: 'websocket local',
+          transportFallbackReason: null,
+        };
+        if (!smokeMode()) {
+          this.config.update({
+            conversationId: this.status.conversationId ?? null,
+            modelHandle: activeModelHandle,
+          });
+        }
+        this.emitStatus();
+        return this.status;
+      } catch {
+        // Fall through to a full reconnect if the existing socket cannot resync.
+      }
+    }
+    return this.init({ strictModelHandle });
   }
 
   async send(text: string): Promise<void> {
@@ -289,17 +343,24 @@ export class WsRuntimeTransport implements OttoRuntimeTransport {
   }
 
   async close(): Promise<void> {
+    this.socketGeneration += 1;
     this.runtimeSocket?.removeAllListeners();
-    this.runtimeSocket?.terminate();
+    if (this.runtimeSocket) {
+      const socket = this.runtimeSocket as WebSocket & { terminate?: () => void };
+      if (typeof socket.terminate === 'function') socket.terminate();
+      else socket.close();
+    }
     this.runtimeSocket = null;
     this.server?.clients.forEach((client) => {
       client.removeAllListeners();
       client.terminate();
     });
-    if (this.remoteProc && !this.remoteProc.killed) {
-      this.remoteProc.kill('SIGTERM');
+    this.remoteGeneration += 1;
+    const remoteProc = this.remoteProc;
+    if (this.remoteProc === remoteProc) {
+      this.remoteProc = null;
     }
-    this.remoteProc = null;
+    await this.terminateRemoteProc(remoteProc);
     await new Promise<void>((resolve) => {
       if (!this.server) return resolve();
       let done = false;
@@ -332,7 +393,12 @@ export class WsRuntimeTransport implements OttoRuntimeTransport {
     this.registrationPort = null;
     this.pendingControls.clear();
     this.controlByUpstream.clear();
-    this.status = { ...this.status, ready: false, reason: 'transport closed' };
+    this.status = {
+      ...this.status,
+      ready: false,
+      code: 'error',
+      reason: 'transport closed',
+    };
   }
 
   private fail(
@@ -470,10 +536,11 @@ export class WsRuntimeTransport implements OttoRuntimeTransport {
         socket.close(1008, 'duplicate runtime connection');
         return;
       }
+      const socketGeneration = ++this.socketGeneration;
       this.runtimeSocket = socket;
       this.lastReconnectAt = new Date().toISOString();
       socket.on('close', () => {
-        if (this.runtimeSocket === socket) {
+        if (this.socketGeneration === socketGeneration && this.runtimeSocket === socket) {
           this.runtimeSocket = null;
           this.markNotReady('Letta runtime disconnected from Otto WebSocket listener.');
         }
@@ -533,24 +600,61 @@ export class WsRuntimeTransport implements OttoRuntimeTransport {
     };
     const nodeBin = process.env.LETTA_NODE?.trim() || 'node';
     this.remoteOutputChunks = [];
-    this.remoteProc = spawn(nodeBin, [cliPath, 'server', '--env-name', REMOTE_ENV, '--debug'], {
+    const generation = ++this.remoteGeneration;
+    const remoteProc = spawn(nodeBin, [cliPath, 'server', '--env-name', REMOTE_ENV, '--debug'], {
       env,
       stdio: ['ignore', 'pipe', 'pipe'],
     });
-    this.remoteProc.stdout?.on('data', (chunk: Buffer) => {
+    this.remoteProc = remoteProc;
+    remoteProc.stdout?.on('data', (chunk: Buffer) => {
       const line = String(chunk).trim();
       if (line) this.captureRemoteOutput(line);
     });
-    this.remoteProc.stderr?.on('data', (chunk: Buffer) => {
+    remoteProc.stderr?.on('data', (chunk: Buffer) => {
       const line = String(chunk).trim();
       if (line) this.captureRemoteOutput(line);
     });
-    this.remoteProc.on('exit', (code) => {
+    remoteProc.on('exit', (code) => {
+      if (!this.shouldHonorRemoteExit(remoteProc, generation)) return;
       if (code !== 0 && !this.runtimeSocket) {
         const detail = this.remoteOutputSummary() || `exit ${code}`;
         this.markNotReady(`Letta Code remote exited before connect (${detail}).`, 'unreachable');
       }
     });
+  }
+
+  private shouldHonorRemoteExit(proc: ChildProcess, generation: number): boolean {
+    return proc === this.remoteProc && generation === this.remoteGeneration;
+  }
+
+  private async terminateRemoteProc(proc: ChildProcess | null): Promise<void> {
+    if (!proc) return;
+    if (proc.exitCode !== null || proc.signalCode !== null) return;
+    let done = false;
+    const waitForExit = new Promise<void>((resolve) => {
+      const finish = () => {
+        done = true;
+        proc.off('exit', finish);
+        proc.off('close', finish);
+        proc.off('error', finish);
+        resolve();
+      };
+      proc.once('exit', finish);
+      proc.once('close', finish);
+      proc.once('error', finish);
+    });
+    if (!proc.killed) proc.kill('SIGTERM');
+    await Promise.race([
+      waitForExit,
+      new Promise<void>((resolve) => setTimeout(resolve, REMOTE_SHUTDOWN_TIMEOUT_MS)),
+    ]);
+    if (!done && proc.exitCode === null && proc.signalCode === null) {
+      proc.kill('SIGKILL');
+      await Promise.race([
+        waitForExit,
+        new Promise<void>((resolve) => setTimeout(resolve, 500)),
+      ]);
+    }
   }
 
   private captureRemoteOutput(line: string): void {
@@ -590,7 +694,8 @@ export class WsRuntimeTransport implements OttoRuntimeTransport {
     this.runtimeSocket.send(JSON.stringify(command));
   }
 
-  private modelInitAttempts(preferredModelHandle?: string | null): (string | null)[] {
+  private modelInitAttempts(preferredModelHandle?: string | null, opts?: { allowFallback?: boolean }): (string | null)[] {
+    if (opts?.allowFallback === false) return [preferredModelHandle?.trim() || null];
     const configuredFallbacks = (process.env.OTTO_WS_MODEL_FALLBACKS ?? '')
       .split(',')
       .map((model) => model.trim())
@@ -606,9 +711,14 @@ export class WsRuntimeTransport implements OttoRuntimeTransport {
     return attempts.length ? attempts : [null];
   }
 
-  private async syncRuntimeWithFallback(agentId: string, conversationId: string | null, preferredModelHandle?: string | null): Promise<string | null> {
+  private async syncRuntimeWithFallback(
+    agentId: string,
+    conversationId: string | null,
+    preferredModelHandle?: string | null,
+    opts?: { allowFallback?: boolean },
+  ): Promise<string | null> {
     let lastError: unknown = null;
-    const attempts = this.modelInitAttempts(preferredModelHandle);
+    const attempts = this.modelInitAttempts(preferredModelHandle, opts);
     for (const [index, modelHandle] of attempts.entries()) {
       try {
         await this.syncRuntime(agentId, conversationId, modelHandle);
@@ -631,11 +741,20 @@ export class WsRuntimeTransport implements OttoRuntimeTransport {
   private async syncRuntime(agentId: string, conversationId: string | null, modelHandle?: string | null): Promise<void> {
     const scopedConversationId = conversationId?.trim() || this.mintConversationId();
     this.status.conversationId = scopedConversationId;
+    const socket = this.runtimeSocket;
+    if (!socket || socket.readyState !== WebSocket.OPEN) {
+      throw new Error('Letta runtime disconnected before sync.');
+    }
     return new Promise((resolve, reject) => {
       let online = false;
       let idle = false;
       let timeout: ReturnType<typeof setTimeout>;
+      let settled = false;
       const handler = (raw: Buffer | ArrayBuffer | Buffer[]) => {
+        if (this.runtimeSocket !== socket) {
+          finish(new Error('Letta runtime socket changed during sync.'));
+          return;
+        }
         let event: WsRuntimeEvent;
         try {
           event = JSON.parse(String(raw)) as WsRuntimeEvent;
@@ -647,36 +766,47 @@ export class WsRuntimeTransport implements OttoRuntimeTransport {
           if (conv) this.status.conversationId = conv;
         }
         if (event.type === 'error') {
-          clearTimeout(timeout);
-          this.runtimeSocket?.off('message', handler);
-          reject(new Error(String(event.message ?? event.error ?? 'Runtime sync failed')));
+          finish(new Error(String(event.message ?? event.error ?? 'Runtime sync failed')));
+          return;
         }
         if (isDeviceOnline(event)) online = true;
         if (isLoopIdle(event)) idle = true;
         if (online && idle) {
-          clearTimeout(timeout);
-          this.runtimeSocket?.off('message', handler);
-          resolve();
+          finish();
         }
       };
+      const cleanup = () => {
+        clearTimeout(timeout);
+        socket.off('message', handler);
+      };
+      const finish = (error?: Error) => {
+        if (settled) return;
+        settled = true;
+        cleanup();
+        if (error) reject(error);
+        else resolve();
+      };
       timeout = setTimeout(() => {
-        this.runtimeSocket?.off('message', handler);
         const detail = this.remoteOutputSummary();
         const modelDetail = modelHandle ? ` for model ${modelHandle}` : '';
         const outputDetail = detail ? `; latest Letta Code output: ${detail}` : '';
-        reject(new Error(`Timed out waiting for runtime sync${modelDetail}${outputDetail}`));
+        finish(new Error(`Timed out waiting for runtime sync${modelDetail}${outputDetail}`));
       }, CONNECT_TIMEOUT_MS);
-      this.runtimeSocket!.on('message', handler);
-      this.sendCommand({
-        type: 'sync',
-        runtime: {
-          agent_id: agentId,
-          conversation_id: scopedConversationId,
-          model: modelHandle ?? undefined,
-          reasoning_effort: this.config.effort(),
-        },
-        recover_approvals: true,
-      });
+      socket.on('message', handler);
+      try {
+        socket.send(JSON.stringify({
+          type: 'sync',
+          runtime: {
+            agent_id: agentId,
+            conversation_id: scopedConversationId,
+            model: modelHandle ?? undefined,
+            reasoning_effort: this.config.effort(),
+          },
+          recover_approvals: true,
+        }));
+      } catch (e) {
+        finish(e instanceof Error ? e : new Error(String(e)));
+      }
     });
   }
 
@@ -756,6 +886,10 @@ export class WsRuntimeTransport implements OttoRuntimeTransport {
       code,
       reason: friendly(code, reason),
     };
+    this.emitStatus();
+  }
+
+  private emitStatus() {
     safeWebContentsSend(this.win, 'otto:event', { status: this.status });
   }
 
