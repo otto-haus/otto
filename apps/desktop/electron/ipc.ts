@@ -74,7 +74,9 @@ export function registerIpc(win: BrowserWindow) {
 
   const initWithStaleRecovery = async (opts?: { freshConversation?: boolean }): Promise<RuntimeStatus> => {
     const status = await runner.init(opts);
-    if (status.ready || status.code !== 'stale' || !config.get().conversationId) {
+    const activeThread = config.get().activeThreadId ? threads.get(config.get().activeThreadId!) : null;
+    const staleConversationId = config.get().conversationId ?? activeThread?.lettaConversationId ?? null;
+    if (status.ready || status.code !== 'stale' || !staleConversationId) {
       bindStatusToActiveThread(status);
       return status;
     }
@@ -278,7 +280,7 @@ export function registerIpc(win: BrowserWindow) {
   });
   ipcMain.handle('otto:threads:switch', async (_e, threadId: string) => {
     const thread = threads.switch(threadId);
-    const status = await initWithStaleRecovery();
+    const status = await initWithStaleRecovery({ freshConversation: !thread.lettaConversationId });
     const updatedThread = threads.touchActive({
       agentId: status.agentId ?? thread.agentId,
       lettaConversationId: status.conversationId ?? thread.lettaConversationId,
@@ -296,6 +298,8 @@ export function registerIpc(win: BrowserWindow) {
     return archived;
   });
   ipcMain.handle('otto:threads:pin', (_e, threadId: string, pinned: boolean) => threads.pin(threadId, pinned));
+  ipcMain.handle('otto:threads:rename', (_e, threadId: string, title: string) => threads.rename(threadId, title));
+  ipcMain.handle('otto:threads:move', (_e, threadId: string, targetId: string) => threads.move(threadId, targetId));
   ipcMain.handle(
     'otto:threads:touch',
     (_e, input: { title?: string; lettaConversationId?: string | null; agentId?: string | null }) =>

@@ -1,0 +1,50 @@
+{
+  "pr": 187,
+  "title": "fix(desktop): honor runtime otto home for field notes",
+  "reviewAgent": "codex",
+  "generatedAt": "2026-06-14T21:12:58Z",
+  "status": "ready_for_sebastian_review_after_ci",
+  "codeRecommendation": {
+    "value": "ready",
+    "reason": "The implementation now keeps field-note artifacts and the associated run, receipt, and practice-metrics records inside runtime OTTO_HOME, with regression coverage and local gate proof."
+  },
+  "shipRecommendation": {
+    "value": "ship_with_functional_labs_train",
+    "reason": "This is a narrow local-data isolation fix that should ship with the functional-labs train once Sebastian accepts the PR. It does not justify a standalone release cut by itself."
+  },
+  "bugsFixedByCodexReview": [
+    "Default PracticeRunner run, receipt, and practice-metrics stores still used import-time OTTO_DIR defaults even after field-note artifacts moved to runtime OTTO_HOME.",
+    "The practice-runner test helper restored an absent OTTO_HOME by assigning undefined instead of deleting the environment variable.",
+    "Regression coverage now proves a default PracticeRunner writes artifact, run, receipt, and metrics receipt paths under runtime OTTO_HOME."
+  ],
+  "proof": {
+    "dataReceipt": "docs/receipts/staging/pr-187/codex-review-field-note-runtime-home.json",
+    "screenshots": [],
+    "screenshotReason": "Backend/local filesystem behavior; data proof is the relevant evaluation artifact."
+  },
+  "verification": [
+    {
+      "command": "bun install --frozen-lockfile",
+      "result": "pass"
+    },
+    {
+      "command": "bun test apps/desktop/electron/practice-runner.test.ts",
+      "result": "pass",
+      "details": "6 pass, 0 fail, 26 expect calls"
+    },
+    {
+      "command": "bash scripts/ci-local-gate.sh",
+      "result": "pass",
+      "details": "root typecheck pass; desktop/electron typecheck pass; bun test 262 pass, 1 skip, 0 fail, 906 expect calls; verify:v0 5 passed, 0 failed; devex mint validate pass; devex broken-links pass; electron-vite build pass; bun audit no vulnerabilities"
+    },
+    {
+      "command": "OTTO_STAGING_ROOT=/tmp/otto-pr-187-proof-staging OTTO_STAGING_PORT=9460 OTTO_STAGING_WS_REMOTE_ENV=otto-pr187-proof-byor OTTO_AGENT_ID=agent-00000000-0000-4000-8000-000000000000 LETTA_BASE_URL=http://127.0.0.1:9 OTTO_STAGING_LOG_CAPTURE_SECONDS=1 task staging",
+      "result": "pass",
+      "details": "Installed and launched /Applications/otto-staging.app with isolated staging root; no live Letta connection claimed."
+    }
+  ],
+  "stagingLogs": [
+    "/Users/seb/.codex/admin/otto-logs/staging-20260614T141108.deploy.log",
+    "/Users/seb/.codex/admin/otto-logs/staging-20260614T141108.app.log"
+  ]
+}

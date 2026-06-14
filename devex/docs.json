@@ -1,0 +1,29 @@
+{
+  "$schema": "https://mintlify.com/docs.json",
+  "theme": "maple",
+  "name": "otto DevEx",
+  "colors": {
+    "primary": "#14161A",
+    "light": "#586F5C",
+    "dark": "#E8ECE6"
+  },
+  "appearance": {
+    "default": "system"
+  },
+  "icons": {
+    "library": "lucide"
+  },
+  "navigation": {
+    "groups": [
+      {
+        "group": "Start",
+        "pages": [
+          "index",
+          "local-setup",
+          "ci-gate",
+          "desktop-staging"
+        ]
+      }
+    ]
+  }
+}

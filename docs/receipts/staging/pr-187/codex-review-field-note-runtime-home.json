@@ -1,0 +1,24 @@
+{
+  "pr": 187,
+  "title": "fix(desktop): honor runtime otto home for field notes",
+  "reviewAgent": "codex",
+  "generatedAt": "2026-06-14T21:12:58Z",
+  "baseRef": "ship/functional-labs",
+  "baseOidAtReview": "873ae3d4f395199387e81b4e7f05263f6d36fcb6",
+  "localReviewHeadBeforeProofCommit": "9b9a5835b22f070152ac31588cf285eb5d0f8470",
+  "runtimeOttoHome": "/var/folders/22/fzs3nrw505z_m71cghqjc7j80000gn/T/otto-pr-187-proof-SbGGb0",
+  "observedPaths": {
+    "artifactPath": "/var/folders/22/fzs3nrw505z_m71cghqjc7j80000gn/T/otto-pr-187-proof-SbGGb0/field-notes/2026-06-14-32cc3e49.md",
+    "runPath": "/var/folders/22/fzs3nrw505z_m71cghqjc7j80000gn/T/otto-pr-187-proof-SbGGb0/runs/run_20260614_e7db468b.json",
+    "receiptPath": "/var/folders/22/fzs3nrw505z_m71cghqjc7j80000gn/T/otto-pr-187-proof-SbGGb0/receipts/2026-06-14T21-11-07-602Z-receipt-ac4f88fe-fdaf-4339-ac10-7bfc263fe1e4.json",
+    "metricsLastReceiptPath": "/var/folders/22/fzs3nrw505z_m71cghqjc7j80000gn/T/otto-pr-187-proof-SbGGb0/receipts/2026-06-14T21-11-07-602Z-receipt-ac4f88fe-fdaf-4339-ac10-7bfc263fe1e4.json"
+  },
+  "assertions": {
+    "artifactUnderRuntimeHome": true,
+    "runUnderRuntimeHome": true,
+    "receiptUnderRuntimeHome": true,
+    "metricsUnderRuntimeHome": true
+  },
+  "bugFixedByCodexReview": "The original PR moved field-note artifacts to runtime OTTO_HOME, but default PracticeRunner stores still used import-time OTTO_DIR defaults for runs, receipts, and practice metrics. The review patch makes those defaults derive from runtime defaultOttoDir().",
+  "boundary": "Backend/local-data proof only; no UI screenshot needed and no live Letta connection claimed."
+}

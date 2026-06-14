@@ -1,16 +1,18 @@
+import { join } from 'node:path';
 import type { BehaviorChangelogEntry, BehaviorChangelogResult } from '@otto-haus/core';
-import { OTTO_DIR } from './config-store';
+import { defaultOttoDir } from './config-store';
 import { ConstitutionStore } from './constitution-store';
 import { ProposalStore } from './proposal-store';
+import { ReceiptWriter } from './receipt-writer';
 import { ReceiptStore } from './receipt-store';
 
 const EMPTY_MESSAGE = 'No behavior changes this week.';
 
 export class BehaviorChangelog {
   constructor(
-    private proposals = new ProposalStore(),
-    private receipts = new ReceiptStore(),
-    private constitution = new ConstitutionStore(),
+    private proposals = defaultProposalStore(),
+    private receipts = defaultReceiptStore(),
+    private constitution = defaultConstitutionStore(),
     private windowDays = 7,
   ) {}
 
@@ -63,7 +65,7 @@ export class BehaviorChangelog {
     entries.sort((a, b) => timestampMs(b.timestamp) - timestampMs(a.timestamp));
 
     return {
-      dir: OTTO_DIR,
+      dir: defaultOttoDir(),
       entries,
       window_days: windowDays,
       empty_message: EMPTY_MESSAGE,
@@ -78,6 +80,29 @@ export class BehaviorChangelog {
       empty_message: result.empty_message,
     };
   }
+}
+
+function defaultProposalStore(): ProposalStore {
+  const ottoDir = defaultOttoDir();
+  const receiptsDir = join(ottoDir, 'receipts');
+  return new ProposalStore(
+    join(ottoDir, 'curation', 'proposals'),
+    new ReceiptWriter(receiptsDir),
+    new ReceiptStore(receiptsDir),
+  );
+}
+
+function defaultReceiptStore(): ReceiptStore {
+  return new ReceiptStore(join(defaultOttoDir(), 'receipts'));
+}
+
+function defaultConstitutionStore(): ConstitutionStore {
+  const ottoDir = defaultOttoDir();
+  return new ConstitutionStore(
+    join(ottoDir, 'constitution.yaml'),
+    join(ottoDir, 'constitution.md'),
+    new ReceiptWriter(join(ottoDir, 'receipts')),
+  );
 }
 
 function timestampMs(value: string): number {

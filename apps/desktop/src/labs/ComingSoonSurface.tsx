@@ -2,7 +2,7 @@ import React from 'react';
 import { EmptyState } from '../components/ui';
 import { labsCopy } from '../copy/surfaces';
 import type { SurfaceId } from '../components/Sidebar';
-import { isLabsTierSurface, surfaceLabel } from '../surface-tiers';
+import { WORKSPACE_PREVIEW_SURFACES, isLabsTierSurface, surfaceLabel } from '../surface-tiers';
 import { META } from '../surface-meta';
 
 export const ComingSoonSurface: React.FC<{
@@ -12,8 +12,9 @@ export const ComingSoonSurface: React.FC<{
   const meta = META[id];
   const label = meta?.title ?? surfaceLabel(id);
   const labsTier = isLabsTierSurface(id);
-  const blurb = meta?.sub ?? (labsTier ? labsCopy.comingSoonNext : labsCopy.comingSoonWorkspaceNext);
-  const next = labsTier ? labsCopy.comingSoonNext : labsCopy.comingSoonWorkspaceNext;
+  const workspacePreview = WORKSPACE_PREVIEW_SURFACES.has(id);
+  const blurb = meta?.sub ?? (!workspacePreview && labsTier ? labsCopy.comingSoonNext : labsCopy.comingSoonWorkspaceNext);
+  const next = !workspacePreview && labsTier ? labsCopy.comingSoonNext : labsCopy.comingSoonWorkspaceNext;
   return (
     <div className="comingSoonShell" data-surface={id}>
       <EmptyState

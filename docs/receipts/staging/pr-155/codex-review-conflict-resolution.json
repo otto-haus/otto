@@ -1,0 +1,22 @@
+{
+  "pr": 155,
+  "reviewer": "Codex PR review agent",
+  "target": "Resolve provider secret store conflict against ship/functional-labs",
+  "resolution": {
+    "base_branch": "ship/functional-labs",
+    "conflicted_file": "apps/desktop/electron/secret-store.ts",
+    "kept_base_validation": true,
+    "kept_secret_path_alias_for_existing_proof": true,
+    "kept_owner_only_secret_file_enforcement": true
+  },
+  "verification": {
+    "targeted_tests": "bun test apps/desktop/electron/secret-store.test.ts apps/desktop/electron/provider-mirror.test.ts -> 5 pass, 0 fail, 23 expect() calls",
+    "desktop_typecheck": "bun run --cwd apps/desktop typecheck -> pass",
+    "electron_typecheck": "bun run --cwd apps/desktop electron:typecheck -> pass",
+    "full_tests": "bun test -> 250 pass, 1 skip, 0 fail, 869 expect() calls",
+    "verify_v0": "bun run verify:v0 -> 5 passed, 0 failed",
+    "git_diff_check": "git diff --check -> pass",
+    "task_staging": "passed and refreshed /Applications/otto-staging.app only"
+  },
+  "known_gaps": []
+}
