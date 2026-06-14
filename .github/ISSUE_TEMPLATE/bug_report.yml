@@ -1,0 +1,68 @@
+name: Bug report
+description: Something in otto behaves differently than documented or expected.
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for helping improve otto. Please ground the report in what you actually
+        observed — receipts beat assertions. For security issues, do **not** file here;
+        see [SECURITY.md](https://github.com/otto-haus/otto/blob/main/SECURITY.md).
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      description: Which part of the repo does this affect?
+      options:
+        - extension (Letta Code charter — extension/charter.ts)
+        - skill (skill/SKILL.md)
+        - desktop app (apps/desktop)
+        - packages (packages/core, packages/practices)
+        - docs
+        - other / not sure
+    validations:
+      required: true
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened
+      description: What did you observe? Paste relevant output, logs, or receipts.
+      placeholder: The agent claimed "done" but no receipt was attached…
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What you expected
+      description: What should have happened instead?
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Steps to reproduce
+      description: Minimal steps so someone else can see the same thing.
+      placeholder: |
+        1. Run `bun run install-extension`
+        2. In Letta Code, …
+        3. Observe …
+    validations:
+      required: true
+  - type: textarea
+    id: checks
+    attributes:
+      label: Checks run (optional)
+      description: If you ran them, paste the output. See CONTRIBUTING.md for details.
+      value: |
+        - [ ] `bun run typecheck`
+        - [ ] `bun test`
+        - [ ] `bun run verify:v0`
+    validations:
+      required: false
+  - type: input
+    id: version
+    attributes:
+      label: Version / commit
+      description: otto version, release tag, or commit SHA you are on.
+    validations:
+      required: false

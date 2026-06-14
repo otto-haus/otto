@@ -3,3 +3,9 @@ contact_links:
   - name: Ready-for-review PR queue
     url: https://github.com/otto-haus/otto/pulls?q=is%3Apr+label%3A%22status%3A+ready+for+review%22+is%3Aopen
     about: PRs ready for Sebastian review/merge.
+  - name: Question or discussion
+    url: https://discord.gg/hab9ZvbPH
+    about: For usage questions, ideas, and general discussion, chat with us on Discord.
+  - name: Security report
+    url: https://github.com/otto-haus/otto/security/policy
+    about: Please report security vulnerabilities privately — see SECURITY.md, do not open a public issue.
