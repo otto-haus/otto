@@ -1,0 +1,19 @@
+{
+  "pr": 159,
+  "reviewer": "Codex PR review agent",
+  "target": "MemoryStore.listBlocks fallback endpoint construction",
+  "agent_id_fixture": "agent/with space",
+  "expected_encoded_agent_id": "agent%2Fwith%20space",
+  "verified_call_sequence": [
+    "http://127.0.0.1:8283/v1/blocks?agent_id=agent%2Fwith%20space",
+    "http://127.0.0.1:8283/v1/agents/agent%2Fwith%20space/core-memory/blocks",
+    "http://127.0.0.1:8283/v1/agents/agent%2Fwith%20space/memory/blocks",
+    "http://127.0.0.1:8283/v1/agents/agent%2Fwith%20space/blocks"
+  ],
+  "negative_case_blocked": "No fallback endpoint may contain the raw path segment '/agents/agent/with space/'.",
+  "source_assertion": "apps/desktop/electron/memory-store.test.ts > encodes agent ids in every fallback memory API path segment",
+  "targeted_test": "bun test apps/desktop/electron/memory-store.test.ts -> 6 pass, 0 fail, 21 expect() calls",
+  "full_tests": "bun test -> 222 pass, 1 skip, 0 fail, 745 expect() calls",
+  "verify_v0": "5 passed, 0 failed",
+  "staging": "task staging passed and refreshed /Applications/otto-staging.app only"
+}

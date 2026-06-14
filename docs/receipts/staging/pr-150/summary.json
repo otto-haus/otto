@@ -1,0 +1,8 @@
+{
+  "pr": 150,
+  "status": "ready_for_review_after_codex_fixes",
+  "evidenceType": "backend-data",
+  "primaryReceipt": "docs/receipts/staging/pr-150/codex-review-worker-status-validation.json",
+  "reviewFinding": "The original runtime validator fixed invalid status writes, but its Set literal could drift from the WorkerStatus union. The validator now uses a Record<WorkerStatus, true> and has valid-status coverage.",
+  "readyForSebastian": true
+}

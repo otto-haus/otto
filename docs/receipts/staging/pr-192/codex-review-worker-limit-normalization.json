@@ -1,0 +1,41 @@
+{
+  "pr": 192,
+  "capturedAt": "2026-06-14T20:54:23Z",
+  "surface": "AutonomyStore max_parallel_workers normalization",
+  "fixtures": [
+    {
+      "value": "many",
+      "expected": 3,
+      "reason": "non-numeric falls back to default",
+      "actual": 3
+    },
+    {
+      "value": "0",
+      "expected": 3,
+      "reason": "zero falls back to default",
+      "actual": 3
+    },
+    {
+      "value": "-2",
+      "expected": 3,
+      "reason": "negative falls back to default",
+      "actual": 3
+    },
+    {
+      "value": "0.5",
+      "expected": 1,
+      "reason": "positive fractional limit keeps at least one worker",
+      "actual": 1
+    },
+    {
+      "value": "2.9",
+      "expected": 2,
+      "reason": "positive fractional limit floors to integer",
+      "actual": 2
+    }
+  ],
+  "assertions": {
+    "allExpectedValuesMatched": true,
+    "noUsablePositiveFractionNormalizesToZero": true
+  }
+}

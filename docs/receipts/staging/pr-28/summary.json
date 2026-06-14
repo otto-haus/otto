@@ -1,0 +1,194 @@
+[
+  {
+    "route": "practices",
+    "viewport": {
+      "name": "desktop",
+      "width": 1040,
+      "height": 720
+    },
+    "url": "http://127.0.0.1:5188/#practices",
+    "title": "Otto Desktop",
+    "expectedHeadingPresent": true,
+    "notBlank": true,
+    "frameworkOverlay": false,
+    "heading": {
+      "text": "Practices are available in the desktop app.",
+      "textWrap": "balance",
+      "width": 520,
+      "height": 60,
+      "lineCount": 2,
+      "lineWidths": [
+        282,
+        240
+      ]
+    },
+    "body": {
+      "text": "The web preview cannot read local practice files. The desktop app loads the repo or packaged file-backed canon.",
+      "textWrap": "pretty"
+    },
+    "screenshot": "/tmp/otto-pr28-proof/desktop-practices.png"
+  },
+  {
+    "route": "curation",
+    "viewport": {
+      "name": "desktop",
+      "width": 1040,
+      "height": 720
+    },
+    "url": "http://127.0.0.1:5188/#curation",
+    "title": "Otto Desktop",
+    "expectedHeadingPresent": true,
+    "notBlank": true,
+    "frameworkOverlay": false,
+    "heading": {
+      "text": "Curation inbox is available in the desktop app.",
+      "textWrap": "balance",
+      "width": 520,
+      "height": 60,
+      "lineCount": 2,
+      "lineWidths": [
+        328,
+        240
+      ]
+    },
+    "body": {
+      "text": "The web preview cannot read local proposal files. The desktop app loads proposals from ~/.otto/curation/proposals/.",
+      "textWrap": "pretty"
+    },
+    "screenshot": "/tmp/otto-pr28-proof/desktop-curation.png"
+  },
+  {
+    "route": "autonomy",
+    "viewport": {
+      "name": "desktop",
+      "width": 1040,
+      "height": 720
+    },
+    "url": "http://127.0.0.1:5188/#autonomy",
+    "title": "Otto Desktop",
+    "expectedHeadingPresent": true,
+    "notBlank": true,
+    "frameworkOverlay": false,
+    "heading": {
+      "text": "Autonomy policy is available in the desktop app.",
+      "textWrap": "balance",
+      "width": 520,
+      "height": 60,
+      "lineCount": 2,
+      "lineWidths": [
+        241,
+        357
+      ]
+    },
+    "body": {
+      "text": "The web preview cannot read autonomy/policy.yaml. Open the packaged desktop app to inspect zones, doors, and action classification.",
+      "textWrap": "pretty"
+    },
+    "screenshot": "/tmp/otto-pr28-proof/desktop-autonomy.png"
+  },
+  {
+    "viewport": "desktop",
+    "console": []
+  },
+  {
+    "route": "practices",
+    "viewport": {
+      "name": "mobile",
+      "width": 390,
+      "height": 844
+    },
+    "url": "http://127.0.0.1:5188/#practices",
+    "title": "Otto Desktop",
+    "expectedHeadingPresent": true,
+    "notBlank": true,
+    "frameworkOverlay": false,
+    "heading": {
+      "text": "Practices are available in the desktop app.",
+      "textWrap": "balance",
+      "width": 258,
+      "height": 91,
+      "lineCount": 3,
+      "lineWidths": [
+        164,
+        187,
+        165
+      ]
+    },
+    "body": {
+      "text": "The web preview cannot read local practice files. The desktop app loads the repo or packaged file-backed canon.",
+      "textWrap": "pretty"
+    },
+    "screenshot": "/tmp/otto-pr28-proof/mobile-practices.png"
+  },
+  {
+    "route": "curation",
+    "viewport": {
+      "name": "mobile",
+      "width": 390,
+      "height": 844
+    },
+    "url": "http://127.0.0.1:5188/#curation",
+    "title": "Otto Desktop",
+    "expectedHeadingPresent": true,
+    "notBlank": true,
+    "frameworkOverlay": false,
+    "heading": {
+      "text": "Curation inbox is available in the desktop app.",
+      "textWrap": "balance",
+      "width": 258,
+      "height": 91,
+      "lineCount": 3,
+      "lineWidths": [
+        184,
+        167,
+        212
+      ]
+    },
+    "body": {
+      "text": "The web preview cannot read local proposal files. The desktop app loads proposals from ~/.otto/curation/proposals/.",
+      "textWrap": "pretty"
+    },
+    "screenshot": "/tmp/otto-pr28-proof/mobile-curation.png"
+  },
+  {
+    "route": "autonomy",
+    "viewport": {
+      "name": "mobile",
+      "width": 390,
+      "height": 844
+    },
+    "url": "http://127.0.0.1:5188/#autonomy",
+    "title": "Otto Desktop",
+    "expectedHeadingPresent": true,
+    "notBlank": true,
+    "frameworkOverlay": false,
+    "heading": {
+      "text": "Autonomy policy is available in the desktop app.",
+      "textWrap": "balance",
+      "width": 258,
+      "height": 91,
+      "lineCount": 3,
+      "lineWidths": [
+        215,
+        167,
+        212
+      ]
+    },
+    "body": {
+      "text": "The web preview cannot read autonomy/policy.yaml. Open the packaged desktop app to inspect zones, doors, and action classification.",
+      "textWrap": "pretty"
+    },
+    "screenshot": "/tmp/otto-pr28-proof/mobile-autonomy.png"
+  },
+  {
+    "viewport": "mobile",
+    "console": []
+  },
+  {
+    "interaction": "sidebar Practices -> Autonomy",
+    "url": "http://127.0.0.1:5188/#autonomy",
+    "heading": "Autonomy policy is available in the desktop app.",
+    "screenshot": "/tmp/otto-pr28-proof/desktop-click-autonomy.png",
+    "console": []
+  }
+]

@@ -1,0 +1,27 @@
+{
+  "pr": 17,
+  "branch": "craft/package-repository-metadata",
+  "status": "ready",
+  "assumptions": [
+    "Root package metadata should be stable for registry/editor integrations.",
+    "Existing dependency constraints from main are intentionally preserved during metadata-only changes."
+  ],
+  "changes": [
+    "Added root package.json homepage/repository/bugs metadata fields.",
+    "Updated the branch onto current main so the PR diff preserves the existing esbuild override without including it as part of this metadata change."
+  ],
+  "checks": [
+    { "command": "python3 -c \"import json; d=json.load(open('package.json')); print(d['repository']); print(d['homepage']); print(d['bugs'])\"", "result": "pass" },
+    { "command": "git remote get-url origin", "result": "https://github.com/otto-haus/otto.git" },
+    { "command": "rg -n 'Website: <https://otto\\.haus>|https://otto\\.haus' README.md", "result": "pass" },
+    { "command": "git diff --check", "result": "pass" },
+    { "command": "bun run typecheck", "result": "pass" },
+    { "command": "bun run --cwd apps/desktop typecheck", "result": "pass" },
+    { "command": "bun run --cwd apps/desktop electron:typecheck", "result": "pass" },
+    { "command": "bun test", "result": "pass (36 pass, 0 fail, 162 expects)" },
+    { "command": "bun run verify:v0", "result": "pass (5 passed, 0 failed)" }
+  ],
+  "notes": [
+    "No runtime or rendered UI behavior changed; this is package provenance metadata."
+  ]
+}

@@ -5,17 +5,25 @@ on:
   push:
     branches: [main]
 
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   checks:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
       - uses: oven-sh/setup-bun@v2
         with:
-          bun-version: latest
-      - run: bun install --frozen-lockfile
-      - run: bun run typecheck
-      - run: bun test
-      - run: bun run verify:v0
-      - run: bun run --cwd apps/desktop typecheck
-      - run: bun run --cwd apps/desktop electron:typecheck
+          bun-version-file: .bun-version
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+      - name: Ensure install did not rewrite the lockfile
+        run: git diff --exit-code -- bun.lock
+      - name: Run local CI gate
+        run: bash scripts/ci-local-gate.sh

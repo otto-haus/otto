@@ -1,0 +1,29 @@
+{
+  "pr": 154,
+  "title": "docs(readme): add bundled canon dirs autonomy/ and knowledge/ to repo map",
+  "reviewer": "Codex PR review agent",
+  "branch": "craft/ship-3",
+  "base": "ship/functional-labs",
+  "status": "ready_for_sebastian_review",
+  "review_result": "README change is correct. Codex corrected ticket wording so it no longer implies channels/ and checks/ are unbundled.",
+  "changed_files": [
+    "README.md",
+    "planning/hq-tickets/_Done/162-craft-readme-repomap-bundled-canon.md",
+    "docs/receipts/staging/pr-154/codex-review-readme-repomap.json",
+    "docs/receipts/staging/pr-154/summary.json"
+  ],
+  "data_receipt": "docs/receipts/staging/pr-154/codex-review-readme-repomap.json",
+  "verification": [
+    "bun install --frozen-lockfile",
+    "directory existence check for standards/practices/routines/autonomy/knowledge/skill",
+    "electron-builder extraResources check",
+    "README repo-map alignment awk",
+    "git diff --check",
+    "bun run typecheck",
+    "bun run --cwd apps/desktop typecheck",
+    "bun run --cwd apps/desktop electron:typecheck",
+    "bun test",
+    "bun run verify:v0"
+  ],
+  "known_gaps": []
+}

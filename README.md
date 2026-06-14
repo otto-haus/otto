@@ -209,8 +209,11 @@ Local desktop app:
 # development Electron app
 task electron
 
-# build, package, install to /Applications/otto.app, and open
-task refresh
+# safe packaged app, isolated from the live profile
+task staging
+
+# intentional live replacement of /Applications/otto.app
+OTTO_ALLOW_LIVE_REFRESH=1 task refresh
 ```
 
 Connect the desktop app to Letta:
@@ -229,6 +232,14 @@ bun run --cwd apps/desktop typecheck
 bun run --cwd apps/desktop electron:typecheck
 task release:gate
 task smoke:cli   # disposable conversation; never writes to default
+```
+
+DevEx docs:
+
+```sh
+task docs:dev       # Mintlify preview for devex/
+task docs:validate  # Mintlify validation, also run by task ci
+task docs:links     # Mintlify internal link check, also run by task ci
 ```
 
 ---
@@ -256,7 +267,8 @@ Common commands:
 ```sh
 task dev          # Vite web preview; no desktop bridge
 task electron     # Electron app wired to local Letta
-task refresh      # build/package/install/open /Applications/otto.app
+task staging      # build/package/install/open isolated /Applications/otto-staging.app
+task refresh      # live /Applications/otto.app replacement; requires OTTO_ALLOW_LIVE_REFRESH=1
 task ps           # show otto + spawned Letta CLI processes
 ```
 
@@ -290,8 +302,11 @@ otto/
   practices/      practice.yaml specs
   routines/       proposed Routine specs
   standards/      canon, precedents, anti-patterns, registry
+  autonomy/       policy.yaml: zones, doors, action classification
+  knowledge/      AI Frontier model registry + corpus (Labs)
   templates/      Charter, Practice, Routine, Standard, Ticket, Worker packets
   docs/           architecture, install, runtime, autonomy, desktop, practices, routines
+  devex/          Mintlify docs for contributor workflow and local gates
   AGENTS.md       operating notes for AI coding agents
   INSTALL_FOR_AGENTS.md  agent-first install protocol
   receipts/       proof artifacts for v0.1

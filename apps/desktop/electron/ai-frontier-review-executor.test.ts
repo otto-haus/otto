@@ -101,4 +101,31 @@ describe('AiFrontierReviewExecutor', () => {
       rmSync(tmp, { recursive: true, force: true });
     }
   });
+
+  test('manual run skips malformed registry without crashing', () => {
+    const tmp = mkdtempSync(join(tmpdir(), 'otto-ai-frontier-'));
+    try {
+      const frontierDir = join(tmp, 'ai-frontier');
+      mkdirSync(join(tmp, '_templates'), { recursive: true });
+      mkdirSync(frontierDir, { recursive: true });
+      const notesPath = join(frontierDir, 'capability-notes.md');
+      const registryPath = join(frontierDir, 'model-registry.yaml');
+      writeFileSync(notesPath, '# Capability notes\n');
+      writeFileSync(registryPath, 'models: [unterminated\n');
+      const executor = new AiFrontierReviewExecutor(
+        new KnowledgeStore(tmp),
+        new ReceiptWriter(join(tmp, 'receipts')),
+        new ProposalStore(join(tmp, 'proposals')),
+      );
+
+      const result = executor.run();
+
+      expect(result.receipt.action).toBe('knowledge.frontier_review.manual');
+      expect(result.touched).toContain(notesPath);
+      expect(result.touched).not.toContain(registryPath);
+      expect(readFileSync(registryPath, 'utf8')).toBe('models: [unterminated\n');
+    } finally {
+      rmSync(tmp, { recursive: true, force: true });
+    }
+  });
 });
