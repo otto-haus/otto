@@ -50,6 +50,7 @@ type AttachmentDraft = SavedAttachment & { previewUrl: string };
 
 const DRAFT_KEY = 'otto.chat.draft.v1';
 const ATTACHMENTS_KEY = 'otto.chat.attachments.v1';
+const QUEUE_DELIVERED_PRUNE_AGE_MS = 15_000;
 
 const FALLBACK_MODEL_OPTIONS: LettaModelOption[] = [
   { label: 'GPT-5.5 (ChatGPT)', handle: 'chatgpt-plus-pro/gpt-5.5' },
@@ -776,6 +777,7 @@ const LiveChat: React.FC<{
       (item) =>
         !(
           item.state === 'queued' &&
+          Date.now() - item.createdAt >= QUEUE_DELIVERED_PRUNE_AGE_MS &&
           queueMatchesThread(item, rt.activeThreadId) &&
           queueItemAlreadyDelivered(item, rt.messages)
         )
