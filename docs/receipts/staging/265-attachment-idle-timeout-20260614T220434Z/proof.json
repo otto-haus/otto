@@ -1,0 +1,10 @@
+{
+  "issue": 265,
+  "at": "2026-06-14T22:04:34Z",
+  "changes": [
+    "turnIdleTimeoutMs scales with attachment count (2m base + 30s each, max 10m)",
+    "idle timeout no longer markNotReady — transport stays connected",
+    "assistant without idle confirmation completes turn successfully"
+  ],
+  "tests": "bun test apps/desktop/electron/runtime-transport/ws-protocol.test.ts apps/desktop/electron/runtime-transport/ws-runtime-transport.test.ts — 19 pass"
+}

@@ -21,6 +21,22 @@ const RECEIPT_DIR = join(RECEIPT_BASE, `159-chat-core-working-loop-ws-${RUN_ID}`
 const TIMEOUT = Number(process.env.OTTO_159_PROOF_TIMEOUT_MS ?? 180000);
 
 const marker = (name) => `OTTO_159_${name}_${RUN_ID}`;
+const TITLE_A = `159 A ${RUN_ID}`;
+const TITLE_B = `159 B ${RUN_ID}`;
+const WORKSPACE_SURFACES = [
+  ['charters', 'Charters'],
+  ['standards', 'Standards'],
+  ['practices', 'Practices'],
+  ['routines', 'Routines'],
+  ['curation', 'Curation'],
+  ['receipts', 'Receipts'],
+  ['checks', 'Checks'],
+  ['autonomy', 'Autonomy'],
+  ['skills', 'Skills'],
+  ['knowledge', 'Knowledge'],
+  ['tickets', 'Tickets'],
+  ['channels', 'Channels'],
+];
 
 main().catch((error) => {
   console.error(error);
@@ -47,9 +63,14 @@ async function main() {
       queue2: marker('QUEUE_2'),
       steer: marker('STEER'),
     },
+    expected: {
+      titleA: TITLE_A,
+      titleB: TITLE_B,
+    },
     checks: {},
     threads: {},
     models: {},
+    workspace: {},
     status: {},
     errors: [],
     screenshots: {},
@@ -63,6 +84,7 @@ async function main() {
     proof.status.initial = proof.initial.status;
     proof.checks.notBlank = proof.initial.bodyLen > 100;
     proof.checks.noSilentHang = proof.initial.status?.ready === true || proof.initial.setupHasRetry === true;
+    proof.checks.commandStationAbsent = await commandStationAbsent(page);
     proof.checks.wsReady =
       proof.initial.status?.ready === true &&
       proof.initial.status?.transportMode === 'ws' &&
@@ -79,15 +101,16 @@ async function main() {
 
     await clearQueue(page);
 
-    const threadA = await createViaNewChat(page, `159 A ${RUN_ID}`);
+    const threadA = await createViaNewChat(page, TITLE_A);
     proof.threads.a = threadA;
     await configureModel(page, proof.models.gpt.handle);
     proof.status.afterGptConfigure = await page.evaluate(() => window.otto.runtime.status());
     await sendViaComposer(page, `Reply with exactly ${proof.markers.a} and nothing else.`);
     await waitForAssistantMarker(page, threadA.id, proof.markers.a);
     proof.threads.aAfterSend = await getThread(page, threadA.id);
+    proof.checks.renameNotOverwrittenByFirstSend = proof.threads.aAfterSend?.title === TITLE_A;
 
-    const threadB = await createViaNewChat(page, `159 B ${RUN_ID}`);
+    const threadB = await createViaNewChat(page, TITLE_B);
     proof.threads.b = threadB;
     await sendViaComposer(page, `Reply with exactly ${proof.markers.b} and nothing else.`);
     await waitForAssistantMarker(page, threadB.id, proof.markers.b);
@@ -102,9 +125,9 @@ async function main() {
       proof.threads.aAfterSend?.lettaConversationId !== 'default' &&
       proof.threads.bAfterSend?.lettaConversationId !== 'default';
 
-    await clickConversation(page, `159 A ${RUN_ID}`, threadA.id);
+    await clickConversation(page, TITLE_A, threadA.id);
     const aVisible = await visibleAndStoredText(page, threadA.id);
-    await clickConversation(page, `159 B ${RUN_ID}`, threadB.id);
+    await clickConversation(page, TITLE_B, threadB.id);
     const bVisible = await visibleAndStoredText(page, threadB.id);
     proof.checks.switchActiveRowMoves = (await activeThreadId(page)) === threadB.id;
     proof.checks.noHistoryBleed =
@@ -113,22 +136,22 @@ async function main() {
       bVisible.stored.includes(proof.markers.b) &&
       !bVisible.stored.includes(proof.markers.a);
 
-    await clickConversation(page, `159 A ${RUN_ID}`, threadA.id);
-    await clickThreadPin(page, `159 A ${RUN_ID}`);
+    await clickConversation(page, TITLE_A, threadA.id);
+    await clickThreadPin(page, TITLE_A);
     await waitForThread(page, threadA.id, (thread) => thread.pinned === true);
     proof.threads.aPinned = await getThread(page, threadA.id);
     proof.checks.pinPersistsInStore = proof.threads.aPinned?.pinned === true;
-    proof.checks.pinButtonLeft = await page.locator('.sidebarConvWrap', { hasText: `159 A ${RUN_ID}` }).first().evaluate((row) => {
+    proof.checks.pinButtonLeft = await page.locator('.sidebarConvWrap', { hasText: TITLE_A }).first().evaluate((row) => {
       const pin = row.querySelector('.sidebarConv__pin');
       const label = row.querySelector('.sidebarConv__label');
       if (!pin || !label) return false;
       return pin.getBoundingClientRect().left < label.getBoundingClientRect().left;
     });
 
-    await clickConversation(page, `159 B ${RUN_ID}`, threadB.id);
-    await clickThreadPin(page, `159 B ${RUN_ID}`);
+    await clickConversation(page, TITLE_B, threadB.id);
+    await clickThreadPin(page, TITLE_B);
     await waitForThread(page, threadB.id, (thread) => thread.pinned === true);
-    await archiveConversationTwoClick(page, `159 B ${RUN_ID}`);
+    proof.archiveClick = await archiveConversationTwoClick(page, TITLE_B);
     await waitForThread(page, threadB.id, (thread) => thread.archived === true, true);
     await waitReady(page);
     proof.threads.bArchived = await getThread(page, threadB.id, true);
@@ -142,16 +165,22 @@ async function main() {
       proof.afterArchive.activeThreadId &&
       proof.afterArchive.activeThreadId !== threadB.id &&
       proof.status.afterArchive.ready === true;
+    proof.checks.archiveTwoClickSameLocation =
+      proof.archiveClick?.beforeLabel === 'Archive conversation' &&
+      proof.archiveClick?.armedLabel === 'Confirm archive' &&
+      sameBoxCenter(proof.archiveClick?.before, proof.archiveClick?.armed);
 
-    await clickConversation(page, `159 A ${RUN_ID}`, threadA.id);
+    await clickConversation(page, TITLE_A, threadA.id);
     await configureModelViaPicker(page, proof.models.claude.handle);
     proof.status.afterClaudeConfigure = await page.evaluate(() => window.otto.runtime.status());
     await sendViaComposer(page, `Reply with exactly ${proof.markers.model} and nothing else.`);
     await waitForAssistantMarker(page, threadA.id, proof.markers.model, TIMEOUT);
+    proof.threads.aAfterModelSend = await getThread(page, threadA.id);
     proof.checks.modelSwitchSend =
       proof.status.afterClaudeConfigure?.ready === true &&
       proof.status.afterClaudeConfigure?.modelHandle === proof.models.claude.handle &&
       (await assistantTextFor(page, threadA.id)).includes(proof.markers.model);
+    proof.checks.renameNotOverwrittenByNextSend = proof.threads.aAfterModelSend?.title === TITLE_A;
 
     await proveQueueAndSteer(page, proof, threadA.id);
 
@@ -175,9 +204,14 @@ async function main() {
       aAfterRelaunch?.pinned === true &&
       bAfterRelaunch?.archived === true &&
       proof.afterRelaunch.threads.some((thread) => thread.id === threadA.id);
+    proof.checks.renamePersistsAfterRelaunch = aAfterRelaunch?.title === TITLE_A;
+    proof.checks.renamePersistsAndNotOverwritten =
+      proof.checks.renameNotOverwrittenByFirstSend === true &&
+      proof.checks.renameNotOverwrittenByNextSend === true &&
+      proof.checks.renamePersistsAfterRelaunch === true;
 
-    await clickConversation(page, `159 A ${RUN_ID}`, threadA.id);
-    await clickThreadPin(page, `159 A ${RUN_ID}`);
+    await clickConversation(page, TITLE_A, threadA.id);
+    await clickThreadPin(page, TITLE_A);
     await waitForThread(page, threadA.id, (thread) => thread.pinned === false);
     proof.threads.aUnpinned = await getThread(page, threadA.id);
     proof.checks.unpinReturnsToRecents = proof.threads.aUnpinned?.pinned === false;
@@ -191,6 +225,10 @@ async function main() {
       if (/^new chat$/i.test(title) && !thread.lettaConversationId && thread.id !== proof.finalVisible.activeThreadId) return false;
       return true;
     });
+    proof.workspace = await proveWorkspaceSoon(page);
+    proof.checks.workspaceSurfacesComingSoon = proof.workspace.ok === true;
+    await page.locator('button[aria-label="Chat"]').first().click();
+    await page.waitForSelector('.chat', { timeout: 10000 });
 
     proof.screenshots.final = join(RECEIPT_DIR, 'final.png');
     await page.screenshot({ path: proof.screenshots.final, fullPage: false });
@@ -198,6 +236,7 @@ async function main() {
     proof.ok = [
       'notBlank',
       'noSilentHang',
+      'commandStationAbsent',
       'wsReady',
       'modelRegistryHasGpt',
       'modelRegistryHasClaude',
@@ -209,14 +248,17 @@ async function main() {
       'pinPersistsInStore',
       'pinButtonLeft',
       'archivePinnedWorks',
+      'archiveTwoClickSameLocation',
       'archiveActiveFallback',
       'modelSwitchSend',
+      'renamePersistsAndNotOverwritten',
       'queueDrain',
       'steerChangedCourse',
       'queueFailureHonest',
       'relaunchRestore',
       'unpinReturnsToRecents',
       'recentsClean',
+      'workspaceSurfacesComingSoon',
     ].every((key) => proof.checks[key] === true);
   } catch (error) {
     proof.errors.push(error instanceof Error ? { message: error.message, stack: error.stack } : { message: String(error) });
@@ -316,6 +358,13 @@ async function readState(page) {
       queue: JSON.parse(localStorage.getItem('otto.chat.queue.v3') ?? '[]'),
       activeThreadId: (await window.otto.threads.list()).activeThreadId,
     };
+  });
+}
+
+async function commandStationAbsent(page) {
+  return page.evaluate(() => {
+    const body = document.body?.innerText ?? '';
+    return !document.querySelector('.commandStation') && !body.includes('COMMAND STATION') && !body.includes('What needs you');
   });
 }
 
@@ -437,11 +486,26 @@ async function archiveConversationTwoClick(page, title) {
   await row.waitFor({ state: 'visible', timeout: 30000 });
   const button = row.locator('.sidebarConv__archive').first();
   const before = await button.boundingBox();
+  const beforeLabel = await button.getAttribute('aria-label');
   await button.click();
-  await page.waitForFunction((label) => !!document.querySelector(`[aria-label="${label}"]`), 'Confirm archive', { timeout: 5000 });
+  await page.waitForFunction((rowTitle) => {
+    const rows = Array.from(document.querySelectorAll('.sidebarConvWrap'));
+    const found = rows.find((candidate) => (candidate.textContent ?? '').includes(rowTitle));
+    return found?.querySelector('.sidebarConv__archive')?.getAttribute('aria-label') === 'Confirm archive';
+  }, title, { timeout: 5000 });
   const armed = await button.boundingBox();
+  const armedLabel = await button.getAttribute('aria-label');
   await button.click();
-  return { before, armed };
+  return { before, armed, beforeLabel, armedLabel };
+}
+
+function sameBoxCenter(a, b) {
+  if (!a || !b) return false;
+  const ax = a.x + a.width / 2;
+  const ay = a.y + a.height / 2;
+  const bx = b.x + b.width / 2;
+  const by = b.y + b.height / 2;
+  return Math.abs(ax - bx) <= 4 && Math.abs(ay - by) <= 4;
 }
 
 async function configureModel(page, handle) {
@@ -497,6 +561,33 @@ async function proveQueueAndSteer(page, proof, threadId) {
     state.assistant.includes(proof.markers.queue2);
   proof.checks.steerChangedCourse = state.assistant.includes(proof.markers.steer);
   proof.checks.queueFailureHonest = !state.queue.some((item) => item.state === 'sending') && !state.failedVisible;
+}
+
+async function proveWorkspaceSoon(page) {
+  const result = { ok: false, items: {} };
+  const workspace = page.getByRole('button', { name: /^Workspace$/ });
+  await workspace.waitFor({ state: 'visible', timeout: 10000 });
+  if ((await workspace.getAttribute('aria-expanded')) !== 'true') {
+    await workspace.click();
+  }
+
+  for (const [id, label] of WORKSPACE_SURFACES) {
+    const button = page.locator(`button[aria-label="${label}"]`).first();
+    await button.waitFor({ state: 'visible', timeout: 10000 });
+    const navSoon = await button.locator('.nav__badge--soon').count().then((count) => count > 0);
+    await button.click();
+    const shell = page.locator(`.comingSoonShell[data-surface="${id}"]`).first();
+    await shell.waitFor({ state: 'visible', timeout: 10000 });
+    const text = await shell.innerText();
+    result.items[id] = {
+      label,
+      navSoon,
+      surfaceComingSoon: /coming soon/i.test(text),
+      textSample: text.replace(/\s+/g, ' ').slice(0, 180),
+    };
+  }
+  result.ok = Object.values(result.items).every((item) => item.navSoon && item.surfaceComingSoon);
+  return result;
 }
 
 function relaunchStaging() {
