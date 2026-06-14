@@ -1,0 +1,37 @@
+{
+  "pr": 192,
+  "reviewedBy": "codex",
+  "capturedAt": "2026-06-14T20:54:23Z",
+  "baseBranch": "ship/functional-labs",
+  "reviewBranch": "bugfix/autonomy-worker-limit",
+  "reviewHeadBeforeProofCommit": "719cd9407e3c1445729590e76c6193eefa2273f3",
+  "codeRecommendation": "ready",
+  "shipRecommendation": "ship_with_functional_labs_train",
+  "shipRecommendationReason": "This is a narrow autonomy policy normalization hardening. It prevents malformed worker limits from becoming NaN and prevents usable fractional limits below one from becoming zero workers. It does not create a standalone release reason, but I see no higher-level blocker to shipping it with the functional-labs train once Sebastian approves that train.",
+  "bugsFixedByCodexReview": [
+    "Fixed the residual fractional-limit edge where max_parallel_workers: 0.5 passed the positive guard and then floored to 0.",
+    "Expanded regression coverage for non-numeric, zero, negative, sub-one fractional, and above-one fractional max_parallel_workers values."
+  ],
+  "proof": {
+    "dataReceipt": "docs/receipts/staging/pr-192/codex-review-worker-limit-normalization.json",
+    "nativeStaging": {
+      "command": "OTTO_STAGING_ROOT=/tmp/otto-pr-192-proof-staging OTTO_STAGING_PORT=9457 OTTO_STAGING_WS_REMOTE_ENV=otto-pr192-proof-byor OTTO_AGENT_ID=agent-00000000-0000-4000-8000-000000000000 LETTA_BASE_URL=http://127.0.0.1:9 OTTO_STAGING_LOG_CAPTURE_SECONDS=1 task staging",
+      "deployLog": "/Users/seb/.codex/admin/otto-logs/staging-20260614T135223.deploy.log",
+      "appLog": "/Users/seb/.codex/admin/otto-logs/staging-20260614T135223.app.log",
+      "result": "passed; installed and launched /Applications/otto-staging.app"
+    }
+  },
+  "verification": [
+    "bun install --frozen-lockfile",
+    "bun test apps/desktop/electron/autonomy-store.test.ts -> 12 pass, 0 fail, 51 expect calls",
+    "bash scripts/ci-local-gate.sh -> pass",
+    "bun test inside local gate -> 259 pass, 1 skip, 0 fail, 896 expect calls",
+    "bun run verify:v0 inside local gate -> 5 passed, 0 failed",
+    "devex mint validate inside local gate -> pass",
+    "devex broken-links inside local gate -> pass",
+    "electron-vite build inside local gate -> pass",
+    "bun audit inside local gate -> No vulnerabilities found",
+    "task staging -> pass, installed and launched /Applications/otto-staging.app"
+  ],
+  "proofBoundary": "This is a backend/local-data change, so the attached evidence is fixture data and observed normalization output rather than screenshots. No live Letta connection was claimed."
+}

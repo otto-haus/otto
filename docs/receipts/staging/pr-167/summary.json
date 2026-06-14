@@ -1,0 +1,37 @@
+{
+  "pr": 167,
+  "branch": "ci/mintlify-devex",
+  "status": "ready",
+  "source_docs": [
+    "Context7 /mintlify/docs confirmed docs.json navigation groups and CLI commands: mint dev, mint validate, mint broken-links"
+  ],
+  "reviewer_fixes": [
+    "Added bun run docs:links to scripts/ci-local-gate.sh so the local CI gate covers the ticket's broken-link requirement.",
+    "Updated devex/ci-gate.mdx and README.md so the documented task ci steps match the gate."
+  ],
+  "checks": [
+    { "command": "bun install --frozen-lockfile", "result": "pass" },
+    { "command": "task docs:validate", "result": "pass (Mintlify build validation passed)" },
+    { "command": "task docs:links", "result": "pass (no broken links found)" },
+    { "command": "bun run typecheck", "result": "pass" },
+    { "command": "bun run --cwd apps/desktop typecheck", "result": "pass" },
+    { "command": "bun run --cwd apps/desktop electron:typecheck", "result": "pass" },
+    { "command": "git diff --check", "result": "pass" },
+    { "command": "bun test", "result": "pass (35 pass, 0 fail, 160 expects)" },
+    { "command": "bun run verify:v0", "result": "pass (5 passed, 0 failed)" },
+    { "command": "OTTO_READINESS_IGNORE_LOCAL_CONFIG=1 bun run --cwd apps/desktop electron:build", "result": "pass" },
+    { "command": "bun audit", "result": "pass (No vulnerabilities found)" },
+    { "command": "task ci", "result": "pass" }
+  ],
+  "artifacts": [
+    "devex/docs.json",
+    "devex/index.mdx",
+    "devex/local-setup.mdx",
+    "devex/ci-gate.mdx",
+    "devex/desktop-staging.mdx"
+  ],
+  "notes": [
+    "No hosted Mintlify deploy, token, DNS, custom domain, release, tag, or repository setting changed.",
+    "No rendered product UI changed; this is a docs/CI gate change."
+  ]
+}

@@ -1,0 +1,46 @@
+{
+  "pr": 160,
+  "title": "fix(desktop): give Provider-type segmented control valid tab roles",
+  "reviewer": "Codex PR review agent",
+  "branch": "craft/ship-4",
+  "base": "ship/functional-labs",
+  "status": "ready_for_sebastian_review",
+  "finding_fixed": "Original PR added role=tab and aria-selected, but left the tablist without tabpanel ownership and keyboard navigation. Repair adds aria-controls, role=tabpanel, roving tabIndex, and Arrow/Home/End navigation.",
+  "changed_files": [
+    "apps/desktop/src/surfaces/Panes.tsx",
+    "apps/desktop/src/surfaces/provider-tabs-a11y.test.ts",
+    "docs/receipts/staging/pr-160/codex-review-provider-tabs-a11y.json",
+    "docs/receipts/staging/pr-160/codex-review-provider-tabs-desktop.png",
+    "docs/receipts/staging/pr-160/codex-review-provider-tabs-mobile.png",
+    "planning/hq-tickets/_Done/163-craft-provider-segmented-tab-roles.md"
+  ],
+  "rendered_proof": {
+    "flow": "http://127.0.0.1:4270/#settings -> Model providers -> Provider type Local/Cloud tabs",
+    "desktop_screenshot": "docs/receipts/staging/pr-160/codex-review-provider-tabs-desktop.png",
+    "mobile_screenshot": "docs/receipts/staging/pr-160/codex-review-provider-tabs-mobile.png",
+    "a11y_data": "docs/receipts/staging/pr-160/codex-review-provider-tabs-a11y.json",
+    "browser_path": "Playwright fallback",
+    "browser_fallback_reason": "Browser plugin bootstrap succeeded but agent.browsers.get(\"iab\") returned: Browser is not available: iab",
+    "console_errors_or_warnings": 0
+  },
+  "verification": [
+    "bun install --frozen-lockfile",
+    "bun test apps/desktop/src/surfaces/provider-tabs-a11y.test.ts",
+    "bun run --cwd apps/desktop typecheck",
+    "bun run --cwd apps/desktop electron:typecheck",
+    "bun run typecheck",
+    "git diff --check",
+    "bun test",
+    "bun run verify:v0",
+    "task staging"
+  ],
+  "verification_summary": {
+    "targeted_test": "2 pass, 0 fail, 12 expect() calls",
+    "full_tests": "223 pass, 1 skip, 0 fail, 750 expect() calls",
+    "verify_v0": "5 passed, 0 failed",
+    "staging": "/Applications/otto-staging.app refreshed with isolated HOME and OTTO_HOME"
+  },
+  "known_gaps": [
+    "In-app Browser endpoint iab was unavailable, so screenshots/data used Playwright fallback."
+  ]
+}
