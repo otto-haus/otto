@@ -1,0 +1,73 @@
+{
+  "receipt": "codex-review-run-status-validation",
+  "pr": 44,
+  "createdAt": "2026-06-14T22:36:27Z",
+  "reviewAgent": "codex-correctness-auditor",
+  "headBeforeRepair": "3958548dc6b75cdd56fe7807ef20b6646615d33e",
+  "baseMerged": "origin/ship/functional-labs@9a629158d0210971766b1c39870437e27f36715b",
+  "status": "ready_after_codex_repair",
+  "changes": [
+    {
+      "file": "apps/desktop/electron/run-store.test.ts",
+      "summary": "Resolved the add/add conflict by preserving base filename-sanitization tests and PR status-normalization tests in one suite."
+    }
+  ],
+  "behaviorReviewed": [
+    "RunStore.record keeps the caller-provided run id as data while sanitizing only the filename.",
+    "RunStore.list skips persisted records with unknown status instead of normalizing them to success.",
+    "Legacy persisted status completed remains mapped to success.",
+    "Malformed/unknown persisted run status increments skipped count and does not create false proof."
+  ],
+  "verification": [
+    {
+      "command": "bun test apps/desktop/electron/run-store.test.ts",
+      "status": "pass",
+      "result": "6 pass, 0 fail, 27 expect() calls"
+    },
+    {
+      "command": "bun test apps/desktop/electron/run-store.test.ts apps/desktop/electron/practice-runner.test.ts apps/desktop/electron/worker-runner.test.ts apps/desktop/electron/ticket-orchestrator.test.ts",
+      "status": "pass",
+      "result": "17 pass, 0 fail, 71 expect() calls after bun install --frozen-lockfile restored workspace dependencies"
+    },
+    {
+      "command": "bash scripts/ci-local-gate.sh",
+      "status": "pass",
+      "result": "301 pass, 1 skip, 0 fail, 1014 expect() calls; verify:v0 5/5; Mintlify validate and broken-links passed; Electron build passed; bun audit found no vulnerabilities"
+    },
+    {
+      "command": "OTTO_STAGING_APP=/Applications/otto-pr-44-staging.app OTTO_STAGING_ROOT=/tmp/otto-pr-44-staging-root OTTO_STAGING_BUNDLE_ID=haus.otto.desktop.pr44 OTTO_STAGING_DISPLAY_NAME=\"otto pr44\" OTTO_STAGING_PORT=9544 OTTO_STAGING_LOG_CAPTURE_SECONDS=8 task staging",
+      "status": "pass",
+      "result": "Disposable app/profile proof passed; no /Applications/otto.app or /Applications/otto-staging.app mutation."
+    }
+  ],
+  "disposableAppProof": {
+    "app": "/Applications/otto-pr-44-staging.app",
+    "home": "/tmp/otto-pr-44-staging-root/home",
+    "ottoHome": "/tmp/otto-pr-44-staging-root/otto-home",
+    "profile": "/tmp/otto-pr-44-staging-root/profile",
+    "bundleId": "haus.otto.desktop.pr44",
+    "port": 9544,
+    "deployLog": "/Users/seb/.codex/admin/otto-logs/staging-20260614T153537.deploy.log",
+    "appLog": "/Users/seb/.codex/admin/otto-logs/staging-20260614T153537.app.log",
+    "plistVerified": {
+      "HOME": "/tmp/otto-pr-44-staging-root/home",
+      "OTTO_HOME": "/tmp/otto-pr-44-staging-root/otto-home",
+      "OTTO_SMOKE": "1",
+      "OTTO_RUNTIME_TRANSPORT": "ws",
+      "CFBundleIdentifier": "haus.otto.desktop.pr44"
+    }
+  },
+  "caveats": [
+    "An earlier proof attempt used OTTO_STAGING_HOME, which the script does not read; that run is not counted as disposable-profile proof.",
+    "The final app log contains normal macOS AppIntents/LaunchServices sandbox noise; no otto-specific fatal runtime error was identified in the captured startup log."
+  ],
+  "officialAppBoundary": {
+    "mutatedApplicationsOttoApp": false,
+    "mutatedApplicationsOttoStagingApp": false,
+    "usedDisposableAppAndProfile": true
+  },
+  "recommendation": {
+    "code": "ready_for_sebastian_review",
+    "ship": "ship_with_functional_labs_train"
+  }
+}
