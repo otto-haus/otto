@@ -15,6 +15,10 @@ export function secretsFilePath(): string {
   return join(defaultOttoDir(), 'secrets.env');
 }
 
+export function secretStorePath(): string {
+  return secretsFilePath();
+}
+
 function assertSecretName(name: string): void {
   if (!SECRET_NAME.test(name)) throw new Error(`Invalid secret name: ${name}`);
 }
