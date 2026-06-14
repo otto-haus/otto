@@ -184,8 +184,11 @@ Local desktop app:
 # development Electron app
 task electron
 
-# build, package, install to /Applications/otto.app, and open
-task refresh
+# safe packaged app, isolated from the live profile
+task staging
+
+# intentional live replacement of /Applications/otto.app
+OTTO_ALLOW_LIVE_REFRESH=1 task refresh
 ```
 
 Connect the desktop app to Letta:
@@ -231,7 +234,8 @@ Common commands:
 ```sh
 task dev          # Vite web preview; no desktop bridge
 task electron     # Electron app wired to local Letta
-task refresh      # build/package/install/open /Applications/otto.app
+task staging      # build/package/install/open isolated /Applications/otto-staging.app
+task refresh      # live /Applications/otto.app replacement; requires OTTO_ALLOW_LIVE_REFRESH=1
 task ps           # show otto + spawned Letta CLI processes
 ```
 

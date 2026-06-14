@@ -49,25 +49,38 @@ tasks:
     cmds: [bun run verify:v0]
 
   build:
-    desc: Build the desktop app (main + preload + renderer)
+    desc: Build the desktop app with committed readiness baseline (main + preload + renderer)
     dir: '{{.DESKTOP}}'
+    env:
+      OTTO_READINESS_IGNORE_LOCAL_CONFIG: '1'
     cmds: [bun run electron:build]
 
   package:
     desc: Package the macOS .app (electron-builder, arm64)
     dir: '{{.DESKTOP}}'
+    env:
+      OTTO_READINESS_IGNORE_LOCAL_CONFIG: '1'
     cmds:
       - bun run electron:build
       - bunx electron-builder --mac dir --arm64
 
   refresh:
-    aliases: [deploy]
-    desc: Build + package + install to /Applications/otto.app + open
-    cmds: [bash scripts/refresh-otto-app.sh]
+    aliases: [live, refresh:live]
+    desc: LIVE app update — requires OTTO_ALLOW_LIVE_REFRESH=1
+    cmds:
+      - task: _refresh-live
 
   staging:
-    desc: Build + package + install/open isolated /Applications/otto-staging.app
+    aliases: [deploy]
+    desc: Safe deploy — build + package + install/open isolated /Applications/otto-staging.app
     cmds: [bash apps/desktop/scripts/deploy-staging.sh]
+
+  _refresh-live:
+    internal: true
+    preconditions:
+      - sh: 'test "${OTTO_ALLOW_LIVE_REFRESH:-}" = "1"'
+        msg: 'Refusing to replace /Applications/otto.app. Use `task staging`, or run `OTTO_ALLOW_LIVE_REFRESH=1 task refresh` when you intentionally want the live app replaced.'
+    cmds: [bash scripts/refresh-otto-app.sh]
 
   open:
     desc: Open installed /Applications/otto.app without the Electron-as-Node footgun

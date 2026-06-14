@@ -52,7 +52,8 @@ Desktop:
 
 ```sh
 task electron       # live Electron app in dev
-task refresh        # build/package/install/open /Applications/otto.app
+task staging        # build/package/install/open isolated /Applications/otto-staging.app
+task refresh        # live /Applications/otto.app replacement; requires OTTO_ALLOW_LIVE_REFRESH=1
 task smoke:cli      # isolated disposable conversation; never default
 ```
 
