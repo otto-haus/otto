@@ -161,10 +161,12 @@ export class TicketStore {
     if (!existsSync(ticketPath)) return null;
     try {
       const raw = parse(readFileSync(ticketPath, 'utf8')) as Record<string, unknown>;
+      const ticketId = optionalString(raw.ticket_id);
+      if (!ticketId) return null;
       const packetPath = join(root, 'worker-packet.md');
       return {
         schema: 'otto.ticket.v1',
-        ticket_id: String(raw.ticket_id ?? ''),
+        ticket_id: ticketId,
         status: status(raw.status),
         charter: optionalString(raw.charter),
         owner: optionalString(raw.owner),

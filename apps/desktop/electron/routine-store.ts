@@ -10,6 +10,7 @@ import type {
   Schedule,
 } from '@otto-haus/core';
 import { AiFrontierReviewExecutor } from './ai-frontier-review-executor';
+import { KnowledgeStore } from './knowledge-store';
 import { PracticeMiningLoop } from './practice-mining';
 import { RECEIPTS_DIR, ReceiptWriter, type WrittenReceipt } from './receipt-writer';
 
@@ -40,6 +41,7 @@ export class RoutineStore {
   constructor(
     private dir = resolveRoutinesDir(),
     private receipts = new ReceiptWriter(),
+    private knowledge = new KnowledgeStore(),
   ) {}
 
   listResult(): RoutineListResult {
@@ -115,7 +117,7 @@ export class RoutineStore {
     const evidence: WrittenReceipt['evidence'] = [{ kind: 'file', ref: routine.file, note: 'Canonical routine.yaml' }];
 
     if (slug === 'ai-frontier-review') {
-      const frontier = new AiFrontierReviewExecutor(undefined, this.receipts);
+      const frontier = new AiFrontierReviewExecutor(this.knowledge, this.receipts);
       const run = frontier.run();
       knowledgeReceiptId = run.receipt.id;
       evidence.push({ kind: 'log', ref: run.receipt.id, note: 'knowledge.frontier_review.manual' });

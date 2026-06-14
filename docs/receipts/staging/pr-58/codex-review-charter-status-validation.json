@@ -1,0 +1,48 @@
+{
+  "pr": 58,
+  "reviewer": "codex",
+  "reviewedAt": "2026-06-14",
+  "base": "ship/functional-labs",
+  "head": "bugfix/charter-status-validation",
+  "changeType": "electron-backend",
+  "fixApplied": {
+    "summary": "CharterStore.create and updateStatus reject invalid runtime status values before writing receipts or charter JSON. The allowed runtime map is now a Record<CharterStatus, true> so TypeScript catches future CharterStatus drift.",
+    "files": [
+      "apps/desktop/electron/charter-store.ts",
+      "apps/desktop/electron/charter-store.test.ts"
+    ]
+  },
+  "runtimeBoundaryProof": {
+    "invalidStatus": "done",
+    "throws": "Invalid charter status",
+    "invalidCreateDoesNotWrite": "charters/bad-status/charter.json is absent",
+    "invalidUpdateDoesNotRewrite": {
+      "status": "active",
+      "changesLength": 1
+    },
+    "validCompleteStillRequiresReceiptProof": true
+  },
+  "verification": {
+    "passed": [
+      "bun install --frozen-lockfile",
+      "bun test apps/desktop/electron/charter-store.test.ts (7 pass / 0 fail / 31 expect calls)",
+      "bun run typecheck",
+      "bun run --cwd apps/desktop typecheck",
+      "bun run --cwd apps/desktop electron:typecheck",
+      "git diff --check",
+      "bun test (220 pass / 1 skip / 0 fail / 734 expect calls)",
+      "bun run verify:v0 (5/5 passed)",
+      "task staging"
+    ],
+    "staging": {
+      "app": "/Applications/otto-staging.app",
+      "home": "/Users/seb/.codex/admin/otto-staging/home",
+      "ottoHome": "/Users/seb/.codex/admin/otto-staging/otto-home",
+      "profile": "/Users/seb/.codex/admin/otto-staging/profile",
+      "port": 9445
+    },
+    "notRun": [
+      "Screenshot capture: not applicable; this is backend charter JSON/receipt validation. Data proof and staging build are attached instead."
+    ]
+  }
+}

@@ -1,14 +1,17 @@
 import { afterEach, describe, expect, test } from 'bun:test';
 import {
   createQueueItem,
+  INFLIGHT_KEY,
   isSmokeQueueText,
   LEGACY_QUEUE_KEY,
   LEGACY_QUEUE_V2_KEY,
   nextQueueItemForThread,
   previewQueueText,
   QUEUE_KEY,
+  queueDisplayItemsForThread,
   queueMatchesThread,
   readQueue,
+  retryFailedQueueItemsForThread,
   sanitizeQueue,
   type QueueItem,
 } from './queue-storage';
@@ -107,6 +110,29 @@ describe('queue-storage', () => {
     expect(JSON.parse(localStorage.getItem(QUEUE_KEY) ?? '[]')).toEqual(queue);
   });
 
+  test('readQueue rehydrates in-flight messages after queued work with thread scope', () => {
+    installStorage();
+    localStorage.setItem(QUEUE_KEY, JSON.stringify([
+      { id: 'queued-a', text: 'Already queued for A.', createdAt: Date.now(), state: 'queued', threadId: 'thread_a' },
+    ]));
+    localStorage.setItem(INFLIGHT_KEY, JSON.stringify({
+      id: 'inflight-a',
+      text: 'Restored in-flight for A.',
+      createdAt: Date.now(),
+      state: 'sending',
+      threadId: 'thread_a',
+    }));
+
+    const queue = readQueue();
+
+    expect(queue.map((item) => `${item.id}:${item.threadId ?? 'legacy'}`)).toEqual([
+      'queued-a:thread_a',
+      'inflight-a:thread_a',
+    ]);
+    expect(nextQueueItemForThread(queue, 'thread_a')?.id).toBe('queued-a');
+    expect(JSON.parse(localStorage.getItem(QUEUE_KEY) ?? '[]')).toEqual(queue);
+  });
+
   test('thread-aware queue drains only the active conversation', () => {
     const items: QueueItem[] = [
       { id: 'a', text: 'follow-up for A', createdAt: 1, state: 'queued', threadId: 'thread_a' },
@@ -118,5 +144,41 @@ describe('queue-storage', () => {
     expect(queueMatchesThread(items[1], 'thread_b')).toBe(true);
     expect(queueMatchesThread(items[2], 'thread_b')).toBe(true);
     expect(nextQueueItemForThread(items, 'thread_b')?.id).toBe('b');
+  });
+
+  test('display metadata marks the next active-thread queued item', () => {
+    const items: QueueItem[] = [
+      { id: 'failed-a', text: 'failed for A', createdAt: 1, state: 'failed', threadId: 'thread_a' },
+      { id: 'queued-b', text: 'queued for B', createdAt: 2, state: 'queued', threadId: 'thread_b' },
+      { id: 'queued-a', text: 'first queued for A', createdAt: 3, state: 'queued', threadId: 'thread_a' },
+      { id: 'legacy', text: 'legacy applies to any thread', createdAt: 4, state: 'queued', threadId: null },
+    ];
+
+    expect(queueDisplayItemsForThread(items, 'thread_a').map(({ id, isNext, sendPosition }) => ({
+      id,
+      isNext,
+      sendPosition,
+    }))).toEqual([
+      { id: 'failed-a', isNext: false, sendPosition: null },
+      { id: 'queued-a', isNext: true, sendPosition: 1 },
+      { id: 'legacy', isNext: false, sendPosition: 2 },
+    ]);
+  });
+
+  test('retrying a failed item keeps already queued work next', () => {
+    const items: QueueItem[] = [
+      { id: 'failed-a', text: 'failed for A', createdAt: 1, state: 'failed', threadId: 'thread_a' },
+      { id: 'queued-a', text: 'already queued for A', createdAt: 2, state: 'queued', threadId: 'thread_a' },
+      { id: 'queued-b', text: 'queued for B', createdAt: 3, state: 'queued', threadId: 'thread_b' },
+    ];
+
+    const retried = retryFailedQueueItemsForThread(items, 'thread_a', 'failed-a');
+
+    expect(retried.map((item) => `${item.id}:${item.state}`)).toEqual([
+      'queued-a:queued',
+      'queued-b:queued',
+      'failed-a:queued',
+    ]);
+    expect(nextQueueItemForThread(retried, 'thread_a')?.id).toBe('queued-a');
   });
 });

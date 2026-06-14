@@ -7,6 +7,7 @@ export type ThreadSummary = {
   conversationId: string | null;
   title: string;
   updatedAt: number;
+  sortOrder?: number | null;
   pinned?: boolean;
 };
 
@@ -43,21 +44,85 @@ const ConversationRow: React.FC<{
   thread: ThreadSummary;
   active: boolean;
   variant: 'pinned' | 'recent';
+  editing: boolean;
+  confirmingArchive: boolean;
   onSelect?: (thread: ThreadSummary) => void;
   onPin?: (thread: ThreadSummary, pinned: boolean) => void;
   onArchive?: (thread: ThreadSummary) => void;
-}> = ({ thread, active, variant, onSelect, onPin, onArchive }) => (
-  <div className={`sidebarConvWrap${active ? ' is-active' : ''}${thread.pinned ? ' is-pinned' : ''}`}>
-    <button
-      type="button"
-      className={`sidebarConv thread${active ? ' is-active' : ''}`}
-      onClick={() => onSelect?.(thread)}
-      disabled={!onSelect}
-      aria-current={active ? 'true' : undefined}
+  onStartRename: (thread: ThreadSummary) => void;
+  onCommitRename: (thread: ThreadSummary, title: string) => void;
+  onCancelRename: () => void;
+  onRequestArchive: (thread: ThreadSummary) => void;
+  onMove?: (thread: ThreadSummary, target: ThreadSummary) => void;
+  draggingId: string | null;
+  onDragThreadStart: (threadId: string) => void;
+  onDragThreadEnd: () => void;
+}> = ({
+  thread,
+  active,
+  variant,
+  editing,
+  confirmingArchive,
+  onSelect,
+  onPin,
+  onArchive,
+  onStartRename,
+  onCommitRename,
+  onCancelRename,
+  onRequestArchive,
+  onMove,
+  draggingId,
+  onDragThreadStart,
+  onDragThreadEnd,
+}) => {
+  const [draft, setDraft] = useState(thread.title);
+  const inputRef = React.useRef<HTMLInputElement>(null);
+  const skipNextBlurCommit = React.useRef(false);
+
+  React.useEffect(() => {
+    if (editing) setDraft(displayThreadTitle(thread.title));
+  }, [editing, thread.title]);
+
+  React.useEffect(() => {
+    if (!editing) return;
+    const frame = window.requestAnimationFrame(() => {
+      inputRef.current?.focus({ preventScroll: true });
+      inputRef.current?.select();
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [editing]);
+
+  const commit = () => {
+    if (skipNextBlurCommit.current) {
+      skipNextBlurCommit.current = false;
+      return;
+    }
+    onCommitRename(thread, draft);
+  };
+
+  return (
+    <div
+      className={`sidebarConvWrap${active ? ' is-active' : ''}${thread.pinned ? ' is-pinned' : ''}${editing ? ' is-editing' : ''}${draggingId === thread.id ? ' is-dragging' : ''}${confirmingArchive ? ' is-confirmingArchive' : ''}`}
+      draggable={!!onMove && !editing}
+      onDragStart={(event) => {
+        if (!onMove || editing) return;
+        event.dataTransfer.effectAllowed = 'move';
+        event.dataTransfer.setData('text/plain', thread.id);
+        onDragThreadStart(thread.id);
+      }}
+      onDragOver={(event) => {
+        if (!onMove || !draggingId || draggingId === thread.id) return;
+        event.preventDefault();
+        event.dataTransfer.dropEffect = 'move';
+      }}
+      onDrop={(event) => {
+        if (!onMove || !draggingId || draggingId === thread.id) return;
+        event.preventDefault();
+        onMove({ ...thread, id: draggingId }, thread);
+        onDragThreadEnd();
+      }}
+      onDragEnd={onDragThreadEnd}
     >
-      <span className="sidebarConv__icon">{variant === 'pinned' ? Icon.pin : Icon.clock}</span>
-      <span className="sidebarConv__label">{displayThreadTitle(thread.title)}</span>
-    </button>
     {onPin ? (
       <button
         type="button"
@@ -72,22 +137,63 @@ const ConversationRow: React.FC<{
         {Icon.pin}
       </button>
     ) : null}
+    {editing ? (
+      <div className="sidebarConv thread sidebarConv--editing">
+        {variant === 'recent' ? <span className="sidebarConv__icon">{Icon.clock}</span> : null}
+        <input
+          ref={inputRef}
+          className="sidebarConv__rename"
+          value={draft}
+          aria-label={threadCopy.rename}
+          onChange={(event) => setDraft(event.target.value)}
+          onBlur={commit}
+          onKeyDown={(event) => {
+            if (event.key === 'Enter') {
+              event.preventDefault();
+              commit();
+            }
+            if (event.key === 'Escape') {
+              event.preventDefault();
+              skipNextBlurCommit.current = true;
+              onCancelRename();
+            }
+          }}
+        />
+      </div>
+    ) : (
+      <button
+        type="button"
+        className={`sidebarConv thread${active ? ' is-active' : ''}`}
+        onClick={() => onSelect?.(thread)}
+        onDoubleClick={(event) => {
+          event.preventDefault();
+          onStartRename(thread);
+        }}
+        disabled={!onSelect}
+        aria-current={active ? 'true' : undefined}
+      >
+        {variant === 'recent' ? <span className="sidebarConv__icon">{Icon.clock}</span> : null}
+        <span className="sidebarConv__label">{displayThreadTitle(thread.title)}</span>
+      </button>
+    )}
     {onArchive ? (
       <button
         type="button"
-        className="sidebarConv__archive"
-        aria-label={threadCopy.archive}
-        title={threadCopy.archive}
+        className={`sidebarConv__archive${confirmingArchive ? ' is-confirming' : ''}`}
+        aria-label={confirmingArchive ? threadCopy.archiveConfirm : threadCopy.archive}
+        title={confirmingArchive ? threadCopy.archiveConfirm : threadCopy.archive}
         onClick={(event) => {
           event.stopPropagation();
-          onArchive(thread);
+          if (confirmingArchive) onArchive(thread);
+          else onRequestArchive(thread);
         }}
       >
         {Icon.archive}
       </button>
     ) : null}
-  </div>
-);
+    </div>
+  );
+};
 
 const Section: React.FC<{
   label: string;
@@ -121,7 +227,12 @@ export const ThreadList: React.FC<{
   onSelect?: (thread: ThreadSummary) => void;
   onPin?: (thread: ThreadSummary, pinned: boolean) => void;
   onArchive?: (thread: ThreadSummary) => void;
-}> = ({ threads, activeThreadId, activeConversationId, onSelect, onPin, onArchive }) => {
+  onRename?: (thread: ThreadSummary, title: string) => void;
+  onMove?: (thread: ThreadSummary, target: ThreadSummary) => void;
+}> = ({ threads, activeThreadId, activeConversationId, onSelect, onPin, onArchive, onRename, onMove }) => {
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [confirmingArchiveId, setConfirmingArchiveId] = useState<string | null>(null);
+  const [draggingId, setDraggingId] = useState<string | null>(null);
   const pinned = threads.filter((t) => t.pinned);
   const recents = threads.filter((t) => !t.pinned);
 
@@ -137,6 +248,25 @@ export const ThreadList: React.FC<{
     activeThreadId
       ? thread.id === activeThreadId
       : !!activeConversationId && thread.conversationId === activeConversationId;
+  const startRename = (thread: ThreadSummary) => {
+    setConfirmingArchiveId(null);
+    setEditingId(thread.id);
+  };
+  const commitRename = (thread: ThreadSummary, title: string) => {
+    setEditingId(null);
+    const trimmed = title.trim();
+    if (!trimmed || displayThreadTitle(thread.title) === trimmed) return;
+    onRename?.(thread, trimmed);
+  };
+  const requestArchive = (thread: ThreadSummary) => {
+    setEditingId(null);
+    setConfirmingArchiveId((current) => (current === thread.id ? null : thread.id));
+  };
+  const moveThread = (dragged: ThreadSummary, target: ThreadSummary) => {
+    if (!onMove || dragged.id === target.id) return;
+    setConfirmingArchiveId(null);
+    onMove(dragged, target);
+  };
 
   return (
     <div className="sidebar__conversations sidebar__threads" aria-label="Conversations">
@@ -148,9 +278,19 @@ export const ThreadList: React.FC<{
               thread={thread}
               active={isActive(thread)}
               variant="pinned"
+              editing={editingId === thread.id}
+              confirmingArchive={confirmingArchiveId === thread.id}
               onSelect={onSelect}
               onPin={onPin}
               onArchive={onArchive}
+              onStartRename={startRename}
+              onCommitRename={commitRename}
+              onCancelRename={() => setEditingId(null)}
+              onRequestArchive={requestArchive}
+              onMove={onMove ? moveThread : undefined}
+              draggingId={draggingId}
+              onDragThreadStart={setDraggingId}
+              onDragThreadEnd={() => setDraggingId(null)}
             />
           ))
         ) : (
@@ -165,9 +305,19 @@ export const ThreadList: React.FC<{
               thread={thread}
               active={isActive(thread)}
               variant="recent"
+              editing={editingId === thread.id}
+              confirmingArchive={confirmingArchiveId === thread.id}
               onSelect={onSelect}
               onPin={onPin}
               onArchive={onArchive}
+              onStartRename={startRename}
+              onCommitRename={commitRename}
+              onCancelRename={() => setEditingId(null)}
+              onRequestArchive={requestArchive}
+              onMove={onMove ? moveThread : undefined}
+              draggingId={draggingId}
+              onDragThreadStart={setDraggingId}
+              onDragThreadEnd={() => setDraggingId(null)}
             />
           ))}
         </Section>

@@ -1,0 +1,42 @@
+{
+  "pr": 215,
+  "capturedAt": "2026-06-14T20:37:46.460Z",
+  "target": "Safe renderer preview http://127.0.0.1:5196 plus native task staging proof",
+  "screenshots": [
+    "docs/receipts/staging/pr-215/preview-desktop-chat.png",
+    "docs/receipts/staging/pr-215/preview-desktop-settings.png",
+    "docs/receipts/staging/pr-215/preview-mobile-chat.png",
+    "docs/receipts/staging/pr-215/preview-mobile-settings.png"
+  ],
+  "assertions": {
+    "desktopPreviewRendered": true,
+    "previewDoesNotExposeElectronLocalData": true,
+    "mobileSettingsRendered": true,
+    "noPageOrConsoleErrors": true,
+    "nativeTaskStagingPassed": true,
+    "wsHandlerLifecycleHasUnitProof": true,
+    "duplicateChunkDedupeHasUnitProof": true,
+    "remoteOutputRedactionHasUnitProof": true,
+    "latestLogSelectionHasUnitProof": true
+  },
+  "desktop": {
+    "url": "http://127.0.0.1:5196/#settings",
+    "title": "Otto Desktop",
+    "text": "otto\nNew chat\nChat\nWorkspace\n\nNo conversations yet.\n\nSettings\nLocal operator\nSetup required\nOTTO WORKSPACE\nRUNTIME SETUP\nSETTINGS\nSettings\n\nConnection, providers, and workspace defaults.\n\nGeneral\nModel providers\nGeneral\n\nHow otto connects to Letta, what is ready, and workspace defaults.\n\nConnection\n\notto discovers Letta Desktop and your default agent automatically. Override only when discovery picks the wrong runtime.\n\nThe desktop app auto-detects the local Letta runtime and current/default agent. This web preview cannot open the Electron bridge, so manual overrides are disabled here.\n\nOnboarding\n\nReplay the first-run walkthrough on next launch.\n\nReplay first-run\n\nClears the first-run flag so Welcome and the getting-started dock return on next launch.\n\nReset onboarding\nReadiness\n\nWhat must be true before Chat and irreversible actions unlock.\n\nSetup required — Chat stays disabled until required items are configured. Letta runtime · Agent identity · Memory / MemFS\nShow readiness detail\nMemory observatory\n\nRead-only view of Letta core-memory blocks. Writeback goes through Curation.\n\nOpen in Letta\n\nInspects Letta core-memory blocks via `/v1/agents/{id}/core-memory/blocks`. Otto does no",
+    "hasElectronBridge": false,
+    "hasRuntimeSetup": true
+  },
+  "mobile": {
+    "url": "http://127.0.0.1:5196/#settings",
+    "textLength": 2553,
+    "settingsVisible": true,
+    "noElectronBridge": true
+  },
+  "errors": [],
+  "nativeStaging": {
+    "command": "OTTO_STAGING_ROOT=/tmp/otto-pr-215-proof-staging OTTO_STAGING_PORT=9455 OTTO_STAGING_WS_REMOTE_ENV=otto-pr215-proof-byor OTTO_AGENT_ID=agent-00000000-0000-4000-8000-000000000000 LETTA_BASE_URL=http://127.0.0.1:9 OTTO_STAGING_LOG_CAPTURE_SECONDS=1 task staging",
+    "deployLog": "/Users/seb/.codex/admin/otto-logs/staging-20260614T133430.deploy.log",
+    "appLog": "/Users/seb/.codex/admin/otto-logs/staging-20260614T133430.app.log",
+    "result": "passed; installed and launched /Applications/otto-staging.app"
+  }
+}

@@ -7,6 +7,11 @@ import type { ChatThreadRecord, ThreadListResult } from './shared/types';
 
 export type { ChatThreadRecord, ThreadListResult };
 
+type ThreadPatch = Partial<Pick<
+  ChatThreadRecord,
+  'title' | 'lettaConversationId' | 'agentId' | 'pinned' | 'archived' | 'sortOrder'
+>>;
+
 function threadsDir(): string {
   return join(defaultOttoDir(), 'threads');
 }
@@ -24,7 +29,7 @@ function readIndex(): ChatThreadRecord[] {
     if (!Array.isArray(parsed)) return [];
     const raw = parsed.filter((t) => typeof t?.id === 'string');
     const normalized = normalizeThreads(raw);
-    if (normalized.length !== raw.length) writeIndex(normalized);
+    if (JSON.stringify(normalized) !== JSON.stringify(raw)) writeIndex(normalized);
     return normalized;
   } catch {
     return [];
@@ -36,16 +41,40 @@ function writeIndex(threads: ChatThreadRecord[]) {
   writeFileSync(indexFile(), `${JSON.stringify(normalizeThreads(threads), null, 2)}\n`);
 }
 
+function sortableOrder(thread: ChatThreadRecord): number | null {
+  return typeof thread.sortOrder === 'number' && Number.isFinite(thread.sortOrder)
+    ? thread.sortOrder
+    : null;
+}
+
 function sortThreads(threads: ChatThreadRecord[]): ChatThreadRecord[] {
   return [...threads].sort((a, b) => {
     if (a.pinned !== b.pinned) return a.pinned ? -1 : 1;
+    const aOrder = sortableOrder(a);
+    const bOrder = sortableOrder(b);
+    if (aOrder !== null || bOrder !== null) {
+      if (aOrder === null) return 1;
+      if (bOrder === null) return -1;
+      if (aOrder !== bOrder) return aOrder - bOrder;
+    }
     return Date.parse(b.updatedAt) - Date.parse(a.updatedAt);
   });
 }
 
+function nextSortOrder(threads: ChatThreadRecord[], pinned: boolean): number {
+  const orders = threads
+    .filter((thread) => !thread.archived && !!thread.pinned === pinned)
+    .map(sortableOrder)
+    .filter((value): value is number => value !== null);
+  return orders.length ? Math.max(...orders) + 1 : 0;
+}
+
 function normalizeThreads(threads: ChatThreadRecord[]): ChatThreadRecord[] {
   const seen = new Set<string>();
-  return sortThreads(threads).filter((thread) => {
+  return sortThreads(threads).map((thread) => ({
+    ...thread,
+    lettaConversationId: normalizeConversationId(thread.lettaConversationId),
+  })).filter((thread) => {
     if (isJunkThread(thread)) return false;
     if (seen.has(thread.id)) return false;
     seen.add(thread.id);
@@ -53,9 +82,16 @@ function normalizeThreads(threads: ChatThreadRecord[]): ChatThreadRecord[] {
   });
 }
 
+function normalizeConversationId(conversationId: string | null | undefined): string | null {
+  const trimmed = conversationId?.trim();
+  if (!trimmed || trimmed === 'default') return null;
+  return trimmed;
+}
+
 function isJunkThread(thread: ChatThreadRecord): boolean {
   const title = thread.title.trim();
   if (/^046-debug-/i.test(title)) return true;
+  if (/^046-(?:alpha|beta)-thread$/i.test(title)) return true;
   if (/^\d{3}-(?:rev\d+-|smoke-)?thread-[ab]-\d{12,14}$/i.test(title)) return true;
   return /^chat session$/i.test(title);
 }
@@ -73,7 +109,7 @@ export class ThreadStore {
       const active = threads.find((t) => t.id === activeThreadId) ?? null;
       this.config.update({
         activeThreadId,
-        conversationId: active?.lettaConversationId ?? null,
+        conversationId: normalizeConversationId(active?.lettaConversationId),
       });
     }
     return { dir: threadsDir(), activeThreadId, threads };
@@ -92,6 +128,7 @@ export class ThreadStore {
       title: input?.title?.trim() || 'New chat',
       createdAt: now,
       updatedAt: now,
+      sortOrder: null,
       pinned: false,
       archived: false,
     };
@@ -107,27 +144,38 @@ export class ThreadStore {
     if (thread.archived) throw new Error(`Thread is archived: ${threadId}`);
     this.config.update({
       activeThreadId: thread.id,
-      conversationId: thread.lettaConversationId,
+      conversationId: normalizeConversationId(thread.lettaConversationId),
     });
     return thread;
   }
 
   update(
     threadId: string,
-    patch: Partial<Pick<ChatThreadRecord, 'title' | 'lettaConversationId' | 'agentId' | 'pinned' | 'archived'>>,
+    patch: ThreadPatch,
   ): ChatThreadRecord {
     const threads = readIndex();
     const idx = threads.findIndex((t) => t.id === threadId);
     if (idx < 0) throw new Error(`Thread not found: ${threadId}`);
+    const wasPinned = !!threads[idx].pinned;
+    const nextPinned = patch.pinned ?? wasPinned;
+    const crossesGroups = patch.pinned !== undefined && patch.pinned !== wasPinned;
     const updated: ChatThreadRecord = {
       ...threads[idx],
       ...patch,
+      lettaConversationId: patch.lettaConversationId !== undefined
+        ? normalizeConversationId(patch.lettaConversationId)
+        : normalizeConversationId(threads[idx].lettaConversationId),
+      sortOrder: patch.sortOrder !== undefined
+        ? patch.sortOrder
+        : crossesGroups
+          ? nextSortOrder(threads, nextPinned)
+          : threads[idx].sortOrder ?? null,
       updatedAt: new Date().toISOString(),
     };
     threads[idx] = updated;
     writeIndex(sortThreads(threads));
     if (this.config.get().activeThreadId === threadId && patch.lettaConversationId !== undefined) {
-      this.config.update({ conversationId: patch.lettaConversationId });
+      this.config.update({ conversationId: normalizeConversationId(patch.lettaConversationId) });
     }
     return updated;
   }
@@ -138,7 +186,7 @@ export class ThreadStore {
       const next = sortThreads(readIndex()).find((t) => !t.archived) ?? null;
       this.config.update({
         activeThreadId: next?.id ?? null,
-        conversationId: next?.lettaConversationId ?? null,
+        conversationId: normalizeConversationId(next?.lettaConversationId),
       });
     }
     return archived;
@@ -146,6 +194,38 @@ export class ThreadStore {
 
   pin(threadId: string, pinned: boolean): ChatThreadRecord {
     return this.update(threadId, { pinned });
+  }
+
+  rename(threadId: string, title: string): ChatThreadRecord {
+    const trimmed = title.trim().replace(/\s+/g, ' ');
+    return this.update(threadId, { title: trimmed || 'New chat' });
+  }
+
+  move(threadId: string, targetId: string): ThreadListResult {
+    if (threadId === targetId) return this.list();
+    const threads = readIndex();
+    const moving = threads.find((thread) => thread.id === threadId);
+    const target = threads.find((thread) => thread.id === targetId);
+    if (!moving || !target) throw new Error('Thread not found.');
+    if (moving.archived || target.archived) throw new Error('Archived threads cannot be reordered.');
+
+    const targetPinned = !!target.pinned;
+    moving.pinned = targetPinned;
+    moving.archived = false;
+
+    const group = sortThreads(threads)
+      .filter((thread) => !thread.archived && !!thread.pinned === targetPinned && thread.id !== threadId);
+    const targetIndex = group.findIndex((thread) => thread.id === targetId);
+    const orderedGroup = [...group];
+    orderedGroup.splice(targetIndex < 0 ? orderedGroup.length : targetIndex, 0, moving);
+    const now = new Date().toISOString();
+    orderedGroup.forEach((thread, index) => {
+      thread.sortOrder = index;
+      if (thread.id === moving.id) thread.updatedAt = now;
+    });
+
+    writeIndex(threads);
+    return this.list();
   }
 
   touchActive(input: { title?: string; lettaConversationId?: string | null; agentId?: string | null }) {
@@ -171,7 +251,7 @@ export class ThreadStore {
       const picked = threads[0];
       this.config.update({
         activeThreadId: picked.id,
-        conversationId: picked.lettaConversationId,
+        conversationId: normalizeConversationId(picked.lettaConversationId),
       });
       return picked;
     }

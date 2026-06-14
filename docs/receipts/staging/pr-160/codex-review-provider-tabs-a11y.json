@@ -1,0 +1,333 @@
+{
+  "browserPath": "Playwright fallback",
+  "browserFallbackReason": "Browser plugin bootstrap succeeded but agent.browsers.get(\"iab\") returned: Browser is not available: iab",
+  "flow": "http://127.0.0.1:4270/#settings -> Model providers -> Provider type Local/Cloud tab keyboard navigation",
+  "viewports": [
+    {
+      "width": 1280,
+      "height": 900
+    },
+    {
+      "width": 390,
+      "height": 844
+    }
+  ],
+  "desktop": {
+    "name": "desktop",
+    "viewport": {
+      "width": 1280,
+      "height": 900
+    },
+    "url": "http://127.0.0.1:4270/#settings",
+    "title": "Otto Desktop",
+    "notBlank": true,
+    "noFrameworkOverlay": true,
+    "screenshotPath": "/Users/seb/Code/otto-pr-160/docs/receipts/staging/pr-160/codex-review-provider-tabs-desktop.png",
+    "states": [
+      {
+        "label": "desktop: local initial",
+        "activeElementId": "provider-tab-local",
+        "tabs": [
+          {
+            "id": "provider-tab-local",
+            "label": "Local",
+            "ariaSelected": "true",
+            "ariaControls": "provider-panel-local",
+            "tabIndex": "0",
+            "className": "is-active",
+            "activeElement": true
+          },
+          {
+            "id": "provider-tab-cloud",
+            "label": "Cloud",
+            "ariaSelected": "false",
+            "ariaControls": "provider-panel-cloud",
+            "tabIndex": "-1",
+            "className": "",
+            "activeElement": false
+          }
+        ],
+        "tabpanel": {
+          "id": "provider-panel-local",
+          "ariaLabelledBy": "provider-tab-local",
+          "tabIndex": "0",
+          "visibleProviderNames": [
+            "ChatGPT Plus/Pro (Codex Subscription)",
+            "Anthropic",
+            "Anthropic (Claude Pro/Max)",
+            "OpenAI"
+          ]
+        }
+      },
+      {
+        "label": "desktop: after ArrowRight",
+        "activeElementId": "provider-tab-cloud",
+        "tabs": [
+          {
+            "id": "provider-tab-local",
+            "label": "Local",
+            "ariaSelected": "false",
+            "ariaControls": "provider-panel-local",
+            "tabIndex": "-1",
+            "className": "",
+            "activeElement": false
+          },
+          {
+            "id": "provider-tab-cloud",
+            "label": "Cloud",
+            "ariaSelected": "true",
+            "ariaControls": "provider-panel-cloud",
+            "tabIndex": "0",
+            "className": "is-active",
+            "activeElement": true
+          }
+        ],
+        "tabpanel": {
+          "id": "provider-panel-cloud",
+          "ariaLabelledBy": "provider-tab-cloud",
+          "tabIndex": "0",
+          "visibleProviderNames": [
+            "Amazon Bedrock",
+            "Azure OpenAI Responses",
+            "Cloudflare AI Gateway",
+            "DeepSeek",
+            "Cerebras",
+            "Fireworks"
+          ]
+        }
+      },
+      {
+        "label": "desktop: after Home",
+        "activeElementId": "provider-tab-local",
+        "tabs": [
+          {
+            "id": "provider-tab-local",
+            "label": "Local",
+            "ariaSelected": "true",
+            "ariaControls": "provider-panel-local",
+            "tabIndex": "0",
+            "className": "is-active",
+            "activeElement": true
+          },
+          {
+            "id": "provider-tab-cloud",
+            "label": "Cloud",
+            "ariaSelected": "false",
+            "ariaControls": "provider-panel-cloud",
+            "tabIndex": "-1",
+            "className": "",
+            "activeElement": false
+          }
+        ],
+        "tabpanel": {
+          "id": "provider-panel-local",
+          "ariaLabelledBy": "provider-tab-local",
+          "tabIndex": "0",
+          "visibleProviderNames": [
+            "ChatGPT Plus/Pro (Codex Subscription)",
+            "Anthropic",
+            "Anthropic (Claude Pro/Max)",
+            "OpenAI"
+          ]
+        }
+      },
+      {
+        "label": "desktop: after End",
+        "activeElementId": "provider-tab-cloud",
+        "tabs": [
+          {
+            "id": "provider-tab-local",
+            "label": "Local",
+            "ariaSelected": "false",
+            "ariaControls": "provider-panel-local",
+            "tabIndex": "-1",
+            "className": "",
+            "activeElement": false
+          },
+          {
+            "id": "provider-tab-cloud",
+            "label": "Cloud",
+            "ariaSelected": "true",
+            "ariaControls": "provider-panel-cloud",
+            "tabIndex": "0",
+            "className": "is-active",
+            "activeElement": true
+          }
+        ],
+        "tabpanel": {
+          "id": "provider-panel-cloud",
+          "ariaLabelledBy": "provider-tab-cloud",
+          "tabIndex": "0",
+          "visibleProviderNames": [
+            "Amazon Bedrock",
+            "Azure OpenAI Responses",
+            "Cloudflare AI Gateway",
+            "DeepSeek",
+            "Cerebras",
+            "Fireworks"
+          ]
+        }
+      }
+    ]
+  },
+  "mobile": {
+    "name": "mobile",
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "url": "http://127.0.0.1:4270/#settings",
+    "title": "Otto Desktop",
+    "notBlank": true,
+    "noFrameworkOverlay": true,
+    "screenshotPath": "/Users/seb/Code/otto-pr-160/docs/receipts/staging/pr-160/codex-review-provider-tabs-mobile.png",
+    "states": [
+      {
+        "label": "mobile: local initial",
+        "activeElementId": "provider-tab-local",
+        "tabs": [
+          {
+            "id": "provider-tab-local",
+            "label": "Local",
+            "ariaSelected": "true",
+            "ariaControls": "provider-panel-local",
+            "tabIndex": "0",
+            "className": "is-active",
+            "activeElement": true
+          },
+          {
+            "id": "provider-tab-cloud",
+            "label": "Cloud",
+            "ariaSelected": "false",
+            "ariaControls": "provider-panel-cloud",
+            "tabIndex": "-1",
+            "className": "",
+            "activeElement": false
+          }
+        ],
+        "tabpanel": {
+          "id": "provider-panel-local",
+          "ariaLabelledBy": "provider-tab-local",
+          "tabIndex": "0",
+          "visibleProviderNames": [
+            "ChatGPT Plus/Pro (Codex Subscription)",
+            "Anthropic",
+            "Anthropic (Claude Pro/Max)",
+            "OpenAI"
+          ]
+        }
+      },
+      {
+        "label": "mobile: after ArrowRight",
+        "activeElementId": "provider-tab-cloud",
+        "tabs": [
+          {
+            "id": "provider-tab-local",
+            "label": "Local",
+            "ariaSelected": "false",
+            "ariaControls": "provider-panel-local",
+            "tabIndex": "-1",
+            "className": "",
+            "activeElement": false
+          },
+          {
+            "id": "provider-tab-cloud",
+            "label": "Cloud",
+            "ariaSelected": "true",
+            "ariaControls": "provider-panel-cloud",
+            "tabIndex": "0",
+            "className": "is-active",
+            "activeElement": true
+          }
+        ],
+        "tabpanel": {
+          "id": "provider-panel-cloud",
+          "ariaLabelledBy": "provider-tab-cloud",
+          "tabIndex": "0",
+          "visibleProviderNames": [
+            "Amazon Bedrock",
+            "Azure OpenAI Responses",
+            "Cloudflare AI Gateway",
+            "DeepSeek",
+            "Cerebras",
+            "Fireworks"
+          ]
+        }
+      },
+      {
+        "label": "mobile: after Home",
+        "activeElementId": "provider-tab-local",
+        "tabs": [
+          {
+            "id": "provider-tab-local",
+            "label": "Local",
+            "ariaSelected": "true",
+            "ariaControls": "provider-panel-local",
+            "tabIndex": "0",
+            "className": "is-active",
+            "activeElement": true
+          },
+          {
+            "id": "provider-tab-cloud",
+            "label": "Cloud",
+            "ariaSelected": "false",
+            "ariaControls": "provider-panel-cloud",
+            "tabIndex": "-1",
+            "className": "",
+            "activeElement": false
+          }
+        ],
+        "tabpanel": {
+          "id": "provider-panel-local",
+          "ariaLabelledBy": "provider-tab-local",
+          "tabIndex": "0",
+          "visibleProviderNames": [
+            "ChatGPT Plus/Pro (Codex Subscription)",
+            "Anthropic",
+            "Anthropic (Claude Pro/Max)",
+            "OpenAI"
+          ]
+        }
+      },
+      {
+        "label": "mobile: after End",
+        "activeElementId": "provider-tab-cloud",
+        "tabs": [
+          {
+            "id": "provider-tab-local",
+            "label": "Local",
+            "ariaSelected": "false",
+            "ariaControls": "provider-panel-local",
+            "tabIndex": "-1",
+            "className": "",
+            "activeElement": false
+          },
+          {
+            "id": "provider-tab-cloud",
+            "label": "Cloud",
+            "ariaSelected": "true",
+            "ariaControls": "provider-panel-cloud",
+            "tabIndex": "0",
+            "className": "is-active",
+            "activeElement": true
+          }
+        ],
+        "tabpanel": {
+          "id": "provider-panel-cloud",
+          "ariaLabelledBy": "provider-tab-cloud",
+          "tabIndex": "0",
+          "visibleProviderNames": [
+            "Amazon Bedrock",
+            "Azure OpenAI Responses",
+            "Cloudflare AI Gateway",
+            "DeepSeek",
+            "Cerebras",
+            "Fireworks"
+          ]
+        }
+      }
+    ]
+  },
+  "consoleMessages": [],
+  "pass": true
+}

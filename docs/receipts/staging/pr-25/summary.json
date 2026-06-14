@@ -1,0 +1,67 @@
+[
+  {
+    "route": "charters",
+    "url": "http://127.0.0.1:5185/#charters",
+    "title": "Otto Desktop",
+    "notBlank": true,
+    "frameworkOverlay": false,
+    "metrics": {
+      "contentHeight": 613,
+      "emptyHeight": 320,
+      "centerDeltaPx": -17,
+      "contentFlex": "1",
+      "contentMinHeight": "0px",
+      "contentOverflowY": "auto"
+    },
+    "screenshot": "/tmp/otto-pr25-proof/desktop-charters.png"
+  },
+  {
+    "route": "receipts",
+    "url": "http://127.0.0.1:5185/#receipts",
+    "title": "Otto Desktop",
+    "notBlank": true,
+    "frameworkOverlay": false,
+    "metrics": {
+      "contentHeight": 613,
+      "emptyHeight": 320,
+      "centerDeltaPx": -17,
+      "contentFlex": "1",
+      "contentMinHeight": "0px",
+      "contentOverflowY": "auto"
+    },
+    "screenshot": "/tmp/otto-pr25-proof/desktop-receipts.png"
+  },
+  {
+    "route": "settings",
+    "url": "http://127.0.0.1:5185/#settings",
+    "title": "Otto Desktop",
+    "notBlank": true,
+    "frameworkOverlay": false,
+    "metrics": {
+      "contentHeight": 613,
+      "settingsTopWithinContent": 26,
+      "contentScrolls": true,
+      "contentFlex": "1",
+      "contentMinHeight": "0px",
+      "contentOverflowY": "auto"
+    },
+    "screenshot": "/tmp/otto-pr25-proof/desktop-settings.png"
+  },
+  {
+    "route": "chat",
+    "url": "http://127.0.0.1:5185/#chat",
+    "title": "Otto Desktop",
+    "notBlank": true,
+    "frameworkOverlay": false,
+    "metrics": {
+      "chatContentHeight": 720,
+      "flexGrow": "1",
+      "minHeight": "0px",
+      "overflowY": "hidden"
+    },
+    "screenshot": "/tmp/otto-pr25-proof/desktop-chat.png"
+  },
+  {
+    "console": []
+  }
+]

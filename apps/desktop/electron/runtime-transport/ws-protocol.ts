@@ -9,10 +9,24 @@ export function normalizeWsEvent(event: WsRuntimeEvent): Record<string, unknown>
       const delta = event.delta as Record<string, unknown> | undefined;
       if (!delta) return null;
       const messageType = String(delta.message_type ?? '');
+      if (messageType === 'loop_error') {
+        return {
+          type: 'error',
+          message: String(delta.message ?? delta.error ?? 'Runtime loop error'),
+          uuid: randomUUID(),
+        };
+      }
       if (messageType !== 'assistant_message') return null;
       const text = extractDeltaText(delta.content);
       if (!text) return null;
-      return { type: 'assistant', text, content: delta.content, uuid: randomUUID() };
+      const streamId = String(delta.otid ?? delta.run_id ?? randomUUID());
+      const rawChunkId =
+        event.idempotency_key
+        ?? delta.id
+        ?? delta.seq_id
+        ?? null;
+      const chunkId = rawChunkId == null ? null : String(rawChunkId);
+      return { type: 'assistant', text, content: delta.content, uuid: streamId, runId: delta.run_id ?? null, chunkId };
     }
     case 'error':
       return {

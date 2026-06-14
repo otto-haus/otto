@@ -1,5 +1,9 @@
 /** Per-thread localStorage keys for chat history (046). */
 export const LEGACY_MESSAGES_KEY = 'otto.chat.messages.v1';
+const MAX_RESTORED_MESSAGES = 12;
+const MAX_RESTORED_TEXT_CHARS = 1000;
+const MAX_RESTORED_THREAD_CHARS = 6000;
+const MAX_RAW_HISTORY_CHARS = 50000;
 
 export type StoredChatMsg = {
   id: string;
@@ -16,9 +20,24 @@ function parseMessages(raw: string | null): StoredChatMsg[] {
   try {
     const parsed = JSON.parse(raw ?? '[]') as StoredChatMsg[];
     if (!Array.isArray(parsed)) return [];
-    return parsed
+    const restored: StoredChatMsg[] = [];
+    let restoredChars = 0;
+    for (const m of parsed.slice(-MAX_RESTORED_MESSAGES).reverse()) {
+      if (
+        typeof m?.id !== 'string'
+        || typeof m.text !== 'string'
+        || (m.who !== 'user' && m.who !== 'otto' && m.who !== 'error')
+      ) continue;
+      if (restoredChars >= MAX_RESTORED_THREAD_CHARS) break;
+      const text = m.text.length > MAX_RESTORED_TEXT_CHARS
+        ? `${m.text.slice(0, MAX_RESTORED_TEXT_CHARS)}\n\n[Older local message truncated for renderer safety.]`
+        : m.text;
+      restoredChars += text.length;
+      restored.push({ ...m, text });
+    }
+    return restored.reverse()
       .filter((m) => typeof m?.id === 'string' && typeof m.text === 'string' && (m.who === 'user' || m.who === 'otto' || m.who === 'error'))
-      .slice(-200);
+      .slice(-MAX_RESTORED_MESSAGES);
   } catch {
     return [];
   }
@@ -42,6 +61,13 @@ export function readStoredMessages(threadId: string | null): StoredChatMsg[] {
   try {
     const key = messagesKey(threadId);
     const raw = localStorage.getItem(key);
+    if (raw && raw.length > MAX_RAW_HISTORY_CHARS) {
+      return [{
+        id: `history-suppressed-${threadId ?? 'legacy'}`,
+        who: 'otto',
+        text: `Local chat history is hidden because it is too large to restore safely at startup (${Math.round(raw.length / 1000)}k chars). New messages will still work.`,
+      }];
+    }
     if (raw) return parseMessages(raw);
     if (!threadId) return parseMessages(localStorage.getItem(LEGACY_MESSAGES_KEY));
     return [];
