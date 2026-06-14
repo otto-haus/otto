@@ -65,3 +65,22 @@ Visual: `#charters` / `#receipts` empty states centered; `#settings` unchanged;
 ## Blocker log
 
 Leave blank unless blocked.
+
+## Execution receipt
+
+- Added `flex: 1; min-height: 0;` to `.content`, matching the existing
+  `.content--chat` fill pattern.
+- Proof artifacts: `docs/receipts/staging/pr-25/`.
+- Verification:
+  - `bun run --cwd apps/desktop typecheck`
+  - `bun run --cwd apps/desktop electron:typecheck`
+  - `bun run typecheck`
+  - `bun test` -> 35 pass / 0 fail
+  - `bun run verify:v0` -> 5 pass / 0 fail
+  - `git diff --check`
+  - Playwright screenshots for Charters, Receipts, Settings, and Chat at
+    1040x720.
+- Measured Charters and Receipts content: `flex-grow: 1`, `min-height: 0px`,
+  `overflow-y: auto`, content height 613px, empty surface height 320px.
+- Settings path-chip wrapping remains a separate main-branch issue covered by
+  PR #27.
