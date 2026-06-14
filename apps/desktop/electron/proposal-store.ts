@@ -17,8 +17,10 @@ import type {
   ProposalTarget,
 } from '@otto-haus/core';
 import { OTTO_DIR } from './config-store';
+import { CheckCompiler } from './check-compiler';
 import { ReceiptWriter, type WrittenReceipt } from './receipt-writer';
 import { ReceiptStore } from './receipt-store';
+import { StandardStore } from './standard-store';
 
 export const PROPOSALS_DIR = join(OTTO_DIR, 'curation', 'proposals');
 
@@ -38,6 +40,7 @@ export interface DecideProposalResult {
   proposal: CurationProposalRecord;
   receipt: WrittenReceipt;
   blocked?: boolean;
+  compiledCheckId?: string | null;
 }
 
 export class ProposalStore {
@@ -240,7 +243,15 @@ export class ProposalStore {
     };
     writeFileSync(updated.path, `${JSON.stringify(updated, null, 2)}\n`);
 
-    return { proposal: updated, receipt };
+    let compiledCheckId: string | null = null;
+    if (input.decision === 'accept' && nextStatus === 'applied') {
+      const compiler = new CheckCompiler();
+      const standardsDir = new StandardStore().listResult().dir;
+      const compiled = compiler.compileFromProposal(updated, standardsDir);
+      if (compiled.compiled) compiledCheckId = compiled.compiled.id;
+    }
+
+    return { proposal: updated, receipt, compiledCheckId };
   }
 
   private read(path: string): CurationProposalRecord | null {

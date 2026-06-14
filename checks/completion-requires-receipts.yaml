@@ -1,0 +1,16 @@
+schema: otto.check.v1
+id: completion-requires-receipts
+version: "1.0.0"
+source: standard/no-fake-done.md
+trigger:
+  event: done_claim
+inspect:
+  require:
+    - acceptance_criteria_mapped
+    - evidence_attached
+    - test_or_log_or_artifact_present
+on_fail:
+  block_claim: true
+  message: "Not done: missing mapped proof."
+  write_receipt: true
+active: true

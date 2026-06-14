@@ -19,6 +19,7 @@ import { SkillStore } from './skill-store';
 import { TicketOrchestrator } from './ticket-orchestrator';
 import { TicketStore } from './ticket-store';
 import { WorkerStore } from './worker-store';
+import { CheckRunner } from './check-runner';
 
 export function registerIpc(win: BrowserWindow) {
   const config = new ConfigStore();
@@ -37,6 +38,7 @@ export function registerIpc(win: BrowserWindow) {
   const workers = new WorkerStore();
   const runs = new RunStore();
   const orchestrator = new TicketOrchestrator(tickets, workers, runs, knowledge, autonomy);
+  const checkRunner = new CheckRunner();
 
   ipcMain.handle('otto:init', () => runner.init());
   ipcMain.handle('otto:new-chat', () => runner.newChat());
@@ -129,6 +131,10 @@ export function registerIpc(win: BrowserWindow) {
   ipcMain.handle('otto:tickets:orchestrate-existing', (_e, ticketId: string, repoRoot?: string) =>
     orchestrator.orchestrateExisting(ticketId, { repoRoot }),
   );
+  ipcMain.handle(
+    'otto:tickets:update-status',
+    (_e, ticketId: string, patch: Parameters<TicketStore['updateStatus']>[1]) => tickets.updateStatus(ticketId, patch),
+  );
 
   ipcMain.handle('otto:workers:list', () => workers.list());
   ipcMain.handle('otto:workers:update-status', (_e, id: string, status: import('@otto-haus/core').WorkerStatus, receiptId?: string) =>
@@ -140,6 +146,15 @@ export function registerIpc(win: BrowserWindow) {
   ipcMain.handle('otto:autonomy:policy', () => autonomy.loadResult());
   ipcMain.handle('otto:autonomy:evaluate-action', (_e, input: { action: string; context?: string }) =>
     autonomy.evaluateAction(input),
+  );
+
+  ipcMain.handle('otto:checks:list', () => checkRunner.list());
+  ipcMain.handle('otto:checks:get', (_e, id: string) => checkRunner.get(id));
+  ipcMain.handle('otto:checks:evaluate-done-claim', (_e, context: Parameters<CheckRunner['evaluateDoneClaim']>[0]) =>
+    checkRunner.evaluateDoneClaim(context),
+  );
+  ipcMain.handle('otto:checks:evaluate-one-way-door', (_e, context: Parameters<CheckRunner['evaluateOneWayDoor']>[0]) =>
+    checkRunner.evaluateOneWayDoor(context),
   );
 
   ipcMain.on('otto:permission:respond', (_e, requestId: string, response: PermissionResponse) =>

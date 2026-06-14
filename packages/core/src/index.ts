@@ -3,3 +3,4 @@
  * Re-exports the core primitives every lane depends on.
  */
 export * from './types.js';
+export * from './check.js';

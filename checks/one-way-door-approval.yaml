@@ -1,0 +1,14 @@
+schema: otto.check.v1
+id: one-way-door-approval
+version: "1.0.0"
+source: standard/one-way-doors.md
+trigger:
+  event: one_way_door_action
+inspect:
+  require:
+    - approval_present
+on_fail:
+  block_claim: true
+  message: "Blocked: one-way door requires explicit approval."
+  write_receipt: true
+active: true

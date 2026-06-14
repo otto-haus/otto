@@ -264,6 +264,13 @@ export interface OttoStatusEvent {
 
 export type OttoEvent = OttoMessageEvent | OttoStatusEvent;
 
+export interface TicketReviewRecord {
+  verdict?: '+1' | '-1' | 'blocked';
+  evidence?: string[];
+  reviewed_at?: string;
+  blocker?: string;
+}
+
 /** Local-first config at ~/.otto/config.json (shared with gen-readiness.mjs). */
 export interface OttoConfig {
   agentId?: string | null;

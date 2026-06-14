@@ -3,7 +3,9 @@ import { randomUUID } from 'node:crypto';
 import { join } from 'node:path';
 import { parse, stringify } from 'yaml';
 import type { TicketCompileInput, TicketListResult, TicketRecord, TicketStatus } from '@otto-haus/core';
+import type { TicketReviewRecord } from './shared/types';
 import { OTTO_DIR } from './config-store';
+import { CheckRunner } from './check-runner';
 import { ReceiptWriter, type WrittenReceipt } from './receipt-writer';
 
 export const TICKETS_DIR = join(OTTO_DIR, 'tickets');
@@ -17,6 +19,7 @@ export class TicketStore {
   constructor(
     private dir = TICKETS_DIR,
     private receipts = new ReceiptWriter(),
+    private checks = new CheckRunner(),
   ) {}
 
   list(): TicketListResult {
@@ -43,16 +46,48 @@ export class TicketStore {
 
   updateStatus(
     ticketId: string,
-    patch: Partial<Pick<TicketRecord, 'status' | 'owner' | 'model'>>,
+    patch: Partial<Pick<TicketRecord, 'status' | 'owner' | 'model'>> & { review?: TicketReviewRecord },
   ): TicketRecord {
     const existing = this.get(ticketId);
     if (!existing) throw new Error(`Ticket not found: ${ticketId}`);
     const raw = parse(readFileSync(existing.ticketPath, 'utf8')) as Record<string, unknown>;
-    const next = {
+    const nextStatus = patch.status ?? status(raw.status);
+    const review = patch.review ?? readReview(raw.review);
+
+    if (nextStatus === 'review' && existing.status !== 'active' && existing.status !== 'blocked') {
+      throw new Error(`Cannot move ticket to review from status "${existing.status}". Start implementation (active) first.`);
+    }
+    if (nextStatus === 'merged') {
+      if (existing.status !== 'review' && existing.status !== 'merged') {
+        throw new Error(`Cannot mark ticket merged from status "${existing.status}". Move to review and obtain reviewer +1 first.`);
+      }
+      const verdict = review?.verdict;
+      const evidence = review?.evidence ?? [];
+      if (verdict !== '+1') {
+        throw new Error('Cannot mark ticket merged without reviewer_verdict: +1.');
+      }
+      if (!evidence.length) {
+        throw new Error('Cannot mark ticket merged without evidence refs mapped to acceptance criteria.');
+      }
+      const checkResults = this.checks.evaluateDoneClaim({
+        acceptance_criteria: existing.acceptance_criteria,
+        review,
+        evidence,
+      });
+      const blocked = checkResults.find((r) => r.blocked && !r.passed);
+      if (blocked) {
+        throw new Error(`${blocked.message}${blocked.receipt_id ? ` (receipt: ${blocked.receipt_id})` : ''}`);
+      }
+    }
+
+    const next: Record<string, unknown> = {
       ...raw,
-      ...patch,
+      status: nextStatus,
       updated_at: new Date().toISOString(),
     };
+    if (patch.owner !== undefined) next.owner = patch.owner;
+    if (patch.model !== undefined) next.model = patch.model;
+    if (patch.review) next.review = patch.review;
     writeFileSync(existing.ticketPath, stringify(next), 'utf8');
     const updated = this.readTicket(existing.ticketPath, existing.root);
     if (!updated) throw new Error(`Failed to update ticket: ${ticketId}`);
@@ -194,6 +229,17 @@ ${stringArray(body.stop_conditions).map((p) => `- ${p}`).join('\n')}
 ## Receipt
 Write proof to \`${body.receipt_path}\` before claiming done.
 `;
+}
+
+function readReview(value: unknown): TicketReviewRecord | undefined {
+  if (!value || typeof value !== 'object') return undefined;
+  const raw = value as Record<string, unknown>;
+  const verdict = raw.verdict === '+1' || raw.verdict === '-1' || raw.verdict === 'blocked' ? raw.verdict : undefined;
+  const evidence = stringArray(raw.evidence);
+  const reviewed_at = optionalString(raw.reviewed_at);
+  const blocker = optionalString(raw.blocker);
+  if (!verdict && !evidence.length && !reviewed_at) return undefined;
+  return { verdict, evidence, reviewed_at, blocker };
 }
 
 function slugify(value: string): string {

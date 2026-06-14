@@ -48,7 +48,9 @@ import type {
   WorkerStatus,
   RunListResult,
   ApprovalListResult,
+  TicketReviewRecord,
 } from './shared/types';
+import type { CheckListResult, CheckRunResult } from '@otto-haus/core';
 
 const api = {
   runtime: {
@@ -136,6 +138,18 @@ const api = {
     orchestrate: (input: TicketCompileInput & { repoRoot?: string }) => ipcRenderer.invoke('otto:tickets:orchestrate', input),
     orchestrateExisting: (ticketId: string, repoRoot?: string) =>
       ipcRenderer.invoke('otto:tickets:orchestrate-existing', ticketId, repoRoot),
+    updateStatus: (
+      ticketId: string,
+      patch: Partial<Pick<TicketRecord, 'status' | 'owner' | 'model'>> & { review?: TicketReviewRecord },
+    ) => ipcRenderer.invoke('otto:tickets:update-status', ticketId, patch),
+  },
+  checks: {
+    list: (): Promise<CheckListResult> => ipcRenderer.invoke('otto:checks:list'),
+    get: (id: string) => ipcRenderer.invoke('otto:checks:get', id),
+    evaluateDoneClaim: (context: unknown): Promise<CheckRunResult[]> =>
+      ipcRenderer.invoke('otto:checks:evaluate-done-claim', context),
+    evaluateOneWayDoor: (context: unknown): Promise<CheckRunResult[]> =>
+      ipcRenderer.invoke('otto:checks:evaluate-one-way-door', context),
   },
   workers: {
     list: (): Promise<WorkerListResult> => ipcRenderer.invoke('otto:workers:list'),

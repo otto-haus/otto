@@ -337,6 +337,7 @@ export type ReceiptSubjectType =
   | 'charter'
   | 'standard'
   | 'proposal'
+  | 'check'
   | 'autonomy'
   | 'task';
 
