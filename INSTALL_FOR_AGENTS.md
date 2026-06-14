@@ -77,6 +77,15 @@ Do not report the installed app as tested unless you deliberately ran the instal
 
 The desktop is honest by design: chat must stay blocked until a real Letta session initializes.
 
+Optional CLI smoke:
+
+```sh
+OTTO_AGENT_ID=<agent-id> task smoke:cli
+```
+
+If no real local Letta agent is available yet, record the missing-agent message instead of
+running a fake smoke or using `conversation=default`.
+
 ## Done receipt
 
 Report:

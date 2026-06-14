@@ -146,12 +146,13 @@ tasks:
       - ps aux | grep -E '[M]acOS/otto|[o]tto Helper|[l]etta-code/letta.js --output-format stream-json' | sed -n '1,160p'
 
   smoke:cli:
-    desc: Direct Letta CLI smoke against the configured local agent in a disposable conversation
+    desc: Optional Letta CLI smoke; requires OTTO_AGENT_ID or LETTA_AGENT_ID and uses a disposable conversation
     cmds:
       - |
         AGENT_ID="${OTTO_AGENT_ID:-${LETTA_AGENT_ID:-}}"
         if [ -z "$AGENT_ID" ]; then
-          printf '%s\n' 'OTTO_AGENT_ID or LETTA_AGENT_ID: set one target Letta agent id'
+          printf '%s\n' 'task smoke:cli requires OTTO_AGENT_ID or LETTA_AGENT_ID.'
+          printf '%s\n' 'Optional until you have a real local Letta agent; run OTTO_AGENT_ID=<agent-id> task smoke:cli.'
           exit 1
         fi
         CLI_PATH="${LETTA_CLI_PATH:-{{.LETTA_CLI}}}"
