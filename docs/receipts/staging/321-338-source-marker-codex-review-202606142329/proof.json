@@ -1,0 +1,44 @@
+{
+  "ok": true,
+  "issues": [
+    321,
+    338
+  ],
+  "runId": "codex-review-202606142329",
+  "originMainShort": "2fa8fc5",
+  "stagingApp": "/Applications/otto-staging-pr348-review.app",
+  "cdpPort": 9548,
+  "receiptDir": "/Users/seb/Code/otto/.worktrees/issue-321-338-build-marker/docs/receipts/staging/321-338-source-marker-codex-review-202606142329",
+  "checks": {
+    "markerVisible": true,
+    "channelPresent": true,
+    "shortShaPresent": true,
+    "versionPresent": true,
+    "appPathPresent": true,
+    "profilePathPresent": true,
+    "mainShaPresent": true,
+    "matchesMainWhenExpected": true,
+    "markerWarnsWhenBehind": true,
+    "settingsDetailsVisible": true,
+    "sourceMarkerComplete": true
+  },
+  "buildInfo": {
+    "sha": "3fd744e241c65ba40c8ce18ff9b7982dd98de2ea",
+    "shortSha": "3fd744e",
+    "builtAt": "2026-06-14T23:28:58Z",
+    "branch": "fix/321-338-staging-source-marker",
+    "channel": "staging",
+    "version": "0.1.3",
+    "appPath": "/Applications/otto-staging-pr348-review.app",
+    "profilePath": "/tmp/otto-pr-348-review-root/profile",
+    "homePath": "/tmp/otto-pr-348-review-root/otto-home",
+    "mainSha": "2fa8fc516d6eb8e10789916724da6c3c92e9aee6",
+    "mainShortSha": "2fa8fc5",
+    "matchesMain": false
+  },
+  "markerText": "staging · 3fd744e · behind main",
+  "screenshots": {
+    "chat": "/Users/seb/Code/otto/.worktrees/issue-321-338-build-marker/docs/receipts/staging/321-338-source-marker-codex-review-202606142329/chat-source-marker.png",
+    "settings": "/Users/seb/Code/otto/.worktrees/issue-321-338-build-marker/docs/receipts/staging/321-338-source-marker-codex-review-202606142329/settings-source-details.png"
+  }
+}
