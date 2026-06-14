@@ -69,7 +69,7 @@ if grep -q 'brand/otto-pfp.png' <<<"$INDEX_BODY" && grep -qi '^HTTP/.* 200' <<<"
 fi
 
 OG_OK="false"
-if grep -q 'https://otto.haus/og.png' <<<"$INDEX_BODY" && grep -qi '^HTTP/.* 200' <<<"$OG_HEADERS"; then
+if grep -q 'https://otto-haus.github.io/otto/og.png' <<<"$INDEX_BODY" && grep -qi '^HTTP/.* 200' <<<"$OG_HEADERS"; then
   OG_OK="true"
 fi
 
