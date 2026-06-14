@@ -1,8 +1,11 @@
 {
   "pr": 153,
-  "status": "ready_for_review_after_codex_fixes",
-  "evidenceType": "backend-data",
+  "status": "decision_ready_after_codex_safety_fixes",
+  "evidenceType": "backend-data-and-live-issue-readonly-checks",
   "primaryReceipt": "docs/receipts/staging/pr-153/codex-review-issue-migration.json",
-  "reviewFinding": "Original dry-run behavior could dirty the committed migration map; fixed by moving default dry-run output to the OS temp directory while preserving write-mode migration-map output.",
-  "readyForSebastian": true
+  "codeRecommendation": "ready_for_sebastian_review_with_hold",
+  "shipRecommendation": "hold",
+  "reviewFinding": "The helper now blocks duplicate local ticket IDs before GitHub reads and matches existing issues by source path, but current main has duplicate ticket IDs and 8 post-migration tickets that are not represented in the committed migration map.",
+  "readyForSebastian": true,
+  "reviewedAt": "2026-06-14T21:58:26.153180Z"
 }

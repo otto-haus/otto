@@ -68,7 +68,7 @@ function readExistingIssues(repo) {
     "--limit",
     "1000",
     "--json",
-    "number,title,url,state",
+    "number,title,url,state,body",
   ]);
   return JSON.parse(raw);
 }
@@ -230,7 +230,7 @@ function createIssue(repo, title, body) {
   );
 }
 
-function updateIssue(repo, number, body) {
+function updateIssueWithTitle(repo, number, title, body) {
   return withBodyFile(body, (bodyPath) =>
     runGh([
       "issue",
@@ -238,32 +238,66 @@ function updateIssue(repo, number, body) {
       "--repo",
       repo,
       String(number),
+      "--title",
+      title,
       "--body-file",
       bodyPath,
     ])
   );
 }
 
-const existing = readExistingIssues(options.repo);
-const existingByTitle = new Map(existing.map((issue) => [issue.title, issue]));
+function sourceFromIssue(issue) {
+  const body = typeof issue.body === "string" ? issue.body : "";
+  return body.match(/^- Source: `([^`]+)`/m)?.[1];
+}
+
+function duplicateTicketIds(tickets) {
+  const byId = new Map();
+  for (const ticket of tickets) {
+    const existing = byId.get(ticket.id) ?? [];
+    existing.push(displaySource(ticket));
+    byId.set(ticket.id, existing);
+  }
+
+  return [...byId.entries()]
+    .filter(([, sources]) => sources.length > 1)
+    .map(([id, sources]) => ({ id, sources }));
+}
+
 let tickets = discoverTickets(options.source);
 if (options.limit > 0) tickets = tickets.slice(0, options.limit);
+const duplicateIds = duplicateTicketIds(tickets);
+if (duplicateIds.length > 0) {
+  const detail = duplicateIds
+    .map((entry) => `${entry.id}: ${entry.sources.join(", ")}`)
+    .join("; ");
+  throw new Error(`Duplicate local ticket ids in migration set: ${detail}`);
+}
+
+const existing = readExistingIssues(options.repo);
+const existingByTitle = new Map(existing.map((issue) => [issue.title, issue]));
+const existingBySource = new Map();
+for (const issue of existing) {
+  const source = sourceFromIssue(issue);
+  if (source && !existingBySource.has(source)) existingBySource.set(source, issue);
+}
 
 const results = [];
 for (const ticket of tickets) {
   const title = `[otto-ticket:${ticket.id}] ${ticket.title}`;
-  const duplicate = existingByTitle.get(title);
+  const source = displaySource(ticket);
+  const duplicate = existingBySource.get(source) ?? existingByTitle.get(title);
 
   if (duplicate) {
     if (options.write && options.syncExisting) {
-      updateIssue(options.repo, duplicate.number, buildIssueBody(ticket));
+      updateIssueWithTitle(options.repo, duplicate.number, title, buildIssueBody(ticket));
       results.push({
         id: ticket.id,
         status: ticket.status,
-        source: displaySource(ticket),
+        source,
         title,
         action: "updated",
-        reason: "matching title already existed",
+        reason: existingBySource.get(source) ? "matching source already existed" : "matching title already existed",
         issueNumber: duplicate.number,
         issueUrl: duplicate.url,
       });
@@ -274,10 +308,10 @@ for (const ticket of tickets) {
     results.push({
       id: ticket.id,
       status: ticket.status,
-      source: displaySource(ticket),
+      source,
       title,
       action: "skipped",
-      reason: "matching title already exists",
+      reason: existingBySource.get(source) ? "matching source already exists" : "matching title already exists",
       issueNumber: duplicate.number,
       issueUrl: duplicate.url,
     });
@@ -288,7 +322,7 @@ for (const ticket of tickets) {
     results.push({
       id: ticket.id,
       status: ticket.status,
-      source: displaySource(ticket),
+      source,
       title,
       action: "dry-run",
     });
@@ -306,7 +340,7 @@ for (const ticket of tickets) {
   results.push({
     id: ticket.id,
     status: ticket.status,
-    source: displaySource(ticket),
+    source,
     title,
     action: "created",
     issueNumber: number,
