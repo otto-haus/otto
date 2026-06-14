@@ -1151,6 +1151,11 @@ h1, h2, h3, h4, p { margin: 0; }
   border-color: rgba(196, 84, 58, 0.24);
   background: rgba(196, 84, 58, 0.06);
 }
+.queueitem__pill--next {
+  color: var(--accent);
+  border-color: rgba(61, 111, 245, 0.22);
+  background: rgba(61, 111, 245, 0.07);
+}
 .queueitem__text {
   min-width: 0;
   overflow: hidden;
