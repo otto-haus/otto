@@ -1,6 +1,6 @@
 # otto Desktop
 
-A v0 Desktop workspace for local otto chat, setup, and honest coming-soon workspace panes.
+A v0.1 Desktop workspace for local otto chat, setup, and honest coming-soon workspace panes.
 
 ## Install
 
@@ -11,7 +11,11 @@ bun install
 ## Develop
 
 ```sh
+# web preview — fast UI iteration, no desktop bridge (chat is disabled here)
 bun run --cwd apps/desktop dev
+
+# full desktop app, wired to a local Letta runtime
+bun run --cwd apps/desktop electron:dev
 ```
 
 The non-chat workspace panes are placeholders in v0.1 until their real loaders land.
