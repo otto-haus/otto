@@ -67,7 +67,14 @@ const EFFORT_OPTIONS: Array<{ label: string; value: EffortLevel }> = [
 ];
 
 const labelForModel = (value?: string | null) => MODEL_OPTIONS.find((m) => m.value === value)?.label ?? value ?? 'Agent default';
-const labelForEffort = (value?: EffortLevel) => EFFORT_OPTIONS.find((e) => e.value === value)?.label ?? 'Max';
+const labelForEffort = (value?: EffortLevel) => EFFORT_OPTIONS.find((e) => e.value === value)?.label ?? 'High';
+
+const formatRuntimeSubtitle = (ready: boolean, reason: string | undefined, modelLabel: string): string => {
+  if (ready) return modelLabel;
+  const text = reason?.trim() ?? 'connecting…';
+  if (text.length <= 96) return text;
+  return `${text.slice(0, 93)}…`;
+};
 
 const ModelEffortPickers: React.FC<{
   busy: boolean;
@@ -425,7 +432,7 @@ const LiveChat: React.FC<{
   const st = rt.status;
   const ready = !!st?.ready;
   const selectedModel = st?.modelHandle ?? st?.model ?? null;
-  const selectedEffort = st?.effort ?? 'max';
+  const selectedEffort = st?.effort ?? 'high';
   const activeThreadTitle = threads.find((t) => t.id === rt.activeThreadId)?.title;
   const headTitle = displayThreadTitle(activeThreadTitle ?? 'New chat');
 
@@ -658,12 +665,12 @@ const LiveChat: React.FC<{
             {st ? (
               <>
                 <span className={`dot ${ready ? 'dot--ok' : 'dot--warn'}`} aria-hidden="true" />
-                {ready ? labelForModel(selectedModel) : st.reason ?? 'connecting…'}
+                {ready ? labelForModel(selectedModel) : formatRuntimeSubtitle(ready, st.reason, labelForModel(selectedModel))}
               </>
             ) : 'connecting…'}
           </div>
         </div>
-        {ready ? (
+        {st ? (
           <div className="chat__headActions" ref={pickerRef}>
             <ModelEffortPickers
               compact
@@ -700,9 +707,6 @@ const LiveChat: React.FC<{
           )}
           {ready && streamMessages.length === 0 && (
             <div className="chatEmpty">
-              <div className="chatEmpty__mark" aria-hidden="true">
-                <img src={ottoAvatar} alt="" />
-              </div>
               <div className="eyebrow">{chatCopy.sessionEyebrow}</div>
               <h2 className="chatEmpty__title">{chatCopy.sessionTitle}</h2>
               <p className="chatEmpty__lede">{chatCopy.sessionBody}</p>
@@ -780,7 +784,7 @@ const LiveChat: React.FC<{
       </div>
 
       <div className="promptbar">
-        {queue.length > 0 && (
+        {ready && queue.length > 0 && (
           <QueueStrip
             queue={queue}
             onClear={() => setQueue([])}

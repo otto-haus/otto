@@ -150,6 +150,14 @@ export function classify(reason: string, hasKey: boolean): StatusCode {
 }
 
 export function friendly(code: StatusCode, reason: string): string {
+  const lower = reason.toLowerCase();
+  if (lower.includes('invalid model')) {
+    const match = reason.match(/Invalid model '([^']+)'/i);
+    const preset = match?.[1];
+    return preset
+      ? `Model preset "${preset}" isn't available in your Letta build. Choose another model or lower reasoning effort.`
+      : 'Model preset isn't available in your Letta build. Choose another model or lower reasoning effort.';
+  }
   switch (code) {
     case 'no-api-key':
       return `Letta auth failed. For local v1, configure provider auth inside Letta; otto does not need its own API key. (${reason})`;
@@ -182,14 +190,22 @@ export function nextActionFor(code: StatusCode): string {
 }
 
 export function modelSelectionForCli(modelHandle: string, effort: string): string {
-  const e = effort === 'max' ? 'xhigh' : effort;
+  const effortKey = effort === 'max' ? 'xhigh' : effort;
   const presets: Record<string, Partial<Record<string, string>>> = {
     'chatgpt-plus-pro/gpt-5.5': {
       off: 'gpt-5.5-plus-pro-none',
       low: 'gpt-5.5-plus-pro-low',
       medium: 'gpt-5.5-plus-pro-medium',
       high: 'gpt-5.5-plus-pro-high',
-      xhigh: 'gpt-5.5-plus-pro-xhigh',
+      // Not every Letta CLI build registers a distinct xhigh preset — fall back to high.
+      xhigh: 'gpt-5.5-plus-pro-high',
+    },
+    'openai-codex/gpt-5.5': {
+      off: 'gpt-5.5-codex-none',
+      low: 'gpt-5.5-codex-low',
+      medium: 'gpt-5.5-codex-medium',
+      high: 'gpt-5.5-codex-high',
+      xhigh: 'gpt-5.5-codex-high',
     },
     'anthropic/claude-opus-4-8': {
       low: 'opus-4.8-low',
@@ -205,5 +221,8 @@ export function modelSelectionForCli(modelHandle: string, effort: string): strin
       xhigh: 'sonnet-4.6-xhigh',
     },
   };
-  return presets[modelHandle]?.[e] ?? modelHandle;
+
+  const table = presets[modelHandle];
+  if (!table) return modelHandle;
+  return table[effortKey] ?? table.high ?? table.medium ?? table.off ?? modelHandle;
 }

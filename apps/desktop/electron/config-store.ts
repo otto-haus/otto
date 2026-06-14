@@ -69,7 +69,7 @@ export class ConfigStore {
 
   /** UI-level reasoning effort preference. Public SDK support is version-gated. */
   effort(): EffortLevel {
-    return normalizeEffort(process.env.OTTO_EFFORT || this.cfg.effort) ?? 'max';
+    return normalizeEffort(process.env.OTTO_EFFORT || this.cfg.effort) ?? 'high';
   }
 
   connectionMode(): NonNullable<OttoConfig['connectionMode']> {

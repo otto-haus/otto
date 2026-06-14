@@ -1,7 +1,7 @@
 # 063 — Sebastian gate packet (v0.1.3 draft — hold)
 
 Date: 2026-06-14 (updated 14:45 local)  
-Branch: `ship/functional-labs` @ `19a821c` (+ hygiene commits pending push)  
+Branch: `ship/functional-labs` @ `1d93ff1` (hygiene commits on branch; +1 follow-up commit may apply)  
 Tag: **`v0.1.3`** (GitHub pre-release on integration line — **not tagged yet**). Sebastian gate sign-off still required before calling this **shipped**.
 
 ## What to try (staging only)
