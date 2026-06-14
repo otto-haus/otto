@@ -9,6 +9,7 @@ const originalEnv = {
   OTTO_SMOKE: process.env.OTTO_SMOKE,
   OTTO_AGENT_ID: process.env.OTTO_AGENT_ID,
   OTTO_SKIP_LETTA_LSOF: process.env.OTTO_SKIP_LETTA_LSOF,
+  OTTO_WS_SKIP_CONVERSATION_CREATE: process.env.OTTO_WS_SKIP_CONVERSATION_CREATE,
   LETTA_CLI_PATH: process.env.LETTA_CLI_PATH,
 };
 
@@ -70,16 +71,15 @@ async function waitForListener(transport: WsRuntimeTransport, timeoutMs = 5000) 
   throw new Error('Timed out waiting for WS listener');
 }
 
-async function connectMockRuntime(transport: WsRuntimeTransport, conversationId: string) {
+async function connectMockRuntime(
+  transport: WsRuntimeTransport,
+  conversationId: string,
+  onCommand?: (cmd: Record<string, unknown>) => void,
+) {
   const { port, token } = await waitForListener(transport);
   const socket = new WebSocket(`ws://127.0.0.1:${port}`, {
     headers: { Authorization: `Bearer ${token}` },
   });
-  await new Promise<void>((resolve, reject) => {
-    socket.once('open', () => resolve());
-    socket.once('error', reject);
-  });
-
   socket.on('message', (raw) => {
     let cmd: Record<string, unknown>;
     try {
@@ -87,6 +87,7 @@ async function connectMockRuntime(transport: WsRuntimeTransport, conversationId:
     } catch {
       return;
     }
+    onCommand?.(cmd);
     if (cmd.type === 'sync') {
       socket.send(JSON.stringify(syncResponse(conversationId)));
       socket.send(JSON.stringify(deviceOnline()));
@@ -101,6 +102,11 @@ async function connectMockRuntime(transport: WsRuntimeTransport, conversationId:
     }
   });
 
+  await new Promise<void>((resolve, reject) => {
+    socket.once('open', () => resolve());
+    socket.once('error', reject);
+  });
+
   return socket;
 }
 
@@ -109,17 +115,19 @@ describe('WsRuntimeTransport', () => {
     process.env.OTTO_SMOKE = '1';
     process.env.OTTO_AGENT_ID = 'agent-ws-test';
     process.env.OTTO_SKIP_LETTA_LSOF = '1';
+    process.env.OTTO_WS_SKIP_CONVERSATION_CREATE = '1';
     process.env.LETTA_CLI_PATH =
       '/Applications/Letta.app/Contents/Resources/app.asar.unpacked/node_modules/@letta-ai/letta-code/letta.js';
   });
 
   test('init reaches ready; smoke session; reconnect marks not ready on socket close', async () => {
     const { win, sent } = mockWindow();
+    const commands: Array<Record<string, unknown>> = [];
     const transport = new WsRuntimeTransport(win, mockConfig());
     (transport as unknown as { spawnRemote: () => Promise<void> }).spawnRemote = async () => {};
 
     const initPromise = transport.init({ freshConversation: true });
-    const socket = await connectMockRuntime(transport, 'conv-ws-disposable');
+    const socket = await connectMockRuntime(transport, 'conv-ws-disposable', (cmd) => commands.push(cmd));
     await initPromise;
 
     expect(transport.getStatus().ready).toBe(true);
@@ -127,6 +135,10 @@ describe('WsRuntimeTransport', () => {
     expect(transport.getStatus().effectiveTransport).toBe('websocket local');
     expect(smokeMode()).toBe(true);
     expect(transport.getStatus().sessionMode).toBe('smoke');
+    const syncCommand = commands.find((cmd) => cmd.type === 'sync');
+    expect(syncCommand).toBeTruthy();
+    const runtime = syncCommand?.runtime as { conversation_id?: string } | undefined;
+    expect(runtime?.conversation_id).toMatch(/^local-conv-/);
 
     socket.close();
     await new Promise((r) => setTimeout(r, 30));

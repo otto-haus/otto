@@ -82,6 +82,29 @@ describe('ThreadStore', () => {
     }
   });
 
+  test('archiving a pinned thread unpins and hides it', () => {
+    const tmp = mkdtempSync(join(tmpdir(), 'otto-thread-test-'));
+    try {
+      const config = mockConfig(tmp);
+      const store = new ThreadStore(config);
+      const thread = store.create({ title: 'Pinned archive' });
+      store.pin(thread.id, true);
+
+      const archived = store.archive(thread.id);
+
+      expect(archived.archived).toBe(true);
+      expect(archived.pinned).toBe(false);
+      expect(store.list(false).threads.some((t) => t.id === thread.id)).toBe(false);
+      expect(store.list(true).threads.find((t) => t.id === thread.id)).toMatchObject({
+        archived: true,
+        pinned: false,
+      });
+    } finally {
+      rmSync(tmp, { recursive: true, force: true });
+      delete process.env.OTTO_HOME;
+    }
+  });
+
   test('archiving the active thread moves config to the next visible thread', () => {
     const tmp = mkdtempSync(join(tmpdir(), 'otto-thread-test-'));
     try {
@@ -184,6 +207,8 @@ describe('ThreadStore', () => {
         row('local_keep', 'hi how are you?'),
         row('local_chat_session', 'Chat session'),
         row('local_debug', '046-debug-1781425936940'),
+        row('local_alpha', '046-alpha-thread'),
+        row('local_beta', '046-beta-thread'),
       ], null, 2)}\n`);
       config.update({ activeThreadId: 'local_chat_session', conversationId: 'stale-conv' });
 
@@ -251,6 +276,45 @@ describe('ThreadStore', () => {
       expect(updated.title).toBe('Canonical duplicate');
       expect(persisted).toHaveLength(1);
       expect(persisted[0]).toMatchObject({ id: 'local_duplicate', title: 'Canonical duplicate', pinned: true });
+    } finally {
+      rmSync(tmp, { recursive: true, force: true });
+      delete process.env.OTTO_HOME;
+    }
+  });
+
+  test('pinned manual order survives later touches', () => {
+    const tmp = mkdtempSync(join(tmpdir(), 'otto-thread-test-'));
+    try {
+      const config = mockConfig(tmp);
+      const store = new ThreadStore(config);
+      const first = store.create({ title: 'First pinned' });
+      const second = store.create({ title: 'Second pinned' });
+      store.pin(first.id, true);
+      store.pin(second.id, true);
+
+      store.move(second.id, first.id);
+      store.switch(first.id);
+      store.touchActive({ title: 'First pinned updated' });
+
+      expect(store.list().threads.filter((t) => t.pinned).map((t) => t.id)).toEqual([second.id, first.id]);
+    } finally {
+      rmSync(tmp, { recursive: true, force: true });
+      delete process.env.OTTO_HOME;
+    }
+  });
+
+  test('rename persists a cleaned conversation title', () => {
+    const tmp = mkdtempSync(join(tmpdir(), 'otto-thread-test-'));
+    try {
+      const config = mockConfig(tmp);
+      const store = new ThreadStore(config);
+      const thread = store.create({ title: 'New chat' });
+
+      const renamed = store.rename(thread.id, '  Project   notes  ');
+      const reloaded = new ThreadStore(new ConfigStore()).get(thread.id);
+
+      expect(renamed.title).toBe('Project notes');
+      expect(reloaded?.title).toBe('Project notes');
     } finally {
       rmSync(tmp, { recursive: true, force: true });
       delete process.env.OTTO_HOME;

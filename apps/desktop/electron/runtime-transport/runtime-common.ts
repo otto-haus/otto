@@ -2,7 +2,7 @@ import { createRequire } from 'node:module';
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 import type { BrowserWindow } from 'electron';
-import type { EffortLevel, OttoConfig, StatusCode } from '../shared/types';
+import type { EffortLevel, OttoConfig, RuntimeStatus, StatusCode } from '../shared/types';
 
 export function smokeMode(): boolean {
   return process.env.OTTO_SMOKE === '1' || process.env.OTTO_SMOKE === 'true';
@@ -165,7 +165,7 @@ export function friendly(code: StatusCode, reason: string): string {
     case 'no-agent':
       return `Can't find a default local Letta agent — open Letta once or choose an Agent ID override in Settings. (${reason})`;
     case 'stale':
-      return `Saved Letta agent or conversation was stale — choose a valid Agent ID override in Settings or clear the override. (${reason})`;
+      return `Saved Letta conversation was stale — retry will start a fresh conversation for this sidebar row. (${reason})`;
     default:
       return reason;
   }
@@ -180,7 +180,7 @@ export function nextActionFor(code: StatusCode): string {
     case 'no-agent':
       return 'Open Letta once or choose an Agent ID override in Settings.';
     case 'stale':
-      return 'Clear the stale override or choose a valid Agent ID in Settings.';
+      return 'Retry to revive this sidebar row with a fresh Letta conversation.';
     case 'sdk-missing':
       return 'Install or repair the Letta Code SDK dependency.';
     default:
@@ -275,4 +275,26 @@ export function modelSelectionForCli(modelHandle: string, effort: string): strin
   const table = presets[modelHandle];
   if (!table) return modelHandle;
   return table[effortKey] ?? table.high ?? table.medium ?? table.off ?? modelHandle;
+}
+
+export function runtimeContextForPrompt(status: Partial<Pick<RuntimeStatus, 'model' | 'modelHandle' | 'effort' | 'sessionMode'>>): string {
+  const selectedModel = status.modelHandle ?? status.model ?? 'agent-default';
+  const effort = status.effort ?? 'unknown';
+  const mode = status.sessionMode ?? 'unknown';
+  return [
+    '<otto_runtime_context>',
+    'Use this context only when it is relevant or when the user asks about model, effort, provider path, or runtime setup.',
+    `selected_model_handle: ${selectedModel}`,
+    `reasoning_effort: ${effort}`,
+    `transport_mode: ${mode}`,
+    'provider_path: local Letta runtime owns provider auth/subscription; otto does not call OpenAI or Anthropic provider APIs directly.',
+    '</otto_runtime_context>',
+  ].join('\n');
+}
+
+export function promptWithRuntimeContext(
+  text: string,
+  status: Partial<Pick<RuntimeStatus, 'model' | 'modelHandle' | 'effort' | 'sessionMode'>>,
+): string {
+  return `${runtimeContextForPrompt(status)}\n\n${text}`;
 }

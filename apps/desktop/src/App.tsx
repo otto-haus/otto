@@ -86,7 +86,7 @@ export function App() {
 function AppShell() {
   const rt = useRuntimeContext();
   const labs = useLabs();
-  const { threads, refresh: refreshThreads, pinThread } = useChatThreads(rt.activeThreadId);
+  const { threads, refresh: refreshThreads, pinThread, archiveThread, renameThread, moveThread } = useChatThreads(rt.activeThreadId);
   const [active, setActiveState] = useState<SurfaceId>(initialSurface());
   const [sidebarHidden, setSidebarHidden] = useState(false);
   const [sidebarCompact, setSidebarCompact] = useState(
@@ -177,7 +177,17 @@ function AppShell() {
               void pinThread(thread.id, pinned);
             }}
             onArchiveThread={(thread) => {
-              void rt.archiveThread(thread.id).then(() => refreshThreads());
+              void (async () => {
+                if (thread.id === rt.activeThreadId) await rt.archiveThread(thread.id);
+                else await archiveThread(thread.id);
+                await refreshThreads();
+              })();
+            }}
+            onRenameThread={(thread, title) => {
+              void renameThread(thread.id, title);
+            }}
+            onMoveThread={(thread, target) => {
+              void moveThread(thread.id, target.id);
             }}
             isComingSoon={labs.isComingSoon}
           />

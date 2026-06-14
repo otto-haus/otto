@@ -292,8 +292,13 @@ declare global {
 
 export type OttoBridge = OttoApi;
 
-export const ottoApi = (): OttoApi | null =>
-  typeof window !== 'undefined' && window.otto ? window.otto : null;
+let cachedOttoApi: OttoApi | null | undefined;
+
+export const ottoApi = (): OttoApi | null => {
+  if (cachedOttoApi !== undefined) return cachedOttoApi;
+  cachedOttoApi = typeof window !== 'undefined' && window.otto ? window.otto : null;
+  return cachedOttoApi;
+};
 export const isElectron = (): boolean => ottoApi() !== null;
 
 export type ChatMsg = StoredChatMsg & {
@@ -339,6 +344,16 @@ function loadThreadMessages(
   return loaded;
 }
 
+function shouldAutoTitleThread(title: string | null | undefined): boolean {
+  const t = (title ?? '').trim();
+  if (!t) return true;
+  if (/^new chat$/i.test(t)) return true;
+  if (/^chat session$/i.test(t)) return true;
+  if (/^local_/i.test(t)) return true;
+  if (/^\d{3}-(?:rev\d+-|smoke-)?thread-[ab]-\d{12,14}$/i.test(t)) return true;
+  return false;
+}
+
 export function useRuntime() {
   const api = ottoApi();
   const [status, setStatus] = useState<RuntimeStatus | null>(null);
@@ -350,6 +365,7 @@ export function useRuntime() {
   const activeThreadRef = useRef<string | null>(null);
   const messagesRef = useRef<ChatMsg[]>([]);
   const threadHydrated = useRef(false);
+  const runtimeInitialized = useRef(false);
   const threadMessagesCache = useRef(new Map<string, ChatMsg[]>());
   /** Thread that owns the in-flight Letta turn — events route here, not to the active view. */
   const inflightThreadRef = useRef<string | null>(null);
@@ -412,7 +428,8 @@ export function useRuntime() {
   }, [api]);
 
   useEffect(() => {
-    if (!api) return;
+    if (!api || runtimeInitialized.current) return;
+    runtimeInitialized.current = true;
     setStatus((current) => current ?? {
       ready: false,
       reason: 'Booting local Letta session…',
@@ -512,7 +529,12 @@ export function useRuntime() {
     inflightThreadRef.current = sendThreadId;
     const snippet = text.trim().replace(/\s+/g, ' ');
     if (snippet) {
-      void api.threads.touch({ title: snippet.length > 56 ? `${snippet.slice(0, 53)}…` : snippet });
+      void api.threads.list().then((result) => {
+        if (activeThreadRef.current !== sendThreadId) return;
+        const active = result.threads.find((thread) => thread.id === sendThreadId);
+        if (!shouldAutoTitleThread(active?.title)) return;
+        void api.threads.touch({ title: snippet.length > 56 ? `${snippet.slice(0, 53)}…` : snippet });
+      });
     }
     const prev = loadThreadMessages(sendThreadId, threadMessagesCache.current);
     const next: ChatMsg[] = [...prev, { id: `user-${Date.now()}`, who: 'user', text }];

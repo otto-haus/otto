@@ -227,10 +227,15 @@ h1, h2, h3, h4, p { margin: 0; }
   align-items: stretch;
   gap: 0;
   border-radius: 10px;
+  width: 100%;
+  min-width: 0;
+  min-height: 32px;
+  overflow: hidden;
 }
-.sidebarConvWrap .sidebarConv { flex: 1; min-width: 0; }
+.sidebarConvWrap .sidebarConv { flex: 1 1 auto; min-width: 0; }
 .sidebarConvWrap.is-active { background: rgba(20,22,26,0.07); }
 .sidebarConvWrap.is-active .sidebarConv.is-active { background: transparent; }
+.sidebarConvWrap.is-dragging { opacity: 0.48; }
 .sidebarConv__pin,
 .sidebarConv__archive {
   flex: none;
@@ -245,25 +250,32 @@ h1, h2, h3, h4, p { margin: 0; }
   opacity: 0;
   transition: opacity 120ms ease, color 120ms ease, background 120ms ease;
 }
+.sidebarConv__pin { margin-left: 2px; }
 .sidebarConv__archive { margin-right: 2px; }
 .sidebarConvWrap:hover .sidebarConv__pin,
 .sidebarConvWrap:hover .sidebarConv__archive,
 .sidebarConvWrap.is-active .sidebarConv__pin,
 .sidebarConvWrap.is-active .sidebarConv__archive,
 .sidebarConvWrap.is-pinned .sidebarConv__pin,
+.sidebarConvWrap.is-pinned .sidebarConv__archive,
 .sidebarConv__pin.is-on {
   opacity: 1;
 }
 .sidebarConv__pin:hover,
 .sidebarConv__archive:hover { color: var(--ink-soft); background: rgba(20,22,26,0.06); }
 .sidebarConv__pin.is-on { color: var(--ink); }
+.sidebarConv__archive.is-confirming {
+  opacity: 1;
+  color: var(--stop);
+  background: rgba(180,65,48,0.1);
+}
 .sidebarConv__pin svg,
 .sidebarConv__archive svg { width: 14px; height: 14px; stroke-width: 1.65; }
 
 .sidebarConv {
   display: flex; align-items: center; gap: 10px;
   width: 100%; min-height: 32px;
-  padding: 0 10px 0 28px;
+  padding: 0 10px 0 4px;
   border: 0; border-radius: 8px;
   background: transparent;
   color: var(--mut);
@@ -271,11 +283,28 @@ h1, h2, h3, h4, p { margin: 0; }
   font-size: 13.5px;
   cursor: pointer;
 }
+.sidebarConv--editing { cursor: text; }
 .sidebarConv:hover { background: rgba(20,22,26,0.04); color: var(--ink-soft); }
 .sidebarConv.is-active { background: rgba(20,22,26,0.07); color: var(--ink); font-weight: 600; }
 .sidebarConv__icon { display: grid; place-items: center; flex: none; color: #848990; }
 .sidebarConv__icon svg { width: 15px; height: 15px; stroke-width: 1.55; }
 .sidebarConv__label { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sidebarConv__rename {
+  flex: 1;
+  min-width: 0;
+  width: 100%;
+  height: 24px;
+  box-sizing: border-box;
+  border: 1px solid var(--line-strong);
+  border-radius: 6px;
+  background: var(--panel);
+  color: var(--ink);
+  font: inherit;
+  font-size: 13.5px;
+  padding: 0 4px;
+  outline: none;
+}
+.sidebarConv__rename:focus { border-color: var(--ink); }
 
 .sidebar__lower {
   display: grid;
@@ -611,14 +640,6 @@ h1, h2, h3, h4, p { margin: 0; }
   align-items: center;
   margin: 8px 0 12px;
 }
-.chat__commandStation {
-  flex: none;
-  padding: 0 28px 12px;
-  max-width: 900px;
-  width: 100%;
-  margin: 0 auto;
-  box-sizing: border-box;
-}
 .settingsSurface .settingsPage { max-width: none; width: 100%; }
 .charterField { display: grid; gap: 5px; min-width: 0; }
 .charterField span {
@@ -785,10 +806,10 @@ h1, h2, h3, h4, p { margin: 0; }
   scroll-behavior: smooth;
 }
 .chat__streamInner {
-  max-width: 780px;
+  max-width: 1120px;
   width: 100%;
   margin: 0 auto;
-  padding: 28px 28px 32px;
+  padding: 32px clamp(28px, 5vw, 72px) 36px;
   display: flex;
   flex-direction: column;
   gap: 18px;
@@ -888,9 +909,9 @@ h1, h2, h3, h4, p { margin: 0; }
   0%, 70%, 100% { opacity: 0.35; transform: translateY(0); }
   35% { opacity: 1; transform: translateY(-2px); }
 }
-.msg { display: grid; gap: 8px; max-width: min(680px, 100%); min-width: 0; }
+.msg { display: grid; gap: 8px; max-width: min(860px, 100%); min-width: 0; }
 .msg__body { font-size: 15px; line-height: 1.65; color: var(--ink); overflow-wrap: anywhere; min-width: 0; }
-.msg--user { margin-left: auto; max-width: min(560px, 92%); }
+.msg--user { margin-left: auto; max-width: min(620px, 92%); }
 .msg--user .msg__body {
   background: var(--ink);
   color: var(--dark-tx);
@@ -907,6 +928,33 @@ h1, h2, h3, h4, p { margin: 0; }
 .md__quote p { margin: 0; }
 .md__pre { margin: 0; padding: 12px 14px; max-width: 100%; overflow: auto; border: 1px solid var(--line); border-radius: 9px; background: var(--bg-2); }
 .md__pre code { font-size: 12px; }
+.md__tableWrap { max-width: 100%; overflow-x: auto; border: 1px solid var(--line); border-radius: 9px; }
+.md__table { width: 100%; border-collapse: collapse; font-size: 13.5px; line-height: 1.35; background: var(--panel); }
+.md__table th,
+.md__table td { padding: 8px 10px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
+.md__table th { font-weight: 650; color: var(--ink); background: var(--bg-2); }
+.md__table tr:last-child td { border-bottom: 0; }
+.longMessage { display: grid; gap: 10px; }
+.longMessage__preview {
+  margin: 0;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  font: inherit;
+  color: inherit;
+}
+.longMessage__toggle {
+  justify-self: start;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--panel);
+  color: var(--mut);
+  font: inherit;
+  font-size: 12.5px;
+  font-weight: 650;
+  padding: 6px 10px;
+  cursor: pointer;
+}
+.longMessage__toggle:hover { border-color: var(--line-strong); color: var(--ink); }
 .md :not(pre) > code { background: var(--accent-tint); border: 1px solid var(--line); border-radius: 5px; padding: 1px 5px; color: inherit; }
 .md a { color: inherit; text-decoration: underline; text-underline-offset: 3px; }
 .msg--user .md :not(pre) > code { background: rgba(255,255,255,0.14); border-color: rgba(255,255,255,0.2); }
@@ -1006,7 +1054,7 @@ h1, h2, h3, h4, p { margin: 0; }
   left: 0; right: 0; top: -56px; height: 56px;
   background: linear-gradient(to bottom, rgba(248,247,242,0), var(--bg));
 }
-.promptCompose { display: grid; gap: 8px; max-width: 780px; width: 100%; margin: 0 auto; position: relative; z-index: 2; }
+.promptCompose { display: grid; gap: 8px; max-width: 900px; width: 100%; margin: 0 auto; position: relative; z-index: 2; }
 .promptbox {
   display: flex; align-items: flex-end; gap: 8px;
   border: 1px solid var(--line-strong);

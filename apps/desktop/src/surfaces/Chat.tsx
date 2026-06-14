@@ -7,7 +7,7 @@ import { isElectron, ottoApi, type EffortLevel, type LettaModelOption, type Save
 import { useRuntimeContext } from '../RuntimeContext';
 import type { SurfaceId } from '../components/Sidebar';
 import { OttoMark } from '../components/OttoMark';
-import { CheckBlockBanner, CommandStationStrip, MessageActions, Modal, PermissionCard, ReceiptInlineCard, type PermissionDecision, type PermissionRequestView } from '../components/ui';
+import { CheckBlockBanner, MessageActions, Modal, PermissionCard, ReceiptInlineCard, type PermissionDecision, type PermissionRequestView } from '../components/ui';
 import { displayThreadTitle } from '../components/ui/ThreadList';
 import { chatCopy, permissionCopy, toastCopy } from '../copy/surfaces';
 import { useChatThreads } from '../chat/useChatThreads';
@@ -314,6 +314,45 @@ const renderInline = (text: string): React.ReactNode[] => {
   return nodes;
 };
 
+const isTableDivider = (line: string): boolean => {
+  const cells = line.trim().replace(/^\|/, '').replace(/\|$/, '').split('|').map((cell) => cell.trim());
+  return cells.length > 1 && cells.every((cell) => /^:?-{3,}:?$/.test(cell));
+};
+
+const parseTableRow = (line: string): string[] =>
+  line.trim().replace(/^\|/, '').replace(/\|$/, '').split('|').map((cell) => cell.trim());
+
+const isPotentialTableRow = (line: string): boolean =>
+  line.includes('|') && parseTableRow(line).length > 1;
+
+const isTableDividerCell = (cell: string): boolean => /^:?-{3,}:?$/.test(cell.trim());
+
+const normalizeInlineTableLine = (line: string): string[] => {
+  if (!line.includes('|') || !line.includes('---')) return [line];
+  const firstPipe = line.indexOf('|');
+  const prefix = line.slice(0, firstPipe).trim();
+  const cells = line.slice(firstPipe).split('|').map((cell) => cell.trim()).filter(Boolean);
+  const dividerStart = cells.findIndex(isTableDividerCell);
+  if (dividerStart <= 0) return [line];
+  const columnCount = dividerStart;
+  const dividerCells = cells.slice(dividerStart, dividerStart + columnCount);
+  if (dividerCells.length !== columnCount || !dividerCells.every(isTableDividerCell)) return [line];
+
+  const rows: string[] = [];
+  if (prefix) rows.push(prefix, '');
+  rows.push(`| ${cells.slice(0, columnCount).join(' | ')} |`);
+  rows.push(`| ${dividerCells.join(' | ')} |`);
+  const bodyCells = cells.slice(dividerStart + columnCount);
+  for (let i = 0; i < bodyCells.length; i += columnCount) {
+    const row = bodyCells.slice(i, i + columnCount);
+    if (row.length === columnCount) rows.push(`| ${row.join(' | ')} |`);
+  }
+  return rows;
+};
+
+const normalizeInlineTables = (text: string): string =>
+  text.split('\n').flatMap(normalizeInlineTableLine).join('\n');
+
 const MarkdownText: React.FC<{ text: string }> = ({ text }) => {
   const blocks: React.ReactNode[] = [];
   const parts = text.split(/(```[\s\S]*?```)/g).filter(Boolean);
@@ -325,7 +364,7 @@ const MarkdownText: React.FC<{ text: string }> = ({ text }) => {
       continue;
     }
 
-    const lines = part.split('\n');
+    const lines = normalizeInlineTables(part).split('\n');
     let i = 0;
     while (i < lines.length) {
       const line = lines[i];
@@ -354,6 +393,35 @@ const MarkdownText: React.FC<{ text: string }> = ({ text }) => {
         }
         const quoteText = quoted.join('\n');
         blocks.push(<blockquote className="md__quote" key={`q-${blocks.length}-${quoteText.slice(0, 48)}`}>{quoted.map((q) => <p key={q}>{renderInline(q)}</p>)}</blockquote>);
+        continue;
+      }
+
+      if (i + 1 < lines.length && isPotentialTableRow(line) && isTableDivider(lines[i + 1])) {
+        const headers = parseTableRow(line);
+        i += 2;
+        const rows: string[][] = [];
+        while (i < lines.length && lines[i].trim() && isPotentialTableRow(lines[i])) {
+          rows.push(parseTableRow(lines[i]));
+          i += 1;
+        }
+        blocks.push(
+          <div className="md__tableWrap" key={`table-${blocks.length}-${headers.join('|')}`}>
+            <table className="md__table">
+              <thead>
+                <tr>{headers.map((header, index) => <th key={`${index}-${header}`}>{renderInline(header)}</th>)}</tr>
+              </thead>
+              <tbody>
+                {rows.map((row, rowIndex) => (
+                  <tr key={`${rowIndex}-${row.join('|')}`}>
+                    {headers.map((_, cellIndex) => (
+                      <td key={`${rowIndex}-${cellIndex}`}>{renderInline(row[cellIndex] ?? '')}</td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>,
+        );
         continue;
       }
 
@@ -398,6 +466,24 @@ const MarkdownText: React.FC<{ text: string }> = ({ text }) => {
   return <div className="md">{blocks}</div>;
 };
 
+const LONG_MESSAGE_PREVIEW_CHARS = 1800;
+
+const MessageText: React.FC<{ text: string }> = ({ text }) => {
+  const [expanded, setExpanded] = useState(false);
+  if (text.length <= LONG_MESSAGE_PREVIEW_CHARS) return <MarkdownText text={text} />;
+  const preview = text.slice(0, LONG_MESSAGE_PREVIEW_CHARS).trimEnd();
+  return (
+    <div className="longMessage">
+      {expanded ? <MarkdownText text={text} /> : (
+        <pre className="longMessage__preview">{preview}</pre>
+      )}
+      <button type="button" className="longMessage__toggle" onClick={() => setExpanded((value) => !value)}>
+        {expanded ? 'Collapse message' : `Show full message (${Math.round(text.length / 1000)}k chars)`}
+      </button>
+    </div>
+  );
+};
+
 const LiveChat: React.FC<{
   onOpenSettings?: () => void;
   onNavigate?: (id: SurfaceId) => void;
@@ -438,6 +524,13 @@ const LiveChat: React.FC<{
   const selectedEffort = st?.effort ?? 'high';
   const activeThreadTitle = threads.find((t) => t.id === rt.activeThreadId)?.title;
   const headTitle = displayThreadTitle(activeThreadTitle ?? 'New chat');
+
+  const focusComposer = () => {
+    if (!ready || permission || proposeContext || modelOpen || effortOpen) return;
+    requestAnimationFrame(() => {
+      textareaRef.current?.focus({ preventScroll: true });
+    });
+  };
 
   useEffect(() => {
     if (!api) return;
@@ -488,6 +581,7 @@ const LiveChat: React.FC<{
         return;
       }
       setDraft(text);
+      focusComposer();
     };
     window.addEventListener('otto-onboarding-starter', onStarter);
     return () => window.removeEventListener('otto-onboarding-starter', onStarter);
@@ -598,6 +692,10 @@ const LiveChat: React.FC<{
   }, [draft]);
 
   useEffect(() => {
+    focusComposer();
+  }, [ready, rt.activeThreadId, rt.busy, modelOpen, effortOpen, permission, proposeContext]);
+
+  useEffect(() => {
     tailRef.current?.scrollIntoView({ behavior: streamMessages.length > 1 ? 'smooth' : 'auto', block: 'end' });
   }, [streamMessages.length, rt.busy, activeQueue.length]);
 
@@ -631,12 +729,14 @@ const LiveChat: React.FC<{
         }]);
         setDraft('');
         setAttachments([]);
+        focusComposer();
         return;
       }
       setQueue((items) => [...items, createQueueItem(text, 'queued', rt.activeThreadId)]);
       if (rt.busy) void rt.abort();
       setDraft('');
       setAttachments([]);
+      focusComposer();
     })();
   };
 
@@ -710,12 +810,6 @@ const LiveChat: React.FC<{
         </div>
       </div>
 
-      {ready && onNavigate ? (
-        <div className="chat__commandStation">
-          <CommandStationStrip onNavigate={onNavigate} />
-        </div>
-      ) : null}
-
       <div className="chat__stream" ref={streamRef}>
         <div className="chat__streamInner">
           {!ready && (
@@ -757,7 +851,10 @@ const LiveChat: React.FC<{
                     type="button"
                     className="chatStarter"
                     disabled={!ready}
-                    onClick={() => setDraft(prompt)}
+                    onClick={() => {
+                      setDraft(prompt);
+                      focusComposer();
+                    }}
                   >
                     {prompt}
                   </button>
@@ -803,7 +900,7 @@ const LiveChat: React.FC<{
                     />
                   ) : null}
                   <div className="msg__body" style={isError ? { color: 'var(--stop)' } : undefined}>
-                    {m.text ? <MarkdownText text={m.text} /> : null}
+                    {m.text ? <MessageText text={m.text} /> : null}
                   </div>
                   {!isUser && !isError && m.text ? (
                     <MessageActions
@@ -919,7 +1016,7 @@ const LiveChat: React.FC<{
                   e.preventDefault();
                   submit();
                 }
-                else if (e.key === 'Escape') { setDraft(''); e.currentTarget.blur(); }
+                else if (e.key === 'Escape') { setDraft(''); }
               }}
               disabled={!ready}
               rows={1}
