@@ -49,4 +49,19 @@ describe('secret-store', () => {
       rmSync(dir, { recursive: true, force: true });
     }
   });
+
+  test('rejects multiline secret values before writing the store', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'otto-secrets-test-'));
+    try {
+      process.env.OTTO_HOME = dir;
+      delete process.env.OTTO_CONFIG_DIR;
+
+      expect(() => setSecret('LETTA_API_KEY', 'test-key\nOTTO_MODEL=bad')).toThrow('single-line');
+
+      expect(existsSync(secretsFilePath())).toBe(false);
+      expect(hasSecret('LETTA_API_KEY')).toBe(false);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
 });

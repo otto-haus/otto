@@ -9,8 +9,18 @@ import { defaultOttoDir } from './config-store';
 // hardening; this is the v0.1 fallback the file's perms make safe enough for a
 // single-user local app.)
 
+const SECRET_NAME = /^[A-Z_][A-Z0-9_]*$/;
+
 export function secretsFilePath(): string {
   return join(defaultOttoDir(), 'secrets.env');
+}
+
+function assertSecretName(name: string): void {
+  if (!SECRET_NAME.test(name)) throw new Error(`Invalid secret name: ${name}`);
+}
+
+function assertSecretValue(value: string): void {
+  if (/[\r\n]/.test(value)) throw new Error('Secret values must be single-line');
 }
 
 function readAll(): Record<string, string> {
@@ -22,7 +32,9 @@ function readAll(): Record<string, string> {
     if (!t || t.startsWith('#')) continue;
     const eq = t.indexOf('=');
     if (eq <= 0) continue;
-    out[t.slice(0, eq)] = t.slice(eq + 1);
+    const name = t.slice(0, eq);
+    if (!SECRET_NAME.test(name)) continue;
+    out[name] = t.slice(eq + 1);
   }
   return out;
 }
@@ -43,10 +55,13 @@ function writeAll(map: Record<string, string>): void {
 }
 
 export function getSecret(name: string): string | null {
+  assertSecretName(name);
   return readAll()[name] ?? null;
 }
 
 export function setSecret(name: string, value: string | null): void {
+  assertSecretName(name);
+  if (value != null && value !== '') assertSecretValue(value);
   const map = readAll();
   if (value == null || value === '') delete map[name];
   else map[name] = value;
