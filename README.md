@@ -232,6 +232,11 @@ task staging
 Bun's partial Electron bundle extraction from the local Electron cache before opening
 the development app.
 
+For clean-profile or CI-style runs, set `OTTO_HOME` or `XDG_STATE_HOME` before
+`task electron`. `HOME` alone is not enough to isolate Electron's macOS browser
+profile; `task electron` derives a temp user-data dir from `OTTO_HOME`, then
+`XDG_STATE_HOME`, unless `OTTO_USER_DATA_DIR` is set explicitly.
+
 `task electron` also reports the Letta CLI preflight state. The first runtime connection
 uses Letta Code with auto-update disabled, so update Letta Desktop or Letta Code outside
 otto. Set `LETTA_CLI_PATH=/path/to/letta.js` when Letta is installed outside the default
@@ -299,7 +304,7 @@ Common commands:
 
 ```sh
 task dev          # Vite web preview; no desktop bridge
-task electron     # Electron app wired to local Letta; does not update canonical app
+task electron     # Electron dev app; chat connects after Letta session initializes; does not update canonical app
 task staging      # build/package/install/open isolated /Applications/otto-staging.app
 task ps           # show otto + spawned Letta CLI processes
 ```
@@ -317,8 +322,9 @@ Runtime truth:
 - `OTTO_AGENT_ID` selects the target Letta agent for desktop and smoke checks.
 - `LETTA_AGENT_ID` is also accepted by `task smoke:cli` for direct Letta CLI compatibility.
 - `~/.otto` stores local otto runtime/config/traces.
-- `OTTO_USER_DATA_DIR` may override the Electron browser profile; when `OTTO_HOME` is set,
-  `task electron` uses `$OTTO_HOME/electron-user-data`.
+- `OTTO_USER_DATA_DIR` may override the Electron browser profile; otherwise `task electron`
+  derives it from `$OTTO_HOME/electron-user-data`, then
+  `$XDG_STATE_HOME/otto/electron-user-data` when those env vars are set.
 - `LETTA_CLI_PATH` may point at a specific Letta CLI bundle, including for `task smoke:cli`.
 - Otto sets `DISABLE_AUTOUPDATER=1` for the spawned Letta Code CLI unless you set it yourself.
 - Chat stays gated until `session.initialize()` succeeds.

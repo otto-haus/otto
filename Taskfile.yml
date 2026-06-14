@@ -27,8 +27,12 @@ tasks:
     cmds:
       - node ../../scripts/ensure-electron-ready.mjs
       - |
-        if [ -z "${OTTO_USER_DATA_DIR:-}" ] && [ -n "${OTTO_HOME:-}" ]; then
-          export OTTO_USER_DATA_DIR="$OTTO_HOME/electron-user-data"
+        if [ -z "${OTTO_USER_DATA_DIR:-}" ]; then
+          if [ -n "${OTTO_HOME:-}" ]; then
+            export OTTO_USER_DATA_DIR="$OTTO_HOME/electron-user-data"
+          elif [ -n "${XDG_STATE_HOME:-}" ]; then
+            export OTTO_USER_DATA_DIR="$XDG_STATE_HOME/otto/electron-user-data"
+          fi
         fi
         env -u ELECTRON_RUN_AS_NODE bun run electron:dev
 
