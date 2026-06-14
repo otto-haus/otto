@@ -15,7 +15,14 @@ import { OTTO_DIR } from './config-store';
 import { ReceiptWriter, type WrittenReceipt } from './receipt-writer';
 
 export const CHARTERS_DIR = join(OTTO_DIR, 'charters');
-const CHARTER_STATUSES = new Set<CharterStatus>(['proposed', 'draft', 'active', 'blocked', 'complete', 'cancelled']);
+const CHARTER_STATUSES: Record<CharterStatus, true> = {
+  proposed: true,
+  draft: true,
+  active: true,
+  blocked: true,
+  complete: true,
+  cancelled: true,
+};
 
 export interface CharterCreateInput {
   slug: string;
@@ -280,7 +287,7 @@ function safeSlug(value: string): string {
 }
 
 function normalizeStatus(value: unknown): CharterStatus {
-  if (typeof value === 'string' && CHARTER_STATUSES.has(value as CharterStatus)) {
+  if (typeof value === 'string' && value in CHARTER_STATUSES) {
     return value as CharterStatus;
   }
   throw new Error(`Invalid charter status: ${String(value)}`);
