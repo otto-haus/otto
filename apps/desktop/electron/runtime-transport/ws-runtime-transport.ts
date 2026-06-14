@@ -553,12 +553,19 @@ export class WsRuntimeTransport implements OttoRuntimeTransport {
   }
 
   private captureRemoteOutput(line: string): void {
-    this.remoteOutputChunks.push(line);
+    this.remoteOutputChunks.push(this.sanitizeRemoteOutput(line));
     if (this.remoteOutputChunks.length > 30) this.remoteOutputChunks.shift();
   }
 
   private remoteOutputSummary(): string {
     return this.remoteOutputChunks.slice(-4).join(' | ');
+  }
+
+  private sanitizeRemoteOutput(line: string): string {
+    return line
+      .replace(/\btoken\s+([a-z0-9._-]{6,})\b/gi, 'token [redacted]')
+      .replace(/\bBearer\s+([a-z0-9._-]{6,})\b/gi, 'Bearer [redacted]')
+      .replace(/\b(sk-[a-z0-9_-]{10,})\b/gi, 'sk-[redacted]');
   }
 
   private waitForRuntimeSocket(): Promise<void> {

@@ -190,6 +190,21 @@ describe('WsRuntimeTransport', () => {
     await transport.close();
   });
 
+  test('redacts token-like remote output before surfacing sync failures', () => {
+    const { win } = mockWindow();
+    const transport = new WsRuntimeTransport(win, mockConfig());
+    const debugTransport = transport as unknown as {
+      captureRemoteOutput: (line: string) => void;
+      remoteOutputSummary: () => string;
+    };
+
+    debugTransport.captureRemoteOutput('Scheduler lease held by PID 88202 (token 90fc5da4).');
+
+    const summary = debugTransport.remoteOutputSummary();
+    expect(summary).toContain('token [redacted]');
+    expect(summary).not.toContain('90fc5da4');
+  });
+
   test('resolvePermission emits control_response on runtime socket', async () => {
     const { win, sent } = mockWindow();
     const transport = new WsRuntimeTransport(win, mockConfig());
