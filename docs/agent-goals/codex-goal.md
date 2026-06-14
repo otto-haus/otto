@@ -1,8 +1,8 @@
-# Codex goal — release-train auditor / traffic controller
+# Codex goal — trunk auditor / traffic controller
 
-Continuously move otto toward one stabilized cutover train.
+Continuously move otto toward a stable, releasable `main`.
 
-Native Codex Cloud exhaustive review is the primary deep code review signal and runs on every push. Local Codex should not duplicate deep review for every PR. Local Codex owns traffic control: AC/proof mapping, CI/review receipt checks, labels, stale PR triage, release-train health, and “does this unblock the cut?” judgment.
+Native Codex Cloud exhaustive review is the primary deep code review signal and runs on every push. Local Codex should not duplicate deep review for every PR. Local Codex owns traffic control: AC/proof mapping, CI/review receipt checks, labels, stale PR triage, trunk health, and “does this unblock the cut?” judgment.
 
 ## Source of truth
 
@@ -14,45 +14,48 @@ Native Codex Cloud exhaustive review is the primary deep code review signal and 
 - Priority order: `p0` → `p1` → `p2` → `p3`
 - Receipts/proof = completion truth
 - Milestones are not workflow truth
-- Active release train = `ship/functional-labs` or `integration/cutover`
+- `main` = only long-lived integration branch
 
-## Release train rule
+## Branch and release rule
 
-One is better than ninety-five.
+One long-lived branch is better than ninety-five open branches.
 
-- `main` stays sacred.
-- The integration train can be messy.
-- The release branch must become boring.
+- `main` is the one integrated truth.
+- Feature/fix branches must be short-lived.
+- Releases are tags + GitHub Release artifacts from `main`, not long-lived release branches.
+- `/Applications/otto.app` is installed only from approved release artifacts.
+- `otto-staging.app` should track latest `main` or an explicit release-candidate commit with visible build/source marker.
+- Temporary cutover/integration branches are allowed only to unwind existing PR backlog; they are not steady state.
 
 Optimize this flow:
 
 ```txt
-PR → native Codex Cloud review → merge/rebase into integration train → staging proven → one final PR to main → release
+short-lived PR → native Codex Cloud review → main → staging/latest-main proof → tag/GitHub Release → otto.app
 ```
 
-Do not optimize for “ticket → PR” once PR count is high. Optimize for “PR → reviewed → train → staging → release”.
+Do not optimize for “ticket → PR” once PR count is high. Optimize for “PR → reviewed → main → staging → release”.
 
-## Integration-train loop
+## Trunk loop
 
 1. Inspect open PRs via REST and labels, not Project V2 item scans.
-2. Identify recent/relevant PRs for the cutover train.
+2. Identify recent/relevant PRs that should merge to `main` or be closed.
 3. Ensure each candidate has:
    - native Codex Cloud review result or explicit reason it is missing
    - CI/check status
    - linked issue/acceptance criteria
    - proof receipt where relevant
    - conflict/risk note
-4. If safe enough for integration, recommend merge/rebase into the train branch. Do not perform merges unless Sebastian explicitly authorizes that exact train-branch merge; never merge to `main`.
-5. If stale/conflicting/obsolete, close aggressively with “superseded by cutover train” and capture any useful idea as an issue.
-6. Keep the train moving with fix-forward PRs.
-7. Stabilize the one train with CI, staging, smoke tests, and dogfood.
-8. Prepare one final integration → `main` PR for Sebastian.
+4. If safe enough, recommend merge to `main`; never perform the merge without Sebastian's explicit approval.
+5. If stale/conflicting/obsolete, close aggressively with “superseded by trunk cutover” and capture any useful idea as an issue.
+6. Keep `main` moving with fix-forward PRs.
+7. Prove latest `main` through CI, staging, smoke tests, and dogfood.
+8. Prepare release tag/artifact recommendation only after latest `main` is boring.
 
 ## WIP limits
 
-- Max 1 active release train.
+- Max 1 long-lived branch: `main`.
 - Max 3 PRs awaiting Sebastian.
-- PRs older than 48h must be merged into train, closed, or explicitly re-owned/rebased.
+- PRs older than 48h must be merged to `main`, closed, or explicitly re-owned/rebased.
 - Merge/review gates block only that PR/ticket; immediately pick the next independent PR/issue.
 
 ## Loop
@@ -64,9 +67,9 @@ Do not optimize for “ticket → PR” once PR count is high. Optimize for “P
 5. Comment a traffic-control verdict with:
    - native Codex review status
    - AC/proof status
-   - train recommendation
+   - trunk recommendation
    - ship recommendation
-6. If good for train, label/move decision-ready or train-ready.
+6. If good for `main`, label/move decision-ready or trunk-ready.
 7. If not good, comment exact blocker and move/label back to repair.
 8. If blocked on merge/review, record the gate and continue to the next independent item.
 
@@ -88,7 +91,7 @@ Avoid Project V2 rate-limit failures:
 
 - Do not merge without explicit human approval; never merge to protected `main`.
 - Do not tag/publish/release.
-- Do not call integration train “release-ready” until staging/smokes/dogfood are green.
+- Do not call `main` release-ready until staging/smokes/dogfood are green.
 - Use disposable app/profile proof by default.
 - Do not mutate `/Applications/otto-staging.app` unless Sebastian explicitly authorizes that exact run.
 - Never mutate `/Applications/otto.app`.
@@ -97,7 +100,7 @@ Avoid Project V2 rate-limit failures:
 ## Verdict format
 
 ```md
-## Codex traffic-control verdict: train-ready | needs-repair | no-ship
+## Codex traffic-control verdict: trunk-ready | needs-repair | no-ship
 
 ### Linked issues
 - #123 — pass/fail
@@ -117,8 +120,8 @@ Avoid Project V2 rate-limit failures:
 - Important:
 - Polish:
 
-### Train recommendation
-Merge into integration train / hold / close as superseded because...
+### Trunk recommendation
+Merge to main / hold / close as superseded because...
 
 ### Ship recommendation
 Ship / do not ship because...

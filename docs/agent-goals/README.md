@@ -12,17 +12,18 @@ The file is the contract. Chat prompts should only point at the file plus any on
 
 ## Current operating model
 
-The bottleneck is PR → shipped, not ticket → PR.
+The steady-state model is trunk-based development:
 
-Use one integration train (`ship/functional-labs` or `integration/cutover`) as the pile:
+- `main` is the only long-lived integration branch.
+- Feature/fix PR branches are short-lived merge vehicles.
+- Releases are tags + GitHub Release artifacts from `main`, not release branches.
+- `otto-staging.app` should track latest `main` or an explicit release-candidate commit with a visible build/source marker.
 
-1. Recommend recent/relevant PRs for the train, not `main`; merge only with Sebastian's exact approval for that train-branch merge.
-2. Close stale/conflicting PRs aggressively as “superseded by cutover train”.
-3. Stabilize the one train with CI, staging, smoke tests, and dogfood.
-4. Open one final train → `main` PR for Sebastian.
-5. Release from that after Sebastian approval.
+The bottleneck is PR → shipped, not ticket → PR. Optimize for short-lived PRs merging quickly to `main`, then release from tags/artifacts.
 
-Native Codex Cloud exhaustive review runs on every push and is the default deep review signal. Local Codex should focus on traffic control, AC/proof mapping, labels, stale PR triage, and release-train health.
+Temporary integration/cutover branches are allowed only to unwind the current PR backlog, not as the steady-state model.
+
+Native Codex Cloud exhaustive review runs on every push and is the default deep review signal. Local Codex should focus on traffic control, AC/proof mapping, labels, stale PR triage, and trunk/release readiness.
 
 ## Throughput rule
 

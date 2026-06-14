@@ -29,16 +29,26 @@ If a change does not gate irreversibility or make behavior compound, question it
 - Do not claim done without receipts.
 - Do not add private/product-specific control systems to the OSS core unless behind a clear boundary.
 
+## Branch and release model
+
+- `main` is the only long-lived integration branch.
+- Feature/fix work happens on short-lived PR branches only.
+- Merge/review gates block the PR, not the whole lane; keep working on the next independent issue.
+- Releases are tags + GitHub Release artifacts from `main`, not long-lived release branches.
+- `/Applications/otto.app` is installed only from the latest approved GitHub Release artifact.
+- `/Applications/otto-staging.app` should track latest `main` or an explicit release-candidate commit and must show a visible build/channel/source marker.
+- Temporary integration/cutover branches are allowed only to unwind existing PR backlog, not as the steady-state model.
+
 ## Ticket/review workflow
 
-- **Tickets:** `planning/hq-tickets/` — folder location is status truth (`root`, `_InReview`, `_Done`, `_Parked`). Start at `planning/hq-tickets/AGENTS.md`.
-- **Active wave 136–141:** implementer model is **`Composer 2.5 Fast` only** (see `000-parallel-map.md`). Reviewers stay independent.
-- Folder/ticket state is truth. Chat claims are not state.
-- Implementer cannot self-certify Done.
-- Current reviewer topology: one Claude lane + one Codex lane.
-- For review, the implementer manually launches an unbiased reviewer subagent with the ticket packet, diff, checks, and receipts.
-- The reviewer grades AC-by-AC. No proof mapped to Done-when means no `+1`.
-- No required Claude -> Codex or Codex -> Claude handoff. Use each standing agent for its strengths; use a fresh unbiased subagent for review.
+- GitHub Issues are the active intake and work queue.
+- GitHub PRs are short-lived merge vehicles; do not let PR branches become durable workspaces.
+- Native Codex Cloud exhaustive review is the default deep code-review signal on every push.
+- Local agents should focus on implementation, AC/proof mapping, labels, receipts, staging proof, and release readiness — not duplicate exhaustive code review on every PR.
+- Implementer cannot self-certify Done for consequential changes; use independent review or native Codex Cloud review plus receipt checks.
+- Use REST Issues/PRs + labels for hot-loop workflow state. Treat Project V2 as batched dashboard sync, not the live conveyor.
+- Chat claims are not state. If Sebastian reports a nit in chat, capture it as a GitHub Issue with evidence/screenshot links when available.
+- Sebastian is the merge/release/one-way-door gate.
 
 ## Verify
 

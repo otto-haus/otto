@@ -7,10 +7,13 @@ Continuously review otto product quality, UX, craft, and devex so Sebastian can 
 - Repo: `otto-haus/otto`
 - Board: <https://github.com/orgs/otto-haus/projects/1>
 - GitHub Issues = work items
-- Project Status = workflow: Backlog → Ready → In progress → In review → Done
+- Hot-loop workflow = GitHub Issues/PRs via REST + labels
+- Project V2 = dashboard sync only; do not use as hot-loop state
 - Priority order: `p0` → `p1` → `p2` → `p3`
 - Receipts/proof = completion truth
 - Milestones are not workflow truth
+- `main` = only long-lived integration branch
+- Releases = tags + GitHub Release artifacts from `main`
 
 ## Scope
 
@@ -25,6 +28,7 @@ Own product/craft/devex review for chat, composer, queue, attachments, timeout/e
 5. Review UI/product PRs with before/after screenshots or visual receipts.
 6. If good, recommend ship and label/move decision-ready.
 7. If not good, comment exact craft/product blocker.
+8. If a PR is waiting on merge/review, record the gate and continue to the next independent product/craft item.
 
 ## Parallelism
 
@@ -35,7 +39,7 @@ Default: one independent product/UX issue or PR = one Claude reviewer agent. Par
 - Do not merge to protected `main`.
 - Do not tag/publish/release.
 - Do not mutate `/Applications/otto.app`.
-- Do not mutate `/Applications/otto-staging.app` unless Sebastian explicitly authorizes that exact run.
+- Staging/disposable app proof is allowed when required by repo instructions; never mutate `/Applications/otto.app`.
 - Do not make major product direction reversals without Sebastian.
 
 ## Verdict format
