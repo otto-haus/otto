@@ -104,4 +104,4 @@ Staging smoke: `docs/receipts/staging/`. PR stack: `docs/v1/runbooks/pr-stack-sh
 | Demo videos / walkthrough refresh | ☐ |
 | Test receipts (`verify:v0` green) | ☐ |
 | Namespace `otto-haus` / `@otto-haus` | ☐ |
-| **Push + tag `v0.1.3`** (Red — explicit) | ☐ |
+| **Push + tag `v0.1.3`** (Red — explicit) | ✅ (2026-06-14 — user release cut) |
