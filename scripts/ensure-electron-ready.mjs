@@ -231,13 +231,13 @@ function warnIfLettaCliWillBootstrap() {
   const defaultMacCli =
     "/Applications/Letta.app/Contents/Resources/app.asar.unpacked/node_modules/@letta-ai/letta-code/letta.js";
   if (process.platform === "darwin" && existsSync(defaultMacCli)) {
-    console.warn("Letta Desktop CLI found; first runtime connection may still bootstrap Letta Code with npm.");
+    console.warn("Letta Desktop CLI found; Otto disables Letta Code auto-update during dev launch.");
     return;
   }
 
   console.warn("Letta CLI was not found at the default macOS app path.");
   console.warn(
-    "First runtime connection may bootstrap Letta Code with npm; install Letta Desktop or set LETTA_CLI_PATH to avoid that fallback.",
+    "Otto will use the SDK-bundled Letta Code CLI with auto-update disabled; install Letta Desktop or set LETTA_CLI_PATH for the intended local runtime.",
   );
 }
 

@@ -68,9 +68,10 @@ This opens a development app from the repo and runs the Electron install preflig
 It does not install `/Applications/otto.app`.
 For clean-profile runs, set `OTTO_HOME`; `task electron` will keep Electron user data under
 `$OTTO_HOME/electron-user-data` unless `OTTO_USER_DATA_DIR` is set explicitly.
-If the preflight reports a Letta CLI bootstrap or missing CLI, record that exact state and
-let any scoped first-run bootstrap finish before stopping the dev process. Do not call the
-desktop connected until `session.initialize()` succeeds against a live Letta agent.
+If the preflight reports a missing Letta CLI, record that exact state. Otto disables Letta
+Code auto-update during dev launch, so do not run global npm repair commands as part of a
+clean-profile smoke. Do not call the desktop connected until `session.initialize()`
+succeeds against a live Letta agent.
 Do not report the installed app as tested unless you deliberately ran the installed-app path
 (`task refresh`), which writes `/Applications/otto.app`.
 

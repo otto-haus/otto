@@ -233,9 +233,9 @@ Bun's partial Electron bundle extraction from the local Electron cache before op
 the development app.
 
 `task electron` also reports the Letta CLI preflight state. The first runtime connection
-may still bootstrap Letta Code with npm; let that finish before stopping the dev app.
-Set `LETTA_CLI_PATH=/path/to/letta.js` when Letta is installed outside the default macOS
-app path.
+uses Letta Code with auto-update disabled, so update Letta Desktop or Letta Code outside
+otto. Set `LETTA_CLI_PATH=/path/to/letta.js` when Letta is installed outside the default
+macOS app path.
 
 Canonical app boundary:
 
@@ -319,6 +319,7 @@ Runtime truth:
 - `OTTO_USER_DATA_DIR` may override the Electron browser profile; when `OTTO_HOME` is set,
   `task electron` uses `$OTTO_HOME/electron-user-data`.
 - `LETTA_CLI_PATH` may point at a specific Letta CLI bundle, including for `task smoke:cli`.
+- Otto sets `DISABLE_AUTOUPDATER=1` for the spawned Letta Code CLI unless you set it yourself.
 - Chat stays gated until `session.initialize()` succeeds.
 
 Do not claim “connected” unless the SDK initializes against a live agent/session.
