@@ -111,17 +111,31 @@ const ModelEffortPickers: React.FC<{
 }) => (
   <div className={`promptControls${compact ? ' promptControls--head' : ''}`} onClick={(e) => e.stopPropagation()}>
     <div className="picker" data-open={modelOpen ? 'true' : 'false'}>
-      <button type="button" className="picker__button" onClick={onToggleModel} disabled={busy} aria-expanded={modelOpen}>
+      <button
+        type="button"
+        className="picker__button"
+        onClick={onToggleModel}
+        disabled={busy}
+        aria-haspopup="menu"
+        aria-expanded={modelOpen}
+        aria-label={`Model: ${labelForModel(selectedModel, modelOptions)}`}
+      >
         <span>{labelForModel(selectedModel, modelOptions)}</span>
         <span className="picker__chev">›</span>
       </button>
       {modelOpen && (
-        <div className={`picker__menu picker__menu--model${menuPlacement === 'down' ? ' picker__menu--down' : ''}`}>
+        <div
+          className={`picker__menu picker__menu--model${menuPlacement === 'down' ? ' picker__menu--down' : ''}`}
+          role="menu"
+          aria-label={chatCopy.selectModelTitle}
+        >
           <div className="picker__title">{chatCopy.selectModelTitle}</div>
           {modelOptions.map((m) => (
             <button
               type="button"
               key={m.handle}
+              role="menuitemradio"
+              aria-checked={selectedModel === m.handle}
               className={`picker__option${selectedModel === m.handle ? ' is-selected' : ''}`}
               onClick={() => {
                 onClose();
@@ -136,7 +150,15 @@ const ModelEffortPickers: React.FC<{
       )}
     </div>
     <div className="picker" data-open={effortOpen ? 'true' : 'false'}>
-      <button type="button" className="picker__button picker__button--effort" onClick={onToggleEffort} disabled={busy} aria-expanded={effortOpen}>
+      <button
+        type="button"
+        className="picker__button picker__button--effort"
+        onClick={onToggleEffort}
+        disabled={busy}
+        aria-haspopup="menu"
+        aria-expanded={effortOpen}
+        aria-label={`Reasoning effort: ${labelForEffort(selectedEffort)}`}
+      >
         <span>{labelForEffort(selectedEffort)}</span>
         <span className="effortDots" aria-hidden="true">
           {EFFORT_OPTIONS.slice(1).map((e) => (
@@ -149,12 +171,18 @@ const ModelEffortPickers: React.FC<{
         <span className="picker__chev">›</span>
       </button>
       {effortOpen && (
-        <div className={`picker__menu picker__menu--effort${menuPlacement === 'down' ? ' picker__menu--down' : ''}`}>
+        <div
+          className={`picker__menu picker__menu--effort${menuPlacement === 'down' ? ' picker__menu--down' : ''}`}
+          role="menu"
+          aria-label={chatCopy.reasoningTitle}
+        >
           <div className="picker__title">{chatCopy.reasoningTitle}</div>
           {EFFORT_OPTIONS.map((e) => (
             <button
               type="button"
               key={e.value}
+              role="menuitemradio"
+              aria-checked={selectedEffort === e.value}
               className={`picker__option${selectedEffort === e.value ? ' is-selected' : ''}`}
               onClick={() => {
                 onClose();
