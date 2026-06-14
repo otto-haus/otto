@@ -1,5 +1,5 @@
 import { existsSync, readFileSync } from 'node:fs';
-import { join, resolve } from 'node:path';
+import { isAbsolute, join, relative, resolve } from 'node:path';
 import { parse } from 'yaml';
 import type {
   StandardCitation,
@@ -84,7 +84,8 @@ export class StandardStore {
   }
 
   readPrecedent(relativePath: string): { excerpt?: string; file?: string } | null {
-    const file = join(this.dir, relativePath);
+    const file = resolveInsideDir(this.dir, relativePath);
+    if (!file) return null;
     if (!existsSync(file)) return null;
     const source = readFileSync(file, 'utf8');
     const excerpt = extractPrecedentExcerpt(source);
@@ -237,6 +238,15 @@ function arrayOfRecords(value: unknown): Record<string, unknown>[] {
 
 function unique(values: string[]): string[] {
   return [...new Set(values.map((value) => value.trim()).filter(Boolean))];
+}
+
+function resolveInsideDir(root: string, relativePath: string): string | null {
+  if (isAbsolute(relativePath)) return null;
+  const rootPath = resolve(root);
+  const file = resolve(rootPath, relativePath);
+  const candidate = relative(rootPath, file);
+  if (!candidate || candidate.startsWith('..') || isAbsolute(candidate)) return null;
+  return file;
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
