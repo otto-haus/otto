@@ -22,7 +22,8 @@ function createWindow() {
     height: 720,
     minWidth: 680,
     minHeight: 480,
-    backgroundColor: '#fbfaf7',
+    // Match CSS --bg (warm paper field) so there's no flash/seam before the renderer paints.
+    backgroundColor: '#f8f7f2',
     titleBarStyle: 'hiddenInset',
     title: 'otto',
     webPreferences: {

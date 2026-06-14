@@ -31,7 +31,8 @@
     "@types/node": "^22.10.0",
     "@types/react": "latest",
     "@types/react-dom": "latest",
-    "electron": "^33.2.0",
-    "electron-vite": "^5.0.0"
+    "electron": "^42.4.0",
+    "electron-vite": "^5.0.0",
+    "esbuild": "^0.28.1"
   }
 }

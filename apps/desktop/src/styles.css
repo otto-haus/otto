@@ -5,6 +5,8 @@
    not shadows), Inter + IBM Plex Mono, status color only on dots/pills, one ink moment. */
 
 :root {
+  color-scheme: light;
+
   --bg: #f8f7f2;        /* warm paper field */
   --bg-2: #efeee8;      /* sidebar parchment */
   --panel: #fffefa;     /* record surface */
@@ -291,7 +293,7 @@ h1, h2, h3, h4, p { margin: 0; }
 .topbar__sub { color: var(--mut); font-size: 14px; margin-top: 4px; }
 .topbar__right { display: flex; align-items: center; gap: 10px; }
 
-.content { overflow-y: auto; overflow-x: hidden; padding: 26px 32px 60px; animation: surfaceIn 180ms var(--ease) both; display: flex; flex-direction: column; }
+.content { overflow-y: auto; overflow-x: hidden; padding: 26px 32px 60px; animation: surfaceIn 180ms var(--ease) both; display: flex; flex-direction: column; flex: 1; min-height: 0; }
 .content > * { min-width: 0; max-width: 100%; }
 .content--chat { padding: 0; display: flex; flex-direction: column; min-height: 0; flex: 1; overflow: hidden; }
 
@@ -675,8 +677,8 @@ h1, h2, h3, h4, p { margin: 0; }
   animation: surfaceIn 180ms var(--ease) both;
 }
 .emptySurface--chat { margin: auto; align-items: center; text-align: center; }
-.emptySurface h2 { font-size: 28px; line-height: 1.08; letter-spacing: -0.04em; }
-.emptySurface p { color: var(--mut); font-size: 15px; line-height: 1.6; max-width: 560px; }
+.emptySurface h2 { font-size: 28px; line-height: 1.08; letter-spacing: -0.04em; text-wrap: balance; }
+.emptySurface p { color: var(--mut); font-size: 15px; line-height: 1.6; max-width: 560px; text-wrap: pretty; }
 
 /* ---------- settings / providers ---------- */
 .settingsShell { display: grid; grid-template-columns: 230px minmax(0, 1fr); gap: 24px; align-items: start; }
@@ -773,7 +775,8 @@ textarea:focus-visible {
 
 @media (max-width: 900px) {
   .app { grid-template-columns: 68px 1fr; }
-  .brand__text, .nav__label, .nav__group, .nav__badge, .sidebar__foot { display: none; }
+  .brand__text, .nav__label, .nav__group, .nav__badge, .sidebar__primaryText, .sidebar__threads, .sidebar__foot { display: none; }
+  .sidebar__primary { width: 44px; min-height: 44px; justify-content: center; padding: 0; }
   .nav__item { justify-content: center; padding-left: 0; padding-right: 0; }
   .split { grid-template-columns: 1fr; }
 }
