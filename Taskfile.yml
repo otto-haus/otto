@@ -67,6 +67,10 @@ tasks:
     desc: Check local tool availability and Bun pin
     cmds: [bun run doctor]
 
+  check:sensitive-files:
+    desc: Check tracked filenames for obvious secret material
+    cmds: [bun run check:sensitive-files]
+
   verify:
     desc: v0 release gate (scripts/verify-v0.mjs)
     cmds: [bun run verify:v0]
