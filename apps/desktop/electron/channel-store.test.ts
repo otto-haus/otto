@@ -84,4 +84,21 @@ describe('ChannelStore', () => {
       rmSync(tmp, { recursive: true, force: true });
     }
   });
+
+  test('reports malformed channels root shape instead of silently returning empty files storage', () => {
+    const tmp = mkdtempSync(join(tmpdir(), 'otto-channels-'));
+    try {
+      writeFileSync(join(tmp, 'channels.yaml'), 'channels: nope\n');
+
+      const result = new ChannelStore(tmp).listResult();
+
+      expect(result.storage).toBe('files');
+      expect(result.channels).toEqual([]);
+      expect(result.skipped).toHaveLength(1);
+      expect(result.skipped[0]?.index).toBe(0);
+      expect(result.skipped[0]?.reason).toContain('channels must be an array');
+    } finally {
+      rmSync(tmp, { recursive: true, force: true });
+    }
+  });
 });
