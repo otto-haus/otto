@@ -29,7 +29,65 @@ Use `apps/desktop/src/copy/surfaces.ts` → `labsCopy`, `checksCopy`.
 - **Per-feature toggles** — disabled when master off; ids match matrix `LabFeatureId`
 - Persisted in `~/.otto/config.json`; IPC `otto:labs:get` / `otto:labs:set`
 
-## Nav
+## Agent API
+
+Agents and staging scripts use the same preload surface as Settings — no React-only toggles.
+
+### Channels
+
+| Preload | IPC | Returns |
+|---------|-----|---------|
+| `window.otto.labs.get()` | `otto:labs:get` | `LabsConfig` |
+| `window.otto.labs.set(patch)` | `otto:labs:set` | updated `LabsConfig` |
+
+### Shape (`LabsConfig`)
+
+```typescript
+{
+  enabled?: boolean;  // master — default false on fresh profile
+  features?: Partial<Record<LabFeatureId, boolean>>;
+}
+```
+
+`LabFeatureId` values match **137** / `docs/v1/ship-tier-matrix.md` (`knowledge_cognee`, `channels_outbound`, `culture_export`, …).
+
+Settings persists the **full merged object** after each toggle. Partial patches are fine for agents — main process merges with `patchLabsConfig` before writing `~/.otto/config.json`.
+
+### Examples (Electron renderer / CDP)
+
+Read current state:
+
+```javascript
+await window.otto.labs.get();
+// → { enabled: false, features: {} }
+```
+
+Enable Knowledge without opening Settings (same outcome as master on + `knowledge_cognee` toggle):
+
+```javascript
+await window.otto.labs.set({
+  enabled: true,
+  features: { knowledge_cognee: true },
+});
+```
+
+Enable culture export feature flag (export still runs via `window.otto.culture.export()` when deps are ready):
+
+```javascript
+await window.otto.labs.set({
+  enabled: true,
+  features: { culture_export: true },
+});
+```
+
+Staging: evaluate the snippets above in `/Applications/otto-staging.app` via CDP after `otto:init`.
+
+### Cut tier — no IPC shortcuts
+
+**Cut** items in `docs/v1/ship-tier-matrix.md` (Otto Cloud live stack, Cathedral control plane, Paperclip write integration, extension `/ticket` CLI) have **no** product sidebar row and **no** dedicated deploy IPC routes. Enabling a Labs feature flag (e.g. `remote_letta_cloud`) only stores intent in config — it does not bypass connection credentials or ship cloud infrastructure.
+
+Do not add MCP servers or hidden handlers for Cut-tier work in v0.1 ship.
+
 
 Labs-tier sidebar items (Knowledge, Channels) stay visible with a faint `coming soon` badge when master off or feature off (`surface-tiers.ts` + `Sidebar.tsx`).
 

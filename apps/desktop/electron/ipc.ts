@@ -1,6 +1,6 @@
 import { type BrowserWindow, ipcMain, shell } from 'electron';
 import type { ConnectionInfo, ConnectionInput, CreateProposalFromCorrectionInput, DecideProposalInput, LabsConfig, OttoConfig, PermissionRequest, PermissionResponse, ProposalClassification, ProposalTarget, RuntimePreferences, RuntimeStatus } from './shared/types';
-import { getLabsConfig, labsConfigToOttoPatch, patchLabsConfig } from './labs-config';
+import { applyLabsConfigPatch, getLabsConfig, labsConfigToOttoPatch } from './labs-config';
 import type { CharterCreateInput, CharterStatus } from './shared/types';
 import type { AttachmentInput } from './shared/types';
 import { saveAttachment } from './attachments';
@@ -109,7 +109,7 @@ export function registerIpc(win: BrowserWindow) {
   ipcMain.handle('otto:config:set', (_e, patch: Partial<OttoConfig>) => config.update(patch));
   ipcMain.handle('otto:labs:get', () => getLabsConfig(config.get()));
   ipcMain.handle('otto:labs:set', (_e, patch: Partial<LabsConfig>) => {
-    const next = patchLabsConfig(config.get(), patch);
+    const next = applyLabsConfigPatch(config.get(), patch);
     config.update(labsConfigToOttoPatch(next));
     return next;
   });

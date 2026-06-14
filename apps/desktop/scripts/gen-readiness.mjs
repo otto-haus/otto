@@ -67,6 +67,10 @@ const runtimeConnected = cfg.runtime?.connected === true;
 const agentId = cfg.agentId ?? cfg.agent?.id; // ConfigStore writes flat agentId; accept nested too
 const mcpCount = Array.isArray(cfg.mcpServers) ? cfg.mcpServers.length : 0;
 const fnCount = Array.isArray(cfg.functions) ? cfg.functions.length : 0;
+const labsEnabled = cfg.labs?.enabled === true;
+const labsFeatureCount = cfg.labs?.features && typeof cfg.labs.features === 'object'
+  ? Object.values(cfg.labs.features).filter(Boolean).length
+  : 0;
 const cfgSrc = hasConfig ? (customConfigPath ? 'local readiness config' : '~/.otto/config.json') : null;
 
 const items = [
@@ -109,6 +113,15 @@ const items = [
     status: fnCount > 0 ? 'configured' : 'missing',
     detail: fnCount > 0 ? `${fnCount} registered` : 'No local tools registered',
     source: fnCount > 0 ? cfgSrc : null, action: 'Register functions in ~/.otto/config.json' },
+  { key: 'labs', label: 'Labs master', required: false,
+    status: hasConfig ? (labsEnabled ? 'enabled' : 'off') : 'missing',
+    detail: hasConfig
+      ? (labsEnabled
+        ? `master on · ${labsFeatureCount} feature${labsFeatureCount === 1 ? '' : 's'} enabled`
+        : 'master off (Ship default)')
+      : 'Labs gate not in local config snapshot',
+    source: hasConfig ? cfgSrc : null,
+    action: 'Toggle in Settings → Labs or window.otto.labs.set' },
   { key: 'permissions', label: 'Permissions / autonomy', required: false,
     status: permissionsDoc && storePresent('autonomy') ? 'file' : (permissionsDoc ? 'file' : 'missing'),
     detail: storePresent('autonomy')

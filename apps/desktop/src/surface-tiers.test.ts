@@ -1,5 +1,6 @@
 import { describe, expect, test } from 'bun:test';
 import { defaultLabsConfig } from '../electron/labs-config';
+import type { SurfaceId } from './components/Sidebar';
 import {
   isSurfaceAccessible,
   isSurfaceComingSoon,
@@ -8,7 +9,30 @@ import {
   surfaceTier,
 } from './surface-tiers';
 
+const ALL_SURFACES: SurfaceId[] = [
+  'chat',
+  'settings',
+  'charters',
+  'standards',
+  'practices',
+  'routines',
+  'curation',
+  'receipts',
+  'checks',
+  'autonomy',
+  'skills',
+  'knowledge',
+  'tickets',
+  'channels',
+];
+
 describe('surface-tiers', () => {
+  test('no sidebar surface is Cut tier (Cut items stay out of nav)', () => {
+    for (const id of ALL_SURFACES) {
+      expect(surfaceTier(id)).not.toBe('cut');
+    }
+  });
+
   test('ship workspace previews show coming soon in the product shell', () => {
     const labs = defaultLabsConfig();
     expect(surfaceTier('chat')).toBe('ship');

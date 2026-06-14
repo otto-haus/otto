@@ -76,3 +76,8 @@ export function patchLabsConfig(cfg: OttoConfig, patch: Partial<LabsConfig>): La
 export function labsConfigToOttoPatch(next: LabsConfig): Pick<OttoConfig, 'labs'> {
   return { labs: next };
 }
+
+/** Same merge + persist steps as `otto:labs:set` IPC (Settings uses preload → this path). */
+export function applyLabsConfigPatch(cfg: OttoConfig, patch: Partial<LabsConfig>): LabsConfig {
+  return patchLabsConfig(cfg, patch);
+}

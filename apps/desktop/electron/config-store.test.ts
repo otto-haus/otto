@@ -1,9 +1,9 @@
 import { describe, expect, test } from 'bun:test';
-import { mkdtempSync, rmSync } from 'node:fs';
+import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { ConfigStore } from './config-store';
-import { getLabsConfig } from './labs-config';
+import { applyLabsConfigPatch, getLabsConfig, labsConfigToOttoPatch } from './labs-config';
 
 describe('ConfigStore', () => {
   test('defaults connectionMode to existing local Letta', () => {
@@ -59,6 +59,29 @@ describe('ConfigStore', () => {
     } finally {
       rmSync(tmp, { recursive: true, force: true });
       delete process.env.OTTO_HOME;
+    }
+  });
+
+  test('labs IPC persist matches config-store update path', () => {
+    const prevHome = process.env.OTTO_HOME;
+    const tmp = mkdtempSync(join(tmpdir(), 'otto-config-labs-ipc-'));
+    try {
+      process.env.OTTO_HOME = tmp;
+      const store = new ConfigStore();
+      const next = applyLabsConfigPatch(store.get(), {
+        enabled: true,
+        features: { culture_export: true },
+      });
+      store.update(labsConfigToOttoPatch(next));
+      const onDisk = JSON.parse(readFileSync(join(tmp, 'config.json'), 'utf8'));
+      expect(getLabsConfig(onDisk)).toEqual({
+        enabled: true,
+        features: { culture_export: true },
+      });
+    } finally {
+      rmSync(tmp, { recursive: true, force: true });
+      if (prevHome === undefined) delete process.env.OTTO_HOME;
+      else process.env.OTTO_HOME = prevHome;
     }
   });
 
