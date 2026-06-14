@@ -42,10 +42,10 @@ const GROUPS: { group?: string; items: NavDef[] }[] = [
   {
     group: 'System',
     items: [
-      { id: 'skills', label: 'Skills', icon: Icon.practices },
-      { id: 'knowledge', label: 'Knowledge', icon: Icon.standards },
-      { id: 'tickets', label: 'Tickets', icon: Icon.charter },
-      { id: 'channels', label: 'Channels', icon: Icon.chat },
+      { id: 'skills', label: 'Skills', icon: Icon.owl },
+      { id: 'knowledge', label: 'Knowledge', icon: Icon.theme },
+      { id: 'tickets', label: 'Tickets', icon: Icon.plus },
+      { id: 'channels', label: 'Channels', icon: Icon.send },
     ],
   },
 ];
