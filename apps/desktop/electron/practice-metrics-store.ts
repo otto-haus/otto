@@ -16,7 +16,7 @@ export class PracticeMetricsStore {
   constructor(private dir = PRACTICE_METRICS_DIR) {}
 
   get(slug: string): PracticeMetricsRecord {
-    const path = join(this.dir, `${slug}.json`);
+    const path = this.metricsPath(slug);
     if (!existsSync(path)) return emptyMetrics(slug);
     try {
       const raw = JSON.parse(readFileSync(path, 'utf8')) as PracticeMetricsRecord;
@@ -55,15 +55,23 @@ export class PracticeMetricsStore {
       successful_runs: current.successful_runs + (input.status === 'success' ? 1 : 0),
       blocked_runs: current.blocked_runs + (input.status === 'blocked' ? 1 : 0),
     };
-    writeFileSync(join(this.dir, `${input.slug}.json`), `${JSON.stringify(next, null, 2)}\n`);
+    writeFileSync(this.metricsPath(input.slug), `${JSON.stringify(next, null, 2)}\n`);
     return next;
   }
 
   patch(slug: string, patch: Partial<PracticeMetricsRecord>): PracticeMetricsRecord {
     mkdirSync(this.dir, { recursive: true });
     const next = { ...this.get(slug), ...patch, slug };
-    writeFileSync(join(this.dir, `${slug}.json`), `${JSON.stringify(next, null, 2)}\n`);
+    writeFileSync(this.metricsPath(slug), `${JSON.stringify(next, null, 2)}\n`);
     return next;
+  }
+
+  private metricsPath(slug: string): string {
+    const trimmed = slug.trim();
+    if (!trimmed || /[/\\]/.test(trimmed) || trimmed === '.' || trimmed === '..') {
+      throw new Error('Practice metric slug must be a single path segment');
+    }
+    return join(this.dir, `${trimmed}.json`);
   }
 }
 
