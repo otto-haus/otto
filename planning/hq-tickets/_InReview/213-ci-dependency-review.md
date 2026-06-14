@@ -16,13 +16,15 @@ can merge unnoticed.
   10-minute job timeout.
 - Pins `actions/checkout` and `actions/dependency-review-action` to full commit
   SHAs with version comments.
+- Keeps the enforcing action gated behind `OTTO_DEPENDENCY_REVIEW_ENABLED=true`
+  so CI stays green until a human enables the repository Dependency graph.
 
 ## Why
 
 `bun audit` catches the installed tree during CI, but it does not summarize the
 dependency diff introduced by a pull request. Dependency Review gives reviewers a
 PR-native supply-chain gate and can fail when new vulnerable dependencies are
-introduced.
+introduced after the required repository setting is enabled.
 
 ## Execution receipt
 
@@ -37,4 +39,4 @@ introduced.
   - `actionlint .github/workflows/dependency-review.yml` passed.
   - `task ci` passed.
 - PR: https://github.com/otto-haus/otto/pull/213
-- PR CI: pending
+- PR CI: initial Dependency Review run failed because Dependency graph is disabled; patched to no-op until `OTTO_DEPENDENCY_REVIEW_ENABLED=true`.
