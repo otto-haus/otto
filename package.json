@@ -47,6 +47,7 @@
     "electron"
   ],
   "scripts": {
+    "ci": "bash scripts/ci-local-gate.sh",
     "install-extension": "bun scripts/install.mjs",
     "typecheck": "tsc -p packages/core/tsconfig.json && tsc -p packages/practices/tsconfig.json",
     "test": "bun test",
