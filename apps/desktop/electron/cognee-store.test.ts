@@ -219,16 +219,22 @@ describe('CogneeStore helpers', () => {
   });
 
   test('writeCogneeRecallReceipt writes under receipts/cognee/recall', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'otto-cognee-recall-receipt-'));
     const prev = process.env.OTTO_ROOT;
-    process.env.OTTO_ROOT = repoRoot;
-    const path = writeCogneeRecallReceipt({
-      ok: true,
-      query: 'test',
-      citations: [{ path: '/receipts/foo.md', snippet: 'indexed' }],
-      error: null,
-    });
-    expect(path).toContain('receipts/cognee/recall');
-    if (prev !== undefined) process.env.OTTO_ROOT = prev;
-    else delete process.env.OTTO_ROOT;
+    try {
+      process.env.OTTO_ROOT = dir;
+      const path = writeCogneeRecallReceipt({
+        ok: true,
+        query: 'test',
+        citations: [{ path: '/receipts/foo.md', snippet: 'indexed' }],
+        error: null,
+      });
+      expect(path).toContain('receipts/cognee/recall');
+      expect(path).toStartWith(dir);
+    } finally {
+      if (prev !== undefined) process.env.OTTO_ROOT = prev;
+      else delete process.env.OTTO_ROOT;
+      rmSync(dir, { recursive: true, force: true });
+    }
   });
 });
