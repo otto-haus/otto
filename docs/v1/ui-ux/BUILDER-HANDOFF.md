@@ -74,6 +74,25 @@ Sidebar or Chat head — use `SplitLayout` / card list patterns; thread subtitle
 
 Avoid parallel edits to `Panes.tsx` — prefer UX PR for markup/copy; builder PR for data hooks. Merge UX first when conflicts.
 
+---
+
+## Phase 0b components (shipped)
+
+| Component | Path | Notes |
+|-----------|------|-------|
+| `WebPreviewFrame` | `components/ui/WebPreviewFrame.tsx` | `webPreviewEmpty[surface]` for !api paths |
+| `ReceiptCard` | `components/ui/ReceiptCard.tsx` | Receipts list (**124**) |
+| `CultureCard` | `components/ui/CultureCard.tsx` | Culture nav cards |
+| `MemoryWritebackGate` | `components/ui/MemoryWritebackGate.tsx` | Modal shell — wire when writeback IPC lands |
+| `CheckBlockBanner` | `components/ui/CheckBlockBanner.tsx` | Chat inline block UI — wire on **133** block events |
+| `ChecksSurfaceShell` | `surfaces/ChecksSurfaceShell.tsx` | Pane shell — **not routed** until **133** + sidebar entry |
+
+Copy: `curationCopy`, `receiptsCopy`, `checksCopy`, `cultureCiCopy`, `memoryWritebackCopy` in `copy/surfaces.ts`.
+
+**134 blocked on 133:** do not call `checks.list` or subscribe to block events until builder exposes IPC. `CheckBlockBanner` accepts props only — no fabricated rows.
+
+Phase 1 reference migrations: **Curation** + **Receipts** use `SurfacePage`, `SurfaceHeader`, `FilterBar`, `SplitLayout`, `InlineEmpty`.
+
 ## Definition of done (UI)
 
 - [ ] Uses shared components where applicable

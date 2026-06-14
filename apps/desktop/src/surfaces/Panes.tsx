@@ -7,8 +7,8 @@ import {
 } from '../readiness';
 import { Icon } from '../components/icons';
 import { useToast } from '../components/Toast';
-import { EmptyState, statusPill, SurfaceProof } from '../components/ui';
-import { toastCopy } from '../copy/surfaces';
+import { EmptyState, statusPill, SurfaceProof, SurfacePage, SurfaceHeader, SplitLayout, FilterBar, InlineEmpty, WebPreviewFrame, ReceiptCard } from '../components/ui';
+import { toastCopy, curationCopy, receiptsCopy, listEmpty } from '../copy/surfaces';
 import {
   isSampleReceiptPreviewEnabled,
   SAMPLE_RECEIPT_DETAIL,
@@ -1001,15 +1001,7 @@ export const Curation: React.FC = () => {
     ?? null;
 
   if (!api) {
-    return (
-      <EmptySurface
-        eyebrow="curation"
-        title="Curation inbox is available in the desktop app."
-        body="The web preview cannot read local proposal files. The desktop app loads proposals from ~/.otto/curation/proposals/."
-        path="~/.otto/curation/proposals/"
-        next="Open the packaged desktop app to inspect pending canon proposals."
-      />
-    );
+    return <WebPreviewFrame surface="curation" />;
   }
 
   const pendingCount = proposals.filter((p) => isPendingProposal(p.status)).length;
@@ -1063,65 +1055,65 @@ export const Curation: React.FC = () => {
   };
 
   return (
-    <div className="standardsSurface">
-      <div className="panel">
-        <div className="between">
-          <div>
-            <div className="eyebrow">curation inbox</div>
-            <div className="h-sec">Proposals</div>
-          </div>
-          <span className="pill pill--ok">files</span>
-        </div>
-        <p className="lede" style={{ marginTop: 8 }}>
-          Corrections become explicit proposals. Accept applies ratified canon changes with a receipt; reject and defer leave canon unchanged.
-        </p>
+    <SurfacePage>
+      <SurfaceHeader
+        eyebrow={curationCopy.eyebrow}
+        title={curationCopy.title}
+        lede={curationCopy.lede}
+        tag={<span className="pill pill--ok">{curationCopy.pathLabel}</span>}
+      >
         <div className="row" style={{ flexWrap: 'wrap', gap: 8, marginTop: 12 }}>
           <span className="filechip">{Icon.file} {result?.dir ?? '~/.otto/curation/proposals/'}</span>
           <span className="filechip">{pendingCount} pending</span>
           <span className="filechip">{decidedCount} decided</span>
         </div>
-        <div className="row" style={{ flexWrap: 'wrap', gap: 8, marginTop: 12 }}>
-          {(['pending', 'decided', 'all'] as const).map((key) => (
-            <button
-              key={key}
-              className={`btn${filter === key ? ' btn--primary' : ''}`}
-              onClick={() => setFilter(key)}
-            >
-              {key}
-            </button>
-          ))}
-        </div>
-      </div>
+        <FilterBar
+          options={[
+            { key: 'pending', label: curationCopy.filterPending },
+            { key: 'decided', label: curationCopy.filterDecided },
+            { key: 'all', label: curationCopy.filterAll },
+          ]}
+          active={filter}
+          onSelect={(key) => setFilter(key as ProposalInboxFilter)}
+        />
+      </SurfaceHeader>
 
       {error && <div className="notice"><span className="dot dot--warn" /> {error}</div>}
 
       {filtered.length === 0 ? (
-        <div className="panel">
-          <div className="h-sec">No {filter === 'all' ? '' : `${filter} `}proposals</div>
-          <p className="muted" style={{ marginTop: 8 }}>
-            {filter === 'pending'
-              ? 'User corrections routed through createFromCorrection will appear here as needs_approval.'
-              : 'Decided proposals (applied, rejected) will appear in this view.'}
-          </p>
-        </div>
+        <InlineEmpty
+          title={
+            filter === 'pending'
+              ? curationCopy.emptyPendingTitle
+              : filter === 'decided'
+                ? curationCopy.emptyDecidedTitle
+                : (listEmpty.curation?.title ?? curationCopy.emptyPendingTitle)
+          }
+          body={
+            filter === 'pending'
+              ? curationCopy.emptyPendingBody
+              : filter === 'decided'
+                ? curationCopy.emptyDecidedBody
+                : (listEmpty.curation?.body ?? curationCopy.emptyPendingBody)
+          }
+        />
       ) : (
-        <div className="split">
-          <div className="cards">
-            {filtered.map((proposal) => (
-              <button
-                key={proposal.id}
-                className={`card${proposal.id === selected?.id ? ' is-selected' : ''}`}
-                onClick={() => setSelectedId(proposal.id)}
-              >
-                <div className="between">
-                  <span className="card__title">{proposal.summary}</span>
-                  {statusPill(proposal.status)}
-                </div>
-                <span className="card__sub">{proposal.kind} · {proposal.classification.required_gate}</span>
-              </button>
-            ))}
-          </div>
-          {selected && (
+        <SplitLayout
+          list={filtered.map((proposal) => (
+            <button
+              key={proposal.id}
+              type="button"
+              className={`card${proposal.id === selected?.id ? ' is-selected' : ''}`}
+              onClick={() => setSelectedId(proposal.id)}
+            >
+              <div className="between">
+                <span className="card__title">{proposal.summary}</span>
+                {statusPill(proposal.status)}
+              </div>
+              <span className="card__sub">{proposal.kind} · {proposal.classification.required_gate}</span>
+            </button>
+          ))}
+          detail={selected ? (
             <ProposalDetail
               proposal={selected}
               busy={busy}
@@ -1130,21 +1122,19 @@ export const Curation: React.FC = () => {
               onReject={() => decide('reject')}
               onDefer={() => decide('defer')}
             />
-          )}
-        </div>
+          ) : null}
+        />
       )}
 
       <div className="panel" style={{ marginTop: 16 }}>
         <div className="between">
           <div>
-            <div className="eyebrow">ratification records</div>
-            <div className="h-sec">Approvals</div>
+            <div className="eyebrow">{curationCopy.approvalsEyebrow}</div>
+            <div className="h-sec">{curationCopy.approvalsTitle}</div>
           </div>
           <span className="pill pill--info">emitted by curation</span>
         </div>
-        <p className="muted" style={{ marginTop: 8 }}>
-          Approvals are not a peer subsystem — each record is derived from a decided proposal and its decision receipt.
-        </p>
+        <p className="muted" style={{ marginTop: 8 }}>{curationCopy.approvalsLede}</p>
         {(approvals?.approvals ?? []).length === 0 ? (
           <p className="muted" style={{ marginTop: 12 }}>No approval records yet. Accept, reject, or defer a consequential proposal to emit one.</p>
         ) : (
@@ -1167,7 +1157,7 @@ export const Curation: React.FC = () => {
         )}
       </div>
       <SurfaceProof surface="curation" />
-    </div>
+    </SurfacePage>
   );
 };
 
@@ -1330,15 +1320,7 @@ export const Receipts: React.FC = () => {
   const selectedSummary = receipts.find((receipt) => receipt.id === selectedId) ?? null;
 
   if (!api) {
-    return (
-      <EmptySurface
-        eyebrow="receipts"
-        title="Receipts are available in the desktop app."
-        body="The web preview cannot read the local receipt directory. The desktop app reads real otto.receipt.v1 JSON files."
-        path="~/.otto/receipts/"
-        next="Open the packaged desktop app to inspect local proof."
-      />
-    );
+    return <WebPreviewFrame surface="receipts" />;
   }
 
   if (!loading && !receipts.length) {
@@ -1358,16 +1340,17 @@ export const Receipts: React.FC = () => {
           </div>
           <div className="split receiptsSplit">
             <div className="cards receiptList" aria-label="Sample receipt">
-              <button type="button" className="card receiptCard is-selected" aria-current="true">
-                <div className="between">
-                  <span className="card__title">{SAMPLE_RECEIPT_SUMMARY.action}</span>
-                  {statusPill(SAMPLE_RECEIPT_SUMMARY.status)}
-                </div>
-                <span className="card__sub">{SAMPLE_RECEIPT_SUMMARY.summary}</span>
-                <span className="receiptCard__meta mono">
-                  sample · chat:onboarding-sample
-                </span>
-              </button>
+              <ReceiptCard
+                receipt={{
+                  id: SAMPLE_RECEIPT_SUMMARY.id,
+                  action: SAMPLE_RECEIPT_SUMMARY.action,
+                  status: SAMPLE_RECEIPT_SUMMARY.status,
+                  summary: SAMPLE_RECEIPT_SUMMARY.summary,
+                  metaLine: 'sample · chat:onboarding-sample',
+                }}
+                selected
+                onSelect={() => undefined}
+              />
             </div>
             <ReceiptDetailView detail={SAMPLE_RECEIPT_DETAIL} summary={SAMPLE_RECEIPT_SUMMARY} />
           </div>
@@ -1417,44 +1400,45 @@ export const Receipts: React.FC = () => {
   }
 
   return (
-    <div className="receiptsSurface">
-      <div className="panel receiptsToolbar">
-        <div>
-          <div className="eyebrow">local proof trail</div>
-          <div className="h-sec" style={{ marginTop: 6 }}>
-            {loading ? 'Loading receipts...' : `${receipts.length} receipt${receipts.length === 1 ? '' : 's'}`}
-          </div>
-          <p className="muted" style={{ marginTop: 6 }}>
-            Real `otto.receipt.v1` JSON from the local desktop receipt directory.
-            {!!result?.skipped && ` ${result.skipped} malformed file${result.skipped === 1 ? '' : 's'} skipped.`}
-          </p>
-        </div>
-        <div className="receiptControls">
+    <SurfacePage className="receiptsSurface">
+      <SurfaceHeader
+        eyebrow={receiptsCopy.eyebrow}
+        title={receiptsCopy.title}
+        lede={
+          loading
+            ? 'Loading receipts…'
+            : `${receipts.length} receipt${receipts.length === 1 ? '' : 's'}. Real otto.receipt.v1 JSON from the local desktop receipt directory.${
+                result?.skipped ? ` ${result.skipped} malformed file${result.skipped === 1 ? '' : 's'} skipped.` : ''
+              }`
+        }
+        tag={<span className="filechip">{Icon.file} {result?.dir ?? '~/.otto/receipts'}</span>}
+      >
+        <div className="receiptControls" style={{ marginTop: 12 }}>
           <input
             className="receiptSearch"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search receipts"
-            aria-label="Search receipts"
+            placeholder={receiptsCopy.searchPlaceholder}
+            aria-label={receiptsCopy.searchPlaceholder}
           />
           <div className="segmented" role="tablist" aria-label="Receipt status filter">
             {RECEIPT_FILTERS.map((item) => (
-              <button key={item} className={filter === item ? 'is-active' : ''} onClick={() => setFilter(item)}>
-                {item}
+              <button key={item} type="button" className={filter === item ? 'is-active' : ''} onClick={() => setFilter(item)}>
+                {item === 'all' ? receiptsCopy.filterAll : item}
               </button>
             ))}
           </div>
         </div>
-        {error && <div className="notice"><span className="dot dot--warn" /> {error}</div>}
-        <span className="filechip">{Icon.file} {result?.dir ?? '~/.otto/receipts'}</span>
-      </div>
+      </SurfaceHeader>
+
+      {error && <div className="notice"><span className="dot dot--warn" /> {error}</div>}
 
       {runs.length > 0 && (
         <div className="panel">
           <div className="between">
             <div>
-              <div className="eyebrow">execution records</div>
-              <div className="h-sec">Runs</div>
+              <div className="eyebrow">{receiptsCopy.runsEyebrow}</div>
+              <div className="h-sec">{receiptsCopy.runsTitle}</div>
             </div>
             <span className="filechip">{runsResult?.dir ?? '~/.otto/runs'}</span>
           </div>
@@ -1475,34 +1459,29 @@ export const Receipts: React.FC = () => {
       <div className="split receiptsSplit">
         <div className="cards receiptList" aria-label="Receipts list">
           {filtered.map((receipt) => (
-            <button
+            <ReceiptCard
               key={receipt.id}
-              className={`card receiptCard${receipt.id === selectedId ? ' is-selected' : ''}`}
-              onClick={() => setSelectedId(receipt.id)}
-            >
-              <div className="between">
-                <span className="card__title">{receipt.action}</span>
-                {statusPill(receipt.status)}
-              </div>
-              <span className="card__sub">{receipt.summary}</span>
-              <span className="receiptCard__meta mono">
-                {formatReceiptTime(receipt.timestamp)} · {receipt.subjectType}{receipt.subjectId ? `:${receipt.subjectId}` : ''}
-              </span>
-              {receipt.blockerCode && <span className="filechip">{receipt.blockerCode}</span>}
-            </button>
+              receipt={{
+                id: receipt.id,
+                action: receipt.action,
+                status: receipt.status,
+                summary: receipt.summary,
+                metaLine: `${formatReceiptTime(receipt.timestamp)} · ${receipt.subjectType}${receipt.subjectId ? `:${receipt.subjectId}` : ''}`,
+                blockerCode: receipt.blockerCode,
+              }}
+              selected={receipt.id === selectedId}
+              onSelect={() => setSelectedId(receipt.id)}
+            />
           ))}
           {!filtered.length && (
-            <div className="panel">
-              <div className="h-sec">No matching receipts</div>
-              <p className="muted" style={{ marginTop: 6 }}>Clear the search or status filter to inspect the full proof trail.</p>
-            </div>
+            <InlineEmpty title={receiptsCopy.noMatchTitle} body={receiptsCopy.noMatchBody} />
           )}
         </div>
 
         <ReceiptDetailView detail={detail} summary={selectedSummary} />
       </div>
       <SurfaceProof surface="receipts" />
-    </div>
+    </SurfacePage>
   );
 };
 
@@ -1511,8 +1490,7 @@ const ReceiptDetailView: React.FC<{ detail: ReceiptDetail | null; summary: Recei
     return (
       <div className="detail">
         <div className="panel">
-          <div className="h-sec">Select a receipt</div>
-          <p className="muted" style={{ marginTop: 6 }}>The detail pane shows the exact receipt contract fields.</p>
+          <InlineEmpty title={receiptsCopy.selectTitle} body={receiptsCopy.selectBody} />
         </div>
       </div>
     );
@@ -1522,7 +1500,7 @@ const ReceiptDetailView: React.FC<{ detail: ReceiptDetail | null; summary: Recei
     return (
       <div className="detail">
         <div className="panel">
-          <div className="h-sec">Loading receipt detail...</div>
+          <div className="h-sec">{receiptsCopy.loadingTitle}</div>
           <p className="muted" style={{ marginTop: 6 }}>{summary.id}</p>
         </div>
       </div>

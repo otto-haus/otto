@@ -179,6 +179,65 @@ export const threadCopy = {
   empty: 'No prior chats yet.',
 } as const;
 
+export const curationCopy = {
+  eyebrow: 'curation inbox',
+  title: 'Proposals',
+  lede: 'Corrections become explicit proposals. Ratify to change future behavior; defer or reject to keep canon unchanged.',
+  pathLabel: 'files',
+  filterPending: 'Pending',
+  filterDecided: 'Decided',
+  filterAll: 'All',
+  emptyPendingTitle: 'No pending proposals',
+  emptyPendingBody: 'When otto proposes a behavior change, it lands here for ratification.',
+  emptyDecidedTitle: 'No decided proposals yet',
+  emptyDecidedBody: 'Accepted and rejected proposals appear here with their decision record.',
+  approvalsEyebrow: 'ratification records',
+  approvalsTitle: 'Approvals',
+  approvalsLede: 'Each decision writes an approval record tied to the proposal artifact.',
+} as const;
+
+export const receiptsCopy = {
+  eyebrow: 'proof trail',
+  title: 'Receipts',
+  lede: 'Every completed, blocked, or failed action emits a receipt with schema-backed fields.',
+  searchPlaceholder: 'Search action, summary, subject…',
+  filterAll: 'All statuses',
+  selectTitle: 'Select a receipt',
+  selectBody: 'The detail pane shows the exact receipt contract fields.',
+  loadingTitle: 'Loading receipt detail…',
+  runsEyebrow: 'execution records',
+  runsTitle: 'Runs',
+  noMatchTitle: 'No matching receipts',
+  noMatchBody: 'Clear the search or status filter to inspect the full proof trail.',
+} as const;
+
+/** Culture CI checks surface — list IPC ships with builder 133. */
+export const checksCopy = {
+  eyebrow: 'culture ci',
+  title: 'Checks',
+  lede: 'File-backed checks compile from Standards and Practices. Blocks surface here and in Chat when a check fails.',
+  emptyTitle: 'Checks not wired yet',
+  emptyBody: 'Waiting on checks.list and block events (builder 133). No mock check rows.',
+  blockEyebrow: 'check blocked',
+  blockPill: 'BLOCK',
+  openReceipt: 'Open receipt',
+  openStandard: 'Open standard',
+} as const;
+
+export const cultureCiCopy = {
+  compileHint: 'Run compile check in Chat or via ticket command when the check contract is available.',
+  blockHint: 'Failed checks block irreversible actions until resolved or overridden per autonomy policy.',
+} as const;
+
+export const memoryWritebackCopy = {
+  eyebrow: 'memory writeback',
+  title: 'Approve memory write',
+  lede: 'This change would persist to Letta memory. Approve only when the summary matches what you want remembered.',
+  targetEyebrow: 'target',
+  approve: 'Approve write',
+  deny: 'Deny',
+} as const;
+
 export const commandStationCopy = {
   eyebrow: 'command station',
   title: 'What needs you',

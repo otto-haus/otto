@@ -4,6 +4,12 @@ export { SurfaceHeader, SurfacePage, SplitLayout, FilterBar } from './SurfaceLay
 export { Notice } from './Notice';
 export { SurfaceProof } from './SurfaceProof';
 export { CommandStationStrip } from './CommandStationStrip';
+export { WebPreviewFrame } from './WebPreviewFrame';
+export { ReceiptCard } from './ReceiptCard';
+export type { ReceiptCardSummary } from './ReceiptCard';
+export { CultureCard } from './CultureCard';
+export { MemoryWritebackGate } from './MemoryWritebackGate';
+export { CheckBlockBanner } from './CheckBlockBanner';
 export type { CommandStationCounts } from './CommandStationStrip';
 export { Modal } from './Modal';
 export { PermissionCard } from './PermissionCard';
