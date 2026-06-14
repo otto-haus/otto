@@ -39,6 +39,7 @@
     "typecheck": "tsc -p packages/core/tsconfig.json && tsc -p packages/practices/tsconfig.json",
     "test": "bun test",
     "verify:v0": "bun scripts/verify-v0.mjs",
+    "release:gate": "bash scripts/release-gate.sh",
     "desktop:refresh": "bash scripts/refresh-otto-app.sh"
   },
   "devDependencies": {

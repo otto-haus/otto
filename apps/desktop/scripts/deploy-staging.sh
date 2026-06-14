@@ -47,7 +47,7 @@ stamp_bundle() {
 
 echo "==> Building otto desktop"
 cd "$APP_DIR"
-bun run electron:build
+OTTO_READINESS_IGNORE_LOCAL_CONFIG=1 bun run electron:build
 bunx electron-builder --mac dir --arm64
 
 if [[ ! -d "$BUILT_APP" ]]; then

@@ -1,17 +1,29 @@
-import React, { useEffect, useRef, useState } from 'react';
+import type React from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Icon } from '../components/icons';
 import { requiredMissing, isReady } from '../readiness';
-import { isElectron, type EffortLevel } from '../runtime';
+import { isElectron, ottoApi, type EffortLevel, type SavedAttachment } from '../runtime';
 import { useRuntimeContext } from '../RuntimeContext';
 import ottoAvatar from '../assets/otto-avatar.png';
 
 // In Electron (window.otto present) → the runtime-wired LiveChat.
 // In the web preview → the file-backed PreviewChat (unchanged).
-export const Chat: React.FC<{ onOpenSettings?: () => void }> = ({ onOpenSettings }) =>
-  isElectron() ? <LiveChat onOpenSettings={onOpenSettings} /> : <PreviewChat />;
+export const Chat: React.FC<{ onOpenSettings?: () => void; sidebarHidden?: boolean; onToggleSidebar?: () => void }> = ({
+  onOpenSettings,
+  sidebarHidden = false,
+  onToggleSidebar,
+}) =>
+  isElectron() ? <LiveChat onOpenSettings={onOpenSettings} sidebarHidden={sidebarHidden} onToggleSidebar={onToggleSidebar} /> : <PreviewChat />;
 
 /* ---------- LiveChat (Electron, wired to the Letta runtime) ---------- */
-type QueueItem = { id: string; text: string; createdAt: number };
+type QueueState = 'queued' | 'sending' | 'failed';
+type QueueItem = { id: string; text: string; createdAt: number; state: QueueState };
+type AttachmentDraft = SavedAttachment & { previewUrl: string };
+
+const DRAFT_KEY = 'otto.chat.draft.v1';
+const QUEUE_KEY = 'otto.chat.queue.v1';
+const INFLIGHT_KEY = 'otto.chat.inflight.v1';
+const ATTACHMENTS_KEY = 'otto.chat.attachments.v1';
 
 const MODEL_OPTIONS = [
   { label: 'GPT-5.5 (ChatGPT)', value: 'chatgpt-plus-pro/gpt-5.5' },
@@ -31,6 +43,110 @@ const EFFORT_OPTIONS: Array<{ label: string; value: EffortLevel }> = [
 
 const labelForModel = (value?: string | null) => MODEL_OPTIONS.find((m) => m.value === value)?.label ?? value ?? 'Agent default';
 const labelForEffort = (value?: EffortLevel) => EFFORT_OPTIONS.find((e) => e.value === value)?.label ?? 'Max';
+
+const imageFiles = (files: FileList | File[]): File[] =>
+  Array.from(files).filter((file) => file.type.startsWith('image/'));
+
+const imageFilesFromTransfer = (transfer: DataTransfer): File[] => {
+  const fromFiles = imageFiles(transfer.files);
+  if (fromFiles.length) return fromFiles;
+  return Array.from(transfer.items)
+    .filter((item) => item.kind === 'file' && item.type.startsWith('image/'))
+    .map((item) => item.getAsFile())
+    .filter((file): file is File => !!file);
+};
+
+const fileToDataUrl = (file: File): Promise<string> =>
+  new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = () => reject(new Error('Could not read image.'));
+    reader.onload = () => resolve(String(reader.result));
+    reader.readAsDataURL(file);
+  });
+
+const formatBytes = (n: number): string => {
+  if (n < 1024 * 1024) return `${Math.max(1, Math.round(n / 1024))}KB`;
+  return `${(n / 1024 / 1024).toFixed(1)}MB`;
+};
+
+const withAttachments = (text: string, attachments: AttachmentDraft[]): string => {
+  if (!attachments.length) return text;
+  const body = text.trim() || 'Please inspect the attached image(s).';
+  const lines = attachments.map((a, i) => `${i + 1}. ${a.name} — ${a.path}`);
+  return `${body}\n\nAttached local image${attachments.length === 1 ? '' : 's'}:\n${lines.join('\n')}`;
+};
+
+const readDraft = (): string => {
+  try { return localStorage.getItem(DRAFT_KEY) ?? ''; } catch { return ''; }
+};
+
+const readInFlight = (): QueueItem | null => {
+  try {
+    const item = JSON.parse(localStorage.getItem(INFLIGHT_KEY) ?? 'null') as QueueItem | null;
+    if (!item || typeof item.id !== 'string' || typeof item.text !== 'string') return null;
+    return { id: item.id, text: item.text, createdAt: typeof item.createdAt === 'number' ? item.createdAt : Date.now(), state: 'queued' };
+  } catch {
+    return null;
+  }
+};
+
+const readQueue = (): QueueItem[] => {
+  try {
+    const parsed = JSON.parse(localStorage.getItem(QUEUE_KEY) ?? '[]') as QueueItem[];
+    const stored = Array.isArray(parsed) ? parsed : [];
+    return dedupeQueue([readInFlight(), ...stored]
+      .filter((item): item is QueueItem => typeof item?.id === 'string' && typeof item.text === 'string')
+      // Old builds persisted visible `sending` rows in the queue. Those were already handed
+      // to the runtime and caused the stuck badge in #6; new builds use INFLIGHT_KEY instead.
+      .filter((item) => item.state !== 'sending')
+      .map((item) => ({
+        id: item.id,
+        text: item.text,
+        createdAt: typeof item.createdAt === 'number' ? item.createdAt : Date.now(),
+        state: item.state === 'failed' ? 'failed' : 'queued',
+      })));
+  } catch {
+    return [];
+  }
+};
+
+const readAttachments = (): AttachmentDraft[] => {
+  try {
+    const parsed = JSON.parse(localStorage.getItem(ATTACHMENTS_KEY) ?? '[]') as SavedAttachment[];
+    if (!Array.isArray(parsed)) return [];
+    return parsed
+      .filter((item) => typeof item?.id === 'string' && typeof item.path === 'string' && typeof item.url === 'string')
+      .map((item) => ({ ...item, previewUrl: item.url }));
+  } catch {
+    return [];
+  }
+};
+
+const persist = (key: string, value: unknown) => {
+  try { localStorage.setItem(key, JSON.stringify(value)); } catch { /* best effort */ }
+};
+
+const persistInFlight = (item: QueueItem | null) => {
+  try {
+    if (item) localStorage.setItem(INFLIGHT_KEY, JSON.stringify(item));
+    else localStorage.removeItem(INFLIGHT_KEY);
+  } catch { /* best effort */ }
+};
+
+const clearInFlight = (id: string) => {
+  try {
+    const item = JSON.parse(localStorage.getItem(INFLIGHT_KEY) ?? 'null') as QueueItem | null;
+    if (item?.id === id) localStorage.removeItem(INFLIGHT_KEY);
+  } catch { /* best effort */ }
+};
+
+const dedupeQueue = (items: Array<QueueItem | null>): QueueItem[] => {
+  const out: QueueItem[] = [];
+  for (const item of items) {
+    if (item && !out.some((x) => x.id === item.id)) out.push(item);
+  }
+  return out;
+};
 
 const renderInline = (text: string): React.ReactNode[] => {
   const nodes: React.ReactNode[] = [];
@@ -58,10 +174,10 @@ const MarkdownText: React.FC<{ text: string }> = ({ text }) => {
   const blocks: React.ReactNode[] = [];
   const parts = text.split(/(```[\s\S]*?```)/g).filter(Boolean);
 
-  parts.forEach((part, partIndex) => {
+  for (const part of parts) {
     if (part.startsWith('```')) {
       const code = part.replace(/^```[^\n]*\n?/, '').replace(/```$/, '').trimEnd();
-      blocks.push(<pre className="md__pre" key={`code-${partIndex}`}><code>{code}</code></pre>);
+      blocks.push(<pre className="md__pre" key={`code-${blocks.length}-${code.slice(0, 48)}`}><code>{code}</code></pre>);
       return;
     }
 
@@ -75,10 +191,10 @@ const MarkdownText: React.FC<{ text: string }> = ({ text }) => {
       if (heading) {
         const children = renderInline(heading[2]);
         blocks.push(heading[1].length === 1
-          ? <h3 className="md__heading" key={`h-${partIndex}-${i}`}>{children}</h3>
+          ? <h3 className="md__heading" key={`h-${blocks.length}-${line}`}>{children}</h3>
           : heading[1].length === 2
-            ? <h4 className="md__heading" key={`h-${partIndex}-${i}`}>{children}</h4>
-            : <h5 className="md__heading" key={`h-${partIndex}-${i}`}>{children}</h5>);
+            ? <h4 className="md__heading" key={`h-${blocks.length}-${line}`}>{children}</h4>
+            : <h5 className="md__heading" key={`h-${blocks.length}-${line}`}>{children}</h5>);
         i += 1;
         continue;
       }
@@ -92,7 +208,8 @@ const MarkdownText: React.FC<{ text: string }> = ({ text }) => {
           quoted.push(q[1]);
           i += 1;
         }
-        blocks.push(<blockquote className="md__quote" key={`q-${partIndex}-${i}`}>{quoted.map((q, qi) => <p key={qi}>{renderInline(q)}</p>)}</blockquote>);
+        const quoteText = quoted.join('\n');
+        blocks.push(<blockquote className="md__quote" key={`q-${blocks.length}-${quoteText.slice(0, 48)}`}>{quoted.map((q) => <p key={q}>{renderInline(q)}</p>)}</blockquote>);
         continue;
       }
 
@@ -105,7 +222,8 @@ const MarkdownText: React.FC<{ text: string }> = ({ text }) => {
           items.push(b[1]);
           i += 1;
         }
-        blocks.push(<ul className="md__list" key={`ul-${partIndex}-${i}`}>{items.map((item, ii) => <li key={ii}>{renderInline(item)}</li>)}</ul>);
+        const listText = items.join('\n');
+        blocks.push(<ul className="md__list" key={`ul-${blocks.length}-${listText.slice(0, 48)}`}>{items.map((item) => <li key={item}>{renderInline(item)}</li>)}</ul>);
         continue;
       }
 
@@ -118,7 +236,8 @@ const MarkdownText: React.FC<{ text: string }> = ({ text }) => {
           items.push(n[1]);
           i += 1;
         }
-        blocks.push(<ol className="md__list" key={`ol-${partIndex}-${i}`}>{items.map((item, ii) => <li key={ii}>{renderInline(item)}</li>)}</ol>);
+        const listText = items.join('\n');
+        blocks.push(<ol className="md__list" key={`ol-${blocks.length}-${listText.slice(0, 48)}`}>{items.map((item) => <li key={item}>{renderInline(item)}</li>)}</ol>);
         continue;
       }
 
@@ -127,59 +246,116 @@ const MarkdownText: React.FC<{ text: string }> = ({ text }) => {
         para.push(lines[i].trim());
         i += 1;
       }
-      blocks.push(<p className="md__p" key={`p-${partIndex}-${i}`}>{renderInline(para.join(' '))}</p>);
+      const paraText = para.join(' ');
+      blocks.push(<p className="md__p" key={`p-${blocks.length}-${paraText.slice(0, 48)}`}>{renderInline(paraText)}</p>);
     }
-  });
+  }
 
   return <div className="md">{blocks}</div>;
 };
 
-const LiveChat: React.FC<{ onOpenSettings?: () => void }> = ({ onOpenSettings }) => {
+const LiveChat: React.FC<{ onOpenSettings?: () => void; sidebarHidden: boolean; onToggleSidebar?: () => void }> = ({
+  onOpenSettings,
+  sidebarHidden,
+  onToggleSidebar,
+}) => {
+  const api = ottoApi();
   const rt = useRuntimeContext();
-  const [draft, setDraft] = useState('');
-  const [queue, setQueue] = useState<QueueItem[]>([]);
+  const [draft, setDraft] = useState(readDraft);
+  const [attachments, setAttachments] = useState<AttachmentDraft[]>(readAttachments);
+  const [attachmentError, setAttachmentError] = useState<string | null>(null);
+  const [draggingImage, setDraggingImage] = useState(false);
+  const [queue, setQueue] = useState<QueueItem[]>(readQueue);
   const [modelOpen, setModelOpen] = useState(false);
   const [effortOpen, setEffortOpen] = useState(false);
   const draining = useRef(false);
-  const lastSent = useRef('');
+  const fileInput = useRef<HTMLInputElement | null>(null);
   const st = rt.status;
   const ready = !!st?.ready;
   const selectedModel = st?.modelHandle ?? st?.model ?? null;
   const selectedEffort = st?.effort ?? 'max';
 
+  useEffect(() => {
+    try { localStorage.setItem(DRAFT_KEY, draft); } catch { /* best effort */ }
+  }, [draft]);
+
+  useEffect(() => {
+    persist(QUEUE_KEY, queue);
+  }, [queue]);
+
+  useEffect(() => {
+    persist(ATTACHMENTS_KEY, attachments.map(({ previewUrl: _previewUrl, ...rest }) => rest));
+  }, [attachments]);
+
+  const attachImages = async (files: File[]) => {
+    if (!api || !files.length) return;
+    setAttachmentError(null);
+    try {
+      const saved = await Promise.all(files.map(async (file) => {
+        const dataUrl = await fileToDataUrl(file);
+        const attachment = await api.attachments.save({ name: file.name || 'image.png', mime: file.type || 'image/png', dataUrl });
+        return { ...attachment, previewUrl: dataUrl } satisfies AttachmentDraft;
+      }));
+      setAttachments((items) => [...items, ...saved]);
+    } catch (e) {
+      setAttachmentError(e instanceof Error ? e.message : String(e));
+    }
+  };
+
   const submit = () => {
     const t = draft.trim();
-    if (!t || !ready) return;
-    setQueue((items) => [...items, { id: `${Date.now()}-${items.length}`, text: t, createdAt: Date.now() }]);
+    if ((!t && attachments.length === 0) || !ready) return;
+    const text = withAttachments(t, attachments);
+    setQueue((items) => [...items, { id: `${Date.now()}-${items.length}`, text, createdAt: Date.now(), state: 'queued' }]);
     setDraft('');
+    setAttachments([]);
   };
 
   useEffect(() => {
     if (!ready || rt.busy || draining.current || queue.length === 0) return;
-    const [next] = queue;
+    const next = queue.find((item) => item.state === 'queued');
     if (!next) return;
     draining.current = true;
-    lastSent.current = next.text;
-    setQueue((items) => items.slice(1));
-    void rt.send(next.text).finally(() => {
-      draining.current = false;
-    });
+    persistInFlight({ ...next, state: 'sending' });
+    setQueue((items) => items.filter((item) => item.id !== next.id));
+    void rt.send(next.text)
+      .then(() => {
+        clearInFlight(next.id);
+      })
+      .catch(() => {
+        clearInFlight(next.id);
+        setQueue((items) => dedupeQueue([{ ...next, state: 'failed' }, ...items]));
+      })
+      .finally(() => {
+        draining.current = false;
+      });
   }, [queue, ready, rt]);
 
-  // Error state preserves the user's turn by moving the failed message back to the front of the queue.
-  const lastMsg = rt.messages[rt.messages.length - 1];
-  useEffect(() => {
-    if (lastMsg?.who === 'error' && lastSent.current && !draft) {
-      const retryText = lastSent.current;
-      setQueue((items) => [{ id: `${Date.now()}-retry`, text: retryText, createdAt: Date.now() }, ...items]);
-      lastSent.current = '';
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [lastMsg]);
+  // Failed sends remain durable in the queue; the user can retry or remove them.
 
   return (
-    <div className="chat">
+    <div
+      className={`chat${draggingImage ? ' is-dragging-image' : ''}`}
+      onDragOver={(e) => {
+        if (!imageFilesFromTransfer(e.dataTransfer).length) return;
+        e.preventDefault();
+        setDraggingImage(true);
+      }}
+      onDragLeave={() => setDraggingImage(false)}
+      onDrop={(e) => {
+        const files = imageFilesFromTransfer(e.dataTransfer);
+        if (!files.length) return;
+        e.preventDefault();
+        setDraggingImage(false);
+        void attachImages(files);
+      }}
+    >
       <div className="chat__head">
+        {sidebarHidden && (
+          <button type="button" className="topbar__sidebarButton" onClick={onToggleSidebar} aria-label="Open sidebar">
+            {Icon.panel}
+          </button>
+        )}
         <span className="brand__mark brand__mark--avatar" style={{ width: 28, height: 28, borderRadius: 8 }}><img src={ottoAvatar} alt="" /></span>
         <div>
           <div style={{ fontWeight: 600 }}>otto</div>
@@ -204,22 +380,27 @@ const LiveChat: React.FC<{ onOpenSettings?: () => void }> = ({ onOpenSettings })
               <span>cli: {st.cliResolved ? st.cliPath : 'bundled @letta-ai/letta-code'}</span>
             </div>
             <div className="inkblock__actions">
-              <button className="btn btn--solid-d" onClick={rt.retry}>Retry</button>
-              {onOpenSettings && <button className="btn btn--ghost-d" onClick={onOpenSettings}>Open Settings</button>}
+              <button type="button" className="btn btn--solid-d" onClick={rt.retry}>Retry</button>
+              {onOpenSettings && <button type="button" className="btn btn--ghost-d" onClick={onOpenSettings}>Open Settings</button>}
             </div>
           </div>
         )}
         {ready && rt.messages.length === 0 && (
-          <div className="eyebrow" style={{ textAlign: 'center', marginTop: 48 }}>
-            Connected to {st?.agentId ?? 'otto'} — message otto to start a session.
+          <div className="emptySurface emptySurface--chat">
+            <div className="eyebrow">Session</div>
+            <h2>Ready when you are.</h2>
+            <p>Connected to {st?.agentId ?? 'otto'}. Message otto to start a session.</p>
           </div>
         )}
-        {rt.messages.map((m, i) => (
-          <div key={i} className={`msg${m.who === 'user' ? ' msg--user' : ''}`}>
-            <div className="msg__who">{m.who === 'user' ? 'You' : m.who === 'error' ? 'error' : 'otto'}</div>
-            <div className="msg__body" style={m.who === 'error' ? { color: 'var(--stop)' } : undefined}><MarkdownText text={m.text} /></div>
-          </div>
-        ))}
+        {rt.messages.map((m, i) => {
+          const showWho = i === 0 || rt.messages[i - 1].who !== m.who;
+          return (
+            <div key={m.id} className={`msg${m.who === 'user' ? ' msg--user' : ''}${showWho ? '' : ' msg--cont'}`}>
+              {showWho && <div className="msg__who">{m.who === 'user' ? 'You' : m.who === 'error' ? 'error' : 'otto'}</div>}
+              <div className="msg__body" style={m.who === 'error' ? { color: 'var(--stop)' } : undefined}><MarkdownText text={m.text} /></div>
+            </div>
+          );
+        })}
         {rt.busy && <div className="eyebrow">otto is working…</div>}
       </div>
 
@@ -228,15 +409,23 @@ const LiveChat: React.FC<{ onOpenSettings?: () => void }> = ({ onOpenSettings })
           <div className="queuebar" aria-label="Queued messages">
             <div className="queuebar__head">
               <span className="dot dot--idle" />
-              <span>{queue.length} queued</span>
-              <button className="queuebar__clear" onClick={() => setQueue([])}>Clear</button>
+              <span>{queue.length} saved</span>
+              <button type="button" className="queuebar__clear" onClick={() => setQueue([])}>Clear</button>
             </div>
             <div className="queuebar__items">
               {queue.map((item, index) => (
                 <div className="queueitem" key={item.id}>
                   <span className="mono faint">{index + 1}</span>
-                  <span className="queueitem__text">{item.text}</span>
-                  <button
+                  <span className="queueitem__text">
+                    <span className={`queueitem__state queueitem__state--${item.state}`}>{item.state}</span>
+                    {item.text}
+                  </span>
+                  {item.state === 'failed' && (
+                    <button type="button" className="queueitem__retry" onClick={() => setQueue((items) => items.map((x) => x.id === item.id ? { ...x, state: 'queued' } : x))}>
+                      Retry
+                    </button>
+                  )}
+                  <button type="button"
                     className="queueitem__remove"
                     aria-label="Remove queued message"
                     onClick={() => setQueue((items) => items.filter((x) => x.id !== item.id))}
@@ -248,12 +437,49 @@ const LiveChat: React.FC<{ onOpenSettings?: () => void }> = ({ onOpenSettings })
             </div>
           </div>
         )}
+        {attachments.length > 0 && (
+          <div className="attachmentTray" aria-label="Image attachments">
+            {attachments.map((a) => (
+              <div className="attachment" key={a.id}>
+                <img src={a.previewUrl} alt="" />
+                <div className="attachment__meta">
+                  <span>{a.name}</span>
+                  <span className="faint">{formatBytes(a.size)}</span>
+                </div>
+                <button type="button" className="attachment__remove" aria-label={`Remove ${a.name}`} onClick={() => setAttachments((items) => items.filter((x) => x.id !== a.id))}>
+                  {Icon.x}
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+        {attachmentError && <div className="attachmentError">{attachmentError}</div>}
         <div className={`promptbox${ready ? '' : ' promptbox--disabled'}`}>
+          <input
+            ref={fileInput}
+            type="file"
+            accept="image/*"
+            multiple
+            className="srOnly"
+            onChange={(e) => {
+              void attachImages(imageFiles(e.currentTarget.files ?? []));
+              e.currentTarget.value = '';
+            }}
+          />
+          <button type="button" className="btn btn--icon" aria-label="Attach image" disabled={!ready} onClick={() => fileInput.current?.click()}>
+            {Icon.image}
+          </button>
           <textarea
             placeholder={ready ? (rt.busy ? 'Queue a follow-up…' : 'Message otto…') : 'Runtime not ready — see Settings'}
             aria-label="Message Otto"
             value={draft}
             onChange={(e) => setDraft(e.target.value)}
+            onPaste={(e) => {
+              const files = imageFilesFromTransfer(e.clipboardData);
+              if (!files.length) return;
+              e.preventDefault();
+              void attachImages(files);
+            }}
             onKeyDown={(e) => {
               if (e.key === 'Enter' && !e.shiftKey) {
                 e.preventDefault();
@@ -264,13 +490,13 @@ const LiveChat: React.FC<{ onOpenSettings?: () => void }> = ({ onOpenSettings })
             disabled={!ready}
           />
           {rt.busy && (
-            <button className="btn btn--icon" aria-label="Abort current run" onClick={rt.abort}>{Icon.stop}</button>
+            <button type="button" className="btn btn--icon" aria-label="Abort current run" onClick={rt.abort}>{Icon.stop}</button>
           )}
-          <button className="btn btn--primary btn--icon" aria-label={rt.busy ? 'Queue message' : 'Send message'} disabled={!ready || !draft.trim()} onClick={submit}>{Icon.send}</button>
+          <button type="button" className="btn btn--primary btn--icon" aria-label={rt.busy ? 'Queue message' : 'Send message'} disabled={!ready || (!draft.trim() && attachments.length === 0)} onClick={submit}>{Icon.send}</button>
         </div>
         <div className="promptControls">
           <div className="picker" data-open={modelOpen ? 'true' : 'false'}>
-            <button className="picker__button" onClick={() => { setModelOpen((x) => !x); setEffortOpen(false); }} disabled={rt.busy}>
+            <button type="button" className="picker__button" onClick={() => { setModelOpen((x) => !x); setEffortOpen(false); }} disabled={rt.busy}>
               <span>{labelForModel(selectedModel)}</span>
               <span className="picker__chev">›</span>
             </button>
@@ -278,7 +504,7 @@ const LiveChat: React.FC<{ onOpenSettings?: () => void }> = ({ onOpenSettings })
               <div className="picker__menu picker__menu--model">
                 <div className="picker__title">Select model</div>
                 {MODEL_OPTIONS.map((m) => (
-                  <button
+                  <button type="button"
                     key={m.value}
                     className={`picker__option${selectedModel === m.value ? ' is-selected' : ''}`}
                     onClick={() => {
@@ -294,7 +520,7 @@ const LiveChat: React.FC<{ onOpenSettings?: () => void }> = ({ onOpenSettings })
             )}
           </div>
           <div className="picker" data-open={effortOpen ? 'true' : 'false'}>
-            <button className="picker__button picker__button--effort" onClick={() => { setEffortOpen((x) => !x); setModelOpen(false); }} disabled={rt.busy}>
+            <button type="button" className="picker__button picker__button--effort" onClick={() => { setEffortOpen((x) => !x); setModelOpen(false); }} disabled={rt.busy}>
               <span>{labelForEffort(selectedEffort)}</span>
               <span className="effortDots" aria-hidden="true">
                 {EFFORT_OPTIONS.slice(1).map((e) => <i key={e.value} data-on={EFFORT_OPTIONS.findIndex((x) => x.value === e.value) <= EFFORT_OPTIONS.findIndex((x) => x.value === selectedEffort) ? 'true' : 'false'} />)}
@@ -305,7 +531,7 @@ const LiveChat: React.FC<{ onOpenSettings?: () => void }> = ({ onOpenSettings })
               <div className="picker__menu picker__menu--effort">
                 <div className="picker__title">Reasoning</div>
                 {EFFORT_OPTIONS.map((e) => (
-                  <button
+                  <button type="button"
                     key={e.value}
                     className={`picker__option${selectedEffort === e.value ? ' is-selected' : ''}`}
                     onClick={() => {
@@ -379,7 +605,7 @@ const PreviewChat: React.FC = () => (
           disabled
           readOnly
         />
-        <button className="btn btn--primary" aria-label="Send message" disabled aria-disabled="true">{Icon.send}</button>
+        <button type="button" className="btn btn--primary" aria-label="Send message" disabled aria-disabled="true">{Icon.send}</button>
       </div>
       <div className="promptbar__meta">
         <span>desktop bridge unavailable</span>

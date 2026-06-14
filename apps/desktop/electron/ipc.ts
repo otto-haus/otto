@@ -1,9 +1,11 @@
 import { type BrowserWindow, ipcMain, shell } from 'electron';
 import type { ConnectionInfo, ConnectionInput, CreateProposalFromCorrectionInput, DecideProposalInput, OttoConfig, PermissionResponse, RuntimePreferences } from './shared/types';
 import type { CharterCreateInput, CharterStatus } from './shared/types';
+import type { AttachmentInput } from './shared/types';
+import { saveAttachment } from './attachments';
 import { CharterStore } from './charter-store';
 import { ConfigStore } from './config-store';
-import { LettaRunner } from './letta-runner';
+import { discoverLocalLettaContext, LettaRunner } from './letta-runner';
 import { ReceiptStore } from './receipt-store';
 import { StandardStore } from './standard-store';
 import { PracticeStore } from './practice-store';
@@ -31,14 +33,18 @@ export function registerIpc(win: BrowserWindow) {
 
   ipcMain.handle('otto:config:get', () => config.get());
   ipcMain.handle('otto:config:set', (_e, patch: Partial<OttoConfig>) => config.update(patch));
+  ipcMain.handle('otto:attachment:save', (_e, input: AttachmentInput) => saveAttachment(input));
 
   // Connection setup. v1 is local-only: provider auth lives in Letta, not Otto.
   ipcMain.handle(
     'otto:connection:get',
-    (): ConnectionInfo => ({
-      baseUrl: config.baseUrl(),
-      agentId: config.agentId(),
-    }),
+    (): ConnectionInfo => {
+      const context = discoverLocalLettaContext(config);
+      return {
+        baseUrl: context.baseUrl,
+        agentId: context.agentId,
+      };
+    },
   );
   ipcMain.handle('otto:connection:save', (_e, input: ConnectionInput) => {
     const patch: Partial<OttoConfig> = {};

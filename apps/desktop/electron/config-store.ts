@@ -3,8 +3,12 @@ import { homedir } from 'node:os';
 import { join, resolve } from 'node:path';
 import type { EffortLevel, OttoConfig } from './shared/types';
 
-export const OTTO_DIR = process.env.OTTO_HOME?.trim() ? resolve(process.env.OTTO_HOME.trim()) : join(homedir(), '.otto');
-const CONFIG_FILE = join(OTTO_DIR, 'config.json');
+export const defaultOttoDir = () => {
+  const homeOverride = process.env.OTTO_HOME?.trim();
+  if (homeOverride) return resolve(homeOverride);
+  return process.env.OTTO_CONFIG_DIR || join(homedir(), '.otto');
+};
+export const OTTO_DIR = defaultOttoDir();
 const LETTA_SETTINGS_LOCAL = join(homedir(), '.letta', 'settings.local.json');
 const LETTA_SETTINGS = join(homedir(), '.letta', 'settings.json');
 
@@ -14,15 +18,18 @@ type LettaSettings = {
   sessionsByServer?: Record<string, { agentId?: string | null; conversationId?: string | null }>;
 };
 
-/** Local-first config store at ~/.otto/config.json. No hardcoded agent — Otto stays generic. */
+/** Local-first config store at ~/.otto/config.json by default. No hardcoded agent — otto stays generic. */
 export class ConfigStore {
   private cfg: OttoConfig = {};
+  private readonly configFile: string;
 
   constructor() {
-    mkdirSync(OTTO_DIR, { recursive: true });
-    if (existsSync(CONFIG_FILE)) {
+    const ottoDir = defaultOttoDir();
+    this.configFile = join(ottoDir, 'config.json');
+    mkdirSync(ottoDir, { recursive: true });
+    if (existsSync(this.configFile)) {
       try {
-        this.cfg = JSON.parse(readFileSync(CONFIG_FILE, 'utf8')) as OttoConfig;
+        this.cfg = JSON.parse(readFileSync(this.configFile, 'utf8')) as OttoConfig;
       } catch {
         this.cfg = {};
       }
@@ -35,7 +42,7 @@ export class ConfigStore {
 
   update(patch: Partial<OttoConfig>): OttoConfig {
     this.cfg = { ...this.cfg, ...patch };
-    writeFileSync(CONFIG_FILE, `${JSON.stringify(this.cfg, null, 2)}\n`);
+    writeFileSync(this.configFile, `${JSON.stringify(this.cfg, null, 2)}\n`);
     return this.cfg;
   }
 
@@ -44,7 +51,7 @@ export class ConfigStore {
     return this.agentCandidates()[0] ?? null;
   }
 
-  /** Agent candidates in priority order: explicit Otto override, then local Letta's recent agents. */
+  /** Agent candidates in priority order: explicit otto override, then local Letta's recent agents. */
   agentCandidates(): string[] {
     const nested = (this.cfg as OttoConfig & { agent?: { id?: string | null } }).agent?.id;
     return unique([process.env.OTTO_AGENT_ID, this.cfg.agentId, nested, ...discoverLettaAgentIds()]);
@@ -77,7 +84,10 @@ function readJson<T>(path: string): T | null {
 
 function discoverLettaAgentIds(): string[] {
   const candidates: Array<string | null | undefined> = [];
-  for (const path of [LETTA_SETTINGS_LOCAL, LETTA_SETTINGS]) {
+  const paths = process.env.OTTO_LETTA_SETTINGS_PATH
+    ? [process.env.OTTO_LETTA_SETTINGS_PATH]
+    : [LETTA_SETTINGS_LOCAL, LETTA_SETTINGS];
+  for (const path of paths) {
     const settings = readJson<LettaSettings>(path);
     candidates.push(settings?.lastSession?.agentId, settings?.lastAgent);
     for (const session of Object.values(settings?.sessionsByServer ?? {})) {

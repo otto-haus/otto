@@ -1,9 +1,11 @@
 import { execFileSync } from 'node:child_process';
 import { randomUUID } from 'node:crypto';
-import { existsSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
+import { homedir } from 'node:os';
+import { join } from 'node:path';
 import type { BrowserWindow } from 'electron';
 import type { PermissionRequest, PermissionResponse, RuntimePreferences, RuntimeStatus, StatusCode } from './shared/types';
-import { ConfigStore } from './config-store';
+import type { ConfigStore } from './config-store';
 import { ReceiptWriter } from './receipt-writer';
 import { getSecret, hasSecret } from './secret-store';
 import { StandardStore } from './standard-store';
@@ -34,8 +36,8 @@ const isNotFound = (e: unknown) => {
 };
 
 /**
- * Single Otto session against OTTO_AGENT_ID. Recovers from a stale conversation id
- * (clear it, ride the agent's default conversation) instead of hard-failing.
+ * Single Otto session against a local Letta agent. Recovers from stale candidates by
+ * trying local Letta's recent agents before surfacing a clean not-ready status.
  */
 export class LettaRunner {
   private sdk: SDK | null = null;
@@ -93,31 +95,26 @@ export class LettaRunner {
     return o;
   }
 
-  /** Inject the stored Letta key + base URL into the env the SDK hands the spawned CLI. */
-  private applyConnectionEnv() {
+  /** Inject stored Letta key + discovered/local base URL into the spawned CLI env. */
+  private applyConnectionEnv(baseUrl: string | null) {
     const cli = resolveCli();
-    // The SDK can otherwise resolve a stale cached @letta-ai/letta-code package. Prefer the
-    // installed Letta Desktop CLI, which is the live local-backend runtime Sebastian is using.
+    // Prefer the installed Letta Desktop CLI, which is the live local-backend runtime Sebastian is using.
     if (cli.cliResolved && !process.env.LETTA_CLI_PATH) process.env.LETTA_CLI_PATH = cli.cliPath;
     const key = getSecret('LETTA_API_KEY');
     if (key && !process.env.LETTA_API_KEY) process.env.LETTA_API_KEY = key;
-    // Base URL: explicit config/env wins; otherwise auto-discover a running local Letta
-    // server so a normal user never has to find a port. (Letta Code local mode is Otto's
-    // one hard dependency; the spawned CLI otherwise defaults to Letta Cloud and fails for
-    // a local agent.)
-    const baseUrl = normalizeBaseUrl(this.config.baseUrl() ?? discoverLocalLettaUrl());
-    if (baseUrl && !process.env.LETTA_BASE_URL) process.env.LETTA_BASE_URL = baseUrl;
+    if (baseUrl) process.env.LETTA_BASE_URL = baseUrl;
   }
 
   private hasApiKey(): boolean {
     return hasSecret('LETTA_API_KEY') || !!process.env.LETTA_API_KEY;
   }
 
-  /** Connect; recover from a stale conversation; never throw to the renderer. */
+  /** Connect; recover from stale agents/conversations; never throw to the renderer. */
   async init(): Promise<RuntimeStatus> {
     const cli = resolveCli();
-    this.applyConnectionEnv();
-    const agentCandidates = this.config.agentCandidates();
+    const context = discoverLocalLettaContext(this.config);
+    this.applyConnectionEnv(context.baseUrl);
+    const agentCandidates = context.agentCandidates;
     const primaryAgentId = agentCandidates[0] ?? null;
 
     let sdk: SDK;
@@ -129,6 +126,8 @@ export class LettaRunner {
         code: 'sdk-missing',
         reason: `Letta SDK unavailable: ${msg(e)}`,
         agentId: primaryAgentId,
+        baseUrl: context.baseUrl,
+        discoverySource: context.source,
         modelHandle: this.config.modelHandle(),
         effort: this.config.effort(),
         sessionMode: SMOKE_MODE ? 'smoke' : 'default',
@@ -168,13 +167,15 @@ export class LettaRunner {
       if (!r && !SMOKE_MODE && !process.env.OTTO_AGENT_ID) {
         r = await tryOnce(null);
       }
-      if (!r) throw lastAgentError ?? new Error('No local Letta agent candidate was available.');
+      if (!r) throw lastAgentError ?? new Error(context.reason ?? 'No local Letta agent candidate was available.');
       this.session = r.session;
-      if (!SMOKE_MODE) this.config.update({ agentId: r.init.agentId ?? primaryAgentId, conversationId: r.init.conversationId ?? null });
+      if (!SMOKE_MODE) this.config.update({ agentId: r.init.agentId ?? primaryAgentId, baseUrl: context.baseUrl, conversationId: r.init.conversationId ?? null });
       this.status = {
         ready: true,
         code: 'ready',
         agentId: r.init.agentId,
+        baseUrl: context.baseUrl,
+        discoverySource: context.source,
         conversationId: r.init.conversationId,
         model: r.init.model,
         modelHandle: this.config.modelHandle(),
@@ -185,7 +186,6 @@ export class LettaRunner {
         ...cli,
       };
     } catch (e) {
-      // agent-not-found / auth / provider / unreachable — diagnose cleanly, do not crash.
       const reason = msg(e);
       const code = classify(reason, this.hasApiKey());
       this.status = {
@@ -193,6 +193,8 @@ export class LettaRunner {
         code,
         reason: friendly(code, reason),
         agentId: primaryAgentId,
+        baseUrl: context.baseUrl,
+        discoverySource: context.source,
         modelHandle: this.config.modelHandle(),
         effort: this.config.effort(),
         sessionMode: SMOKE_MODE ? 'smoke' : 'default',
@@ -454,13 +456,100 @@ function msg(e: unknown): string {
   return e instanceof Error ? e.message : String(e);
 }
 
+type LocalLettaContext = {
+  baseUrl: string | null;
+  agentId: string | null;
+  agentCandidates: string[];
+  source: string;
+  reason?: string;
+};
+
+type LettaSettings = {
+  lastAgent?: string;
+  preferredBackendMode?: string;
+  sessionsByServer?: Record<string, { agentId?: string; conversationId?: string }>;
+  agents?: Array<{ agentId?: string; baseUrl?: string }>;
+};
+
+export function discoverLocalLettaContext(config: ConfigStore): LocalLettaContext {
+  const settings = readLettaSettings();
+  const configuredBase = config.baseUrl();
+  const discoveredUrl = normalizeBaseUrl(configuredBase) ?? discoverLocalLettaUrl() ?? discoverSettingsHttpBaseUrl(settings);
+  const settingsAgent = discoverSettingsAgentId(settings, discoveredUrl);
+  const agentCandidates = unique([...config.agentCandidates(), settingsAgent]);
+  const source = configuredBase || process.env.OTTO_AGENT_ID || config.get().agentId
+    ? 'otto config/env'
+    : agentCandidates.length || discoveredUrl
+      ? 'Letta local settings/discovery'
+      : 'none';
+  return {
+    baseUrl: discoveredUrl,
+    agentId: agentCandidates[0] ?? null,
+    agentCandidates,
+    source,
+    reason: agentCandidates.length === 0 ? 'no last local agent or session was found in ~/.letta/settings.json' : undefined,
+  };
+}
+
+function readLettaSettings(): LettaSettings | null {
+  try {
+    const settingsPath = process.env.OTTO_LETTA_SETTINGS_PATH || join(homedir(), '.letta', 'settings.json');
+    return JSON.parse(readFileSync(settingsPath, 'utf8')) as LettaSettings;
+  } catch {
+    return null;
+  }
+}
+
+function normalizeBaseUrl(value?: string | null): string | null {
+  const trimmed = value?.trim();
+  if (!trimmed) return null;
+  if (/^https?:\/\//i.test(trimmed)) return trimmed.replace(/\/+$/, '');
+  if (/^(localhost|127\.0\.0\.1):\d+$/i.test(trimmed)) return `http://${trimmed.replace(/\/+$/, '')}`;
+  return null;
+}
+
+function discoverSettingsHttpBaseUrl(settings: LettaSettings | null): string | null {
+  if (!settings) return null;
+  const sessionKeys = Object.keys(settings.sessionsByServer ?? {});
+  const agentBases = (settings.agents ?? []).map((a) => a.baseUrl).filter(Boolean) as string[];
+  for (const candidate of [...sessionKeys, ...agentBases]) {
+    const url = normalizeBaseUrl(candidate);
+    if (url) return url;
+  }
+  return null;
+}
+
+function discoverSettingsAgentId(settings: LettaSettings | null, baseUrl: string | null): string | null {
+  if (!settings) return null;
+  const normalizedBase = normalizeBaseUrl(baseUrl);
+  const sessions = settings.sessionsByServer ?? {};
+
+  if (normalizedBase) {
+    for (const [server, session] of Object.entries(sessions)) {
+      if (normalizeBaseUrl(server) === normalizedBase && session.agentId) return session.agentId;
+    }
+  }
+
+  const localSession = Object.entries(sessions).find(([server, session]) =>
+    !!session.agentId && (server.startsWith('local:') || !!normalizeBaseUrl(server)),
+  );
+  if (localSession?.[1].agentId) return localSession[1].agentId;
+
+  if (settings.lastAgent?.startsWith('agent-')) return settings.lastAgent;
+
+  const localAgent = (settings.agents ?? []).find((a) =>
+    a.agentId?.startsWith('agent-') && (!a.baseUrl || a.baseUrl.startsWith('local:') || !!normalizeBaseUrl(a.baseUrl)),
+  );
+  return localAgent?.agentId ?? null;
+}
+
 /**
  * Best-effort discovery of a running local Letta server's URL on macOS. A GUI-launched
- * Otto can't know the (dynamic) port the user's Letta Code chose, so we ask the OS which
- * loopback port a Letta process is listening on. Returns null if none is found (then the
- * CLI falls back to its default / the user sets a base URL in Settings).
+ * otto can't know the dynamic port, so we ask the OS which loopback port a Letta process
+ * is listening on. Returns null if none is found.
  */
 function discoverLocalLettaUrl(): string | null {
+  if (process.env.OTTO_SKIP_LETTA_LSOF === '1') return null;
   if (process.platform !== 'darwin') return null;
   try {
     const out = execFileSync('lsof', ['-nP', '-iTCP', '-sTCP:LISTEN'], {
@@ -468,21 +557,23 @@ function discoverLocalLettaUrl(): string | null {
       encoding: 'utf8',
     });
     for (const line of out.split('\n')) {
-      if (!/letta/i.test(line)) continue; // command column contains "Letta"
-      const m = line.match(/127\.0\.0\.1:(\d+)/);
+      if (!/letta/i.test(line)) continue;
+      const m = line.match(/(?:127\.0\.0\.1|localhost):(\d+)/i);
       if (m) return `http://127.0.0.1:${m[1]}`;
     }
   } catch {
-    // lsof unavailable / blocked — fall through to null
+    // lsof unavailable / blocked — fall through to settings/config only
   }
   return null;
 }
 
-function normalizeBaseUrl(value: string | null): string | null {
-  const trimmed = value?.trim();
-  if (!trimmed) return null;
-  if (/^https?:\/\//i.test(trimmed)) return trimmed.replace(/\/+$/, '');
-  return `http://${trimmed.replace(/\/+$/, '')}`;
+function unique(values: Array<string | null | undefined>): string[] {
+  const out: string[] = [];
+  for (const value of values) {
+    const trimmed = value?.trim();
+    if (trimmed && !out.includes(trimmed)) out.push(trimmed);
+  }
+  return out;
 }
 
 /** Map a raw connect error to a diagnosis category for the Settings UI. */
@@ -515,7 +606,7 @@ function classify(reason: string, hasKey: boolean): StatusCode {
 function friendly(code: StatusCode, reason: string): string {
   switch (code) {
     case 'no-api-key':
-      return `Letta auth failed. For local v1, configure provider auth inside Letta; Otto does not need its own API key. (${reason})`;
+      return `Letta auth failed. For local v1, configure provider auth inside Letta; otto does not need its own API key. (${reason})`;
     case 'unreachable':
       return `Can't reach the Letta backend — check the base URL in Settings. (${reason})`;
     case 'no-agent':

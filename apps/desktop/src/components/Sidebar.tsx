@@ -41,14 +41,13 @@ export const Sidebar: React.FC<{
   active: SurfaceId;
   onSelect: (id: SurfaceId) => void;
   counts: Partial<Record<SurfaceId, number>>;
-  collapsed: boolean;
   onToggleCollapsed: () => void;
-}> = ({ active, onSelect, counts, collapsed, onToggleCollapsed }) => {
+}> = ({ active, onSelect, counts, onToggleCollapsed }) => {
   const rt = useRuntimeContext();
   // Truthful readiness: only the live runtime can mark connected.
   const connected = rt.electron ? !!rt.status?.ready : false;
   const item = (n: NavDef) => (
-    <button
+    <button type="button"
       key={n.id}
       className={`nav__item has-tip${active === n.id ? ' is-active' : ''}`}
       onClick={() => onSelect(n.id)}
@@ -63,7 +62,7 @@ export const Sidebar: React.FC<{
   );
 
   return (
-    <aside className={`sidebar${collapsed ? ' is-collapsed' : ''}`}>
+    <aside className="sidebar">
       <div className="brand">
         <span className="brand__mark brand__mark--avatar"><img src={ottoAvatar} alt="" /></span>
         <span className="brand__text">
@@ -73,8 +72,8 @@ export const Sidebar: React.FC<{
           className="sidebar__toggle has-tip"
           type="button"
           onClick={onToggleCollapsed}
-          aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-          data-tip={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+          aria-label="Collapse sidebar"
+          data-tip="Collapse sidebar"
           data-kbd="⌘B"
         >
           {Icon.panel}
@@ -94,8 +93,8 @@ export const Sidebar: React.FC<{
       </button>
 
       <nav className="nav">
-        {GROUPS.map((g, i) => (
-          <React.Fragment key={i}>
+        {GROUPS.map((g) => (
+          <React.Fragment key={g.group ?? 'primary'}>
             {g.group && <div className="nav__group">{g.group}</div>}
             {g.items.map(item)}
           </React.Fragment>
@@ -104,7 +103,7 @@ export const Sidebar: React.FC<{
 
       <div className="sidebar__spacer" />
 
-      <button
+      <button type="button"
         className={`nav__item nav__item--settings has-tip${active === 'settings' ? ' is-active' : ''}`}
         onClick={() => onSelect('settings')}
         aria-label="Settings"

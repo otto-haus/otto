@@ -1666,14 +1666,14 @@ const ConnectLetta: React.FC = () => {
       </div>
       <div className="h-sec" style={{ marginTop: 6 }}>Local Letta connection</div>
       <p className="muted" style={{ marginTop: 4 }}>
-        otto uses your local Letta runtime and current/default agent automatically. Use these fields only as advanced overrides.
+        otto tries to discover Letta Desktop and your current local agent automatically. These fields are advanced overrides for the rare case discovery picks the wrong runtime or agent.
       </p>
       {displayStatus && !displayStatus.ready && displayStatus.reason && (
         <p className="faint" style={{ marginTop: 6 }}>↳ {displayStatus.reason}</p>
       )}
       <div className="grid" style={{ gap: 12, marginTop: 12 }}>
         <label>
-          <span className="faint" style={{ fontSize: 12 }}>Local Letta URL override</span>
+          <span className="faint" style={{ fontSize: 12 }}>Local Letta URL · advanced override</span>
           <input
             style={inputStyle}
             value={baseUrl}
@@ -1683,7 +1683,7 @@ const ConnectLetta: React.FC = () => {
           />
         </label>
         <label>
-          <span className="faint" style={{ fontSize: 12 }}>Agent ID override</span>
+          <span className="faint" style={{ fontSize: 12 }}>Agent ID · advanced override</span>
           <input
             className="mono"
             style={inputStyle}
@@ -1695,12 +1695,13 @@ const ConnectLetta: React.FC = () => {
         </label>
       </div>
       <div className="row" style={{ marginTop: 14, gap: 12, alignItems: 'center' }}>
-        <button className="btn btn--primary" onClick={connect} disabled={busy}>
+        <button type="button" className="btn btn--primary" onClick={connect} disabled={busy}>
           {busy ? 'Connecting…' : 'Save overrides & reconnect'}
         </button>
         {displayStatus?.ready && (
           <span className="muted" style={{ fontSize: 13 }}>
             {displayStatus.agentId}
+            {displayStatus.baseUrl ? ` · ${displayStatus.baseUrl}` : ''}
             {displayStatus.model ? ` · ${displayStatus.model}` : ''}
           </span>
         )}
@@ -1723,7 +1724,7 @@ const readyPill = (s: ReadyStatus) => {
 };
 
 const ReadyRow: React.FC<{ item: ReadyItem }> = ({ item }) => (
-  <div className="zone" style={{ gridTemplateColumns: '190px 1fr auto', gap: 16 }}>
+  <div className="zone" style={{ gridTemplateColumns: '190px minmax(0, 1fr) auto', gap: 16 }}>
     <span style={{ fontWeight: 600, fontSize: 14 }}>
       {item.label}
       {item.required && <span className="faint" style={{ fontWeight: 400, fontSize: 12 }}> · required</span>}
@@ -1774,12 +1775,12 @@ const ModelProviders: React.FC = () => {
             otto does not collect provider keys. Connect providers in Letta, then choose model and effort from the chat composer.
           </p>
         </div>
-        <button className="btn btn--primary" onClick={openLetta}>Open Letta</button>
+        <button type="button" className="btn btn--primary" onClick={openLetta}>Open Letta</button>
       </div>
 
       <div className="segmented" role="tablist" aria-label="Provider type">
-        <button className={tab === 'local' ? 'is-active' : ''} onClick={() => setTab('local')}>Local</button>
-        <button className={tab === 'cloud' ? 'is-active' : ''} onClick={() => setTab('cloud')}>Cloud</button>
+        <button type="button" className={tab === 'local' ? 'is-active' : ''} onClick={() => setTab('local')}>Local</button>
+        <button type="button" className={tab === 'cloud' ? 'is-active' : ''} onClick={() => setTab('cloud')}>Cloud</button>
       </div>
 
       <div className="providerList">
@@ -1795,7 +1796,7 @@ const ModelProviders: React.FC = () => {
                 </div>
                 <p className="muted" style={{ marginTop: 4 }}>{provider.detail}</p>
               </div>
-              <button className="btn" onClick={openLetta}>{active ? 'Manage' : 'Connect'}</button>
+              <button type="button" className="btn" onClick={openLetta}>{active ? 'Manage' : 'Connect'}</button>
             </div>
           );
         })}
@@ -1868,10 +1869,10 @@ export const Settings: React.FC = () => {
   return (
     <div className="settingsShell">
       <aside className="settingsNav" aria-label="Settings sections">
-        <button className={section === 'general' ? 'is-active' : ''} onClick={() => setSection('general')}>
+        <button type="button" className={section === 'general' ? 'is-active' : ''} onClick={() => setSection('general')}>
           {Icon.settings}<span>General</span>
         </button>
-        <button className={section === 'providers' ? 'is-active' : ''} onClick={() => setSection('providers')}>
+        <button type="button" className={section === 'providers' ? 'is-active' : ''} onClick={() => setSection('providers')}>
           {Icon.lock}<span>Model providers</span>
         </button>
       </aside>
@@ -1892,7 +1893,7 @@ export const Settings: React.FC = () => {
             </div>
             {liveConnected ? (
               <p className="muted" style={{ marginTop: 6 }}>
-                Live Letta runtime connected. The file-backed checks below describe local config only.
+                Live Letta runtime connected. The file-backed checks below describe local config only; runtime and agent may have been discovered from Letta settings.
               </p>
             ) : (
               !ready && (

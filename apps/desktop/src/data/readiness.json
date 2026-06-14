@@ -60,10 +60,10 @@
       "key": "practices",
       "label": "Practices",
       "required": false,
-      "status": "configured",
-      "detail": "5 practice specs",
-      "source": "apps/desktop/src/data/practices.json",
-      "action": "validated via otto-practices"
+      "status": "not-wired",
+      "detail": "Coming soon; not loaded in the v0.1 desktop",
+      "source": null,
+      "action": "Ship a real Practices loader before marking this surface done"
     },
     {
       "key": "mcp",

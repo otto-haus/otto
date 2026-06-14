@@ -1,10 +1,18 @@
 <p align="center">
-  <img src=".github/assets/otto-avatar.png" width="144" alt="otto" />
+  <a href="https://github.com/otto-haus/otto/releases/latest"><img alt="Watch the desktop demo" src="https://img.shields.io/badge/watch-v0.1%20desktop%20demo-14161a?style=for-the-badge" /></a>
+  <a href="https://discord.gg/hab9ZvbPH"><img alt="Join Discord" src="https://img.shields.io/badge/Discord-join%20otto-5865F2?style=for-the-badge&logo=discord&logoColor=white" /></a>
+  <a href="https://otto.haus"><img alt="otto.haus" src="https://img.shields.io/badge/otto.haus-visit-2f855a?style=for-the-badge" /></a>
 </p>
+
+<!-- After v0.1.1 publish, point the demo badge at the uploaded demo video asset. -->
 
 # otto
 
-**Letta remembers. otto improves.**
+**Define the culture your AI agents run on.**
+
+[Watch the desktop demo →](https://github.com/otto-haus/otto/releases/latest)
+
+Letta remembers. otto improves.
 
 otto is the behavior layer for persistent AI agents.
 
@@ -123,7 +131,7 @@ Source of truth:
 | Charter | proposed |
 | Routines | proposed |
 | Standards | proposed |
-| Desktop | proposed |
+| Desktop | ship |
 | Approvals / Runs / Receipts | defer |
 | Autonomy / Tickets / Workers | defer |
 | Channels | defer |
@@ -132,7 +140,7 @@ Source of truth:
 The first falsifiable desktop done test:
 
 > otto Shell launches over Letta and truthfully reports its own state — connected,
-> blocked, stale, or ready. No fake live chat.
+> blocked, stale, or ready. Live chat unlocks only after `session.initialize()` succeeds.
 
 ---
 
@@ -185,8 +193,8 @@ Connect the desktop app to Letta:
 A fresh clone does not include a hosted agent. Live chat requires a local Letta runtime, provider auth configured in Letta, and a target Letta agent.
 
 1. Open `/Applications/otto.app`.
-2. Go to **Settings → General**.
-3. Confirm or paste the local Letta URL and target agent id.
+2. otto tries to discover Letta Desktop and your current local agent automatically.
+3. Use **Settings → General** only for advanced runtime/agent overrides.
 4. Provider/model credentials stay in Letta. otto does not ask for provider API keys in v1.
 
 Useful checks:
@@ -194,6 +202,7 @@ Useful checks:
 ```sh
 bun run --cwd apps/desktop typecheck
 bun run --cwd apps/desktop electron:typecheck
+task release:gate
 task smoke:cli   # disposable conversation; never writes to default
 ```
 
