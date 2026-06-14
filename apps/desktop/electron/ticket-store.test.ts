@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'bun:test';
-import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { parse, stringify } from 'yaml';
@@ -24,6 +24,28 @@ describe('TicketStore', () => {
       expect(existsSync(result.ticket.ticketPath)).toBe(true);
       expect(result.receipt.action).toBe('ticket.compile');
       expect(result.receipt.status).toBe('success');
+    } finally {
+      rmSync(tmp, { recursive: true, force: true });
+    }
+  });
+
+  test('list skips ticket files missing ticket_id', () => {
+    const tmp = mkdtempSync(join(tmpdir(), 'otto-ticket-test-'));
+    const ticketDir = join(tmp, 'tickets', 'missing-id');
+    try {
+      mkdirSync(ticketDir, { recursive: true });
+      writeFileSync(
+        join(ticketDir, 'ticket.yaml'),
+        `status: active
+objective: Missing id should not become a blank ticket.
+updated_at: "2026-06-14T00:00:00.000Z"
+`,
+      );
+
+      const result = new TicketStore(join(tmp, 'tickets')).list();
+
+      expect(result.tickets).toHaveLength(0);
+      expect(result.skipped).toBe(1);
     } finally {
       rmSync(tmp, { recursive: true, force: true });
     }
