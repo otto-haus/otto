@@ -249,7 +249,7 @@ Useful checks:
 bun run --cwd apps/desktop typecheck
 bun run --cwd apps/desktop electron:typecheck
 task release:gate
-task smoke:cli   # disposable conversation; never writes to default
+OTTO_AGENT_ID=<agent-id> task smoke:cli   # disposable conversation; never writes to default
 ```
 
 DevEx docs:
@@ -299,9 +299,10 @@ bun run --cwd apps/desktop electron:build
 
 Runtime truth:
 
-- `OTTO_AGENT_ID` selects the target Letta agent.
+- `OTTO_AGENT_ID` selects the target Letta agent for desktop and smoke checks.
+- `LETTA_AGENT_ID` is also accepted by `task smoke:cli` for direct Letta CLI compatibility.
 - `~/.otto` stores local otto runtime/config/traces.
-- `LETTA_CLI_PATH` may point at a specific Letta CLI bundle.
+- `LETTA_CLI_PATH` may point at a specific Letta CLI bundle, including for `task smoke:cli`.
 - Chat stays gated until `session.initialize()` succeeds.
 
 Do not claim “connected” unless the SDK initializes against a live agent/session.

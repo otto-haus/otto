@@ -143,7 +143,12 @@ tasks:
     desc: Direct Letta CLI smoke against the configured local agent in a disposable conversation
     cmds:
       - |
-        node {{.LETTA_CLI}} --agent "${LETTA_AGENT_ID:?set LETTA_AGENT_ID}" --new --no-memfs --no-skills --no-system-info-reminder -p 'Reply exactly: OTTO_SMOKE_OK' --output-format json
+        AGENT_ID="${OTTO_AGENT_ID:-${LETTA_AGENT_ID:-}}"
+        if [ -z "$AGENT_ID" ]; then
+          printf '%s\n' 'OTTO_AGENT_ID or LETTA_AGENT_ID: set one target Letta agent id'
+          exit 1
+        fi
+        node "${LETTA_CLI_PATH:-{{.LETTA_CLI}}}" --agent "$AGENT_ID" --new --no-memfs --no-skills --no-system-info-reminder -p 'Reply exactly: OTTO_SMOKE_OK' --output-format json
 
   smoke:desktop:
     desc: Non-destructive desktop smoke — launches a temporary second instance, leaves live otto.app alone
