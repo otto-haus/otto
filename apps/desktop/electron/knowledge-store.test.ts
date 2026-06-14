@@ -1,4 +1,6 @@
 import { describe, expect, test } from 'bun:test';
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { KnowledgeStore } from './knowledge-store';
@@ -23,5 +25,22 @@ describe('KnowledgeStore', () => {
     const resolved = store.resolveModelForRole('ticket_worker');
     expect(resolved?.provider).toBeTruthy();
     expect(resolved?.model).toBeTruthy();
+  });
+
+  test('malformed model registry does not crash knowledge listing', () => {
+    const tmp = mkdtempSync(join(tmpdir(), 'otto-knowledge-'));
+    try {
+      const frontierDir = join(tmp, 'ai-frontier');
+      mkdirSync(frontierDir, { recursive: true });
+      writeFileSync(join(frontierDir, 'model-registry.yaml'), 'models: [unterminated\n');
+
+      const result = new KnowledgeStore(tmp).listResult();
+
+      expect(result.registryPath).toBe(join(frontierDir, 'model-registry.yaml'));
+      expect(result.registry).toBeNull();
+      expect(result.storage).toBe('files');
+    } finally {
+      rmSync(tmp, { recursive: true, force: true });
+    }
   });
 });
