@@ -44,4 +44,24 @@ describe('CheckRunLogStore', () => {
       rmSync(dir, { recursive: true, force: true });
     }
   });
+
+  test('replaces malformed persisted count values with zeroes', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'otto-check-log-'));
+    const path = join(dir, 'run-log.json');
+    try {
+      writeFileSync(path, JSON.stringify({
+        'completion-requires-receipts': {
+          pass_count: 'not-a-count',
+          fail_count: -2,
+        },
+      }));
+
+      const stats = new CheckRunLogStore(path).record('completion-requires-receipts', false);
+
+      expect(stats.pass_count).toBe(0);
+      expect(stats.fail_count).toBe(1);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
 });
