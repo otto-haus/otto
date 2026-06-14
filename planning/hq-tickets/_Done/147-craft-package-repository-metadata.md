@@ -22,7 +22,7 @@ back to nothing. Every value is unambiguous and already used across the repo.
 
 ## Scope
 
-- `apps/.../package.json` → root `package.json`:
+- Root `package.json`:
   - `repository`: `git+https://github.com/otto-haus/otto.git` (matches `git
     remote get-url origin`)
   - `homepage`: `https://otto.haus` (the README's "Website" link)
@@ -55,3 +55,42 @@ git remote get-url origin   # should match repository.url
 ## Blocker log
 
 Leave blank unless blocked.
+
+## Execution receipt
+
+- Repo path: `/Users/seb/Code/otto-pr-17`
+- Branch: `craft/package-repository-metadata`
+- Files changed:
+  - `package.json`
+  - `docs/receipts/staging/pr-17/summary.json`
+- Commands/checks:
+  - `python3 -c "import json; d=json.load(open('package.json')); print(d['repository']); print(d['homepage']); print(d['bugs'])"`
+  - `git remote get-url origin`
+  - `rg -n 'Website: <https://otto.haus>|https://otto.haus' README.md`
+  - `bun run typecheck`
+  - `bun test`
+  - `bun run verify:v0`
+  - `bun run --cwd apps/desktop typecheck`
+  - `bun run --cwd apps/desktop electron:typecheck`
+- Evidence:
+  - Package metadata data is recorded in `docs/receipts/staging/pr-17/summary.json`.
+  - Current PR diff against `origin/main` contains only `package.json`, the PR receipt, and this ticket.
+- Known gaps: none.
+
+## Review
+
+Verdict: +1
+
+Evidence:
+- Root `package.json` is valid JSON and now includes `repository`, `homepage`, and `bugs`.
+- `repository.url` is `git+https://github.com/otto-haus/otto.git`, matching `origin` after normalizing the npm `git+` prefix.
+- `homepage` is `https://otto.haus`, matching the README website link.
+- The branch was merged with current `origin/main` so the already-existing `esbuild` override is preserved without appearing as part of this metadata diff.
+- `bun test` passed: 36 pass / 0 fail / 162 expects.
+- `bun run verify:v0` passed: 5 passed / 0 failed.
+
+Unmet Done when items: none.
+
+Exact fixes required: none.
+
+May move to `_Done`: yes.
