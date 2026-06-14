@@ -1,0 +1,29 @@
+{
+  "pr": 174,
+  "generatedAt": "2026-06-14T21:49:55.891Z",
+  "surface": "apps/desktop/electron/pgvector-store.ts",
+  "proofType": "backend security data proof",
+  "fixtureShape": {
+    "rootContains": [
+      "fixture/secret.md -> symlink to outside/secret.md"
+    ],
+    "outsideContains": [
+      "secret.md"
+    ],
+    "lexicalAttackPath": "../outside.md",
+    "symlinkAttackPath": "fixture/secret.md"
+  },
+  "observed": {
+    "lexicalMessage": "sourcePath must stay within root and be relative",
+    "lexicalHealthCheckCalls": 0,
+    "symlinkMessage": "sourcePath must stay within root and be relative",
+    "symlinkHealthCheckCalls": 0
+  },
+  "assertions": {
+    "lexicalTraversalRejected": true,
+    "lexicalRejectedBeforeHealthCheck": true,
+    "symlinkTraversalRejected": true,
+    "symlinkRejectedBeforeHealthCheck": true
+  },
+  "allAssertionsPassed": true
+}

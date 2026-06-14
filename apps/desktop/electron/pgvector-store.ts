@@ -1,6 +1,6 @@
 import { createHash, randomUUID } from 'node:crypto';
-import { readFileSync } from 'node:fs';
-import { resolve } from 'node:path';
+import { readFileSync, realpathSync } from 'node:fs';
+import { isAbsolute, relative, resolve, sep } from 'node:path';
 import type { ISO8601 } from '@otto-haus/core';
 import pg from 'pg';
 
@@ -131,6 +131,32 @@ function resolveMigrationSql(): string {
   return readFileSync(resolve(resolveRepoRoot(), MIGRATION_REL), 'utf8');
 }
 
+function resolveSourcePath(root: string, sourcePath: string): string {
+  const trimmed = sourcePath.trim();
+  if (!trimmed || isAbsolute(trimmed) || trimmed.split(/[\\/]+/).includes('..')) {
+    throw new Error('sourcePath must stay within root and be relative');
+  }
+  const absRoot = resolve(root);
+  const absPath = resolve(absRoot, trimmed);
+  const rel = relative(absRoot, absPath);
+  if (rel === '..' || rel.startsWith(`..${sep}`) || isAbsolute(rel)) {
+    throw new Error('sourcePath must stay within root and be relative');
+  }
+  return absPath;
+}
+
+function resolveReadableSourcePath(root: string, sourcePath: string): string {
+  const absRoot = resolve(root);
+  const absPath = resolveSourcePath(absRoot, sourcePath);
+  const realRoot = realpathSync(absRoot);
+  const realPath = realpathSync(absPath);
+  const rel = relative(realRoot, realPath);
+  if (rel === '..' || rel.startsWith(`..${sep}`) || isAbsolute(rel)) {
+    throw new Error('sourcePath must stay within root and be relative');
+  }
+  return realPath;
+}
+
 /** Optional local pgvector recall (068) — disabled unless OTTO_PGVECTOR=1. */
 export class PgvectorStore {
   private lastStatus: PgvectorStatus = this.buildDisabledStatus();
@@ -218,13 +244,14 @@ export class PgvectorStore {
     if (!pgvectorEnabled()) {
       throw new Error('pgvector disabled — set OTTO_PGVECTOR=1');
     }
+    const root = opts?.root ?? resolveRepoRoot();
+    resolveSourcePath(root, sourcePath);
+    const readablePath = opts?.text === undefined ? resolveReadableSourcePath(root, sourcePath) : null;
     const health = await this.healthCheck();
     if (!health.available) {
       throw new Error(health.error ?? health.note);
     }
-    const root = opts?.root ?? resolveRepoRoot();
-    const absPath = resolve(root, sourcePath);
-    const raw = opts?.text ?? readFileSync(absPath, 'utf8');
+    const raw = opts?.text ?? readFileSync(readablePath!, 'utf8');
     const contentHash = sha256Text(raw);
     const model = resolveEmbeddingModel();
     const dims = resolveEmbeddingDimensions();
