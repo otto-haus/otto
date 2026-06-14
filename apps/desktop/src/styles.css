@@ -675,8 +675,8 @@ h1, h2, h3, h4, p { margin: 0; }
   animation: surfaceIn 180ms var(--ease) both;
 }
 .emptySurface--chat { margin: auto; align-items: center; text-align: center; }
-.emptySurface h2 { font-size: 28px; line-height: 1.08; letter-spacing: -0.04em; }
-.emptySurface p { color: var(--mut); font-size: 15px; line-height: 1.6; max-width: 560px; }
+.emptySurface h2 { font-size: 28px; line-height: 1.08; letter-spacing: -0.04em; text-wrap: balance; }
+.emptySurface p { color: var(--mut); font-size: 15px; line-height: 1.6; max-width: 560px; text-wrap: pretty; }
 
 /* ---------- settings / providers ---------- */
 .settingsShell { display: grid; grid-template-columns: 230px minmax(0, 1fr); gap: 24px; align-items: start; }
