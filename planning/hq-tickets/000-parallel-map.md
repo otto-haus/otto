@@ -2,7 +2,29 @@
 
 Throughput principle: maximize **accepted** tickets per unit time. Parallelize independent chains; preserve isolated worktrees and independent review gates.
 
-Updated: 2026-06-14 (audit reopen: `_Done/` 62, root 35 numbered, `_Parked/` 29)
+Updated: 2026-06-14 (swarm 3 armed; `_InReview` 143–150 + 151–157; root 140–142 + integration)
+
+## Agent swarms (parallel lanes)
+
+Non-overlapping write boundaries. Each swarm ends with `bun run verify:v0`, staging-only proof, commit on `ship/functional-labs`, push to `otto-haus/otto`. **No tag, no merge to main, no live `/Applications/otto.app`.**
+
+| Swarm | Agents | Tickets | Start gate |
+|-------|--------|---------|------------|
+| **1** | 4 | Ops (GitHub semver cleanup); **045/046**; culture **051–052/070/122/125/128**; **136–137** Labs gate | integration branch |
+| **2** | 3 | Cognee/runtime **039/041–044/076**; UI wedge **124/126/123/139**; hygiene **049–058/138/063** + `release-gate.sh` | swarm 1 `verify:v0` green |
+| **3** | 3 | **141** agent-native Labs IPC; **140 + 142** release docs + ceremony; **143–150** onboarding/settings craft review → `_Done` | wave 2 landed (`verify:v0` green; **138** proof receipt or explicit defer in **140**) |
+
+**Swarm 3 implementer model:** `Composer 2.5 Fast` for **141**; Claude-grade craft for **143–150** review/screenshots; Cursor+Claude for **140/142** docs.
+
+**Swarm 3 file boundaries**
+
+| Agent | Owns | Do not touch |
+|-------|------|--------------|
+| Labs parity | `labs-config.ts`, `preload.ts`, `docs/v1/labs.md`, labs tests | `Onboarding.tsx`, `Panes.tsx` bulk |
+| Release + ceremony | `RELEASE_CHECKLIST.md`, `README.md`, `docs/v1/runbooks/sebastian-release-sign-off.md`, tickets **140/142** | `Chat.tsx`, runtime transport |
+| Onboarding craft | `Onboarding.tsx`, `OnboardingStepLayout.tsx`, onboarding CSS, `_InReview/143–150`, `docs/receipts/staging/onboarding-craft-*` | `labs-config`, release checklists |
+
+Reconcile parent commit after swarm 3 before Sebastian gate.
 
 ## Staging runtime (all lanes)
 
@@ -20,8 +42,8 @@ All runtime/UI proof uses staging with isolated HOME/OTTO_HOME. Do not close liv
 
 ```txt
 _Done:     62 tickets — foundation 001–018, craft 026–032, bug 033–038, proven integration subset, culture 131/133, spec-only, onboarding subset, …
-_InReview: (empty)
-Root:      29 reopened + 136–141 (Ship/Labs) + 142 (ceremony) — sorted list in 000-index.md
+_InReview: 15 tickets (143–150 craft + 151–157 reliability)
+Root:      140–142 release lane + reopened integration + 159 chat core
 _Parked:   019–025, 077, 083–099, 117–118, 120, 130
 Audit:     planning/hq-tickets/000-audit-status.md (131 files scanned; 29 reopened 2026-06-14)
 Canonical: git `planning/hq-tickets/` — rsync one-way to Dropbox HQ/Otto Tickets after each wave
