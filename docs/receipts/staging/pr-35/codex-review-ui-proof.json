@@ -1,0 +1,95 @@
+{
+  "pr": 35,
+  "reviewer": "Codex PR review agent",
+  "target": "functional-labs integration UI smoke after conflict repair",
+  "url": "http://127.0.0.1:5195/",
+  "screenshots": [
+    "docs/receipts/staging/pr-35/desktop-chat-preview.png",
+    "docs/receipts/staging/pr-35/desktop-settings-labs.png",
+    "docs/receipts/staging/pr-35/mobile-chat-preview.png",
+    "docs/receipts/staging/pr-35/mobile-settings-labs.png"
+  ],
+  "nonempty_screenshots": true,
+  "desktop": {
+    "viewport": {
+      "width": 1280,
+      "height": 900
+    },
+    "settingsButtonBox": {
+      "x": 14,
+      "y": 797.8125,
+      "width": 243,
+      "height": 36
+    },
+    "sendButtonBox": {
+      "x": 1187,
+      "y": 806,
+      "width": 52,
+      "height": 39
+    },
+    "promptBox": {
+      "x": 300,
+      "y": 795,
+      "width": 952,
+      "height": 61
+    },
+    "disabledPlaceholder": "Chat is disabled in this preview",
+    "chat": {
+      "path": "docs/receipts/staging/pr-35/desktop-chat-preview.png",
+      "bytes": 70972,
+      "text": "otto\nNew chat\nChat\nWorkspace\n\nNo conversations yet.\n\nSettings\nsetup\nLocal operator\nSetup required\notto\nruntime not connected · desktop bridge unavailable\nPREVIEW · NOT CONNECTED\nCHAT\nNo live session in web preview.\n\nOpen the packaged desktop app to connect to local Letta. This preview does not show fake messages.\n\nSetup required — otto is not connected to a runtime (3 required items missing). Open Settings to configure.\ndesktop bridge unavailable\nruntime: not connected"
+    },
+    "settings": {
+      "path": "docs/receipts/staging/pr-35/desktop-settings-labs.png",
+      "bytes": 118932,
+      "text": "otto\nNew chat\nChat\nWorkspace\n\nNo conversations yet.\n\nSettings\nLocal operator\nSetup required\nOTTO WORKSPACE\nRUNTIME SETUP\nSETTINGS\nSettings\n\nConnection, providers, and workspace defaults.\n\nGeneral\nModel providers\nGeneral\n\nHow otto connects to Letta, what is ready, and workspace defaults.\n\nConnection\n\notto discovers Letta Desktop and your default agent automatically. Override only when discovery picks the wrong runtime.\n\nThe desktop app auto-detects the local Letta runtime and current/default agent. This web preview cannot open the Electron bridge, so manual overrides are disabled here.\n\nOnboarding\n\nReplay the first-run walkthrough on next launch.\n\nReplay first-run\n\nClears the first-run flag so Welcome and the getting-started dock return on next launch.\n\nReset onboarding\nReadiness\n\nWhat must be true before Chat and irreversible actions unlock.\n\nSetup required — Chat stays disabled until required items are configured. Letta runtime · Agent identity · Memory / MemFS\nShow readiness detail\nMemory observatory\n\nRead-only view of Letta core-memory blocks. Writeback goes through Curation.\n\nOpen in Letta\n\nInspects Letta core-memory blocks via `/v1/agents/{id}/core-memory/blocks`. Otto does not write memory here — use Curation proposals for writeback.\n\nConnect Letta in General before expecting live blocks.\nLabs\n\nExperimental paths stay off until you turn Labs on. Ship-tier surfaces work without Labs.\n\nThese change how the app behaves and may change or disappear. Nothing here affects receipt records.\nEnable Labs\n\nLabs may break or change without notice. Use on a workspace you can reset.\n\nKnowledge (Cognee)COMING SOON\n\nOptional recall graph sidecar for Knowledge — not required for Ship.\n\npgvector recallCOMING SOON\n\nLocal vector recall store — env-gated; experimental retrieval path.\n\nChannels outboundCOMING SOON\n\nLive outbound bot sends — contract-only until enabled.\n\nMemory observatoryCOMING SOON\n\nDeep memory block inspection in Settings when runtime is up.\n\nWorker autonomous loopCOMING SOON\n\nTicket worker loop without manual nudge — approval-gated.\n\nPractice miningCOMING SOON\n\nObserve loop that proposes practice updates from runs.\n\nCulture exportCOMING SOON\n\nPortable culture"
+    },
+    "console": []
+  },
+  "mobile": {
+    "viewport": {
+      "width": 390,
+      "height": 844,
+      "isMobile": true
+    },
+    "settingsButtonBox": {
+      "x": 12,
+      "y": 792,
+      "width": 40,
+      "height": 40
+    },
+    "sendButtonBox": {
+      "x": 291,
+      "y": 674,
+      "width": 52,
+      "height": 39
+    },
+    "promptBox": {
+      "x": 102,
+      "y": 630.5,
+      "width": 254,
+      "height": 93.5
+    },
+    "disabledPlaceholder": "Chat is disabled in this preview",
+    "chat": {
+      "path": "docs/receipts/staging/pr-35/mobile-chat-preview.png",
+      "bytes": 54325,
+      "text": "otto\nruntime not connected · desktop bridge unavailable\nPREVIEW · NOT CONNECTED\nCHAT\nNo live session in web preview.\n\nOpen the packaged desktop app to connect to local Letta. This preview does not show fake messages.\n\nSetup required — otto is not connected to a runtime (3 required items missing). Open Settings to configure.\ndesktop bridge unavailable\nruntime: not connected"
+    },
+    "settings": {
+      "path": "docs/receipts/staging/pr-35/mobile-settings-labs.png",
+      "bytes": 76778,
+      "text": "OTTO WORKSPACE\nRUNTIME SETUP\nSETTINGS\nSettings\n\nConnection, providers, and workspace defaults.\n\nGeneral\nModel providers\nGeneral\n\nHow otto connects to Letta, what is ready, and workspace defaults.\n\nConnection\n\notto discovers Letta Desktop and your default agent automatically. Override only when discovery picks the wrong runtime.\n\nThe desktop app auto-detects the local Letta runtime and current/default agent. This web preview cannot open the Electron bridge, so manual overrides are disabled here.\n\nOnboarding\n\nReplay the first-run walkthrough on next launch.\n\nReplay first-run\n\nClears the first-run flag so Welcome and the getting-started dock return on next launch.\n\nReset onboarding\nReadiness\n\nWhat must be true before Chat and irreversible actions unlock.\n\nSetup required — Chat stays disabled until required items are configured. Letta runtime · Agent identity · Memory / MemFS\nShow readiness detail\nMemory observatory\n\nRead-only view of Letta core-memory blocks. Writeback goes through Curation.\n\nOpen in Letta\n\nInspects Letta core-memory blocks via `/v1/agents/{id}/core-memory/blocks`. Otto does not write memory here — use Curation proposals for writeback.\n\nConnect Letta in General before expecting live blocks.\nLabs\n\nExperimental paths stay off until you turn Labs on. Ship-tier surfaces work without Labs.\n\nThese change how the app behaves and may change or disappear. Nothing here affects receipt records.\nEnable Labs\n\nLabs may break or change without notice. Use on a workspace you can reset.\n\nKnowledge (Cognee)COMING SOON\n\nOptional recall graph sidecar for Knowledge — not required for Ship.\n\npgvector recallCOMING SOON\n\nLocal vector recall store — env-gated; experimental retrieval path.\n\nChannels outboundCOMING SOON\n\nLive outbound bot sends — contract-only until enabled.\n\nMemory observatoryCOMING SOON\n\nDeep memory block inspection in Settings when runtime is up.\n\nWorker autonomous loopCOMING SOON\n\nTicket worker loop without manual nudge — approval-gated.\n\nPractice miningCOMING SOON\n\nObserve loop that proposes practice updates from runs.\n\nCulture exportCOMING SOON\n\nPortable culture bundle export from Settings.\n\nRemote Letta CloudCOMING SOON\n\nAdvanced cloud connection mode"
+    },
+    "console": []
+  },
+  "assertions": {
+    "chat_preview_honest_empty_state": true,
+    "settings_labs_are_marked_experimental": true,
+    "setup_required_visible": true,
+    "disabled_composer_copy_fits_mobile": true,
+    "mobile_settings_button_fully_visible": true,
+    "mobile_send_button_right_aligned": true,
+    "no_page_errors": true
+  }
+}

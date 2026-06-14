@@ -1009,13 +1009,13 @@ const PreviewChat: React.FC = () => (
         >
           <span className="dot dot--warn" />
           <span>
-            <strong>Setup required</strong> — Otto is not connected to a runtime ({requiredMissing.length} required items missing). Open <strong>Settings</strong> to configure.
+            <strong>Setup required</strong> — otto is not connected to a runtime ({requiredMissing.length} required items missing). Open <strong>Settings</strong> to configure.
           </span>
         </div>
       )}
       <div className="promptbox promptbox--disabled">
         <input
-          placeholder="Chat is not wired to the Letta runtime in this preview"
+          placeholder="Chat is disabled in this preview"
           aria-label="Chat input (disabled in preview)"
           disabled
           readOnly
