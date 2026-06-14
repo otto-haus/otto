@@ -59,3 +59,20 @@ Chrome vs Vite preview.
 ## Blocker log
 
 Leave blank unless blocked.
+
+## Execution receipt
+
+- Added `text-wrap: balance` to `.emptySurface h2`.
+- Added `text-wrap: pretty` to `.emptySurface p`.
+- Reviewer proof found the compact mobile sidebar still rendered the New chat
+  label after nav labels were hidden; fixed the same media query so the primary
+  action renders as an icon button under 900px.
+- Proof artifacts: `docs/receipts/staging/pr-28/`.
+- Verification:
+  - `bun run --cwd apps/desktop typecheck`
+  - `bun run typecheck`
+  - `bun test` -> 35 pass / 0 fail
+  - `bun run verify:v0` -> 5 pass / 0 fail
+  - `git diff --check`
+  - Playwright screenshots at 1040x720 and 390x844 for Practices, Curation,
+    and Autonomy.
