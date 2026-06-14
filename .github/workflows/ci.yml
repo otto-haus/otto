@@ -25,7 +25,7 @@ jobs:
         with:
           bun-version-file: .bun-version
       - name: Install dependencies
-        run: bun install --frozen-lockfile
+        run: bun ci
       - name: Ensure install did not rewrite the lockfile
         run: git diff --exit-code -- bun.lock
       - name: Run local CI gate
