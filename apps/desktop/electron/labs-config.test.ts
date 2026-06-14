@@ -53,6 +53,21 @@ describe('labs-config', () => {
     expect(migrated.features.channels_outbound).toBeUndefined();
   });
 
+  test('normalizes corrupted labs booleans from persisted config', () => {
+    const normalized = normalizeLabsConfig({
+      enabled: 'yes',
+      features: {
+        knowledge_cognee: 'true',
+        channels_outbound: true,
+        bogus_feature: true,
+      },
+    } as never);
+    expect(normalized).toEqual({
+      enabled: false,
+      features: { channels_outbound: true },
+    });
+  });
+
   test('IPC set enables knowledge_cognee (Settings-equivalent persist path)', () => {
     const tmp = mkdtempSync(join(tmpdir(), 'otto-labs-ipc-test-'));
     try {
