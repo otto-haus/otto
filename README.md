@@ -211,7 +211,7 @@ DevEx docs:
 ```sh
 task docs:dev       # Mintlify preview for devex/
 task docs:validate  # Mintlify validation, also run by task ci
-task docs:links     # Mintlify internal link check
+task docs:links     # Mintlify internal link check, also run by task ci
 ```
 
 ---

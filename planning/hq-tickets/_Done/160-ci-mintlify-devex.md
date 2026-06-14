@@ -18,7 +18,7 @@ Contributor workflow is part of the build contract. A validated docs surface mak
 - Add `devex/docs.json` and a small Mintlify page set.
 - Add pinned Mintlify CLI package invocations through `docs:*` scripts.
 - Add Taskfile wrappers for docs preview, validation, and link checks.
-- Add Mintlify validation to the shared local CI gate.
+- Add Mintlify validation and broken-link checks to the shared local CI gate.
 
 ## Out of scope
 
@@ -49,14 +49,32 @@ task ci
 - Added `devex/docs.json` plus four MDX pages: DevEx overview, local setup, local CI gate, and desktop staging.
 - Added pinned Mintlify CLI commands through `bunx --bun mint@4.2.616`.
 - Added `task docs:dev`, `task docs:validate`, and `task docs:links`.
-- Added `bun run docs:validate` to `scripts/ci-local-gate.sh`.
+- Added `bun run docs:validate` and `bun run docs:links` to `scripts/ci-local-gate.sh`.
+- Codex reviewer fixed the first implementation so `task ci` also enforces the broken-link check required by this ticket.
 - `bun install --frozen-lockfile` passed.
 - `task --list` passed and listed the docs tasks.
 - `task docs:validate` passed.
 - `task docs:links` passed with no broken links.
-- `bun run typecheck`, desktop typechecks, `bun test`, `bun run verify:v0`, Electron build, `bun audit`, and `git diff --check` passed.
+- `bun run typecheck`, desktop typechecks, `bun test` (35 pass / 0 fail), `bun run verify:v0` (5 passed / 0 failed), Electron build, `bun audit`, and `git diff --check` passed.
 - `apps/desktop/src/data/readiness.json` remained clean after Electron build.
-- Clean `task ci` passed from commit `f7de3b7`.
+- Clean `task ci` passed before reviewer commit.
+
+## Review
+
+Verdict: +1
+
+Evidence:
+- Context7 `/mintlify/docs` confirmed `docs.json` navigation groups and the `mint dev`, `mint validate`, and `mint broken-links` CLI commands.
+- `task docs:validate` passed.
+- `task docs:links` passed with no broken links.
+- `scripts/ci-local-gate.sh` now runs both `bun run docs:validate` and `bun run docs:links`.
+- `task ci` passed after staging the reviewer repair, including its final clean-diff check.
+
+Unmet Done when items: none.
+
+Exact fixes required: none.
+
+May move to `_Done`: yes.
 
 ## Blocker log
 
