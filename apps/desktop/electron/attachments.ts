@@ -24,7 +24,7 @@ export function saveAttachment(input: AttachmentInput): SavedAttachment {
   const mime = match[1];
   if (mime !== input.mime) throw new Error('Attachment MIME mismatch.');
 
-  const data = Buffer.from(match[2], 'base64');
+  const data = decodeBase64Attachment(match[2]);
   if (!data.length) throw new Error('Attachment is empty.');
   if (data.byteLength > MAX_BYTES) throw new Error('Attachment is larger than 25MB.');
 
@@ -46,4 +46,16 @@ export function saveAttachment(input: AttachmentInput): SavedAttachment {
     url: pathToFileURL(path).href,
     size: data.byteLength,
   };
+}
+
+function decodeBase64Attachment(value: string): Buffer {
+  if (!/^[A-Za-z0-9+/]+={0,2}$/.test(value) || value.length % 4 === 1) {
+    throw new Error('Attachment data must be valid base64.');
+  }
+
+  const data = Buffer.from(value, 'base64');
+  if (data.toString('base64').replace(/=+$/g, '') !== value.replace(/=+$/g, '')) {
+    throw new Error('Attachment data must be valid base64.');
+  }
+  return data;
 }
