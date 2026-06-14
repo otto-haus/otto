@@ -10,6 +10,8 @@ Mirror: `docs/v1/SHIP_STATUS.md`. Gate packet: `docs/receipts/staging/063-sebast
 
 ## Release cut policy
 
+**Standard:** [`standards/standards/earned-semver.md`](standards/standards/earned-semver.md) (canon) · anti-pattern: [`standards/anti-patterns/semver-inflation.md`](standards/anti-patterns/semver-inflation.md)
+
 **Floor:** `0.1.x` is the lowest honest public line. We are on it. Version numbers are **earned**, not branch names.
 
 | Bump | When | Example |

@@ -2,7 +2,7 @@
 
 Throughput principle: maximize **accepted** tickets per unit time. Parallelize independent chains; preserve isolated worktrees and independent review gates.
 
-Updated: 2026-06-14 (root 033–082, 091–092, 115–116, 119, 121–135; parked … 130)
+Updated: 2026-06-14 (audit reopen: `_Done/` 62, root 35 numbered, `_Parked/` 29)
 
 ## Staging runtime (all lanes)
 
@@ -19,11 +19,47 @@ All runtime/UI proof uses staging with isolated HOME/OTTO_HOME. Do not close liv
 ## Current state
 
 ```txt
-_Done:     001–018, 026–032
-_InReview: 067 (one-pagers — staging smoke pending)
-Root:      033–082, 091–092, 115–116, 119, 121–135 (queued)
+_Done:     62 tickets — foundation 001–018, craft 026–032, bug 033–038, proven integration subset, culture 131/133, spec-only, onboarding subset, …
+_InReview: (empty)
+Root:      29 reopened + 136–141 (Ship/Labs) + 142 (ceremony) — sorted list in 000-index.md
 _Parked:   019–025, 077, 083–099, 117–118, 120, 130
+Audit:     planning/hq-tickets/000-audit-status.md (131 files scanned; 29 reopened 2026-06-14)
+Canonical: git `planning/hq-tickets/` — rsync one-way to Dropbox HQ/Otto Tickets after each wave
 ```
+
+## Post-audit execution waves (reopened + active)
+
+Lowest safe parallel waves after reopen. Tickets still in `_Done/` are omitted.
+
+| Wave | Tickets | Notes |
+|------|---------|-------|
+| A | 069, 071, 073, 046, 067 | Onboarding + threads (`046` reopened) |
+| B | 076 → 039 → 060 | Embedded Letta → WS transport → worker loop |
+| C | 041 → 042 → 043 → 044 | Cognee chain (all reopened) |
+| D | 068, 047 | pgvector + memory observatory (`068`, `047` in `_Done/` — wave when unparked from proven set) |
+| E | 132, 134, 135 | Culture CI UX (`132` reopened; 134/135 remain `_Done/` until re-audit) |
+| F | 063 → 142 → 064, 065, 115, 141 | Release + marketing (`141` = apex/Lighthouse when unblocked) |
+| Parallel head | 136–141 | Ship/Labs/Cut — Composer 2.5 Fast implementer per 136–141 table below |
+
+Root queue sort (numeric): 039, 041–046, 049, 051–056, 058, 060–062, 066, 070, 076, 121–128, 132, 136–142.
+
+## Functional ship loop (136–141)
+
+```txt
+Ship rule:  works OR Coming soon (Labs off) OR Labs unlock
+136 audit → 137 gate → 138 Ship proof → 139 Labs UX → 141 parity → 140 release
+```
+
+**Implementer model (136–141 only):** `Composer 2.5 Fast` — mandatory for all implementation in this wave. Do not dispatch Codex/Claude/other models as implementers. Independent reviewers stay unbiased (any lane).
+
+| Ticket | Owner | Model | Depends | Notes |
+|--------|-------|-------|---------|-------|
+| 136 | Codex | Composer 2.5 Fast | none | Tier matrix + Sebastian sign-off |
+| 137 | Cursor | Composer 2.5 Fast | 136 | `labs` config, IPC, Settings, nav tiers |
+| 138 | Codex+Cursor | Composer 2.5 Fast | 136, 076, 137 | Embedded bootstrap + 135 + Ship smokes |
+| 139 | Claude | Composer 2.5 Fast | 137, 136 | ComingSoonShell + LabsBlockedShell |
+| 141 | Cursor | Composer 2.5 Fast | 137 | Agent-native IPC parity |
+| 140 | Cursor+Claude | Composer 2.5 Fast | 136–139, 063 | README + RELEASE_CHECKLIST; NOT PUSHED |
 
 ## Category wedge loop
 
@@ -236,21 +272,16 @@ Category: Letta = memory · Paperclip = management · Otto = behavior CI
 ## Recommended execution order (single lane)
 
 ```txt
-033–038 → 076 → 078 → 045 → 046–048 → 123 → 126 → **131 → 132 → 133 → 134 → 135**
-→ 128 → 081 → 054 → 129 → 055–056 → 051 (feeds 133) → 049 → 039 + 079 → 047 → 080 → 119
-→ 122 → 124 → 059 → 127 → 041–044/068
-→ 063 → 065 + 115–116 → 121 → 125
-→ unpark 021 → 074 → 022 → 075; 019 → 020; 077 after 039
-→ parallel: 082 → 090 → 083 → 084 → 089 → 085 → 086; 087 with 056; 088 later
-→ parallel: 091 anytime; 092 after 051+082 reviewed → 094–099
-→ unpark 130 after 053 + 076 stable
+**136 → 137 → 138 → 139 → 141 → 140**
+(historical integration 033–135 assumed in tree; 138 re-proves Ship tier on staging)
+→ unpark Cloud/Paperclip/Discord only after 140 + explicit Sebastian unpark
 ```
 
-## Cathedral vs v0.1
+## Functional ship vs Cathedral
 
 ```txt
-v0.1 ship:     local otto + governance loop + culture wedge + **Culture CI (131–135)** + cloud scaffold
-Cathedral:     092 + 094–099 control plane semantics + cloud CP live
+Functional ship (136–141):  Ship tier works (Labs off) + Labs tier honest (Coming soon / unlock)
+Cathedral / Cloud:          Cut from default UI — parked 083–099, 094–099
 ```
 
 ## Recompute trigger

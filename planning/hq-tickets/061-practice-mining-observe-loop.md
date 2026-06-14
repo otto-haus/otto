@@ -144,3 +144,17 @@ Delta vs rev9: reconfirmed
 ### Finding
 
 Rev9 +1 stands. Reconfirmed +1.
+
+## Reopened (2026-06-14)
+
+Reason: +1 but proof_class=unit_only
+Remaining Done-when: see latest review required changes above.
+Prior receipts: preserved in history — do not delete.
+
+## Review
+
+Reviewer: (pending)
+Date: 2026-06-14
+Verdict: pending
+
+Awaiting implementer execution receipt and independent reviewer +1.

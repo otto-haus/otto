@@ -66,6 +66,7 @@ Independent chains in parallel → reviewed capabilities out faster.
 root       = active queue
 _InReview  = built; waiting for independent review
 _Done      = finished and proven
+_Backlog   = not done; reopened from fake _Done or proof-deferred
 _Parked    = valid but not active
 ```
 

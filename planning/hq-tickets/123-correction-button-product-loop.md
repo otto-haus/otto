@@ -190,3 +190,17 @@ Move to _Done?: Yes (retained)
 
 Behavior loop upstream of **135** demo; code path improved since rev9 without invalidating prior +1. +1 with limit stands.
 
+
+## Reopened (2026-06-14)
+
+Reason: +1 but proof_class=unit_only
+Remaining Done-when: see latest review required changes above.
+Prior receipts: preserved in history — do not delete.
+
+## Review
+
+Reviewer: (pending)
+Date: 2026-06-14
+Verdict: pending
+
+Awaiting implementer execution receipt and independent reviewer +1.

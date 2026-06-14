@@ -325,3 +325,14 @@ Delta vs rev9: live search/filter on staging closes rev9 gap
 ### Finding
 
 Rev9 search gap closed on staging. +1.
+
+
+---
+
+## Folder audit (2026-06-14)
+
+**Moved:** `_Done/` → `_Backlog/`
+
+**Reason:** 6 Done-when items open (memory read surface needs live staging proof)
+
+**Rule:** No premie-dones. Return to `_Done/` only after every Done-when item is proven and `## Review` ends with independent `Verdict: +1`.

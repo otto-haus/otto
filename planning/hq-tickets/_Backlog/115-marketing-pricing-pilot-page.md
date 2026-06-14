@@ -288,3 +288,14 @@ Delta vs rev9: 390×844 pricing screenshot + shared rev10 site proof JSON
 Rev9 desktop-only gap closed with rev10 phone-width pricing capture. All Done-when items mapped. +1.
 
 
+
+
+---
+
+## Folder audit (2026-06-14)
+
+**Moved:** `_Done/` → `_Backlog/`
+
+**Reason:** Pricing page staging + claim review open
+
+**Rule:** No premie-dones. Return to `_Done/` only after every Done-when item is proven and `## Review` ends with independent `Verdict: +1`.

@@ -244,3 +244,14 @@ Move to _Done?: Yes (retained)
 ### Finding
 
 134/135 staging proof chain intact. +1 stands.
+
+
+---
+
+## Folder audit (2026-06-14)
+
+**Moved:** `_Done/` → `_Backlog/`
+
+**Reason:** Staging screenshots still pending despite partial UI
+
+**Rule:** No premie-dones. Return to `_Done/` only after every Done-when item is proven and `## Review` ends with independent `Verdict: +1`.

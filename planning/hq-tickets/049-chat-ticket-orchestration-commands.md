@@ -258,3 +258,17 @@ Delta vs rev9: orchestrate + status captured on staging; worker spawn still bloc
 ### Finding
 
 Major delta vs rev9 (orchestrate/status now in staging transcript). Done-when requires worker spawn — policy block ≠ spawn. No +1 until autonomy maps orchestrate or successful spawn proof.
+
+## Reopened (2026-06-14)
+
+Reason: Verdict: -1
+Remaining Done-when: see latest review required changes above.
+Prior receipts: preserved in history — do not delete.
+
+## Review
+
+Reviewer: (pending)
+Date: 2026-06-14
+Verdict: pending
+
+Awaiting implementer execution receipt and independent reviewer +1.

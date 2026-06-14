@@ -223,3 +223,14 @@ Move to _Done?: Yes (retained)
 
 +1 with limit stands.
 
+
+
+---
+
+## Folder audit (2026-06-14)
+
+**Moved:** `_Done/` → `_Backlog/`
+
+**Reason:** GitHub Actions break→red→green receipt still open (+1 with limit)
+
+**Rule:** No premie-dones. Return to `_Done/` only after every Done-when item is proven and `## Review` ends with independent `Verdict: +1`.

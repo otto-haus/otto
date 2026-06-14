@@ -17,8 +17,8 @@ Domain asset exists (`RELEASE_CHECKLIST.md`); one-pagers exist in Dropbox; no pu
 
 ## Source anchors (design canon)
 
-- `~/Library/CloudStorage/Dropbox/This Cycle/otto/Brand Style Guide.html` — warm/ink, Inter + IBM Plex Mono, owl mark, lowercase wordmark
-- `~/Library/CloudStorage/Dropbox/This Cycle/otto/otto-onboarding.md` — boundary copy: *The human ratifies. otto records the proof.*
+- `docs/design/brand-style-guide.html` — warm/ink, Inter + IBM Plex Mono, owl mark, lowercase wordmark
+- `docs/design/onboarding.md` — boundary copy: *The human ratifies. otto records the proof.*
 - One-pagers: `This Cycle/otto/_Archive/onepagers/html/*.html` and June 2026 compressed pack
 - Product rules: `AGENTS.md` — otto lowercase; owl avatar primary mark; no mock operational data
 - Desktop tokens: `apps/desktop/src/styles.css` warm paper system (keep ink action, not blue)
@@ -390,3 +390,14 @@ Delta vs rev9: phone-width screenshots + brand checklist
 ### Finding
 
 Rev9 phone/checklist gaps closed. Apex DNS still pending Sebastian — not a Done-when blocker. +1.
+
+
+---
+
+## Folder audit (2026-06-14)
+
+**Moved:** `_Done/` → `_Backlog/`
+
+**Reason:** Marketing site staging/Lighthouse deploy open
+
+**Rule:** No premie-dones. Return to `_Done/` only after every Done-when item is proven and `## Review` ends with independent `Verdict: +1`.

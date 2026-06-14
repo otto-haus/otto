@@ -461,3 +461,17 @@ Delta vs rev9: composer send on two threads (was inject-only); isolation/reload 
 ### Finding
 
 Material delta vs rev9 (real composer sends). Done-when isolation/reload still fail → no +1.
+
+## Reopened (2026-06-14)
+
+Reason: Verdict: -1
+Remaining Done-when: see latest review required changes above.
+Prior receipts: preserved in history — do not delete.
+
+## Review
+
+Reviewer: (pending)
+Date: 2026-06-14
+Verdict: pending
+
+Awaiting implementer execution receipt and independent reviewer +1.

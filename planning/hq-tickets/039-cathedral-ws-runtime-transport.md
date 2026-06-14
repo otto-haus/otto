@@ -693,3 +693,17 @@ Delta vs rev9: scorecard re-run + operator runbook; live WS smoke still blocked
 ### Finding
 
 Rev9 blocked unchanged. Foundation honest; upstream key required for live WS proof. No +1.
+
+## Reopened (2026-06-14)
+
+Reason: Verdict: blocked
+Remaining Done-when: see latest review required changes above.
+Prior receipts: preserved in history — do not delete.
+
+## Review
+
+Reviewer: (pending)
+Date: 2026-06-14
+Verdict: pending
+
+Awaiting implementer execution receipt and independent reviewer +1.

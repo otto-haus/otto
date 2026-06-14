@@ -195,3 +195,14 @@ Delta vs rev9: reconfirmed
 ### Finding
 
 Rev9 +1 stands. Reconfirmed +1.
+
+
+---
+
+## Folder audit (2026-06-14)
+
+**Moved:** `_Done/` → `_Backlog/`
+
+**Reason:** Command station staging dashboard proof open
+
+**Rule:** No premie-dones. Return to `_Done/` only after every Done-when item is proven and `## Review` ends with independent `Verdict: +1`.

@@ -80,7 +80,7 @@ extension/            Letta Code commands and permission gates
 skill/                Charter and Routine skills
 practices/            practice.yaml specs
 routines/             proposed Routine specs
-standards/            canon and precedents
+standards/            canon and precedents (earned semver: standards/standards/earned-semver.md)
 templates/            Charter, Practice, Routine, Standard, Ticket, Worker packets
 receipts/             proof artifacts
 planning/hq-tickets/  ticket conveyor (canonical queue)

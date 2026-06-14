@@ -354,3 +354,17 @@ Delta vs rev9: template/MCP mismatch documented; no live stdio smoke
 ### Finding
 
 Rev9 -1 stands. Policy layer complete; live MCP recall unproven.
+
+## Reopened (2026-06-14)
+
+Reason: Verdict: -1
+Remaining Done-when: see latest review required changes above.
+Prior receipts: preserved in history — do not delete.
+
+## Review
+
+Reviewer: (pending)
+Date: 2026-06-14
+Verdict: pending
+
+Awaiting implementer execution receipt and independent reviewer +1.

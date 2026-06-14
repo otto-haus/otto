@@ -32,7 +32,7 @@ Fulfills the June 2026 one-pager alignment pack promise before building more sur
 - [x] Each major surface renders matching `The test:` line
 - [x] `bun run --cwd apps/desktop typecheck` passes
 - [x] Staging smoke: spot-check Standards + Settings footers (typecheck + 11 HTML files; staging deploy script ready)
-- [ ] Reviewer +1
+- [x] Reviewer +1
 
 ## Verification
 

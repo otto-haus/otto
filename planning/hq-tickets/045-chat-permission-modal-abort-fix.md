@@ -262,3 +262,17 @@ Delta vs rev9: blocker documented in staging manifest; modal E2E still not captu
 ### Finding
 
 Headline staging Done-when still unproven. Safe automation blocker is honest; Rev9 -1 stands.
+
+## Reopened (2026-06-14)
+
+Reason: Verdict: -1
+Remaining Done-when: see latest review required changes above.
+Prior receipts: preserved in history — do not delete.
+
+## Review
+
+Reviewer: (pending)
+Date: 2026-06-14
+Verdict: pending
+
+Awaiting implementer execution receipt and independent reviewer +1.

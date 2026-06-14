@@ -479,3 +479,14 @@ Delta vs rev9: reconfirmed — integration receipt rev9 unchanged
 ### Finding
 
 Rev9 +1 (stub slice) stands. No rev10 execution delta; unit layer reconfirmed. +1.
+
+
+---
+
+## Folder audit (2026-06-14)
+
+**Moved:** `_Done/` → `_Backlog/`
+
+**Reason:** Stub slice only; pgvector live path open
+
+**Rule:** No premie-dones. Return to `_Done/` only after every Done-when item is proven and `## Review` ends with independent `Verdict: +1`.

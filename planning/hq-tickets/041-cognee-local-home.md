@@ -403,3 +403,17 @@ Delta vs rev9: manual uvicorn `ready` in consolidated bundle; Otto `start` + nam
 ### Finding
 
 Operator progress documented; AC-level Otto-managed start + named smoke still open. Rev9 -1 stands.
+
+## Reopened (2026-06-14)
+
+Reason: Verdict: -1
+Remaining Done-when: see latest review required changes above.
+Prior receipts: preserved in history — do not delete.
+
+## Review
+
+Reviewer: (pending)
+Date: 2026-06-14
+Verdict: pending
+
+Awaiting implementer execution receipt and independent reviewer +1.

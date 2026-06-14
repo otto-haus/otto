@@ -22,7 +22,9 @@ Cursor = everything else / default implementation
 
 If you are not the routed executor, stop and hand off instead of improvising.
 
-## Rules
+## Model (wave 136–141)
+
+Tickets **136–141** (functional ship: Ship / Labs / Cut): implement with **`Composer 2.5 Fast` only**. Do not run Codex, Claude, or other models as the implementer for these tickets. Review subagents remain allowed and should stay unbiased.
 
 1. Read `000-canonical.md`.
 2. Read `000-index.md`.

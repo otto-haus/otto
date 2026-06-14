@@ -197,3 +197,14 @@ Move to _Done?: Yes (retained)
 
 Culture CI spine still falsifiable. +1 stands.
 
+
+
+---
+
+## Folder audit (2026-06-14)
+
+**Moved:** `_Done/` → `_Backlog/`
+
+**Reason:** Check contract Done-when substantive items open
+
+**Rule:** No premie-dones. Return to `_Done/` only after every Done-when item is proven and `## Review` ends with independent `Verdict: +1`.

@@ -376,3 +376,14 @@ Move to _Done?: Yes (retained)
 ### Finding
 
 135 block moment still independently falsifiable. +1 with limit stands.
+
+
+---
+
+## Folder audit (2026-06-14)
+
+**Moved:** `_Done/` → `_Backlog/`
+
+**Reason:** Culture CI demo sequence + skeptic proof open
+
+**Rule:** No premie-dones. Return to `_Done/` only after every Done-when item is proven and `## Review` ends with independent `Verdict: +1`.

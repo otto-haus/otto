@@ -108,6 +108,7 @@ See `000-workflow.md` for the full invariant list.
 root       = active queue; implementer may build
 _InReview  = built; waiting for independent review
 _Done      = finished, proven, reviewer +1
+_Backlog   = was wrongly _Done or deferred; not active sprint; not done
 _Parked    = valid future work; do not touch unless explicitly unparked
 ```
 

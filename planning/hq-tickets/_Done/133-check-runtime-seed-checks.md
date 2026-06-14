@@ -70,7 +70,7 @@ Receipt appears.
 - [x] Compiled check from **132** runs on next trigger (end-to-end with fixture)
 - [x] Receipt includes check id, standard source, trigger event, fail message
 - [x] `checks.list` / block event payload stable for **134** (even if enforcement is seed-only)
-- [ ] Reviewer +1
+- [x] Reviewer +1
 
 ## Verification
 

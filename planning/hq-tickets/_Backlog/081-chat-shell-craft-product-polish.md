@@ -338,3 +338,14 @@ Delta vs rev9: unchanged — rev8/rev9 proof reaffirmed (no new 081 capture in r
 ### Finding
 
 No rev10 execution delta required; rev9 +1 stands. +1.
+
+
+---
+
+## Folder audit (2026-06-14)
+
+**Moved:** `_Done/` → `_Backlog/`
+
+**Reason:** Chat craft staging before/after proof open
+
+**Rule:** No premie-dones. Return to `_Done/` only after every Done-when item is proven and `## Review` ends with independent `Verdict: +1`.

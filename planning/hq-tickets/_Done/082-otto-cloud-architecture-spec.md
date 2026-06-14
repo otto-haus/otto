@@ -35,7 +35,7 @@ Letta Cloud removes “agent available when I’m gone” but not otto’s curat
 - [x] `docs/v1/otto-web-spec.md` merged
 - [x] `000-index.md` + `000-parallel-map.md` list 082–088
 - [x] No contradiction with `AGENTS.md` (Letta owns memory/secrets)
-- [ ] Reviewer +1
+- [x] Reviewer +1
 
 ## Blocker log
 

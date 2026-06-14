@@ -310,3 +310,17 @@ Delta vs rev9: health ready path in bundle; staging PNG + live citations still a
 ### Finding
 
 UI honesty code-proven; operator-visible ready/recall proof still missing. Rev9 -1 stands.
+
+## Reopened (2026-06-14)
+
+Reason: Verdict: -1
+Remaining Done-when: see latest review required changes above.
+Prior receipts: preserved in history — do not delete.
+
+## Review
+
+Reviewer: (pending)
+Date: 2026-06-14
+Verdict: pending
+
+Awaiting implementer execution receipt and independent reviewer +1.

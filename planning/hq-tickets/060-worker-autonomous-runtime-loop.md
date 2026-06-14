@@ -238,3 +238,17 @@ Delta vs rev9: stub AC table + worker-runner tests mapped
 ### Finding
 
 Rev9 -1 resolved by honest stub narrowing documented in ticket. +1 for stub milestone only; Letta/worktree slice remains 039 follow-up.
+
+## Reopened (2026-06-14)
+
+Reason: +1 but proof_class=unit_only
+Remaining Done-when: see latest review required changes above.
+Prior receipts: preserved in history — do not delete.
+
+## Review
+
+Reviewer: (pending)
+Date: 2026-06-14
+Verdict: pending
+
+Awaiting implementer execution receipt and independent reviewer +1.

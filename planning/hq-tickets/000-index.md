@@ -40,14 +40,15 @@ Default to Cursor unless the hardest irreducible part is Codex-grade reasoning o
 
 ## Active queue
 
-Updated: 2026-06-14 (premie-dones → `_Backlog/` — see `000-audit-status.md`)
+Updated: 2026-06-14T14:20Z (audit: `scripts/audit-hq-tickets.sh` → `000-audit-status.md`)
 
 ```txt
-_Done:     42 tickets (001–018, 026–038, 048, 050, 064, 067, 070, 079, 082, 091, 092, 133, …)
+_Done:     48 tickets
 _Backlog:  20 tickets (047, 059, 063, 068–073, 078, 080–081, 115–116, 119, 127, 129, 131, 134–135)
 _Parked:   29 tickets (019–025, 077, 083–099, 117–118, 120, 130)
-_InReview: (empty)
-Root:      36+ numbered tickets (136–141 ship/labs wave + reopened integration)
+_InReview: 8 tickets (143–149 onboarding craft + 150 settings craft)
+Root:      36 tickets (136–141 ship/labs wave + reopened integration)
+Reopen:    6 premie-dones flagged in `_Done/`
 ```
 
 **Head lanes (parallel):**
@@ -79,6 +80,51 @@ Do not unpark `_Parked/` unless `000-parallel-map.md` unpark table conditions ar
 
 **Ship rule:** default (Labs off) = only Ship tier works; Labs tier = Coming soon until enabled in Settings.
 
+### Onboarding craft epic (143–149)
+
+**Style:** Veto sandbox onboarding (2026-06) — layout, voice, interaction patterns (`docs/design/onboarding.md` § Style reference).
+
+**Content:** otto four steps only (Welcome → Connect → Run → Receipt) — **not** Veto identity/auth/team questions.
+
+```txt
+143 shell → 144 welcome → 145 mode cards → 146 readiness gate → 147 first run → 148 receipt payoff → 149 craft pass
+```
+
+| # | Ticket | Owner | Depends on | Proof |
+|---:|---|---|---|---|
+| 143 | Full-screen step shell | Claude | 033, 032 | progress rail + back; no Chat dock collision |
+| 144 | Welcome hero step | Claude | 143, 069 | Step 0 copy + CTAs; sample path labeled |
+| 145 | Connection mode cards | Claude | 143, 076, 078 | embedded vs existing Letta picker |
+| 146 | Inline readiness gate | Cursor | 145, 076 | live rows + blocker copy in onboarding |
+| 147 | First behavior run | Claude | 146, 070, 073 | starter chips; real first turn |
+| 148 | First Receipt payoff | Claude | 147, 071 | live or sample receipt climax |
+| 149 | Craft / motion / microcopy | Claude | 143–148, 081 | staging screenshot audit receipt |
+
+Build **143 first**; **149** is the design-critic gate before calling onboarding shippable.
+
+**Status (2026-06-14):** Implementation landed on `ship/functional-labs`; tickets **143–149** in `_InReview/` with execution receipts. Reviewer +1 pending (051 gate). Staging screenshot dir: `docs/receipts/staging/onboarding-craft-20260614/` (manual capture).
+
+### Settings craft
+
+| # | Ticket | Owner | Depends on | Proof |
+|---:|---|---|---|---|
+| 150 | Settings Veto-style shell | Claude | 001, 137 | staging tab walk; typecheck; `docs/design/settings.md` |
+
+**Style:** Veto Office Settings sandbox — tabs, section ledes, field rows (`docs/design/settings.md`).
+
+### InReview (143–150)
+
+| # | Ticket | Owner | Proof |
+|---:|---|---|---|
+| 143 | Onboarding: full-screen step shell | Claude | `_InReview/143-onboarding-full-screen-step-shell.md` |
+| 144 | Onboarding: welcome hero step | Claude | `_InReview/144-onboarding-welcome-hero-step.md` |
+| 145 | Onboarding: connection mode cards | Claude | `_InReview/145-onboarding-connection-mode-cards.md` |
+| 146 | Onboarding: inline readiness gate | Cursor | `_InReview/146-onboarding-inline-readiness-gate.md` |
+| 147 | Onboarding: first behavior run | Claude | `_InReview/147-onboarding-first-behavior-run.md` |
+| 148 | Onboarding: first receipt payoff | Claude | `_InReview/148-onboarding-first-receipt-payoff.md` |
+| 149 | Onboarding: craft / motion / microcopy | Claude | `_InReview/149-onboarding-craft-motion-microcopy-pass.md` |
+| 150 | Settings craft: Veto-style shell | Claude | `_InReview/150-settings-craft-veto-style-shell.md` |
+
 Exception: dependency-free craft tickets may run out of order **only when explicitly labeled
 `Launch Polish`**. Core behavior tickets remain ordered by dependency.
 
@@ -107,6 +153,7 @@ See `_Done/` folder. Craft 026–032 complete.
 | 072 | Bug: Receipts CTA shows Connect dock | Claude | 069 | secondary path = receipt education |
 | 073 | Bug: Connect dock UX gaps | Claude | 069, 033 | live reason, auto-done, narrow layout, reset |
 | 080 | Onboarding: One-App Zero-Setup | Claude | 076, 069–073 | no “install Letta”; embedded-first copy |
+| 143–149 | Onboarding craft epic (Veto-style flow) | Claude/Cursor | 143→149 chain | `_InReview/` + execution receipts (2026-06-14) |
 | 081 | Chat Shell: Product Craft Polish | Claude | 033, 045 | remove dev chrome; staging = craft spec |
 
 ### Runtime + Cognee

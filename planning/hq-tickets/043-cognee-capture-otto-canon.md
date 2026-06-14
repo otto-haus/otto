@@ -356,3 +356,17 @@ Delta vs rev9: dry-run 111 paths; apply receipt stub only (no live ingest)
 ### Finding
 
 Receipt file landed; live ingest still absent. Rev9 -1 stands.
+
+## Reopened (2026-06-14)
+
+Reason: Verdict: -1
+Remaining Done-when: see latest review required changes above.
+Prior receipts: preserved in history — do not delete.
+
+## Review
+
+Reviewer: (pending)
+Date: 2026-06-14
+Verdict: pending
+
+Awaiting implementer execution receipt and independent reviewer +1.

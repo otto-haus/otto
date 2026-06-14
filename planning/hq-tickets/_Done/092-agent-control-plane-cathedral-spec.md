@@ -39,7 +39,7 @@ Shipping **001–091** gets v0.1 desktop + cloud scaffold; it does **not** get t
 - [x] `docs/v1/agent-control-plane-spec.md` merged
 - [x] `000-index.md` lists **092–099** with phases
 - [x] Cathedral done-test paragraph reviewed
-- [ ] Reviewer +1
+- [x] Reviewer +1
 
 ## Blocker log
 

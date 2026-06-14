@@ -399,3 +399,17 @@ Delta vs rev9: `bootstrapTurnCompleted: true` on disposable profile
 ### Finding
 
 Material delta vs rev9 (bootstrap turn proven). Full Done-when (fresh Mac, embedded Letta home) still open → no +1.
+
+## Reopened (2026-06-14)
+
+Reason: Verdict: -1
+Remaining Done-when: see latest review required changes above.
+Prior receipts: preserved in history — do not delete.
+
+## Review
+
+Reviewer: (pending)
+Date: 2026-06-14
+Verdict: pending
+
+Awaiting implementer execution receipt and independent reviewer +1.
