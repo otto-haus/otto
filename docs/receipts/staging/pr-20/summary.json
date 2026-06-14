@@ -6,10 +6,27 @@
       "command": "rg -n '<meta name=\"color-scheme\" content=\"light\"' apps/desktop/index.html",
       "result": "pass",
       "reason": "Meta declaration is present in apps/desktop/index.html"
+    },
+    {
+      "name": "root color-scheme declaration",
+      "command": "rg -n 'color-scheme: light' apps/desktop/src/styles.css",
+      "result": "pass",
+      "reason": "CSS root also resolves document and native controls to light at runtime"
+    },
+    {
+      "name": "dark-mode browser proof",
+      "command": "NODE_PATH=/Users/seb/.codex/admin/node_modules node <playwright proof script>",
+      "result": "pass",
+      "reason": "With emulated Dark Mode, route #charters reported metaColorScheme=light, documentColorScheme=light, proof select/input/checkbox colorScheme=light, warm-paper body colors, and no console errors"
     }
   ],
-  "artifacts": ["desktop-home.png"],
+  "artifacts": [
+    "desktop-home.png",
+    "codex-review-dark-mode-native-controls-with-meta.png",
+    "codex-review-dark-mode-native-controls.json"
+  ],
   "notes": [
-    "No desktop behavior changes beyond head metadata; this is pre-style UA chrome paint control."
+    "Browser plugin fallback: iab endpoint was unavailable, so Codex used the existing admin Playwright package via NODE_PATH.",
+    "The web preview cannot read the local charter store, so Codex injected native proof controls into the actual #charters document to verify UA control color-scheme under emulated Dark Mode."
   ]
 }
