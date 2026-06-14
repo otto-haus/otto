@@ -6,6 +6,7 @@ bun run --cwd apps/desktop typecheck
 bun run --cwd apps/desktop electron:typecheck
 bun test
 bun run verify:v0
+bun run docs:validate
 OTTO_READINESS_IGNORE_LOCAL_CONFIG=1 bun run --cwd apps/desktop electron:build
 bun audit
 git diff --check

@@ -1,0 +1,27 @@
+---
+title: "Desktop staging"
+description: "Use staging for packaged desktop proof without touching the live app."
+---
+
+Runtime or UI proof should not disturb a live otto session.
+
+Use staging for packaged desktop checks:
+
+```sh
+task staging
+```
+
+The staging script installs and opens:
+
+```txt
+/Applications/otto-staging.app
+```
+
+It also isolates runtime state under:
+
+```txt
+~/.codex/admin/otto-staging
+```
+
+Use `task refresh` only when you intentionally want to replace the live
+`/Applications/otto.app`.

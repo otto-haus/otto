@@ -206,6 +206,14 @@ task release:gate
 task smoke:cli   # disposable conversation; never writes to default
 ```
 
+DevEx docs:
+
+```sh
+task docs:dev       # Mintlify preview for devex/
+task docs:validate  # Mintlify validation, also run by task ci
+task docs:links     # Mintlify internal link check
+```
+
 ---
 
 ## Verify
@@ -268,6 +276,7 @@ otto/
   autonomy/       policy.yaml: zones, doors, action classification
   templates/      Charter, Practice, Routine, Standard, Ticket, Worker packets
   docs/           architecture, install, runtime, autonomy, desktop, practices, routines
+  devex/          Mintlify docs for contributor workflow and local gates
   AGENTS.md       operating notes for AI coding agents
   INSTALL_FOR_AGENTS.md  agent-first install protocol
   receipts/       proof artifacts for v0.1
