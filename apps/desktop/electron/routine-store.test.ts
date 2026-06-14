@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'bun:test';
-import { mkdtempSync, rmSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -31,6 +31,33 @@ describe('RoutineStore', () => {
     expect(gate.scheduled).toBe(true);
     expect(gate.requiresApproval).toBe(true);
     expect(gate.allowed).toBe(false);
+  });
+
+  test('uses directory slug when routine.yaml omits slug', () => {
+    const tmp = mkdtempSync(join(tmpdir(), 'otto-routine-fallback-'));
+    try {
+      const routineDir = join(tmp, 'fallback-routine');
+      mkdirSync(routineDir, { recursive: true });
+      writeFileSync(
+        join(routineDir, 'routine.yaml'),
+        [
+          'id: routine-fallback',
+          'name: Fallback Routine',
+          'status: proposed',
+          'summary: Uses directory slug.',
+          'steps:',
+          '  - practice: check',
+          '    invocation: /check',
+          'created_at: 2026-06-14T00:00:00.000Z',
+          '',
+        ].join('\n'),
+      );
+      const result = new RoutineStore(tmp).listResult();
+      expect(result.skipped).toEqual([]);
+      expect(result.routines[0]?.slug).toBe('fallback-routine');
+    } finally {
+      rmSync(tmp, { recursive: true, force: true });
+    }
   });
 
   test('manual run writes a receipt with routine reference', () => {
