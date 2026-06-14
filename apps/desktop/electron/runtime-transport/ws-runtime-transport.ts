@@ -334,6 +334,7 @@ export class WsRuntimeTransport implements OttoRuntimeTransport {
           emitResult(true);
           writeReceipt('success', 'Chat turn completed without idle confirmation.', null);
         } else if (idleTimeout) {
+          emitResult(false);
           writeReceipt('failed', 'Chat turn timed out before the runtime became idle.', {
             code: 'idle_timeout',
             message: 'The runtime did not confirm idle in time. You can wait, send a follow-up, or reconnect.',

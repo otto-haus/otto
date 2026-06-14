@@ -42,7 +42,7 @@ Do not optimize for “ticket → PR” once PR count is high. Optimize for “P
    - linked issue/acceptance criteria
    - proof receipt where relevant
    - conflict/risk note
-4. If safe enough for integration, recommend or perform merge into the train branch only — never `main`.
+4. If safe enough for integration, recommend merge/rebase into the train branch. Do not perform merges unless Sebastian explicitly authorizes that exact train-branch merge; never merge to `main`.
 5. If stale/conflicting/obsolete, close aggressively with “superseded by cutover train” and capture any useful idea as an issue.
 6. Keep the train moving with fix-forward PRs.
 7. Stabilize the one train with CI, staging, smoke tests, and dogfood.
@@ -86,11 +86,12 @@ Avoid Project V2 rate-limit failures:
 
 ## Boundaries
 
-- Do not merge to protected `main`.
+- Do not merge without explicit human approval; never merge to protected `main`.
 - Do not tag/publish/release.
 - Do not call integration train “release-ready” until staging/smokes/dogfood are green.
-- Do not mutate `/Applications/otto.app`.
-- Staging/disposable app proof is allowed when required by repo instructions; never mutate `/Applications/otto.app`.
+- Use disposable app/profile proof by default.
+- Do not mutate `/Applications/otto-staging.app` unless Sebastian explicitly authorizes that exact run.
+- Never mutate `/Applications/otto.app`.
 - Do not touch secrets/security config without approval.
 
 ## Verdict format

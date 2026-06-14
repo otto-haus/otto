@@ -16,7 +16,7 @@ The bottleneck is PR → shipped, not ticket → PR.
 
 Use one integration train (`ship/functional-labs` or `integration/cutover`) as the pile:
 
-1. Merge recent/relevant PRs into the train, not `main`.
+1. Recommend recent/relevant PRs for the train, not `main`; merge only with Sebastian's exact approval for that train-branch merge.
 2. Close stale/conflicting PRs aggressively as “superseded by cutover train”.
 3. Stabilize the one train with CI, staging, smoke tests, and dogfood.
 4. Open one final train → `main` PR for Sebastian.
@@ -39,7 +39,8 @@ Do not parallelize without coordination:
 - two agents editing the same file family
 - release/install scripts
 - migrations/destructive data changes
-- `/Applications/otto.app` or `/Applications/otto-staging.app` mutation
+- `/Applications/otto.app` mutation
+- `/Applications/otto-staging.app` mutation unless Sebastian explicitly authorizes that exact run
 
 Sebastian is the merge/release/one-way-door gate. Agents maximize high-quality reviewed PR throughput.
 

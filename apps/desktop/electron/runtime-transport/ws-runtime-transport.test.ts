@@ -11,6 +11,7 @@ const originalEnv = {
   OTTO_AGENT_ID: process.env.OTTO_AGENT_ID,
   OTTO_SKIP_LETTA_LSOF: process.env.OTTO_SKIP_LETTA_LSOF,
   OTTO_WS_SKIP_CONVERSATION_CREATE: process.env.OTTO_WS_SKIP_CONVERSATION_CREATE,
+  OTTO_WS_TURN_IDLE_TIMEOUT_MS: process.env.OTTO_WS_TURN_IDLE_TIMEOUT_MS,
   LETTA_CLI_PATH: process.env.LETTA_CLI_PATH,
 };
 
@@ -614,6 +615,10 @@ describe('WsRuntimeTransport', () => {
       const message = (e.payload as { message?: { type?: string; success?: boolean } }).message;
       return e.channel === 'otto:event' && message?.type === 'result' && message.success === true;
     })).toBe(false);
+    expect(sent.some((e) => {
+      const message = (e.payload as { message?: { type?: string; success?: boolean } }).message;
+      return e.channel === 'otto:event' && message?.type === 'result' && message.success === false;
+    })).toBe(true);
     expect(sent.some((e) => e.channel === 'otto:event' && (e.payload as { message?: { type?: string } }).message?.type === 'error')).toBe(true);
 
     if (prevTimeout === undefined) Reflect.deleteProperty(process.env, 'OTTO_WS_TURN_IDLE_TIMEOUT_MS');
