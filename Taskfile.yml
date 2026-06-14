@@ -22,7 +22,7 @@ tasks:
     cmds: [bun run dev]
 
   electron:
-    desc: Desktop — Electron app wired to the live Letta runtime
+    desc: Desktop — Electron dev app; chat connects only after Letta session initializes
     dir: '{{.DESKTOP}}'
     cmds:
       - node ../../scripts/ensure-electron-ready.mjs
