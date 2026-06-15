@@ -1,0 +1,19 @@
+{
+  "runId": "20260615083715",
+  "baseUrl": "http://127.0.0.1:4399",
+  "viewport": {
+    "width": 390,
+    "height": 844
+  },
+  "command": "NODE_PATH=$HOME/.codex/admin/node_modules node site/capture-screenshots.cjs 390 844",
+  "screenshots": {
+    "home065": "/private/tmp/otto-homepage-refresh/docs/receipts/staging/065-home-390-20260615083715.png",
+    "pricing115": "/private/tmp/otto-homepage-refresh/docs/receipts/staging/115-pricing-390-20260615083715.png"
+  },
+  "checks": {
+    "homeLoaded": true,
+    "pricingLoaded": true
+  },
+  "brandChecklist": "docs/brand/checklist.md",
+  "honestStatus": "local preview only — apex DNS pending Sebastian"
+}
