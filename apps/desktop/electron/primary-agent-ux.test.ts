@@ -9,9 +9,10 @@ describe('primary agent default UX (#119 / ADR 093)', () => {
     expect(onboardingCopy.connectLede.toLowerCase()).toContain('one primary agent');
   });
 
-  test('settings copy has advanced second-agent placeholder', async () => {
-    const { settingsCopy } = await import('../src/copy/surfaces');
-    expect(settingsCopy.isolatedSecondAgentComingSoon.toLowerCase()).toContain('coming soon');
+  test('settings advanced flow exposes isolated agent create (#120)', async () => {
+    const { settingsCopy, isolatedAgentBoundaryOptions } = await import('../src/copy/surfaces');
+    expect(settingsCopy.isolatedAgentCreate.toLowerCase()).toContain('isolated');
+    expect(isolatedAgentBoundaryOptions.length).toBe(6);
     expect(settingsCopy.primaryAgentOpenLetta).toBe('Open in Letta');
   });
 
@@ -37,5 +38,21 @@ describe('primary agent default UX (#119 / ADR 093)', () => {
     const ws = readFileSync(join(import.meta.dir, 'runtime-transport/ws-runtime-transport.ts'), 'utf8');
     expect(sdk.includes('ensurePrimaryAgentId')).toBe(true);
     expect(ws.includes('ensurePrimaryAgentId')).toBe(true);
+  });
+});
+
+describe('isolated second agent (#120)', () => {
+  test('agent candidates prefer primaryAgentId for Chat default', async () => {
+    const { mkdtempSync, rmSync } = await import('node:fs');
+    const { tmpdir } = await import('node:os');
+    const { join } = await import('node:path');
+    const tmp = mkdtempSync(join(tmpdir(), 'otto-config-primary-'));
+    process.env.OTTO_CONFIG_DIR = tmp;
+    const { ConfigStore } = await import('./config-store');
+    const store = new ConfigStore();
+    store.update({ primaryAgentId: 'agent-primary', agentId: 'agent-legacy' });
+    expect(store.agentCandidates()[0]).toBe('agent-primary');
+    rmSync(tmp, { recursive: true, force: true });
+    delete process.env.OTTO_CONFIG_DIR;
   });
 });

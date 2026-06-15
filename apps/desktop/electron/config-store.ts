@@ -56,10 +56,16 @@ export class ConfigStore {
   agentCandidates(): string[] {
     const nested = (this.cfg as OttoConfig & { agent?: { id?: string | null } }).agent?.id;
     const mode = this.connectionMode();
-    const primary = resolveLettaSettingsPath(this, mode);
+    const primarySettingsPath = resolveLettaSettingsPath(this, mode);
     const settingsPaths =
-      mode === 'existing' ? unique([primary, LETTA_SETTINGS_LOCAL, LETTA_SETTINGS]) : [primary];
-    return unique([process.env.OTTO_AGENT_ID, this.cfg.agentId, nested, ...discoverLettaAgentIds(settingsPaths)]);
+      mode === 'existing' ? unique([primarySettingsPath, LETTA_SETTINGS_LOCAL, LETTA_SETTINGS]) : [primarySettingsPath];
+    return unique([
+      this.primaryAgentId(),
+      process.env.OTTO_AGENT_ID,
+      this.cfg.agentId,
+      nested,
+      ...discoverLettaAgentIds(settingsPaths),
+    ]);
   }
 
   /** Letta base URL for local/self-hosted backends: LETTA_BASE_URL env wins, then config. */

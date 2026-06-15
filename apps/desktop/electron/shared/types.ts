@@ -453,6 +453,34 @@ export interface TicketReviewRecord {
   blocker?: string;
 }
 
+/** ADR 093 boundary reason ids — see `isolated-agent.ts` / docs/v1/adr/093-multi-agent-workspace-policy.md */
+export type IsolationBoundaryReason =
+  | 'different_owner'
+  | 'different_authority'
+  | 'different_secrets_tools'
+  | 'different_schedule_channel'
+  | 'different_mission'
+  | 'strong_isolation';
+
+export interface IsolatedAgentRecord {
+  agentId: string;
+  boundaryReason: IsolationBoundaryReason;
+  label?: string | null;
+  createdAt: string;
+  configPath?: string | null;
+  /** v1 blocks shared Standards canon ratify for isolated secondaries (#120). */
+  standardsRatifyBlocked?: boolean;
+}
+
+export interface IsolatedAgentListResult {
+  agents: IsolatedAgentRecord[];
+}
+
+export interface IsolatedAgentCreateResult {
+  agent: IsolatedAgentRecord;
+  receipt: { id: string; path: string };
+}
+
 /** Local-first config at ~/.otto/config.json (shared with gen-readiness.mjs). */
 export interface OttoConfig {
   agentId?: string | null;
@@ -483,6 +511,8 @@ export interface OttoConfig {
   labs?: LabsConfig;
   /** Sleep-time reflection ("dreaming") trigger — synced to Letta settings for the active agent. */
   dreaming?: DreamSettings;
+  /** Secondary agents created via Settings → Advanced (#120). Chat stays on primaryAgentId. */
+  isolatedAgents?: IsolatedAgentRecord[];
 }
 
 /** Letta sleep-time reflection trigger (mirrors letta-code SleeptimeSelector). */
