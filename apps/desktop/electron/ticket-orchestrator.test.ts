@@ -1,13 +1,13 @@
 import { describe, expect, test } from 'bun:test';
 import { execFileSync } from 'node:child_process';
-import { existsSync, mkdtempSync, rmSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { AutonomyStore } from './autonomy-store';
 import { KnowledgeStore } from './knowledge-store';
 import { ReceiptWriter } from './receipt-writer';
 import { RunStore } from './run-store';
-import { TicketOrchestrator } from './ticket-orchestrator';
+import { patchTicketFile, TicketOrchestrator } from './ticket-orchestrator';
 import { TicketStore } from './ticket-store';
 import { WorkerStore } from './worker-store';
 
@@ -46,6 +46,35 @@ describe('TicketOrchestrator', () => {
       const afterCompile = tickets.get(compiled.ticket.ticket_id);
       expect(afterCompile?.objective).toBe(compiled.ticket.objective);
       expect(afterCompile?.status).toBe('active');
+    } finally {
+      rmSync(tmp, { recursive: true, force: true });
+    }
+  });
+
+  test('orchestrateExisting rejects worktree paths outside the repo root', () => {
+    const tmp = mkdtempSync(join(tmpdir(), 'otto-orchestrator-test-'));
+    const repoRoot = join(tmp, 'repo');
+    try {
+      mkdirSync(repoRoot, { recursive: true });
+      execFileSync('git', ['init'], { cwd: repoRoot, stdio: 'ignore' });
+      execFileSync('git', ['config', 'user.email', 'otto@test.local'], { cwd: repoRoot, stdio: 'ignore' });
+      execFileSync('git', ['config', 'user.name', 'Otto Test'], { cwd: repoRoot, stdio: 'ignore' });
+      execFileSync('git', ['commit', '--allow-empty', '-m', 'init'], { cwd: repoRoot, stdio: 'ignore' });
+
+      const tickets = new TicketStore(join(tmp, 'tickets'), new ReceiptWriter(join(tmp, 'receipts')));
+      const workers = new WorkerStore(join(tmp, 'workers'));
+      const runs = new RunStore(join(tmp, 'runs'));
+      const knowledge = new KnowledgeStore(join(tmp, 'knowledge'));
+      const autonomy = new AutonomyStore(join(tmp, 'autonomy'), new ReceiptWriter(join(tmp, 'receipts')), knowledge);
+      const orchestrator = new TicketOrchestrator(tickets, workers, runs, knowledge, autonomy, new ReceiptWriter(join(tmp, 'receipts')));
+      const compiled = tickets.compile({
+        slug: 'escape-slice',
+        objective: 'Do not create worker worktrees outside the repo.',
+      });
+      patchTicketFile(compiled.ticket.ticketPath, { worktree: '../outside-worktree' });
+
+      expect(() => orchestrator.orchestrateExisting(compiled.ticket.ticket_id, { repoRoot })).toThrow(/worktree/i);
+      expect(existsSync(join(tmp, 'outside-worktree'))).toBe(false);
     } finally {
       rmSync(tmp, { recursive: true, force: true });
     }
