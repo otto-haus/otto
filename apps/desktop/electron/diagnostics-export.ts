@@ -263,6 +263,7 @@ export class DiagnosticsExporter {
         transportMode: input.runtimeStatus.transportMode ?? null,
         effectiveTransport: input.runtimeStatus.effectiveTransport ?? null,
         transportFallbackReason: input.runtimeStatus.transportFallbackReason ?? null,
+        modelFallbackReason: input.runtimeStatus.modelFallbackReason ?? null,
         lastReconnectAt: input.runtimeStatus.lastReconnectAt ?? null,
         wsListenerPort: input.runtimeStatus.wsListenerPort ?? null,
         transport: input.transport,

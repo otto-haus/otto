@@ -78,6 +78,7 @@ export type RuntimeStatus = {
   transportMode?: 'sdk' | 'ws' | 'auto';
   effectiveTransport?: 'sdk subprocess' | 'websocket local';
   transportFallbackReason?: string | null;
+  modelFallbackReason?: string | null;
   lastReconnectAt?: string | null;
   wsListenerPort?: number | null;
   cliPath: string;

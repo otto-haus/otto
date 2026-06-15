@@ -43,6 +43,7 @@ import {
 } from '../chat/queue-storage';
 import { useOutbox } from '../chat/useOutbox';
 import { OutboxBanner } from '../chat/OutboxBanner';
+import { ModelFallbackBanner } from '../chat/ModelFallbackBanner';
 import type { ProposalTarget } from '@otto-haus/core';
 import type { ChatMsg } from '../runtime';
 import { TurnTrailLive } from '../chat/TurnTrailLive';
@@ -146,6 +147,7 @@ const formatChatDebugTitle = (st: ChatRuntimeStatus, modelLabel: string): string
   [
     st.agentId ?? 'no agent',
     modelLabel,
+    st.modelFallbackReason ?? null,
     st.transportFallbackReason ?? null,
     st.conversationId ?? 'no conversation',
     lettaMemoryStatusLabel(st),
@@ -1251,6 +1253,15 @@ const LiveChat: React.FC<{
 
       <div className="promptbar">
         <div className="chat__column">
+        {ready && (
+          <ModelFallbackBanner
+            ready={ready}
+            requested={requestedModel}
+            active={activeModel}
+            fallbackReason={st?.modelFallbackReason}
+            labelFor={(handle) => labelForModel(handle, modelOptions)}
+          />
+        )}
         {ready && activeQueue.length > 0 && (
           <OutboxBanner
             items={outbox.items}

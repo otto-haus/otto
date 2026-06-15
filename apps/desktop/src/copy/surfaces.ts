@@ -248,6 +248,7 @@ export const chatCopy = {
   modelDeprecatedBadge: 'deprecated',
   modelLegacyBadge: 'legacy',
   autoModelResolvedPrefix: 'Resolved',
+  modelFallbackEyebrow: 'Model fallback:',
   reasoningTitle: 'Reasoning',
   pickerRetry: 'Retry',
   pickerOpenSettings: 'Open Settings',

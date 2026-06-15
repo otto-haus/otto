@@ -304,7 +304,7 @@ export function resolveModelHandle(preferred: string | null, models: LettaModelO
     ?? models[0];
   const active = fallback?.handle ?? null;
   const fallbackReason = requested && active && requested !== active
-    ? `Requested ${requested} is unavailable; running ${active} for this session.`
+    ? `Requested ${requested} is not in Letta's model catalog for this session — often a BYOK validation or discovery gap upstream. Running ${active} instead. Your selection stays saved.`
     : null;
   return { requested, active, fallbackReason };
 }

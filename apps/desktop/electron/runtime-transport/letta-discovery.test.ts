@@ -169,6 +169,7 @@ describe('resolveModelHandle', () => {
     expect(resolved.active).toBe('letta/auto');
     expect(resolved.fallbackReason).toContain('anthropic/claude-sonnet-4');
     expect(resolved.fallbackReason).toContain('letta/auto');
+    expect(resolved.fallbackReason).toContain('catalog');
   });
 
   test('returns null active when no models and no preference', () => {
