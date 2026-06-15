@@ -1,6 +1,7 @@
 import { describe, expect, test } from 'bun:test';
 import {
   evaluateReleaseMetadata,
+  fetchRelease,
   normalizeTag,
   pickDesktopAsset,
   tagsMatch,
@@ -86,5 +87,48 @@ describe('otto-release-metadata', () => {
     expect(result.checks.desktopAssetPublished).toBe(false);
     expect(result.warnings.some((w) => w.includes('no desktop'))).toBe(true);
     expect(result.ok).toBe(true);
+  });
+
+  test('fetchRelease uses tag endpoint when OTTO_RELEASE_TAG provided', async () => {
+    const calls = [];
+    const fetchImpl = async (url) => {
+      calls.push(url);
+      return {
+        ok: true,
+        json: async () => ({
+          tag_name: 'v0.1.2',
+          name: 'otto v0.1.2',
+          published_at: '2026-06-13T00:00:00Z',
+          assets: [{ name: 'otto-v01-desktop-mac.zip', browser_download_url: 'https://example.com/a.zip' }],
+        }),
+      };
+    };
+    const release = await fetchRelease({ tag: 'v0.1.2', repo: 'otto-haus/otto', fetchImpl });
+    expect(release.tag).toBe('v0.1.2');
+    expect(calls[0]).toContain('/releases/tags/v0.1.2');
+  });
+
+  test('evaluateReleaseMetadata supports rollback tag match (#324)', () => {
+    const result = evaluateReleaseMetadata({
+      release: {
+        tag: 'v0.1.2',
+        name: 'otto v0.1.2',
+        publishedAt: '2026-06-13T00:00:00Z',
+        assets: [{ name: 'otto-v01-desktop-mac.zip', url: 'https://example.com/a.zip' }],
+      },
+      installed: {
+        installed: true,
+        appPath: '/Applications/otto.app',
+        releaseTag: 'v0.1.2',
+        version: '0.1.2',
+        shortSha: null,
+        sha: null,
+        builtAt: null,
+        branch: 'release/v0.1.2',
+      },
+      requireInstalled: true,
+    });
+    expect(result.ok).toBe(true);
+    expect(result.checks.releaseTagMatchesInstalled).toBe(true);
   });
 });

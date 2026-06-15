@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 /**
- * Issue #305 — read-only release metadata smoke.
+ * Issue #305 / #324 — read-only release metadata smoke.
+ * Compare installed /Applications/otto.app to latest or OTTO_RELEASE_TAG (rollback).
  * Never installs or mutates /Applications/otto.app.
  */
 import { mkdirSync, writeFileSync } from 'node:fs';
@@ -9,29 +10,32 @@ import {
   DEFAULT_APP,
   DEFAULT_REPO,
   evaluateReleaseMetadata,
-  fetchLatestRelease,
+  fetchRelease,
   readInstalledMetadata,
 } from './lib/otto-release-metadata.mjs';
 
 const repo = process.env.OTTO_RELEASE_REPO ?? DEFAULT_REPO;
 const appPath = process.env.OTTO_APP ?? DEFAULT_APP;
+const releaseTag = process.env.OTTO_RELEASE_TAG?.trim() || null;
 const requireInstalled = process.env.OTTO_RELEASE_REQUIRE_INSTALLED === '1';
 const receiptBase = process.env.OTTO_RECEIPT_DIR ?? join(process.cwd(), 'docs/receipts/staging');
 const runId = process.env.OTTO_RELEASE_RUN_ID ?? new Date().toISOString().replace(/[-:.TZ]/g, '').slice(0, 14);
-const receiptDir = join(receiptBase, `305-release-metadata-${runId}`);
+const receiptPrefix = releaseTag ? '324-release-rollback-metadata' : '305-release-metadata';
+const receiptDir = join(receiptBase, `${receiptPrefix}-${runId}`);
 
 async function main() {
-  const release = await fetchLatestRelease(repo);
+  const release = await fetchRelease({ tag: releaseTag, repo });
   const installed = readInstalledMetadata(appPath);
   const result = evaluateReleaseMetadata({ release, installed, requireInstalled });
 
   mkdirSync(receiptDir, { recursive: true });
   const proof = {
     ok: result.ok,
-    issue: 305,
+    issue: releaseTag ? 324 : 305,
     runId,
     repo,
     appPath,
+    expectedReleaseTag: releaseTag ?? 'latest',
     requireInstalled,
     checks: result.checks,
     warnings: result.warnings,
