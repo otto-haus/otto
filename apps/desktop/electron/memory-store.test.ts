@@ -3,7 +3,7 @@ import { mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { ConfigStore } from './config-store';
-import { isLocalLettaAgentId, lettaMemoryUserMessage, MemoryStore } from './memory-store';
+import { isLocalLettaAgentId, lettaMemoryUserMessage, memoryListBlockedResult, MemoryStore } from './memory-store';
 import { APIError } from '@letta-ai/letta-client';
 
 const DISPOSABLE_AGENT_ID = 'agent-disposable-memory-290';
@@ -37,6 +37,14 @@ describe('MemoryStore', () => {
   test('isLocalLettaAgentId recognizes agent-local prefix', () => {
     expect(isLocalLettaAgentId('agent-local-d8e35a2a-a89f-45dd-b117-5eae5df8c8f2')).toBe(true);
     expect(isLocalLettaAgentId('agent-12345678-1234-4123-8123-123456789abc')).toBe(false);
+  });
+
+  test('memoryListBlockedResult returns empty blocks without Letta HTTP (#715)', () => {
+    const blocked = memoryListBlockedResult({ agentId: 'agent-test', reason: 'Runtime not ready' });
+    expect(blocked.blocks).toEqual([]);
+    expect(blocked.baseUrl).toBeNull();
+    expect(blocked.error).toBe('Runtime not ready');
+    expect(blocked.agentId).toBe('agent-test');
   });
 
   test('lettaMemoryUserMessage hides raw 422 JSON', () => {

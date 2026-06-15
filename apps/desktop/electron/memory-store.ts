@@ -57,6 +57,21 @@ function resolveAgentCandidates(config: ConfigStore): string[] {
   return out;
 }
 
+/** Settings observatory response when Letta session is not initialized (#715). */
+export function memoryListBlockedResult(input?: {
+  agentId?: string | null;
+  reason?: string | null;
+}): MemoryListResult {
+  return {
+    agentId: input?.agentId ?? null,
+    baseUrl: null,
+    blocks: [],
+    apiPath: '/v1/agents/{agent_id}/core-memory/blocks',
+    error: input?.reason?.trim()
+      || 'Runtime not ready — connect Letta in Settings before inspecting memory.',
+  };
+}
+
 /** User-facing memory errors — no trace_id or raw JSON in the observatory. */
 export function lettaMemoryUserMessage(error: unknown): string {
   if (error instanceof APIError) {

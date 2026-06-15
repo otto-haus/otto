@@ -45,7 +45,7 @@ import { buildProviderMirror } from './provider-mirror';
 import { setSecret, hasSecret } from './secret-store';
 import { CogneeStore } from './cognee-store';
 import { PaperclipIntakeStore } from './paperclip-intake-store';
-import { MemoryStore } from './memory-store';
+import { MemoryStore, memoryListBlockedResult } from './memory-store';
 import { PgvectorStore } from './pgvector-store';
 import { safeWebContentsSend, smokeMode } from './runtime-transport/runtime-common';
 import { getMainWindow } from './main-window';
@@ -369,7 +369,13 @@ export function registerIpc() {
   ipcMain.handle('otto:knowledge:list', () => knowledge.listResult());
   ipcMain.handle('otto:knowledge:resolve-role', (_e, role: string) => knowledge.resolveModelForRole(role));
 
-  ipcMain.handle('otto:memory:list', () => memory.listBlocks());
+  ipcMain.handle('otto:memory:list', () => {
+    const status = runner.getStatus();
+    if (!status.ready) {
+      return memoryListBlockedResult({ agentId: status.agentId, reason: status.reason });
+    }
+    return memory.listBlocks();
+  });
   ipcMain.handle('otto:cognee:health', () => cognee.health());
   ipcMain.handle('otto:cognee:settings:get', () => cognee.settings());
   ipcMain.handle('otto:cognee:settings:set', (_e, patch: { enabled?: boolean; baseUrl?: string }) => {

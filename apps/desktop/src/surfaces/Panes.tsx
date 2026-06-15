@@ -3998,12 +3998,17 @@ const MemoryObservatory: React.FC<{ connected: boolean; onOpenLetta: () => void 
 
   useEffect(() => {
     if (!api?.memory) return;
+    if (!connected) {
+      setResult(null);
+      setError(null);
+      return;
+    }
     let cancelled = false;
     api.memory.list()
       .then((next) => { if (!cancelled) setResult(next); })
       .catch((e) => { if (!cancelled) setError(String(e)); });
     return () => { cancelled = true; };
-  }, [api]);
+  }, [api, connected]);
 
   const blocks = result?.blocks ?? [];
   const filtered = query.trim()
@@ -4022,25 +4027,28 @@ const MemoryObservatory: React.FC<{ connected: boolean; onOpenLetta: () => void 
       <p className="settingsFieldHint">
         Inspects Letta core-memory blocks via `{result?.apiPath ?? '/v1/agents/{id}/core-memory/blocks'}`. Otto does not write memory here — use Curation proposals for writeback.
       </p>
-        {!connected && (
-          <div className="settingsStatusBanner settingsStatusBanner--warn">
-            {settingsCopy.memoryConnectWarn}
+        {!connected ? (
+          <div className="listEmpty">
+            <p className="muted">{settingsCopy.memoryConnectWarn}</p>
           </div>
+        ) : (
+          <>
+            {(result?.error || error) && (
+              <div className="settingsStatusBanner settingsStatusBanner--warn">
+                {result?.error ?? error}
+              </div>
+            )}
+            <input
+              className="charterInput settingsGeneralSection__search"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder={settingsCopy.memorySearchPlaceholder}
+              disabled={!blocks.length}
+              aria-label={settingsCopy.memorySearchPlaceholder}
+            />
+          </>
         )}
-        {(result?.error || error) && (
-          <div className="settingsStatusBanner settingsStatusBanner--warn">
-            {result?.error ?? error}
-          </div>
-        )}
-        <input
-          className="charterInput settingsGeneralSection__search"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          placeholder={settingsCopy.memorySearchPlaceholder}
-          disabled={!blocks.length}
-          aria-label={settingsCopy.memorySearchPlaceholder}
-        />
-      {filtered.map((block: MemoryBlockRecord) => (
+      {connected && filtered.map((block: MemoryBlockRecord) => (
         <div className="detailSection settingsMemoryBlock" key={block.id}>
           <div className="between">
             <span className="h-sec">{block.label}</span>
@@ -4051,7 +4059,7 @@ const MemoryObservatory: React.FC<{ connected: boolean; onOpenLetta: () => void 
           {block.limit != null && <span className="filechip settingsMemoryBlock__limit">limit · {block.limit}</span>}
         </div>
       ))}
-      {result && !result.error && !filtered.length && (
+      {connected && result && !result.error && !filtered.length && (
         <div className="listEmpty"><p className="muted">{settingsCopy.memoryNoMatch}</p></div>
       )}
     </>
