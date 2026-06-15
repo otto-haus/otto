@@ -1,0 +1,253 @@
+# Unified loop state — orchestrator truth
+
+version: 1
+
+program:
+  status: active
+  stop_at: null
+  repo: otto-haus/otto
+  branch: cursor/unified-loop-orchestration-b4e6
+
+spawn:
+  mechanism: task_subagents
+  max_concurrent: 8
+  model: auto
+  forbidden:
+    - nohup_bulk_farms
+    - composer_workers
+
+budgets:
+  normal:
+    build: 30
+    ship: 30
+  defer:
+    build: 15
+    ship: 15
+  defer_mode: false
+
+gates:
+  build:
+    build_queue:
+      - 627
+      - 628
+      - 630
+      - 631
+      - 632
+      - 633
+      - 635
+      - 636
+      - 637
+      - 638
+      - 650
+      - 656
+      - 657
+      - 658
+    awaiting_ratification:
+      - 650
+      - 656
+      - 657
+      - 658
+    ratified_in_progress:
+      - 627
+      - 628
+      - 630
+      - 631
+      - 632
+      - 633
+      - 635
+      - 636
+      - 637
+      - 638
+    ratified_at: "2026-06-15T04:30:00Z"
+    ratified_by: sebastian
+    label_debt:
+      - 630
+      - 631
+      - 632
+      - 633
+    github_label_pending: "status: in progress (label does not exist — create + apply manually)"
+  ship:
+    in_flight_babysit: []
+    merged_since_last_tick:
+      - 618
+      - 626
+    reviewed_prs:
+      - 582
+      - 624
+      - 625
+    ready_for_sebastian:
+      - 582
+      - 624
+      - 625
+    sebastian_approved_merge:
+      - 582
+      - 624
+    close_approved:
+      - 587
+      - 588
+      - 596
+    close_candidates:
+      - pr: 588
+        winner: 618
+        winner_merged: true
+        close_approved: true
+      - pr: 596
+        winner: 626
+        winner_merged: true
+        close_approved: true
+      - pr: 587
+        winner: 624
+        close_approved: true
+
+ticks:
+  - id: 1
+    at: "2026-06-15T01:00:00Z"
+    spawn_mechanism: nohup_bulk_farms
+    spawn_verification_passed: false
+    notes: "130 bulk nohup workers launched; 0 alive; empty logs. Spawn contract violated."
+    build:
+      spawned: 130
+      completed: 0
+      issues_filed: []
+    ship:
+      spawned: 0
+      completed: 0
+
+  - id: 2
+    at: "2026-06-15T02:00:00Z"
+    spawn_mechanism: nohup_bulk_farms
+    spawn_verification_passed: false
+    notes: "Repeat bulk nohup attempt; 0 alive. Task tool not used."
+    build:
+      spawned: 130
+      completed: 0
+      issues_filed: []
+    ship:
+      spawned: 0
+      completed: 0
+
+  - id: 3
+    at: "2026-06-15T03:38:25Z"
+    spawn_mechanism: task_subagents
+    spawn_verification_passed: true
+    global_agents: 8
+    defer_mode: false
+    notes: "First compliant tick. 4 Task subagents spawned (3 BUILD completed, merge_prep blocked readonly). Orchestrator triaged SHIP + filed 4 issues."
+    build:
+      spawned: 3
+      completed: 3
+      issues_filed:
+        - 630
+        - 631
+        - 632
+        - 633
+      awaiting_ratification:
+        - 627
+        - 628
+        - 630
+        - 631
+        - 632
+        - 633
+    ship:
+      intake: no_safe_work
+      spawned: 1
+      completed: 0
+      ship_candidates:
+        - 618
+        - 624
+        - 626
+      close_candidates_commented:
+        - 587
+        - 588
+        - 596
+
+  - id: 4
+    at: "2026-06-15T04:00:00Z"
+    spawn_mechanism: task_subagents
+    spawn_verification_passed: true
+    global_agents: 11
+    defer_mode: false
+    notes: "3 BUILD Task subagents; 4 new issues. #618/#626 merged. SHIP candidates #582 #624."
+    build:
+      spawned: 3
+      completed: 3
+      issues_filed:
+        - 635
+        - 636
+        - 637
+        - 638
+    ship:
+      intake: no_safe_work
+      merged:
+        - 618
+        - 626
+      ship_candidates:
+        - 582
+        - 624
+      close_stale_dupes:
+        - 587
+        - 588
+        - 596
+
+  - id: ratification
+    at: "2026-06-15T04:30:00Z"
+    actor: sebastian
+    notes: "Chat approval recorded. BUILD 10 issues ratified in state. SHIP #582/#624 approved merge. Close #587/#588/#596 approved. gh token could not apply labels or close PRs."
+    build:
+      ratified:
+        - 627
+        - 628
+        - 630
+        - 631
+        - 632
+        - 633
+        - 635
+        - 636
+        - 637
+        - 638
+    ship:
+      approved_merge:
+        - 582
+        - 624
+      approved_close:
+        - 587
+        - 588
+        - 596
+
+  - id: 5
+    at: "2026-06-15T04:35:00Z"
+    spawn_mechanism: task_subagents
+    spawn_verification_passed: true
+    global_agents: 4
+    defer_mode: false
+    notes: "Post-ratification tick. 6 Task subagents; 4 BUILD issues filed; #625 SHIP_CANDIDATE; intake scouts #627."
+    build:
+      spawned: 3
+      completed: 3
+      issues_filed:
+        - 650
+        - 656
+        - 657
+        - 658
+      awaiting_ratification:
+        - 650
+        - 656
+        - 657
+        - 658
+    ship:
+      intake:
+        recommended: 627
+        branch: cursor/627-cloud-connection-labs-gate
+        pr_created: false
+      spawned: 3
+      completed: 3
+      ship_candidates:
+        - 582
+        - 624
+        - 625
+      close_stale_dupes:
+        - 587
+        - 588
+        - 596
+      hold:
+        - 647
