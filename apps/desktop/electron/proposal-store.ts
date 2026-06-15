@@ -50,6 +50,8 @@ export interface DecideProposalResult {
   receipt: WrittenReceipt;
   blocked?: boolean;
   compiledCheckId?: string | null;
+  /** Result of the post-ratification Letta write/inject pass (#639 + #637). */
+  lettaApply?: import('./ratification-apply').RatificationApplyResult | { error: string };
 }
 
 export type CanonApplyResult = {
