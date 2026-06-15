@@ -12,12 +12,19 @@ import type { AdapterModel, UsageSummary } from "../contract.js";
 
 export const DEFAULT_LETTA_BASE_URL = "http://127.0.0.1:8283";
 
+/** Strip trailing "/" without a backtracking regex (avoids polynomial ReDoS). */
+function stripTrailingSlashes(value: string): string {
+  let end = value.length;
+  while (end > 0 && value.charCodeAt(end - 1) === 47 /* "/" */) end -= 1;
+  return value.slice(0, end);
+}
+
 export function normalizeBaseUrl(value?: string | null): string | null {
   const trimmed = value?.trim();
   if (!trimmed) return null;
-  if (/^https?:\/\//i.test(trimmed)) return trimmed.replace(/\/+$/, "");
+  if (/^https?:\/\//i.test(trimmed)) return stripTrailingSlashes(trimmed);
   if (/^(localhost|127\.0\.0\.1)(:\d+)?$/i.test(trimmed)) {
-    return `http://${trimmed.replace(/\/+$/, "")}`;
+    return `http://${stripTrailingSlashes(trimmed)}`;
   }
   return null;
 }
