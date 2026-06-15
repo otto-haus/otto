@@ -22,22 +22,31 @@ export type SurfaceId =
 
 type NavDef = { id: SurfaceId; label: string; icon: React.ReactNode; shortcut?: string };
 
-const WORKSPACE_ITEMS: NavDef[] = [
+/** Highest-priority workspace surfaces — always visible in the expanded sidebar. */
+const PRIMARY_WORKSPACE_ITEMS: NavDef[] = [
   { id: 'charters', label: 'Charters', icon: Icon.charter, shortcut: '⌘2' },
   { id: 'standards', label: 'Standards', icon: Icon.standards, shortcut: '⌘3' },
   { id: 'practices', label: 'Practices', icon: Icon.practices, shortcut: '⌘4' },
   { id: 'routines', label: 'Routines', icon: Icon.routines, shortcut: '⌘5' },
+];
+
+/** Remaining workspace surfaces — behind the collapsible Workspace group. */
+const COLLAPSIBLE_WORKSPACE_ITEMS: NavDef[] = [
   { id: 'curation', label: 'Curation', icon: Icon.curation, shortcut: '⌘6' },
   { id: 'receipts', label: 'Receipts', icon: Icon.receipts, shortcut: '⌘7' },
-  { id: 'checks', label: 'Checks', icon: Icon.check, shortcut: '⌘9' },
   { id: 'autonomy', label: 'Autonomy', icon: Icon.autonomy, shortcut: '⌘8' },
+  { id: 'checks', label: 'Checks', icon: Icon.check, shortcut: '⌘9' },
   { id: 'skills', label: 'Skills', icon: Icon.owl },
   { id: 'knowledge', label: 'Knowledge', icon: Icon.theme },
   { id: 'tickets', label: 'Tickets', icon: Icon.plus },
   { id: 'channels', label: 'Channels', icon: Icon.send },
 ];
 
-const WORKSPACE_IDS = new Set<SurfaceId>(WORKSPACE_ITEMS.map((item) => item.id));
+const WORKSPACE_ITEMS: NavDef[] = [...PRIMARY_WORKSPACE_ITEMS, ...COLLAPSIBLE_WORKSPACE_ITEMS];
+
+const COLLAPSIBLE_WORKSPACE_IDS = new Set<SurfaceId>(
+  COLLAPSIBLE_WORKSPACE_ITEMS.map((item) => item.id),
+);
 
 function readWorkspaceOpen(fallback: boolean): boolean {
   try {
@@ -89,7 +98,7 @@ export const Sidebar: React.FC<{
 }) => {
   const rt = useRuntimeContext();
   const connected = rt.electron ? !!rt.status?.ready : false;
-  const workspaceActive = WORKSPACE_IDS.has(active);
+  const workspaceActive = COLLAPSIBLE_WORKSPACE_IDS.has(active);
 
   const [workspaceOpen, setWorkspaceOpen] = useState(() => readWorkspaceOpen(workspaceActive));
 
@@ -176,6 +185,7 @@ export const Sidebar: React.FC<{
         ) : (
           <>
             {navItem({ id: 'chat', label: 'Chat', icon: Icon.chat, shortcut: '⌘1' })}
+            {PRIMARY_WORKSPACE_ITEMS.map((item) => navItem(item))}
             <div className={`navGroup${workspaceOpen ? ' is-open' : ''}${workspaceActive ? ' is-activeGroup' : ''}`}>
               <button
                 type="button"
@@ -188,7 +198,9 @@ export const Sidebar: React.FC<{
                 <span className="navGroup__label">Workspace</span>
               </button>
               {workspaceOpen ? (
-                <div className="navGroup__items">{WORKSPACE_ITEMS.map((item) => navItem(item, true))}</div>
+                <div className="navGroup__items">
+                  {COLLAPSIBLE_WORKSPACE_ITEMS.map((item) => navItem(item, true))}
+                </div>
               ) : null}
             </div>
           </>
