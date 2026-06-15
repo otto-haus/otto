@@ -27,6 +27,7 @@ import { Onboarding } from './Onboarding';
 import { ComingSoonSurface } from './labs/ComingSoonSurface';
 import { isSurfaceComingSoon, isSurfaceInSidebar, surfaceDataKind, surfaceGate } from './surface-tiers';
 import { LabsProvider } from './labs/LabsContext';
+import { useLabs } from './labs/labs-context';
 import { VALID_SURFACES } from './surface-meta';
 import { AppSourceBadge } from './components/AppSourceBadge';
 import { isSampleReceiptPreview, SAMPLE_RECEIPT_LABEL } from './onboarding-sample-receipt';
@@ -73,6 +74,7 @@ export function App() {
 
 function AppShell() {
   const rt = useRuntimeContext();
+  const labs = useLabs();
   const shellDebugMenu = useOttoDebugContextMenu('shell');
   const {
     threads,
