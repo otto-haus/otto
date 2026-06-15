@@ -34,6 +34,27 @@ describe('CultureExporter', () => {
     expect(/\b(api[_-]?key|secret|token|password|bearer)\b/i.test(bundleText)).toBe(false);
   });
 
+  test('export bundle includes compiled checks (#720) and curation proposals (#721)', () => {
+    ottoDir = mkdtempSync(join(tmpdir(), 'otto-culture-export-state-'));
+    mkdirSync(join(ottoDir, 'checks'), { recursive: true });
+    writeFileSync(join(ottoDir, 'checks', 'evidence-first.yaml'), 'id: evidence-first\nstatus: active\n');
+    mkdirSync(join(ottoDir, 'curation', 'proposals'), { recursive: true });
+    writeFileSync(join(ottoDir, 'curation', 'proposals', 'prop_1.json'), '{"id":"prop_1","status":"proposed"}\n');
+
+    const result = new CultureExporter(ottoDir).exportBundle();
+    const stagingDir = result.bundlePath.endsWith('.zip')
+      ? result.bundlePath.slice(0, -4)
+      : result.bundlePath;
+
+    const manifest = JSON.parse(readFileSync(join(stagingDir, 'manifest.json'), 'utf8')) as {
+      includes: string[];
+    };
+    expect(manifest.includes).toContain('checks');
+    expect(manifest.includes).toContain('curation/proposals');
+    expect(existsSync(join(stagingDir, 'checks', 'evidence-first.yaml'))).toBe(true);
+    expect(existsSync(join(stagingDir, 'curation', 'proposals', 'prop_1.json'))).toBe(true);
+  });
+
   test('previewImport rejects manifest include paths that escape the workspace', () => {
     ottoDir = mkdtempSync(join(tmpdir(), 'otto-culture-import-'));
     const unsafeIncludes: unknown[][] = [
