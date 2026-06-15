@@ -9,7 +9,7 @@ import { isElectron, ottoApi, type EffortLevel, type LettaModelOption, type Save
 import { useRuntimeContext } from '../RuntimeContext';
 import type { SurfaceId } from '../components/Sidebar';
 import { OttoMark } from '../components/OttoMark';
-import { CheckBlockBanner, MessageActions, Modal, PermissionCard, ReceiptInlineCard, type PermissionDecision, type PermissionRequestView } from '../components/ui';
+import { CheckBlockBanner, CommandStationStrip, MessageActions, Modal, PermissionCard, ReceiptInlineCard, type CommandStationCounts, type PermissionDecision, type PermissionRequestView } from '../components/ui';
 import { TodoPanel } from '../components/TodoPanel';
 import { displayThreadTitle } from '../components/ui/ThreadList';
 import { chatCopy, permissionCopy, toastCopy } from '../copy/surfaces';
@@ -48,6 +48,7 @@ import {
   labelForCuratedModel,
   visiblePickerModels,
 } from '../chat/model-picker-curation';
+import { buildCommandStationCounts } from '../chat/command-station-counts';
 
 // In Electron (window.otto present) → the runtime-wired LiveChat.
 // In the web preview → the file-backed PreviewChat (unchanged).
@@ -652,6 +653,7 @@ const LiveChat: React.FC<{
   const rt = useRuntimeContext();
   const { threads } = useChatThreads(rt.activeThreadId);
   const toast = useToast();
+  const [stationCounts, setStationCounts] = useState<CommandStationCounts>({});
   const [draft, setDraft] = useState(readDraft);
   const [attachments, setAttachments] = useState<AttachmentDraft[]>(readAttachments);
   const [attachmentError, setAttachmentError] = useState<string | null>(null);
@@ -726,6 +728,33 @@ const LiveChat: React.FC<{
     if (!api) return;
     return api.onPermission((req) => setPermission(req as PermissionRequestView));
   }, [api]);
+
+  useEffect(() => {
+    if (!api || !ready) {
+      setStationCounts({});
+      return;
+    }
+    let cancelled = false;
+    void Promise.all([
+      api.curation.proposals.list(),
+      api.receipts.list(),
+      api.tickets.list(),
+      api.curation.approvals.list(),
+    ]).then(([proposals, receipts, tickets, approvals]) => {
+      if (cancelled) return;
+      setStationCounts(buildCommandStationCounts({
+        proposals: proposals.proposals,
+        receipts: receipts.receipts,
+        tickets: tickets.tickets,
+        approvals: approvals.approvals,
+      }));
+    }).catch(() => {
+      if (!cancelled) setStationCounts({});
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [api, ready, rt.busy]);
 
   useEffect(() => {
     const onStarter = (event: Event) => {
@@ -1102,6 +1131,11 @@ const LiveChat: React.FC<{
               <p className="faint" style={{ marginTop: 8, fontSize: 13 }}>{chatCopy.diagnosticsHint}</p>
             </div>
           )}
+          {ready && streamMessages.length === 0 && onNavigate ? (
+            <div className="chat__commandStation">
+              <CommandStationStrip onNavigate={onNavigate} counts={stationCounts} />
+            </div>
+          ) : null}
           {streamMessages.length === 0 && (
             <div className={`chatEmpty${ready ? '' : ' chatEmpty--muted'}`}>
               <div className="eyebrow">{chatCopy.sessionEyebrow}</div>
