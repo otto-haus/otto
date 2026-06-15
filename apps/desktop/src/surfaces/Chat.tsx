@@ -1,3 +1,4 @@
+import { buildRuntimeMessageWithAttachments } from '../attachment-message';
 import type React from 'react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Icon } from '../components/icons';
@@ -304,13 +305,6 @@ const fileToDataUrl = (file: File): Promise<string> =>
 const formatBytes = (n: number): string => {
   if (n < 1024 * 1024) return `${Math.max(1, Math.round(n / 1024))}KB`;
   return `${(n / 1024 / 1024).toFixed(1)}MB`;
-};
-
-const withAttachments = (text: string, attachments: AttachmentDraft[]): string => {
-  if (!attachments.length) return text;
-  const body = text.trim() || 'Please inspect the attached image(s).';
-  const lines = attachments.map((a, i) => `${i + 1}. ${a.name} — ${a.path}`);
-  return `${body}\n\nAttached local image${attachments.length === 1 ? '' : 's'}:\n${lines.join('\n')}`;
 };
 
 const readDraft = (): string => {
@@ -887,7 +881,7 @@ const LiveChat: React.FC<{
   const submit = () => {
     const t = draft.trim();
     if ((!t && attachments.length === 0) || !ready || !api) return;
-    const text = withAttachments(t, attachments);
+    const text = buildRuntimeMessageWithAttachments(t, attachments);
     void (async () => {
       const cmd = await runTicketCommand(api, text);
       if (cmd?.handled) {
