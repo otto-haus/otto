@@ -19,4 +19,19 @@ describe('runtime busy/inflight lifecycle (Codex P2)', () => {
       /finally \{[\s\S]*?if \(inflightThreadRef\.current === sendThreadId\) \{[\s\S]*?inflightThreadRef\.current = null;[\s\S]*?setBusy\(false\);/,
     );
   });
+
+  // Blocker #1: attachTrailToLastAssistant runs through patchInflightMessages, which no-ops once
+  // inflightThreadRef is null. Both terminal branches must finalize the trail BEFORE clearing it,
+  // otherwise the collapsed trail chip never persists onto the answer.
+  it('finalizes the turn trail before clearing inflight on result', () => {
+    expect(runtimeSource).toMatch(
+      /else if \(m\.type === 'result'\) \{[\s\S]*?finalizeTurnTrail\(null\);[\s\S]*?inflightThreadRef\.current = null;/,
+    );
+  });
+
+  it('finalizes the turn trail before clearing inflight on error', () => {
+    expect(runtimeSource).toMatch(
+      /if \(m\.type === 'error'\) \{[\s\S]*?finalizeTurnTrail\(null\);[\s\S]*?inflightThreadRef\.current = null;/,
+    );
+  });
 });

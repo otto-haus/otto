@@ -1,4 +1,6 @@
 /** Per-thread localStorage keys for chat history (046). */
+import type { TurnTrail } from './turn-trail';
+
 export const LEGACY_MESSAGES_KEY = 'otto.chat.messages.v1';
 const MAX_RESTORED_MESSAGES = 12;
 const MAX_RESTORED_TEXT_CHARS = 1000;
@@ -12,6 +14,7 @@ export type StoredChatMsg = {
   text: string;
   details?: string;
   streamId?: string;
+  trail?: TurnTrail;
 };
 
 export function messagesKey(threadId: string | null): string {

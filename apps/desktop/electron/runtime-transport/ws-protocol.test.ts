@@ -1,4 +1,5 @@
 import { describe, expect, test } from 'bun:test';
+import { TurnTrailAccumulator } from '../../src/chat/turn-trail';
 import { TodoStreamAccumulator } from './todo-parser';
 import { countAttachmentsInPrompt, isLoopIdle, normalizeWsEvent, turnIdleTimeoutMs } from './ws-protocol';
 
@@ -50,6 +51,29 @@ describe('ws-protocol', () => {
     });
     expect(event?.type).toBe('error');
     expect(event?.message).toContain('local-conv-stale');
+  });
+
+  test('accumulates turn trail spans from tool_call and return deltas', () => {
+    const trailAccumulator = new TurnTrailAccumulator();
+    normalizeWsEvent({
+      type: 'stream_delta',
+      delta: {
+        message_type: 'tool_call_message',
+        tool_call: {
+          tool_call_id: 'tc-trail',
+          name: 'read_file',
+          arguments: JSON.stringify({ path: 'runtime.ts' }),
+        },
+      },
+    }, { trailAccumulator });
+    normalizeWsEvent({
+      type: 'stream_delta',
+      delta: { message_type: 'tool_return_message', tool_call_id: 'tc-trail' },
+    }, { trailAccumulator });
+    const trail = trailAccumulator.finalize();
+    expect(trail.spans).toHaveLength(1);
+    expect(trail.spans[0]?.status).toBe('done');
+    expect(trail.spans[0]?.label).toBe('Read runtime.ts');
   });
 
   test('detects loop idle', () => {

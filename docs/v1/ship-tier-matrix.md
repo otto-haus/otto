@@ -80,6 +80,7 @@ Cut   = not in product UI (spec / parked only)
 | `culture_export` | Labs | Settings / Command Station | Export path unavailable | culture-export tests | 125 |
 | `remote_letta_cloud` | Labs | Settings connection | Cloud creds missing | parked advanced mode | 077 |
 | `command_station_full` | Labs | Dedicated dashboard | Not built — strip stays Ship | 127 |
+| `turn_phase_timeline` | Labs | Chat turn trail chip | Labs off → span list only | `docs/v1/agent-turn-trail.md` · turn-trail tests | 668 |
 | `ai_frontier_review_routine` | Labs | Routines | Optional executor | ai-frontier-review-executor tests | 062 |
 
 ---

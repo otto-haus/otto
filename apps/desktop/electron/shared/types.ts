@@ -537,7 +537,8 @@ export type LabFeatureId =
   | 'practice_mining'
   | 'culture_export'
   | 'remote_letta_cloud'
-  | 'command_station_full';
+  | 'command_station_full'
+  | 'turn_phase_timeline';
 
 export type LabsConfig = {
   /** Master Labs switch — default false on fresh profile. */
