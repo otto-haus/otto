@@ -72,6 +72,18 @@ plist_env_set() {
     || /usr/libexec/PlistBuddy -c "Add :LSEnvironment:$key string $value" "$plist" >/dev/null
 }
 
+apply_staging_icon() {
+  local bundle="$1"
+  local staging_icon="$APP_DIR/build/icon-staging.icns"
+  local target_icon="$bundle/Contents/Resources/icon.icns"
+  if [[ ! -f "$staging_icon" ]]; then
+    echo "WARN: staging icon missing at $staging_icon — run node apps/desktop/scripts/generate-staging-icon.mjs" >&2
+    return 1
+  fi
+  cp "$staging_icon" "$target_icon"
+  echo "staging_icon=$target_icon"
+}
+
 stamp_bundle() {
   local bundle="$1"
   local plist="$bundle/Contents/Info.plist"
@@ -165,6 +177,10 @@ NODE
   plist_set "$bundle/Contents/Frameworks/otto Helper (GPU).app/Contents/Info.plist" CFBundleIdentifier "$BUNDLE_ID.helper.GPU"
   plist_set "$bundle/Contents/Frameworks/otto Helper (Plugin).app/Contents/Info.plist" CFBundleIdentifier "$BUNDLE_ID.helper.Plugin"
   plist_set "$bundle/Contents/Frameworks/otto Helper (Renderer).app/Contents/Info.plist" CFBundleIdentifier "$BUNDLE_ID.helper.Renderer"
+
+  if [[ "$APP_CHANNEL" == "staging" ]]; then
+    apply_staging_icon "$bundle"
+  fi
 }
 
 echo "==> Building otto desktop"

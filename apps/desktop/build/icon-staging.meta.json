@@ -1,0 +1,11 @@
+{
+  "generatedBy": "apps/desktop/scripts/generate-staging-icon.mjs",
+  "treatment": "amber tint + bottom-right wedge",
+  "color": "#E87722",
+  "sourceIconset": "otto.iconset",
+  "outputs": [
+    "icon-staging.icns",
+    "otto-staging.iconset",
+    "icon-staging-preview.png"
+  ]
+}
