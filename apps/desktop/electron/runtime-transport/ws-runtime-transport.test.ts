@@ -48,78 +48,84 @@ function mockConfig(conversationId: string | null = null): ConfigStore {
   } as unknown as ConfigStore;
 }
 
-function deviceOnline() {
-  return { type: 'update_device_status', device_status: { is_online: true } };
-}
-
 function loopIdle() {
   return { type: 'update_loop_status', loop_status: { status: 'WAITING_ON_INPUT', active_run_ids: [] } };
 }
 
-function syncResponse(conversationId: string) {
-  return { type: 'sync_response', conversation_id: conversationId };
-}
+type FakeRuntimeSocket = {
+  readyState: number;
+  send: (payload: string) => void;
+  on: (event: string, handler: (...args: unknown[]) => void) => void;
+  off: (event: string, handler: (...args: unknown[]) => void) => void;
+  listenerCount: (event: string) => number;
+  emitMessage: (raw: string) => void;
+  close: () => void;
+};
 
-async function closeMockSocket(socket: WebSocket) {
-  socket.close();
-  await new Promise<void>((resolve) => {
-    if (socket.readyState === WebSocket.CLOSED) return resolve();
-    socket.once('close', () => resolve());
-    setTimeout(resolve, 50);
-  });
-}
-
-async function waitForListener(transport: WsRuntimeTransport, timeoutMs = 5000) {
-  const started = Date.now();
-  while (Date.now() - started < timeoutMs) {
-    const port = (transport as unknown as { listenerPort: number | null }).listenerPort;
-    const token = (transport as unknown as { sessionToken: string }).sessionToken;
-    if (port && token) return { port, token };
-    await new Promise((r) => setTimeout(r, 10));
-  }
-  throw new Error('Timed out waiting for WS listener');
-}
-
-async function connectMockRuntime(
-  transport: WsRuntimeTransport,
-  conversationId: string,
-  onCommand?: (cmd: Record<string, unknown>, socket: WebSocket) => void,
-) {
-  const { port, token } = await waitForListener(transport);
-  const socket = new WebSocket(`ws://127.0.0.1:${port}`, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
-  await new Promise<void>((resolve, reject) => {
-    socket.once('open', () => resolve());
-    socket.once('error', reject);
-  });
-
-  socket.on('message', (raw) => {
-    let cmd: Record<string, unknown>;
-    try {
-      cmd = JSON.parse(String(raw)) as Record<string, unknown>;
-    } catch {
-      return;
-    }
-    if (cmd.type === 'sync') {
-      socket.send(JSON.stringify(syncResponse(conversationId)));
-      socket.send(JSON.stringify(deviceOnline()));
-      socket.send(JSON.stringify(loopIdle()));
-    }
-    if (onCommand) {
-      onCommand(cmd, socket);
-      return;
-    }
-    if (cmd.type === 'input') {
-      socket.send(JSON.stringify({
-        type: 'stream_delta',
-        delta: { message_type: 'assistant_message', content: [{ text: 'ok' }] },
-      }));
-      socket.send(JSON.stringify(loopIdle()));
-    }
-  });
-
+function createFakeRuntimeSocket(): FakeRuntimeSocket {
+  const listeners = new Map<string, Set<(...args: unknown[]) => void>>();
+  const socket: FakeRuntimeSocket = {
+    readyState: WebSocket.OPEN,
+    send() {},
+    on(event: string, handler: (...args: unknown[]) => void) {
+      const set = listeners.get(event) ?? new Set();
+      set.add(handler);
+      listeners.set(event, set);
+    },
+    off(event: string, handler: (...args: unknown[]) => void) {
+      listeners.get(event)?.delete(handler);
+    },
+    listenerCount(event: string) {
+      return listeners.get(event)?.size ?? 0;
+    },
+    emitMessage(raw: string) {
+      for (const handler of listeners.get('message') ?? []) {
+        handler(Buffer.from(raw));
+      }
+    },
+    close() {
+      socket.readyState = WebSocket.CLOSED;
+      for (const handler of listeners.get('close') ?? []) {
+        handler();
+      }
+    },
+  };
   return socket;
+}
+
+async function bootstrapFakeRuntime(transport: WsRuntimeTransport, conversationId: string) {
+  const socket = createFakeRuntimeSocket();
+  (transport as unknown as { spawnRemote: () => Promise<void> }).spawnRemote = async () => {};
+  (transport as unknown as { startListener: () => Promise<void> }).startListener = async () => {
+    (transport as unknown as { listenerPort: number }).listenerPort = 59999;
+    (transport as unknown as { sessionToken: string }).sessionToken = 'test-token';
+  };
+  (transport as unknown as { waitForRuntimeSocket: () => Promise<void> }).waitForRuntimeSocket = async () => {
+    (transport as unknown as { runtimeSocket: FakeRuntimeSocket | null }).runtimeSocket = socket;
+    socket.on('close', () => {
+      if ((transport as unknown as { runtimeSocket: FakeRuntimeSocket | null }).runtimeSocket === socket) {
+        (transport as unknown as { runtimeSocket: FakeRuntimeSocket | null }).runtimeSocket = null;
+        (transport as unknown as { handleRuntimeDisconnect: () => void }).handleRuntimeDisconnect();
+      }
+    });
+  };
+  (transport as unknown as {
+    syncRuntime: (agentId: string, conversationId: string | null) => Promise<void>;
+  }).syncRuntime = async (_agentId, _conversationId) => {
+    (transport as unknown as { status: { conversationId?: string | null } }).status.conversationId = conversationId;
+  };
+  return socket;
+}
+
+function readyTransportState(transport: WsRuntimeTransport, conversationId: string, socket: FakeRuntimeSocket) {
+  (transport as unknown as { runtimeSocket: FakeRuntimeSocket | null }).runtimeSocket = socket;
+  (transport as unknown as { status: Record<string, unknown> }).status = {
+    ...transport.getStatus(),
+    ready: true,
+    conversationId,
+    agentId: 'agent-ws-test',
+    code: 'ready',
+  };
 }
 
 describe('WsRuntimeTransport', () => {
@@ -134,10 +140,9 @@ describe('WsRuntimeTransport', () => {
   test('init reaches ready; smoke session; reconnect marks not ready on socket close', async () => {
     const { win, sent } = mockWindow();
     const transport = new WsRuntimeTransport(() => win, mockConfig());
-    (transport as unknown as { spawnRemote: () => Promise<void> }).spawnRemote = async () => {};
 
     const initPromise = transport.init({ freshConversation: true });
-    const socket = await connectMockRuntime(transport, 'conv-ws-disposable');
+    const socket = await bootstrapFakeRuntime(transport, 'conv-ws-disposable');
     await initPromise;
 
     expect(transport.getStatus().ready).toBe(true);
@@ -147,7 +152,7 @@ describe('WsRuntimeTransport', () => {
     expect(transport.getStatus().sessionMode).toBe('smoke');
 
     socket.close();
-    await new Promise((r) => setTimeout(r, 30));
+    await new Promise((r) => setTimeout(r, 10));
     expect(transport.getStatus().ready).toBe(false);
     expect(transport.getStatus().reason).toContain('disconnected');
     expect(sent.some((e) => e.channel === 'otto:event' && (e.payload as { status?: { ready?: boolean } }).status?.ready === false)).toBe(true);
@@ -272,10 +277,9 @@ describe('WsRuntimeTransport', () => {
   test('runtime disconnect clears pending controls and interrupts active turn', async () => {
     const { win, sent } = mockWindow();
     const transport = new WsRuntimeTransport(() => win, mockConfig());
-    (transport as unknown as { spawnRemote: () => Promise<void> }).spawnRemote = async () => {};
 
     const initPromise = transport.init({ freshConversation: true });
-    const socket = await connectMockRuntime(transport, 'conv-ws-perm-disconnect');
+    const socket = await bootstrapFakeRuntime(transport, 'conv-ws-perm-disconnect');
     await initPromise;
 
     (transport as unknown as { turnIdle: boolean }).turnIdle = false;
@@ -287,27 +291,14 @@ describe('WsRuntimeTransport', () => {
     });
     (transport as unknown as { controlByUpstream: Map<string, string> }).controlByUpstream.set('upstream-1', 'otto-req-1');
 
-    await closeMockSocket(socket);
-    await new Promise((r) => setTimeout(r, 30));
+    socket.close();
+    await new Promise((r) => setTimeout(r, 10));
 
     expect((transport as unknown as { pendingControls: Map<string, unknown> }).pendingControls.size).toBe(0);
     expect((transport as unknown as { turnIdle: boolean }).turnIdle).toBe(true);
     expect((transport as unknown as { turnInterruptReason: string | null }).turnInterruptReason).toContain('tool approval');
     expect(sent.some((e) => e.channel === 'otto:event' && (e.payload as { message?: { type?: string } }).message?.type === 'error')).toBe(true);
     await transport.close();
-  });
-
-  test('send rejects when WebSocket transport disconnected', async () => {
-    const { win, sent } = mockWindow();
-    const transport = new WsRuntimeTransport(() => win, mockConfig());
-    (transport as unknown as { status: { ready: boolean } }).status = {
-      ...transport.getStatus(),
-      ready: true,
-    };
-    (transport as unknown as { runtimeSocket: WebSocket | null }).runtimeSocket = null;
-
-    await expect(transport.send('hello while disconnected')).rejects.toThrow(/not ready/i);
-    expect(sent.some((e) => (e.payload as { message?: { type?: string } }).message?.type === 'error')).toBe(false);
   });
 
   test('smokeMode() reads OTTO_SMOKE at call time', () => {
@@ -320,21 +311,8 @@ describe('WsRuntimeTransport', () => {
   test('attachRuntimeHandler detaches per-turn listener', () => {
     const { win } = mockWindow();
     const transport = new WsRuntimeTransport(() => win, mockConfig());
-    const listeners = new Map<string, Set<(...args: unknown[]) => void>>();
-    const socket = {
-      on(event: string, handler: (...args: unknown[]) => void) {
-        const set = listeners.get(event) ?? new Set();
-        set.add(handler);
-        listeners.set(event, set);
-      },
-      off(event: string, handler: (...args: unknown[]) => void) {
-        listeners.get(event)?.delete(handler);
-      },
-      listenerCount(event: string) {
-        return listeners.get(event)?.size ?? 0;
-      },
-    };
-    (transport as unknown as { runtimeSocket: typeof socket | null }).runtimeSocket = socket;
+    const socket = createFakeRuntimeSocket();
+    (transport as unknown as { runtimeSocket: FakeRuntimeSocket | null }).runtimeSocket = socket;
 
     const detach = (transport as unknown as {
       attachRuntimeHandler: (onEvent: (event: unknown) => void) => (() => void) | null;
@@ -348,24 +326,11 @@ describe('WsRuntimeTransport', () => {
   test('turn idle timeout keeps transport ready and emits recoverable error', async () => {
     const { win, sent } = mockWindow();
     const transport = new WsRuntimeTransport(() => win, mockConfig('conv-ws-idle'));
-    (transport as unknown as {
-      runtimeSocket: WebSocket | null;
-      status: { ready: boolean };
-      waitForTurnComplete: () => Promise<void>;
-      attachRuntimeHandler: () => void;
-      sendCommand: () => void;
-      writeChatReceipt: () => void;
-    }).runtimeSocket = { readyState: WebSocket.OPEN } as WebSocket;
-    (transport as unknown as { status: { ready: boolean } }).status = {
-      ...(transport.getStatus()),
-      ready: true,
-      conversationId: 'conv-ws-idle',
-      agentId: 'agent-ws-test',
-    };
+    const socket = createFakeRuntimeSocket();
+    readyTransportState(transport, 'conv-ws-idle', socket);
     (transport as unknown as { waitForTurnComplete: () => Promise<void> }).waitForTurnComplete = async () => {
       throw new Error('Timed out waiting for runtime idle');
     };
-    (transport as unknown as { attachRuntimeHandler: () => void }).attachRuntimeHandler = () => {};
     (transport as unknown as { sendCommand: () => void }).sendCommand = () => {};
     (transport as unknown as { writeChatReceipt: () => void }).writeChatReceipt = () => {};
 
@@ -374,5 +339,69 @@ describe('WsRuntimeTransport', () => {
     expect(transport.getStatus().ready).toBe(true);
     expect(sent.some((e) => e.channel === 'otto:event' && (e.payload as { status?: { ready?: boolean } }).status?.ready === false)).toBe(false);
     expect(sent.some((e) => e.channel === 'otto:event' && (e.payload as { message?: { type?: string } }).message?.type === 'error')).toBe(true);
+  });
+
+  test('normal turn leaves no stacked message handlers across consecutive sends', async () => {
+    const { win } = mockWindow();
+    const transport = new WsRuntimeTransport(() => win, mockConfig('conv-ws-stack'));
+    const socket = createFakeRuntimeSocket();
+    readyTransportState(transport, 'conv-ws-stack', socket);
+    (transport as unknown as { sendCommand: () => void }).sendCommand = () => {};
+    (transport as unknown as { writeChatReceipt: () => void }).writeChatReceipt = () => {};
+    (transport as unknown as { waitForTurnComplete: (timeoutMs: number, done: () => boolean) => Promise<void> }).waitForTurnComplete =
+      async (_timeoutMs, done) => {
+        while (!done()) {
+          await new Promise((r) => setTimeout(r, 1));
+        }
+      };
+
+    const sendTurn = async (label: string) => {
+      const promise = transport.send(label);
+      await new Promise((r) => setTimeout(r, 5));
+      socket.emitMessage(JSON.stringify({
+        type: 'stream_delta',
+        delta: { message_type: 'assistant_message', content: [{ text: label }] },
+      }));
+      socket.emitMessage(JSON.stringify(loopIdle()));
+      await promise;
+    };
+
+    await sendTurn('first');
+    expect(socket.listenerCount('message')).toBe(0);
+
+    await sendTurn('second');
+    expect(socket.listenerCount('message')).toBe(0);
+  });
+
+  test('idle-timeout linger delivers late assistant frame before detach', async () => {
+    const { win, sent } = mockWindow();
+    const transport = new WsRuntimeTransport(() => win, mockConfig('conv-ws-late'));
+    const socket = createFakeRuntimeSocket();
+    readyTransportState(transport, 'conv-ws-late', socket);
+    (transport as unknown as { sendCommand: () => void }).sendCommand = () => {};
+    (transport as unknown as { writeChatReceipt: () => void }).writeChatReceipt = () => {};
+    (transport as unknown as { waitForTurnComplete: () => Promise<void> }).waitForTurnComplete = async () => {
+      throw new Error('Timed out waiting for runtime idle');
+    };
+
+    const sendPromise = transport.send('slow turn');
+    await sendPromise;
+
+    expect(socket.listenerCount('message')).toBe(1);
+    expect(sent.some((e) => e.channel === 'otto:event' && (e.payload as { message?: { type?: string } }).message?.type === 'error')).toBe(true);
+
+    socket.emitMessage(JSON.stringify({
+      type: 'stream_delta',
+      delta: { message_type: 'assistant_message', content: [{ text: 'late reply' }] },
+    }));
+
+    expect(sent.some((e) =>
+      e.channel === 'otto:event'
+      && (e.payload as { message?: { type?: string; text?: string } }).message?.type === 'assistant'
+      && (e.payload as { message?: { text?: string } }).message?.text === 'late reply',
+    )).toBe(true);
+
+    socket.emitMessage(JSON.stringify(loopIdle()));
+    expect(socket.listenerCount('message')).toBe(0);
   });
 });

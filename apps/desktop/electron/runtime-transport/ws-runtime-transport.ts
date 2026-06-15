@@ -60,6 +60,7 @@ export class WsRuntimeTransport implements OttoRuntimeTransport {
   private turnIdle = false;
   private turnInterruptReason: string | null = null;
   private activeRunId: string | null = null;
+  private turnMessageHandlerDetach: (() => void) | null = null;
   private receipts = new ReceiptWriter();
   private standards = new StandardStore();
   private practices = new PracticeStore();
@@ -217,6 +218,7 @@ export class WsRuntimeTransport implements OttoRuntimeTransport {
     if (!this.status.ready || !this.runtimeSocket || this.runtimeSocket.readyState !== WebSocket.OPEN) {
       throw new Error('Runtime not ready — WebSocket transport disconnected.');
     }
+    this.clearTurnMessageHandler();
     const trace = new TraceWriter(this.status.conversationId || 'ws');
     const startedStatus = { ...this.status };
     this.aborted = false;
@@ -227,7 +229,6 @@ export class WsRuntimeTransport implements OttoRuntimeTransport {
     const trailAccumulator = new TurnTrailAccumulator();
     trace.write('prompt', { text, transport: 'ws', agentId: this.status.agentId, conversationId: this.status.conversationId });
 
-    let detachRuntimeHandler: (() => void) | null = null;
     let lastTrailFingerprint = '';
     let trailFinalized = false;
     const finalizeTurnTrailEmit = () => {
@@ -314,10 +315,11 @@ export class WsRuntimeTransport implements OttoRuntimeTransport {
               ...(normalizedError.details ? { details: normalizedError.details } : {}),
             };
           })() : null);
+          this.clearTurnMessageHandler();
         }
       };
 
-      detachRuntimeHandler = this.attachRuntimeHandler(onRuntimeEvent);
+      this.turnMessageHandlerDetach = this.attachRuntimeHandler(onRuntimeEvent);
 
       this.sendCommand({
         type: 'input',
@@ -416,7 +418,9 @@ export class WsRuntimeTransport implements OttoRuntimeTransport {
         this.emitError(normalizedError.message, normalizedError.details);
       }
     } finally {
-      detachRuntimeHandler?.();
+      if (this.turnIdle || this.aborted) {
+        this.clearTurnMessageHandler();
+      }
       trace.close();
     }
   }
@@ -463,6 +467,7 @@ export class WsRuntimeTransport implements OttoRuntimeTransport {
   }
 
   async close(): Promise<void> {
+    this.clearTurnMessageHandler();
     this.runtimeSocket?.removeAllListeners();
     this.runtimeSocket?.close();
     this.runtimeSocket = null;
@@ -645,6 +650,11 @@ export class WsRuntimeTransport implements OttoRuntimeTransport {
   private isStaleConversationError(e: unknown): boolean {
     const text = msg(e).toLowerCase();
     return text.includes('conversation') && (text.includes('not found') || text.includes('not-found') || text.includes('404') || text.includes('500'));
+  }
+
+  private clearTurnMessageHandler() {
+    this.turnMessageHandlerDetach?.();
+    this.turnMessageHandlerDetach = null;
   }
 
   private attachRuntimeHandler(onEvent: (event: WsRuntimeEvent) => void): (() => void) | null {
