@@ -223,6 +223,39 @@ Move to _Done?: Yes (retained)
 
 +1 with limit stands.
 
+## Execution receipt (rev11 — GitHub break cycle)
+
+Status: pass
+Date: 2026-06-14
+Lane: Cursor implementer (#123)
+
+### What changed
+
+- Reverted intentional typecheck break in `packages/core/src/index.ts`.
+- Moved ticket to `_InReview/` after attaching GitHub Actions red/green receipt.
+- Added remote `CI / checks` requirement to **063** release gate verification.
+
+### GitHub Actions break → red → green
+
+| Step | Commit | Result | Run |
+|------|--------|--------|-----|
+| Break | `ee3dacc` — `export const __ciGateBreakProbe: number = 'break'` | **fail** | https://github.com/otto-haus/otto/actions/runs/27518011139 |
+| Fix | (this commit) — revert probe | **pass** (pending push) | (filled after green run) |
+
+PR: https://github.com/otto-haus/otto/pull/417
+
+### Local verification
+
+```sh
+bun install
+bun run typecheck
+bun test
+```
+
+### Known limitations
+
+- None for done-when scope; staging/E2E remain manual per ticket non-goals.
+
 
 
 ---
