@@ -19,7 +19,8 @@ describe('onboarding readiness gate (#137)', () => {
   it('connect step copy names inline rows and Letta-owned keys', async () => {
     const { onboardingCopy, settingsCopy } = await import('../src/copy/surfaces');
     expect(onboardingCopy.connectContinue).toBe('Continue →');
-    expect(onboardingCopy.connectLede).toContain('readiness rows');
+    expect(onboardingCopy.connectLede.toLowerCase()).toContain('readiness rows');
+    expect(onboardingCopy.connectLede.toLowerCase()).toContain('auto-discover');
     expect(onboardingCopy.connectLede.toLowerCase()).toContain('letta');
     expect(settingsCopy.readinessChecking).toBe('Checking runtime…');
   });

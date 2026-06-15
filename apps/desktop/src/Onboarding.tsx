@@ -169,6 +169,17 @@ export const Onboarding: React.FC<{ onNavigate: (id: SurfaceId) => void; activeS
           <button
             type="button"
             className="onboardHelp onboardHelp--dark"
+            onClick={() => {
+              setIntent('connect');
+              setStarted(true);
+              void persistModeAndOpenSettings('existing');
+            }}
+          >
+            {onboardingCopy.advancedExisting}
+          </button>
+          <button
+            type="button"
+            className="onboardHelp onboardHelp--dark"
             onClick={() => window.open(onboardingCopy.helpUrl, '_blank', 'noopener,noreferrer')}
           >
             {onboardingCopy.helpLabel}
