@@ -2548,14 +2548,33 @@ const CogneeKnowledgePanel: React.FC = () => {
             <div className="receiptEvidence" style={{ marginTop: 12 }}>
               <div className="zone receiptEvidenceRow">
                 <span className="zone__tag">{knowledgeCopy.zoneLastCapture}</span>
-                <div className="mono">{capture.id ?? capture.at}</div>
+                <div>
+                  <div className="mono">{capture.id}</div>
+                  <div className="muted">
+                    {typeof capture.capturedAt === 'string'
+                      ? capture.capturedAt
+                      : capture.at}
+                  </div>
+                </div>
               </div>
-              {typeof capture.count === 'number' && (
+              {typeof capture.kinds === 'string' && capture.kinds.length > 0 && (
                 <div className="zone receiptEvidenceRow">
-                  <span className="zone__tag">{knowledgeCopy.zoneDocs}</span>
-                  <div>{capture.count}</div>
+                  <span className="zone__tag">{knowledgeCopy.zoneKinds}</span>
+                  <div className="mono">{capture.kinds}</div>
                 </div>
               )}
+              <div className="zone receiptEvidenceRow">
+                <span className="zone__tag">{knowledgeCopy.zoneDocs}</span>
+                <div>
+                  {typeof capture.count === 'number'
+                    ? capture.count
+                    : knowledgeCopy.zoneUnknown}
+                </div>
+              </div>
+              <div className="zone receiptEvidenceRow">
+                <span className="zone__tag">{knowledgeCopy.zoneEntities}</span>
+                <div>{knowledgeCopy.zoneUnknown}</div>
+              </div>
               {Array.isArray(capture.paths) && capture.paths.length > 0 && (
                 <div className="zone receiptEvidenceRow">
                   <span className="zone__tag">{knowledgeCopy.zonePath}</span>

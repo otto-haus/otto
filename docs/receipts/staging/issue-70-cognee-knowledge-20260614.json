@@ -1,0 +1,50 @@
+{
+  "ok": true,
+  "issue": 70,
+  "ticket": "044-cognee-knowledge-graph-surface",
+  "repo": "/Users/seb/Code/otto",
+  "date": "2026-06-14",
+  "scope": "thin Knowledge pane Cognee graph recall section",
+  "artifacts": {
+    "panel": "apps/desktop/src/surfaces/Panes.tsx#CogneeKnowledgePanel",
+    "ipc": "apps/desktop/electron/ipc.ts (otto:cognee:*)",
+    "store": "apps/desktop/electron/cognee-store.ts",
+    "shipChecks": [
+      "SHIP_CHECKS/cognee.md",
+      "docs/v1/SHIP_CHECKS/knowledge.md"
+    ]
+  },
+  "doneWhen": {
+    "aiFrontierUnchangedWhenCogneeOff": {
+      "status": "pass",
+      "evidence": "separate CogneeKnowledgePanel; cognee-knowledge-panel.test.ts"
+    },
+    "disabledHonestEmptyNoMockCounts": {
+      "status": "pass",
+      "evidence": "LabsBlockedShell + zoneUnknown entity/doc rows"
+    },
+    "readyCaptureReceiptVisible": {
+      "status": "pass-unit",
+      "evidence": "cognee-store.test.ts latestCapture + panel kinds/count rows",
+      "gap": "staging PNG with live capture on operator machine"
+    },
+    "recallSmokeCitationWithRepoPath": {
+      "status": "pass-unit",
+      "evidence": "cognee-store.test.ts recallSmoke path-backed citations",
+      "gap": "semantic MCP recall when Cognee graph indexed"
+    },
+    "noFakeConnectedOnError": {
+      "status": "pass",
+      "evidence": "status pill + lastError notice; recall disabled until ready"
+    },
+    "stagingScreenshot": {
+      "status": "blocked",
+      "reason": "Cognee daemon + LLM key not required for thin v1 surface; unit + source contract proof substituted"
+    }
+  },
+  "verification": {
+    "typecheck": "bun run typecheck",
+    "cogneeStoreTests": "bun test apps/desktop/electron/cognee-store.test.ts",
+    "panelContractTests": "bun test apps/desktop/src/surfaces/cognee-knowledge-panel.test.ts"
+  }
+}
