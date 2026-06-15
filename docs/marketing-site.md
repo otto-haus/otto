@@ -36,14 +36,21 @@ bash site/deploy-staging.sh   # curl + copy checks; receipt in docs/receipts/sta
 ./site/dev.sh                 # interactive preview on :4321
 ```
 
-Pick one host for public preview; apex `otto.haus` requires Sebastian DNS approval.
+**Cloudflare Pages (project `otto-haus`):**
 
-**Cloudflare Pages**
+```sh
+bash site/deploy-pages.sh              # preview for current git branch
+OTTO_PAGES_DRY_RUN=1 bash site/deploy-pages.sh       # print command without deploying
+OTTO_PAGES_BRANCH=main OTTO_PAGES_ALLOW_PRODUCTION=1 bash site/deploy-pages.sh
+bash site/verify-domains.sh            # curl apex + www + pages.dev; writes receipt
+```
 
-1. Project root: `site/` (or build output = repo `site/`)
-2. No build command (static files)
-3. Preview URL → verify mobile width + contrast
-4. Point `staging.otto.haus` CNAME when ready
+- Static root: `site/` — no build command
+- Default URL: `https://otto-haus.pages.dev`
+- Custom domains: `otto.haus`, `www.otto.haus` (Pages → otto-haus → Custom domains)
+- Production deploys require `OTTO_PAGES_ALLOW_PRODUCTION=1`
+- After domain or deploy changes, run `bash site/verify-domains.sh`
+- Optional staging subdomain: `staging.otto.haus` when approved
 
 **GitHub Pages / Render static**
 
@@ -67,5 +74,6 @@ Must not say: Otto replaces Letta memory; fully autonomous without ratification;
 ```sh
 cd /Users/seb/Code/otto
 ./site/dev.sh
+bash site/verify-domains.sh
 # curl -I http://127.0.0.1:4321/
 ```

@@ -1,0 +1,26 @@
+{
+  "issue": 337,
+  "checked_at": "2026-06-15T00:28:47.018548+00:00",
+  "pass": true,
+  "urls": [
+    {
+      "url": "https://otto.haus/",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "url": "https://www.otto.haus/",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "url": "https://otto-haus.pages.dev/",
+      "status": 200,
+      "ok": true
+    }
+  ],
+  "notes": [
+    "Pages project otto-haus; custom domains otto.haus + www.otto.haus",
+    "Production branch main; deploy via site/deploy-pages.sh"
+  ]
+}

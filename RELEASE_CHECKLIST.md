@@ -95,7 +95,7 @@ Experimental; enable per feature. UX: [`docs/v1/labs.md`](docs/v1/labs.md). **13
 | Curation / Receipts / Checks | ✅ | unit | partial | Ship | Culture CI demo **135** open |
 | Autonomy / Tickets | ✅ | unit | partial | Ship | hygiene 049; worker loop Labs |
 | Knowledge / Channels | ✅ | unit | — | Labs | **137** gate |
-| Marketing site | ✅ | manual | — | preview | local staging; apex DNS pending |
+| Marketing site | ✅ | manual | — | live | Pages + otto.haus + www.otto.haus |
 | Release gate | ✅ | ✅ | — | in progress | **063** + **142** ceremony |
 
 Legend: Tried + Approved = Sebastian only.
@@ -137,7 +137,7 @@ Live install + rollback runbook: [`docs/v1/runbooks/live-vs-staging.md`](docs/v1
 - **138** Ship core path: onboarding/rev8/two-thread/Culture CI not all re-run 2026-06-14 session — see ticket staging log.
 - **076** fresh-Mac embedded Letta bundle proof still open.
 - Demos: walkthrough `demo/out/otto-v01-desktop-walkthrough.mp4` + release asset naming `otto-v01-desktop.mp4` (receipt `receipts/otto-v01/demo-render-20260614T063531Z.md`).
-- Marketing site: local staging only; `otto.haus` apex not deployed.
+- Marketing site: **Pages production** at `https://otto-haus.pages.dev`; apex `https://otto.haus` + `https://www.otto.haus` on Pages project `otto-haus` (verify: `bash site/verify-domains.sh`).
 - Live `/Applications/otto.app` lags staging by design until Sebastian approves promotion.
 - Cognee/pgvector require local daemons — UI shows honest empty/blocked when off.
 - Sebastian checklist (Tried + Approved) all pending.
