@@ -71,4 +71,29 @@ describe('gen-readiness', () => {
       rmSync(tmp, { recursive: true, force: true });
     }
   });
+
+  test('OTTO_READINESS_IGNORE_LOCAL_CONFIG blocks opt-in diagnostic render', () => {
+    const tmp = mkdtempSync(join(tmpdir(), 'otto-readiness-'));
+    try {
+      const configPath = join(tmp, 'config.json');
+      const outputPath = join(tmp, 'readiness.json');
+      writeFileSync(configPath, JSON.stringify({ agentId: 'agent-local-test', runtime: { connected: true } }));
+
+      const readiness = runGenerator(
+        {
+          OTTO_READINESS_CONFIG_PATH: configPath,
+          OTTO_READINESS_INCLUDE_LOCAL_CONFIG: '1',
+          OTTO_READINESS_IGNORE_LOCAL_CONFIG: '1',
+        },
+        outputPath,
+      );
+      const agent = readiness.items.find((item) => item.key === 'agent');
+
+      expect(readiness.configSource).toBeNull();
+      expect(agent?.status).toBe('missing');
+      expect(JSON.stringify(readiness)).not.toContain('agent-local-test');
+    } finally {
+      rmSync(tmp, { recursive: true, force: true });
+    }
+  });
 });
