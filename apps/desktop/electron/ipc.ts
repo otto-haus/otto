@@ -11,7 +11,9 @@ import {
 } from './dream-settings';
 import type { CharterCreateInput, CharterStatus } from './shared/types';
 import type { AttachmentInput } from './shared/types';
+import type { RuntimeSendPayload } from '../src/attachment-message';
 import { saveAttachment } from './attachments';
+import { resolveAttachmentRecords } from './attachment-delivery';
 import { CharterStore } from './charter-store';
 import { ConfigStore } from './config-store';
 import { LettaRunner } from './letta-runner';
@@ -162,7 +164,7 @@ export function registerIpc() {
       recent: permissionLogStore.recent(),
     };
   });
-  ipcMain.handle('otto:send', (_e, text: string) => runner.send(text));
+  ipcMain.handle('otto:send', (_e, input: RuntimeSendPayload | string) => runner.send(input));
   ipcMain.handle('otto:abort', () => runner.abort());
   ipcMain.handle('otto:configure', async (_e, input: RuntimePreferences) => {
     const status = await runner.configure(input);
@@ -212,6 +214,7 @@ export function registerIpc() {
     return next;
   });
   ipcMain.handle('otto:attachment:save', (_e, input: AttachmentInput) => saveAttachment(input));
+  ipcMain.handle('otto:attachment:resolve', (_e, ids: string[]) => resolveAttachmentRecords(ids));
 
   // Connection setup. v1 is local-only: provider auth lives in Letta, not Otto.
   ipcMain.handle(

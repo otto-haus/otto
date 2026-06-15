@@ -1,3 +1,4 @@
+import type { RuntimeSendPayload } from '../../src/attachment-message';
 import type { PermissionResponse, RuntimePreferences, RuntimeStatus } from '../shared/types';
 
 export type RuntimeTransportMode = 'sdk' | 'ws' | 'auto';
@@ -24,7 +25,7 @@ export interface OttoRuntimeTransport {
   init(opts?: { freshConversation?: boolean }): Promise<RuntimeStatus>;
   newChat(): Promise<RuntimeStatus>;
   configure(input: RuntimePreferences): Promise<RuntimeStatus>;
-  send(text: string): Promise<void>;
+  send(input: RuntimeSendPayload | string): Promise<void>;
   abort(): Promise<void>;
   resolvePermission(requestId: string, response: PermissionResponse): void;
   close(): Promise<void>;

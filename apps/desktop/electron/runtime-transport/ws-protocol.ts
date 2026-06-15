@@ -89,10 +89,14 @@ export const TURN_IDLE_TIMEOUT_MAX_MS = 600_000;
 export const DEFAULT_CONNECT_TIMEOUT_MS = 45_000;
 
 /** Scale turn idle wait for attachment-heavy prompts; override with OTTO_WS_TURN_IDLE_TIMEOUT_MS. */
-export function turnIdleTimeoutMs(text: string, connectTimeoutMs = DEFAULT_CONNECT_TIMEOUT_MS): number {
+export function turnIdleTimeoutMs(
+  text: string,
+  connectTimeoutMs = DEFAULT_CONNECT_TIMEOUT_MS,
+  attachmentCount?: number,
+): number {
   const override = Number(process.env.OTTO_WS_TURN_IDLE_TIMEOUT_MS);
   if (Number.isFinite(override) && override > 0) return override;
-  const attachments = countAttachmentsInPrompt(text);
+  const attachments = attachmentCount ?? countAttachmentsInPrompt(text);
   const scaled = TURN_IDLE_TIMEOUT_BASE_MS + attachments * TURN_IDLE_TIMEOUT_PER_ATTACHMENT_MS;
   return Math.max(connectTimeoutMs, Math.min(scaled, TURN_IDLE_TIMEOUT_MAX_MS));
 }

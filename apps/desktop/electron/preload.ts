@@ -77,6 +77,7 @@ import type {
   IsolatedAgentListResult,
   IsolationBoundaryReason,
 } from './shared/types';
+import type { RuntimeSendPayload } from '../src/attachment-message';
 import type {
   BehaviorChangelogResult,
   CheckListResult,
@@ -130,7 +131,7 @@ const api = {
     init: (): Promise<RuntimeStatus> => ipcRenderer.invoke('otto:init'),
     newChat: (): Promise<RuntimeStatus> => ipcRenderer.invoke('otto:new-chat'),
     status: (): Promise<RuntimeStatus> => ipcRenderer.invoke('otto:status'),
-    send: (text: string): Promise<void> => ipcRenderer.invoke('otto:send', text),
+    send: (input: RuntimeSendPayload | string): Promise<void> => ipcRenderer.invoke('otto:send', input),
     abort: (): Promise<void> => ipcRenderer.invoke('otto:abort'),
     configure: (input: RuntimePreferences): Promise<RuntimeStatus> => ipcRenderer.invoke('otto:configure', input),
     openLetta: (): Promise<string> => ipcRenderer.invoke('otto:open-letta'),
@@ -169,6 +170,7 @@ const api = {
   },
   attachments: {
     save: (input: AttachmentInput): Promise<SavedAttachment> => ipcRenderer.invoke('otto:attachment:save', input),
+    resolve: (ids: string[]): Promise<SavedAttachment[]> => ipcRenderer.invoke('otto:attachment:resolve', ids),
   },
   connection: {
     get: (): Promise<ConnectionInfo> => ipcRenderer.invoke('otto:connection:get'),

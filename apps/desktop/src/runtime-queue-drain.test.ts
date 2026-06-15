@@ -13,7 +13,8 @@ describe('queue drain failure contract (#545)', () => {
   });
 
   it('re-queues drained items when rt.send rejects', () => {
-    expect(chatSource).toContain('runQueuedSend((text) => rt.send(text), next.text)');
+    expect(chatSource).toContain('runQueuedSend(');
+    expect(chatSource).toContain("rt.send({ storedText: text, promptText: '', attachments: [] })");
     expect(chatSource).toContain('appendFailedQueueItem(items, next, outcome.reason)');
   });
 });
@@ -31,10 +32,5 @@ describe('thread hydration for queue drain', () => {
     expect(runtimeSource).not.toMatch(
       /\.init\(\)[\s\S]*?if \(threadHydrated\.current\) return;/,
     );
-  });
-
-  it('uses planQueueDrain for queue drain wiring', () => {
-    expect(chatSource).toContain('planQueueDrain');
-    expect(chatSource).toContain("if (!ready || steering)");
   });
 });

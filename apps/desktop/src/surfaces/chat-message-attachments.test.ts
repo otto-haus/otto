@@ -15,4 +15,9 @@ describe('sent message attachment rendering (#277)', () => {
     expect(chatSource).toMatch(/displayBody\s*\?\s*\([\s\S]*StreamMarkdown text=\{displayBody\}/);
     expect(chatSource).not.toMatch(/isUser[\s\S]{0,120}StreamMarkdown text=\{m\.text\}/);
   });
+
+  it('sends runtime payload with attachment bytes instead of path footer text', () => {
+    expect(chatSource).toContain('buildRuntimeSendPayload');
+    expect(chatSource).toContain('await rt.send(payload)');
+  });
 });

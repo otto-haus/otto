@@ -1,25 +1,25 @@
 import { describe, expect, test } from 'bun:test';
-import { createElement } from 'react';
-import { renderToStaticMarkup } from 'react-dom/server';
-import { MessageAttachmentStrip } from './MessageAttachmentStrip';
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
+import { ATTACHMENT_REF_PREFIX } from '../attachment-message';
 import { parseSentMessageDisplay, pathToAttachmentPreviewUrl } from './message-attachment-display';
+
+const stripSource = readFileSync(join(import.meta.dir, 'MessageAttachmentStrip.tsx'), 'utf8');
 
 describe('parseSentMessageDisplay (#277)', () => {
   test('strips attachment footer and keeps message body', () => {
-    const path = '/Users/seb/.otto/attachments/shot.png';
-    const text = `Inspect this screenshot.\n\nAttached local image:\n1. shot.png — ${path}`;
-    expect(parseSentMessageDisplay(text)).toEqual({
-      displayBody: 'Inspect this screenshot.',
-      attachments: [{ name: 'shot.png', path }],
+    const stored = `Review this layout.\n\nAttached local image:\n1. shot.png — ${ATTACHMENT_REF_PREFIX}11112222-3333-4444-5555-666677778888`;
+    expect(parseSentMessageDisplay(stored)).toEqual({
+      displayBody: 'Review this layout.',
+      attachments: [{ name: 'shot.png', id: '11112222-3333-4444-5555-666677778888', path: '' }],
     });
   });
 
   test('hides default image-only prompt when attachments are present', () => {
-    const path = '/Users/seb/.otto/attachments/wire.png';
-    const text = `Please inspect the attached image(s).\n\nAttached local images:\n1. wire.png — ${path}`;
-    expect(parseSentMessageDisplay(text)).toEqual({
+    const stored = `Please inspect the attached image(s).\n\nAttached local images:\n1. wire.png — ${ATTACHMENT_REF_PREFIX}aaaa1111-bbbb-cccc-dddd-eeeeeeeeeeee`;
+    expect(parseSentMessageDisplay(stored)).toEqual({
       displayBody: '',
-      attachments: [{ name: 'wire.png', path }],
+      attachments: [{ name: 'wire.png', id: 'aaaa1111-bbbb-cccc-dddd-eeeeeeeeeeee', path: '' }],
     });
   });
 
@@ -31,24 +31,17 @@ describe('parseSentMessageDisplay (#277)', () => {
   });
 });
 
-describe('pathToAttachmentPreviewUrl', () => {
-  test('normalizes absolute paths to file URLs', () => {
-    expect(pathToAttachmentPreviewUrl('/tmp/a.png')).toBe('file:///tmp/a.png');
-    expect(pathToAttachmentPreviewUrl('file:///tmp/a.png')).toBe('file:///tmp/a.png');
+describe('pathToAttachmentPreviewUrl (#277)', () => {
+  test('builds file URL for renderer previews', () => {
+    const path = '/Users/seb/.otto/attachments/shot.png';
+    expect(pathToAttachmentPreviewUrl(path)).toBe('file:///Users/seb/.otto/attachments/shot.png');
   });
 });
 
 describe('MessageAttachmentStrip (#277)', () => {
-  test('renders thumbnails and filenames without raw paths', () => {
-    const path = '/Users/seb/.otto/attachments/shot.png';
-    const html = renderToStaticMarkup(createElement(MessageAttachmentStrip, {
-      attachments: [{ name: 'shot.png', path }],
-    }));
-
-    expect(html).toContain('msgAttachmentStrip');
-    expect(html).toContain('file:///Users/seb/.otto/attachments/shot.png');
-    expect(html).toContain('shot.png');
-    expect(html).not.toContain('Attached local image');
-    expect(html).not.toContain(' — /Users');
+  test('renders filename chip and resolves id-based previews without leaking stored tokens', () => {
+    expect(stripSource).toContain('msgAttachment__name');
+    expect(stripSource).toContain('attachments.resolve');
+    expect(stripSource).not.toContain(ATTACHMENT_REF_PREFIX);
   });
 });

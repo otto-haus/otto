@@ -4,11 +4,12 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import {
   ATTACHMENT_SMOKE_FIXTURE_DATA_URL,
-  buildRuntimeMessageWithAttachments,
+  buildRuntimeSendPayload,
   findPathLeaksInUserVisibleText,
   findSecretLeaksInUserVisibleText,
   formatAttachmentTrayLabel,
 } from '../src/attachment-message';
+import { prepareRuntimeSend } from './attachment-delivery';
 import { saveAttachment } from './attachments';
 
 const originalConfigDir = process.env.OTTO_CONFIG_DIR;
@@ -20,12 +21,12 @@ afterEach(() => {
   else process.env.OTTO_CONFIG_DIR = originalConfigDir;
   if (originalApiKey === undefined) Reflect.deleteProperty(process.env, 'LETTA_API_KEY');
   else process.env.LETTA_API_KEY = originalApiKey;
-  if (originalAgentId === undefined) Reflect.deleteProperty(process.env, 'OTTO_AGENT_ID');
-  else process.env.OTTO_AGENT_ID = originalAgentId;
+  if (originalAgentId === undefined) Reflect.deleteProperty(process.env, 'OTTA_AGENT_ID');
+  else process.env.OTTA_AGENT_ID = originalAgentId;
 });
 
 describe('attachment ingestion smoke (#299)', () => {
-  test('persists fixture image and passes usable path context to the runtime message', () => {
+  test('persists fixture image and prepares base64 delivery content for the runtime', () => {
     const dir = mkdtempSync(join(tmpdir(), 'otto-attachment-smoke-'));
     process.env.OTTO_CONFIG_DIR = dir;
 
@@ -39,11 +40,15 @@ describe('attachment ingestion smoke (#299)', () => {
     expect(existsSync(saved.path)).toBe(true);
     expect(readFileSync(saved.path).byteLength).toBeGreaterThan(0);
 
-    const runtimeMessage = buildRuntimeMessageWithAttachments('Inspect this screenshot.', [saved]);
-    expect(runtimeMessage).toContain('Inspect this screenshot.');
-    expect(runtimeMessage).toContain('dogfood-screenshot.png');
-    expect(runtimeMessage).toContain(saved.path);
-    expect(runtimeMessage).toContain('Attached local image');
+    const payload = buildRuntimeSendPayload('Inspect this screenshot.', [saved]);
+    const prepared = prepareRuntimeSend(payload);
+    expect(prepared.storedText).toContain('Inspect this screenshot.');
+    expect(prepared.storedText).toContain('dogfood-screenshot.png');
+    expect(prepared.storedText).not.toContain(saved.path);
+    expect(prepared.deliveryContent[1]?.type).toBe('image');
+    if (prepared.deliveryContent[1]?.type === 'image') {
+      expect(prepared.deliveryContent[1].source.data).toBe(readFileSync(saved.path).toString('base64'));
+    }
   });
 
   test('keeps local paths out of user-visible attachment tray labels', () => {
@@ -87,8 +92,8 @@ const RUN_LIVE = process.env.OTTO_ATTACHMENT_INTEGRATION === '1';
       mime: 'image/png',
       dataUrl: ATTACHMENT_SMOKE_FIXTURE_DATA_URL,
     });
-    const runtimeMessage = buildRuntimeMessageWithAttachments('Reply exactly: ATTACHMENT_SMOKE_OK', [saved]);
-    expect(runtimeMessage).toContain(saved.path);
+    const prepared = prepareRuntimeSend(buildRuntimeSendPayload('Reply exactly: ATTACHMENT_SMOKE_OK', [saved]));
+    expect(prepared.deliveryContent[1]?.type).toBe('image');
 
     const lettaCli =
       process.env.LETTA_CLI_PATH ??
@@ -105,7 +110,7 @@ const RUN_LIVE = process.env.OTTO_ATTACHMENT_INTEGRATION === '1';
         '--no-skills',
         '--no-system-info-reminder',
         '-p',
-        runtimeMessage,
+        prepared.deliveryContent[0]?.type === 'text' ? prepared.deliveryContent[0].text : 'Reply exactly: ATTACHMENT_SMOKE_OK',
         '--output-format',
         'json',
       ],

@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import type { RuntimeSendPayload } from './attachment-message';
 import { flushMessages, readStoredMessages, type StoredChatMsg } from './chat/message-storage';
 import {
   loadThreadMessages,
@@ -606,12 +607,13 @@ export function useRuntime() {
     setStatus(next);
   };
 
-  const send = useCallback(async (text: string) => {
+  const send = useCallback(async (input: RuntimeSendPayload | string) => {
     if (!api) throw new Error('Chat is unavailable outside the desktop app.');
     if (!status?.ready) throw new Error(status?.reason ?? 'Runtime not ready — finish setup in Settings.');
     if (busy) throw new Error('Wait for the current reply to finish.');
     const sendThreadId = activeThreadRef.current;
     if (!sendThreadId) throw new Error('No active conversation thread yet.');
+    const storedText = typeof input === 'string' ? input : input.storedText;
     sendError.current = null;
     activeAssistantStream.current = null;
     setActiveTodos([]);
@@ -619,19 +621,19 @@ export function useRuntime() {
     setTurnActivity(null);
     setTurnTrail(null);
     pendingTurnTrail.current = null;
-    const snippet = text.trim().replace(/\s+/g, ' ');
+    const snippet = storedText.trim().replace(/\s+/g, ' ');
     if (snippet) {
       void api.threads.touch({ title: snippet.length > 56 ? `${snippet.slice(0, 53)}…` : snippet });
     }
     const prev = loadThreadMessages(sendThreadId, threadMessagesCache.current);
-    const next: ChatMsg[] = [...prev, { id: `user-${Date.now()}`, who: 'user', text }];
+    const next: ChatMsg[] = [...prev, { id: `user-${Date.now()}`, who: 'user', text: storedText }];
     threadMessagesCache.current.set(sendThreadId, next);
     flushMessages(sendThreadId, next);
     messagesRef.current = next;
     setMessages(next);
     setBusy(true);
     try {
-      await api.runtime.send(text);
+      await api.runtime.send(input);
       if (sendError.current) throw new Error(sendError.current);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : String(err);
