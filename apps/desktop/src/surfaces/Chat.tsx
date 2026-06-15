@@ -5,7 +5,6 @@ import { syncComposerTextareaHeight } from '../chat/composer-textarea';
 import { Icon } from '../components/icons';
 import { AppSourceBadge } from '../components/AppSourceBadge';
 import { useToast } from '../components/toast-context';
-import { requiredMissing, isReady } from '../readiness';
 import { isElectron, ottoApi, type EffortLevel, type LettaModelOption, type SavedAttachment } from '../runtime';
 import { useRuntimeContext } from '../runtime-context';
 import type { SurfaceId } from '../components/Sidebar';
@@ -1424,26 +1423,24 @@ const PreviewChat: React.FC = () => (
 
     <div className="promptbar">
       <div className="chat__column">
-      {!isReady && (
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 10,
-            background: 'var(--warn-tint)',
-            border: '1px solid #e7dcc0',
-            borderRadius: 8,
-            padding: '9px 13px',
-            fontSize: 13.5,
-            color: 'var(--ink-soft)',
-          }}
-        >
-          <span className="dot dot--warn" />
-          <span>
-            <strong>Setup required</strong> — otto is not connected to a runtime ({requiredMissing.length} required items missing). Open <strong>Settings</strong> to configure.
-          </span>
-        </div>
-      )}
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 10,
+          background: 'var(--warn-tint)',
+          border: '1px solid #e7dcc0',
+          borderRadius: 8,
+          padding: '9px 13px',
+          fontSize: 13.5,
+          color: 'var(--ink-soft)',
+        }}
+      >
+        <span className="dot dot--warn" />
+        <span>
+          <strong>This is the web preview.</strong> Open the desktop app to connect to a local Letta runtime.
+        </span>
+      </div>
       <div className="promptbox promptbox--disabled">
         <input
           placeholder="Chat is disabled in this preview"
