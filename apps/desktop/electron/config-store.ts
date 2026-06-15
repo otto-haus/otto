@@ -91,6 +91,14 @@ export class ConfigStore {
   primaryAgentId(): string | null {
     return this.cfg.primaryAgentId ?? this.cfg.agentId ?? null;
   }
+
+  /** Persist explicit primaryAgentId on first connect (119 / ADR 093). */
+  ensurePrimaryAgentId(agentId: string | null | undefined): void {
+    const trimmed = agentId?.trim();
+    if (!trimmed) return;
+    if (this.cfg.primaryAgentId != null && this.cfg.primaryAgentId !== '') return;
+    this.update({ primaryAgentId: trimmed });
+  }
 }
 
 function readJson<T>(path: string): T | null {

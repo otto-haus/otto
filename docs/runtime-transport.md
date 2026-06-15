@@ -6,8 +6,19 @@ Cross-links:
 
 - WS transport ticket: [`planning/hq-tickets/039-cathedral-ws-runtime-transport.md`](../planning/hq-tickets/039-cathedral-ws-runtime-transport.md)
 - Embedded engine: [`planning/hq-tickets/076-embedded-letta-one-app-distribution.md`](../planning/hq-tickets/076-embedded-letta-one-app-distribution.md)
+- Primary agent policy: [`docs/v1/adr/093-multi-agent-workspace-policy.md`](v1/adr/093-multi-agent-workspace-policy.md) (**119**)
 - Cloud remote (parked): [`planning/hq-tickets/_Parked/077-letta-cloud-remote-mode.md`](../planning/hq-tickets/_Parked/077-letta-cloud-remote-mode.md)
 - Adapter seam: [`docs/v1/contracts/adapter-seam.md`](v1/contracts/adapter-seam.md)
+
+## `~/.otto/config.json` fields (119)
+
+| Field | Purpose |
+|-------|---------|
+| `primaryAgentId` | Explicit default agent for this workspace (ADR **093**). Set on first successful connect when absent; editable in Settings → General. |
+| `agentId` | Advanced override / discovery fallback when `primaryAgentId` is unset. |
+| `connectionMode` | `embedded` \| `existing` \| `cloud` — product connection path (**076** / **119**). |
+| `baseUrl` | Local Letta URL override when auto-discovery picks the wrong runtime. |
+| `conversationId` | Active Letta conversation; smoke tests must never use `default`. |
 
 ## Architecture
 

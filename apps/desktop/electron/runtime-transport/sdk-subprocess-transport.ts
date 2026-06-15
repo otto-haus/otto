@@ -262,7 +262,15 @@ export class SdkSubprocessTransport implements OttoRuntimeTransport {
         }
         if (Object.keys(patch).length) this.config.update(patch);
       }
-      if (!SMOKE_MODE) this.config.update({ agentId: r.init.agentId ?? primaryAgentId, baseUrl: context.baseUrl, conversationId: r.init.conversationId ?? null });
+      if (!SMOKE_MODE) {
+        const resolvedAgentId = r.init.agentId ?? primaryAgentId;
+        this.config.update({
+          agentId: resolvedAgentId,
+          baseUrl: context.baseUrl,
+          conversationId: r.init.conversationId ?? null,
+        });
+        this.config.ensurePrimaryAgentId(resolvedAgentId);
+      }
       this.status = {
         ready: true,
         code: 'ready',
