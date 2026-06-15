@@ -47,4 +47,15 @@ describe('chat shell craft polish (#081 / #98)', () => {
   it('does not render command station strip on empty chat', () => {
     expect(chatSource).not.toContain('CommandStationStrip');
   });
+
+  it('keeps transportFallbackReason out of connected product subtitle (#603)', () => {
+    const subtitleStart = chatSource.indexOf('const formatChatSessionSubtitle');
+    const debugStart = chatSource.indexOf('const formatChatDebugTitle');
+    expect(subtitleStart).toBeGreaterThan(-1);
+    expect(debugStart).toBeGreaterThan(subtitleStart);
+    const subtitleBlock = chatSource.slice(subtitleStart, debugStart);
+    expect(subtitleBlock).not.toContain('transportFallbackReason');
+    expect(chatSource).toContain('st.transportFallbackReason ?? null');
+    expect(chatSource).not.toMatch(/\{st\.transportFallbackReason\s*\?/);
+  });
 });
