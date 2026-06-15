@@ -225,6 +225,7 @@ export const chatCopy = {
   customModelApply: 'Apply',
   modelDeprecatedBadge: 'deprecated',
   modelLegacyBadge: 'legacy',
+  autoModelResolvedPrefix: 'Resolved',
   reasoningTitle: 'Reasoning',
   pickerRetry: 'Retry',
   pickerOpenSettings: 'Open Settings',

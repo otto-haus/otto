@@ -19,6 +19,7 @@ import { notifyOnboardingFirstMessage, resolveOnboardingStarterAction } from '..
 import { ProposeCorrectionModal, type ProposeCorrectionContext } from '../chat/ProposeCorrectionModal';
 import { serializeConversationMarkdown } from '../chat/conversation-markdown';
 import { runTicketCommand } from '../chat/ticket-commands';
+import { formatResolvedModelLabel, helpTextForModelOption } from '../chat/model-option-help';
 import {
   clearInFlight,
   composerDraftFromQueueText,
@@ -123,6 +124,7 @@ const formatChatDebugTitle = (st: ChatRuntimeStatus, modelLabel: string): string
 const ModelEffortPickers: React.FC<{
   busy: boolean;
   selectedModel: string | null;
+  resolvedModelLabel: string | null;
   selectedEffort: EffortLevel;
   modelOpen: boolean;
   effortOpen: boolean;
@@ -137,6 +139,7 @@ const ModelEffortPickers: React.FC<{
 }> = ({
   busy,
   selectedModel,
+  resolvedModelLabel,
   selectedEffort,
   modelOpen,
   effortOpen,
@@ -175,9 +178,17 @@ const ModelEffortPickers: React.FC<{
         disabled={busy}
         aria-haspopup="menu"
         aria-expanded={modelOpen}
-        aria-label={`Model: ${labelForModel(selectedModel, modelOptions)}`}
+        aria-label={resolvedModelLabel
+          ? `Model: ${labelForModel(selectedModel, modelOptions)} (${chatCopy.autoModelResolvedPrefix}: ${resolvedModelLabel})`
+          : `Model: ${labelForModel(selectedModel, modelOptions)}`}
+        title={resolvedModelLabel
+          ? `${chatCopy.autoModelResolvedPrefix}: ${resolvedModelLabel}`
+          : undefined}
       >
         <span>{labelForModel(selectedModel, modelOptions)}</span>
+        {resolvedModelLabel && (
+          <span className="picker__resolved mono faint">{chatCopy.autoModelResolvedPrefix}: {resolvedModelLabel}</span>
+        )}
         <span className="picker__chev">›</span>
       </button>
       {modelOpen && (
@@ -187,29 +198,45 @@ const ModelEffortPickers: React.FC<{
           aria-label={chatCopy.selectModelTitle}
         >
           <div className="picker__title">{chatCopy.selectModelTitle}</div>
-          {visibleModels.map((m) => (
-            <button
-              type="button"
-              key={m.handle}
-              role="menuitemradio"
-              aria-checked={selectedModel === m.handle}
-              className={`picker__option${selectedModel === m.handle ? ' is-selected' : ''}`}
-              onClick={() => {
-                onClose();
-                onSelectModel(m.handle);
-              }}
-            >
-              <span className="picker__optionLabel">
-                {labelForCuratedModel(m)}
-                {(m.deprecated || m.tier === 'legacy') && (
-                  <span className="picker__badge">
-                    {m.deprecated ? chatCopy.modelDeprecatedBadge : chatCopy.modelLegacyBadge}
+          {visibleModels.map((m) => {
+            const helpText = helpTextForModelOption(m);
+            const resolvedForOption = selectedModel === m.handle ? resolvedModelLabel : null;
+            return (
+              <button
+                type="button"
+                key={m.handle}
+                role="menuitemradio"
+                aria-checked={selectedModel === m.handle}
+                aria-describedby={helpText ? `model-help-${m.handle}` : undefined}
+                title={helpText ?? undefined}
+                className={`picker__option${helpText ? ' picker__option--with-help' : ''}${selectedModel === m.handle ? ' is-selected' : ''}`}
+                onClick={() => {
+                  onClose();
+                  onSelectModel(m.handle);
+                }}
+              >
+                <span className="picker__optionMain">
+                  <span className="picker__optionLabel">
+                    {labelForCuratedModel(m)}
+                    {(m.deprecated || m.tier === 'legacy') && (
+                      <span className="picker__badge">
+                        {m.deprecated ? chatCopy.modelDeprecatedBadge : chatCopy.modelLegacyBadge}
+                      </span>
+                    )}
                   </span>
-                )}
-              </span>
-              <span className="mono faint">{m.handle}</span>
-            </button>
-          ))}
+                  {helpText && (
+                    <span className="picker__optionDesc" id={`model-help-${m.handle}`}>{helpText}</span>
+                  )}
+                  {resolvedForOption && (
+                    <span className="picker__optionResolved mono faint">
+                      {chatCopy.autoModelResolvedPrefix}: {resolvedForOption}
+                    </span>
+                  )}
+                </span>
+                <span className="mono faint">{m.handle}</span>
+              </button>
+            );
+          })}
           {hiddenLegacyCount > 0 && (
             <button
               type="button"
@@ -702,10 +729,11 @@ const LiveChat: React.FC<{
   const activeModel = st?.model ?? st?.modelHandle ?? null;
   const selectedModel = requestedModel ?? activeModel;
   const selectedEffort = st?.effort ?? 'high';
+  const resolvedModelLabel = formatResolvedModelLabel(requestedModel, activeModel, modelOptions, labelForModel);
   const activeThreadTitle = threads.find((t) => t.id === rt.activeThreadId)?.title;
   const headTitle = displayThreadTitle(activeThreadTitle ?? 'New chat');
-  const modelStatusLabel = requestedModel && activeModel && requestedModel !== activeModel
-    ? `${labelForModel(requestedModel, modelOptions)} → ${labelForModel(activeModel, modelOptions)}`
+  const modelStatusLabel = resolvedModelLabel
+    ? `${labelForModel(requestedModel, modelOptions)} → ${resolvedModelLabel}`
     : labelForModel(selectedModel, modelOptions);
   const chatSessionSubtitle = st ? formatChatSessionSubtitle(st, modelStatusLabel) : 'connecting…';
   const chatDebugTitle = st ? formatChatDebugTitle(st, modelStatusLabel) : undefined;
@@ -1277,6 +1305,7 @@ const LiveChat: React.FC<{
             <ModelEffortPickers
               busy={rt.busy}
               selectedModel={selectedModel}
+              resolvedModelLabel={resolvedModelLabel}
               selectedEffort={selectedEffort}
               modelOpen={modelOpen}
               effortOpen={effortOpen}
