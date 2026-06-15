@@ -84,7 +84,7 @@ export function applyLabsConfigPatch(cfg: OttoConfig, patch: Partial<LabsConfig>
   return patchLabsConfig(cfg, patch);
 }
 
-/** Ship-tier gate for Settings / IPC cloud connection mode (#139 / #628). */
+/** Ship-tier gate for Settings / IPC cloud connection mode (#627 / #628 / #139). */
 export function isRemoteLettaCloudEnabled(labs: LabsConfig): boolean {
   return labs.enabled === true && labs.features?.remote_letta_cloud === true;
 }
