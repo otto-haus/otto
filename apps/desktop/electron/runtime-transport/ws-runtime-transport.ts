@@ -44,7 +44,17 @@ type PendingControl = {
   requestId: string;
   toolName: string;
   resolve: (r: PermissionResponse) => void;
+  timeout?: ReturnType<typeof setTimeout>;
 };
+
+const DEFAULT_WS_PERMISSION_TIMEOUT_MS = 120_000;
+
+/** WS permission auto-deny window — mirrors the SDK transport's OTTO_PERMISSION_TIMEOUT_MS (#691). */
+function wsPermissionTimeoutMs(): number {
+  const raw = process.env.OTTO_PERMISSION_TIMEOUT_MS;
+  const parsed = raw ? Number.parseInt(raw, 10) : NaN;
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : DEFAULT_WS_PERMISSION_TIMEOUT_MS;
+}
 
 /** Local BYOR WebSocket server; Letta Code `remote` connects inbound. */
 export class WsRuntimeTransport implements OttoRuntimeTransport {
@@ -90,6 +100,7 @@ export class WsRuntimeTransport implements OttoRuntimeTransport {
   resolvePermission(requestId: string, response: PermissionResponse) {
     const pending = this.pendingControls.get(requestId);
     if (!pending) return;
+    if (pending.timeout) clearTimeout(pending.timeout);
     this.pendingControls.delete(requestId);
     if (response.behavior === 'allow' && response.scope === 'session') {
       permissionSessionStore.allow(pending.toolName);
@@ -104,8 +115,11 @@ export class WsRuntimeTransport implements OttoRuntimeTransport {
         : 'deny',
       response.behavior === 'deny' ? { message: response.message } : undefined,
     );
-    pending.resolve(response);
+    // Capture the upstream id before resolving: pending.resolve() clears the
+    // controlByUpstream mapping, so looking it up afterward would always miss and the
+    // control_response (incl. the #691 timeout auto-deny) would never reach Letta.
     const upstreamId = [...this.controlByUpstream.entries()].find(([, id]) => id === requestId)?.[0];
+    pending.resolve(response);
     if (!upstreamId) return;
     if (this.runtimeSocket?.readyState === WebSocket.OPEN) {
       const approved = response.behavior === 'allow';
@@ -423,6 +437,7 @@ export class WsRuntimeTransport implements OttoRuntimeTransport {
 
   private rejectPendingPermissions(message: string) {
     for (const [, pending] of this.pendingControls) {
+      if (pending.timeout) clearTimeout(pending.timeout);
       try {
         pending.resolve({ behavior: 'deny', message });
       } catch {
@@ -447,6 +462,13 @@ export class WsRuntimeTransport implements OttoRuntimeTransport {
     this.controlByUpstream.clear();
   }
 
+  /** Clear any pending permission auto-deny timers before dropping the pending map (#691). */
+  private clearPendingControlTimers() {
+    for (const [, pending] of this.pendingControls) {
+      if (pending.timeout) clearTimeout(pending.timeout);
+    }
+  }
+
   async abort(): Promise<void> {
     this.aborted = true;
     this.rejectPendingPermissions('Chat turn was aborted.');
@@ -457,6 +479,9 @@ export class WsRuntimeTransport implements OttoRuntimeTransport {
         // ignore abort_message failures during disconnect
       }
     }
+    // Stop must end the turn promptly even when no run id has arrived yet (early stream /
+    // slow tool start): unblock waitForTurnComplete instead of waiting the full idle timeout (#692).
+    this.turnIdle = true;
     if (this.status.ready) {
       this.status = { ...this.status, code: 'ready', reason: 'Turn abort requested' };
     }
@@ -476,6 +501,7 @@ export class WsRuntimeTransport implements OttoRuntimeTransport {
     });
     this.server = null;
     this.listenerPort = null;
+    this.clearPendingControlTimers();
     this.pendingControls.clear();
     this.controlByUpstream.clear();
     this.status = { ...this.status, ready: false, reason: 'transport closed' };
@@ -603,7 +629,11 @@ export class WsRuntimeTransport implements OttoRuntimeTransport {
     return new Promise((resolve, reject) => {
       let online = false;
       let idle = false;
-      const timeout = setTimeout(() => reject(new Error('Timed out waiting for runtime sync')), CONNECT_TIMEOUT_MS);
+      const timeout = setTimeout(() => {
+        // Terminal outcome must remove the temp listener so no ghost handler fires on later turns (#690).
+        this.runtimeSocket?.off('message', handler);
+        reject(new Error('Timed out waiting for runtime sync'));
+      }, CONNECT_TIMEOUT_MS);
       const handler = (raw: Buffer | ArrayBuffer | Buffer[]) => {
         let event: WsRuntimeEvent;
         try {
@@ -703,9 +733,19 @@ export class WsRuntimeTransport implements OttoRuntimeTransport {
     const req: PermissionRequest = { requestId, toolName, toolInput, interactive };
     permissionLogStore.recordPending(req);
     safeWebContentsSend(this.getMainWindow(), 'otto:permission', req);
+    // Match SDK transport: auto-deny if the user never responds, so Letta does not wait
+    // indefinitely for control_response when the modal is dismissed or the renderer stalls (#691).
+    const timeout = setTimeout(() => {
+      if (!this.pendingControls.has(requestId)) return;
+      this.resolvePermission(requestId, {
+        behavior: 'deny',
+        message: 'Permission request timed out.',
+      });
+    }, wsPermissionTimeoutMs());
     this.pendingControls.set(requestId, {
       requestId,
       toolName,
+      timeout,
       resolve: () => {
         this.controlByUpstream.delete(upstreamId);
       },
@@ -714,6 +754,7 @@ export class WsRuntimeTransport implements OttoRuntimeTransport {
 
   private handleRuntimeDisconnect() {
     const hadPending = this.pendingControls.size > 0;
+    this.clearPendingControlTimers();
     this.pendingControls.clear();
     this.controlByUpstream.clear();
     const activeTurn = !this.turnIdle && (hadPending || this.activeRunId !== null);
