@@ -86,3 +86,22 @@ Only add `status: ready for review` after:
 - The PR body includes proof and any known caveats.
 
 If more than one PR is ready for review, alert Sebastian with PR numbers, titles, and URLs.
+
+
+## Verification
+
+Local validation runs in CI via `bun test` (`packages/core/src/github-issue-workflow.test.ts`).
+
+Dry-run smoke (no GitHub mutation):
+
+```bash
+task smoke:github-issue-workflow
+```
+
+Opt-in live smoke (creates and closes a disposable issue; requires `gh auth login`):
+
+```bash
+OTTO_GITHUB_ISSUE_SMOKE_LIVE=1 task smoke:github-issue-workflow
+```
+
+Failure output names the broken capability and the likely next action. Receipts land in `docs/receipts/staging/` unless `OTTO_RECEIPT_DIR` is set.
