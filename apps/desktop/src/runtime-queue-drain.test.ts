@@ -14,8 +14,8 @@ describe('queue drain failure contract (#545)', () => {
 
   it('re-queues drained items when rt.send rejects', () => {
     expect(chatSource).toContain('void rt.send(next.text)');
-    expect(chatSource).toContain('.catch(() => {');
-    expect(chatSource).toContain('appendFailedQueueItem(items, next)');
+    expect(chatSource).toContain('.catch(');
+    expect(chatSource).toContain('appendFailedQueueItem(items, { ...next, error: message })');
   });
 });
 
