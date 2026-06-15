@@ -3,7 +3,7 @@ import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import type { BrowserWindow } from 'electron';
-import { classify, friendly, isInvalidModelError, modelInitAttempts, modelSelectionForCli, nextActionFor, normalizeRuntimeError, parseUsageLimitResetHint, promptWithRuntimeContext, resolveCli, runtimeContextForPrompt, safeWebContentsSend, withTimeout } from './runtime-common';
+import { classify, friendly, isInvalidModelError, modelInitAttempts, modelSelectionForCli, nextActionFor, normalizeRuntimeError, parseUsageLimitResetHint, promptWithRuntimeContext, resolveCli, runtimeContextForPrompt, safeWebContentsSend, sessionInitTimeoutMs, withTimeout } from './runtime-common';
 
 describe('withTimeout', () => {
   test('resolves when promise completes first', async () => {
@@ -14,6 +14,23 @@ describe('withTimeout', () => {
     await expect(
       withTimeout(new Promise<number>((resolve) => setTimeout(() => resolve(1), 80)), 20, 'Letta session.initialize()'),
     ).rejects.toThrow(/timed out after 20ms/i);
+  });
+
+  test('rejects when promise exceeds deadline', async () => {
+    await expect(
+      withTimeout(new Promise<string>(() => {}), 25, 'Letta session.initialize()'),
+    ).rejects.toThrow('Letta session.initialize() timed out after 25ms');
+  });
+
+  test('sessionInitTimeoutMs honors env override', () => {
+    const prev = process.env.OTTO_SESSION_INIT_TIMEOUT_MS;
+    process.env.OTTO_SESSION_INIT_TIMEOUT_MS = '9000';
+    try {
+      expect(sessionInitTimeoutMs()).toBe(9000);
+    } finally {
+      if (prev === undefined) Reflect.deleteProperty(process.env, 'OTTO_SESSION_INIT_TIMEOUT_MS');
+      else process.env.OTTO_SESSION_INIT_TIMEOUT_MS = prev;
+    }
   });
 });
 
@@ -154,6 +171,7 @@ describe('runtime-common status mapping', () => {
 
   test('friendly and nextActionFor align with StatusCode', () => {
     expect(friendly('unreachable', 'ECONNREFUSED')).toMatch(/Can't reach the Letta backend/i);
+    expect(friendly('unreachable', 'Local Letta backend is not running')).toMatch(/Local Letta backend is not running/i);
     expect(friendly('unreachable', 'Letta session.initialize() timed out after 45000ms')).toMatch(/did not connect in time/i);
     const noAgentPath = 'no last local agent or session was found in /Users/seb/.letta/settings.json';
     expect(friendly('no-agent', noAgentPath)).toMatch(/Can't find a default local Letta agent/i);
