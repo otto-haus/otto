@@ -615,3 +615,50 @@ export interface PaperclipSyncResult {
   snapshot: PaperclipIntakeSnapshot;
   receipt?: Receipt & { path: string };
 }
+
+/** Active project / workspace paths and session context (#316). */
+export type WorkspaceContext = {
+  projectRoot: string;
+  ottoHome: string;
+  profileHome: string;
+  lettaStateDir: string;
+  activeThread: {
+    id: string;
+    title: string;
+    conversationId: string | null;
+    agentId: string | null;
+  } | null;
+  runtime: {
+    ready: boolean;
+    agentId: string | null;
+    conversationId: string | null;
+    transportMode: RuntimeTransportMode | null;
+    effectiveTransport: EffectiveTransport | null;
+    model: string | null;
+  } | null;
+  projectSwitch: {
+    allowed: boolean;
+    reason: string;
+  };
+};
+
+export type PermissionDecisionKind = 'allow-once' | 'allow-session' | 'deny' | 'timeout';
+
+export type PermissionLogEntry = {
+  id: string;
+  at: string;
+  requestId: string;
+  toolName: string;
+  status: 'pending' | PermissionDecisionKind;
+  message?: string;
+  receiptId?: string;
+  risk: 'low' | 'medium' | 'high';
+};
+
+/** Permission route/mode + session allowlist + recent decisions (#316). */
+export type PermissionState = {
+  mode: 'default';
+  route: string;
+  sessionAllowed: string[];
+  recent: PermissionLogEntry[];
+};

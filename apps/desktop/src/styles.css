@@ -794,6 +794,87 @@ h1, h2, h3, h4, p { margin: 0; }
 
 /* ---------- chat surface ---------- */
 .chat { display: flex; flex-direction: column; min-height: 0; height: 100%; flex: 1; position: relative; background: var(--bg); }
+.chat__bodyRow {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  position: relative;
+}
+.chat__bodyRow > .chat__stream { flex: 1; min-width: 0; }
+.contextDrawer {
+  width: min(420px, 92vw);
+  flex: none;
+  border-left: 1px solid var(--line);
+  background: rgba(248,247,242,0.96);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  box-shadow: -8px 0 24px rgba(24, 22, 18, 0.06);
+}
+.contextDrawer__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--line);
+}
+.contextDrawer__title { margin: 0; font-size: 15px; font-weight: 650; letter-spacing: -0.02em; }
+.contextDrawer__close {
+  border: 0; background: transparent; color: var(--mut); font-size: 22px; line-height: 1;
+  width: 32px; height: 32px; border-radius: 8px; cursor: pointer;
+}
+.contextDrawer__close:hover { background: var(--bg-2); color: var(--ink); }
+.contextDrawer__body { flex: 1; min-height: 0; overflow: auto; padding: 16px; }
+.contextPanel { display: grid; gap: 14px; }
+.contextPanel__lede { margin: 0; font-size: 13.5px; line-height: 1.45; }
+.contextPanel__section { display: grid; gap: 8px; padding-top: 4px; }
+.contextPanel__section--warn {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 12px;
+  background: var(--panel);
+}
+.contextPanel__note { margin: 0; font-size: 13.5px; }
+.contextPanel__grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.contextStat {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 10px 12px;
+  background: var(--panel);
+  display: grid;
+  gap: 4px;
+}
+.contextStat__label { font-size: 11px; color: var(--mut); text-transform: uppercase; letter-spacing: 0.06em; }
+.contextStat__value { font-size: 13px; font-weight: 600; overflow-wrap: anywhere; }
+.contextRow { display: grid; gap: 4px; }
+.contextRow__label { font-size: 12px; color: var(--mut); }
+.contextRow__value {
+  display: block;
+  font-size: 12px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  overflow-wrap: anywhere;
+}
+.contextPills { display: flex; flex-wrap: wrap; gap: 6px; }
+.contextRecentList { display: grid; gap: 8px; }
+.contextRecent {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 10px 12px;
+  background: var(--panel);
+  display: grid;
+  gap: 4px;
+}
+.contextRecent__tool { font-weight: 600; font-size: 13px; }
+.contextRecent__meta { font-size: 12px; }
+.contextRecent__msg { margin: 0; font-size: 12.5px; }
+.chat__headActions .btn.is-active { border-color: var(--accent); color: var(--accent); }
+.chat__headActions .nav__badge { margin-left: 4px; }
 .chat.is-dragging-image::after {
   content: 'drop image to attach';
   position: absolute; inset: 14px; z-index: 6;

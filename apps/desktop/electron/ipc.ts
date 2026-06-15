@@ -34,6 +34,8 @@ import { ReceiptWriter } from './receipt-writer';
 import { CheckRunner } from './check-runner';
 import { ThreadStore } from './thread-store';
 import { permissionSessionStore } from './permission-session-store';
+import { permissionLogStore } from './permission-log-store';
+import { readWorkspaceContext } from './workspace-context';
 import { BehaviorChangelog } from './behavior-changelog';
 import { ConstitutionStore, CONSTITUTION_MD, CONSTITUTION_YAML } from './constitution-store';
 import { CultureExporter } from './culture-export';
@@ -115,6 +117,7 @@ export function registerIpc(win: BrowserWindow) {
   });
   ipcMain.handle('otto:new-chat', async () => {
     permissionSessionStore.clear();
+    permissionLogStore.clear();
     threads.create();
     return initWithStaleRecovery({ freshConversation: true });
   });
@@ -132,6 +135,16 @@ export function registerIpc(win: BrowserWindow) {
       runs,
     }),
   );
+  ipcMain.handle('otto:workspace:context', () => readWorkspaceContext(config, threads, runner.getStatus()));
+  ipcMain.handle('otto:permission:state', () => {
+    const status = runner.getStatus();
+    return {
+      mode: 'default' as const,
+      route: status.effectiveTransport ?? status.transportMode ?? 'unknown',
+      sessionAllowed: permissionSessionStore.list(),
+      recent: permissionLogStore.recent(),
+    };
+  });
   ipcMain.handle('otto:send', (_e, text: string) => runner.send(text));
   ipcMain.handle('otto:abort', () => runner.abort());
   ipcMain.handle('otto:configure', async (_e, input: RuntimePreferences) => {
@@ -512,6 +525,7 @@ export function registerIpc(win: BrowserWindow) {
         },
         interactive: input?.interactive ?? false,
       };
+      permissionLogStore.recordPending(req);
       safeWebContentsSend(win, 'otto:permission', req);
       return { ok: true, requestId, toolName: req.toolName };
     },

@@ -355,6 +355,10 @@ const api = {
       ipcRenderer.send('otto:permission:respond', requestId, response),
     denyReceipt: (input: { requestId: string; toolName: string; message: string }): Promise<{ id: string; path: string }> =>
       ipcRenderer.invoke('otto:permission:deny-receipt', input),
+    state: () => ipcRenderer.invoke('otto:permission:state'),
+  },
+  workspace: {
+    context: () => ipcRenderer.invoke('otto:workspace:context'),
   },
   smoke: {
     triggerPermission: (input?: { toolName?: string; requestId?: string; interactive?: boolean }) =>

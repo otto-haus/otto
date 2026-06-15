@@ -9,10 +9,12 @@ import { isElectron, ottoApi, type EffortLevel, type LettaModelOption, type Save
 import { useRuntimeContext } from '../RuntimeContext';
 import type { SurfaceId } from '../components/Sidebar';
 import { OttoMark } from '../components/OttoMark';
-import { CheckBlockBanner, CommandStationStrip, MessageActions, Modal, PermissionCard, ReceiptInlineCard, type PermissionDecision, type PermissionRequestView } from '../components/ui';
+import { CheckBlockBanner, CommandStationStrip, ContextDrawer, MessageActions, ReceiptInlineCard, type PermissionDecision, type PermissionRequestView } from '../components/ui';
 import { TodoPanel } from '../components/TodoPanel';
 import { displayThreadTitle } from '../components/ui/ThreadList';
-import { chatCopy, permissionCopy, toastCopy } from '../copy/surfaces';
+import { chatCopy, permissionCopy, projectCopy, toastCopy } from '../copy/surfaces';
+import { ProjectWindow } from './ProjectWindow';
+import { PermissionWindow } from './PermissionWindow';
 import { useChatThreads } from '../chat/useChatThreads';
 import { isTableStart, parseTableBlock, type MarkdownTable } from '../chat/markdown-tables';
 import { notifyOnboardingFirstMessage, resolveOnboardingStarterAction } from '../onboarding-storage';
@@ -698,6 +700,7 @@ const LiveChat: React.FC<{
   const [effortOpen, setEffortOpen] = useState(false);
   const [permission, setPermission] = useState<PermissionRequestView | null>(null);
   const [permissionBusy, setPermissionBusy] = useState(false);
+  const [contextPanel, setContextPanel] = useState<'project' | 'permission' | null>(null);
   const [proposeContext, setProposeContext] = useState<ProposeCorrectionContext | null>(null);
   const [proposeBusy, setProposeBusy] = useState(false);
   const [cmdMessages, setCmdMessages] = useState<ChatMsg[]>([]);
@@ -753,7 +756,10 @@ const LiveChat: React.FC<{
 
   useEffect(() => {
     if (!api) return;
-    return api.onPermission((req) => setPermission(req as PermissionRequestView));
+    return api.onPermission((req) => {
+      setPermission(req as PermissionRequestView);
+      setContextPanel('permission');
+    });
   }, [api]);
 
   useEffect(() => {
@@ -803,6 +809,7 @@ const LiveChat: React.FC<{
     } finally {
       setPermission(null);
       setPermissionBusy(false);
+      setContextPanel((panel) => (panel === 'permission' ? null : panel));
     }
   };
 
@@ -1071,6 +1078,23 @@ const LiveChat: React.FC<{
             </div>
           </div>
           <div className="chat__headActions">
+            <button
+              type="button"
+              className={`btn btn--ghost-d${contextPanel === 'project' ? ' is-active' : ''}`}
+              aria-pressed={contextPanel === 'project'}
+              onClick={() => setContextPanel((p) => (p === 'project' ? null : 'project'))}
+            >
+              {projectCopy.windowTitle}
+            </button>
+            <button
+              type="button"
+              className={`btn btn--ghost-d${contextPanel === 'permission' ? ' is-active' : ''}`}
+              aria-pressed={contextPanel === 'permission'}
+              onClick={() => setContextPanel((p) => (p === 'permission' ? null : 'permission'))}
+            >
+              {permissionCopy.windowTitle}
+              {permission ? <span className="nav__badge nav__badge--warn">1</span> : null}
+            </button>
             <AppSourceBadge compact />
             {st ? (
               <>
@@ -1100,6 +1124,7 @@ const LiveChat: React.FC<{
         </div>
       </div>
 
+      <div className="chat__bodyRow">
       <div className="chat__stream" ref={streamRef}>
         <div className="chat__streamInner">
           {rt.activeTodos.length > 0 && <TodoPanel todos={rt.activeTodos} />}
@@ -1260,6 +1285,27 @@ const LiveChat: React.FC<{
         </div>
       </div>
 
+      <ContextDrawer
+        open={contextPanel === 'project'}
+        title={projectCopy.windowTitle}
+        onClose={() => setContextPanel((p) => (p === 'project' ? null : p))}
+      >
+        <ProjectWindow />
+      </ContextDrawer>
+      <ContextDrawer
+        open={contextPanel === 'permission'}
+        title={permissionCopy.windowTitle}
+        onClose={() => setContextPanel((p) => (p === 'permission' ? null : p))}
+      >
+        <PermissionWindow
+          pending={permission}
+          busy={permissionBusy}
+          onDecide={(decision, denyMessage) => { void respondPermission(decision, denyMessage); }}
+          onCorrectThis={openPermissionCorrection}
+        />
+      </ContextDrawer>
+      </div>
+
       <div className="promptbar">
         <div className="chat__column">
         {ready && activeQueue.length > 0 && (
@@ -1378,24 +1424,6 @@ const LiveChat: React.FC<{
         </div>
         </div>
       </div>
-
-      <Modal
-        open={!!permission}
-        title={permissionCopy.modalTitle}
-        onClose={() => {
-          if (permissionBusy || !permission) return;
-          respondPermission('deny', permissionCopy.deniedByUser);
-        }}
-      >
-        {permission ? (
-          <PermissionCard
-            request={permission}
-            busy={permissionBusy}
-            onDecide={(decision, denyMessage) => { void respondPermission(decision, denyMessage); }}
-            onCorrectThis={openPermissionCorrection}
-          />
-        ) : null}
-      </Modal>
 
       <ProposeCorrectionModal
         open={!!proposeContext}

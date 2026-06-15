@@ -307,7 +307,20 @@ export const loaderCopy = {
 
 export const permissionCopy = {
   modalTitle: 'Permission required',
+  windowTitle: 'Permission',
+  windowLede: 'Active permission route, pending tool gates, and recent decisions.',
   eyebrow: 'approval gate',
+  modeLabel: 'Permission mode',
+  routeLabel: 'Active route',
+  pendingTitle: 'Pending request',
+  recentTitle: 'Recent decisions',
+  recentEmpty: 'No permission decisions this session yet.',
+  sessionAllowedTitle: 'Allowed for session',
+  sessionAllowedEmpty: 'No tools session-allowed yet.',
+  riskLabel: 'Risk',
+  actionLabel: 'Action',
+  scopeOnce: 'once',
+  scopeSession: 'session',
   allowOnce: 'Allow once',
   allowSession: 'Allow for session',
   deny: 'Deny',
@@ -315,6 +328,25 @@ export const permissionCopy = {
   deniedByUser: 'Denied by operator',
   correctThis: 'Correct this',
   interactiveNote: 'This tool needs a richer answer than yes/no — allow or deny for now; full interactive flow ships separately.',
+} as const;
+
+export const projectCopy = {
+  windowTitle: 'Project',
+  windowLede: 'Active folder, otto home profile, and live session context.',
+  eyebrow: 'workspace context',
+  projectRoot: 'Project folder',
+  ottoHome: 'otto home',
+  profileHome: 'Profile home',
+  lettaState: 'Letta state',
+  sessionTitle: 'Session',
+  threadLabel: 'Thread',
+  agentLabel: 'Agent',
+  conversationLabel: 'Conversation',
+  transportLabel: 'Transport',
+  switchTitle: 'Switch project',
+  switchBlocked: 'In-app project switching is not available in v1.',
+  loading: 'Loading workspace context…',
+  unavailable: 'Project context is available in the desktop app only.',
 } as const;
 
 export const threadCopy = {
