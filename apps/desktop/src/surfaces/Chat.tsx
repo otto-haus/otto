@@ -1,6 +1,6 @@
 import { buildRuntimeMessageWithAttachments } from '../attachment-message';
 import type React from 'react';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { Fragment, memo, useEffect, useMemo, useRef, useState } from 'react';
 import { Icon } from '../components/icons';
 import { AppSourceBadge } from '../components/AppSourceBadge';
 import { useToast } from '../components/Toast';
@@ -16,6 +16,10 @@ import { chatCopy, permissionCopy, projectCopy, toastCopy } from '../copy/surfac
 import { ProjectWindow } from './ProjectWindow';
 import { PermissionWindow } from './PermissionWindow';
 import { useChatThreads } from '../chat/useChatThreads';
+import {
+  findStableMarkdownBoundary,
+  shouldPlainRenderTail,
+} from '../chat/markdown-streaming';
 import { isTableStart, parseTableBlock, type MarkdownTable } from '../chat/markdown-tables';
 import { notifyOnboardingFirstMessage, resolveOnboardingStarterAction } from '../onboarding-storage';
 import { ProposeCorrectionModal, type ProposeCorrectionContext } from '../chat/ProposeCorrectionModal';
@@ -28,6 +32,7 @@ import {
 import { serializeConversationMarkdown } from '../chat/conversation-markdown';
 import { runTicketCommand } from '../chat/ticket-commands';
 import { formatResolvedModelLabel, helpTextForModelOption } from '../chat/model-option-help';
+import { planQueueDrain } from '../chat/queue-drain';
 import {
   appendFailedQueueItem,
   clearInFlight,
@@ -52,7 +57,6 @@ import {
 } from '../chat/queue-storage';
 import type { ProposalTarget } from '@otto-haus/core';
 import type { ChatMsg } from '../runtime';
-import { CollapsibleMessageBody } from '../chat/CollapsibleMessageBody';
 import { useOttoDebugContextMenu } from '../debug/useOttoDebugContextMenu';
 import { isTypingTarget, jumpTurnAnchor, turnAnchorIndices } from '../chat/turn-navigation';
 import {
@@ -574,7 +578,7 @@ const MarkdownTableView: React.FC<{ table: MarkdownTable }> = ({ table }) => (
   </div>
 );
 
-const MarkdownText: React.FC<{ text: string }> = ({ text }) => {
+const parseMarkdownBlocks = (text: string): React.ReactNode[] => {
   const blocks: React.ReactNode[] = [];
   const parts = text.split(/(```[\s\S]*?```)/g).filter(Boolean);
 
@@ -657,6 +661,13 @@ const MarkdownText: React.FC<{ text: string }> = ({ text }) => {
           i = parsed.endIndex;
           continue;
         }
+        // isTableStart matched but the block did not fully parse (common while a
+        // table is still streaming in). Render this line as a paragraph and advance:
+        // falling through would re-hit the `!isTableStart` paragraph guard below
+        // without moving `i`, spinning the outer loop forever and OOMing the renderer.
+        blocks.push(<p className="md__p" key={`p-${blocks.length}-${line.slice(0, 48)}`}>{renderInline(line.trim())}</p>);
+        i += 1;
+        continue;
       }
 
       const para: string[] = [];
@@ -669,8 +680,73 @@ const MarkdownText: React.FC<{ text: string }> = ({ text }) => {
     }
   }
 
-  return <div className="md">{blocks}</div>;
+  return blocks;
 };
+
+type MarkdownTextProps = { text: string; streaming?: boolean };
+
+// Incrementally-parsed finalized blocks. Each segment is parsed ONCE when the stream
+// moves past it and cached behind a stable key, so it never re-parses on later tokens.
+type FinalizedCache = { parsedUpTo: number; segments: React.ReactNode[] };
+
+const EMPTY_CACHE: FinalizedCache = { parsedUpTo: 0, segments: [] };
+
+// PRIMARY mechanism: block-level incremental parse. While `text` streams in, only the
+// live tail (the still-open block) re-parses per token — per-token cost is O(current
+// block), not O(message). BACKSTOP: an oversized live tail renders as cheap plain
+// preformatted text until its block closes (the hard ceiling against a single huge
+// block). Completed (non-streaming) messages parse the whole string once for correct
+// markdown. The component stays memoized per message so unrelated renders are no-ops.
+const MarkdownText: React.FC<MarkdownTextProps> = memo(({ text, streaming = false }) => {
+  const cacheRef = useRef<FinalizedCache>(EMPTY_CACHE);
+
+  // Non-streaming: authoritative full parse, and drop any streaming cache.
+  if (!streaming) {
+    if (cacheRef.current !== EMPTY_CACHE) cacheRef.current = EMPTY_CACHE;
+    return <div className="md">{parseMarkdownBlocks(text)}</div>;
+  }
+
+  const boundary = findStableMarkdownBoundary(text);
+  const cache = cacheRef.current;
+
+  // Text only appends while streaming; if the boundary ever regressed (new message
+  // reused this instance, edit, etc.) reset so we never serve stale finalized blocks.
+  if (boundary < cache.parsedUpTo) {
+    cacheRef.current = EMPTY_CACHE;
+  }
+  const live = cacheRef.current;
+
+  // PRIMARY: parse only the newly-finalized slice once, append to the immutable cache.
+  if (boundary > live.parsedUpTo) {
+    const newlyFinal = text.slice(live.parsedUpTo, boundary);
+    const startKey = live.parsedUpTo;
+    const parsed = parseMarkdownBlocks(newlyFinal);
+    cacheRef.current = {
+      parsedUpTo: boundary,
+      segments: [...live.segments, <Fragment key={`seg-${startKey}`}>{parsed}</Fragment>],
+    };
+  }
+
+  const finalizedSegments = cacheRef.current.segments;
+  const tailText = text.slice(boundary);
+  const tailLength = tailText.length;
+
+  // BACKSTOP: oversized live tail → plain pre; full markdown parse deferred until the
+  // block closes (boundary advances) or the stream completes (non-streaming branch).
+  const plainTail = shouldPlainRenderTail(boundary, text.length, tailLength);
+
+  return (
+    <div className="md">
+      {finalizedSegments}
+      {tailLength === 0 ? null : plainTail ? (
+        <pre className="md__pre md__streamingPlain" key="tail-plain">{tailText}</pre>
+      ) : (
+        <Fragment key="tail">{parseMarkdownBlocks(tailText)}</Fragment>
+      )}
+    </div>
+  );
+});
+MarkdownText.displayName = 'MarkdownText';
 
 const LiveChat: React.FC<{
   onOpenSettings?: () => void;
@@ -873,8 +949,9 @@ const LiveChat: React.FC<{
   );
   const turnAnchors = useMemo(() => turnAnchorIndices(streamMessages), [streamMessages]);
   const activeQueue = queueDisplayItemsForThread(queue, rt.activeThreadId);
-  const lastStreamMessage = streamMessages[streamMessages.length - 1];
-  const assistantStreaming = rt.busy && lastStreamMessage?.who === 'otto' && !!lastStreamMessage.text;
+  const lastRuntimeMessage = rt.messages[rt.messages.length - 1];
+  const assistantStreaming = rt.busy && lastRuntimeMessage?.who === 'otto' && !!lastRuntimeMessage.text;
+  const streamingRuntimeMessageIndex = assistantStreaming ? rt.messages.length - 1 : -1;
   const activityLabel = rt.turnActivity?.label ?? chatCopy.workingPulse;
   const headerSubtitle = st
     ? (rt.busy
@@ -1000,7 +1077,7 @@ const LiveChat: React.FC<{
 
   const submit = () => {
     const t = draft.trim();
-    if ((!t && attachments.length === 0) || !ready || !api) return;
+    if ((!t && attachments.length === 0) || !api) return;
     const text = buildRuntimeMessageWithAttachments(t, attachments);
     const recalledId = recalledQueueId;
     void (async () => {
@@ -1018,21 +1095,52 @@ const LiveChat: React.FC<{
         return;
       }
       const steering = rt.busy;
-      setQueue((items) => {
-        const withoutRecalled = recalledId ? removeQueueItem(items, recalledId) : items;
-        return enqueueQueueItemForThread(withoutRecalled, text, rt.activeThreadId, { steer: steering });
-      });
+      if (!ready || steering) {
+        setQueue((items) => {
+          const withoutRecalled = recalledId ? removeQueueItem(items, recalledId) : items;
+          return enqueueQueueItemForThread(withoutRecalled, text, rt.activeThreadId, { steer: steering });
+        });
+        if (recalledId) setRecalledQueueId(null);
+        if (steering) void rt.abort();
+        setDraft('');
+        setAttachments([]);
+        return;
+      }
       if (recalledId) setRecalledQueueId(null);
-      if (steering) void rt.abort();
+      const pendingQueued = nextQueueItemForThread(queue, rt.activeThreadId);
+      if (pendingQueued) {
+        setQueue((items) => {
+          const withoutRecalled = recalledId ? removeQueueItem(items, recalledId) : items;
+          return enqueueQueueItemForThread(withoutRecalled, text, rt.activeThreadId);
+        });
+        setDraft('');
+        setAttachments([]);
+        return;
+      }
+      if (recalledId) {
+        setQueue((items) => removeQueueItem(items, recalledId));
+      }
       setDraft('');
       setAttachments([]);
+      try {
+        await rt.send(text);
+        notifyOnboardingFirstMessage();
+      } catch {
+        setQueue((items) => appendFailedQueueItem(items, createQueueItem(text, 'failed', rt.activeThreadId)));
+      }
     })();
   };
 
   useEffect(() => {
-    if (!ready || !rt.activeThreadId || rt.busy || draining.current || queue.length === 0) return;
-    const next = nextQueueItemForThread(queue, rt.activeThreadId);
-    if (!next) return;
+    const plan = planQueueDrain({
+      queue,
+      ready,
+      activeThreadId: rt.activeThreadId,
+      busy: rt.busy,
+      draining: draining.current,
+    });
+    if (plan.action !== 'send') return;
+    const { item: next } = plan;
     draining.current = true;
     persistInFlight({ ...next, state: 'sending' });
     setQueue((items) => items.filter((item) => item.id !== next.id));
@@ -1236,6 +1344,7 @@ const LiveChat: React.FC<{
             const showWho = i === 0 || streamMessages[i - 1].who !== m.who;
             const isUser = m.who === 'user';
             const isError = m.who === 'error';
+            const isStreamingMessage = assistantStreaming && i === streamingRuntimeMessageIndex && !isUser && !isError;
             const whoLabel = isUser ? 'You' : isError ? 'Error' : 'otto';
             return (
               <div
@@ -1272,7 +1381,7 @@ const LiveChat: React.FC<{
                   ) : null}
                   {isError ? (
                     <div className="msg__body" style={{ color: 'var(--stop)' }}>
-                      {m.text ? <MarkdownText text={m.text} /> : null}
+                      {m.text ? <MarkdownText text={m.text} streaming={isStreamingMessage} /> : null}
                       {m.details ? (
                         <details className="msg__details">
                           <summary>Copy details</summary>
@@ -1281,9 +1390,9 @@ const LiveChat: React.FC<{
                       ) : null}
                     </div>
                   ) : (
-                    <CollapsibleMessageBody collapsible={!isUser && !!m.text}>
-                      {m.text ? <MarkdownText text={m.text} /> : null}
-                    </CollapsibleMessageBody>
+                    <div className="msg__body">
+                      {m.text ? <MarkdownText text={m.text} streaming={isStreamingMessage} /> : null}
+                    </div>
                   )}
                   {!isUser && !isError && m.text ? (
                     <MessageActions

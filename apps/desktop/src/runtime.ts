@@ -407,8 +407,9 @@ export function useRuntime() {
     let cancelled = false;
     void api.threads.list().then((result) => {
       if (cancelled || threadHydrated.current) return;
-      threadHydrated.current = true;
       const threadId = result.activeThreadId;
+      if (!threadId) return;
+      threadHydrated.current = true;
       activeThreadRef.current = threadId;
       const loaded = loadThreadMessagesForView(threadId, threadMessagesCache.current, { allowLegacyFallback: true });
       messagesRef.current = loaded;
@@ -459,14 +460,20 @@ export function useRuntime() {
       .init()
       .then(async (nextStatus) => {
         setStatus(nextStatus);
-        if (threadHydrated.current) return;
         try {
           const result = await api.threads.list();
-          threadHydrated.current = true;
           const threadId = result.activeThreadId;
           if (!threadId) return;
+          const allowLegacyFallback = !threadHydrated.current;
+          threadHydrated.current = true;
+          if (activeThreadRef.current === threadId) {
+            setActiveThreadId((current) => current ?? threadId);
+            return;
+          }
           activeThreadRef.current = threadId;
-          const loaded = loadThreadMessagesForView(threadId, threadMessagesCache.current);
+          const loaded = loadThreadMessagesForView(threadId, threadMessagesCache.current, {
+            allowLegacyFallback,
+          });
           messagesRef.current = loaded;
           setActiveThreadId(threadId);
           setMessages(loaded);
