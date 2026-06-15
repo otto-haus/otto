@@ -17,6 +17,13 @@ describe('markdown streaming OOM guard', () => {
     expect(findStableMarkdownBoundary('before\n```\nopen')).toBe(7);
   });
 
+  it('ignores blank lines inside closed fenced code blocks', () => {
+    const fenced = '```js\nline1\n\nline2\n```\n\nafter';
+    const outsideBreak = fenced.indexOf('\n\nafter');
+    expect(findStableMarkdownBoundary(fenced)).toBe(outsideBreak + 2);
+    expect(findStableMarkdownBoundary('```js\nline1\n\nline2\n```')).toBe(0);
+  });
+
   it('PRIMARY: block-level incremental keeps multi-paragraph streaming bounded', () => {
     const finalLength = 80_000;
     const tokenCount = 400;

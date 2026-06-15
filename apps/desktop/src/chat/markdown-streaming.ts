@@ -25,18 +25,31 @@ export const STREAMING_PLAIN_TOTAL_MAX = 4096;
  * monotonic — finalized content to its left is immutable and safe to cache.
  */
 export function findStableMarkdownBoundary(text: string): number {
+  const fenceRanges: Array<{ start: number; end: number }> = [];
   let fenceCount = 0;
   let lastFenceOpen = 0;
   const fenceRe = /```/g;
   for (let m = fenceRe.exec(text); m; m = fenceRe.exec(text)) {
     fenceCount += 1;
-    if (fenceCount % 2 === 1) lastFenceOpen = m.index;
+    if (fenceCount % 2 === 1) {
+      lastFenceOpen = m.index;
+    } else {
+      fenceRanges.push({ start: lastFenceOpen, end: m.index + 3 });
+    }
   }
   // Odd number of fences → the last one is still open; tail starts at that fence.
   if (fenceCount % 2 === 1) return lastFenceOpen;
 
-  const lastParaBreak = text.lastIndexOf('\n\n');
-  if (lastParaBreak >= 0) return lastParaBreak + 2;
+  // Only finalize at blank-line boundaries outside fenced code blocks. A blank line
+  // inside a closed fence must not split the block across cached segments.
+  let searchFrom = text.length;
+  while (searchFrom > 0) {
+    const paraBreak = text.lastIndexOf('\n\n', searchFrom - 1);
+    if (paraBreak < 0) break;
+    const insideFence = fenceRanges.some((range) => paraBreak >= range.start && paraBreak < range.end);
+    if (!insideFence) return paraBreak + 2;
+    searchFrom = paraBreak;
+  }
 
   return 0;
 }

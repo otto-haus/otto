@@ -40,6 +40,7 @@ import {
   createQueueItem,
   enqueueQueueItemForThread,
   hasDuplicateQueueText,
+  nextQueueItemForThread,
   persistInFlight,
   previewQueueText,
   promoteQueueItemForThread,
@@ -948,8 +949,9 @@ const LiveChat: React.FC<{
   );
   const turnAnchors = useMemo(() => turnAnchorIndices(streamMessages), [streamMessages]);
   const activeQueue = queueDisplayItemsForThread(queue, rt.activeThreadId);
-  const lastStreamMessage = streamMessages[streamMessages.length - 1];
-  const assistantStreaming = rt.busy && lastStreamMessage?.who === 'otto' && !!lastStreamMessage.text;
+  const lastRuntimeMessage = rt.messages[rt.messages.length - 1];
+  const assistantStreaming = rt.busy && lastRuntimeMessage?.who === 'otto' && !!lastRuntimeMessage.text;
+  const streamingRuntimeMessageIndex = assistantStreaming ? rt.messages.length - 1 : -1;
   const activityLabel = rt.turnActivity?.label ?? chatCopy.workingPulse;
   const headerSubtitle = st
     ? (rt.busy
@@ -1104,8 +1106,18 @@ const LiveChat: React.FC<{
         setAttachments([]);
         return;
       }
+      if (recalledId) setRecalledQueueId(null);
+      const pendingQueued = nextQueueItemForThread(queue, rt.activeThreadId);
+      if (pendingQueued) {
+        setQueue((items) => {
+          const withoutRecalled = recalledId ? removeQueueItem(items, recalledId) : items;
+          return enqueueQueueItemForThread(withoutRecalled, text, rt.activeThreadId);
+        });
+        setDraft('');
+        setAttachments([]);
+        return;
+      }
       if (recalledId) {
-        setRecalledQueueId(null);
         setQueue((items) => removeQueueItem(items, recalledId));
       }
       setDraft('');
@@ -1128,10 +1140,10 @@ const LiveChat: React.FC<{
       draining: draining.current,
     });
     if (plan.action !== 'send') return;
-    const { item: next, nextQueue } = plan;
+    const { item: next } = plan;
     draining.current = true;
     persistInFlight({ ...next, state: 'sending' });
-    setQueue(nextQueue);
+    setQueue((items) => items.filter((item) => item.id !== next.id));
     void rt.send(next.text)
       .then(() => {
         clearInFlight(next.id);
@@ -1332,7 +1344,7 @@ const LiveChat: React.FC<{
             const showWho = i === 0 || streamMessages[i - 1].who !== m.who;
             const isUser = m.who === 'user';
             const isError = m.who === 'error';
-            const isStreamingMessage = assistantStreaming && i === streamMessages.length - 1 && !isUser && !isError;
+            const isStreamingMessage = assistantStreaming && i === streamingRuntimeMessageIndex && !isUser && !isError;
             const whoLabel = isUser ? 'You' : isError ? 'Error' : 'otto';
             return (
               <div

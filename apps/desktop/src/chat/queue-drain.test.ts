@@ -113,4 +113,34 @@ describe('planQueueDrain', () => {
       nextQueue: [queue[0]],
     });
   });
+
+  test('functional drain removal preserves concurrently enqueued items', () => {
+    const removeDrained = (items: QueueItem[], drainedId: string) =>
+      items.filter((item) => item.id !== drainedId);
+
+    const queueAtPlanTime: QueueItem[] = [
+      { id: 'a', text: 'first', createdAt: 1, state: 'queued', threadId: 'thread_a' },
+      { id: 'b', text: 'second', createdAt: 2, state: 'queued', threadId: 'thread_a' },
+    ];
+    const plan = planQueueDrain({
+      queue: queueAtPlanTime,
+      ready: true,
+      activeThreadId: 'thread_a',
+      busy: false,
+      draining: false,
+    });
+    if (plan.action !== 'send') throw new Error('expected send plan');
+
+    const concurrent: QueueItem = {
+      id: 'c',
+      text: 'arrived mid-drain',
+      createdAt: 3,
+      state: 'queued',
+      threadId: 'thread_a',
+    };
+    const latestQueue = [...queueAtPlanTime, concurrent];
+
+    expect(plan.nextQueue).toEqual([queueAtPlanTime[1]]);
+    expect(removeDrained(latestQueue, plan.item.id)).toEqual([queueAtPlanTime[1], concurrent]);
+  });
 });
