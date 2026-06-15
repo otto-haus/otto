@@ -51,16 +51,34 @@ export async function resolveLiveLocalLettaContext(config: ConfigStore): Promise
     discoverSettingsHttpBaseUrl(settings),
   ]);
   const httpCandidates = candidates.filter((url) => /^https?:\/\//i.test(url));
+  const connectionMode = config.connectionMode();
+  const loopbackHttpCandidates = httpCandidates.filter((url) =>
+    /^https?:\/\/(?:127\.0\.0\.1|localhost)(?::\d+)?/i.test(url),
+  );
+  const probeCandidates =
+    connectionMode === 'embedded' ? loopbackHttpCandidates : httpCandidates;
 
   // Nothing to probe (embedded `local:` target or no HTTP candidate) — keep sync behavior.
-  if (httpCandidates.length === 0) {
+  if (probeCandidates.length === 0) {
     const discoveredUrl = candidates[0] ?? null;
+    if (
+      connectionMode === 'embedded' &&
+      discoveredUrl &&
+      /^https?:\/\//i.test(discoveredUrl) &&
+      !/^https?:\/\/(?:127\.0\.0\.1|localhost)(?::\d+)?/i.test(discoveredUrl)
+    ) {
+      return buildLocalLettaContext(config, settings, configuredBase, null);
+    }
     return buildLocalLettaContext(config, settings, configuredBase, discoveredUrl);
   }
 
-  const liveUrl = await firstReachableBaseUrl(httpCandidates);
-  // Embedded boot must not pin to a dead loopback override when nothing is reachable.
-  if (!liveUrl && config.connectionMode() === 'embedded' && !candidates.some((url) => url && /^local:/i.test(url))) {
+  const liveUrl = await firstReachableBaseUrl(probeCandidates);
+  // Embedded boot must not pin to a dead loopback override when nothing local is reachable.
+  if (
+    !liveUrl &&
+    connectionMode === 'embedded' &&
+    !candidates.some((url) => url && /^local:/i.test(url))
+  ) {
     return buildLocalLettaContext(config, settings, configuredBase, null);
   }
   // If none are reachable, keep the first candidate so error messaging still has context.
