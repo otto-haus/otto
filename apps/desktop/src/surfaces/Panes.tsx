@@ -4701,7 +4701,6 @@ export const Settings: React.FC = () => {
         </div>
       )}
       </div>
-      <SurfaceProof surface="settings" />
     </SurfacePage>
   );
 };
