@@ -8,7 +8,7 @@
  */
 import { execFileSync } from 'node:child_process';
 import { cpSync, existsSync, mkdirSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
-import { dirname, join, resolve } from 'node:path';
+import { basename, dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -29,8 +29,12 @@ function iconPath(iconsetDir, name) {
   if (!isSafeIconFilename(name)) {
     throw new Error(`Refusing unexpected icon filename: ${name}`);
   }
+  const safeName = basename(name);
+  if (safeName !== name) {
+    throw new Error(`Refusing unexpected icon filename: ${name}`);
+  }
   const root = resolve(iconsetDir);
-  const resolved = resolve(iconsetDir, name);
+  const resolved = resolve(root, safeName);
   if (resolved !== root && !resolved.startsWith(`${root}/`)) {
     throw new Error(`Refusing path outside iconset: ${name}`);
   }
