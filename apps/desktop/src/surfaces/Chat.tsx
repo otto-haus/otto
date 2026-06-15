@@ -46,6 +46,7 @@ import type { ProposalTarget } from '@otto-haus/core';
 import type { ChatMsg } from '../runtime';
 import { CollapsibleMessageBody } from '../chat/CollapsibleMessageBody';
 import { useOttoDebugContextMenu } from '../debug/useOttoDebugContextMenu';
+import { TruncatedMessageRestore } from '../chat/TruncatedMessageRestore';
 import { isTypingTarget, jumpTurnAnchor, turnAnchorIndices } from '../chat/turn-navigation';
 import {
   curateModelOptions,
@@ -709,6 +710,7 @@ const LiveChat: React.FC<{
   const [proposeContext, setProposeContext] = useState<ProposeCorrectionContext | null>(null);
   const [proposeBusy, setProposeBusy] = useState(false);
   const [cmdMessages, setCmdMessages] = useState<ChatMsg[]>([]);
+  const [expandedMessageTexts, setExpandedMessageTexts] = useState<Record<string, string>>({});
   const draining = useRef(false);
   const fileInput = useRef<HTMLInputElement | null>(null);
   const pickerRef = useRef<HTMLDivElement | null>(null);
@@ -1177,6 +1179,7 @@ const LiveChat: React.FC<{
             const isUser = m.who === 'user';
             const isError = m.who === 'error';
             const whoLabel = isUser ? 'You' : isError ? 'Error' : 'otto';
+            const displayText = expandedMessageTexts[m.id] ?? m.text;
             return (
               <div
                 key={m.id}
@@ -1212,7 +1215,7 @@ const LiveChat: React.FC<{
                   ) : null}
                   {isError ? (
                     <div className="msg__body" style={{ color: 'var(--stop)' }}>
-                      {m.text ? <MarkdownText text={m.text} /> : null}
+                      {displayText ? <MarkdownText text={displayText} /> : null}
                       {m.details ? (
                         <details className="msg__details">
                           <summary>Copy details</summary>
@@ -1221,16 +1224,24 @@ const LiveChat: React.FC<{
                       ) : null}
                     </div>
                   ) : (
-                    <CollapsibleMessageBody collapsible={!isUser && !!m.text}>
-                      {m.text ? <MarkdownText text={m.text} /> : null}
+                    <CollapsibleMessageBody collapsible={!isUser && !!displayText}>
+                      {displayText ? <MarkdownText text={displayText} /> : null}
                     </CollapsibleMessageBody>
                   )}
-                  {!isUser && !isError && m.text ? (
+                  <TruncatedMessageRestore
+                    message={m}
+                    threadId={rt.activeThreadId}
+                    expandedText={expandedMessageTexts[m.id]}
+                    onExpand={(messageId, fullText) => {
+                      setExpandedMessageTexts((prev) => ({ ...prev, [messageId]: fullText }));
+                    }}
+                  />
+                  {!isUser && !isError && displayText ? (
                     <MessageActions
                       disabled={proposeBusy}
                       onCorrectThis={() => setProposeContext({
                         messageId: m.id,
-                        messageText: m.text,
+                        messageText: displayText,
                         who: 'otto',
                       })}
                     />

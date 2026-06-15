@@ -208,6 +208,12 @@ export const chatCopy = {
   queuePillWaiting: 'waiting',
   queuePillFailed: 'failed',
   queuePillPosition: (position: number) => `#${position}`,
+  truncatedOnReload: (hiddenChars: number) =>
+    hiddenChars > 0
+      ? `Shortened on reload (${hiddenChars.toLocaleString()} chars hidden).`
+      : 'Shortened on reload.',
+  truncatedShowFull: 'Show full message',
+  truncatedLoading: 'Loading…',
   runtimeConnectingEyebrow: 'starting runtime',
   runtimeConnectingTitle: 'Connecting to Letta…',
   runtimeConnectingBody: 'Booting your local agent session. This usually takes a few seconds. If this hangs, export a diagnostics bundle from Settings.',

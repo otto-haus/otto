@@ -1,10 +1,13 @@
 /** Per-thread localStorage keys for chat history (046). */
 export const LEGACY_MESSAGES_KEY = 'otto.chat.messages.v1';
-const MAX_RESTORED_MESSAGES = 12;
-const MAX_RESTORED_TEXT_CHARS = 1000;
+export const MAX_RESTORED_MESSAGES = 12;
+export const MAX_RESTORED_TEXT_CHARS = 1000;
 const MAX_RESTORED_THREAD_CHARS = 6000;
 /** Reject only pathological localStorage payloads; bounded restore stays in parseMessages(). */
 const MAX_PARSEABLE_HISTORY_CHARS = 1_000_000;
+/** Legacy inline suffix from pre-metadata truncation; stripped on read for older sessions. */
+export const LEGACY_RESTORED_TRUNCATION_SUFFIX =
+  '\n\n[Older local message truncated for renderer safety.]';
 
 export type StoredChatMsg = {
   id: string;
@@ -12,36 +15,87 @@ export type StoredChatMsg = {
   text: string;
   details?: string;
   streamId?: string;
+  /** Present when startup restore shortened text for renderer safety. */
+  truncated?: boolean;
+  /** Original character count before restore shortening. */
+  truncatedFromLength?: number;
 };
 
 export function messagesKey(threadId: string | null): string {
   return threadId ? `otto.chat.messages.${threadId}.v1` : LEGACY_MESSAGES_KEY;
 }
 
-function parseMessages(raw: string | null): StoredChatMsg[] {
+function isStoredChatMsg(m: unknown): m is StoredChatMsg {
+  return !!m
+    && typeof (m as StoredChatMsg).id === 'string'
+    && typeof (m as StoredChatMsg).text === 'string'
+    && ((m as StoredChatMsg).who === 'user'
+      || (m as StoredChatMsg).who === 'otto'
+      || (m as StoredChatMsg).who === 'error');
+}
+
+function readRawMessageArray(
+  raw: string | null,
+): StoredChatMsg[] | null {
+  if (!raw || raw.length > MAX_PARSEABLE_HISTORY_CHARS) return null;
   try {
-    const parsed = JSON.parse(raw ?? '[]') as StoredChatMsg[];
-    if (!Array.isArray(parsed)) return [];
-    const restored: StoredChatMsg[] = [];
-    let restoredChars = 0;
-    for (const m of parsed.slice(-MAX_RESTORED_MESSAGES).reverse()) {
-      if (
-        typeof m?.id !== 'string'
-        || typeof m.text !== 'string'
-        || (m.who !== 'user' && m.who !== 'otto' && m.who !== 'error')
-      ) continue;
-      if (restoredChars >= MAX_RESTORED_THREAD_CHARS) break;
-      const text = m.text.length > MAX_RESTORED_TEXT_CHARS
-        ? `${m.text.slice(0, MAX_RESTORED_TEXT_CHARS)}\n\n[Older local message truncated for renderer safety.]`
-        : m.text;
-      restoredChars += text.length;
-      restored.push({ ...m, text });
-    }
-    return restored.reverse()
-      .filter((m) => typeof m?.id === 'string' && typeof m.text === 'string' && (m.who === 'user' || m.who === 'otto' || m.who === 'error'))
-      .slice(-MAX_RESTORED_MESSAGES);
+    const parsed = JSON.parse(raw) as StoredChatMsg[];
+    if (!Array.isArray(parsed)) return null;
+    return parsed.filter(isStoredChatMsg);
   } catch {
-    return [];
+    return null;
+  }
+}
+
+function stripLegacyTruncationSuffix(text: string): string {
+  return text.endsWith(LEGACY_RESTORED_TRUNCATION_SUFFIX)
+    ? text.slice(0, -LEGACY_RESTORED_TRUNCATION_SUFFIX.length)
+    : text;
+}
+
+function parseMessages(raw: string | null): StoredChatMsg[] {
+  const parsed = readRawMessageArray(raw);
+  if (!parsed) return [];
+  const restored: StoredChatMsg[] = [];
+  let restoredChars = 0;
+  for (const m of parsed.slice(-MAX_RESTORED_MESSAGES).reverse()) {
+    if (restoredChars >= MAX_RESTORED_THREAD_CHARS) break;
+    const fullText = stripLegacyTruncationSuffix(m.text);
+    const truncated = fullText.length > MAX_RESTORED_TEXT_CHARS;
+    const text = truncated ? fullText.slice(0, MAX_RESTORED_TEXT_CHARS) : fullText;
+    restoredChars += text.length;
+    restored.push({
+      ...m,
+      text,
+      ...(truncated
+        ? { truncated: true, truncatedFromLength: fullText.length }
+        : { truncated: undefined, truncatedFromLength: undefined }),
+    });
+  }
+  return restored.reverse().slice(-MAX_RESTORED_MESSAGES);
+}
+
+export function readStoredMessageFullText(
+  threadId: string | null,
+  messageId: string,
+  opts: { allowLegacyFallback?: boolean; storage?: Pick<Storage, 'getItem'> } = {},
+): string | null {
+  try {
+    const storage = opts.storage ?? localStorage;
+    const key = messagesKey(threadId);
+    let raw = storage.getItem(key);
+    if (!raw && opts.allowLegacyFallback && threadId && key !== LEGACY_MESSAGES_KEY) {
+      raw = storage.getItem(LEGACY_MESSAGES_KEY);
+    }
+    if (!raw && !threadId) {
+      raw = storage.getItem(LEGACY_MESSAGES_KEY);
+    }
+    const parsed = readRawMessageArray(raw);
+    if (!parsed) return null;
+    const match = parsed.find((m) => m.id === messageId);
+    return match ? stripLegacyTruncationSuffix(match.text) : null;
+  } catch {
+    return null;
   }
 }
 
@@ -74,7 +128,18 @@ export function readStoredMessages(
 
 export function flushMessages(threadId: string | null, msgs: StoredChatMsg[]): void {
   try {
-    localStorage.setItem(messagesKey(threadId), JSON.stringify(msgs.slice(-200)));
+    const key = messagesKey(threadId);
+    const existing = readRawMessageArray(localStorage.getItem(key));
+    const existingById = new Map(existing?.map((m) => [m.id, m]) ?? []);
+    const toSave = msgs.slice(-200).map((m) => {
+      const prior = existingById.get(m.id);
+      const { truncated, truncatedFromLength, ...rest } = m;
+      if (prior && prior.text.length > rest.text.length) {
+        return { ...rest, text: stripLegacyTruncationSuffix(prior.text) };
+      }
+      return rest;
+    });
+    localStorage.setItem(key, JSON.stringify(toSave));
   } catch {
     /* best effort */
   }
