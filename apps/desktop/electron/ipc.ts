@@ -42,6 +42,7 @@ import { OTTO_DIR } from './config-store';
 import { buildProviderMirror } from './provider-mirror';
 import { setSecret, hasSecret } from './secret-store';
 import { CogneeStore } from './cognee-store';
+import { PaperclipIntakeStore } from './paperclip-intake-store';
 import { MemoryStore } from './memory-store';
 import { PgvectorStore } from './pgvector-store';
 import { safeWebContentsSend, smokeMode } from './runtime-transport/runtime-common';
@@ -75,6 +76,7 @@ export function registerIpc(win: BrowserWindow) {
   const cultureExporter = new CultureExporter();
   const diagnosticsExporter = new DiagnosticsExporter();
   const cognee = new CogneeStore(config);
+  const paperclipIntake = new PaperclipIntakeStore(autonomy);
   const memory = new MemoryStore(config);
   const pgvector = new PgvectorStore();
 
@@ -313,6 +315,12 @@ export function registerIpc(win: BrowserWindow) {
     'otto:tickets:update-status',
     (_e, ticketId: string, patch: Parameters<TicketStore['updateStatus']>[1]) => tickets.updateStatus(ticketId, patch),
   );
+  ipcMain.handle('otto:adapters:paperclip:snapshot', () => paperclipIntake.snapshot());
+  ipcMain.handle(
+    'otto:adapters:paperclip:connect',
+    (_e, input?: { approved?: boolean; baseUrl?: string | null }) => paperclipIntake.connect(input ?? {}),
+  );
+  ipcMain.handle('otto:adapters:paperclip:sync', () => paperclipIntake.sync());
 
   ipcMain.handle('otto:workers:list', () => workers.list());
   ipcMain.handle('otto:workers:update-status', (_e, id: string, status: import('@otto-haus/core').WorkerStatus, receiptId?: string) =>

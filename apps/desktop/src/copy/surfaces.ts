@@ -553,6 +553,28 @@ export const ticketsCopy = {
   noChecks: 'No checks',
 } as const;
 
+export const paperclipIntakeCopy = {
+  eyebrow: 'intake',
+  title: 'Paperclip context (read-only)',
+  lede: 'Imported work_state from Paperclip — display-only. Paperclip status is never otto Done.',
+  notConnectedTitle: 'Paperclip not connected',
+  notConnectedBody: 'Connect through the approval door (021). No mock rows appear here.',
+  connect: 'Connect Paperclip',
+  confirmConnect: 'Approve connect',
+  sync: 'Sync now',
+  lastSync: (at: string) => `Last sync · ${new Date(at).toLocaleString()}`,
+  noSyncYet: 'Connected — no sync yet',
+  syncErrorTitle: 'Sync error',
+  emptySyncTitle: 'No imported tasks yet',
+  emptySyncBody: 'Run sync after 021 writes export.json or set OTTO_PAPERCLIP_EXPORT.',
+  activeEyebrow: 'active tasks',
+  blockedEyebrow: 'blocked tasks',
+  artifactsEyebrow: 'recent artifacts',
+  openInPaperclip: 'Open in Paperclip',
+  approvalRequired: 'Approval required before enabling the connector.',
+  storageLabel: 'Adapter storage',
+} as const;
+
 export const channelsCopy = {
   eyebrow: 'reachability',
   title: 'Channels reach the human.',

@@ -537,3 +537,47 @@ export interface SystemHealthReport {
   build: AppBuildInfo;
   checks: HealthCheck[];
 }
+
+/** Paperclip intake (074) — display-only work_state; never otto Done. */
+export type PaperclipConnectionState = 'not_connected' | 'connected' | 'sync_error';
+
+export interface PaperclipTaskRow {
+  id: string;
+  title: string;
+  status: string;
+  url: string;
+  blocked?: boolean;
+}
+
+export interface PaperclipArtifactRow {
+  id: string;
+  label: string;
+  url: string;
+}
+
+export interface PaperclipIntakeSnapshot {
+  dir: string;
+  connection: PaperclipConnectionState;
+  enabled: boolean;
+  lastSyncAt: string | null;
+  lastSyncError: string | null;
+  sourceBaseUrl: string | null;
+  activeTasks: PaperclipTaskRow[];
+  blockedTasks: PaperclipTaskRow[];
+  recentArtifacts: PaperclipArtifactRow[];
+}
+
+export interface PaperclipConnectResult {
+  ok: boolean;
+  needsApproval?: boolean;
+  message?: string;
+  snapshot: PaperclipIntakeSnapshot;
+  receipt: Receipt & { path: string };
+}
+
+export interface PaperclipSyncResult {
+  ok: boolean;
+  error?: string;
+  snapshot: PaperclipIntakeSnapshot;
+  receipt?: Receipt & { path: string };
+}
