@@ -21,6 +21,7 @@ import { runTicketCommand } from '../chat/ticket-commands';
 import {
   clearInFlight,
   createQueueItem,
+  hasDuplicateQueueText,
   nextQueueItemForThread,
   persistInFlight,
   previewQueueText,
@@ -264,6 +265,11 @@ const dedupeQueue = (items: Array<QueueItem | null>): QueueItem[] => {
     if (item && !out.some((x) => x.id === item.id)) out.push(item);
   }
   return out;
+};
+
+const appendQueueItem = (items: QueueItem[], text: string, threadId: string | null | undefined): QueueItem[] => {
+  if (hasDuplicateQueueText(items, threadId, text)) return items;
+  return [...items, createQueueItem(text, 'queued', threadId ?? null)];
 };
 
 const QueueStrip: React.FC<{
@@ -616,7 +622,7 @@ const LiveChat: React.FC<{
       const text = detail?.text?.trim();
       if (!text) return;
       if (detail?.send && ready && api) {
-        setQueue((items) => [...items, createQueueItem(text, 'queued', rt.activeThreadId)]);
+        setQueue((items) => appendQueueItem(items, text, rt.activeThreadId));
         return;
       }
       setDraft(text);
@@ -818,7 +824,7 @@ const LiveChat: React.FC<{
         setAttachments([]);
         return;
       }
-      setQueue((items) => [...items, createQueueItem(text, 'queued', rt.activeThreadId)]);
+      setQueue((items) => appendQueueItem(items, text, rt.activeThreadId));
       if (rt.busy) void rt.abort();
       setDraft('');
       setAttachments([]);

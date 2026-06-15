@@ -51,6 +51,27 @@ export const previewQueueText = (text: string): string => {
   return `${preview}${suffix}`;
 };
 
+export const normalizeQueueText = (text: string): string => text.trim().replace(/\s+/g, ' ');
+
+export const hasDuplicateQueueText = (
+  items: QueueItem[],
+  threadId: string | null | undefined,
+  text: string,
+  inFlight: QueueItem | null = readInFlight(),
+): boolean => {
+  const key = normalizeQueueText(text);
+  if (!key) return true;
+  if (inFlight && queueMatchesThread(inFlight, threadId) && normalizeQueueText(inFlight.text) === key) {
+    return true;
+  }
+  return items.some(
+    (item) =>
+      queueMatchesThread(item, threadId)
+      && (item.state === 'queued' || item.state === 'sending')
+      && normalizeQueueText(item.text) === key,
+  );
+};
+
 export const createQueueItem = (text: string, state: QueueState = 'queued', threadId: string | null = null): QueueItem => {
   const id = globalThis.crypto?.randomUUID?.() ?? `queue-${Date.now()}-${fallbackQueueIdSequence += 1}`;
   return { id, text, createdAt: Date.now(), state, threadId };
