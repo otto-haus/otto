@@ -1,5 +1,6 @@
 import { describe, expect, test } from 'bun:test';
 import type { ChatMsg } from '../runtime';
+import { CHAT_NON_CANONICAL_DISCLAIMER } from './chat-surface-contract';
 import { redactSensitiveContent, serializeConversationMarkdown } from './conversation-markdown';
 
 describe('redactSensitiveContent', () => {
@@ -63,10 +64,15 @@ describe('serializeConversationMarkdown', () => {
     expect(md).toContain('> **Receipt:** `rcpt-2`');
     expect(md).toContain('## Error · 2024-06-14T12:00:02.000Z');
     expect(md).toContain('Runtime disconnected.');
+    expect(md).toContain(CHAT_NON_CANONICAL_DISCLAIMER);
+    expect(md).toContain('## State');
+    expect(md).toContain('## Open questions');
+    expect(md).toContain('## Next action');
   });
 
   test('returns empty-state markdown when there are no messages', () => {
     const md = serializeConversationMarkdown({ title: 'New chat', messages: [] });
     expect(md).toContain('_No messages in this thread yet._');
+    expect(md).toContain(CHAT_NON_CANONICAL_DISCLAIMER);
   });
 });
