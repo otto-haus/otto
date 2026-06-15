@@ -32,6 +32,7 @@ import {
 import { serializeConversationMarkdown } from '../chat/conversation-markdown';
 import { runTicketCommand } from '../chat/ticket-commands';
 import { formatResolvedModelLabel, helpTextForModelOption } from '../chat/model-option-help';
+import { planQueueDrain } from '../chat/queue-drain';
 import {
   appendFailedQueueItem,
   clearInFlight,
@@ -39,7 +40,6 @@ import {
   createQueueItem,
   enqueueQueueItemForThread,
   hasDuplicateQueueText,
-  nextQueueItemForThread,
   persistInFlight,
   previewQueueText,
   promoteQueueItemForThread,
@@ -1075,7 +1075,7 @@ const LiveChat: React.FC<{
 
   const submit = () => {
     const t = draft.trim();
-    if ((!t && attachments.length === 0) || !ready || !api) return;
+    if ((!t && attachments.length === 0) || !api) return;
     const text = buildRuntimeMessageWithAttachments(t, attachments);
     const recalledId = recalledQueueId;
     void (async () => {
@@ -1093,24 +1093,45 @@ const LiveChat: React.FC<{
         return;
       }
       const steering = rt.busy;
-      setQueue((items) => {
-        const withoutRecalled = recalledId ? removeQueueItem(items, recalledId) : items;
-        return enqueueQueueItemForThread(withoutRecalled, text, rt.activeThreadId, { steer: steering });
-      });
-      if (recalledId) setRecalledQueueId(null);
-      if (steering) void rt.abort();
+      if (!ready || steering) {
+        setQueue((items) => {
+          const withoutRecalled = recalledId ? removeQueueItem(items, recalledId) : items;
+          return enqueueQueueItemForThread(withoutRecalled, text, rt.activeThreadId, { steer: steering });
+        });
+        if (recalledId) setRecalledQueueId(null);
+        if (steering) void rt.abort();
+        setDraft('');
+        setAttachments([]);
+        return;
+      }
+      if (recalledId) {
+        setRecalledQueueId(null);
+        setQueue((items) => removeQueueItem(items, recalledId));
+      }
       setDraft('');
       setAttachments([]);
+      try {
+        await rt.send(text);
+        notifyOnboardingFirstMessage();
+      } catch {
+        setQueue((items) => appendFailedQueueItem(items, createQueueItem(text, 'failed', rt.activeThreadId)));
+      }
     })();
   };
 
   useEffect(() => {
-    if (!ready || !rt.activeThreadId || rt.busy || draining.current || queue.length === 0) return;
-    const next = nextQueueItemForThread(queue, rt.activeThreadId);
-    if (!next) return;
+    const plan = planQueueDrain({
+      queue,
+      ready,
+      activeThreadId: rt.activeThreadId,
+      busy: rt.busy,
+      draining: draining.current,
+    });
+    if (plan.action !== 'send') return;
+    const { item: next, nextQueue } = plan;
     draining.current = true;
     persistInFlight({ ...next, state: 'sending' });
-    setQueue((items) => items.filter((item) => item.id !== next.id));
+    setQueue(nextQueue);
     void rt.send(next.text)
       .then(() => {
         clearInFlight(next.id);
@@ -1523,7 +1544,7 @@ const LiveChat: React.FC<{
               className="btn btn--primary btn--icon promptbox__send"
               aria-label={rt.busy ? 'Queue message' : 'Send message'}
               title={ready ? undefined : chatCopy.composerSendBlockedTitle}
-              disabled={!ready || (!draft.trim() && attachments.length === 0)}
+              disabled={!draft.trim() && attachments.length === 0}
               onClick={submit}
             >
               {Icon.send}
