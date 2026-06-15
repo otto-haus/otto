@@ -32,7 +32,7 @@ import {
 } from '../onboarding-sample-receipt';
 import { useLabs, LAB_FEATURE_IDS, LAB_FEATURE_META } from '../labs/LabsContext';
 import { AppSourceDetails } from '../components/AppSourceBadge';
-import type { AppBuildInfo, LabFeatureId, WorkspaceInfo } from '../../electron/shared/types';
+import type { AppBuildInfo, LabFeatureId, WorkspaceInfo, SystemHealthReport, HealthCheck } from '../../electron/shared/types';
 import {
   ottoApi,
   type CharterDetail,
@@ -3368,6 +3368,83 @@ const SettingsSectionHeader: React.FC<{ title: string; lede: string }> = ({ titl
   </header>
 );
 
+const healthStatusTone = (status: HealthCheck['status']): string => {
+  if (status === 'ok') return 'connected';
+  if (status === 'warn' || status === 'unknown') return 'pending';
+  if (status === 'fail') return 'failed';
+  return 'draft';
+};
+
+const HealthCheckRow: React.FC<{ item: HealthCheck }> = ({ item }) => (
+  <div className="settingsReadinessRow">
+    <div>
+      <div className="settingsReadinessRow__label">{item.label}</div>
+      <div className="settingsReadinessRow__detail">{item.summary}</div>
+      {item.impact ? (
+        <div className="settingsReadinessRow__meta">{settingsCopy.systemHealthImpact}: {item.impact}</div>
+      ) : null}
+      {item.nextAction ? (
+        <div className="settingsReadinessRow__meta">{settingsCopy.systemHealthNext}: {item.nextAction}</div>
+      ) : null}
+    </div>
+    <StatusPill status={healthStatusTone(item.status)} label={item.status} />
+  </div>
+);
+
+const SystemHealthPanel: React.FC = () => {
+  const api = ottoApi();
+  const [report, setReport] = useState<SystemHealthReport | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const refresh = async () => {
+    if (!api?.system?.health) return;
+    setBusy(true);
+    setError(null);
+    try {
+      setReport(await api.system.health());
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  useEffect(() => {
+    void refresh();
+  }, [api]);
+
+  if (!api?.system?.health) return null;
+
+  return (
+    <>
+      <div className="settingsFieldRow">
+        <div className="settingsFieldRow__main">
+          <div className="settingsFieldRow__title">{settingsCopy.systemHealthTitle}</div>
+          <p className="settingsFieldRow__hint">{settingsCopy.systemHealthLede}</p>
+        </div>
+        <button type="button" className="btn" disabled={busy} onClick={() => void refresh()}>
+          {busy ? settingsCopy.systemHealthLoading : settingsCopy.systemHealthRefresh}
+        </button>
+      </div>
+      {error ? <p className="faint settingsStatusBanner settingsStatusBanner--warn">{error}</p> : null}
+      {report ? (
+        <>
+          <div className={`settingsStatusBanner${report.ok ? '' : ' settingsStatusBanner--warn'}`}>
+            {report.ok ? settingsCopy.systemHealthOk : settingsCopy.systemHealthNotOk}
+            <span className="faint mono" style={{ marginLeft: 8 }}>{report.checkedAt}</span>
+          </div>
+          <div className="settingsReadinessGroup">
+            {report.checks.map((check) => <HealthCheckRow key={check.id} item={check} />)}
+          </div>
+        </>
+      ) : busy ? (
+        <p className="faint">{settingsCopy.systemHealthLoading}</p>
+      ) : null}
+    </>
+  );
+};
+
 type ProviderKind = 'local' | 'cloud';
 const PROVIDER_TABS: Array<{
   kind: ProviderKind;
@@ -3921,6 +3998,11 @@ export const Settings: React.FC = () => {
                 {settingsCopy.onboardingReset}
               </button>
             </div>
+          </section>
+
+          <section>
+            <SettingsSectionHeader title={settingsCopy.systemHealthTitle} lede={settingsCopy.systemHealthLede} />
+            <SystemHealthPanel />
           </section>
 
           <section>
