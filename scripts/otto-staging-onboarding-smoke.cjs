@@ -88,8 +88,9 @@ async function main() {
       proof.screenshots.connectedFirst = join(RECEIPT_DIR, '069-connected-first-state.png');
       await page.screenshot({ path: proof.screenshots.connectedFirst, fullPage: false });
       if (!welcomeVisible) {
-        proof.checks.connectedFirstNote =
-          'Welcome not visible when runtime ready on fresh profile — Onboarding.tsx auto-sets started when ready (lines 51–54).';
+        throw new Error(
+          'Welcome not visible when runtime ready on fresh profile (issue #88 / 069 connected-first)',
+        );
       }
     },
   }).catch((error) => {
@@ -180,6 +181,8 @@ async function main() {
   });
 
   proof.ok =
+    proof.checks.connectedFirstRuntimeReady === true &&
+    proof.checks.connectedFirstWelcomeVisible === true &&
     proof.checks.receiptsCtaShowsSample === true &&
     proof.checks.receiptsCtaNotConnectDock === true &&
     proof.checks.primaryCtaConnectStep === true &&
