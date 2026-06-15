@@ -249,6 +249,29 @@ describe('SdkSubprocessTransport permissions', () => {
     expect((terminal.at(-1)?.payload as { message?: { success?: boolean } }).message?.success).toBe(false);
   });
 
+  test('close() denies in-flight permission requests (#695)', async () => {
+    const { win } = mockWindow();
+    const transport = new SdkSubprocessTransport(() => win, mockConfig());
+
+    let resolved: { behavior: string; message?: string } | null = null;
+    const timer = setTimeout(() => {}, 60_000);
+    (transport as unknown as { pending: Map<string, unknown> }).pending.set('req-close-1', {
+      toolName: 'run_shell',
+      resolve: (r: { behavior: string; message?: string }) => {
+        resolved = r;
+      },
+      timer,
+    });
+    expect(transport.getDiagnosticsSnapshot().pendingPermissionCount).toBe(1);
+
+    await transport.close();
+
+    expect(transport.getDiagnosticsSnapshot().pendingPermissionCount).toBe(0);
+    expect(resolved).not.toBeNull();
+    expect(resolved!.behavior).toBe('deny');
+    expect(String(resolved!.message)).toContain('closed');
+  });
+
   test('resolvePermission answers pending tool gate', async () => {
     process.env.OTTO_PERMISSION_TIMEOUT_MS = '5000';
     const { win, sent } = mockWindow();
