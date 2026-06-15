@@ -413,30 +413,32 @@ export class SdkSubprocessTransport implements OttoRuntimeTransport {
     const startedStatus = { ...this.status };
     this.aborted = false;
     const trailAccumulator = new TurnTrailAccumulator();
+    let lastTrailFingerprint = '';
+    let trailFinalized = false;
+    const emitTurnTrail = (final = false) => {
+      const trail = final ? trailAccumulator.finalize() : trailAccumulator.snapshot();
+      const fingerprint = JSON.stringify(trail.spans.map((s) => [s.id, s.status, s.label, final]));
+      if (!final && fingerprint === lastTrailFingerprint) return;
+      lastTrailFingerprint = fingerprint;
+      safeWebContentsSend(this.getMainWindow(), 'otto:event', {
+        message: { type: 'turn_trail', trail, ...(final ? { final: true } : {}), uuid: randomUUID() },
+      });
+    };
+    const finalizeTurnTrailEmit = () => {
+      if (trailFinalized) return;
+      trailFinalized = true;
+      const trail = trailAccumulator.finalize();
+      trace.write('turn_trail', trailTraceSummary(trail));
+      safeWebContentsSend(this.getMainWindow(), 'otto:event', {
+        message: { type: 'turn_trail', trail, final: true, uuid: randomUUID() },
+      });
+    };
     trace.write('prompt', { text, agentId: this.status.agentId, conversationId: this.status.conversationId });
     try {
       let turnError: string | null = null;
       let sawResult = false;
       let markedNotReady = false;
       let receiptWritten = false;
-      let lastTrailFingerprint = '';
-      let trailFinalized = false;
-      const finalizeTurnTrailEmit = () => {
-        if (trailFinalized) return;
-        trailFinalized = true;
-        const trail = trailAccumulator.finalize();
-        trace.write('turn_trail', trailTraceSummary(trail));
-        emitTurnTrail(true);
-      };
-      const emitTurnTrail = (final = false) => {
-        const trail = final ? trailAccumulator.finalize() : trailAccumulator.snapshot();
-        const fingerprint = JSON.stringify(trail.spans.map((s) => [s.id, s.status, s.label, final]));
-        if (!final && fingerprint === lastTrailFingerprint) return;
-        lastTrailFingerprint = fingerprint;
-        safeWebContentsSend(this.win, 'otto:event', {
-          message: { type: 'turn_trail', trail, ...(final ? { final: true } : {}), uuid: randomUUID() },
-        });
-      };
       const writeReceipt = (status: 'success' | 'blocked' | 'failed', summary: string, blocker: Parameters<typeof this.writeChatReceipt>[0]['blocker']) => {
         if (receiptWritten) return;
         receiptWritten = true;

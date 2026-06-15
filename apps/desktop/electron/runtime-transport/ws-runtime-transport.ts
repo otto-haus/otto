@@ -235,7 +235,7 @@ export class WsRuntimeTransport implements OttoRuntimeTransport {
       trailFinalized = true;
       const trail = trailAccumulator.finalize();
       trace.write('turn_trail', trailTraceSummary(trail));
-      safeWebContentsSend(this.win, 'otto:event', {
+      safeWebContentsSend(this.getMainWindow(), 'otto:event', {
         message: { type: 'turn_trail', trail, final: true, uuid: randomUUID() },
       });
     };
@@ -244,7 +244,7 @@ export class WsRuntimeTransport implements OttoRuntimeTransport {
       const fingerprint = JSON.stringify(trail.spans.map((s) => [s.id, s.status, s.label]));
       if (fingerprint === lastTrailFingerprint) return;
       lastTrailFingerprint = fingerprint;
-      safeWebContentsSend(this.win, 'otto:event', {
+      safeWebContentsSend(this.getMainWindow(), 'otto:event', {
         message: { type: 'turn_trail', trail, uuid: randomUUID() },
       });
     };
