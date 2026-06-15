@@ -74,6 +74,9 @@ export class WsRuntimeTransport implements OttoRuntimeTransport {
   private turnInterruptReason: string | null = null;
   private activeRunId: string | null = null;
   private turnMessageHandlerDetach: (() => void) | null = null;
+  /** Status frames Letta may emit on connect before syncRuntime attaches its handler (#694). */
+  private preSyncStatusFrames: WsRuntimeEvent[] = [];
+  private preSyncMessageHandler: ((raw: Buffer | ArrayBuffer | Buffer[]) => void) | null = null;
   private receipts = new ReceiptWriter();
   private standards = new StandardStore();
   private practices = new PracticeStore();
@@ -513,6 +516,7 @@ export class WsRuntimeTransport implements OttoRuntimeTransport {
 
   async close(): Promise<void> {
     this.clearTurnMessageHandler();
+    this.detachPreSyncStatusBuffer();
     this.runtimeSocket?.removeAllListeners();
     this.runtimeSocket?.close();
     this.runtimeSocket = null;
@@ -589,6 +593,7 @@ export class WsRuntimeTransport implements OttoRuntimeTransport {
       }
       this.runtimeSocket = socket;
       this.lastReconnectAt = new Date().toISOString();
+      this.attachPreSyncStatusBuffer(socket);
       socket.on('close', () => {
         if (this.runtimeSocket === socket) {
           this.runtimeSocket = null;
@@ -650,6 +655,41 @@ export class WsRuntimeTransport implements OttoRuntimeTransport {
     this.runtimeSocket.send(JSON.stringify(command));
   }
 
+  private attachPreSyncStatusBuffer(socket: WebSocket) {
+    this.detachPreSyncStatusBuffer();
+    this.preSyncStatusFrames = [];
+    const handler = (raw: Buffer | ArrayBuffer | Buffer[]) => {
+      try {
+        const event = JSON.parse(String(raw)) as WsRuntimeEvent;
+        if (event.type === 'update_device_status' || event.type === 'update_loop_status') {
+          this.preSyncStatusFrames.push(event);
+        }
+      } catch {
+        // ignore malformed frames
+      }
+    };
+    this.preSyncMessageHandler = handler;
+    socket.on('message', handler);
+  }
+
+  private detachPreSyncStatusBuffer() {
+    if (this.preSyncMessageHandler && this.runtimeSocket) {
+      this.runtimeSocket.off('message', this.preSyncMessageHandler);
+    }
+    this.preSyncMessageHandler = null;
+    this.preSyncStatusFrames = [];
+  }
+
+  private takePreSyncStatusFrames(): WsRuntimeEvent[] {
+    const frames = this.preSyncStatusFrames;
+    this.preSyncStatusFrames = [];
+    if (this.preSyncMessageHandler && this.runtimeSocket) {
+      this.runtimeSocket.off('message', this.preSyncMessageHandler);
+    }
+    this.preSyncMessageHandler = null;
+    return frames;
+  }
+
   private async syncRuntime(agentId: string, conversationId: string | null, modelHandle?: string | null): Promise<void> {
     return new Promise((resolve, reject) => {
       let online = false;
@@ -659,13 +699,7 @@ export class WsRuntimeTransport implements OttoRuntimeTransport {
         this.runtimeSocket?.off('message', handler);
         reject(new Error('Timed out waiting for runtime sync'));
       }, CONNECT_TIMEOUT_MS);
-      const handler = (raw: Buffer | ArrayBuffer | Buffer[]) => {
-        let event: WsRuntimeEvent;
-        try {
-          event = JSON.parse(String(raw)) as WsRuntimeEvent;
-        } catch {
-          return;
-        }
+      const processEvent = (event: WsRuntimeEvent) => {
         if (event.type === 'sync_response' || event.type === 'conversation_created') {
           const conv = (event.conversation_id ?? event.conversationId) as string | undefined;
           if (conv) this.status.conversationId = conv;
@@ -674,6 +708,7 @@ export class WsRuntimeTransport implements OttoRuntimeTransport {
           clearTimeout(timeout);
           this.runtimeSocket?.off('message', handler);
           reject(new Error(String(event.message ?? event.error ?? 'Runtime sync failed')));
+          return;
         }
         if (isDeviceOnline(event)) online = true;
         if (isLoopIdle(event)) idle = true;
@@ -683,7 +718,16 @@ export class WsRuntimeTransport implements OttoRuntimeTransport {
           resolve();
         }
       };
+      const handler = (raw: Buffer | ArrayBuffer | Buffer[]) => {
+        try {
+          processEvent(JSON.parse(String(raw)) as WsRuntimeEvent);
+        } catch {
+          // ignore malformed frames
+        }
+      };
+      const buffered = this.takePreSyncStatusFrames();
       this.runtimeSocket!.on('message', handler);
+      for (const event of buffered) processEvent(event);
       this.sendCommand({
         type: 'sync',
         runtime: {
