@@ -529,8 +529,8 @@ const LiveChat: React.FC<{
     const onStarter = (event: Event) => {
       const detail = (event as CustomEvent<{ text?: string; send?: boolean }>).detail;
       const text = detail?.text?.trim();
-      if (!text || !ready || !api) return;
-      if (detail?.send) {
+      if (!text) return;
+      if (detail?.send && ready && api) {
         setQueue((items) => [...items, createQueueItem(text, 'queued', rt.activeThreadId)]);
         return;
       }
