@@ -542,26 +542,57 @@ function createCanonFromProposal(proposal: CurationProposalRecord, appliedAt: st
   const { target } = proposal;
   if (!target.path) return false;
 
-  if (target.kind === 'practice') {
+  const ratifiedEntry = {
+    proposal_id: proposal.id,
+    applied_at: appliedAt,
+    summary: proposal.summary,
+    rationale: proposal.rationale,
+  };
+
+  if (target.kind === 'practice' || target.kind === 'routine') {
     const slug = target.id ?? practiceSlugFromPath(target.path);
     if (!slug) return false;
-    const ratifiedEntry = {
-      proposal_id: proposal.id,
-      applied_at: appliedAt,
-      summary: proposal.summary,
-      rationale: proposal.rationale,
-    };
     const doc = {
       name: titleFromSlug(slug),
       slug,
       version: '0.1',
       status: 'draft',
+      kind: target.kind,
       summary: proposal.summary,
       guardrails: [`[ratified:${proposal.id}] ${proposal.rationale}`],
       otto_ratified: [ratifiedEntry],
     };
     mkdirSync(dirname(target.path), { recursive: true });
     writeFileSync(target.path, stringify(doc));
+    return true;
+  }
+
+  if (target.kind === 'standard') {
+    if (!target.path.endsWith('.md')) return false;
+    const slug = target.id ?? practiceSlugFromPath(target.path);
+    const frontmatter = stringify({
+      title: titleFromSlug(slug || 'standard'),
+      slug: slug || undefined,
+      status: 'draft',
+      version: '0.1',
+      otto_ratified: [ratifiedEntry],
+    }).trimEnd();
+    const body = [
+      '```yaml',
+      frontmatter,
+      '```',
+      '',
+      `# ${titleFromSlug(slug || 'Standard')}`,
+      '',
+      proposal.summary,
+      '',
+      proposal.rationale,
+      '',
+      `<!-- otto:ratified ${proposal.id} ${appliedAt} -->`,
+      '',
+    ].join('\n');
+    mkdirSync(dirname(target.path), { recursive: true });
+    writeFileSync(target.path, body);
     return true;
   }
 

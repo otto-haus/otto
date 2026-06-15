@@ -298,6 +298,67 @@ describe('ProposalStore', () => {
     }
   });
 
+  test('accepting a routine create proposal writes draft YAML at target path (#794)', () => {
+    const tmp = mkdtempSync(join(tmpdir(), 'otto-proposal-test-'));
+    const proposalsDir = join(tmp, 'curation', 'proposals');
+    const receiptsDir = join(tmp, 'receipts');
+    const canonPath = join(tmp, 'routines', 'morning-review', 'routine.yaml');
+    try {
+      const store = new ProposalStore(proposalsDir, new ReceiptWriter(receiptsDir));
+      const created = store.createFromSystem({
+        summary: 'Routine candidate from repeated review cadence',
+        rationale: 'Observed a recurring morning review correction.',
+        target: { kind: 'routine', id: 'morning-review', path: canonPath, action: 'create' },
+        source: 'run_review',
+        created_by: 'otto',
+      });
+
+      const accepted = store.decide(created.proposal.id, { decision: 'accept', note: 'Ratified mined routine.' });
+      expect(accepted.blocked).toBeUndefined();
+      expect(accepted.proposal.status).toBe('applied');
+      expect(accepted.receipt.result.data?.canonApplied).toBe(true);
+      expect(accepted.receipt.result.data?.canonApplyReason).toBe('created');
+      expect(existsSync(canonPath)).toBe(true);
+
+      const doc = parse(readFileSync(canonPath, 'utf8')) as Record<string, unknown>;
+      expect(doc.slug).toBe('morning-review');
+      expect(doc.kind).toBe('routine');
+      expect(doc.status).toBe('draft');
+    } finally {
+      rmSync(tmp, { recursive: true, force: true });
+    }
+  });
+
+  test('accepting a standard create proposal writes draft markdown at target path (#794)', () => {
+    const tmp = mkdtempSync(join(tmpdir(), 'otto-proposal-test-'));
+    const proposalsDir = join(tmp, 'curation', 'proposals');
+    const receiptsDir = join(tmp, 'receipts');
+    const canonPath = join(tmp, 'standards', 'standards', 'evidence-first.md');
+    try {
+      const store = new ProposalStore(proposalsDir, new ReceiptWriter(receiptsDir));
+      const created = store.createFromSystem({
+        summary: 'Standard candidate: evidence before done',
+        rationale: 'Repeated blocked receipts cite missing evidence.',
+        target: { kind: 'standard', id: 'evidence-first', path: canonPath, action: 'create' },
+        source: 'run_review',
+        created_by: 'otto',
+      });
+
+      const accepted = store.decide(created.proposal.id, { decision: 'accept', note: 'Ratified mined standard.' });
+      expect(accepted.blocked).toBeUndefined();
+      expect(accepted.proposal.status).toBe('applied');
+      expect(accepted.receipt.result.data?.canonApplied).toBe(true);
+      expect(accepted.receipt.result.data?.canonApplyReason).toBe('created');
+      expect(existsSync(canonPath)).toBe(true);
+
+      const raw = readFileSync(canonPath, 'utf8');
+      expect(raw).toContain('otto:ratified');
+      expect(raw).toContain('Standard candidate: evidence before done');
+    } finally {
+      rmSync(tmp, { recursive: true, force: true });
+    }
+  });
+
   test('accepting an amend practice proposal without an existing file is blocked', () => {
     const tmp = mkdtempSync(join(tmpdir(), 'otto-proposal-test-'));
     const proposalsDir = join(tmp, 'curation', 'proposals');
