@@ -19,8 +19,8 @@ cleanup() {
 }
 trap cleanup EXIT
 
-for f in index.html pricing.html style.css owl.png og.png CNAME; do
-  [[ -f "$SITE/$f" ]] || { echo "missing $SITE/$f" >&2; exit 1; }
+for f in index.html pricing.html style.css owl.png og.png CNAME robots.txt sitemap.xml; do
+  [[ -e "$SITE/$f" ]] || { echo "missing $SITE/$f" >&2; exit 1; }
 done
 
 mkdir -p "$RECEIPT_DIR"
@@ -53,8 +53,8 @@ check_body() {
   done
 }
 
-check_body "index" "$INDEX_BODY" "CI for agent behavior" "docs.otto.haus" "Install with an agent"
-check_body "pricing" "$PRICING_BODY" "Managed private pilot" "Letta" "Request pilot"
+check_body "index" "$INDEX_BODY" "otto makes agent behavior compound" "docs.otto.haus" "Install with an agent" "#compound" "brand/otto-avatar.png"
+check_body "pricing" "$PRICING_BODY" "Managed private pilot" "Letta" "Request pilot" "index.html#compound" "docs.otto.haus"
 
 META_OK="false"
 if grep -qi 'viewport' <<<"$INDEX_BODY" && grep -qi 'charset' <<<"$INDEX_BODY"; then
