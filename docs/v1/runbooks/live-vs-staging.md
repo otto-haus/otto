@@ -50,6 +50,8 @@ task staging
 # bash apps/desktop/scripts/deploy-staging.sh
 ```
 
+`task staging` refuses to replace `/Applications/otto-staging.app` unless `HEAD` matches `origin/main` (#314). Use a disposable `OTTO_STAGING_APP` path for branch previews.
+
 ### Latest-main refresh (#338)
 
 Fetch `origin/main`, stamp source markers (channel, commit, origin/main, profile paths), and replace **only** `/Applications/otto-staging.app`:
@@ -61,7 +63,7 @@ task staging:main
 # bash scripts/staging-refresh-from-main.sh
 ```
 
-If your checkout HEAD is not `origin/main`, `task staging:main` refuses. To build exact main:
+If your checkout HEAD is not `origin/main`, `task staging` and `task staging:main` refuse. To build exact main:
 
 ```sh
 git checkout main && git merge --ff-only origin/main && task staging:main
