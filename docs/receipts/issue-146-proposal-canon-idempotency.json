@@ -1,0 +1,24 @@
+{
+  "issue": 146,
+  "ticket": "155-proposal-canon-ratification-idempotency",
+  "title": "Proposal canon ratification idempotency",
+  "landed_in": "https://github.com/otto-haus/otto/pull/35",
+  "commit": "b8ed206a0faa93c89a7e5df43d448cd4168e13ad",
+  "before": "Accepting proposals unconditionally appended Markdown ratification blocks and YAML otto_ratified/guardrail entries; standard proposal tests wrote to standards/standards/quality.md.",
+  "after": "Canon apply is idempotent by proposal marker or normalized rationale; receipts record canonChanged and canonApplyReason; proposal-store tests use disposable canon fixtures.",
+  "files": [
+    "apps/desktop/electron/proposal-store.ts",
+    "apps/desktop/electron/proposal-store.test.ts"
+  ],
+  "verify": [
+    "bun test ./apps/desktop/electron/proposal-store.test.ts",
+    "bun run typecheck",
+    "bun run --cwd apps/desktop electron:typecheck"
+  ],
+  "acceptance": {
+    "no_real_quality_md_in_tests": true,
+    "markdown_duplicate_skipped": true,
+    "yaml_duplicate_skipped": true,
+    "receipt_already_ratified": true
+  }
+}
