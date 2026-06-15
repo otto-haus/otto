@@ -59,6 +59,7 @@
     "lint:changed": "bash scripts/lint-changed.sh",
     "verify:v0": "bun scripts/verify-v0.mjs",
     "verify:agent-loop": "bun scripts/verify-agent-loop-contract.mjs",
+    "health:otto": "bun scripts/otto-health.mjs",
     "docs:dev": "cd devex && bunx --bun mint@4.2.616 dev",
     "docs:validate": "cd devex && bunx --bun mint@4.2.616 validate",
     "docs:links": "cd devex && bunx --bun mint@4.2.616 broken-links",

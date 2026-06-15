@@ -515,3 +515,25 @@ export type CogneeSettings = {
   enabled: boolean;
   baseUrl: string;
 };
+
+/** Single health probe — machine + human readable. */
+export type HealthCheckStatus = 'ok' | 'warn' | 'fail' | 'unknown' | 'skip';
+
+export interface HealthCheck {
+  id: string;
+  label: string;
+  status: HealthCheckStatus;
+  summary: string;
+  impact?: string;
+  nextAction?: string;
+  data?: Record<string, unknown>;
+}
+
+/** Aggregated live/offline health for agents, CI, and Settings UI. */
+export interface SystemHealthReport {
+  ok: boolean;
+  checkedAt: string;
+  scope: 'live' | 'offline';
+  build: AppBuildInfo;
+  checks: HealthCheck[];
+}

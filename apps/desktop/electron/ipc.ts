@@ -48,6 +48,7 @@ import { safeWebContentsSend, smokeMode } from './runtime-transport/runtime-comm
 import { readAppBuildInfo } from './build-info';
 import { openSystemTerminal, resolveWorkspaceRoot } from './open-terminal';
 import { getWorkspaceInfo, resolveWorkspaceRepoRoot } from './workspace-root';
+import { collectSystemHealth } from './system-health';
 
 export function registerIpc(win: BrowserWindow) {
   const config = new ConfigStore();
@@ -109,6 +110,18 @@ export function registerIpc(win: BrowserWindow) {
   });
   ipcMain.handle('otto:status', () => runner.getStatus());
   ipcMain.handle('otto:app:build-info', () => readAppBuildInfo());
+  ipcMain.handle('otto:system:health', () =>
+    collectSystemHealth({
+      win,
+      runner,
+      config,
+      memory,
+      autonomy,
+      routines,
+      workers,
+      runs,
+    }),
+  );
   ipcMain.handle('otto:send', (_e, text: string) => runner.send(text));
   ipcMain.handle('otto:abort', () => runner.abort());
   ipcMain.handle('otto:configure', async (_e, input: RuntimePreferences) => {

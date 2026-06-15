@@ -20,6 +20,7 @@ import type {
   RuntimeStatus,
   AppBuildInfo,
   LettaModelOption,
+  SystemHealthReport,
   SavedAttachment,
   StandardCitation,
   StandardListResult,
@@ -131,6 +132,9 @@ const api = {
   },
   app: {
     buildInfo: (): Promise<AppBuildInfo> => ipcRenderer.invoke('otto:app:build-info'),
+  },
+  system: {
+    health: (): Promise<SystemHealthReport> => ipcRenderer.invoke('otto:system:health'),
   },
   models: {
     list: (): Promise<LettaModelOption[]> => ipcRenderer.invoke('otto:models:list'),
