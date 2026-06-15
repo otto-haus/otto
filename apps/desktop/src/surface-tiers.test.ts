@@ -8,6 +8,7 @@ import {
   isSurfaceAccessible,
   isSurfaceComingSoon,
   labsSurfaceGate,
+  surfaceDataKind,
   surfaceGate,
   surfaceTier,
 } from './surface-tiers';
@@ -148,4 +149,13 @@ describe('surface-tiers', () => {
     expect(gatedConnectionMode('cloud', on, true)).toBe('cloud');
     expect(gatedConnectionMode('embedded', off, false)).toBe('embedded');
   });
+  test('surfaceDataKind maps live vs file-backed surfaces for topbar pills', () => {
+    expect(surfaceDataKind('chat')).toBe('live');
+    expect(surfaceDataKind('settings')).toBe('live');
+    expect(surfaceDataKind('terminal')).toBe('live');
+    expect(surfaceDataKind('charters')).toBe('file');
+    expect(surfaceDataKind('knowledge')).toBe('file');
+    expect(surfaceDataKind('receipts')).toBe('file');
+  });
+
 });

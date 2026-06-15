@@ -144,6 +144,17 @@ export function surfaceGate(id: SurfaceId, _labs?: LabsConfig, _hydrated?: boole
   return 'open';
 }
 
+/** Topbar pill data source — live runtime vs file-backed workspace canon. */
+export type SurfaceDataKind = 'live' | 'file';
+
+const LIVE_DATA_SURFACES: ReadonlySet<SurfaceId> = new Set(['chat', 'settings', 'terminal']);
+
+export function surfaceDataKind(id: SurfaceId): SurfaceDataKind | undefined {
+  if (LIVE_DATA_SURFACES.has(id)) return 'live';
+  if (surfaceTier(id) === 'cut') return undefined;
+  return 'file';
+}
+
 export function surfaceLabel(id: SurfaceId): string {
   const fromFeature = Object.entries(SURFACE_LAB_FEATURE).find(([sid]) => sid === id);
   if (fromFeature) {
