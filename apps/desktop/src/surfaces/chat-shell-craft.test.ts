@@ -11,8 +11,8 @@ describe('chat shell craft polish (#081 / #98)', () => {
   });
 
   it('uses human session subtitle without raw ids in the happy path', () => {
-    expect(chatSource).toContain('Letta memory on');
-    expect(chatSource).toContain('Letta memory off');
+    expect(chatSource).toContain('chatCopy.memoryOn');
+    expect(chatSource).toContain('chatCopy.memoryOff');
     expect(chatSource).toContain('formatChatSessionSubtitle');
     expect(chatSource).toContain('formatChatDebugTitle');
     expect(chatSource).toContain('lettaMemoryStatusLabel');
@@ -24,6 +24,14 @@ describe('chat shell craft polish (#081 / #98)', () => {
     expect(chatSource).toContain("sessionStorage.setItem('otto.settings.section', 'memory')");
     expect(chatSource).toContain('chat__memoryLink');
     expect(chatSource).not.toMatch(/memfsEnabled\s*\?\s*chatCopy\.memoryOn/);
+  });
+
+  it('bases Chat memory status on live runtime reachability, not MemFS (#73 P2)', () => {
+    expect(chatSource).toContain('isCoreMemoryReachable');
+    expect(chatSource).toMatch(/!!\s*st\.ready/);
+    expect(chatSource).not.toMatch(/memfsEnabled\s*\?\s*chatCopy\.memoryOn/);
+    expect(chatSource).not.toMatch(/agentId\?\.trim\(\)\s*\?\s*chatCopy\.memoryOn/);
+    expect(chatSource).not.toMatch(/st\.memfsEnabled\s*\?\s*['"]Letta memory on/);
   });
 
   it('shows working pulse in the header while a turn is active', () => {
