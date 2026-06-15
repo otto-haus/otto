@@ -1,0 +1,29 @@
+{
+  "ok": true,
+  "issue": 137,
+  "ticket": "146-onboarding-inline-readiness-gate",
+  "runId": "20260614233000",
+  "branch": "fix/137-onboarding-readiness-gate",
+  "proofKind": "unit-and-contract",
+  "stagingApp": "not-run: user constraint — never touch /Applications/otto-staging.app",
+  "checks": {
+    "readinessRowsInConnectStep": true,
+    "sharedReadinessPanel": true,
+    "errorCodeReasonRecovery": true,
+    "continueDisabledUntilReady": true,
+    "calmLoadingCopy": true,
+    "chatGatedByRuntimeReady": true
+  },
+  "verification": {
+    "commands": [
+      "bun run --cwd apps/desktop typecheck",
+      "bun test apps/desktop/electron/onboarding-*.test.ts apps/desktop/electron/onboarding-readiness.test.ts"
+    ],
+    "notes": "Misconfig→error→connected staging walk deferred; unit proof covers row embed, CTA gate, and copy contract."
+  },
+  "artifacts": {
+    "component": "apps/desktop/src/ReadinessPanel.tsx",
+    "onboarding": "apps/desktop/src/Onboarding.tsx",
+    "tests": "apps/desktop/electron/onboarding-readiness.test.ts"
+  }
+}

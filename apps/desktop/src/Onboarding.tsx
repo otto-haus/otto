@@ -25,6 +25,7 @@ import {
 } from './onboarding-step';
 import { OnboardingStepLayout, type OnboardingEvidence } from './OnboardingStepLayout';
 import { enableSampleReceiptPreview, SAMPLE_RECEIPT_LABEL } from './onboarding-sample-receipt';
+import { ReadinessPanel } from './ReadinessPanel';
 
 const ModeCard: React.FC<{
   title: string;
@@ -240,21 +241,24 @@ export const Onboarding: React.FC<{ onNavigate: (id: SurfaceId) => void; activeS
           onBack={goBack}
           footer={(
             <>
+              <button
+                type="button"
+                className="btn btn--primary"
+                disabled={!connected}
+                onClick={() => connected && onNavigate('chat')}
+              >
+                {onboardingCopy.connectContinue}
+              </button>
               {!connected && (
-                <button type="button" className="btn btn--primary" disabled={connected} onClick={() => onNavigate('settings')}>
-                  {onboardingCopy.connectOpenSettings}
+                <button type="button" className="btn" onClick={() => void retryStatus()}>
+                  {onboardingCopy.connectRetry}
                 </button>
               )}
-              {connected && (
-                <button type="button" className="btn btn--primary" onClick={() => onNavigate('chat')}>
-                  {onboardingCopy.runGoChat}
-                </button>
-              )}
-              <button type="button" className="btn" onClick={() => void retryStatus()}>{onboardingCopy.connectRetry}</button>
               <button type="button" className="btn" onClick={finish}>{onboardingCopy.skip}</button>
             </>
           )}
         >
+          <ReadinessPanel variant="onboarding" />
           {!connected && (statusReason || statusCode) ? (
             <p className="onboardStatusReason onboardStatusReason--inline">
               {statusCode ? <span className="mono onboardStatusCode">{statusCode}</span> : null}
