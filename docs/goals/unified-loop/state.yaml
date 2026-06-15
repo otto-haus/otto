@@ -6,7 +6,7 @@ program:
   status: active
   stop_at: null
   repo: otto-haus/otto
-  branch: cursor/unified-loop-orchestration-b4e6
+  branch: cursor/unified-loop-orchestration-5ceb
 
 spawn:
   mechanism: task_subagents
@@ -42,14 +42,14 @@ gates:
       - 656
       - 657
       - 658
+      - 794
     awaiting_ratification:
       - 650
       - 656
       - 657
       - 658
+      - 794
     ratified_in_progress:
-      - 627
-      - 628
       - 630
       - 631
       - 632
@@ -58,6 +58,9 @@ gates:
       - 636
       - 637
       - 638
+    ratified_closed:
+      - 627
+      - 628
     ratified_at: "2026-06-15T04:30:00Z"
     ratified_by: sebastian
     label_debt:
@@ -65,11 +68,18 @@ gates:
       - 631
       - 632
       - 633
+      - 650
+      - 656
+      - 657
+      - 658
+      - 794
     github_label_pending: "status: in progress (label does not exist — create + apply manually)"
   ship:
     in_flight_babysit: []
     merged_since_last_tick:
       - 618
+      - 624
+      - 625
       - 626
     reviewed_prs:
       - 582
@@ -80,8 +90,6 @@ gates:
       - 784
     ready_for_sebastian:
       - 582
-      - 624
-      - 625
       - 781
       - 782
       - 784
@@ -104,6 +112,10 @@ gates:
       - pr: 587
         winner: 624
         close_approved: true
+      - pr: 758
+        winner: 791
+        close_approved: false
+        note: "CLOSE_CANDIDATE after #791 merges — both fix #715"
 
 ticks:
   - id: 1
@@ -259,47 +271,59 @@ ticks:
         - 647
 
   - id: 6
-    at: "2026-06-15T16:04:00Z"
+    at: "2026-06-15T16:08:00Z"
     spawn_mechanism: task_subagents
     spawn_verification_passed: true
-    global_agents: 1
+    global_agents: 3
     defer_mode: false
-    notes: >
-      Tick 6 SHIP review. Reviewed PRs #781, #782, #784. All MERGEABLE+CLEAN, all CI
-      SUCCESS. All three are SHIP_CANDIDATE. Receipts written to
-      docs/receipts/pr-ship-review/. gh token is read-only — comments and
-      status: ready for review labels could not be applied; Sebastian must apply manually.
+    notes: "8 Task subagents (5 BUILD + 3 SHIP). Filed #794. SHIP_CANDIDATE #781/#782/#784. Intake hold — #631 blocked by Panes.tsx PR collisions. New dupe #758→#791."
+    build:
+      spawned: 5
+      completed: 5
+      issues_filed:
+        - 794
+      awaiting_ratification:
+        - 650
+        - 656
+        - 657
+        - 658
+        - 794
+      label_debt:
+        - 650
+        - 656
+        - 657
+        - 658
+        - 794
     ship:
-      reviewed:
-        - pr: 781
-          verdict: SHIP_CANDIDATE
-          headRefOid: "4361c4797afa90b88452506754871bf258a5b2ec"
-          fixes: [639, 637]
-          receipt: docs/receipts/pr-ship-review/pr-781.md
-        - pr: 782
-          verdict: SHIP_CANDIDATE
-          headRefOid: "a96044f5ff3be4c74bae076044fef8122d4f2539"
-          fixes: [636]
-          receipt: docs/receipts/pr-ship-review/pr-782.md
-        - pr: 784
-          verdict: SHIP_CANDIDATE
-          headRefOid: "21006a4e595b24b4385d8fedf6d5a314e3ab2001"
-          fixes: [640]
-          receipt: docs/receipts/pr-ship-review/pr-784.md
+      intake: hold
+      intake_recommended: 631
+      intake_blockers:
+        - 791
+        - 778
+        - 758
+      spawned: 3
+      completed: 3
+      ship_candidates:
+        - 781
+        - 782
+        - 784
+      merged_confirmed:
+        - 624
+        - 625
+      close_candidates:
+        - 588
+        - 758
+      babysit:
+        - 307
+        - 309
+        - 412
+        - 435
+        - 472
+        - 503
+        - 504
+        - 517
+        - 621
       label_debt:
         - pr: 781
-          label: "status: ready for review"
-          reason: "gh token read-only; apply manually"
         - pr: 782
-          label: "status: ready for review"
-          reason: "gh token read-only; apply manually"
         - pr: 784
-          label: "status: ready for review"
-          reason: "gh token read-only; apply manually"
-      comment_debt:
-        - pr: 781
-          reason: "gh token read-only; post ship review comment manually (see receipt)"
-        - pr: 782
-          reason: "gh token read-only; post ship review comment manually (see receipt)"
-        - pr: 784
-          reason: "gh token read-only; post ship review comment manually (see receipt)"
