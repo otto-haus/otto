@@ -1,7 +1,7 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { join, resolve } from 'node:path';
-import type { EffortLevel, OttoConfig } from './shared/types';
+import type { EffortLevel, OttoConfig, ConversationSortMode } from './shared/types';
 
 export const defaultOttoDir = () => {
   const homeOverride = process.env.OTTO_HOME?.trim();
@@ -139,7 +139,18 @@ function normalizeConfig(config: OttoConfig): OttoConfig {
   } else if ('connectionMode' in config) {
     next.connectionMode = 'existing';
   }
+  const conversationSortMode = normalizeConversationSortMode(config.conversationSortMode);
+  if (conversationSortMode) {
+    next.conversationSortMode = conversationSortMode;
+  } else if ('conversationSortMode' in config) {
+    next.conversationSortMode = 'recent';
+  }
   return next;
+}
+
+function normalizeConversationSortMode(value: unknown): ConversationSortMode | null {
+  if (value === 'recent' || value === 'created') return value;
+  return null;
 }
 
 function normalizeConnectionMode(value: unknown): NonNullable<OttoConfig['connectionMode']> | null {

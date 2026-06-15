@@ -88,7 +88,7 @@ export function App() {
 function AppShell() {
   const rt = useRuntimeContext();
   const labs = useLabs();
-  const { threads, refresh: refreshThreads, pinThread } = useChatThreads(rt.activeThreadId);
+  const { threads, refresh: refreshThreads, pinThread, moveThread } = useChatThreads(rt.activeThreadId);
   const [active, setActiveState] = useState<SurfaceId>(initialSurface());
   const [sidebarHidden, setSidebarHidden] = useState(false);
   const [sidebarCompact, setSidebarCompact] = useState(
@@ -183,6 +183,9 @@ function AppShell() {
             }}
             onPinThread={(thread, pinned) => {
               void pinThread(thread.id, pinned);
+            }}
+            onMoveThread={(thread, target) => {
+              void moveThread(thread.id, target.id);
             }}
             onArchiveThread={(thread) => {
               void rt.archiveThread(thread.id).then(() => refreshThreads());

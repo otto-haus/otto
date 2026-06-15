@@ -7,6 +7,7 @@ export type ThreadSummary = {
   conversationId: string | null;
   title: string;
   updatedAt: number;
+  sortOrder?: number | null;
   pinned?: boolean;
 };
 
@@ -53,10 +54,44 @@ const ConversationRow: React.FC<{
   onSelect?: (thread: ThreadSummary) => void;
   onPin?: (thread: ThreadSummary, pinned: boolean) => void;
   onArchive?: (thread: ThreadSummary) => void;
-}> = ({ thread, active, variant, onSelect, onPin, onArchive }) => (
+  onMove?: (thread: ThreadSummary, target: ThreadSummary) => void;
+  draggingId: string | null;
+  onDragThreadStart: (threadId: string) => void;
+  onDragThreadEnd: () => void;
+}> = ({
+  thread,
+  active,
+  variant,
+  onSelect,
+  onPin,
+  onArchive,
+  onMove,
+  draggingId,
+  onDragThreadStart,
+  onDragThreadEnd,
+}) => (
   <div
-    className={`sidebarConvWrap${active ? ' is-active' : ''}${thread.pinned ? ' is-pinned' : ''}`}
+    className={`sidebarConvWrap${active ? ' is-active' : ''}${thread.pinned ? ' is-pinned' : ''}${draggingId === thread.id ? ' is-dragging' : ''}`}
     data-thread-variant={variant}
+    draggable={!!onMove}
+    onDragStart={(event) => {
+      if (!onMove) return;
+      event.dataTransfer.effectAllowed = 'move';
+      event.dataTransfer.setData('text/plain', thread.id);
+      onDragThreadStart(thread.id);
+    }}
+    onDragOver={(event) => {
+      if (!onMove || !draggingId || draggingId === thread.id) return;
+      event.preventDefault();
+      event.dataTransfer.dropEffect = 'move';
+    }}
+    onDrop={(event) => {
+      if (!onMove || !draggingId || draggingId === thread.id) return;
+      event.preventDefault();
+      onMove({ ...thread, id: draggingId }, thread);
+      onDragThreadEnd();
+    }}
+    onDragEnd={onDragThreadEnd}
   >
     {onPin ? (
       <button
@@ -132,7 +167,9 @@ export const ThreadList: React.FC<{
   onSelect?: (thread: ThreadSummary) => void;
   onPin?: (thread: ThreadSummary, pinned: boolean) => void;
   onArchive?: (thread: ThreadSummary) => void;
-}> = ({ threads, activeThreadId, activeConversationId, onSelect, onPin, onArchive }) => {
+  onMove?: (thread: ThreadSummary, target: ThreadSummary) => void;
+}> = ({ threads, activeThreadId, activeConversationId, onSelect, onPin, onArchive, onMove }) => {
+  const [draggingId, setDraggingId] = useState<string | null>(null);
   const { pinned, recents } = splitThreadSections(threads);
 
   if (!threads.length) {
@@ -148,6 +185,11 @@ export const ThreadList: React.FC<{
       ? thread.id === activeThreadId
       : !!activeConversationId && thread.conversationId === activeConversationId;
 
+  const moveThread = (dragged: ThreadSummary, target: ThreadSummary) => {
+    if (!onMove || dragged.id === target.id) return;
+    onMove(dragged, target);
+  };
+
   return (
     <div className="sidebar__conversations sidebar__threads" aria-label="Conversations">
       <Section label={threadCopy.pinnedLabel} storageKey="otto.sidebar.pinned" defaultOpen>
@@ -161,6 +203,10 @@ export const ThreadList: React.FC<{
               onSelect={onSelect}
               onPin={onPin}
               onArchive={onArchive}
+              onMove={onMove ? moveThread : undefined}
+              draggingId={draggingId}
+              onDragThreadStart={setDraggingId}
+              onDragThreadEnd={() => setDraggingId(null)}
             />
           ))
         ) : (
@@ -178,6 +224,10 @@ export const ThreadList: React.FC<{
               onSelect={onSelect}
               onPin={onPin}
               onArchive={onArchive}
+              onMove={onMove ? moveThread : undefined}
+              draggingId={draggingId}
+              onDragThreadStart={setDraggingId}
+              onDragThreadEnd={() => setDraggingId(null)}
             />
           ))
         ) : (

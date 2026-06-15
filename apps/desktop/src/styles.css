@@ -276,6 +276,10 @@ h1, h2, h3, h4, p { margin: 0; }
 .sidebarConv__pin svg,
 .sidebarConv__archive svg { width: 14px; height: 14px; stroke-width: 1.65; }
 
+.sidebarConvWrap.is-dragging { opacity: 0.45; }
+.sidebarConvWrap[draggable="true"] { cursor: grab; }
+.sidebarConvWrap[draggable="true"]:active { cursor: grabbing; }
+
 .sidebarConv {
   display: flex; align-items: center; gap: 10px;
   width: 100%; min-height: 32px;

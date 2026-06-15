@@ -303,6 +303,9 @@ export interface DecideProposalResult {
 
 export type { StandardConflictResult } from '@otto-haus/core';
 
+/** Default sidebar ordering for threads without manual sortOrder (164). */
+export type ConversationSortMode = 'recent' | 'created';
+
 /** Local chat thread index (046). */
 export interface ChatThreadRecord {
   id: string;
@@ -311,6 +314,8 @@ export interface ChatThreadRecord {
   title: string;
   createdAt: string;
   updatedAt: string;
+  /** Manual drag order within pinned or recents group; null falls back to conversationSortMode. */
+  sortOrder?: number | null;
   pinned: boolean;
   archived: boolean;
 }
@@ -423,6 +428,7 @@ export interface ChatThreadRecord {
   title: string;
   createdAt: string;
   updatedAt: string;
+  sortOrder?: number | null;
   pinned: boolean;
   archived: boolean;
 }
@@ -459,6 +465,8 @@ export interface OttoConfig {
   primaryAgentId?: string | null;
   /** Connection UX mode — embedded vs bring-your-own vs cloud. */
   connectionMode?: 'embedded' | 'existing' | 'cloud';
+  /** Sidebar default for threads without manual sortOrder (164). */
+  conversationSortMode?: ConversationSortMode;
   /** Legacy / generated readiness shape; modelHandle is the v1 desktop control. */
   model?: { provider?: string; model?: string };
   mcpServers?: unknown[];

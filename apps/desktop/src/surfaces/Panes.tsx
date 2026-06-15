@@ -79,6 +79,7 @@ import {
   type ProviderMirrorSnapshot,
   type DreamSettings,
   type DreamTrigger,
+  type ConversationSortMode,
 } from '../runtime';
 import { useRuntimeContext } from '../RuntimeContext';
 import { ReadinessPanel } from '../ReadinessPanel';
@@ -3760,6 +3761,49 @@ const LabsSettingsPanel: React.FC = () => {
   );
 };
 
+const ConversationSortSetting: React.FC = () => {
+  const api = ottoApi();
+  const [mode, setMode] = useState<ConversationSortMode>('recent');
+  const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    if (!api?.config?.get) return;
+    void api.config.get().then((cfg) => {
+      setMode(cfg.conversationSortMode === 'created' ? 'created' : 'recent');
+    });
+  }, [api]);
+
+  const save = async (next: ConversationSortMode) => {
+    if (!api?.config?.set || busy) return;
+    setBusy(true);
+    try {
+      await api.config.set({ conversationSortMode: next });
+      setMode(next);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <div className="settingsFieldRow">
+      <div className="settingsFieldRow__main">
+        <div className="settingsFieldRow__title">{settingsCopy.conversationSortLabel}</div>
+        <p className="settingsFieldRow__hint">{settingsCopy.conversationSortHint}</p>
+      </div>
+      <select
+        className="charterInput"
+        value={mode}
+        disabled={busy || !api}
+        aria-label={settingsCopy.conversationSortLabel}
+        onChange={(event) => void save(event.target.value as ConversationSortMode)}
+      >
+        <option value="recent">{settingsCopy.conversationSortRecent}</option>
+        <option value="created">{settingsCopy.conversationSortCreated}</option>
+      </select>
+    </div>
+  );
+};
+
 export const Settings: React.FC = () => {
   const rt = useRuntimeContext();
   const api = ottoApi();
@@ -3830,6 +3874,11 @@ export const Settings: React.FC = () => {
           <section>
             <SettingsSectionHeader title={settingsCopy.workspaceTitle} lede={settingsCopy.workspaceLede} />
             <WorkspaceAndPermissionRoute />
+          </section>
+
+          <section>
+            <SettingsSectionHeader title={settingsCopy.conversationSortLabel} lede={settingsCopy.conversationSortHint} />
+            <ConversationSortSetting />
           </section>
 
           {(api?.cognee || api?.pgvector) ? (
