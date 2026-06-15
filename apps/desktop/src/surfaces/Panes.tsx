@@ -100,6 +100,7 @@ import {
   type DreamSettings,
   type DreamTrigger,
   type ConversationSortMode,
+  type ComposerSendShortcut,
 } from '../runtime';
 import { useRuntimeContext } from '../runtime-context';
 import { ReadinessPanel } from '../ReadinessPanel';
@@ -4472,6 +4473,49 @@ const ConversationSortSetting: React.FC = () => {
 
 type SettingsSectionId = 'general' | 'display' | 'providers' | 'memory' | 'culture' | 'diagnostics';
 
+const ComposerSendShortcutSetting: React.FC = () => {
+  const api = ottoApi();
+  const [shortcut, setShortcut] = useState<ComposerSendShortcut>('enter');
+  const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    if (!api?.config?.get) return;
+    void api.config.get().then((cfg) => {
+      setShortcut(cfg.composerSendShortcut === 'tab' ? 'tab' : 'enter');
+    });
+  }, [api]);
+
+  const save = async (next: ComposerSendShortcut) => {
+    if (!api?.config?.set || busy) return;
+    setBusy(true);
+    try {
+      await api.config.set({ composerSendShortcut: next });
+      setShortcut(next);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <div className="settingsFieldRow">
+      <div className="settingsFieldRow__main">
+        <div className="settingsFieldRow__title">{settingsCopy.composerShortcutLabel}</div>
+        <p className="settingsFieldRow__hint">{settingsCopy.composerShortcutHint}</p>
+      </div>
+      <select
+        className="charterInput"
+        value={shortcut}
+        disabled={busy || !api}
+        aria-label={settingsCopy.composerShortcutLabel}
+        onChange={(event) => void save(event.target.value as ComposerSendShortcut)}
+      >
+        <option value="enter">{settingsCopy.composerShortcutEnter}</option>
+        <option value="tab">{settingsCopy.composerShortcutTab}</option>
+      </select>
+    </div>
+  );
+};
+
 export const Settings: React.FC = () => {
   const rt = useRuntimeContext();
   const api = ottoApi();
@@ -4617,6 +4661,7 @@ export const Settings: React.FC = () => {
           <section>
             <SettingsSectionHeader title={settingsCopy.conversationSortLabel} lede={settingsCopy.conversationSortHint} />
             <ConversationSortSetting />
+            <ComposerSendShortcutSetting />
           </section>
 
           {(api?.cognee || api?.pgvector) ? (
