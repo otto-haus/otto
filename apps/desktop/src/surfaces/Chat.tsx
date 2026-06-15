@@ -68,6 +68,7 @@ import {
   labelForCuratedModel,
   visiblePickerModels,
 } from '../chat/model-picker-curation';
+import { ChatHandoffStrip } from '../chat/ChatHandoffStrip';
 
 // In Electron (window.otto present) → the runtime-wired LiveChat.
 // In the web preview → the file-backed PreviewChat (unchanged).
@@ -1077,6 +1078,7 @@ const LiveChat: React.FC<{
       <div className="chat__stream" ref={streamRef}>
         <div className="chat__streamInner">
           {rt.activeTodos.length > 0 && <TodoPanel todos={rt.activeTodos} />}
+          {onNavigate ? <ChatHandoffStrip todos={rt.activeTodos} onNavigate={onNavigate} /> : null}
           {!ready && (
             <div className="inkblock chat__setup" onContextMenu={runtimeSetupDebugMenu.onContextMenu}>
               {!st ? (
