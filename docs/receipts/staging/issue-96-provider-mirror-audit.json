@@ -2,6 +2,8 @@
   "issue": 96,
   "ticket": "078-provider-capability-mirror-settings",
   "date": "2026-06-14",
+  "reverified_at": "2026-06-15",
+  "merged_pr": 420,
   "status": "pass",
   "secret_value_printed": false,
   "ipc_trace_audit": {
