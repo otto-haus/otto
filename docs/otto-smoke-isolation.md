@@ -4,6 +4,7 @@ Smoke tests must not write into Sebastian's live `conversation=default`.
 
 Use one of these paths:
 
+- Capability: `task smoke:letta-cli` — proves `resolveCli`, `--version`, and `--help` from otto's runtime context. Set `LETTA_AGENT_ID` for an opt-in disposable `--new` turn (never `conversation=default`).
 - Direct CLI: `task smoke:cli` — runs with `--new`, `--no-memfs`, `--no-skills`.
 - Letta cron / reminders: `OTTO_AGENT_ID=<agent-id> task smoke:cron` — creates a one-shot task on `otto-cron-smoke-<timestamp>`, verifies prompt/agent/conversation binding, then deletes it.
 - Desktop/app harness: launch the app executable with `OTTO_SMOKE=1` so Otto creates a disposable conversation and does not persist that conversation id.
