@@ -151,7 +151,7 @@ const api = {
     get: (): Promise<OttoConfig> => ipcRenderer.invoke('otto:config:get'),
     set: (patch: Partial<OttoConfig>): Promise<OttoConfig> => ipcRenderer.invoke('otto:config:set', patch),
   },
-  /** Labs gate — same shape as Settings → Labs (`{ enabled, features }`). See `docs/v1/labs.md`. */
+  /** Labs config — `{ enabled, features }` persisted in otto config. See `docs/v1/labs.md`. */
   labs: {
     /** Read master + per-feature toggles from `~/.otto/config.json`. */
     get: (): Promise<LabsConfig> => ipcRenderer.invoke('otto:labs:get'),

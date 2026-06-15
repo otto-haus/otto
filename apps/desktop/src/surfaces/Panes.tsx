@@ -3294,12 +3294,6 @@ const ConnectLetta: React.FC = () => {
             ) : null}
           </select>
         </label>
-        {hydrated && !cloudConnectionAllowed ? (
-          <p className="settingsFieldHint" style={{ marginTop: 8 }}>
-            <span className="pill">{labsCopy.previewBadge}</span>{' '}
-            {settingsCopy.connectionCloudLabsHint}
-          </p>
-        ) : null}
       </div>
       {displayStatus && !displayStatus.ready && displayStatus.reason && (
         <p className="faint" style={{ margin: 0 }}>↳ {displayStatus.reason}</p>
@@ -3625,7 +3619,7 @@ const ConnectPgvector: React.FC = () => {
         <StatusPill status={healthCode} />
       </div>
       <p className="settingsOptionalBlock__lede">
-        {labsCopy.pgvectorBlockedBody} Advanced env toggles live in docs/pgvector.md.
+        {settingsCopy.pgvectorSettingsLede}
       </p>
       {status && (
         <p className="faint" style={{ marginTop: 8, fontSize: 12 }}>
@@ -3704,7 +3698,7 @@ const ConnectCognee: React.FC = () => {
             checked={enabled}
             onChange={(e) => setEnabled(e.target.checked)}
           />
-          <span style={{ fontSize: 13.5 }}>{labsCopy.featureEnableLabel}: Knowledge (Cognee)</span>
+          <span style={{ fontSize: 13.5 }}>{settingsCopy.cogneeEnableLabel}</span>
         </label>
         <label>
           <span className="faint" style={{ fontSize: 12 }}>Base URL (loopback only)</span>

@@ -749,7 +749,8 @@ export const settingsCopy = {
   agentsActionDocs: 'Read setup docs',
   memoryTitle: 'Memory observatory',
   memoryLede: 'Read-only view of Letta core-memory blocks. Writeback goes through Curation.',
-  labsWarn: 'These change how the app behaves and may change or disappear. Nothing here affects receipt records.',
+  cogneeEnableLabel: 'Enable Cognee sidecar',
+  pgvectorSettingsLede: 'Local vector recall store. Env-gated — see docs/pgvector.md.',
   primaryAgentLabel: 'Primary agent',
   primaryAgentHint: 'One default agent per workspace — memory continuity is the product.',
   primaryAgentOpenLetta: 'Open in Letta',
@@ -771,8 +772,6 @@ export const settingsCopy = {
   connectionEmbedded: 'Embedded (bundled CLI + local web server)',
   connectionExisting: 'Existing local Letta',
   connectionCloud: 'Cloud remote',
-  connectionCloudLabsHint:
-    'Remote Letta Cloud is a Labs feature. Enable Labs and Remote Letta Cloud in Settings → Labs when you are ready.',
   conversationSortLabel: 'Conversation order',
   conversationSortHint: 'Default sort for threads you have not dragged. Manual order always wins.',
   conversationSortRecent: 'Most recent activity',
