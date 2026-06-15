@@ -68,6 +68,25 @@ Knowledge is maintained external-world understanding. v1 focuses on AI Frontier 
 - Proposed: status pill + notice when `registry.status === 'proposed'`
 - Routing: assignments table visible; Autonomy evaluation cross-link shows `knowledge_routing` when classified
 
+## Cognee graph recall (044 / #70)
+
+- [x] AI Frontier file-backed sections unchanged when Cognee off — separate `CogneeKnowledgePanel` in `detailGrid--2`.
+  - Evidence: `apps/desktop/src/surfaces/Panes.tsx`; `apps/desktop/src/surfaces/cognee-knowledge-panel.test.ts`
+
+- [x] Disabled: `LabsBlockedShell` + status pill `disabled` — no mock entity counts (`zoneUnknown` for entities/docs when absent).
+  - Evidence: `apps/desktop/electron/cognee-store.test.ts` — disabled recall honesty
+
+- [~] Ready + capture receipt: last capture id/time, kinds, doc count (or `unknown`) from `otto:cognee:latest-capture`.
+  - Evidence: `CogneeKnowledgePanel` capture rows; unit fixture in `cognee-store.test.ts`
+  - Gap: operator staging screenshot with live capture receipt on disk
+
+- [~] Recall smoke: path-backed citations when health `ready` + capture paths exist.
+  - Evidence: `cognee-store.recallSmoke`; `cognee-store.test.ts` — citation paths
+  - Gap: semantic MCP recall when graph indexed (042 live lane)
+
+- [x] Error honesty: `lastError` notice when status not `ready`; recall button disabled until `ready`.
+  - Evidence: `cognee-knowledge-panel.test.ts`
+
 ## Status legend
 
 - `[x]` Done — evidence path required

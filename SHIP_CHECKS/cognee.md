@@ -32,8 +32,9 @@ Cognee is an optional **derived relationship graph / recall sidecar** under Know
 - [ ] Capture jobs with provenance receipts.
   - Gap: **043**.
 
-- [ ] Knowledge pane graph section.
-  - Gap: **044**.
+- [~] Knowledge pane graph section.
+  - Evidence: `apps/desktop/src/surfaces/Panes.tsx` — `CogneeKnowledgePanel`; `apps/desktop/src/surfaces/cognee-knowledge-panel.test.ts`; `apps/desktop/electron/cognee-store.test.ts` (disabled/stopped/ready recall paths); `docs/receipts/staging/issue-70-cognee-knowledge-20260614.json`
+  - Gap: live staging PNG + semantic MCP recall when Cognee daemon + LLM key available (041–043 operator lane).
 
 ## Forbidden mutation trace
 
