@@ -1,4 +1,5 @@
 import type { BrowserWindow } from 'electron';
+import type { RuntimeSendPayload } from '../../src/attachment-message';
 import type { PermissionResponse, RuntimePreferences, RuntimeStatus } from '../shared/types';
 import type { ConfigStore } from '../config-store';
 import { SdkSubprocessTransport } from './sdk-subprocess-transport';
@@ -83,8 +84,8 @@ export class RuntimeSupervisor implements OttoRuntimeTransport {
     return this.withModeMeta(await this.active.configure(input));
   }
 
-  async send(text: string): Promise<void> {
-    return this.active.send(text);
+  async send(input: RuntimeSendPayload | string): Promise<void> {
+    return this.active.send(input);
   }
 
   async abort(): Promise<void> {

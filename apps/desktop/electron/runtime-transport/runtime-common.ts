@@ -464,3 +464,13 @@ export function promptWithRuntimeContext(
 ): string {
   return `${runtimeContextForPrompt(status)}\n\n${text}`;
 }
+
+import type { MessageContentItem } from '@letta-ai/letta-code-sdk';
+
+/** Prepend runtime context to multimodal user content for Letta transports. */
+export function promptContentWithRuntimeContext(
+  content: MessageContentItem[],
+  status: PromptRuntimeContext,
+): MessageContentItem[] {
+  return [{ type: 'text', text: runtimeContextForPrompt(status) }, ...content];
+}

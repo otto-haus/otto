@@ -60,15 +60,18 @@ export const splitQueueText = (text: string): { body: string; attachmentLines: s
   return { body, attachmentLines };
 };
 
-export type QueueAttachmentRef = { name: string; path: string };
+export type QueueAttachmentRef = { name: string; path: string; id?: string };
 
 export const parseQueueAttachmentLine = (line: string): QueueAttachmentRef | null => {
   const match = line.trim().match(/^\d+\.\s+(.+?)\s+—\s+(.+)$/);
   if (!match) return null;
   const name = match[1].trim();
-  const path = match[2].trim();
-  if (!name || !path) return null;
-  return { name, path };
+  const token = match[2].trim();
+  if (!name || !token) return null;
+  if (token.startsWith('otto-att:')) {
+    return { name, id: token.slice('otto-att:'.length), path: '' };
+  }
+  return { name, path: token };
 };
 
 /** Split queued message text into composer body plus attachment refs for recall. */

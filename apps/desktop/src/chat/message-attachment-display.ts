@@ -12,6 +12,7 @@ export type SentMessageDisplay = {
 
 /** file:// preview URL for a saved attachment path (renderer display only). */
 export function pathToAttachmentPreviewUrl(path: string): string {
+  if (!path) return '';
   if (path.startsWith('file://')) return path;
   const normalized = path.replace(/\\/g, '/');
   return normalized.startsWith('/') ? `file://${normalized}` : `file:///${normalized}`;

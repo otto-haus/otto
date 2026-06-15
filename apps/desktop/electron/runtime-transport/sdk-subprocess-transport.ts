@@ -24,6 +24,7 @@ import {
   nextActionFor,
   normalizeRuntimeError,
   promptWithRuntimeContext,
+  promptContentWithRuntimeContext,
   resolveCli,
   safeWebContentsSend,
   sessionInitTimeoutMs,
@@ -32,6 +33,8 @@ import {
 } from './runtime-common';
 import { permissionSessionStore } from '../permission-session-store';
 import { permissionLogStore } from '../permission-log-store';
+import { prepareRuntimeSend } from '../attachment-delivery';
+import type { RuntimeSendPayload } from '../../src/attachment-message';
 import type { OttoRuntimeTransport, SdkTransportDiagnosticsSnapshot } from './types';
 
 const DEFAULT_PERMISSION_TIMEOUT_MS = 120_000;
@@ -51,6 +54,7 @@ type PendingPermission = {
 type SDK = typeof import('@letta-ai/letta-code-sdk');
 type Session = import('@letta-ai/letta-code-sdk').Session;
 type CreateSessionOptions = import('@letta-ai/letta-code-sdk').CreateSessionOptions;
+type SendMessage = import('@letta-ai/letta-code-sdk').SendMessage;
 
 /** SDK/subprocess path — existing Letta Code session via @letta-ai/letta-code-sdk. */
 export class SdkSubprocessTransport implements OttoRuntimeTransport {
@@ -399,11 +403,13 @@ export class SdkSubprocessTransport implements OttoRuntimeTransport {
     this.publishStatus();
   }
 
-  async send(text: string): Promise<void> {
+  async send(input: RuntimeSendPayload | string): Promise<void> {
+    const prepared = prepareRuntimeSend(input);
+    const storedText = prepared.storedText;
     if (!this.session || !this.status.ready) {
       const reason = 'Runtime not ready — open Settings and connect before sending.';
       this.writeChatReceipt({
-        text,
+        text: storedText,
         status: 'blocked',
         summary: 'Chat turn blocked before send.',
         blocker: {
@@ -440,7 +446,12 @@ export class SdkSubprocessTransport implements OttoRuntimeTransport {
         message: { type: 'turn_trail', trail, final: true, uuid: randomUUID() },
       });
     };
-    trace.write('prompt', { text, agentId: this.status.agentId, conversationId: this.status.conversationId });
+    trace.write('prompt', {
+      storedText,
+      attachmentCount: prepared.attachmentCount,
+      agentId: this.status.agentId,
+      conversationId: this.status.conversationId,
+    });
     try {
       let turnError: string | null = null;
       let sawResult = false;
@@ -450,7 +461,7 @@ export class SdkSubprocessTransport implements OttoRuntimeTransport {
         if (receiptWritten) return;
         receiptWritten = true;
         this.writeChatReceipt({
-          text,
+          text: storedText,
           status,
           summary,
           blocker,
@@ -466,7 +477,10 @@ export class SdkSubprocessTransport implements OttoRuntimeTransport {
           evidence: [{ kind: 'log', ref: trace.path, note: 'Raw chat trace JSONL' }],
         });
       };
-      await this.session.send(promptWithRuntimeContext(text, startedStatus));
+      const sendMessage: SendMessage = prepared.attachmentCount > 0 || prepared.deliveryContent.length > 1
+        ? promptContentWithRuntimeContext(prepared.deliveryContent, startedStatus)
+        : promptWithRuntimeContext(prepared.deliveryContent[0]?.type === 'text' ? prepared.deliveryContent[0].text : storedText, startedStatus);
+      await this.session.send(sendMessage);
       for await (const message of this.session.stream()) {
         trace.write('event', message);
         trailAccumulator.ingestRuntimeMessage(message as unknown as Record<string, unknown>);
@@ -556,7 +570,7 @@ export class SdkSubprocessTransport implements OttoRuntimeTransport {
       const normalizedError = normalizeRuntimeError(reason, this.hasApiKey());
       finalizeTurnTrailEmit();
       this.writeChatReceipt({
-        text,
+        text: storedText,
         status: normalizedError.code === 'error' ? 'failed' : 'blocked',
         summary: 'Chat turn failed.',
         blocker: {

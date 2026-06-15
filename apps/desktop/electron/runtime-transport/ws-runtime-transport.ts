@@ -20,6 +20,7 @@ import {
   nextActionFor,
   normalizeRuntimeError,
   promptWithRuntimeContext,
+  promptContentWithRuntimeContext,
   resolveCli,
   safeWebContentsSend,
 } from './runtime-common';
@@ -35,6 +36,8 @@ import {
 } from './ws-protocol';
 import { permissionSessionStore } from '../permission-session-store';
 import { permissionLogStore } from '../permission-log-store';
+import { prepareRuntimeSend } from '../attachment-delivery';
+import type { RuntimeSendPayload } from '../../src/attachment-message';
 import type { OttoRuntimeTransport, WsTransportDiagnosticsSnapshot } from './types';
 
 const CONNECT_TIMEOUT_MS = DEFAULT_CONNECT_TIMEOUT_MS;
@@ -228,7 +231,9 @@ export class WsRuntimeTransport implements OttoRuntimeTransport {
     return this.init();
   }
 
-  async send(text: string): Promise<void> {
+  async send(input: RuntimeSendPayload | string): Promise<void> {
+    const prepared = prepareRuntimeSend(input);
+    const storedText = prepared.storedText;
     if (!this.status.ready || !this.runtimeSocket || this.runtimeSocket.readyState !== WebSocket.OPEN) {
       throw new Error('Runtime not ready — WebSocket transport disconnected.');
     }
@@ -241,7 +246,13 @@ export class WsRuntimeTransport implements OttoRuntimeTransport {
     this.activeRunId = null;
     const todoAccumulator = new TodoStreamAccumulator();
     const trailAccumulator = new TurnTrailAccumulator();
-    trace.write('prompt', { text, transport: 'ws', agentId: this.status.agentId, conversationId: this.status.conversationId });
+    trace.write('prompt', {
+      storedText,
+      attachmentCount: prepared.attachmentCount,
+      transport: 'ws',
+      agentId: this.status.agentId,
+      conversationId: this.status.conversationId,
+    });
 
     let lastTrailFingerprint = '';
     let trailFinalized = false;
@@ -275,7 +286,7 @@ export class WsRuntimeTransport implements OttoRuntimeTransport {
       ) => {
         if (receiptWritten) return;
         receiptWritten = true;
-        this.writeChatReceipt({ text, status, summary, blocker, startedStatus, tracePath: trace.path });
+        this.writeChatReceipt({ text: storedText, status, summary, blocker, startedStatus, tracePath: trace.path });
       };
       const emitResult = (success: boolean) => {
         safeWebContentsSend(this.getMainWindow(), 'otto:event', {
@@ -335,6 +346,13 @@ export class WsRuntimeTransport implements OttoRuntimeTransport {
 
       this.turnMessageHandlerDetach = this.attachRuntimeHandler(onRuntimeEvent);
 
+      const messageContent = prepared.attachmentCount > 0 || prepared.deliveryContent.length > 1
+        ? promptContentWithRuntimeContext(prepared.deliveryContent, startedStatus)
+        : promptWithRuntimeContext(
+          prepared.deliveryContent[0]?.type === 'text' ? prepared.deliveryContent[0].text : storedText,
+          startedStatus,
+        );
+
       this.sendCommand({
         type: 'input',
         runtime: {
@@ -345,12 +363,12 @@ export class WsRuntimeTransport implements OttoRuntimeTransport {
         },
         payload: {
           kind: 'create_message',
-          messages: [{ role: 'user', content: promptWithRuntimeContext(text, startedStatus), client_message_id: randomUUID() }],
+          messages: [{ role: 'user', content: messageContent, client_message_id: randomUUID() }],
           supports_control_response: true,
         },
       });
 
-      const turnTimeoutMs = turnIdleTimeoutMs(text, CONNECT_TIMEOUT_MS);
+      const turnTimeoutMs = turnIdleTimeoutMs(storedText, CONNECT_TIMEOUT_MS, prepared.attachmentCount);
       try {
         await this.waitForTurnComplete(turnTimeoutMs, () => this.aborted || this.turnIdle);
       } catch (e) {
@@ -417,7 +435,7 @@ export class WsRuntimeTransport implements OttoRuntimeTransport {
         this.markNotReady(reason, normalizedError.code);
         finalizeTurnTrailEmit();
         this.writeChatReceipt({
-          text,
+          text: storedText,
           status: 'failed',
           summary: 'Chat turn failed.',
           blocker: {

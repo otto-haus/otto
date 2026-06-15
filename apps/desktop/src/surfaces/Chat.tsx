@@ -1,4 +1,4 @@
-import { buildRuntimeMessageWithAttachments } from '../attachment-message';
+import { buildRuntimeSendPayload } from '../attachment-message';
 import type React from 'react';
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { syncComposerTextareaHeight } from '../chat/composer-textarea';
@@ -416,7 +416,7 @@ const pathToPreviewUrl = pathToAttachmentPreviewUrl;
 
 const attachmentDraftsFromQueueRefs = (refs: QueueAttachmentRef[]): AttachmentDraft[] =>
   refs.map((ref, index) => ({
-    id: `recalled-${index}-${ref.path}`,
+    id: ref.id ?? `recalled-${index}-${ref.path || ref.name}`,
     name: ref.name,
     mime: mimeFromAttachmentName(ref.name),
     path: ref.path,
@@ -888,24 +888,38 @@ const LiveChat: React.FC<{
   const recallQueueItem = (id: string) => {
     const item = queue.find((entry) => entry.id === id);
     if (!item) return;
-    const { body, attachments: attachmentRefs } = composerDraftFromQueueText(item.text);
-    setDraft(body);
-    setAttachments(attachmentDraftsFromQueueRefs(attachmentRefs));
-    setRecalledQueueId(id);
-    toast.push({ title: chatCopy.queueRecalledToast, tone: 'ok' });
-    requestAnimationFrame(() => {
-      textareaRef.current?.focus();
-      textareaRef.current?.setSelectionRange(body.length, body.length);
-    });
+    void (async () => {
+      const { body, attachments: attachmentRefs } = composerDraftFromQueueText(item.text);
+      const unresolvedIds = attachmentRefs.filter((ref) => ref.id && !ref.path).map((ref) => ref.id!);
+      const resolved = unresolvedIds.length && api ? await api.attachments.resolve(unresolvedIds) : [];
+      const mergedRefs = attachmentRefs.map((ref) => {
+        if (ref.path) return ref;
+        const found = resolved.find((record) => record.id === ref.id);
+        return found ? { ...ref, path: found.path } : ref;
+      });
+      setDraft(body);
+      setAttachments(attachmentDraftsFromQueueRefs(mergedRefs));
+      setRecalledQueueId(id);
+      toast.push({ title: chatCopy.queueRecalledToast, tone: 'ok' });
+      requestAnimationFrame(() => {
+        textareaRef.current?.focus();
+        textareaRef.current?.setSelectionRange(body.length, body.length);
+      });
+    })();
   };
 
   const submit = () => {
     const t = draft.trim();
     if ((!t && attachments.length === 0) || !api) return;
-    const text = buildRuntimeMessageWithAttachments(t, attachments);
+    const payload = buildRuntimeSendPayload(t, attachments.map(({ id, name, path, mime }) => ({
+      id,
+      name,
+      path,
+      mime,
+    })));
     const recalledId = recalledQueueId;
     void (async () => {
-      const cmd = await runTicketCommand(api, text);
+      const cmd = await runTicketCommand(api, payload.storedText);
       if (cmd?.handled) {
         setCmdMessages((items) => [...items, {
           id: `cmd-${Date.now()}`,
@@ -922,7 +936,7 @@ const LiveChat: React.FC<{
       if (!ready || steering) {
         setQueue((items) => {
           const withoutRecalled = recalledId ? removeQueueItem(items, recalledId) : items;
-          return enqueueQueueItemForThread(withoutRecalled, text, rt.activeThreadId, { steer: steering });
+          return enqueueQueueItemForThread(withoutRecalled, payload.storedText, rt.activeThreadId, { steer: steering });
         });
         if (recalledId) setRecalledQueueId(null);
         if (steering) void rt.abort();
@@ -935,7 +949,7 @@ const LiveChat: React.FC<{
       if (pendingQueued) {
         setQueue((items) => {
           const withoutRecalled = recalledId ? removeQueueItem(items, recalledId) : items;
-          return enqueueQueueItemForThread(withoutRecalled, text, rt.activeThreadId);
+          return enqueueQueueItemForThread(withoutRecalled, payload.storedText, rt.activeThreadId);
         });
         setDraft('');
         setAttachments([]);
@@ -947,11 +961,11 @@ const LiveChat: React.FC<{
       setDraft('');
       setAttachments([]);
       try {
-        await rt.send(text);
+        await rt.send(payload);
         notifyOnboardingFirstMessage();
       } catch (err) {
         const reason = err instanceof Error ? err.message : String(err);
-        setQueue((items) => appendFailedQueueItem(items, createQueueItem(text, 'failed', rt.activeThreadId), reason));
+        setQueue((items) => appendFailedQueueItem(items, createQueueItem(payload.storedText, 'failed', rt.activeThreadId), reason));
       }
     })();
   };
@@ -969,7 +983,10 @@ const LiveChat: React.FC<{
     draining.current = true;
     persistInFlight({ ...next, state: 'sending' });
     setQueue((items) => items.filter((item) => item.id !== next.id));
-    void runQueuedSend((text) => rt.send(text), next.text)
+    void runQueuedSend(
+      (text) => rt.send({ storedText: text, promptText: '', attachments: [] }),
+      next.text,
+    )
       .then((outcome) => {
         clearInFlight(next.id);
         if (outcome.ok) {

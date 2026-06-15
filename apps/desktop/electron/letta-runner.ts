@@ -4,6 +4,7 @@ export { resolveTransportMode } from './runtime-transport/transport-mode';
 
 import type { BrowserWindow } from 'electron';
 import type { PermissionResponse, RuntimePreferences, RuntimeStatus } from './shared/types';
+import type { RuntimeSendPayload } from '../src/attachment-message';
 import type { ConfigStore } from './config-store';
 import { RuntimeSupervisor } from './runtime-transport/runtime-supervisor';
 import type { TransportDiagnosticsSnapshot } from './diagnostics-export';
@@ -42,8 +43,8 @@ export class LettaRunner {
     return this.supervisor.configure(input);
   }
 
-  send(text: string): Promise<void> {
-    return this.supervisor.send(text);
+  send(input: RuntimeSendPayload | string): Promise<void> {
+    return this.supervisor.send(input);
   }
 
   abort(): Promise<void> {
