@@ -91,15 +91,36 @@ export async function listLocalLettaModels(config: ConfigStore): Promise<LettaMo
   return out;
 }
 
-export async function confirmedModelHandle(config: ConfigStore): Promise<string | null> {
-  const models = await listLocalLettaModels(config);
-  if (!models.length) return config.modelHandle();
-  const preferred = config.modelHandle();
-  if (preferred && models.some((model) => model.handle === preferred)) return preferred;
-  return models.find((model) => model.handle === 'letta/auto')?.handle
-    ?? models.find((model) => model.handle === 'openai/gpt-5.5')?.handle
-    ?? models[0]?.handle
-    ?? null;
+export type ResolvedModelHandle = {
+  /** User's persisted selection — never rewritten by discovery/fallback. */
+  requested: string | null;
+  /** Model handle passed to the runtime for this session/turn. */
+  active: string | null;
+  /** Human-readable reason when active differs from requested. */
+  fallbackReason: string | null;
+};
+
+export function resolveModelHandle(preferred: string | null, models: LettaModelOption[]): ResolvedModelHandle {
+  const requested = preferred;
+  if (!models.length) {
+    return { requested, active: requested, fallbackReason: null };
+  }
+  if (requested && models.some((model) => model.handle === requested)) {
+    return { requested, active: requested, fallbackReason: null };
+  }
+  const fallback = models.find((model) => model.handle === 'letta/auto')
+    ?? models.find((model) => model.handle === 'openai/gpt-5.5')
+    ?? models[0];
+  const active = fallback?.handle ?? null;
+  const fallbackReason = requested && active && requested !== active
+    ? `Requested ${requested} is unavailable; running ${active} for this session.`
+    : null;
+  return { requested, active, fallbackReason };
+}
+
+export async function confirmedModelHandle(config: ConfigStore): Promise<ResolvedModelHandle> {
+  const models = await listLocalLettaModels(config).catch(() => [] as LettaModelOption[]);
+  return resolveModelHandle(config.modelHandle(), models);
 }
 
 function discoverSettingsHttpBaseUrl(settings: LettaSettings | null): string | null {
