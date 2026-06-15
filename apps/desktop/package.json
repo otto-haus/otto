@@ -33,7 +33,7 @@
     "yaml": "latest"
   },
   "devDependencies": {
-    "@types/node": "^22.10.0",
+    "@types/node": "^25.9.3",
     "@types/pg": "^8.15.2",
     "@types/react": "latest",
     "@types/react-dom": "latest",
