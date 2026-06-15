@@ -5,7 +5,7 @@ import { join } from 'node:path';
 const chatSource = readFileSync(join(import.meta.dir, 'Chat.tsx'), 'utf8');
 const copySource = readFileSync(join(import.meta.dir, '../copy/surfaces.ts'), 'utf8');
 
-describe('chat composer readiness contract (#289)', () => {
+describe('chat composer readiness contract (#289, #300)', () => {
   it('keeps the draft textarea editable while runtime is not ready', () => {
     expect(chatSource).not.toMatch(/<textarea[\s\S]*?disabled=\{!ready\}/);
     expect(chatSource).toContain('Draft while setup finishes…');

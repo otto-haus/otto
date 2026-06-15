@@ -59,6 +59,15 @@ function syncResponse(conversationId: string) {
   return { type: 'sync_response', conversation_id: conversationId };
 }
 
+async function closeMockSocket(socket: WebSocket) {
+  socket.close();
+  await new Promise<void>((resolve) => {
+    if (socket.readyState === WebSocket.CLOSED) return resolve();
+    socket.once('close', () => resolve());
+    setTimeout(resolve, 50);
+  });
+}
+
 async function waitForListener(transport: WsRuntimeTransport, timeoutMs = 5000) {
   const started = Date.now();
   while (Date.now() - started < timeoutMs) {
@@ -70,7 +79,11 @@ async function waitForListener(transport: WsRuntimeTransport, timeoutMs = 5000) 
   throw new Error('Timed out waiting for WS listener');
 }
 
-async function connectMockRuntime(transport: WsRuntimeTransport, conversationId: string) {
+async function connectMockRuntime(
+  transport: WsRuntimeTransport,
+  conversationId: string,
+  onCommand?: (cmd: Record<string, unknown>, socket: WebSocket) => void,
+) {
   const { port, token } = await waitForListener(transport);
   const socket = new WebSocket(`ws://127.0.0.1:${port}`, {
     headers: { Authorization: `Bearer ${token}` },
@@ -91,6 +104,10 @@ async function connectMockRuntime(transport: WsRuntimeTransport, conversationId:
       socket.send(JSON.stringify(syncResponse(conversationId)));
       socket.send(JSON.stringify(deviceOnline()));
       socket.send(JSON.stringify(loopIdle()));
+    }
+    if (onCommand) {
+      onCommand(cmd, socket);
+      return;
     }
     if (cmd.type === 'input') {
       socket.send(JSON.stringify({
@@ -186,5 +203,36 @@ describe('WsRuntimeTransport', () => {
     expect(smokeMode()).toBe(true);
     process.env.OTTO_SMOKE = '0';
     expect(smokeMode()).toBe(false);
+  });
+
+  test('turn idle timeout keeps transport ready and emits recoverable error', async () => {
+    const { win, sent } = mockWindow();
+    const transport = new WsRuntimeTransport(win, mockConfig('conv-ws-idle'));
+    (transport as unknown as {
+      runtimeSocket: WebSocket | null;
+      status: { ready: boolean };
+      waitForTurnComplete: () => Promise<void>;
+      attachRuntimeHandler: () => void;
+      sendCommand: () => void;
+      writeChatReceipt: () => void;
+    }).runtimeSocket = { readyState: WebSocket.OPEN } as WebSocket;
+    (transport as unknown as { status: { ready: boolean } }).status = {
+      ...(transport.getStatus()),
+      ready: true,
+      conversationId: 'conv-ws-idle',
+      agentId: 'agent-ws-test',
+    };
+    (transport as unknown as { waitForTurnComplete: () => Promise<void> }).waitForTurnComplete = async () => {
+      throw new Error('Timed out waiting for runtime idle');
+    };
+    (transport as unknown as { attachRuntimeHandler: () => void }).attachRuntimeHandler = () => {};
+    (transport as unknown as { sendCommand: () => void }).sendCommand = () => {};
+    (transport as unknown as { writeChatReceipt: () => void }).writeChatReceipt = () => {};
+
+    await transport.send('draft while prior turn times out');
+
+    expect(transport.getStatus().ready).toBe(true);
+    expect(sent.some((e) => e.channel === 'otto:event' && (e.payload as { status?: { ready?: boolean } }).status?.ready === false)).toBe(false);
+    expect(sent.some((e) => e.channel === 'otto:event' && (e.payload as { message?: { type?: string } }).message?.type === 'error')).toBe(true);
   });
 });

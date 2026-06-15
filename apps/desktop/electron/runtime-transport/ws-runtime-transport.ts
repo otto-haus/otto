@@ -23,11 +23,18 @@ import {
   safeWebContentsSend,
 } from './runtime-common';
 import { TodoStreamAccumulator } from './todo-parser';
-import { isDeviceOnline, isLoopIdle, normalizeWsEvent, type WsRuntimeEvent } from './ws-protocol';
+import {
+  DEFAULT_CONNECT_TIMEOUT_MS,
+  isDeviceOnline,
+  isLoopIdle,
+  normalizeWsEvent,
+  turnIdleTimeoutMs,
+  type WsRuntimeEvent,
+} from './ws-protocol';
 import { permissionSessionStore } from '../permission-session-store';
 import type { OttoRuntimeTransport, WsTransportDiagnosticsSnapshot } from './types';
 
-const CONNECT_TIMEOUT_MS = 45_000;
+const CONNECT_TIMEOUT_MS = DEFAULT_CONNECT_TIMEOUT_MS;
 const REMOTE_ENV = process.env.OTTO_WS_REMOTE_ENV ?? 'otto-byor';
 
 type PendingControl = {
@@ -205,6 +212,11 @@ export class WsRuntimeTransport implements OttoRuntimeTransport {
         receiptWritten = true;
         this.writeChatReceipt({ text, status, summary, blocker, startedStatus, tracePath: trace.path });
       };
+      const emitResult = (success: boolean) => {
+        safeWebContentsSend(this.win, 'otto:event', {
+          message: { type: 'result', success, conversationId: this.status.conversationId, uuid: randomUUID() },
+        });
+      };
 
       const onRuntimeEvent = (event: WsRuntimeEvent) => {
         trace.write('event', event);
@@ -239,9 +251,7 @@ export class WsRuntimeTransport implements OttoRuntimeTransport {
         }
         if (isLoopIdle(event)) {
           this.turnIdle = true;
-          safeWebContentsSend(this.win, 'otto:event', {
-            message: { type: 'result', success: !turnErrorMessage, conversationId: this.status.conversationId, uuid: randomUUID() },
-          });
+          emitResult(!turnErrorMessage);
           writeReceipt(turnErrorMessage ? 'failed' : 'success', turnErrorMessage ? 'Chat turn failed.' : 'Chat turn completed.', turnErrorRaw ? (() => {
             const normalizedError = normalizeRuntimeError(turnErrorRaw, this.hasApiKey());
             return {
@@ -272,7 +282,44 @@ export class WsRuntimeTransport implements OttoRuntimeTransport {
         },
       });
 
-      await this.waitForTurnComplete(CONNECT_TIMEOUT_MS, () => this.aborted || this.turnIdle);
+      const turnTimeoutMs = turnIdleTimeoutMs(text, CONNECT_TIMEOUT_MS);
+      try {
+        await this.waitForTurnComplete(turnTimeoutMs, () => this.aborted || this.turnIdle);
+      } catch (e) {
+        const idleTimeout = msg(e).includes('Timed out waiting for runtime idle');
+        if (idleTimeout && turnErrorMessage) {
+          emitResult(false);
+          writeReceipt('failed', 'Chat turn failed before idle confirmation.', turnErrorRaw ? (() => {
+            const normalizedError = normalizeRuntimeError(turnErrorRaw, this.hasApiKey());
+            return {
+              code: normalizedError.code,
+              message: normalizedError.message,
+              recoverable: true,
+              next_action: nextActionFor(normalizedError.code),
+              ...(normalizedError.details ? { details: normalizedError.details } : {}),
+            };
+          })() : {
+            code: 'error',
+            message: turnErrorMessage,
+            recoverable: true,
+            next_action: nextActionFor('error'),
+          });
+          this.emitError(turnErrorMessage);
+        } else if (idleTimeout && sawAssistant && !this.activeRunId) {
+          emitResult(true);
+          writeReceipt('success', 'Chat turn completed without idle confirmation.', null);
+        } else if (idleTimeout) {
+          writeReceipt('failed', 'Chat turn timed out before the runtime became idle.', {
+            code: 'idle_timeout',
+            message: 'The runtime did not confirm idle in time. You can wait, send a follow-up, or reconnect.',
+            recoverable: true,
+            next_action: nextActionFor('error'),
+          });
+          this.emitError('Timed out waiting for the runtime to finish. Try again or reconnect if the turn looks stuck.');
+        } else {
+          throw e;
+        }
+      }
       if (!receiptWritten) {
         writeReceipt(this.aborted ? 'blocked' : sawAssistant ? 'success' : 'failed', this.aborted ? 'Chat turn was aborted.' : sawAssistant ? 'Chat turn completed.' : 'Chat turn ended without idle signal.', this.aborted ? {
           code: 'aborted',
@@ -283,22 +330,25 @@ export class WsRuntimeTransport implements OttoRuntimeTransport {
     } catch (e) {
       const reason = msg(e);
       trace.write('error', { message: reason });
-      const normalizedError = normalizeRuntimeError(reason, this.hasApiKey());
-      this.markNotReady(reason, normalizedError.code);
-      this.writeChatReceipt({
-        text,
-        status: 'failed',
-        summary: 'Chat turn failed.',
-        blocker: {
-          code: normalizedError.code,
-          message: normalizedError.message,
-          recoverable: normalizedError.code === 'usage-limit' || normalizedError.code !== 'error',
-          next_action: nextActionFor(normalizedError.code),
-        },
-        startedStatus,
-        tracePath: trace.path,
-      });
-      this.emitError(normalizedError.message, normalizedError.details);
+      const idleTimeout = reason.includes('Timed out waiting for runtime idle');
+      if (!idleTimeout) {
+        const normalizedError = normalizeRuntimeError(reason, this.hasApiKey());
+        this.markNotReady(reason, normalizedError.code);
+        this.writeChatReceipt({
+          text,
+          status: 'failed',
+          summary: 'Chat turn failed.',
+          blocker: {
+            code: normalizedError.code,
+            message: normalizedError.message,
+            recoverable: normalizedError.code === 'usage-limit' || normalizedError.code !== 'error',
+            next_action: nextActionFor(normalizedError.code),
+          },
+          startedStatus,
+          tracePath: trace.path,
+        });
+        this.emitError(normalizedError.message, normalizedError.details);
+      }
     } finally {
       trace.close();
     }
