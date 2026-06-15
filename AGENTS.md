@@ -75,6 +75,13 @@ bash apps/desktop/scripts/deploy-staging.sh
 NODE_PATH=$HOME/.codex/admin/node_modules OTTO_RECEIPT_DIR=$PWD/docs/receipts/staging   node scripts/otto-staging-two-thread-smoke.cjs   # 046 thread isolation
 ```
 
+Clean-machine E2E (#291 — isolated HOME, no host Letta config, never live/staging installs):
+
+```sh
+bun run --cwd apps/desktop app:dir
+NODE_PATH=$HOME/.codex/admin/node_modules task smoke:clean-machine
+```
+
 Canonical app boundary:
 
 - `/Applications/otto.app` must only be installed or updated from the latest published GitHub Release artifact.
