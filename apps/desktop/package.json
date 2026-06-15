@@ -28,6 +28,8 @@
     "pg": "^8.21.0",
     "react": "latest",
     "react-dom": "latest",
+    "react-markdown": "10.1.0",
+    "remark-gfm": "4.0.1",
     "typescript": "latest",
     "vite": "latest",
     "ws": "^8.21.0",
