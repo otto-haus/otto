@@ -9,7 +9,7 @@ import { StandardStore } from '../standard-store';
 import { PracticeStore } from '../practice-store';
 import { TraceWriter } from '../trace-writer';
 import { TurnTrailAccumulator, trailTraceSummary } from '../../src/chat/turn-trail';
-import { discoverLocalLettaContext, resolveInitBaseUrl, type InitBaseUrlResolution } from './letta-discovery';
+import { resolveInitBaseUrl, resolveLiveLocalLettaContext, type InitBaseUrlResolution } from './letta-discovery';
 import {
   SMOKE_MODE,
   smokeMode,
@@ -182,7 +182,7 @@ export class SdkSubprocessTransport implements OttoRuntimeTransport {
   /** Connect; recover from stale agents/conversations; never throw to the renderer. */
   async init(opts?: { freshConversation?: boolean }): Promise<RuntimeStatus> {
     const cli = resolveCli(this.config.connectionMode());
-    const context = discoverLocalLettaContext(this.config);
+    const context = await resolveLiveLocalLettaContext(this.config);
     const baseResolution = await resolveInitBaseUrl(context.baseUrl, this.config.connectionMode());
     if (baseResolution.blockReason) {
       this.status = {
