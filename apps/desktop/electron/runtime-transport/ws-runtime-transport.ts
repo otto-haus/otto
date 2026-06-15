@@ -17,6 +17,7 @@ import {
   friendly,
   msg,
   nextActionFor,
+  promptWithRuntimeContext,
   resolveCli,
   safeWebContentsSend,
 } from './runtime-common';
@@ -225,7 +226,7 @@ export class WsRuntimeTransport implements OttoRuntimeTransport {
         },
         payload: {
           kind: 'create_message',
-          messages: [{ role: 'user', content: text, client_message_id: randomUUID() }],
+          messages: [{ role: 'user', content: promptWithRuntimeContext(text, startedStatus), client_message_id: randomUUID() }],
           supports_control_response: true,
         },
       });
