@@ -712,6 +712,9 @@ const LiveChat: React.FC<{
   const streamMessages = [...rt.messages, ...cmdMessages];
   const turnAnchors = useMemo(() => turnAnchorIndices(streamMessages), [streamMessages]);
   const activeQueue = queueDisplayItemsForThread(queue, rt.activeThreadId);
+  const lastStreamMessage = streamMessages[streamMessages.length - 1];
+  const assistantStreaming = rt.busy && lastStreamMessage?.who === 'otto' && !!lastStreamMessage.text;
+  const activityLabel = rt.turnActivity?.label ?? chatCopy.workingPulse;
 
   const copyConversationMarkdown = async () => {
     if (streamMessages.length === 0) {
@@ -1044,14 +1047,18 @@ const LiveChat: React.FC<{
               </div>
             );
           })}
-          {rt.busy && (
+          {rt.busy && !assistantStreaming && (
             <div className="msgRow">
               <span className="msgRow__avatar" aria-hidden="true"><OttoMark size={26} className="ottoMark" /></span>
-              <div className="chat__thinking" aria-live="polite">
+              <div
+                className={`chat__thinking${rt.turnActivity ? ` chat__thinking--${rt.turnActivity.kind}` : ''}`}
+                aria-live="polite"
+                aria-label={activityLabel}
+              >
                 <span className="chat__thinkingDots" aria-hidden="true">
                   <i /><i /><i />
                 </span>
-                {chatCopy.workingPulse}
+                {activityLabel}
               </div>
             </div>
           )}

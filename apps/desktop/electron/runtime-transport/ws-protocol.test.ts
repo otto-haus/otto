@@ -31,6 +31,15 @@ describe('ws-protocol', () => {
     expect(event?.todos).toEqual([{ id: '1', content: 'Wire todos', status: 'in_progress' }]);
   });
 
+  test('normalizes tool_call_message stream_delta as activity', () => {
+    const event = normalizeWsEvent({
+      type: 'stream_delta',
+      delta: { message_type: 'tool_call_message', name: 'grep' },
+    });
+    expect(event?.type).toBe('activity');
+    expect(event?.label).toBe('Searching…');
+  });
+
   test('detects loop idle', () => {
     expect(isLoopIdle({
       type: 'update_loop_status',

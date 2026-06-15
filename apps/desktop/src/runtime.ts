@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { flushMessages, readStoredMessages, type StoredChatMsg } from './chat/message-storage';
+import { activityFromRuntimeMessage, type TurnActivity } from './chat/turn-activity';
 import type {
   Charter,
   CharterRef,
@@ -296,6 +297,8 @@ export const ottoApi = (): OttoApi | null =>
   typeof window !== 'undefined' && window.otto ? window.otto : null;
 export const isElectron = (): boolean => ottoApi() !== null;
 
+export type { TurnActivity } from './chat/turn-activity';
+
 export type ChatMsg = StoredChatMsg & {
   checkBlock?: {
     checkName: string;
@@ -352,6 +355,7 @@ export function useRuntime() {
   const [messages, setMessages] = useState<ChatMsg[]>([]);
   const [activeTodos, setActiveTodos] = useState<TodoItem[]>([]);
   const [busy, setBusy] = useState(false);
+  const [turnActivity, setTurnActivity] = useState<TurnActivity | null>(null);
   const activeAssistantStream = useRef<string | null>(null);
   const sendError = useRef<string | null>(null);
   const activeThreadRef = useRef<string | null>(null);
@@ -470,6 +474,7 @@ export function useRuntime() {
       if (m.type === 'assistant') {
         const t = assistantText(m);
         if (t) {
+          setTurnActivity(null);
           const streamId = String(m.uuid ?? m.runId ?? 'assistant');
           patchInflightMessages((x) => {
             const last = x[x.length - 1];
@@ -501,7 +506,11 @@ export function useRuntime() {
               })),
           );
         }
-      } else if (m.type === 'error') {
+      } else {
+        const activity = activityFromRuntimeMessage(m);
+        if (activity) setTurnActivity(activity);
+      }
+      if (m.type === 'error') {
         const ownedTurn = inflightThreadRef.current;
         sendError.current = String((m as { message?: unknown }).message ?? 'error');
         activeAssistantStream.current = null;
@@ -510,10 +519,12 @@ export function useRuntime() {
           { id: `error-${Date.now()}`, who: 'error', text: String((m as { message?: unknown }).message ?? 'error') },
         ]);
         inflightThreadRef.current = null;
+        setTurnActivity(null);
         if (!ownedTurn) setBusy(false);
       } else if (m.type === 'result') {
         activeAssistantStream.current = null;
         inflightThreadRef.current = null;
+        setTurnActivity(null);
         const conversationId = typeof m.conversationId === 'string' ? m.conversationId : null;
         if (conversationId) {
           void api.threads.touch({ lettaConversationId: conversationId });
@@ -541,6 +552,7 @@ export function useRuntime() {
     activeAssistantStream.current = null;
     setActiveTodos([]);
     inflightThreadRef.current = sendThreadId;
+    setTurnActivity(null);
     const snippet = text.trim().replace(/\s+/g, ' ');
     if (snippet) {
       void api.threads.touch({ title: snippet.length > 56 ? `${snippet.slice(0, 53)}…` : snippet });
@@ -566,6 +578,7 @@ export function useRuntime() {
     await api.runtime.abort();
     activeAssistantStream.current = null;
     inflightThreadRef.current = null;
+    setTurnActivity(null);
     setBusy(false);
   };
 
@@ -583,6 +596,7 @@ export function useRuntime() {
     sendError.current = null;
     activeAssistantStream.current = null;
     inflightThreadRef.current = null;
+    setTurnActivity(null);
     setBusy(false);
     if (activeThreadRef.current) {
       applyThreadView(activeThreadRef.current, { persistLeaving: true });
@@ -603,6 +617,7 @@ export function useRuntime() {
     sendError.current = null;
     activeAssistantStream.current = null;
     inflightThreadRef.current = null;
+    setTurnActivity(null);
     setBusy(false);
     if (activeThreadRef.current) {
       threadMessagesCache.current.set(activeThreadRef.current, messagesRef.current);
@@ -646,6 +661,7 @@ export function useRuntime() {
     messages,
     activeTodos,
     busy,
+    turnActivity,
     activeThreadId,
     send,
     abort,
