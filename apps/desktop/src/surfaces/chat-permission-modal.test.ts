@@ -3,17 +3,20 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 const chatSource = readFileSync(join(import.meta.dir, 'Chat.tsx'), 'utf8');
+const permissionWindowSource = readFileSync(join(import.meta.dir, 'PermissionWindow.tsx'), 'utf8');
 const preloadSource = readFileSync(join(import.meta.dir, '../../electron/preload.ts'), 'utf8');
 const ipcSource = readFileSync(join(import.meta.dir, '../../electron/ipc.ts'), 'utf8');
 const permissionCardSource = readFileSync(join(import.meta.dir, '../components/ui/PermissionCard.tsx'), 'utf8');
 
-describe('chat permission modal contract (#71 / 045)', () => {
-  it('subscribes to runtime permission requests and opens Modal + PermissionCard', () => {
-    expect(chatSource).toContain('api.onPermission((req) => setPermission(req as PermissionRequestView))');
-    expect(chatSource).toContain('<Modal');
-    expect(chatSource).toContain('open={!!permission}');
-    expect(chatSource).toContain('<PermissionCard');
-    expect(chatSource).toContain('title={permissionCopy.modalTitle}');
+describe('chat permission modal contract (#71 / 045 / #316)', () => {
+  it('subscribes to runtime permission requests and opens Permission drawer', () => {
+    expect(chatSource).toContain('api.onPermission((req) => {');
+    expect(chatSource).toContain('setPermission(req as PermissionRequestView)');
+    expect(chatSource).toContain("setContextPanel('permission')");
+    expect(chatSource).toContain('<ContextDrawer');
+    expect(chatSource).toContain("contextPanel === 'permission'");
+    expect(chatSource).toContain('<PermissionWindow');
+    expect(permissionWindowSource).toContain('<PermissionCard');
   });
 
   it('maps allow/deny/session decisions to runtime permission.respond', () => {

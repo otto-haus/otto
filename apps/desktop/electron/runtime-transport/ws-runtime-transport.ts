@@ -33,6 +33,7 @@ import {
   type WsRuntimeEvent,
 } from './ws-protocol';
 import { permissionSessionStore } from '../permission-session-store';
+import { permissionLogStore } from '../permission-log-store';
 import type { OttoRuntimeTransport, WsTransportDiagnosticsSnapshot } from './types';
 
 const CONNECT_TIMEOUT_MS = DEFAULT_CONNECT_TIMEOUT_MS;
@@ -92,6 +93,16 @@ export class WsRuntimeTransport implements OttoRuntimeTransport {
     if (response.behavior === 'allow' && response.scope === 'session') {
       permissionSessionStore.allow(pending.toolName);
     }
+    permissionLogStore.recordDecision(
+      requestId,
+      pending.toolName,
+      response.behavior === 'allow'
+        ? response.scope === 'session'
+          ? 'allow-session'
+          : 'allow-once'
+        : 'deny',
+      response.behavior === 'deny' ? { message: response.message } : undefined,
+    );
     pending.resolve(response);
     const upstreamId = [...this.controlByUpstream.entries()].find(([, id]) => id === requestId)?.[0];
     if (!upstreamId) return;
@@ -624,6 +635,7 @@ export class WsRuntimeTransport implements OttoRuntimeTransport {
     this.controlByUpstream.set(upstreamId, requestId);
     const interactive = toolName === 'AskUserQuestion' || toolName === 'ExitPlanMode';
     const req: PermissionRequest = { requestId, toolName, toolInput, interactive };
+    permissionLogStore.recordPending(req);
     safeWebContentsSend(this.win, 'otto:permission', req);
     this.pendingControls.set(requestId, {
       requestId,

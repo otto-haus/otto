@@ -1,0 +1,14 @@
+{
+  "issue": 316,
+  "title": "P0: Add first-class Project and Permission windows",
+  "verified": [
+    "bun test apps/desktop/electron/permission-log-store.test.ts",
+    "bun test apps/desktop/electron/workspace-context.test.ts",
+    "bun run typecheck",
+    "bun run --cwd apps/desktop typecheck",
+    "bun run --cwd apps/desktop electron:typecheck",
+    "bun test (289 pass)"
+  ],
+  "manual": "Open Chat → Project / Permission header buttons. Permission drawer opens on tool gate without blocking composer. Project drawer shows OTTO_ROOT, ~/.otto, session ids. Project switch blocked with reason.",
+  "screenshots": "Capture in staging smoke when OTTO_SMOKE=1 trigger-permission flow runs."
+}

@@ -24,6 +24,7 @@ export { MemoryWritebackGate } from './MemoryWritebackGate';
 export { CheckBlockBanner } from './CheckBlockBanner';
 export type { CommandStationCounts } from './CommandStationStrip';
 export { Modal } from './Modal';
+export { ContextDrawer } from './ContextDrawer';
 export { PermissionCard } from './PermissionCard';
 export type { PermissionRequestView, PermissionDecision } from './PermissionCard';
 export { MessageActions } from './MessageActions';

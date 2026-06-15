@@ -29,6 +29,7 @@ import {
   type ModelInitAttempt,
 } from './runtime-common';
 import { permissionSessionStore } from '../permission-session-store';
+import { permissionLogStore } from '../permission-log-store';
 import type { OttoRuntimeTransport, SdkTransportDiagnosticsSnapshot } from './types';
 
 const DEFAULT_PERMISSION_TIMEOUT_MS = 120_000;
@@ -85,6 +86,16 @@ export class SdkSubprocessTransport implements OttoRuntimeTransport {
     if (response.behavior === 'allow' && response.scope === 'session') {
       permissionSessionStore.allow(entry.toolName);
     }
+    permissionLogStore.recordDecision(
+      requestId,
+      entry.toolName,
+      response.behavior === 'allow'
+        ? response.scope === 'session'
+          ? 'allow-session'
+          : 'allow-once'
+        : 'deny',
+      response.behavior === 'deny' ? { message: response.message } : undefined,
+    );
     entry.resolve(response);
   }
 
@@ -104,11 +115,15 @@ export class SdkSubprocessTransport implements OttoRuntimeTransport {
       const requestId = randomUUID();
       const interactive = toolName === 'AskUserQuestion' || toolName === 'ExitPlanMode';
       const req: PermissionRequest = { requestId, toolName, toolInput, interactive };
+      permissionLogStore.recordPending(req);
       safeWebContentsSend(this.win, 'otto:permission', req);
       return new Promise<PermissionResponse>((resolve) => {
         const timer = setTimeout(() => {
           if (!this.pending.has(requestId)) return;
           this.pending.delete(requestId);
+          permissionLogStore.recordDecision(requestId, toolName, 'timeout', {
+            message: 'Permission request timed out.',
+          });
           resolve({ behavior: 'deny', message: 'Permission request timed out.' });
         }, permissionTimeoutMs());
         this.pending.set(requestId, { toolName, resolve, timer });

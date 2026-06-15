@@ -10,6 +10,12 @@ export type PermissionRequestView = {
 
 export type PermissionDecision = 'allow-once' | 'allow-session' | 'deny';
 
+const riskForTool = (toolName: string): 'low' | 'medium' | 'high' => {
+  if (/(delete|destroy|send|publish|deploy|merge|push|spend|wire|credential|secret)/i.test(toolName)) return 'high';
+  if (/(write|edit|install|migrate|exec|run|bash|shell)/i.test(toolName)) return 'medium';
+  return 'low';
+};
+
 export const PermissionCard: React.FC<{
   request: PermissionRequestView;
   busy?: boolean;
@@ -17,11 +23,21 @@ export const PermissionCard: React.FC<{
   onCorrectThis?: () => void;
 }> = ({ request, busy = false, onDecide, onCorrectThis }) => {
   const [denyReason, setDenyReason] = useState('');
+  const risk = riskForTool(request.toolName);
+  const scopePreview = Object.keys(request.toolInput).slice(0, 4).join(', ') || 'tool input';
 
   return (
     <div className="permissionCard panel">
       <div className="permissionCard__eyebrow">{permissionCopy.eyebrow}</div>
-      <div className="permissionCard__tool">{request.toolName}</div>
+      <div className="between">
+        <div className="permissionCard__tool">{request.toolName}</div>
+        <span className={`pill pill--${risk === 'high' ? 'warn' : 'neutral'}`}>
+          {permissionCopy.riskLabel}: {risk}
+        </span>
+      </div>
+      <p className="permissionCard__note muted">
+        {permissionCopy.actionLabel}: <code>{request.toolName}</code> · scope: {scopePreview}
+      </p>
       {request.interactive ? (
         <p className="permissionCard__note muted">{permissionCopy.interactiveNote}</p>
       ) : null}
