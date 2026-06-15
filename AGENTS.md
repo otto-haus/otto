@@ -66,6 +66,14 @@ task smoke:letta-cli          # resolveCli + version/help; opt-in turn with LETT
 task smoke:cli                # isolated disposable conversation; never default
 task smoke:cron               # opt-in Letta cron create/list/delete smoke; never default
 task smoke:attachments        # fixture save + runtime attachment context + leak checks (#299)
+task smoke:permission         # #298 permission allow/deny round-trip (mock transport; no app bundles)
+```
+
+Permission round-trip (#298):
+
+```sh
+bun scripts/permission-round-trip-smoke.ts
+# or: task smoke:permission
 ```
 
 **Nonintrusive desktop smoke (default for agents):** prefer `task staging:build` plus CDP/Playwright smokes, or `task staging` (background launch). Staging bundles set `OTTO_SMOKE=1` and default `OTTO_WINDOW_MODE=background` so windows do not steal focus. Use `task staging:open` or `OTTO_WINDOW_MODE=visible` only when a human needs a visible window. Never mutate `/Applications/otto.app`.
