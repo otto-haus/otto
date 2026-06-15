@@ -1,6 +1,7 @@
 import { buildRuntimeMessageWithAttachments } from '../attachment-message';
 import type React from 'react';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { syncComposerTextareaHeight } from '../chat/composer-textarea';
 import { Icon } from '../components/icons';
 import { AppSourceBadge } from '../components/AppSourceBadge';
 import { useToast } from '../components/toast-context';
@@ -824,11 +825,10 @@ const LiveChat: React.FC<{
     );
   }, [attachments]);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const el = textareaRef.current;
     if (!el) return;
-    el.style.height = 'auto';
-    el.style.height = `${Math.min(el.scrollHeight, 200)}px`;
+    syncComposerTextareaHeight(el);
   }, [draft]);
 
   useEffect(() => {
