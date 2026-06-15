@@ -13,7 +13,7 @@ import { AiFrontierReviewExecutor } from './ai-frontier-review-executor';
 import { KnowledgeStore } from './knowledge-store';
 import { PracticeMiningLoop } from './practice-mining';
 import { PracticeRunner, RUNTIME_PRACTICE_SLUGS } from './practice-runner';
-import { RECEIPTS_DIR, ReceiptWriter, type WrittenReceipt } from './receipt-writer';
+import { ReceiptWriter, type WrittenReceipt } from './receipt-writer';
 
 export interface RoutineListResult {
   dir: string;
@@ -162,12 +162,13 @@ export class RoutineStore {
     }
 
     if (slug === 'practice-mining') {
+      const receiptsDir = this.receipts.directory;
       const mining = new PracticeMiningLoop(undefined, undefined, this.receipts);
-      const observed = mining.observe(RECEIPTS_DIR);
+      const observed = mining.observe(receiptsDir);
       observeReceiptId = observed.receipt_id;
       proposalIds = observed.proposals.map((p) => p.id);
       evidence.push({ kind: 'log', ref: observed.receipt_id, note: 'practice.mining.observe' });
-      evidence.push({ kind: 'file', ref: RECEIPTS_DIR, note: 'observed receipts dir' });
+      evidence.push({ kind: 'file', ref: receiptsDir, note: 'observed receipts dir' });
       const receipt = this.receipts.write({
         status: 'success',
         subject: { type: 'routine', id: routine.id },

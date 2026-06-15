@@ -188,4 +188,56 @@ created_at: "2026-06-13T00:00:00Z"
       rmSync(tmp, { recursive: true, force: true });
     }
   });
+
+  test('practice-mining manual run invokes observe loop without proposal on single receipt', () => {
+    const tmp = mkdtempSync(join(tmpdir(), 'otto-routine-test-'));
+    process.env.OTTO_HOME = tmp;
+    try {
+      const receiptsDir = join(tmp, 'receipts');
+      mkdirSync(receiptsDir, { recursive: true });
+      writeFileSync(
+        join(receiptsDir, 'one.json'),
+        JSON.stringify({ action: 'ticket.compile', id: 'r1' }),
+      );
+
+      const store = new RoutineStore(routinesDir, new ReceiptWriter(receiptsDir));
+      const result = store.runManual('practice-mining');
+
+      expect(result.receipt.action).toBe('routine.run.manual');
+      expect(result.observeReceiptId).toBeTruthy();
+      expect(result.proposalIds).toEqual([]);
+      expect(result.receipt.result.data.proposalCount).toBe(0);
+      expect(result.receipt.evidence.some((entry) => entry.note === 'practice.mining.observe')).toBe(true);
+      expect(result.receipt.evidence.some((entry) => entry.ref === receiptsDir)).toBe(true);
+    } finally {
+      delete process.env.OTTO_HOME;
+      rmSync(tmp, { recursive: true, force: true });
+    }
+  });
+
+  test('practice-mining manual run creates Curation proposal on repeated receipts', () => {
+    const tmp = mkdtempSync(join(tmpdir(), 'otto-routine-test-'));
+    process.env.OTTO_HOME = tmp;
+    try {
+      const receiptsDir = join(tmp, 'receipts');
+      mkdirSync(receiptsDir, { recursive: true });
+      for (let i = 0; i < 2; i += 1) {
+        writeFileSync(
+          join(receiptsDir, `repeat-${i}.json`),
+          JSON.stringify({ action: 'otto.test.repeated-mining-action', id: `r${i}` }),
+        );
+      }
+
+      const store = new RoutineStore(routinesDir, new ReceiptWriter(receiptsDir));
+      const result = store.runManual('practice-mining');
+
+      expect(result.observeReceiptId).toBeTruthy();
+      expect(result.proposalIds?.length).toBe(1);
+      expect(result.receipt.result.data.proposalCount).toBe(1);
+      expect(result.receipt.input.proposalIds).toHaveLength(1);
+    } finally {
+      delete process.env.OTTO_HOME;
+      rmSync(tmp, { recursive: true, force: true });
+    }
+  });
 });
