@@ -1,0 +1,81 @@
+{
+  "schema": "otto.clean-machine-e2e-smoke.v1",
+  "issue": 291,
+  "ok": true,
+  "runId": "20260615155030",
+  "gitHead": "22cb86f1",
+  "appTemplate": "/private/tmp/otto-cleanmachine-fix/apps/desktop/dist-app/mac-arm64/otto.app",
+  "smokeRoot": "/var/folders/22/fzs3nrw505z_m71cghqjc7j80000gn/T/otto-clean-machine-20260615155030",
+  "isolatedHome": "/var/folders/22/fzs3nrw505z_m71cghqjc7j80000gn/T/otto-clean-machine-20260615155030/home",
+  "isolatedOttoHome": "/var/folders/22/fzs3nrw505z_m71cghqjc7j80000gn/T/otto-clean-machine-20260615155030/home/otto-home",
+  "receiptDir": "/private/tmp/otto-cleanmachine-fix/docs/receipts/staging",
+  "path": [
+    "resolve packaged otto.app from dist-app (never live or staging installs)",
+    "copy to disposable temp bundle + isolated HOME/OTTO_HOME (no host .letta)",
+    "verify onboarding welcome + connect dock on fresh profile",
+    "embedded connectionMode + runtime.init() on disposable smoke conversation",
+    "one chat turn via runtime.send"
+  ],
+  "checks": {
+    "appBundleExists": true,
+    "bundledCliExists": true,
+    "noHostLettaSettings": true,
+    "providerCredentialPresent": true,
+    "notDefaultConversation": true,
+    "sessionModeSmoke": true,
+    "bundledCliUsed": true,
+    "onboardingWelcomeVisible": true,
+    "connectDockReachable": true,
+    "runtimeReady": true,
+    "cliResolved": true,
+    "lettaStateUnderIsolatedHome": true,
+    "chatTurnCompleted": true
+  },
+  "failureCategory": null,
+  "nextAction": null,
+  "runtimeStatus": {
+    "ready": true,
+    "code": "ready",
+    "agentId": "agent-653b92a2-529d-4a0a-84cb-250f41b6d5c7",
+    "baseUrl": null,
+    "discoverySource": "none",
+    "conversationId": "conv-1277d953-4fbf-41b6-a27f-7a41437f4725",
+    "model": "auto",
+    "modelHandle": null,
+    "effort": "high",
+    "sessionMode": "smoke",
+    "memfsEnabled": true,
+    "tools": [
+      "Bash",
+      "TaskOutput",
+      "Edit",
+      "EnterPlanMode",
+      "ExitPlanMode",
+      "Glob",
+      "Grep",
+      "TaskStop",
+      "memory",
+      "Read",
+      "Skill",
+      "Task",
+      "TodoWrite",
+      "Write"
+    ],
+    "transportMode": "auto",
+    "effectiveTransport": "sdk subprocess",
+    "transportFallbackReason": "WS promotion scorecard not passed — auto uses SDK until reviewer-approved traces land (039).",
+    "cliPath": "/private/var/folders/22/fzs3nrw505z_m71cghqjc7j80000gn/T/otto-clean-machine-20260615155030/otto-clean-machine-smoke.app/Contents/Resources/app/node_modules/@letta-ai/letta-code/letta.js",
+    "cliResolved": true
+  },
+  "chat": {
+    "ok": true,
+    "elapsedMs": 2689,
+    "conversationId": "conv-1277d953-4fbf-41b6-a27f-7a41437f4725",
+    "agentId": "agent-653b92a2-529d-4a0a-84cb-250f41b6d5c7"
+  },
+  "screenshots": {
+    "setup": "/private/tmp/otto-cleanmachine-fix/docs/receipts/staging/291-clean-machine-setup-20260615155030.png",
+    "final": "/private/tmp/otto-cleanmachine-fix/docs/receipts/staging/291-clean-machine-final-20260615155030.png"
+  },
+  "consoleMessages": []
+}

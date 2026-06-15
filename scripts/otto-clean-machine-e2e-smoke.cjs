@@ -336,6 +336,15 @@ async function runSession({ proof, profileDir, home, port, exercise }) {
   const ottoHome = join(home, 'otto-home');
   mkdirSync(ottoHome, { recursive: true });
 
+  // Seed the provider credential into the isolated otto secret store (disposable /tmp profile,
+  // never ~/.otto, never the repo). otto sources LETTA_API_KEY from its own secret store and
+  // strips any inherited process.env value (applyConnectionEnv), so env passthrough alone never
+  // reaches the bundled CLI. This mirrors a user who configured their provider key in otto.
+  const seededKey = process.env.LETTA_API_KEY?.trim();
+  if (seededKey) {
+    writeFileSync(join(ottoHome, 'secrets.env'), `LETTA_API_KEY=${seededKey}\n`, { mode: 0o600 });
+  }
+
   const app = spawn(APP_BIN, [`--remote-debugging-port=${port}`, `--user-data-dir=${profileDir}`], {
     env: {
       ...process.env,
