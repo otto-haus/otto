@@ -957,6 +957,11 @@ h1, h2, h3, h4, p { margin: 0; }
 .md__quote p { margin: 0; }
 .md__pre { margin: 0; padding: 12px 14px; max-width: 100%; overflow: auto; border: 1px solid var(--line); border-radius: 9px; background: var(--bg-2); }
 .md__pre code { font-size: 12px; }
+.md__tableWrap { margin: 0; max-width: 100%; overflow-x: auto; border: 1px solid var(--line); border-radius: 9px; background: var(--bg-2); }
+.md__table { width: max-content; min-width: 100%; border-collapse: collapse; font-size: 13px; line-height: 1.45; }
+.md__table th, .md__table td { padding: 8px 12px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; white-space: nowrap; }
+.md__table tr:last-child td { border-bottom: 0; }
+.md__table th { font-weight: 600; color: var(--ink); background: var(--panel); }
 .md :not(pre) > code { background: var(--accent-tint); border: 1px solid var(--line); border-radius: 5px; padding: 1px 5px; color: inherit; }
 .md a { color: inherit; text-decoration: underline; text-underline-offset: 3px; }
 .msg--user .md :not(pre) > code { background: rgba(255,255,255,0.14); border-color: rgba(255,255,255,0.2); }

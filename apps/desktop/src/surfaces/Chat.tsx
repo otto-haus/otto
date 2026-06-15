@@ -13,6 +13,7 @@ import { TodoPanel } from '../components/TodoPanel';
 import { displayThreadTitle } from '../components/ui/ThreadList';
 import { chatCopy, permissionCopy, toastCopy } from '../copy/surfaces';
 import { useChatThreads } from '../chat/useChatThreads';
+import { isTableStart, parseTableBlock, type MarkdownTable } from '../chat/markdown-tables';
 import { notifyOnboardingFirstMessage } from '../onboarding-storage';
 import { ProposeCorrectionModal, type ProposeCorrectionContext } from '../chat/ProposeCorrectionModal';
 import { serializeConversationMarkdown } from '../chat/conversation-markdown';
@@ -399,6 +400,29 @@ const renderInline = (text: string): React.ReactNode[] => {
   return nodes;
 };
 
+const MarkdownTableView: React.FC<{ table: MarkdownTable }> = ({ table }) => (
+  <div className="md__tableWrap">
+    <table className="md__table">
+      <thead>
+        <tr>
+          {table.headers.map((header) => (
+            <th key={header}>{renderInline(header)}</th>
+          ))}
+        </tr>
+      </thead>
+      <tbody>
+        {table.rows.map((row, rowIndex) => (
+          <tr key={`row-${rowIndex}-${row.join('|')}`}>
+            {row.map((cell, cellIndex) => (
+              <td key={`cell-${rowIndex}-${cellIndex}-${cell}`}>{renderInline(cell)}</td>
+            ))}
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  </div>
+);
+
 const MarkdownText: React.FC<{ text: string }> = ({ text }) => {
   const blocks: React.ReactNode[] = [];
   const parts = text.split(/(```[\s\S]*?```)/g).filter(Boolean);
@@ -470,8 +494,22 @@ const MarkdownText: React.FC<{ text: string }> = ({ text }) => {
         continue;
       }
 
+      if (isTableStart(lines, i)) {
+        const parsed = parseTableBlock(lines, i);
+        if (parsed) {
+          blocks.push(
+            <MarkdownTableView
+              key={`table-${blocks.length}-${parsed.table.headers.join('|')}`}
+              table={parsed.table}
+            />,
+          );
+          i = parsed.endIndex;
+          continue;
+        }
+      }
+
       const para: string[] = [];
-      while (i < lines.length && lines[i].trim() && !/^(#{1,3})\s+/.test(lines[i]) && !/^\s*[-*]\s+/.test(lines[i]) && !/^\s*\d+[.)]\s+/.test(lines[i]) && !/^>\s+/.test(lines[i])) {
+      while (i < lines.length && lines[i].trim() && !/^(#{1,3})\s+/.test(lines[i]) && !/^\s*[-*]\s+/.test(lines[i]) && !/^\s*\d+[.)]\s+/.test(lines[i]) && !/^>\s+/.test(lines[i]) && !isTableStart(lines, i)) {
         para.push(lines[i].trim());
         i += 1;
       }
