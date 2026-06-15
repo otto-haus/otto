@@ -23,8 +23,10 @@ describe('chat composer readiness contract (#289, #300)', () => {
     expect(chatSource).not.toContain("ready ? '' : ' promptbox--disabled'");
   });
 
-  it('allows starter prompts to populate draft before runtime is ready', () => {
-    expect(chatSource).not.toMatch(/className="chatStarter"[\s\S]*?disabled=\{!ready\}/);
+  it('disables starter prompts until runtime is ready (#562)', () => {
+    expect(chatSource).toMatch(/className="chatStarter"[\s\S]*?disabled=\{!ready\}/);
+    expect(chatSource).toContain('chatCopy.starterBlockedTitle');
+    expect(copySource).toContain('starterBlockedTitle');
   });
 
   it('surfaces ticket orchestration commands in the empty chat state when ready (#74)', () => {

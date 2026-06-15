@@ -1060,7 +1060,7 @@ h1, h2, h3, h4, p { margin: 0; }
   cursor: pointer;
   transition: border-color 120ms var(--ease), background 120ms var(--ease), transform 120ms var(--ease);
 }
-.chatStarter:hover {
+.chatStarter:hover:not(:disabled) {
   border-color: var(--line-strong);
   background: #fff;
   transform: translateY(-1px);
