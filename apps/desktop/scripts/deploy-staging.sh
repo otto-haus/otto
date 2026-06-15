@@ -94,18 +94,9 @@ stamp_bundle() {
   plist_env_set "$plist" OTTO_MAIN_SHA "$MAIN_SHA"
   plist_env_set "$plist" OTTO_MAIN_SHORT_SHA "$MAIN_SHORT"
   plist_env_set "$plist" OTTO_SMOKE "1"
-  case "$STAGING_LAUNCH" in
-    open)
-      plist_env_set "$plist" OTTO_WINDOW_MODE "visible"
-      ;;
-    build-only|background)
-      plist_env_set "$plist" OTTO_WINDOW_MODE "${OTTO_WINDOW_MODE:-background}"
-      ;;
-    *)
-      echo "Unknown OTTO_STAGING_LAUNCH=$STAGING_LAUNCH (use build-only, background, or open)" >&2
-      exit 1
-      ;;
-  esac
+  # Dogfood default: visible window so external resize (Rectangle) keeps input/paint.
+  # Agent background launch temporarily overrides OTTO_WINDOW_MODE at open time only.
+  plist_env_set "$plist" OTTO_WINDOW_MODE "${OTTO_WINDOW_MODE:-visible}"
   plist_env_set "$plist" ELECTRON_ENABLE_LOGGING "1"
   plist_env_set "$plist" OTTO_BUILD_SHA "$build_sha"
   plist_env_set "$plist" OTTO_BUILD_SHORT_SHA "$build_short"
@@ -224,6 +215,7 @@ case "$STAGING_LAUNCH" in
     ;;
   background)
     echo "==> Launching staging app in background (no focus steal)"
+    plist_env_set "$TARGET_APP/Contents/Info.plist" OTTO_WINDOW_MODE "background"
     OPEN_FLAGS=(-g)
     ;;
 esac
@@ -231,6 +223,10 @@ esac
 /usr/bin/open -n "${OPEN_FLAGS[@]}" "$TARGET_APP" --args \
   "--user-data-dir=$PROFILE_DIR" \
   "--remote-debugging-port=$PORT"
+
+if [[ "$STAGING_LAUNCH" == "background" ]]; then
+  plist_env_set "$TARGET_APP/Contents/Info.plist" OTTO_WINDOW_MODE "visible"
+fi
 
 for _ in {1..50}; do
   PID="$(pgrep -f "$TARGET_APP/Contents/MacOS/otto" | head -1 || true)"
