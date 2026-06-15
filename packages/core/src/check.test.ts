@@ -7,6 +7,11 @@ import { validateCheck, CHECK_SCHEMA } from './check.js';
 
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), '../../..');
 
+function loadCheckFixture(name: string) {
+  const path = join(repoRoot, 'checks', `${name}.yaml`);
+  return validateCheck(Bun.YAML.parse(readFileSync(path, 'utf8')));
+}
+
 describe('otto.check.v1', () => {
   test('validates completion-requires-receipts fixture shape', () => {
     const result = validateCheck({
@@ -32,10 +37,23 @@ describe('otto.check.v1', () => {
     }
   });
 
-  test('repo seed yaml declares otto.check.v1', () => {
-    const text = readFileSync(join(repoRoot, 'checks/completion-requires-receipts.yaml'), 'utf8');
-    expect(text).toContain('schema: otto.check.v1');
-    expect(text).toContain('done_claim');
+  test('loads completion-requires-receipts seed from disk', () => {
+    const result = loadCheckFixture('completion-requires-receipts');
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.check.schema).toBe(CHECK_SCHEMA);
+      expect(result.check.id).toBe('completion-requires-receipts');
+      expect(result.check.trigger.event).toBe('done_claim');
+    }
+  });
+
+  test('loads one-way-door-approval seed from disk', () => {
+    const result = loadCheckFixture('one-way-door-approval');
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.check.trigger.event).toBe('one_way_door_action');
+      expect(result.check.inspect.require).toContain('approval_present');
+    }
   });
 
   test('rejects malformed check', () => {
