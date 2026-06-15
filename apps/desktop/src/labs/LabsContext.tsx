@@ -1,25 +1,10 @@
-import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import type { LabFeatureId, LabsConfig } from '../../electron/shared/types';
 import type { SurfaceId } from '../components/Sidebar';
 import { ottoApi } from '../runtime';
-import {
-  isSurfaceAccessible,
-  surfaceGate,
-  LAB_FEATURE_META,
-} from '../surface-tiers';
+import { isSurfaceAccessible, surfaceGate } from '../surface-tiers';
 import { defaultLabsConfig } from '../../electron/labs-config';
-
-type LabsContextValue = {
-  labs: LabsConfig;
-  hydrated: boolean;
-  isEnabled: (id: SurfaceId) => boolean;
-  isComingSoon: (id: SurfaceId) => boolean;
-  isFeatureEnabled: (id: LabFeatureId) => boolean;
-  setMasterEnabled: (enabled: boolean) => Promise<void>;
-  setFeatureEnabled: (id: LabFeatureId, enabled: boolean) => Promise<void>;
-};
-
-const LabsContext = createContext<LabsContextValue | null>(null);
+import { LabsContext, type LabsContextValue } from './labs-context';
 
 function normalize(labs: LabsConfig | undefined): LabsConfig {
   return {
@@ -28,7 +13,7 @@ function normalize(labs: LabsConfig | undefined): LabsConfig {
   };
 }
 
-export const LabsProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export function LabsProvider({ children }: { children: React.ReactNode }) {
   const [labs, setLabs] = useState<LabsConfig>(() => defaultLabsConfig());
   const [hydrated, setHydrated] = useState(false);
 
@@ -63,32 +48,12 @@ export const LabsProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const value = useMemo<LabsContextValue>(() => ({
     labs,
     hydrated,
-    isEnabled: (id) => isSurfaceAccessible(id, labs),
-    isComingSoon: (id) => surfaceGate(id, labs, hydrated) === 'coming-soon',
-    isFeatureEnabled: (id) => labs.enabled === true && labs.features?.[id] === true,
+    isEnabled: (id: SurfaceId) => isSurfaceAccessible(id, labs),
+    isComingSoon: (id: SurfaceId) => surfaceGate(id, labs, hydrated) === 'coming-soon',
+    isFeatureEnabled: (id: LabFeatureId) => labs.enabled === true && labs.features?.[id] === true,
     setMasterEnabled,
     setFeatureEnabled,
   }), [labs, hydrated, setMasterEnabled, setFeatureEnabled]);
 
   return <LabsContext.Provider value={value}>{children}</LabsContext.Provider>;
-};
-
-export function useLabs(): LabsContextValue {
-  const ctx = useContext(LabsContext);
-  if (!ctx) {
-    const fallback = defaultLabsConfig();
-    return {
-      labs: fallback,
-      hydrated: true,
-      isEnabled: (id) => isSurfaceAccessible(id, fallback),
-      isComingSoon: (id) => surfaceGate(id, fallback, true) === 'coming-soon',
-      isFeatureEnabled: () => false,
-      setMasterEnabled: async () => {},
-      setFeatureEnabled: async () => {},
-    };
-  }
-  return ctx;
 }
-
-export { LAB_FEATURE_META };
-export { LAB_FEATURE_IDS } from '../../electron/labs-config';

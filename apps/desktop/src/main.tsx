@@ -1,48 +1,39 @@
-import React, { Component, type ErrorInfo, type ReactNode } from 'react';
+import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { App } from './App.js';
+import { AppErrorBoundary } from './AppErrorBoundary.js';
 import { applyDisplayTheme, readStoredDisplayTheme, watchSystemDisplayTheme } from './display-preferences.js';
 import './styles.css';
-import { isElectron, ottoApi } from './runtime';
-
-class AppErrorBoundary extends Component<{ children: ReactNode }, { error: Error | null }> {
-  state = { error: null as Error | null };
-
-  static getDerivedStateFromError(error: Error) {
-    return { error };
-  }
-
-  componentDidCatch(error: Error, info: ErrorInfo) {
-    console.error('[otto] renderer error', error, info);
-  }
-
-  onContextMenu = (event: React.MouseEvent) => {
-    if (!isElectron()) return;
-    event.preventDefault();
-    void ottoApi()?.debug?.showContextMenu('renderer-error');
-  };
-
-  render() {
-    if (this.state.error) {
-      return (
-        <div id="otto-boot-shell" onContextMenu={this.onContextMenu}>
-          <strong>otto failed to load</strong>
-          <small>{this.state.error.message}</small>
-          <small>Right-click for debug menu (logs, status, DevTools).</small>
-        </div>
-      );
-    }
-    return this.props.children;
-  }
-}
 
 applyDisplayTheme(readStoredDisplayTheme());
 watchSystemDisplayTheme(readStoredDisplayTheme());
 
-ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
-  <React.StrictMode>
-    <AppErrorBoundary>
-      <App />
-    </AppErrorBoundary>
-  </React.StrictMode>,
-);
+const container = document.getElementById('root') as HTMLElement;
+
+type Root = ReturnType<typeof ReactDOM.createRoot>;
+
+const hotData = import.meta.hot?.data as { root?: Root } | undefined;
+let root = hotData?.root;
+
+if (!root) {
+  root = ReactDOM.createRoot(container);
+  if (import.meta.hot) {
+    import.meta.hot.data.root = root;
+  }
+}
+
+function renderApp() {
+  root!.render(
+    <React.StrictMode>
+      <AppErrorBoundary>
+        <App />
+      </AppErrorBoundary>
+    </React.StrictMode>,
+  );
+}
+
+renderApp();
+
+if (import.meta.hot) {
+  import.meta.hot.accept();
+}

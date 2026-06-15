@@ -12,7 +12,7 @@ describe('Electron window background', () => {
     expect(windowBackgroundForTheme('light')).toBe(WINDOW_BACKGROUND.light);
     expect(windowBackgroundForTheme('dark')).toBe(WINDOW_BACKGROUND.dark);
     expect(stylesSource).toContain('[data-theme="dark"]');
-    expect(stylesSource).toContain('--bg: oklch(0.975 0.012 85);');
+    expect(stylesSource).toContain('--bg: oklch(0.985 0.002 270);');
     expect(stylesSource).toContain('body { min-height: 100vh; background: var(--bg); }');
   });
 });

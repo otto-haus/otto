@@ -3,13 +3,13 @@ import type React from 'react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Icon } from '../components/icons';
 import { AppSourceBadge } from '../components/AppSourceBadge';
-import { useToast } from '../components/Toast';
+import { useToast } from '../components/toast-context';
 import { requiredMissing, isReady } from '../readiness';
 import { isElectron, ottoApi, type EffortLevel, type LettaModelOption, type SavedAttachment } from '../runtime';
-import { useRuntimeContext } from '../RuntimeContext';
+import { useRuntimeContext } from '../runtime-context';
 import type { SurfaceId } from '../components/Sidebar';
 import { OttoMark } from '../components/OttoMark';
-import { CheckBlockBanner, CommandStationStrip, ContextDrawer, MessageActions, ReceiptInlineCard, type PermissionDecision, type PermissionRequestView } from '../components/ui';
+import { CheckBlockBanner, ContextDrawer, MessageActions, Modal, PermissionCard, ReceiptInlineCard, type PermissionDecision, type PermissionRequestView } from '../components/ui';
 import { TodoPanel } from '../components/TodoPanel';
 import { displayThreadTitle } from '../components/ui/ThreadList';
 import { chatCopy, permissionCopy, projectCopy, toastCopy } from '../copy/surfaces';
@@ -580,7 +580,6 @@ const LiveChat: React.FC<{
   const [proposeBusy, setProposeBusy] = useState(false);
   const [cmdMessages, setCmdMessages] = useState<ChatMsg[]>([]);
   const draining = useRef(false);
-  const fileInput = useRef<HTMLInputElement | null>(null);
   const pickerRef = useRef<HTMLDivElement | null>(null);
   const streamRef = useRef<HTMLDivElement | null>(null);
   const tailRef = useRef<HTMLDivElement | null>(null);
@@ -1114,32 +1113,28 @@ const LiveChat: React.FC<{
               <p className="faint" style={{ marginTop: 8, fontSize: 13 }}>{chatCopy.diagnosticsHint}</p>
             </div>
           )}
-          {ready && streamMessages.length === 0 && onNavigate ? (
-            <div className="chat__commandStation">
-              <CommandStationStrip onNavigate={onNavigate} />
-            </div>
-          ) : null}
           {streamMessages.length === 0 && (
             <div className={`chatEmpty${ready ? '' : ' chatEmpty--muted'}`}>
-              <div className="eyebrow">{chatCopy.sessionEyebrow}</div>
               <h2 className="chatEmpty__title">{chatCopy.sessionTitle}</h2>
-              <p className="chatEmpty__lede">
-                {ready ? chatCopy.sessionBody : 'Finish runtime setup above, then send your first message.'}
-              </p>
-              <div className="chatStarters" aria-label="Starter prompts">
-                {chatCopy.starterPrompts.map((prompt) => (
-                  <button
-                    key={prompt}
-                    type="button"
-                    className="chatStarter"
-                    onClick={() => setDraft(prompt)}
-                  >
-                    {prompt}
-                  </button>
-                ))}
-              </div>
+              {!ready ? (
+                <p className="chatEmpty__lede">Finish runtime setup above, then send your first message.</p>
+              ) : null}
               {ready ? (
-                <p className="faint chatEmpty__lede">{chatCopy.ticketCommandHint}</p>
+                <>
+                  <div className="chatStarters" aria-label="Starter prompts">
+                    {chatCopy.starterPrompts.map((prompt) => (
+                      <button
+                        key={prompt}
+                        type="button"
+                        className="chatStarter"
+                        onClick={() => setDraft(prompt)}
+                      >
+                        {prompt}
+                      </button>
+                    ))}
+                  </div>
+                  <p className="faint chatEmpty__lede">{chatCopy.ticketCommandHint}</p>
+                </>
               ) : null}
             </div>
           )}
@@ -1157,7 +1152,7 @@ const LiveChat: React.FC<{
               >
                 {!isUser && showWho ? (
                   <span className="msgRow__avatar" aria-hidden="true">
-                    <OttoMark size={26} className="ottoMark" />
+                    <OttoMark size={32} className="ottoMark" />
                   </span>
                 ) : !isUser ? <span className="msgRow__avatar msgRow__avatar--spacer" aria-hidden="true" /> : null}
                 <div className={`msg${isUser ? ' msg--user' : ''}${showWho ? '' : ' msg--cont'}`}>
@@ -1217,7 +1212,7 @@ const LiveChat: React.FC<{
           })}
           {rt.busy && !assistantStreaming && (
             <div className="msgRow">
-              <span className="msgRow__avatar" aria-hidden="true"><OttoMark size={26} className="ottoMark" /></span>
+              <span className="msgRow__avatar" aria-hidden="true"><OttoMark size={32} className="ottoMark" /></span>
               <div
                 className={`chat__thinking${rt.turnActivity ? ` chat__thinking--${rt.turnActivity.kind}` : ''}`}
                 aria-live="polite"
@@ -1313,20 +1308,6 @@ const LiveChat: React.FC<{
         ) : null}
         <div className="promptCompose">
           <div className={`promptbox${ready ? '' : ' promptbox--send-blocked'}`}>
-            <input
-              ref={fileInput}
-              type="file"
-              accept="image/*"
-              multiple
-              className="srOnly"
-              onChange={(e) => {
-                void attachImages(imageFiles(e.currentTarget.files ?? []));
-                e.currentTarget.value = '';
-              }}
-            />
-            <button type="button" className="btn btn--icon promptbox__attach" aria-label="Attach image" disabled={!api} onClick={() => fileInput.current?.click()}>
-              {Icon.image}
-            </button>
             <textarea
               ref={textareaRef}
               placeholder={
@@ -1370,7 +1351,7 @@ const LiveChat: React.FC<{
               {Icon.send}
             </button>
           </div>
-          <div className="promptbar__hint">{ready ? chatCopy.composerHint : chatCopy.composerNotReadyHint}</div>
+          {!ready && <div className="promptbar__hint">{chatCopy.composerNotReadyHint}</div>}
         </div>
         </div>
       </div>

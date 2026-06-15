@@ -1,7 +1,7 @@
 import type React from 'react';
 import { useEffect, useState } from 'react';
 import { onboardingCopy } from './copy/surfaces';
-import { useRuntimeContext } from './RuntimeContext';
+import { useRuntimeContext } from './runtime-context';
 import type { SurfaceId } from './components/Sidebar';
 import { ottoApi } from './runtime';
 import {
@@ -176,13 +176,6 @@ export const Onboarding: React.FC<{ onNavigate: (id: SurfaceId) => void; activeS
             }}
           >
             {onboardingCopy.advancedExisting}
-          </button>
-          <button
-            type="button"
-            className="onboardHelp onboardHelp--dark"
-            onClick={() => window.open(onboardingCopy.helpUrl, '_blank', 'noopener,noreferrer')}
-          >
-            {onboardingCopy.helpLabel}
           </button>
         </div>
       </div>

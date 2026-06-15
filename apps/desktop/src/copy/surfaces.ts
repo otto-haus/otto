@@ -177,15 +177,12 @@ export const toastCopy = {
 } as const;
 
 export const chatCopy = {
-  sessionEyebrow: 'Chat',
   sessionTitle: 'What should we work on?',
-  sessionBody: 'Pick a model, send a message, or choose a starter below.',
   starterPrompts: [
     'Help me think through the next step.',
-    'Summarize what matters from our last thread.',
     'Draft a short plan I can react to.',
+    'Turn a rough idea into a ratifiable Standard.',
   ] as const,
-  composerHint: 'Enter to send · Shift+Enter for a new line',
   composerNotReadyHint: 'Finish setup above to send · your draft is saved locally',
   composerSendBlockedTitle: 'Send is unavailable until the runtime is ready',
   queuePending: (count: number) => `${count} waiting to send`,
@@ -235,14 +232,11 @@ export const chatCopy = {
   correctThisHint: 'Turn this moment into changed future behavior',
   correctionDefault: 'This response should change — describe the behavior you want instead.',
   proposeFromCorrection: 'Propose from correction',
-  proposeFromCorrectionHint: 'Describe the behavior you want next time. Canon stays unchanged until you ratify in Curation.',
+  proposeFromCorrectionHint: 'Becomes a proposal — nothing changes until you approve it.',
   correctThisModalTitle: 'Correct this',
   createProposal: 'Create proposal',
   cancel: 'Cancel',
-  futureBehavior: 'Future behavior',
-  evidenceContext: 'Evidence / context',
-  targetLabel: 'Target',
-  classificationPreview: 'classification preview',
+  futureBehavior: 'Describe the behavior you want next time',
   ticketCommandHint: 'Commands: compile ticket <slug> <objective> · orchestrate ticket <slug> · check ticket <slug> · merge ticket <slug> · status workers',
   onboardingHint: 'Send your first message — otto writes a Receipt when work completes with proof.',
   onboardingReceiptHint: 'First turn recorded — open Receipts to inspect the proof record.',
@@ -269,8 +263,6 @@ export const onboardingCopy = {
   secondarySample: 'See what Receipts will prove',
   advancedExisting: 'Advanced: existing Letta install',
   skip: 'Skip',
-  helpLabel: 'Need help?',
-  helpUrl: 'https://github.com/otto-haus/otto/blob/main/docs/design/onboarding.md',
   progressWelcome: 'Welcome',
   progressConnect: 'Connect',
   progressRun: 'Run',
@@ -926,19 +918,6 @@ export const memoryWritebackCopy = {
   targetEyebrow: 'target',
   approve: 'Approve write',
   deny: 'Deny',
-} as const;
-
-export const commandStationCopy = {
-  eyebrow: 'command station',
-  title: 'What needs you',
-  curation: { label: 'Curation', hint: 'Pending proposals' },
-  receipts: { label: 'Recent proof', hint: 'Latest receipts' },
-  tickets: { label: 'Tickets', hint: 'Open worker slices' },
-  autonomy: { label: 'Doors', hint: 'Awaiting approval' },
-  constitution: { label: 'Constitution', hint: 'Source of culture' },
-  changelog: { label: 'Changelog', hint: 'What changed' },
-  latestProof: { label: 'Latest proof', hint: 'Authority + status' },
-  needsRatification: { label: 'Needs ratification', hint: 'Pending Curation' },
 } as const;
 
 export const cultureSettingsCopy = {

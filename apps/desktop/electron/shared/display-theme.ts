@@ -3,7 +3,7 @@ export type DisplayTheme = 'light' | 'dark' | 'system';
 export const DISPLAY_THEME_STORAGE_KEY = 'otto.display.theme.v1';
 
 export const WINDOW_BACKGROUND = {
-  light: '#f8f7f2',
+  light: '#fafafa',
   dark: '#17171a',
 } as const;
 

@@ -2,7 +2,7 @@ import type React from 'react';
 import { Icon } from './components/icons';
 import { readyStatusPill } from './components/ui';
 import { settingsCopy } from './copy/surfaces';
-import { useRuntimeContext } from './RuntimeContext';
+import { useRuntimeContext } from './runtime-context';
 import { readiness, requiredMissing, type ReadyItem } from './readiness';
 
 const ReadyRow: React.FC<{ item: ReadyItem }> = ({ item }) => (

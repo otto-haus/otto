@@ -99,13 +99,6 @@ export const OnboardingStepLayout: React.FC<LayoutProps> = ({
       </div>
       {children ? <div className="onboardStepHost__body">{children}</div> : null}
       {footer ? <div className="onboardStepHost__footer">{footer}</div> : null}
-      <button
-        type="button"
-        className="onboardStepHost__help"
-        onClick={() => window.open(onboardingCopy.helpUrl, '_blank', 'noopener,noreferrer')}
-      >
-        {onboardingCopy.helpLabel}
-      </button>
     </div>
   </div>
 );
