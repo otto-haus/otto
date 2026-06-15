@@ -48,7 +48,7 @@ import {
   SAMPLE_RECEIPT_LABEL,
 } from '../onboarding-sample-receipt';
 import { useLabs, LAB_FEATURE_IDS, LAB_FEATURE_META } from '../labs/LabsContext';
-import { effectiveConnectionMode } from '../surface-tiers';
+import { gatedConnectionMode } from '../surface-tiers';
 import { AppSourceDetails } from '../components/AppSourceBadge';
 import type { AppBuildInfo, IsolatedAgentRecord, LabFeatureId, WorkspaceInfo, SystemHealthReport, HealthCheck } from '../../electron/shared/types';
 import {
@@ -3102,7 +3102,7 @@ const inputStyle: React.CSSProperties = {
 const ConnectLetta: React.FC = () => {
   const api = ottoApi();
   const rt = useRuntimeContext();
-  const { labs, isFeatureEnabled } = useLabs();
+  const { labs, hydrated, isFeatureEnabled } = useLabs();
   const cloudConnectionAllowed = isFeatureEnabled('remote_letta_cloud');
   const [status, setStatus] = useState<RuntimeStatus | null>(null);
   const [baseUrl, setBaseUrl] = useState('');
@@ -3111,6 +3111,7 @@ const ConnectLetta: React.FC = () => {
   const [connectionMode, setConnectionMode] = useState<'embedded' | 'existing' | 'cloud'>('existing');
   const [busy, setBusy] = useState(false);
   const [connectError, setConnectError] = useState<string | null>(null);
+  const showCloudOption = cloudConnectionAllowed || (!hydrated && connectionMode === 'cloud');
 
   useEffect(() => {
     if (!api) return;
@@ -3144,7 +3145,7 @@ const ConnectLetta: React.FC = () => {
         baseUrl,
         agentId,
         primaryAgentId,
-        connectionMode: effectiveConnectionMode(connectionMode, labs),
+        connectionMode: gatedConnectionMode(connectionMode, labs, hydrated),
       });
       setStatus(next);
       rt.updateStatus(next);
@@ -3158,7 +3159,7 @@ const ConnectLetta: React.FC = () => {
 
   const displayStatus = rt.status ?? status;
   const code: StatusCode = displayStatus?.ready ? 'ready' : displayStatus?.code ?? 'error';
-  const displayedConnectionMode = effectiveConnectionMode(connectionMode, labs);
+  const displayedConnectionMode = gatedConnectionMode(connectionMode, labs, hydrated);
 
   return (
     <div className="settingsBlock">
@@ -3196,12 +3197,12 @@ const ConnectLetta: React.FC = () => {
           >
             <option value="embedded">{settingsCopy.connectionEmbedded}</option>
             <option value="existing">{settingsCopy.connectionExisting}</option>
-            {cloudConnectionAllowed ? (
+            {showCloudOption ? (
               <option value="cloud">{settingsCopy.connectionCloud}</option>
             ) : null}
           </select>
         </label>
-        {!cloudConnectionAllowed ? (
+        {hydrated && !cloudConnectionAllowed ? (
           <p className="settingsFieldHint" style={{ marginTop: 8 }}>
             <span className="pill">{labsCopy.previewBadge}</span>{' '}
             {settingsCopy.connectionCloudLabsHint}
@@ -3242,7 +3243,7 @@ const ConnectLetta: React.FC = () => {
         </label>
       </div>
       <div className="row" style={{ gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
-        <button type="button" className="btn btn--primary" onClick={connect} disabled={busy}>
+        <button type="button" className="btn btn--primary" onClick={connect} disabled={busy || !hydrated}>
           {busy ? settingsCopy.connectionSaveBusy : settingsCopy.connectionSaveIdle}
         </button>
         {displayStatus?.ready && (

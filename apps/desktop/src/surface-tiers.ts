@@ -15,6 +15,16 @@ export function effectiveConnectionMode(mode: ConnectionMode, labs: LabsConfig):
   return mode;
 }
 
+/** Defer Labs gate until hydration so pre-load Save cannot clobber stored cloud mode (#627). */
+export function gatedConnectionMode(
+  mode: ConnectionMode,
+  labs: LabsConfig,
+  hydrated: boolean,
+): ConnectionMode {
+  if (!hydrated) return mode;
+  return effectiveConnectionMode(mode, labs);
+}
+
 export type SurfaceTier = 'ship' | 'labs' | 'cut';
 
 export const SURFACE_TIER: Record<SurfaceId, SurfaceTier> = {

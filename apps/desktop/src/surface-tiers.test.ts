@@ -3,6 +3,7 @@ import { defaultLabsConfig } from '../electron/labs-config';
 import type { SurfaceId } from './components/Sidebar';
 import {
   effectiveConnectionMode,
+  gatedConnectionMode,
   isRemoteLettaCloudEnabled,
   isSurfaceAccessible,
   isSurfaceComingSoon,
@@ -124,5 +125,16 @@ describe('surface-tiers', () => {
     const on = { enabled: true, features: { remote_letta_cloud: true } };
     expect(isRemoteLettaCloudEnabled(on)).toBe(true);
     expect(effectiveConnectionMode('cloud', on)).toBe('cloud');
+  });
+
+  test('gatedConnectionMode defers Labs clamp until hydration (#627)', () => {
+    const off = defaultLabsConfig();
+    const on = { enabled: true, features: { remote_letta_cloud: true } };
+
+    expect(gatedConnectionMode('cloud', off, false)).toBe('cloud');
+    expect(gatedConnectionMode('cloud', off, true)).toBe('existing');
+    expect(gatedConnectionMode('cloud', on, false)).toBe('cloud');
+    expect(gatedConnectionMode('cloud', on, true)).toBe('cloud');
+    expect(gatedConnectionMode('embedded', off, false)).toBe('embedded');
   });
 });
