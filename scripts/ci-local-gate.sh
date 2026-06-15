@@ -21,6 +21,7 @@ run_gate "package manager pin" bun run check:package-manager
 run_gate "core/practices typecheck" bun run typecheck
 run_gate "desktop renderer typecheck" bun run --cwd apps/desktop typecheck
 run_gate "desktop Electron typecheck" bun run --cwd apps/desktop electron:typecheck
+run_gate "shell syntax check" bun run check:shell
 run_gate "unit tests" bun test
 run_gate "v0 verifier" bun run verify:v0
 run_gate "docs validate" bun run docs:validate

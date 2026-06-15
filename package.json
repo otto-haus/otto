@@ -52,6 +52,7 @@
     "check:package-manager": "bun scripts/check-package-manager-pin.mjs",
     "typecheck": "tsc -p packages/core/tsconfig.json && tsc -p packages/practices/tsconfig.json",
     "test": "bun test",
+    "check:shell": "bash scripts/check-shell-syntax.sh",
     "verify:v0": "bun scripts/verify-v0.mjs",
     "docs:dev": "cd devex && bunx --bun mint@4.2.616 dev",
     "docs:validate": "cd devex && bunx --bun mint@4.2.616 validate",

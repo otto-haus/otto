@@ -59,6 +59,10 @@ tasks:
     desc: Unit tests
     cmds: [bun test]
 
+  check:shell:
+    desc: Syntax-check tracked shell scripts
+    cmds: [bun run check:shell]
+
   verify:
     desc: v0 release gate (scripts/verify-v0.mjs)
     cmds: [bun run verify:v0]
