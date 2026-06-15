@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import type { OttoConfig, RuntimeStatus } from './shared/types';
 import { hasSecret } from './secret-store';
+import { resolveWindowLaunchMode } from './window-launch';
 import type { DebugEnvelope } from './debug-envelope';
 
 export type OttoDebugPacket = {
@@ -20,6 +21,12 @@ export type OttoDebugPacket = {
   selectedModel: string | null;
   selectedEffort: string | null;
   lastRuntimeError: string | null;
+  window: {
+    launchMode: string;
+    ottoWindowMode: string | null;
+    ottoSmoke: string | null;
+    theme: string | null;
+  };
   credentials: {
     lettaApiKeyPresent: boolean;
   };
@@ -76,6 +83,12 @@ export function buildDebugPacket(input: DebugPacketInput): OttoDebugPacket {
     selectedModel: status.modelHandle ?? status.model ?? config.modelHandle ?? null,
     selectedEffort: status.effort ?? config.effort ?? null,
     lastRuntimeError: lastRuntimeError(status),
+    window: {
+      launchMode: resolveWindowLaunchMode(),
+      ottoWindowMode: process.env.OTTO_WINDOW_MODE ?? null,
+      ottoSmoke: process.env.OTTO_SMOKE ?? null,
+      theme: config.theme ?? null,
+    },
     credentials: {
       lettaApiKeyPresent: hasSecret('LETTA_API_KEY') || !!process.env.LETTA_API_KEY?.trim(),
     },

@@ -8,6 +8,7 @@ import { OTTO_DIR } from './config-store';
 import { ReceiptStore } from './receipt-store';
 import { ReceiptWriter } from './receipt-writer';
 import { runsDir } from './trace-writer';
+import { resolveWindowLaunchMode } from './window-launch';
 import type { AppBuildInfo } from './shared/types';
 
 const SECRET_PATTERN = /\b(api[_-]?key|secret|token|password|bearer)\s*[:=]\s*['"]?[A-Za-z0-9_\-]{16,}/gi;
@@ -31,6 +32,13 @@ export type TransportDiagnosticsSnapshot = {
   };
 };
 
+export type WindowDiagnosticsSnapshot = {
+  visible: boolean;
+  minimized: boolean;
+  maximized: boolean;
+  bounds: { width: number; height: number } | null;
+};
+
 export type DiagnosticsExportInput = {
   buildInfo: AppBuildInfo;
   runtimeStatus: RuntimeStatus;
@@ -44,6 +52,8 @@ export type DiagnosticsExportInput = {
   routines: RoutineListResult;
   cognee: CogneeHealth;
   pgvector: PgvectorStatus;
+  /** Live BrowserWindow flags (main process); omitted in tests/headless. */
+  window?: WindowDiagnosticsSnapshot | null;
 };
 
 export function redactDiagnosticsText(text: string): string {
@@ -62,7 +72,30 @@ function redactConfig(config: OttoConfig): Record<string, unknown> {
     modelHandle: config.modelHandle ?? null,
     effort: config.effort ?? null,
     primaryAgentId: config.primaryAgentId ?? null,
+    theme: config.theme ?? null,
     labs: config.labs ?? null,
+  };
+}
+
+/** Non-secret window launch + env context for triaging blank/background-launch failures (#684, #689). */
+function windowDiagnostics(input: DiagnosticsExportInput): Record<string, unknown> {
+  return {
+    launchMode: resolveWindowLaunchMode(),
+    ottoWindowMode: process.env.OTTO_WINDOW_MODE ?? null,
+    ottoSmoke: process.env.OTTO_SMOKE ?? null,
+    visible: input.window?.visible ?? null,
+    minimized: input.window?.minimized ?? null,
+    maximized: input.window?.maximized ?? null,
+    bounds: input.window?.bounds ?? null,
+  };
+}
+
+/** Resolved Letta discovery inputs so fresh-staging discovery failures are triagable from the bundle alone (#609). */
+function lettaDiscoveryDiagnostics(input: DiagnosticsExportInput): Record<string, unknown> {
+  return {
+    discoverySource: input.runtimeStatus.discoverySource ?? null,
+    baseUrl: input.runtimeStatus.baseUrl ?? input.config.baseUrl ?? null,
+    lettaSettingsPathEnv: process.env.OTTO_LETTA_SETTINGS_PATH ?? null,
   };
 }
 
@@ -178,6 +211,8 @@ export class DiagnosticsExporter {
       },
       runtime: input.runtimeStatus,
       config: redactConfig(input.config),
+      window: windowDiagnostics(input),
+      lettaDiscovery: lettaDiscoveryDiagnostics(input),
       websocketSession: {
         transportMode: input.runtimeStatus.transportMode ?? null,
         effectiveTransport: input.runtimeStatus.effectiveTransport ?? null,

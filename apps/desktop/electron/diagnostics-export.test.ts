@@ -36,7 +36,46 @@ describe('DiagnosticsExporter', () => {
     expect(redacted).not.toContain('abcdefghijklmnopqrstuvwxyz');
     expect(redacted).toContain('[REDACTED]');
   });
+
+  test('snapshot records window launch mode/env, theme, and Letta discovery (#684/#689/#609)', () => {
+    ottoDir = mkdtempSync(join(tmpdir(), 'otto-diagnostics-window-'));
+    const prevMode = process.env.OTTO_WINDOW_MODE;
+    const prevSmoke = process.env.OTTO_SMOKE;
+    const prevSettings = process.env.OTTO_LETTA_SETTINGS_PATH;
+    process.env.OTTO_WINDOW_MODE = 'background';
+    process.env.OTTO_SMOKE = '1';
+    process.env.OTTO_LETTA_SETTINGS_PATH = '/tmp/letta/settings.json';
+    try {
+      const input = makeInput(ottoDir);
+      input.config.theme = 'dark';
+      input.runtimeStatus.discoverySource = 'config.json';
+      input.window = { visible: false, minimized: false, maximized: true, bounds: { width: 1280, height: 800 } };
+
+      const result = new DiagnosticsExporter(ottoDir).exportBundle(input);
+      const stagingDir = result.bundlePath.endsWith('.zip')
+        ? result.bundlePath.slice(0, -4)
+        : result.bundlePath;
+      const snapshot = JSON.parse(readFileSync(join(stagingDir, 'snapshot.json'), 'utf8')) as Record<string, any>;
+
+      expect(snapshot.window.launchMode).toBe('background');
+      expect(snapshot.window.ottoWindowMode).toBe('background');
+      expect(snapshot.window.ottoSmoke).toBe('1');
+      expect(snapshot.window.maximized).toBe(true);
+      expect(snapshot.config.theme).toBe('dark');
+      expect(snapshot.lettaDiscovery.discoverySource).toBe('config.json');
+      expect(snapshot.lettaDiscovery.lettaSettingsPathEnv).toBe('/tmp/letta/settings.json');
+    } finally {
+      restoreEnv('OTTO_WINDOW_MODE', prevMode);
+      restoreEnv('OTTO_SMOKE', prevSmoke);
+      restoreEnv('OTTO_LETTA_SETTINGS_PATH', prevSettings);
+    }
+  });
 });
+
+function restoreEnv(key: string, value: string | undefined): void {
+  if (value === undefined) delete process.env[key];
+  else process.env[key] = value;
+}
 
 function makeInput(ottoDir: string): DiagnosticsExportInput {
   return {
