@@ -83,6 +83,7 @@ describe('DiagnosticsExporter', () => {
     const main = summary.entries.find((entry) => entry.id === 'main');
     expect(main?.tail).toContain('boot ok');
     expect(main?.tail).not.toContain('super-secret-token-value-1234567890');
+    expect(summary.entries.some((entry) => entry.id === 'latest-trace')).toBe(true);
   });
 });
 
