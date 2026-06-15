@@ -24,6 +24,7 @@ import {
   loaderCopy,
 } from '../copy/surfaces';
 import { resetOnboardingForReplay } from '../onboarding-storage';
+import { saveConnectionAndReconnect } from '../connection-reconnect';
 import {
   STANDARD_DOMAINS,
   domainForStandard,
@@ -3136,12 +3137,10 @@ const ConnectLetta: React.FC = () => {
     setBusy(true);
     setConnectError(null);
     try {
-      const next = await api.connection.save({
-        baseUrl: baseUrl.trim() || null,
-        agentId: agentId.trim() || null,
-      });
-      await api.config.set({
-        primaryAgentId: primaryAgentId.trim() || agentId.trim() || null,
+      const next = await saveConnectionAndReconnect(api, {
+        baseUrl,
+        agentId,
+        primaryAgentId,
         connectionMode,
       });
       setStatus(next);
@@ -3736,6 +3735,7 @@ const ModelProviders: React.FC = () => {
   const [apiKeyDraft, setApiKeyDraft] = useState('');
   const [keyBusy, setKeyBusy] = useState(false);
   const [keyMessage, setKeyMessage] = useState<string | null>(null);
+  const [keyError, setKeyError] = useState<string | null>(null);
   const activeModel = `${rt.status?.modelHandle ?? ''} ${rt.status?.model ?? ''}`.toLowerCase();
   const openLetta = () => void api?.runtime.openLetta();
   const rows = MODEL_PROVIDERS.filter((p) => p.kind === tab);
@@ -3775,6 +3775,7 @@ const ModelProviders: React.FC = () => {
     if (!api?.provider || !apiKeyDraft.trim()) return;
     setKeyBusy(true);
     setKeyMessage(null);
+    setKeyError(null);
     try {
       const result = await api.provider.setApiKey(apiKeyDraft);
       setApiKeyDraft('');
@@ -3782,6 +3783,8 @@ const ModelProviders: React.FC = () => {
       refreshMirror();
       const next = await api.runtime.init();
       rt.updateStatus(next);
+    } catch (err) {
+      setKeyError(err instanceof Error ? err.message : String(err));
     } finally {
       setKeyBusy(false);
     }
@@ -3822,8 +3825,9 @@ const ModelProviders: React.FC = () => {
           <button type="button" className="btn btn--primary" onClick={submitApiKey} disabled={keyBusy || !apiKeyDraft.trim()}>
             {keyBusy ? 'Saving…' : settingsCopy.providerSubmitKey}
           </button>
-          {keyMessage && <span className="muted" style={{ fontSize: 13 }}>{keyMessage}</span>}
+          {keyMessage && !keyError && <span className="muted" style={{ fontSize: 13 }}>{keyMessage}</span>}
         </div>
+        {keyError ? <p className="faint settingsStatusBanner settingsStatusBanner--warn">{keyError}</p> : null}
       </div>
 
       <div className="segmented" role="tablist" aria-label="Provider type" onKeyDown={handleProviderTabKeyDown}>

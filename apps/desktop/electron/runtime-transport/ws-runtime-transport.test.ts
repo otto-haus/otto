@@ -254,6 +254,34 @@ describe('WsRuntimeTransport', () => {
     expect(smokeMode()).toBe(false);
   });
 
+  test('attachRuntimeHandler detaches per-turn listener', () => {
+    const { win } = mockWindow();
+    const transport = new WsRuntimeTransport(win, mockConfig());
+    const listeners = new Map<string, Set<(...args: unknown[]) => void>>();
+    const socket = {
+      on(event: string, handler: (...args: unknown[]) => void) {
+        const set = listeners.get(event) ?? new Set();
+        set.add(handler);
+        listeners.set(event, set);
+      },
+      off(event: string, handler: (...args: unknown[]) => void) {
+        listeners.get(event)?.delete(handler);
+      },
+      listenerCount(event: string) {
+        return listeners.get(event)?.size ?? 0;
+      },
+    };
+    (transport as unknown as { runtimeSocket: typeof socket | null }).runtimeSocket = socket;
+
+    const detach = (transport as unknown as {
+      attachRuntimeHandler: (onEvent: (event: unknown) => void) => (() => void) | null;
+    }).attachRuntimeHandler(() => {});
+    expect(socket.listenerCount('message')).toBe(1);
+
+    detach?.();
+    expect(socket.listenerCount('message')).toBe(0);
+  });
+
   test('turn idle timeout keeps transport ready and emits recoverable error', async () => {
     const { win, sent } = mockWindow();
     const transport = new WsRuntimeTransport(win, mockConfig('conv-ws-idle'));

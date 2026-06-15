@@ -1,10 +1,26 @@
-# Staging receipt — 071 Sample receipt onboarding step
+# Receipt — 071 / issue #89 Sample receipt onboarding step
 
-**Date:** 2026-06-14  
-**Build:** `fff0152`  
-**App:** `/Applications/otto-staging.app` only
+**Date:** 2026-06-14 (updated 2026-06-15)  
+**Issue:** [#89](https://github.com/otto-haus/otto/issues/89)
 
-## Smoke
+## Automated proof (CI-safe — no staging app)
+
+```sh
+bun run typecheck
+bun test apps/desktop/src/onboarding-sample-receipt.test.ts
+bun test apps/desktop/src/onboarding-receipt-journey.test.ts
+bun test apps/desktop/electron/onboarding-step.test.ts
+```
+
+Covers:
+
+- Four-step journey (welcome → connect → run → receipt)
+- `receipts-preview` secondary CTA path
+- Sample label `sample · not live · not from your workspace`
+- `otto.receipt.v1` fixture structure for Receipts empty-state split view
+- No onboarding receipt copy claiming "coming soon" or "Receipts land"
+
+## Staging smoke (optional — requires disposable staging bundle)
 
 ```sh
 NODE_PATH=$HOME/.codex/admin/node_modules \
@@ -12,13 +28,7 @@ NODE_PATH=$HOME/.codex/admin/node_modules \
   node scripts/otto-staging-onboarding-smoke.cjs
 ```
 
-## Checks
-
-- Secondary CTA **See what Receipts will prove** → Receipts surface
-- Visible **Sample proof record** heading (`receiptsCtaShowsSample=true`)
-- Screenshot: `docs/receipts/staging/071-072-receipts-sample-onboarding.png`
-
-Sample labeling (`sample · not live · not from your workspace`) present in detail toolbar (may be off-screen in full-page capture).
+Prior run: `onboarding-smoke-20260614061453.json` (`receiptsCtaShowsSample=true`, `receiptsCtaNotConnectDock=true`).
 
 ## Artifacts
 

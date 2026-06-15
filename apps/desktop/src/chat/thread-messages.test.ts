@@ -110,4 +110,32 @@ describe('thread message persistence (046)', () => {
 
     expect(localStorage.getItem(messagesKey('thread_a'))).toContain('before new chat');
   });
+
+  test('persistActiveThread preserves disk when in-memory view is stale empty', () => {
+    installStorage();
+    localStorage.setItem(
+      messagesKey('thread_a'),
+      JSON.stringify([{ id: '1', who: 'user', text: 'saved before new chat' }]),
+    );
+    const cache = new Map<string, { id: string; who: 'user'; text: string }[]>();
+    cache.set('thread_a', []);
+
+    persistActiveThread(cache, 'thread_a', []);
+
+    expect(localStorage.getItem(messagesKey('thread_a'))).toContain('saved before new chat');
+  });
+
+  test('persistLeavingThread preserves disk when in-memory view is stale empty', () => {
+    installStorage();
+    localStorage.setItem(
+      messagesKey('thread_a'),
+      JSON.stringify([{ id: '1', who: 'user', text: 'thread a on disk' }]),
+    );
+    const cache = new Map<string, { id: string; who: 'user'; text: string }[]>();
+    cache.set('thread_a', []);
+
+    persistLeavingThread(cache, 'thread_a', 'thread_b', []);
+
+    expect(localStorage.getItem(messagesKey('thread_a'))).toContain('thread a on disk');
+  });
 });

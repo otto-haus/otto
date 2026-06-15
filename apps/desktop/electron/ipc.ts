@@ -1,6 +1,6 @@
 import { type BrowserWindow, app, clipboard, ipcMain, shell } from 'electron';
 import type { ConnectionInfo, ConnectionInput, CreateProposalFromCorrectionInput, DecideProposalInput, DreamSettings, LabsConfig, OttoConfig, PermissionRequest, PermissionResponse, ProposalClassification, ProposalTarget, RuntimePreferences, RuntimeStatus } from './shared/types';
-import { applyLabsConfigPatch, getLabsConfig, labsConfigToOttoPatch } from './labs-config';
+import { applyLabsConfigPatch, assertConnectionModePatchAllowed, getLabsConfig, labsConfigToOttoPatch } from './labs-config';
 import {
   applyDreamSettingsPatch,
   dreamSettingsToOttoPatch,
@@ -157,6 +157,7 @@ export function registerIpc(win: BrowserWindow) {
 
   ipcMain.handle('otto:config:get', () => config.get());
   ipcMain.handle('otto:config:set', (_e, patch: Partial<OttoConfig>) => {
+    assertConnectionModePatchAllowed(config.get(), patch);
     const next = config.update(patch);
     if ('theme' in patch) syncWindowBackground(win, next.theme);
     return next;

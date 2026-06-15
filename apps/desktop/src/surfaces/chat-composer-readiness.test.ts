@@ -26,4 +26,9 @@ describe('chat composer readiness contract (#289, #300)', () => {
   it('allows starter prompts to populate draft before runtime is ready', () => {
     expect(chatSource).not.toMatch(/className="chatStarter"[\s\S]*?disabled=\{!ready\}/);
   });
+
+  it('surfaces ticket orchestration commands in the empty chat state when ready (#74)', () => {
+    expect(copySource).toContain('ticketCommandHint');
+    expect(chatSource).toContain('{chatCopy.ticketCommandHint}');
+  });
 });

@@ -2,6 +2,18 @@ import { flushMessages, readStoredMessages, type StoredChatMsg } from './message
 
 export type ThreadChatMsg = StoredChatMsg;
 
+/** Never flush a stale empty in-memory view over non-empty disk history (046 rev10). */
+function resolveThreadMessagesForPersist(
+  threadId: string,
+  messages: ThreadChatMsg[],
+  cache: Map<string, ThreadChatMsg[]>,
+): ThreadChatMsg[] {
+  if (messages.length > 0) return messages;
+  const cached = cache.get(threadId);
+  if (cached && cached.length > 0) return cached;
+  return readStoredMessages(threadId);
+}
+
 /** Persist the active thread without switching views (e.g. before create). */
 export function persistActiveThread(
   cache: Map<string, ThreadChatMsg[]>,
@@ -9,9 +21,9 @@ export function persistActiveThread(
   messages: ThreadChatMsg[],
 ): void {
   if (!threadId) return;
-  const snapshot = cache.get(threadId) ?? messages;
-  cache.set(threadId, snapshot);
-  flushMessages(threadId, snapshot);
+  const resolved = resolveThreadMessagesForPersist(threadId, messages, cache);
+  cache.set(threadId, resolved);
+  flushMessages(threadId, resolved);
 }
 
 /** Persist the thread we are leaving before loading another thread's history. */
@@ -22,9 +34,9 @@ export function persistLeavingThread(
   messages: ThreadChatMsg[],
 ): void {
   if (!leaving || leaving === nextThreadId) return;
-  const snapshot = cache.get(leaving) ?? messages;
-  cache.set(leaving, snapshot);
-  flushMessages(leaving, snapshot);
+  const resolved = resolveThreadMessagesForPersist(leaving, messages, cache);
+  cache.set(leaving, resolved);
+  flushMessages(leaving, resolved);
 }
 
 /** Load a thread view from disk so reload/switch never reuse a stale in-memory cache. */
