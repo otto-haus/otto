@@ -51,10 +51,11 @@ export class PracticeMiningLoop {
       if (known.has(slug)) continue;
       candidates.push(candidate);
 
+      const practicePath = join(this.practices.listResult().dir, slug, 'practice.yaml');
       const created = this.proposals.createFromSystem({
         summary: `Practice candidate from repeated ${action}`,
         rationale: `Observed ${count} receipts with action "${action}" under ${receiptsDir}. Draft only — activation requires Curation ratification.`,
-        target: { kind: 'practice', id: slug, action: 'create' },
+        target: { kind: 'practice', id: slug, path: practicePath, action: 'create' },
         evidence: paths.slice(0, 5).map((ref) => ({ kind: 'file' as const, ref, note: 'repeated receipt' })),
         source: 'run_review',
         created_by: 'otto',
