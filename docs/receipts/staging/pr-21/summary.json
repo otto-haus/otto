@@ -1,0 +1,33 @@
+{
+  "pr": 21,
+  "checks": [
+    {
+      "name": "targeted unit tests",
+      "command": "bun test apps/desktop/electron/chat-message-keys.test.ts",
+      "result": "pass",
+      "notes": "4 pass"
+    },
+    {
+      "name": "runtime + full suite",
+      "command": "bun test",
+      "result": "pass",
+      "notes": "190 pass, 1 skip"
+    },
+    {
+      "name": "typecheck",
+      "command": "bun run typecheck && bun run --cwd apps/desktop typecheck && bun run --cwd apps/desktop electron:typecheck",
+      "result": "pass"
+    },
+    {
+      "name": "git diff check",
+      "command": "git diff --check",
+      "result": "pass"
+    }
+  ],
+  "findings": [
+    {
+      "severity": "none",
+      "finding": "No additional defects found beyond scoped behavior; legacy fallback remains explicit to first hydration path only."
+    }
+  ]
+}

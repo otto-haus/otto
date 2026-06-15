@@ -3,6 +3,7 @@ import {
   LEGACY_MESSAGES_KEY,
   messagesKey,
   readStoredMessages,
+  type StoredChatMsg,
 } from '../src/chat/message-storage';
 
 const installStorage = () => {
@@ -46,4 +47,35 @@ describe('chat message storage keys (046)', () => {
     expect(readStoredMessages('thread_b').map((m) => m.text)).toEqual([]);
     expect(readStoredMessages('thread_a').map((m) => m.text)).toEqual(['only a']);
   });
+
+  test('empty thread does not inherit legacy chat history by default', () => {
+    const legacy: StoredChatMsg = { id: 'legacy-1', who: 'user', text: 'old default history' };
+    const storage = fakeStorage({ [LEGACY_MESSAGES_KEY]: JSON.stringify([legacy]) });
+
+    expect(readStoredMessages('thread_new', { storage })).toEqual([]);
+  });
+
+  test('legacy chat history fallback is explicit for first-load migration', () => {
+    const legacy: StoredChatMsg = { id: 'legacy-1', who: 'otto', text: 'migrate me' };
+    const storage = fakeStorage({ [LEGACY_MESSAGES_KEY]: JSON.stringify([legacy]) });
+
+    expect(readStoredMessages('thread_initial', { storage, allowLegacyFallback: true })).toEqual([legacy]);
+  });
+
+  test('explicit legacy fallback does not override thread-specific history', () => {
+    const legacy: StoredChatMsg = { id: 'legacy-1', who: 'user', text: 'old default history' };
+    const thread: StoredChatMsg = { id: 'thread-1', who: 'otto', text: 'current thread history' };
+    const storage = fakeStorage({
+      [LEGACY_MESSAGES_KEY]: JSON.stringify([legacy]),
+      [messagesKey('thread_existing')]: JSON.stringify([thread]),
+    });
+
+    expect(readStoredMessages('thread_existing', { storage, allowLegacyFallback: true })).toEqual([thread]);
+  });
 });
+
+function fakeStorage(entries: Record<string, string>): Pick<Storage, 'getItem'> {
+  return {
+    getItem: (key: string) => entries[key] ?? null,
+  };
+}
