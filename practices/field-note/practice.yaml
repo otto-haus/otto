@@ -1,8 +1,11 @@
 name: Field Note
 slug: field-note
 version: 0.1
-status: draft            # draft — spec only, not yet implemented as an extension
+status: active           # active — Letta Code extension + desktop PracticeRunner
 summary: Capture messy customer/operator/research notes into durable structured state.
+implementation:
+  extension: extension/field-note.ts
+  skill: skill/SKILL.md
 invocations:
   - /field-note capture
 triggers:
