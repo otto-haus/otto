@@ -246,6 +246,7 @@ export class WsRuntimeTransport implements OttoRuntimeTransport {
     this.activeRunId = null;
     const todoAccumulator = new TodoStreamAccumulator();
     const trailAccumulator = new TurnTrailAccumulator();
+    const assistantStreamId = randomUUID();
     trace.write('prompt', {
       storedText,
       attachmentCount: prepared.attachmentCount,
@@ -301,7 +302,7 @@ export class WsRuntimeTransport implements OttoRuntimeTransport {
           return;
         }
         this.trackActiveRun(event);
-        const normalized = normalizeWsEvent(event, { todoAccumulator, trailAccumulator });
+        const normalized = normalizeWsEvent(event, { todoAccumulator, trailAccumulator, assistantStreamId });
         if (normalized) {
           emitTurnTrail();
           if (normalized.type === 'error') {

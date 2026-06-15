@@ -8,6 +8,8 @@ export type WsRuntimeEvent = Record<string, unknown> & { type?: string };
 export type WsNormalizeContext = {
   todoAccumulator?: { ingestStreamDelta(delta: Record<string, unknown>): TodoItem[] | null };
   trailAccumulator?: TurnTrailAccumulator;
+  /** Stable id for all assistant deltas of one turn (#779). */
+  assistantStreamId?: string;
 };
 
 /** Map Letta BYOR stream_delta into Otto chat event shape. */
@@ -39,7 +41,12 @@ export function normalizeWsEvent(
       if (messageType === 'assistant_message') {
         const text = extractDeltaText(delta.content);
         if (!text) return null;
-        return { type: 'assistant', text, content: delta.content, uuid: randomUUID() };
+        return {
+          type: 'assistant',
+          text,
+          content: delta.content,
+          uuid: ctx.assistantStreamId ?? randomUUID(),
+        };
       }
       if (messageType === 'tool_call_message' || messageType === 'tool_call') {
         const { toolCallId, toolName, toolInput } = readToolCallFromDelta(delta);
