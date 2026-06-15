@@ -5,3 +5,4 @@
 export * from './types.js';
 export * from './check.js';
 export * from './github-issue-workflow.js';
+export * from './cognee-capture.js';

@@ -175,16 +175,20 @@ Canon capture is **manual** and **receipted**. Otto never treats Cognee as sourc
 
 ```sh
 ./scripts/cognee-capture.sh --kinds receipt,charter,ticket,precedent --dry-run
+./scripts/cognee-capture.sh --kinds receipt,precedent --apply --smoke   # bounded: ≥3 receipts + ≥1 precedent
 ./scripts/cognee-capture.sh --kinds receipt,precedent --apply
 ```
 
+**Provenance (per indexed file):** `source_kind`, `repo_path`, `content_hash` (sha256), `captured_at`, optional `git_commit`. Stored in receipt `entries[]` and mirrored in `paths[]` for recall.
+
 **Idempotency rules:**
 
-- Each `--apply` writes a new `receipts/cognee/capture/<capture-*.json>` with `capturedAt`, `paths`, `docCount`, and `provenance.git_commit`.
-- Re-running `--apply` on unchanged files is safe: Cognee may re-index duplicates; Otto provenance is append-only (new receipt per run).
-- Use `--since <git-ref>` (when implemented) or narrow `--kinds` to limit scope; dry-run always lists paths without ingest.
-- Forbidden paths (`.env`, `secrets/`) are skipped at collection time — never partial-index secrets.
-- Without `cognee` CLI installed, apply still writes a capture receipt (stub ingest) so the Knowledge pane can show last capture honestly.
+- Each `--apply` writes a new `receipts/cognee/capture/<capture-*.json>` with `capturedAt`, `entries`, `docCount`, and `provenance.git_commit`.
+- Re-running `--apply` skips files whose `repo_path` + `content_hash` match the latest prior capture entry (hash-based dedupe); new receipt records `skipped_count`.
+- Use `--smoke` for bounded ingest proof (≥3 receipts, ≥1 precedent); `--since <git-ref>` reserved for future narrowing.
+- Forbidden paths (`.env`, `secrets/`, `receipts/cognee/`) are skipped at collection — never partial-index secrets.
+- Without `cognee` CLI installed, apply still writes a capture receipt (`ingestMode: stub`) so the Knowledge pane can show last capture honestly.
+- Apply prints `RECALL_OK <receipts/...>` when spot-check finds a `receipts/` citation in the new receipt.
 
 **Allowed kinds:** `receipt`, `charter`, `ticket`, `standard`, `precedent`, `manual` — never Letta memory blocks.
 
