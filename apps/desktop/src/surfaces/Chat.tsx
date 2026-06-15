@@ -15,6 +15,11 @@ import { displayThreadTitle } from '../components/ui/ThreadList';
 import { chatCopy, permissionCopy, projectCopy, toastCopy } from '../copy/surfaces';
 import { ProjectWindow } from './ProjectWindow';
 import { PermissionWindow } from './PermissionWindow';
+import {
+  dequeuePermissionRequest,
+  enqueuePermissionRequest,
+  headPermissionRequest,
+} from './chat-permission-queue';
 import { useChatThreads } from '../chat/useChatThreads';
 import {
   findStableMarkdownBoundary,
@@ -777,8 +782,10 @@ const LiveChat: React.FC<{
   const [modelOptions, setModelOptions] = useState<LettaModelOption[]>(FALLBACK_MODEL_OPTIONS);
   const [modelOpen, setModelOpen] = useState(false);
   const [effortOpen, setEffortOpen] = useState(false);
-  const [permission, setPermission] = useState<PermissionRequestView | null>(null);
+  const [permissionQueue, setPermissionQueue] = useState<PermissionRequestView[]>([]);
   const [permissionBusy, setPermissionBusy] = useState(false);
+  const permission = headPermissionRequest(permissionQueue);
+  const pendingPermissionCount = permissionQueue.length;
   const [contextPanel, setContextPanel] = useState<'project' | 'permission' | null>(null);
   const [proposeContext, setProposeContext] = useState<ProposeCorrectionContext | null>(null);
   const [proposeBusy, setProposeBusy] = useState(false);
@@ -845,7 +852,7 @@ const LiveChat: React.FC<{
   useEffect(() => {
     if (!api) return;
     return api.onPermission((req) => {
-      setPermission(req as PermissionRequestView);
+      setPermissionQueue((queue) => enqueuePermissionRequest(queue, req as PermissionRequestView));
       setContextPanel('permission');
     });
   }, [api]);
@@ -895,9 +902,14 @@ const LiveChat: React.FC<{
         api.permission.respond(active.requestId, { behavior: 'allow', scope: 'once' });
       }
     } finally {
-      setPermission(null);
       setPermissionBusy(false);
-      setContextPanel((panel) => (panel === 'permission' ? null : panel));
+      setPermissionQueue((queue) => {
+        const next = dequeuePermissionRequest(queue);
+        if (next.length === 0) {
+          setContextPanel((panel) => (panel === 'permission' ? null : panel));
+        }
+        return next;
+      });
     }
   };
 
@@ -1234,7 +1246,9 @@ const LiveChat: React.FC<{
               onClick={() => setContextPanel((p) => (p === 'permission' ? null : 'permission'))}
             >
               {permissionCopy.windowTitle}
-              {permission ? <span className="nav__badge nav__badge--warn">1</span> : null}
+              {pendingPermissionCount > 0 ? (
+                <span className="nav__badge nav__badge--warn">{pendingPermissionCount}</span>
+              ) : null}
             </button>
             <AppSourceBadge compact />
             {st ? (
@@ -1441,6 +1455,7 @@ const LiveChat: React.FC<{
       >
         <PermissionWindow
           pending={permission}
+          pendingCount={pendingPermissionCount}
           busy={permissionBusy}
           onDecide={(decision, denyMessage) => { void respondPermission(decision, denyMessage); }}
           onCorrectThis={openPermissionCorrection}

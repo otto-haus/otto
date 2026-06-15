@@ -200,6 +200,35 @@ describe('permission tool-call round-trip (#298)', () => {
     await sendPromise;
   });
 
+  test('concurrent gates: transport keeps both pending until each is resolved (#709)', async () => {
+    process.env.OTTO_PERMISSION_TIMEOUT_MS = '5000';
+    const { win, sent } = mockWindow();
+    const transport = new SdkSubprocessTransport(win, mockConfig());
+
+    wireTransport(transport, async (canUseTool) => {
+      const first = canUseTool('run_shell', { cmd: 'echo one' });
+      const second = canUseTool('read_file', { path: '/tmp/two' });
+      await new Promise((r) => setTimeout(r, 15));
+
+      const perms = sent.filter((e) => e.channel === 'otto:permission');
+      expect(perms.length, 'broken: concurrent tool calls should emit one IPC per gate').toBe(2);
+      expect(transport.getDiagnosticsSnapshot().pendingPermissionCount).toBe(2);
+
+      const firstId = (perms[0]!.payload as { requestId: string }).requestId;
+      const secondId = (perms[1]!.payload as { requestId: string }).requestId;
+      transport.resolvePermission(firstId, { behavior: 'allow' });
+      expect(transport.getDiagnosticsSnapshot().pendingPermissionCount).toBe(1);
+      transport.resolvePermission(secondId, { behavior: 'allow' });
+      expect(transport.getDiagnosticsSnapshot().pendingPermissionCount).toBe(0);
+
+      await expect(first).resolves.toMatchObject({ behavior: 'allow' });
+      await expect(second).resolves.toMatchObject({ behavior: 'allow' });
+    });
+
+    await transport.init({ freshConversation: true });
+    await transport.send('concurrent permission gates');
+  });
+
   test('runtime abort: pending permission rejected and turn completes', async () => {
     process.env.OTTO_PERMISSION_TIMEOUT_MS = '60000';
     const { win, sent } = mockWindow();
