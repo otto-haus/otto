@@ -45,6 +45,7 @@ Skills are reusable capability/context packages an agent loads to do a kind of w
 - Empty: no skills dir → honest empty state (store returns empty list)
 - Error: IPC failure surfaces notice banner
 - File/live pill: `storage: files` chip visible
+- Staging proof: `docs/receipts/staging/staging-hygiene-proof-20260614143512.json` (`tickets.056.surfaces.skills.loaded: true`); PNG `docs/receipts/staging/056-skills-20260614143512.png`
 
 ## Automated verification
 

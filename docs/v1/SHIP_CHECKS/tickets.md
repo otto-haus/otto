@@ -50,6 +50,7 @@ Tickets are bounded worker slices. Charters define the bet; Tickets define the s
 - Compile: writes ticket + shows receipt id in message bar
 - Orchestrate: spawns worker + run; re-orchestrate existing ticket without re-compile
 - Skipped: `skipped` count from loader when ticket dirs lack valid `ticket.yaml` (037)
+- Staging proof: `docs/receipts/staging/staging-hygiene-proof-20260614143512.json` (`tickets.056.surfaces.tickets.loaded: true`); PNG `docs/receipts/staging/056-tickets-20260614143512.png`
 
 ## Automated verification
 

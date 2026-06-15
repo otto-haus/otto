@@ -44,6 +44,7 @@ Channels are communication surfaces. Discord is v0/v1 backend: mobile and ambien
 - Disabled: discord-main shows `disabled` pill + approval-required badge
 - Enabled: desktop-chat shows `enabled` pill
 - File/live pill: `storage: files` chip visible
+- Staging proof: `docs/receipts/staging/staging-hygiene-proof-20260614143512.json` (`tickets.056.surfaces.channels.loaded: true`); PNG `docs/receipts/staging/056-channels-20260614143512.png`
 
 ## Automated verification
 

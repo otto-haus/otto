@@ -9,5 +9,6 @@
   # 2 pass — compile writes ticket.yaml + receipt; orchestrateExisting reuses without re-compile
   ```
 - **Manual verification (staging):** Tickets pane → compile bounded slice → receipt id in message bar → orchestrate → worker + run ids → re-orchestrate existing ticket.
+- **Staging proof:** `docs/receipts/staging/staging-hygiene-proof-20260614143512.json` (`tickets.056.ok: true`); screenshot `docs/receipts/staging/056-tickets-20260614143512.png`
 - **Known limitations:** Letta `/ticket` extension CLI parity deferred (130). Path/stop enforcement is compile-time spec, not runtime sandbox.
 - **Approval status:** ☐ pending Sebastian.
