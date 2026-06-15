@@ -247,8 +247,6 @@ export const chatCopy = {
   createProposal: 'Create proposal',
   cancel: 'Cancel',
   futureBehavior: 'Describe the behavior you want next time',
-  onboardingHint: 'Send your first message — otto writes a Receipt when work completes with proof.',
-  onboardingReceiptHint: 'First turn recorded — open Receipts to inspect the proof record.',
   onboardingSkip: 'Skip setup',
   onboardingViewReceipts: 'View Receipts',
   copyMarkdown: 'Copy Markdown',
