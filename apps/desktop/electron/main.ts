@@ -11,7 +11,10 @@ import { attachWindowGeometryHandlers } from './window-geometry';
 import {
   applyWindowLaunchMode,
   browserWindowShowsOnCreate,
+  resolveActivateAction,
   resolveWindowLaunchMode,
+  shouldEnforceSingleInstance,
+  surfaceWindow,
 } from './window-launch';
 
 function applyUserDataDirOverride() {
@@ -95,17 +98,40 @@ function createWindow() {
   return win;
 }
 
+// Set userData (the single-instance lock scope) before requesting the lock, so isolated
+// instances (OTTO_USER_DATA_DIR) keep independent locks and only true same-dir double
+// launches are deduped.
 applyUserDataDirOverride();
 
-app.whenReady().then(() => {
-  ensurePath();
-  registerIpc();
-  createWindow();
-  app.on('activate', () => {
-    if (BrowserWindow.getAllWindows().length === 0) createWindow();
+// Prevent a second launch from racing ConfigStore writes against the running instance (#681).
+if (shouldEnforceSingleInstance() && !app.requestSingleInstanceLock()) {
+  app.quit();
+} else {
+  app.on('second-instance', () => {
+    const win = getMainWindow();
+    if (win && !win.isDestroyed()) surfaceWindow(win);
   });
-});
 
-app.on('window-all-closed', () => {
-  if (process.platform !== 'darwin') app.quit();
-});
+  app.whenReady().then(() => {
+    ensurePath();
+    registerIpc();
+    createWindow();
+    app.on('activate', () => {
+      const win = getMainWindow();
+      const action = resolveActivateAction(
+        BrowserWindow.getAllWindows().length,
+        !!win && !win.isDestroyed(),
+      );
+      if (action === 'create') {
+        createWindow();
+      } else if (action === 'surface' && win) {
+        // Surface even a hidden smoke window so the Dock click never leaves an invisible app (#683).
+        surfaceWindow(win);
+      }
+    });
+  });
+
+  app.on('window-all-closed', () => {
+    if (process.platform !== 'darwin') app.quit();
+  });
+}
