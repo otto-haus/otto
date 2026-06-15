@@ -60,7 +60,9 @@ export class CheckCompiler {
     const slug = proposal.target.id ?? slugFromPath(proposal.target.path);
     const template = STANDARD_CHECK_MAP[slug];
     if (!template?.id) {
-      return { compiled: null, skipped: `No compilable check mapping for standard "${slug}"` };
+      const skipped = `No compilable check mapping for standard "${slug}"`;
+      this.writeSkipReceipt(proposal, slug, skipped);
+      return { compiled: null, skipped };
     }
     const standardPath = proposal.target.path ?? join(standardsDir, `${slug}.md`);
     if (!existsSync(standardPath)) {
@@ -93,6 +95,18 @@ export class CheckCompiler {
       blocker: null,
     });
     return { compiled: check };
+  }
+
+  private writeSkipReceipt(proposal: CurationProposalRecord, standardSlug: string, reason: string): void {
+    this.receipts.write({
+      status: 'success',
+      subject: { type: 'standard', id: standardSlug },
+      action: 'check.compile_skipped',
+      input: { proposal_id: proposal.id, standard_slug: standardSlug },
+      result: { summary: reason, data: { reason } },
+      evidence: [],
+      blocker: null,
+    });
   }
 }
 

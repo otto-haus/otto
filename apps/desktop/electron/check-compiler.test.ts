@@ -115,7 +115,8 @@ describe('CheckCompiler', () => {
       process.env.OTTO_CHECKS_DIR = checksDir;
       const store = new CheckStore(checksDir);
       store.listResult();
-      const compiler = new CheckCompiler(store, new ReceiptWriter(join(tmp, 'receipts')));
+      const receiptsDir = join(tmp, 'receipts');
+      const compiler = new CheckCompiler(store, new ReceiptWriter(receiptsDir));
 
       const result = compiler.compileFromProposal(
         proposalFixture({
@@ -127,6 +128,13 @@ describe('CheckCompiler', () => {
       expect(result.compiled).toBeNull();
       expect(result.skipped).toMatch(/No compilable check mapping/);
       expect(readdirYamlCount(checksDir)).toBe(2);
+
+      const skipSummary = new ReceiptStore(receiptsDir).list().receipts.find(
+        (r) => r.action === 'check.compile_skipped',
+      );
+      expect(skipSummary?.status).toBe('success');
+      expect(skipSummary?.subjectType).toBe('standard');
+      expect(skipSummary?.subjectId).toBe('judgment');
     } finally {
       rmSync(tmp, { recursive: true, force: true });
       delete process.env.OTTO_CHECKS_DIR;
