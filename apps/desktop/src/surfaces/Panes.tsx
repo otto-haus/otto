@@ -4015,7 +4015,11 @@ const ModelProviders: React.FC<{ onShowGeneral?: () => void }> = ({ onShowGenera
         <>
         <div className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
           <span className={`pill ${mirror?.lettaConnected ? 'pill--ok' : 'pill--warn'}`}>
-            Letta {mirror?.lettaConnected ? 'reachable' : 'not connected'}
+            Letta {mirror?.lettaConnected
+              ? 'reachable'
+              : mirror?.lettaConfigured
+                ? 'configured · not probed'
+                : 'not connected'}
           </span>
           <span className={`pill ${mirror?.hasApiKey ? 'pill--ok' : ''}`}>
             {mirror?.hasApiKey ? settingsCopy.providerApiKeyPresent : settingsCopy.providerApiKeyMissing}

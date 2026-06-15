@@ -330,7 +330,10 @@ export interface ThreadListResult {
 
 /** Provider capability mirror — boolean presence only (078). */
 export interface ProviderMirrorSnapshot {
+  /** True only when a live runtime session has initialized (session.initialize success). */
   lettaConnected: boolean;
+  /** True when a Letta base URL is configured/discovered but liveness was not probed. */
+  lettaConfigured: boolean;
   hasApiKey: boolean;
   modelHandle: string | null;
   agentId: string | null;
