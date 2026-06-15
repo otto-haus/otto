@@ -124,6 +124,18 @@ function AppShell() {
     return () => window.removeEventListener('hashchange', onHash);
   }, []);
 
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (!(e.metaKey || e.ctrlKey) || e.key.toLowerCase() !== 'b' || e.altKey) return;
+      const tag = (e.target as HTMLElement | null)?.tagName;
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || (e.target as HTMLElement | null)?.isContentEditable) return;
+      e.preventDefault();
+      setSidebarHidden((hidden) => !hidden);
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, []);
+
   const setActive = (id: SurfaceId) => {
     setActiveState(id);
     if (typeof location !== 'undefined') location.hash = id;
