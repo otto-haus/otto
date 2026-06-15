@@ -1,6 +1,6 @@
 import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { randomUUID } from 'node:crypto';
-import { join } from 'node:path';
+import { dirname, join } from 'node:path';
 import { parse, stringify } from 'yaml';
 import type {
   ApprovalListResult,
@@ -55,7 +55,7 @@ export interface DecideProposalResult {
 export type CanonApplyResult = {
   applied: boolean;
   changed: boolean;
-  reason: 'not_required' | 'updated' | 'already_ratified' | 'missing_target' | 'unsupported_target';
+  reason: 'not_required' | 'updated' | 'already_ratified' | 'missing_target' | 'unsupported_target' | 'created';
 };
 
 export class ProposalStore {
@@ -474,7 +474,17 @@ function requiresCanonApply(target: ProposalTarget): boolean {
 /** Apply ratified proposal content to file-backed canon when target.path is set. */
 export function applyAcceptedProposal(proposal: CurationProposalRecord, appliedAt: string): CanonApplyResult {
   const { target } = proposal;
-  if (!target.path || !existsSync(target.path)) {
+  if (!target.path) {
+    return { applied: false, changed: false, reason: 'missing_target' };
+  }
+
+  if (!existsSync(target.path)) {
+    if (target.action === 'create') {
+      const created = createCanonFromProposal(proposal, appliedAt);
+      return created
+        ? { applied: true, changed: true, reason: 'created' }
+        : { applied: false, changed: false, reason: 'missing_target' };
+    }
     return { applied: false, changed: false, reason: 'missing_target' };
   }
 
@@ -524,6 +534,52 @@ export function applyAcceptedProposal(proposal: CurationProposalRecord, appliedA
   }
 
   return { applied: false, changed: false, reason: 'unsupported_target' };
+}
+
+function createCanonFromProposal(proposal: CurationProposalRecord, appliedAt: string): boolean {
+  const { target } = proposal;
+  if (!target.path) return false;
+
+  if (target.kind === 'practice') {
+    const slug = target.id ?? practiceSlugFromPath(target.path);
+    if (!slug) return false;
+    const ratifiedEntry = {
+      proposal_id: proposal.id,
+      applied_at: appliedAt,
+      summary: proposal.summary,
+      rationale: proposal.rationale,
+    };
+    const doc = {
+      name: titleFromSlug(slug),
+      slug,
+      version: '0.1',
+      status: 'draft',
+      summary: proposal.summary,
+      guardrails: [`[ratified:${proposal.id}] ${proposal.rationale}`],
+      otto_ratified: [ratifiedEntry],
+    };
+    mkdirSync(dirname(target.path), { recursive: true });
+    writeFileSync(target.path, stringify(doc));
+    return true;
+  }
+
+  return false;
+}
+
+function practiceSlugFromPath(path: string): string {
+  const parts = path.split('/');
+  const practiceIndex = parts.lastIndexOf('practice.yaml');
+  if (practiceIndex > 0) return parts[practiceIndex - 1] ?? '';
+  const base = parts.pop() ?? path;
+  return base.replace(/\.ya?ml$/i, '');
+}
+
+function titleFromSlug(slug: string): string {
+  return slug
+    .split('-')
+    .filter(Boolean)
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(' ');
 }
 
 function hasYamlRatification(ratified: unknown[], proposal: CurationProposalRecord): boolean {

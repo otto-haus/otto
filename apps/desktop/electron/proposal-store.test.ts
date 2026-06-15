@@ -264,6 +264,62 @@ describe('ProposalStore', () => {
     }
   });
 
+  test('accepting a practice create proposal writes draft YAML at target path', () => {
+    const tmp = mkdtempSync(join(tmpdir(), 'otto-proposal-test-'));
+    const proposalsDir = join(tmp, 'curation', 'proposals');
+    const receiptsDir = join(tmp, 'receipts');
+    const practicesDir = join(tmp, 'practices');
+    const canonPath = join(practicesDir, 'ticket-compile', 'practice.yaml');
+    try {
+      const store = new ProposalStore(proposalsDir, new ReceiptWriter(receiptsDir));
+      const created = store.createFromSystem({
+        summary: 'Practice candidate from repeated ticket.compile',
+        rationale: 'Observed 2 receipts with action "ticket.compile".',
+        target: { kind: 'practice', id: 'ticket-compile', path: canonPath, action: 'create' },
+        source: 'run_review',
+        created_by: 'otto',
+      });
+
+      expect(existsSync(canonPath)).toBe(false);
+
+      const accepted = store.decide(created.proposal.id, { decision: 'accept', note: 'Ratified mined practice.' });
+      expect(accepted.blocked).toBeUndefined();
+      expect(accepted.proposal.status).toBe('applied');
+      expect(accepted.receipt.result.data?.canonApplied).toBe(true);
+      expect(accepted.receipt.result.data?.canonApplyReason).toBe('created');
+      expect(existsSync(canonPath)).toBe(true);
+
+      const doc = parse(readFileSync(canonPath, 'utf8')) as Record<string, unknown>;
+      expect(doc.slug).toBe('ticket-compile');
+      expect(doc.status).toBe('draft');
+      expect(doc.summary).toBe('Practice candidate from repeated ticket.compile');
+    } finally {
+      rmSync(tmp, { recursive: true, force: true });
+    }
+  });
+
+  test('accepting an amend practice proposal without an existing file is blocked', () => {
+    const tmp = mkdtempSync(join(tmpdir(), 'otto-proposal-test-'));
+    const proposalsDir = join(tmp, 'curation', 'proposals');
+    const receiptsDir = join(tmp, 'receipts');
+    const canonPath = join(tmp, 'practices', 'missing', 'practice.yaml');
+    try {
+      const store = new ProposalStore(proposalsDir, new ReceiptWriter(receiptsDir));
+      const created = store.createFromCorrection({
+        correction: 'Missing practice should gain a guardrail.',
+        target: { kind: 'practice', id: 'missing', path: canonPath, action: 'update' },
+      });
+
+      const accepted = store.decide(created.proposal.id, { decision: 'accept' });
+      expect(accepted.blocked).toBe(true);
+      expect(accepted.proposal.status).toBe('needs_approval');
+      expect(accepted.receipt.blocker?.code).toBe('canon_apply_missing_target');
+      expect(existsSync(canonPath)).toBe(false);
+    } finally {
+      rmSync(tmp, { recursive: true, force: true });
+    }
+  });
+
   test('persists and reloads proposal records', () => {
     const tmp = mkdtempSync(join(tmpdir(), 'otto-proposal-test-'));
     const proposalsDir = join(tmp, 'curation', 'proposals');
