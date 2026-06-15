@@ -24,6 +24,7 @@ import {
   loaderCopy,
 } from '../copy/surfaces';
 import { resetOnboardingForReplay } from '../onboarding-storage';
+import { saveConnectionAndReconnect } from '../connection-reconnect';
 import {
   STANDARD_DOMAINS,
   domainForStandard,
@@ -3136,12 +3137,10 @@ const ConnectLetta: React.FC = () => {
     setBusy(true);
     setConnectError(null);
     try {
-      const next = await api.connection.save({
-        baseUrl: baseUrl.trim() || null,
-        agentId: agentId.trim() || null,
-      });
-      await api.config.set({
-        primaryAgentId: primaryAgentId.trim() || agentId.trim() || null,
+      const next = await saveConnectionAndReconnect(api, {
+        baseUrl,
+        agentId,
+        primaryAgentId,
         connectionMode,
       });
       setStatus(next);
