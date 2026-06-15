@@ -1,5 +1,5 @@
-import { app, clipboard, ipcMain, shell } from 'electron';
-import type { ConnectionInfo, ConnectionInput, CreateProposalFromCorrectionInput, DecideProposalInput, DreamSettings, LabsConfig, OttoConfig, PermissionRequest, PermissionResponse, ProposalClassification, ProposalTarget, RuntimePreferences, RuntimeStatus } from './shared/types';
+import { type BrowserWindow, app, clipboard, ipcMain, shell } from 'electron';
+import type { ConnectionInfo, ConnectionInput, CreateProposalFromCorrectionInput, DecideProposalInput, DreamSettings, LabsConfig, MemoryListResult, OttoConfig, PermissionRequest, PermissionResponse, ProposalClassification, ProposalTarget, RuntimePreferences, RuntimeStatus } from './shared/types';
 import { applyLabsConfigPatch, assertConnectionModePatchAllowed, getLabsConfig, labsConfigToOttoPatch } from './labs-config';
 import {
   applyDreamSettingsPatch,
@@ -369,7 +369,19 @@ export function registerIpc() {
   ipcMain.handle('otto:knowledge:list', () => knowledge.listResult());
   ipcMain.handle('otto:knowledge:resolve-role', (_e, role: string) => knowledge.resolveModelForRole(role));
 
-  ipcMain.handle('otto:memory:list', () => memory.listBlocks());
+  ipcMain.handle('otto:memory:list', () => {
+    const runtimeStatus = runner.getStatus();
+    if (!runtimeStatus.ready) {
+      return {
+        agentId: null,
+        baseUrl: null,
+        blocks: [],
+        apiPath: '/v1/agents/{agent_id}/core-memory/blocks',
+        error: runtimeStatus.reason ?? 'Runtime not ready — finish setup in Settings.',
+      } satisfies MemoryListResult;
+    }
+    return memory.listBlocks();
+  });
   ipcMain.handle('otto:cognee:health', () => cognee.health());
   ipcMain.handle('otto:cognee:settings:get', () => cognee.settings());
   ipcMain.handle('otto:cognee:settings:set', (_e, patch: { enabled?: boolean; baseUrl?: string }) => {
