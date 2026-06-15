@@ -1,9 +1,9 @@
 import { getSecret } from './secret-store';
 import { discoverLocalLettaContext, resolveHttpBaseUrl } from './runtime-transport/letta-discovery';
 import type { ConfigStore } from './config-store';
-import type { MemoryBlockRecord, MemoryListResult } from './shared/types';
+import type { MemoryBlockRecord, MemoryListResult, MemoryUpdateResult } from './shared/types';
 
-export type { MemoryBlockRecord, MemoryListResult };
+export type { MemoryBlockRecord, MemoryListResult, MemoryUpdateResult };
 
 const BLOCK_PATHS = (agentId: string) => {
   const encoded = encodeURIComponent(agentId);
@@ -15,9 +15,10 @@ const BLOCK_PATHS = (agentId: string) => {
   ];
 };
 
-function authHeaders(): Record<string, string> {
+function authHeaders(jsonBody = false): Record<string, string> {
   const key = getSecret('LETTA_API_KEY') || process.env.LETTA_API_KEY;
   const headers: Record<string, string> = { Accept: 'application/json' };
+  if (jsonBody) headers['Content-Type'] = 'application/json';
   if (key) headers.Authorization = `Bearer ${key}`;
   return headers;
 }
@@ -135,4 +136,82 @@ export class MemoryStore {
       || (b.description?.toLowerCase().includes(q) ?? false),
     );
   }
+
+  async updateBlock(label: string, value: string): Promise<MemoryUpdateResult> {
+    const trimmedLabel = label.trim();
+    const agentCandidates = resolveAgentCandidates(this.config);
+    const agentId = agentCandidates[0] ?? null;
+    const baseUrl = resolveHttpBaseUrl(this.config.baseUrl() ?? discoverLocalLettaContext(this.config).baseUrl);
+    const apiPath = agentId && trimmedLabel
+      ? `/v1/agents/${encodeURIComponent(agentId)}/core-memory/blocks/${encodeURIComponent(trimmedLabel)}`
+      : '/v1/agents/{agent_id}/core-memory/blocks/{block_label}';
+
+    if (!trimmedLabel) {
+      return {
+        agentId,
+        baseUrl,
+        block: null,
+        apiPath,
+        error: 'Memory block label is required for update.',
+      };
+    }
+
+    if (!agentCandidates.length) {
+      const discovered = discoverLocalLettaContext(this.config);
+      return {
+        agentId: null,
+        baseUrl,
+        block: null,
+        apiPath,
+        error: discovered.reason ?? 'No local Letta agent — connect runtime in Settings first.',
+      };
+    }
+    if (!baseUrl) {
+      return {
+        agentId,
+        baseUrl: null,
+        block: null,
+        apiPath,
+        error: 'Letta base URL not discovered — start Letta local runtime or set base URL in Settings.',
+      };
+    }
+
+    let lastError: string | undefined;
+    for (const candidateId of agentCandidates) {
+      const path = `/v1/agents/${encodeURIComponent(candidateId)}/core-memory/blocks/${encodeURIComponent(trimmedLabel)}`;
+      try {
+        const res = await fetch(`${baseUrl}${path}`, {
+          method: 'PATCH',
+          headers: authHeaders(true),
+          body: JSON.stringify({ value }),
+        });
+        if (!res.ok) {
+          const body = await res.text().catch(() => '');
+          lastError = `Letta memory update ${res.status}${body ? `: ${body.slice(0, 160)}` : ''}`;
+          continue;
+        }
+        const json = await res.json();
+        const block = isRecord(json) ? normalizeBlock(json) : null;
+        if (!block) {
+          lastError = 'Letta memory update returned an unparseable block payload.';
+          continue;
+        }
+        return { agentId: candidateId, baseUrl, block, apiPath: path };
+      } catch (e) {
+        lastError = e instanceof Error ? e.message : String(e);
+      }
+    }
+
+    return {
+      agentId,
+      baseUrl,
+      block: null,
+      apiPath,
+      error: lastError ?? 'Letta memory update unreachable — connect runtime in Settings.',
+    };
+  }
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return !!value && typeof value === 'object' && !Array.isArray(value);
 }
