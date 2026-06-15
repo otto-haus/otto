@@ -197,6 +197,7 @@ export function parseUsageLimitResetHint(reason: string): string | null {
 export function classify(reason: string, hasKey: boolean): StatusCode {
   const r = reason.toLowerCase();
   void hasKey;
+  if (r.includes('usage_limit_reached') || r.includes('usage limit reached')) return 'error';
   if (r.includes('letta_api_key') || r.includes('api key') || r.includes('unauthorized') || r.includes('401'))
     return 'no-api-key';
   if (
@@ -221,7 +222,31 @@ export function classify(reason: string, hasKey: boolean): StatusCode {
   return 'error';
 }
 
+export function parseUsageLimitError(reason: string): { message: string; resetHint?: string } | null {
+  const lower = reason.toLowerCase();
+  if (!lower.includes('usage_limit_reached') && !lower.includes('usage limit reached') && !lower.includes('status_code:429')) {
+    return null;
+  }
+  const resetMatch = reason.match(/resets?\s+(?:at|in)\s+([0-9T:+-Z]+)/i)
+    ?? reason.match(/resets?\s+in\s+about\s+(\d+)\s+minutes?/i)
+    ?? reason.match(/resets?\s+in\s+(\d+)\s+minutes?/i);
+  let resetHint: string | undefined;
+  if (resetMatch?.[1]) {
+    resetHint = resetMatch[0].toLowerCase().includes('minute')
+      ? `Resets in about ${resetMatch[1]} minutes.`
+      : `Resets at ${resetMatch[1]}.`;
+  }
+  return {
+    message: 'Provider usage limit reached. Try Auto/Fast, switch provider/model, or wait for the reset.',
+    resetHint,
+  };
+}
+
 export function friendly(code: StatusCode, reason: string): string {
+  const usageLimit = parseUsageLimitError(reason);
+  if (usageLimit) {
+    return usageLimit.resetHint ? `${usageLimit.message} ${usageLimit.resetHint}` : usageLimit.message;
+  }
   const lower = reason.toLowerCase();
   if (lower.includes('invalid model')) {
     const match = reason.match(/Invalid model '([^']+)'/i);
@@ -250,6 +275,9 @@ export function friendly(code: StatusCode, reason: string): string {
       return parts.join(' ');
     }
     default:
+      if (reason.includes('{') && reason.length > 180) {
+        return 'Runtime error — open diagnostics or retry after fixing provider setup.';
+      }
       return reason;
   }
 }
