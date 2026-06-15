@@ -98,7 +98,6 @@ export const WORKSPACE_PREVIEW_SURFACES: ReadonlySet<SurfaceId> = new Set([
   'practices',
   'routines',
   'curation',
-  'receipts',
   'checks',
   'autonomy',
   'skills',
