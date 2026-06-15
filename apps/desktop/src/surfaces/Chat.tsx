@@ -127,8 +127,12 @@ const formatRuntimeSubtitle = (
   return `${text.slice(0, 93)}…`;
 };
 
+/** Same gate as Memory Observatory `connected` in Panes — live runtime ready, not MemFS. */
+const isCoreMemoryReachable = (st: ChatRuntimeStatus): boolean => !!st.ready;
+
+
 const lettaMemoryStatusLabel = (st: ChatRuntimeStatus): string =>
-  (st.agentId?.trim() ? 'Letta memory on' : 'Letta memory off');
+  isCoreMemoryReachable(st) ? chatCopy.memoryOn : chatCopy.memoryOff;
 
 /** Product subtitle — model + memory state; no raw agent/conversation ids (#081). */
 const formatChatSessionSubtitle = (
@@ -606,7 +610,7 @@ const LiveChat: React.FC<{
     : labelForModel(selectedModel, modelOptions);
   const chatSessionSubtitle = st ? formatChatSessionSubtitle(st, modelStatusLabel) : 'connecting…';
   const chatDebugTitle = st ? formatChatDebugTitle(st, modelStatusLabel) : undefined;
-  const memoryLabel = st?.agentId?.trim() ? chatCopy.memoryOn : chatCopy.memoryOff;
+  const memoryLabel = st && isCoreMemoryReachable(st) ? chatCopy.memoryOn : chatCopy.memoryOff;
 
   const openMemoryObservatory = () => {
     try {
