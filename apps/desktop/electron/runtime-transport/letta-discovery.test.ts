@@ -6,7 +6,7 @@ import { ConfigStore } from '../config-store';
 import { discoverLocalLettaContext, isLocalLettaBackendListening, resolveInitBaseUrl, resolveModelHandle } from './letta-discovery';
 import type { LettaModelOption } from '../shared/types';
 
-const envKeys = ['OTTO_HOME', 'OTTO_LETTA_SETTINGS_PATH', 'OTTO_SKIP_LETTA_LSOF'] as const;
+const envKeys = ['OTTO_HOME', 'OTTO_LETTA_SETTINGS_PATH', 'OTTO_SKIP_LETTA_LSOF', 'OTTO_AGENT_ID', 'LETTA_BASE_URL'] as const;
 const originalEnv = new Map(envKeys.map((k) => [k, process.env[k]]));
 
 afterEach(() => {
@@ -43,6 +43,8 @@ describe('discoverLocalLettaContext embedded state', () => {
       process.env.OTTO_HOME = tmp;
       process.env.OTTO_SKIP_LETTA_LSOF = '1';
       Reflect.deleteProperty(process.env, 'OTTO_LETTA_SETTINGS_PATH');
+      Reflect.deleteProperty(process.env, 'OTTO_AGENT_ID');
+      Reflect.deleteProperty(process.env, 'LETTA_BASE_URL');
       mkdirSync(join(tmp, 'letta'), { recursive: true });
       writeFileSync(join(tmp, 'letta', 'settings.json'), `${JSON.stringify({}, null, 2)}\n`, 'utf8');
       const config = new ConfigStore();
