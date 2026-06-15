@@ -137,24 +137,22 @@ export const Onboarding: React.FC<{ onNavigate: (id: SurfaceId) => void; activeS
 
   if (step === 'welcome') {
     return (
-      <div className="onboardOverlay">
+      <div className="onboardOverlay onboardOverlay--takeover">
         <div className="onboardCard onboardCard--welcome">
-          <span className="onboardBadge">{onboardingCopy.badge}</span>
           <div className="onboardEyebrow onboardEyebrow--dark">{onboardingCopy.eyebrow}</div>
-          <h2 className="onboardTitle" style={{ color: '#fff' }}>{onboardingCopy.welcomeTitle}</h2>
-          <p className="onboardBody" style={{ maxWidth: '46ch' }}>{onboardingCopy.welcomeBody}</p>
-          <div className="onboardAuthority">{onboardingCopy.authorityLine}</div>
-          <div className="onboardActions">
+          <h2 className="onboardTitle">{onboardingCopy.welcomeTitle}</h2>
+          <p className="onboardBody">{onboardingCopy.welcomeBody}</p>
+          <div className="onboardWelcomeStack">
             <button
               type="button"
-              className="btn btn--solid-d"
+              className="btn btn--solid-d onboardWelcomeStack__primary"
               onClick={() => startPath('connect', connected ? 'chat' : 'settings')}
             >
               {onboardingCopy.primaryStart}
             </button>
             <button
               type="button"
-              className="btn btn--ghost-d"
+              className="onboardLinkSecondary"
               onClick={() => {
                 enableSampleReceiptPreview();
                 startPath('receipts-preview', 'receipts');
@@ -162,21 +160,23 @@ export const Onboarding: React.FC<{ onNavigate: (id: SurfaceId) => void; activeS
             >
               {onboardingCopy.secondarySample}
             </button>
-            <button type="button" className="btn btn--ghost-d onboardSkip" onClick={finish}>
-              {onboardingCopy.skip}
-            </button>
+            <div className="onboardTertiary">
+              <button type="button" className="onboardLinkTertiary" onClick={finish}>
+                {onboardingCopy.skip}
+              </button>
+              <button
+                type="button"
+                className="onboardLinkTertiary"
+                onClick={() => {
+                  setIntent('connect');
+                  setStarted(true);
+                  void persistModeAndOpenSettings('existing');
+                }}
+              >
+                {onboardingCopy.advancedExisting}
+              </button>
+            </div>
           </div>
-          <button
-            type="button"
-            className="onboardHelp onboardHelp--dark"
-            onClick={() => {
-              setIntent('connect');
-              setStarted(true);
-              void persistModeAndOpenSettings('existing');
-            }}
-          >
-            {onboardingCopy.advancedExisting}
-          </button>
         </div>
       </div>
     );
