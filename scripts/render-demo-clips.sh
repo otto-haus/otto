@@ -20,6 +20,7 @@ Compositions (default: desktop walkthrough):
   OttoV01Tickets              tickets / Ticketcraft demo (064)
   OttoV01Charter              charter demo
   OttoV01Practices            practices demo
+  OttoProductDemo             OpenAI-inspired product hero (~54s)
   all                         render-all.sh (v0.1 demos + walkthrough)
 
 Examples:
@@ -56,6 +57,9 @@ case "$COMP" in
     ;;
   OttoV01Practices)
     (cd "$DEMO" && bunx remotion render src/index.ts OttoV01Practices "$OUT/otto-v01-practices.mp4")
+    ;;
+  OttoProductDemo)
+    (cd "$DEMO" && bunx remotion render src/index.ts OttoProductDemo "$OUT/otto-product-demo.mp4")
     ;;
   -h|--help)
     usage
