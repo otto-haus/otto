@@ -1,0 +1,8 @@
+{
+  "at": "2026-06-15T06:39:46Z",
+  "app": "/Users/seb/Code/otto/apps/desktop/dist-app/mac-arm64/otto.app",
+  "cliResolved": true,
+  "cliPath": "/Users/seb/Code/otto/apps/desktop/dist-app/mac-arm64/otto.app/Contents/Resources/app/node_modules/@letta-ai/letta-code/letta.js",
+  "bootstrapTurnCompleted": false,
+  "fullBootstrapProof": "scripts/otto-staging-076-bootstrap-proof.cjs"
+}

@@ -50,8 +50,16 @@ For the product story, visit [otto.haus](https://otto.haus). This README is the 
 
 **Agents:** [`INSTALL_FOR_AGENTS.md`](INSTALL_FOR_AGENTS.md) · [`AGENTS.md`](AGENTS.md)
 
-**Humans** need [Bun](https://bun.sh), [go-task](https://taskfile.dev), and a local
-[Letta](https://letta.com) runtime (Letta Desktop or Letta Code). Provider keys live in Letta, not otto.
+**Default — This Mac (one app):** download otto and it works. otto bundles and supervises its
+own embedded [Letta](https://letta.com) runtime ([`@letta-ai/letta-code`](https://www.npmjs.com/package/@letta-ai/letta-code),
+Apache-2.0; otto is **powered by Letta**), so no separate Letta install is required. Provider keys
+live in Letta, not otto. See [`docs/v1/embedded-letta-bundle.md`](docs/v1/embedded-letta-bundle.md)
+and [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md).
+
+**Advanced — Existing local Letta:** if you already run Letta Desktop, switch to **Existing local
+Letta** in **Settings → General**. otto will not silently fall back to it; the embedded runtime is the default.
+
+**From source (developers)** need [Bun](https://bun.sh) and [go-task](https://taskfile.dev):
 
 ```sh
 brew install go-task          # macOS
@@ -61,9 +69,9 @@ bun run install-extension     # Letta Code commands → ~/.letta/extensions/
 task electron                 # dev app (or task staging for isolated /Applications/otto-staging.app)
 ```
 
-Live chat unlocks only after `session.initialize()` succeeds against a real Letta agent.
-A fresh clone has no hosted agent — otto discovers Letta Desktop locally; fix blockers in
-**Settings → General**. See [Install](#install) for extension skills, smoke checks, and canonical app boundaries.
+Live chat unlocks only after `session.initialize()` succeeds against a real Letta agent. In This Mac
+mode that agent comes from the embedded runtime; fix any blockers in **Settings → General**. See
+[Install](#install) for extension skills, smoke checks, and canonical app boundaries.
 
 ---
 
@@ -165,8 +173,9 @@ Set `OTTO_HOME` or `XDG_STATE_HOME` for clean-profile runs. `LETTA_CLI_PATH` whe
 ### Connect to Letta
 
 1. Launch via `task electron`, `task staging`, or the Release build at `/Applications/otto.app`.
-2. otto discovers Letta Desktop and your local agent.
-3. If disconnected, **Settings → General** shows the blocker. Provider credentials stay in Letta.
+2. **This Mac (default):** otto starts its embedded Letta runtime and bootstraps a local agent — no setup.
+3. **Existing local Letta (advanced):** switch in **Settings → General** to point otto at a Letta you already run.
+4. If disconnected, **Settings → General** shows the blocker. Provider credentials stay in Letta.
 
 ### Verify
 

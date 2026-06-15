@@ -16,7 +16,8 @@ If a change does not gate irreversibility or make behavior compound, question it
 
 - Product/UI name is `otto` lowercase. Use `Otto` only when grammar/platform labels force it.
 - Owl/avatar image is the primary mark. Do not reintroduce the old line-drawn owl as the product logo.
-- v1 is local-only: otto connects to a local Letta runtime. Provider/API keys belong in Letta, not otto.
+- v1 is local-only. **Default ("This Mac"): otto bundles and supervises its own embedded Letta runtime** — download otto and it works, no separate Letta install. **Advanced ("Existing local Letta"): connect to a Letta.app the user already runs** (no silent fallback). Either way, **provider/API keys belong in Letta, not otto** (otto stores only a `hasProviderKey` boolean). See `docs/v1/embedded-letta-bundle.md`.
+- Embedded runtime is bundled from the published `@letta-ai/letta-code` package (Apache-2.0), never forked. Carry its LICENSE in the bundle, keep `THIRD_PARTY_NOTICES.md` accurate (`bun run gen:notices`), and attribute as "powered by Letta". Do not ship Letta marks/logos as otto branding (otto's mark is the owl).
 - Do not show mock operational data. If a pane is not wired, show an honest empty state.
 - Smoke tests must never write into Sebastian's live `conversation=default`; use disposable conversations.
 
