@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, test } from 'bun:test';
 import {
   createQueueItem,
+  hasDuplicateQueueText,
   INFLIGHT_KEY,
   isSmokeQueueText,
   LEGACY_QUEUE_KEY,
@@ -180,6 +181,23 @@ describe('queue-storage', () => {
       { id: 'queued-a', isNext: true, sendPosition: 1 },
       { id: 'legacy', isNext: false, sendPosition: 2 },
     ]);
+  });
+
+  test('hasDuplicateQueueText rejects duplicate queued and in-flight text for a thread', () => {
+    installStorage();
+    const items: QueueItem[] = [
+      { id: 'queued', text: 'Same prompt please', createdAt: 1, state: 'queued', threadId: 'thread_a' },
+    ];
+    expect(hasDuplicateQueueText(items, 'thread_a', 'Same prompt please')).toBe(true);
+    expect(hasDuplicateQueueText(items, 'thread_a', 'Different prompt')).toBe(false);
+    localStorage.setItem(INFLIGHT_KEY, JSON.stringify({
+      id: 'inflight',
+      text: 'In flight duplicate',
+      createdAt: Date.now(),
+      state: 'sending',
+      threadId: 'thread_a',
+    }));
+    expect(hasDuplicateQueueText([], 'thread_a', 'In flight duplicate')).toBe(true);
   });
 
   test('retrying a failed item keeps already queued work next', () => {
