@@ -44,6 +44,12 @@ describe('surface-tiers', () => {
     expect(surfaceGate('settings', labs, true)).toBe('open');
   });
 
+  test('receipts surface is open for onboarding payoff (#139)', () => {
+    const labs = defaultLabsConfig();
+    expect(isSurfaceComingSoon('receipts', labs)).toBe(false);
+    expect(surfaceGate('receipts', labs, true)).toBe('open');
+  });
+
   test('labs surfaces blocked until master and feature enabled', () => {
     const off = defaultLabsConfig();
     expect(isSurfaceComingSoon('knowledge', off)).toBe(true);
