@@ -39,6 +39,7 @@ import {
   appendFailedQueueItem,
   clearInFlight,
   composerDraftFromQueueText,
+  createQueueItem,
   enqueueQueueItemForThread,
   hasDuplicateQueueText,
   nextQueueItemForThread,
