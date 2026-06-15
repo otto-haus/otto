@@ -2,7 +2,13 @@ import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 
 import { randomUUID } from 'node:crypto';
 import { join } from 'node:path';
 import { parse, stringify } from 'yaml';
-import type { TicketCompileInput, TicketListResult, TicketRecord, TicketStatus } from '@otto-haus/core';
+import type {
+  TicketCompileInput,
+  TicketListResult,
+  TicketPaperclipMeta,
+  TicketRecord,
+  TicketStatus,
+} from '@otto-haus/core';
 import type { TicketReviewRecord } from './shared/types';
 import { OTTO_DIR } from './config-store';
 import { CheckRunner } from './check-runner';
@@ -157,6 +163,39 @@ export class TicketStore {
     return { ticket, receipt };
   }
 
+  /** Paperclip completion → review requested metadata; never merged/done (075). */
+  recordPaperclipReviewRequested(
+    ticketId: string,
+    patch: TicketPaperclipMeta & { review_requested_at: string },
+  ): TicketRecord {
+    const existing = this.get(ticketId);
+    if (!existing) throw new Error(`Ticket not found: ${ticketId}`);
+    if (existing.status === 'merged' || existing.status === 'cancelled') {
+      throw new Error(`Cannot record Paperclip review signal for status "${existing.status}".`);
+    }
+
+    const raw = parse(readFileSync(existing.ticketPath, 'utf8')) as Record<string, unknown>;
+    const prior = readPaperclipMeta(raw.paperclip);
+    const paperclip: TicketPaperclipMeta = {
+      ...prior,
+      ...patch,
+    };
+    const nextStatus =
+      existing.status === 'active' || existing.status === 'blocked' ? 'review' : existing.status;
+
+    const next: Record<string, unknown> = {
+      ...raw,
+      paperclip,
+      updated_at: new Date().toISOString(),
+    };
+    if (nextStatus !== existing.status) next.status = nextStatus;
+
+    writeFileSync(existing.ticketPath, stringify(next), 'utf8');
+    const updated = this.readTicket(existing.ticketPath, existing.root);
+    if (!updated) throw new Error(`Failed to update ticket: ${ticketId}`);
+    return updated;
+  }
+
   private readTicket(ticketPath: string, root: string): TicketRecord | null {
     if (!existsSync(ticketPath)) return null;
     try {
@@ -188,11 +227,30 @@ export class TicketStore {
         ticketPath,
         packetPath: existsSync(packetPath) ? packetPath : undefined,
         updated_at: String(raw.updated_at ?? new Date().toISOString()),
+        paperclip: readPaperclipMeta(raw.paperclip),
       };
     } catch {
       return null;
     }
   }
+}
+
+function readPaperclipMeta(value: unknown): TicketPaperclipMeta | undefined {
+  if (!value || typeof value !== 'object') return undefined;
+  const raw = value as Record<string, unknown>;
+  const paperclip_task_id = optionalString(raw.paperclip_task_id);
+  const paperclip_url = optionalString(raw.paperclip_url);
+  const review_requested_at = optionalString(raw.review_requested_at);
+  const review_signal_receipt_id = optionalString(raw.review_signal_receipt_id);
+  if (!paperclip_task_id && !paperclip_url && !review_requested_at && !review_signal_receipt_id) {
+    return undefined;
+  }
+  return {
+    paperclip_task_id,
+    paperclip_url,
+    review_requested_at,
+    review_signal_receipt_id,
+  };
 }
 
 function renderWorkerPacket(body: Record<string, unknown>): string {
