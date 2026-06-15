@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Icon } from './icons';
-import { useRuntimeContext } from '../RuntimeContext';
+import { useRuntimeContext } from '../runtime-context';
 import { ThreadList, type ThreadSummary } from './ui';
 import { OttoMark } from './OttoMark';
 

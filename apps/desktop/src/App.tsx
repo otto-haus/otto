@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { RuntimeProvider, useRuntimeContext } from './RuntimeContext';
+import { RuntimeProvider } from './RuntimeContext';
+import { useRuntimeContext } from './runtime-context';
 import { ToastProvider } from './components/Toast';
 import { Sidebar, type SurfaceId } from './components/Sidebar';
 import { Icon } from './components/icons';
@@ -22,7 +23,8 @@ import {
 import { ChecksSurfaceShell } from './surfaces/ChecksSurfaceShell';
 import { Terminal } from './surfaces/Terminal';
 import { Onboarding } from './Onboarding';
-import { LabsProvider, useLabs } from './labs/LabsContext';
+import { LabsProvider } from './labs/LabsContext';
+import { useLabs } from './labs/labs-context';
 import { ComingSoonSurface } from './labs/ComingSoonSurface';
 import { surfaceGate } from './surface-tiers';
 import { EmptyState } from './components/ui';

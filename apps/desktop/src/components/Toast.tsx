@@ -1,29 +1,7 @@
-import React, { createContext, useCallback, useContext, useMemo, useState } from 'react';
-
-export type ToastTone = 'ok' | 'info' | 'warn';
-
-export type ToastInput = {
-  title: string;
-  body?: string;
-  tone?: ToastTone;
-  durationMs?: number;
-  actionLabel?: string;
-  onAction?: () => void;
-};
+import React, { useCallback, useMemo, useState } from 'react';
+import { ToastContext, type ToastInput } from './toast-context';
 
 type ToastItem = ToastInput & { id: string };
-
-type ToastContextValue = {
-  push: (item: ToastInput) => void;
-};
-
-const ToastContext = createContext<ToastContextValue | null>(null);
-
-export function useToast(): ToastContextValue {
-  const ctx = useContext(ToastContext);
-  if (!ctx) throw new Error('useToast requires ToastProvider');
-  return ctx;
-}
 
 export function ToastProvider({ children }: { children: React.ReactNode }) {
   const [toasts, setToasts] = useState<ToastItem[]>([]);

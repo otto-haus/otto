@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { PaperclipIntakePanel } from './PaperclipIntakePanel';
 import { Icon } from '../components/icons';
-import { useToast } from '../components/Toast';
+import { useToast } from '../components/toast-context';
 import { EmptyState, StatusPill, statusPill, statusCodePill, SurfaceProof, SurfacePage, SurfaceHero, InkBlock, SurfaceInk, SurfaceStatStrip, SurfaceMeta, SplitLayout, FilterBar, InlineEmpty, WebPreviewFrame, ReceiptCard, CheckBlockBanner } from '../components/ui';
 import {
   toastCopy,
@@ -47,8 +47,9 @@ import {
   sampleReceiptCard,
   SAMPLE_RECEIPT_LABEL,
 } from '../onboarding-sample-receipt';
-import { useLabs, LAB_FEATURE_IDS, LAB_FEATURE_META } from '../labs/LabsContext';
-import { gatedConnectionMode } from '../surface-tiers';
+import { LAB_FEATURE_IDS } from '../../electron/labs-config';
+import { useLabs } from '../labs/labs-context';
+import { LAB_FEATURE_META, gatedConnectionMode } from '../surface-tiers';
 import { AppSourceDetails } from '../components/AppSourceBadge';
 import type { AppBuildInfo, IsolatedAgentRecord, LabFeatureId, WorkspaceInfo, SystemHealthReport, HealthCheck } from '../../electron/shared/types';
 import {
@@ -100,7 +101,7 @@ import {
   type DreamTrigger,
   type ConversationSortMode,
 } from '../runtime';
-import { useRuntimeContext } from '../RuntimeContext';
+import { useRuntimeContext } from '../runtime-context';
 import { ReadinessPanel } from '../ReadinessPanel';
 import type { SurfaceId } from '../components/Sidebar';
 

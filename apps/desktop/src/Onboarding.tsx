@@ -1,7 +1,7 @@
 import type React from 'react';
 import { useEffect, useState } from 'react';
 import { onboardingCopy } from './copy/surfaces';
-import { useRuntimeContext } from './RuntimeContext';
+import { useRuntimeContext } from './runtime-context';
 import type { SurfaceId } from './components/Sidebar';
 import { ottoApi } from './runtime';
 import {
