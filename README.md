@@ -164,6 +164,7 @@ MEMORY_DIR=/path/to/agent/memory bun run install-extension
 ```sh
 task electron     # dev Electron; preflight + Letta CLI discovery
 task staging      # isolated /Applications/otto-staging.app
+task staging:main # fetch origin/main then refresh otto-staging.app (#338)
 ```
 
 Set `OTTO_HOME` or `XDG_STATE_HOME` for clean-profile runs. `LETTA_CLI_PATH` when Letta is outside the default macOS app path.
