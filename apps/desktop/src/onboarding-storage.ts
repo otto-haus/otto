@@ -23,6 +23,23 @@ export function clearOnboardingModeDraft(): void {
   try { sessionStorage.removeItem(MODE_DRAFT_KEY); } catch { /* ignore */ }
 }
 
+export type OnboardingStarterDetail = { text?: string; send?: boolean };
+export type OnboardingStarterAction =
+  | { kind: 'ignore' }
+  | { kind: 'queue'; text: string }
+  | { kind: 'draft'; text: string };
+
+/** Pure handler for run-step starter chips → Chat composer/queue (ticket 147 / #138). */
+export function resolveOnboardingStarterAction(
+  detail: OnboardingStarterDetail | undefined,
+  ctx: { ready: boolean; hasApi: boolean },
+): OnboardingStarterAction {
+  const text = detail?.text?.trim();
+  if (!text || !ctx.ready || !ctx.hasApi) return { kind: 'ignore' };
+  if (detail?.send) return { kind: 'queue', text };
+  return { kind: 'draft', text };
+}
+
 export function requestOnboardingStarter(text: string): void {
   window.dispatchEvent(new CustomEvent('otto-onboarding-starter', { detail: { text, send: true } }));
 }
