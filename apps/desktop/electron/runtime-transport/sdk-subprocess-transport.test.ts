@@ -97,7 +97,7 @@ describe('SdkSubprocessTransport permissions', () => {
   test('times out pending permission resolvers', async () => {
     process.env.OTTO_PERMISSION_TIMEOUT_MS = '40';
     const { win, sent } = mockWindow();
-    const transport = new SdkSubprocessTransport(win, mockConfig());
+    const transport = new SdkSubprocessTransport(() => win, mockConfig());
 
     let canUseTool: ((toolName: string, toolInput: Record<string, unknown>) => Promise<{ behavior: string; message?: string }>) | null = null;
     const session = {
@@ -146,7 +146,7 @@ describe('SdkSubprocessTransport permissions', () => {
   test('abort rejects pending permission and emits terminal result', async () => {
     process.env.OTTO_PERMISSION_TIMEOUT_MS = '60000';
     const { win, sent } = mockWindow();
-    const transport = new SdkSubprocessTransport(win, mockConfig());
+    const transport = new SdkSubprocessTransport(() => win, mockConfig());
 
     let canUseTool: ((toolName: string, toolInput: Record<string, unknown>) => Promise<{ behavior: string; message?: string }>) | null = null;
     let releaseStream: (() => void) | null = null;
@@ -205,7 +205,7 @@ describe('SdkSubprocessTransport permissions', () => {
   test('resolvePermission answers pending tool gate', async () => {
     process.env.OTTO_PERMISSION_TIMEOUT_MS = '5000';
     const { win, sent } = mockWindow();
-    const transport = new SdkSubprocessTransport(win, mockConfig());
+    const transport = new SdkSubprocessTransport(() => win, mockConfig());
 
     let canUseTool: ((toolName: string, toolInput: Record<string, unknown>) => Promise<{ behavior: string }>) | null = null;
     const session = {
@@ -253,7 +253,7 @@ describe('SdkSubprocessTransport permissions', () => {
     permissionSessionStore.clear();
     process.env.OTTO_PERMISSION_TIMEOUT_MS = '5000';
     const { win, sent } = mockWindow();
-    const transport = new SdkSubprocessTransport(win, mockConfig());
+    const transport = new SdkSubprocessTransport(() => win, mockConfig());
 
     let canUseTool: ((toolName: string, toolInput: Record<string, unknown>) => Promise<{ behavior: string; scope?: string }>) | null = null;
     const session = {

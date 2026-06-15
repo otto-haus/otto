@@ -8,6 +8,8 @@ import { WS_PROMOTION_GATE_REASON, wsPromotionApproved } from './ws-promotion-ga
 import type { OttoRuntimeTransport, RuntimeTransportMode, SdkTransportDiagnosticsSnapshot, WsTransportDiagnosticsSnapshot } from './types';
 import type { TransportDiagnosticsSnapshot } from '../diagnostics-export';
 
+type MainWindowResolver = () => BrowserWindow | null;
+
 /** Owns transport selection, fallback, and delegation to the active implementation. */
 export class RuntimeSupervisor implements OttoRuntimeTransport {
   private readonly sdk: SdkSubprocessTransport;
@@ -15,9 +17,9 @@ export class RuntimeSupervisor implements OttoRuntimeTransport {
   private readonly mode: RuntimeTransportMode;
   private active: OttoRuntimeTransport;
 
-  constructor(win: BrowserWindow, config: ConfigStore) {
-    this.sdk = new SdkSubprocessTransport(win, config);
-    this.ws = new WsRuntimeTransport(win, config);
+  constructor(getMainWindow: MainWindowResolver, config: ConfigStore) {
+    this.sdk = new SdkSubprocessTransport(getMainWindow, config);
+    this.ws = new WsRuntimeTransport(getMainWindow, config);
     this.mode = resolveTransportMode();
     this.active = this.sdk;
   }

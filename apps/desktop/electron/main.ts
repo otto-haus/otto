@@ -5,6 +5,7 @@ import { BrowserWindow, app } from 'electron';
 import { ConfigStore } from './config-store';
 import { windowBackgroundForPref } from './display-theme';
 import { registerIpc } from './ipc';
+import { getMainWindow, setMainWindow } from './main-window';
 import { resolveDevRendererUrl } from './main-security';
 import { attachWindowGeometryHandlers } from './window-geometry';
 import {
@@ -12,8 +13,6 @@ import {
   browserWindowShowsOnCreate,
   resolveWindowLaunchMode,
 } from './window-launch';
-
-let mainWindow: BrowserWindow | null = null;
 
 function applyUserDataDirOverride() {
   const override = process.env.OTTO_USER_DATA_DIR?.trim();
@@ -57,7 +56,7 @@ function createWindow() {
 
   applyWindowLaunchMode(win, launchMode);
   attachWindowGeometryHandlers(win);
-  registerIpc(win);
+  setMainWindow(win);
 
   // Dev: load the running Vite renderer; Prod: load the built renderer.
   const devRendererUrl = resolveDevRendererUrl(process.env.ELECTRON_RENDERER_URL, app.isPackaged);
@@ -68,9 +67,8 @@ function createWindow() {
   }
 
   win.on('closed', () => {
-    if (mainWindow === win) mainWindow = null;
+    if (getMainWindow() === win) setMainWindow(null);
   });
-  mainWindow = win;
 
   const capturePath = process.env.OTTO_CAPTURE_README?.trim();
   if (capturePath) {
@@ -101,6 +99,7 @@ applyUserDataDirOverride();
 
 app.whenReady().then(() => {
   ensurePath();
+  registerIpc();
   createWindow();
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow();

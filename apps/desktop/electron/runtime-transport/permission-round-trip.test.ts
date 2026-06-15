@@ -106,7 +106,7 @@ describe('permission tool-call round-trip (#298)', () => {
   test('allow: request shown, user approves, tool gate resolves allow', async () => {
     process.env.OTTO_PERMISSION_TIMEOUT_MS = '5000';
     const { win, sent } = mockWindow();
-    const transport = new SdkSubprocessTransport(win, mockConfig());
+    const transport = new SdkSubprocessTransport(() => win, mockConfig());
 
     wireTransport(transport, async (canUseTool) => {
       const response = await canUseTool('run_shell', { cmd: 'echo ok' });
@@ -128,7 +128,7 @@ describe('permission tool-call round-trip (#298)', () => {
   test('deny: user decision captured and tool gate returns deny', async () => {
     process.env.OTTO_PERMISSION_TIMEOUT_MS = '5000';
     const { win, sent } = mockWindow();
-    const transport = new SdkSubprocessTransport(win, mockConfig());
+    const transport = new SdkSubprocessTransport(() => win, mockConfig());
 
     wireTransport(transport, async (canUseTool) => {
       const response = await canUseTool('run_shell', { cmd: 'echo denied' });
@@ -153,7 +153,7 @@ describe('permission tool-call round-trip (#298)', () => {
     permissionSessionStore.clear();
     process.env.OTTO_PERMISSION_TIMEOUT_MS = '5000';
     const { win, sent } = mockWindow();
-    const transport = new SdkSubprocessTransport(win, mockConfig());
+    const transport = new SdkSubprocessTransport(() => win, mockConfig());
 
     wireTransport(transport, async (canUseTool) => {
       const first = await canUseTool('run_shell', { cmd: 'echo one' });
@@ -184,7 +184,7 @@ describe('permission tool-call round-trip (#298)', () => {
   test('ui disconnect: unanswered permission times out as deny with actionable message', async () => {
     process.env.OTTO_PERMISSION_TIMEOUT_MS = '40';
     const { win, sent } = mockWindow();
-    const transport = new SdkSubprocessTransport(win, mockConfig());
+    const transport = new SdkSubprocessTransport(() => win, mockConfig());
 
     wireTransport(transport, async (canUseTool) => {
       const response = await canUseTool('run_shell', { cmd: 'echo hi' });
@@ -232,7 +232,7 @@ describe('permission tool-call round-trip (#298)', () => {
   test('runtime abort: pending permission rejected and turn completes', async () => {
     process.env.OTTO_PERMISSION_TIMEOUT_MS = '60000';
     const { win, sent } = mockWindow();
-    const transport = new SdkSubprocessTransport(win, mockConfig());
+    const transport = new SdkSubprocessTransport(() => win, mockConfig());
 
     let releaseStream: (() => void) | null = null;
     const canUseToolRef: { current: CanUseTool | null } = { current: null };

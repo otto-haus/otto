@@ -108,7 +108,7 @@ async function main() {
   config.update({ agentId, conversationId: null });
 
   const { win, events } = mockWindow();
-  const transport = new WsRuntimeTransport(win, config);
+  const transport = new WsRuntimeTransport(() => win, config);
 
   const started = Date.now();
   const initStatus = await transport.init({ freshConversation: true });
