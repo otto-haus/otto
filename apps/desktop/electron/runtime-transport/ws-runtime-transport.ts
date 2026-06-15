@@ -198,9 +198,7 @@ export class WsRuntimeTransport implements OttoRuntimeTransport {
 
   async send(text: string): Promise<void> {
     if (!this.status.ready || !this.runtimeSocket || this.runtimeSocket.readyState !== WebSocket.OPEN) {
-      const reason = 'Runtime not ready — WebSocket transport disconnected.';
-      this.emitError(reason);
-      return;
+      throw new Error('Runtime not ready — WebSocket transport disconnected.');
     }
     const trace = new TraceWriter(this.status.conversationId || 'ws');
     const startedStatus = { ...this.status };
