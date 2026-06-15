@@ -69,6 +69,10 @@ Composer:
 
 Footer/diagnostics:
   runtime status, cli/source, last error, retry/reset if needed
+
+Preview rail (optional, resizable):
+  artifact render for selected message or code block (see [`docs/v1/preview-mode.md`](v1/preview-mode.md))
+  honest empty when nothing selected; ⌘⇧P toggle
 ```
 
 ### Required actions
@@ -84,6 +88,8 @@ Footer/diagnostics:
 | Deny tool request | Returns denial to runtime and records denial. |
 | Create proposal from correction | User correction can become Curation proposal or draft proposal card. |
 | Save receipt | Agent output/run can create a receipt linked to message/run. |
+| Toggle preview rail | ⌘⇧P or header control; persists open/width; shows honest empty when no selection (see [`docs/v1/preview-mode.md`](v1/preview-mode.md)). |
+| Open preview on artifact | Message action or HTML code-block click renders markdown/html/image in rail; no mock content when disconnected. |
 
 ### Runtime boundary
 
