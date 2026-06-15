@@ -1,21 +1,14 @@
-<p align="center">
-  <a href="#see-it"><img alt="Watch the desktop demo" src="https://img.shields.io/badge/watch-desktop%20demo-14161a?style=for-the-badge" /></a>
-  <a href="https://discord.gg/hab9ZvbPH"><img alt="Join Discord" src="https://img.shields.io/badge/Discord-join%20otto-5865F2?style=for-the-badge&logo=discord&logoColor=white" /></a>
-  <a href="https://otto.haus"><img alt="otto.haus" src="https://img.shields.io/badge/otto.haus-visit-2f855a?style=for-the-badge" /></a>
-</p>
-
 # otto
 
-**Define the culture your AI agents run on.**
+**Your agents forget every correction you give them. otto makes them stick.**
 
-Letta remembers. otto improves.
+otto is the behavior layer for persistent AI agents. You correct an agent once — *don't call it done without the proof; never cut that corner* — and otto turns the correction into a check it has to pass on every task after. The lesson holds instead of evaporating.
 
-otto is the behavior layer for persistent AI agents — Standards, Practices, Checks,
-Routines, approvals, and receipts that turn corrections into better future behavior.
+A lesson isn't culture until it changes what happens next. That's the whole job.
 
-> A lesson is not culture until it changes what happens next.
+**[otto.haus](https://otto.haus) · [Discord](https://discord.gg/hab9ZvbPH) · [Watch the demo](demo/README.md)**
 
-For the product story, visit [otto.haus](https://otto.haus). This README is the clone-and-run path for engineers and contributors.
+> For the product story, see **[otto.haus](https://otto.haus)**. This README is the clone-and-run path for engineers and contributors.
 
 ---
 
@@ -44,6 +37,8 @@ completed one real issue round-trip — not before.
 
 ## See it
 
+otto Desktop — a chat workspace with pinned threads, a model selector, and honest runtime connection state.
+
 <p align="center">
   <a href="https://github.com/otto-haus/otto/releases/latest/download/otto-v01-desktop.mp4">
     <img src=".github/assets/otto-desktop.png" alt="otto desktop — chat workspace with pinned threads, model selector, and runtime connection state" width="920" />
@@ -52,47 +47,29 @@ completed one real issue round-trip — not before.
   <a href="https://github.com/otto-haus/otto/releases/latest/download/otto-v01-desktop.mp4">
     <img src="docs/assets/desktop-demo.gif" alt="otto v0.1 desktop walkthrough — Remotion re-enactment of setup, chat, and behavior surfaces" width="820" />
   </a>
-  <br />
-  <sub>
-    <em>
-      <a href="https://github.com/otto-haus/otto/releases/latest/download/otto-v01-desktop.mp4">▶&nbsp;44s desktop walkthrough</a>
-      (MP4) · GIF from <code>OttoV01DesktopWalkthrough</code> —
-      <a href="demo/README.md#honesty-note">Remotion re-enactment</a>, not live screen capture —
-      hero screenshot is staging UI · cinematic cut <code>OttoProductDemo</code> in
-      <a href="https://github.com/otto-haus/otto/pull/525">PR&nbsp;#525</a>
-      (full render: <a href="https://github.com/otto-haus/otto/issues/577">#577</a>)
-    </em>
-  </sub>
 </p>
+
+▶ **45-second desktop walkthrough** — a Remotion re-enactment, not a live screen capture ([`demo/README.md`](demo/README.md)).
 
 ---
 
 ## Quick start
 
-**Agents:** [`INSTALL_FOR_AGENTS.md`](INSTALL_FOR_AGENTS.md) · [`AGENTS.md`](AGENTS.md)
+**Default — This Mac (one app).** [Download otto](https://github.com/otto-haus/otto/releases/latest) and open it. otto bundles and supervises its own embedded Letta runtime ([`@letta-ai/letta-code`](https://www.npmjs.com/package/@letta-ai/letta-code), Apache-2.0 — otto is **powered by Letta**), so there's no separate Letta install. Provider keys live in Letta, not otto. See [`docs/v1/embedded-letta-bundle.md`](docs/v1/embedded-letta-bundle.md) and [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md).
 
-**Default — This Mac (one app):** download otto and it works. otto bundles and supervises its
-own embedded [Letta](https://letta.com) runtime ([`@letta-ai/letta-code`](https://www.npmjs.com/package/@letta-ai/letta-code),
-Apache-2.0; otto is **powered by Letta**), so no separate Letta install is required. Provider keys
-live in Letta, not otto. See [`docs/v1/embedded-letta-bundle.md`](docs/v1/embedded-letta-bundle.md)
-and [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md).
+**Advanced — existing local Letta.** Already running Letta Desktop? Switch to *Existing local Letta* in **Settings → General**. otto won't silently fall back to it — the embedded runtime is the default.
 
-**Advanced — Existing local Letta:** if you already run Letta Desktop, switch to **Existing local
-Letta** in **Settings → General**. otto will not silently fall back to it; the embedded runtime is the default.
+**From source (developers).** You'll need [Bun](https://bun.sh) and [go-task](https://taskfile.dev):
 
-**From source (developers)** need [Bun](https://bun.sh) and [go-task](https://taskfile.dev):
-
-```sh
-brew install go-task          # macOS
+```bash
+brew install go-task                 # macOS
 git clone https://github.com/otto-haus/otto.git && cd otto
 bun install
-bun run install-extension     # Letta Code commands → ~/.letta/extensions/
-task electron                 # dev app (or task staging for isolated /Applications/otto-staging.app)
+bun run install-extension            # Letta Code commands → ~/.letta/extensions/
+task electron                        # dev app  (task staging for an isolated build)
 ```
 
-Live chat unlocks only after `session.initialize()` succeeds against a real Letta agent. In This Mac
-mode that agent comes from the embedded runtime; fix any blockers in **Settings → General**. See
-[Install](#install) for extension skills, smoke checks, and canonical app boundaries.
+Live chat only unlocks after `session.initialize()` succeeds against a real Letta agent. In This Mac mode that agent comes from the embedded runtime; fix any blockers in **Settings → General**.
 
 ---
 
@@ -100,124 +77,118 @@ mode that agent comes from the embedded runtime; fix any blockers in **Settings 
 
 Every correction can become a regression test.
 
-You correct an agent once (“done” without proof). otto proposes a Check. You ratify it.
-Future “done” claims must pass — mapped acceptance criteria, attached evidence, receipt.
+Your agent claims "done" with no proof. You correct it once. otto proposes a Check; you ratify it; from then on every "done" has to pass it — acceptance criteria mapped to the work, evidence attached, a receipt written.
 
-```txt
-Pattern:        “done” claimed without evidence
+```
+Pattern:        "done" claimed without evidence
 Proposed rule:  completion requires receipts mapped to acceptance criteria
-Result:         future done claims must attach test output, logs, or artifacts
-Gate:           human ratifies before it becomes canon
+Result:         future "done" claims must attach test output, logs, or artifacts
+Gate:           you ratify before it becomes canon
 ```
 
-Walkthrough: [`docs/v1/demo-culture-ci.md`](docs/v1/demo-culture-ci.md). Search finds pages. Memory remembers facts. otto changes behavior.
+Search finds pages. Memory remembers facts. otto changes behavior. Full walkthrough: [`docs/v1/demo-culture-ci.md`](docs/v1/demo-culture-ci.md).
 
 ---
 
 ## North star
 
-```txt
-correction -> proposal -> ratification -> standard/practice/routine -> receipt -> better next action
+```
+correction → proposal → ratification → standard / practice / routine → receipt → better next action
 ```
 
-If a feature does not gate irreversibility or make behavior compound, it is probably not otto.
+If a feature doesn't gate irreversibility or make behavior compound, it probably isn't otto.
 
-**Primitives:** (1) Reversibility is the unit of trust. (2) Approve doors, not steps. (3) Receipts over claims. (4) Files are truth. Memory is lessons. UI is workspace.
+**Primitives.** Reversibility is the unit of trust. Approve doors, not steps. Receipts over claims. Files are truth, memory is lessons, the UI is a workspace.
 
 ---
 
 ## What otto is not
 
-- **Not a memory engine** — Letta owns canonical agent memory; otto owns the culture loop.
-- **Not an orchestrator** — work routing is a reference stack (Paperclip), not v0.1 ship.
-- **Not a chat app or RAG product** — otto Shell is a workspace for behavior, approvals, and receipts.
-- **Not a values poster** — a value that cannot refuse you is decoration.
+- **Not a memory engine.** Letta owns canonical agent memory; otto owns the culture loop around it.
+- **Not an orchestrator.** Work routing is a reference stack (Paperclip), not v0.1 ship.
+- **Not a chat app or RAG product.** otto Shell is a workspace for behavior, approvals, and receipts.
+- **Not a values poster.** A value that cannot refuse you is decoration.
 
 ---
 
 ## Core concepts
 
 | Concept | Meaning |
-|---|---|
+| --- | --- |
 | **Standards** | Canon: what the agent rewards, refuses, and does under pressure. |
 | **Practices** | Repeatable behaviors worth preserving; executable culture. |
-| **Checks** | Executable regressions from ratified Standards — failed Checks write blocked Receipts. |
-| **Routines** | Bundles of Practices; recurring activation requires approval. |
-| **Charters** | Operating contracts: objective, ACs, plan, gates, receipts. |
+| **Checks** | Executable regressions compiled from ratified Standards — failed Checks write blocked Receipts. |
+| **Routines** | Bundles of Practices; recurring activation needs approval. |
+| **Charters** | Operating contracts: objective, acceptance criteria, plan, gates, receipts. |
 | **Approvals** | Scoped human ratification for one-way doors. |
 | **Receipts** | Proof artifacts. No artifact, no progress. |
-| **Curation** | Proposal-and-ratification engine (desktop Ship tier; spine still maturing — see [`SPEC_COMPLIANCE.md`](SPEC_COMPLIANCE.md)). |
-| **otto Desktop** | Workspace over runtime readiness, chat, approvals, receipts, and surfaces. |
+| **Curation** | The proposal-and-ratification engine (desktop Ship tier; spine still maturing — see [`SPEC_COMPLIANCE.md`](SPEC_COMPLIANCE.md)). |
+| **otto Desktop** | A workspace over runtime readiness, chat, approvals, receipts, and surfaces. |
 
 ---
 
-## Status (v0.1)
+## Status — v0.1.3
 
-Early, local-first, file-backed. **Ship** (Labs off): chat, settings, desktop shell, Practices, Charters, Standards, Routines, Checks, Receipts, Skills — with honest limits (live chat needs Letta; some surfaces are file-backed or re-enactment demos).
+Early, local-first, file-backed.
 
-**Labs** (Settings → Labs): Knowledge, Channels, worker loop, Letta Cloud — not public v0.1 claims.
+**Ship (Labs off):** chat, settings, desktop shell, Practices, Charters, Standards, Routines, Checks, Receipts, Skills — with honest limits (live chat needs Letta; some surfaces are file-backed or re-enactment demos).
+
+**Labs (Settings → Labs):** Knowledge, Channels, the worker loop, Letta Cloud — not part of public v0.1 claims.
+
+The desktop "done" test: otto Shell launches over Letta and truthfully reports *connected, blocked, stale,* or *ready* — never "connected" unless `session.initialize()` succeeds.
 
 Truth tables: [`docs/v1/ship-tier-matrix.md`](docs/v1/ship-tier-matrix.md) · [`docs/v1/labs.md`](docs/v1/labs.md) · [`RELEASE_CHECKLIST.md`](RELEASE_CHECKLIST.md) · [`SPEC_COMPLIANCE.md`](SPEC_COMPLIANCE.md)
-
-**Desktop done test:** otto Shell launches over Letta and truthfully reports connected, blocked, stale, or ready — never “connected” unless `session.initialize()` succeeds.
-
-Issues: GitHub Issues with exactly one `p0`–`p3` label — [`docs/github-issues-workflow.md`](docs/github-issues-workflow.md).
 
 ---
 
 ## Install
 
-### Letta Code extension
+**Letta Code extension**
 
-```sh
+```bash
 bun run install-extension
 # then run /reload in Letta Code
 ```
 
-Optional skills (needs agent memory dir):
+Optional skills (needs an agent memory dir):
 
-```sh
+```bash
 MEMORY_DIR=/path/to/agent/memory bun run install-extension
 ```
 
-### Desktop launch paths
+**Desktop launch paths**
 
-```sh
+```bash
 task electron     # dev Electron; preflight + Letta CLI discovery
 task staging      # isolated /Applications/otto-staging.app
 task staging:main # fetch origin/main then refresh otto-staging.app (#338)
 ```
 
-Set `OTTO_HOME` or `XDG_STATE_HOME` for clean-profile runs. `LETTA_CLI_PATH` when Letta is outside the default macOS app path.
+Set `OTTO_HOME` or `XDG_STATE_HOME` for clean-profile runs; `LETTA_CLI_PATH` when Letta lives outside the default macOS app path. Update `/Applications/otto.app` only from a published GitHub Release — never from `task refresh` or a local branch build.
 
-**Canonical app:** update `/Applications/otto.app` only from a published GitHub Release — not from `task refresh` or local branch builds.
+**Connect to Letta.** This Mac (default) starts the embedded runtime and bootstraps a local agent — no setup. Existing local Letta (advanced): point otto at your own in **Settings → General**. If it's disconnected, **Settings → General** shows the blocker. Provider credentials stay in Letta.
 
-### Connect to Letta
+---
 
-1. Launch via `task electron`, `task staging`, or the Release build at `/Applications/otto.app`.
-2. **This Mac (default):** otto starts its embedded Letta runtime and bootstraps a local agent — no setup.
-3. **Existing local Letta (advanced):** switch in **Settings → General** to point otto at a Letta you already run.
-4. If disconnected, **Settings → General** shows the blocker. Provider credentials stay in Letta.
+## Verify
 
-### Verify
-
-```sh
+```bash
 bun run typecheck && bun test && bun run verify:v0
 bun run --cwd apps/desktop typecheck
 bun run --cwd apps/desktop electron:typecheck
 task release:gate
-OTTO_AGENT_ID=<agent-id> task smoke:cli   # disposable conversation; never default
-bun packages/practices/src/cli.ts           # validate Practices
-task docs:dev                               # Mintlify preview (devex/)
+OTTO_AGENT_ID=<agent-id> task smoke:cli   # disposable conversation; never the default
+bun packages/practices/src/cli.ts         # validate Practices
+task docs:dev                             # Mintlify preview (devex/)
 ```
 
-`task smoke:cli` is optional until a real local agent exists; it reports `SKIP` instead of faking success.
+`task smoke:cli` reports SKIP rather than faking success until a real local agent exists.
 
 ---
 
 ## Repo map
 
-```txt
+```
 otto/
   packages/       shared contracts + PracticeSpec tooling
   apps/desktop/   otto Desktop: Vite + Electron workspace shell
@@ -237,11 +208,11 @@ otto/
 
 ## Roadmap
 
-- **Now:** otto Shell over Letta, Practices, Charters, Standards, receipts.
-- **Next:** Curation hardening, approval records, work-state bridge (reference — not v0.1 ship).
-- **Then:** Intake for AI-chat exports, packaged install.
+- **Now:** otto Shell over Letta; Practices, Charters, Standards, receipts.
+- **Next:** Curation hardening, approval records, a work-state bridge (reference — not v0.1 ship).
+- **Then:** intake for AI-chat exports, packaged install.
 
-Each step must make behavior compound or gate irreversibility.
+Each step has to make behavior compound or gate irreversibility.
 
 ---
 
