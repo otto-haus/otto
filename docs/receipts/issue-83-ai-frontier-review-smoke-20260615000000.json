@@ -1,0 +1,12 @@
+{
+  "schema": "otto.ai-frontier-review-smoke.v1",
+  "issue": 83,
+  "runId": "20260615000000",
+  "ok": true,
+  "knowledgeSource": "/Users/seb/Code/otto/.worktrees/issue-83/knowledge",
+  "isolatedKnowledgeDir": "/var/folders/22/fzs3nrw505z_m71cghqjc7j80000gn/T/otto-ai-frontier-smoke-Ey9HW0/knowledge",
+  "executorReceiptAction": "knowledge.frontier_review.manual",
+  "routineKnowledgeReceiptId": "receipt-0215aa5e-6a3b-4f39-b5a3-0aa7aa8c36ec",
+  "routingProposalId": "prop_20260615_7a4cc60f",
+  "touchedCount": 3
+}

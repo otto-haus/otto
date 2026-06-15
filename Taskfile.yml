@@ -201,6 +201,11 @@ tasks:
     cmds:
       - bun scripts/github-issue-workflow-smoke.ts
 
+  smoke:ai-frontier-review:
+    desc: AI frontier review executor integration smoke — isolated knowledge copy; never mutates repo knowledge/ (#83)
+    cmds:
+      - bun scripts/ai-frontier-review-smoke.ts
+
   smoke:letta-cli:
     desc: Letta CLI capability smoke — resolveCli, --version, --help; opt-in disposable turn with LETTA_AGENT_ID (#295)
     cmds:
