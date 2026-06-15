@@ -35,6 +35,8 @@ function mockWindow() {
   return { win, sent };
 }
 
+const mockLettaStateDir = join(tmpdir(), 'otto-test-letta-state');
+
 function mockConfig(): ConfigStore {
   return {
     connectionMode: () => 'existing' as const,
@@ -44,6 +46,8 @@ function mockConfig(): ConfigStore {
     baseUrl: () => null,
     agentId: () => 'agent-test',
     agentCandidates: () => ['agent-test'],
+    lettaStateDir: () => mockLettaStateDir,
+    ensureLettaStateDir: () => mockLettaStateDir,
     get: () => ({}),
     update: () => ({}),
     ensurePrimaryAgentId: () => {},
@@ -65,6 +69,41 @@ describe('SdkSubprocessTransport init resilience', () => {
     expect(status.ready).toBe(false);
     expect(status.code).toBe('unreachable');
     expect(status.reason).toMatch(/Local Letta backend is not running/i);
+  });
+
+  test('embedded mode omits stale LETTA_BASE_URL when local backend is down', async () => {
+    process.env.OTTO_SKIP_LETTA_LSOF = '1';
+    process.env.LETTA_BASE_URL = 'local:/Users/seb/.letta/lc-local-backend';
+    process.env.OTTO_AGENT_ID = 'agent-test';
+    const { win } = mockWindow();
+    const transport = new SdkSubprocessTransport(win, {
+      ...mockConfig(),
+      connectionMode: () => 'embedded' as const,
+      baseUrl: () => 'local:/Users/seb/.letta/lc-local-backend',
+      agentCandidates: () => ['agent-test'],
+    } as ConfigStore);
+
+    const session = {
+      close: () => {},
+      initialize: async () => ({
+        agentId: 'agent-test',
+        conversationId: 'conv-smoke-test',
+        model: 'test-model',
+        memfsEnabled: false,
+        tools: [],
+      }),
+      send: async () => {},
+      abort: async () => {},
+      async *stream() {},
+    };
+
+    (transport as unknown as { sdk: unknown }).sdk = {
+      createSession: () => session,
+      resumeSession: () => session,
+    };
+
+    await transport.init({ freshConversation: true });
+    expect(process.env.LETTA_BASE_URL).toBeUndefined();
   });
 
   test('session.initialize timeout returns unreachable instead of hanging', async () => {

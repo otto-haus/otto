@@ -65,9 +65,29 @@ function readLettaSettings(config: ConfigStore): LettaSettings | null {
 
 export type InitBaseUrlResolution = {
   baseUrl: string | null;
+  /** When true, LETTA_BASE_URL must be unset so bundled CLI can spawn a standalone backend. */
+  omitBaseUrl?: boolean;
   /** When set, skip SDK init and return unreachable immediately. */
   blockReason?: string;
 };
+
+const LETTA_HTTP_PROBE_TIMEOUT_MS = 3_000;
+
+/** Short-timeout readiness probe for a loopback Letta HTTP base URL. */
+export async function probeLettaHttpBaseUrl(baseUrl: string): Promise<boolean> {
+  const normalized = normalizeBaseUrl(baseUrl);
+  if (!normalized || !/^https?:\/\//i.test(normalized)) return false;
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), LETTA_HTTP_PROBE_TIMEOUT_MS);
+  try {
+    const res = await fetch(`${normalized}/v1/models/`, { signal: controller.signal });
+    return res.ok;
+  } catch {
+    return false;
+  } finally {
+    clearTimeout(timer);
+  }
+}
 
 /** True when a Letta process is listening on loopback (Letta Desktop open or embedded backend up). */
 export function isLocalLettaBackendListening(): boolean {
@@ -79,10 +99,10 @@ export function isLocalLettaBackendListening(): boolean {
  * - existing + local: backend down → block with Settings guidance (no infinite hang).
  * - embedded + local: backend down → omit URL so bundled CLI can spawn standalone backend.
  */
-export function resolveInitBaseUrl(
+export async function resolveInitBaseUrl(
   configured: string | null | undefined,
   connectionMode: ConnectionMode,
-): InitBaseUrlResolution {
+): Promise<InitBaseUrlResolution> {
   const normalized = normalizeBaseUrl(configured);
   if (!normalized) return { baseUrl: null };
 
@@ -91,8 +111,11 @@ export function resolveInitBaseUrl(
   const listening = isLocalLettaBackendListening();
 
   if ((isLocalScheme || isLoopbackHttp) && !listening) {
+    if (isLoopbackHttp && await probeLettaHttpBaseUrl(normalized)) {
+      return { baseUrl: normalized };
+    }
     if (connectionMode === 'embedded') {
-      return { baseUrl: null };
+      return { baseUrl: null, omitBaseUrl: true };
     }
     if (connectionMode === 'existing') {
       return {
