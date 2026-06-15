@@ -49,3 +49,17 @@ describe('chat permission modal contract (#71 / 045 / #316)', () => {
     expect(permissionCardSource).toContain('permissionCard__tool');
   });
 });
+
+describe('chat permission modal thread isolation (#706)', () => {
+  it('clears permission and propose modals when activeThreadId changes', () => {
+    expect(chatSource).toMatch(/rt\.activeThreadId[\s\S]*setPermissionQueue\(\[\]\)/);
+    expect(chatSource).toMatch(/rt\.activeThreadId[\s\S]*setProposeContext\(null\)/);
+    expect(chatSource).toContain('setPermissionBusy(false)');
+    expect(chatSource).toContain('setProposeBusy(false)');
+  });
+
+  it('clears stale permission UI when turn ends while modal is open (abort path)', () => {
+    expect(chatSource).toContain('wasBusyRef');
+    expect(chatSource).toMatch(/wasBusy && !rt\.busy && permissionQueue\.length > 0/);
+  });
+});
