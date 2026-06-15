@@ -8,10 +8,13 @@ export type AttachmentRef = {
 export const ATTACHMENT_SMOKE_FIXTURE_DATA_URL =
   'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/p9sAAAAASUVORK5CYII=';
 
+/** Default user-message body when sending image-only turns (runtime + display parsing). */
+export const DEFAULT_ATTACHMENT_PROMPT = 'Please inspect the attached image(s).';
+
 /** Message body handed to the Letta runtime (paths are intentional for local file tools). */
 export function buildRuntimeMessageWithAttachments(text: string, attachments: AttachmentRef[]): string {
   if (!attachments.length) return text;
-  const body = text.trim() || 'Please inspect the attached image(s).';
+  const body = text.trim() || DEFAULT_ATTACHMENT_PROMPT;
   const lines = attachments.map((a, i) => `${i + 1}. ${a.name} — ${a.path}`);
   return `${body}\n\nAttached local image${attachments.length === 1 ? '' : 's'}:\n${lines.join('\n')}`;
 }

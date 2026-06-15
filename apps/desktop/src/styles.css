@@ -1304,6 +1304,42 @@ h1, h2, h3, h4, p { margin: 0; }
 .md :not(pre) > code { background: var(--accent-tint); border: 1px solid var(--line); border-radius: 5px; padding: 1px 5px; color: inherit; }
 .md a { color: inherit; text-decoration: underline; text-underline-offset: 3px; }
 .msg--user .md :not(pre) > code { background: rgba(255,255,255,0.14); border-color: rgba(255,255,255,0.2); }
+.msgAttachmentStrip {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 8px;
+}
+.msg--user .msgAttachmentStrip:first-child { margin-top: 0; }
+.msgAttachment {
+  display: grid;
+  grid-template-columns: 46px minmax(0, 1fr);
+  align-items: center;
+  gap: 8px;
+  min-width: 140px;
+  max-width: 220px;
+  border: 1px solid rgba(255,255,255,0.18);
+  border-radius: 10px;
+  padding: 6px;
+  background: rgba(255,255,255,0.08);
+  color: var(--dark-tx);
+  text-decoration: none;
+}
+.msgAttachment:hover { background: rgba(255,255,255,0.14); }
+.msgAttachment img {
+  width: 46px;
+  height: 36px;
+  object-fit: cover;
+  border-radius: 7px;
+  background: rgba(255,255,255,0.08);
+}
+.msgAttachment__name {
+  min-width: 0;
+  font-size: 12px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 .msgActions { display: flex; gap: 8px; margin-top: 6px; }
 .msgActions__btn {
   border: 1px solid var(--line); background: transparent; color: var(--mut);
