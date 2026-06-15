@@ -8,7 +8,8 @@ const copySource = readFileSync(join(import.meta.dir, '../copy/surfaces.ts'), 'u
 describe('chat composer readiness contract (#289, #300)', () => {
   it('keeps the draft textarea editable while runtime is not ready', () => {
     expect(chatSource).not.toMatch(/<textarea[\s\S]*?disabled=\{!ready\}/);
-    expect(chatSource).toContain('Draft while setup finishes…');
+    expect(chatSource).toContain('chatCopy.composerPlaceholderDraftWhileSetup');
+    expect(copySource).toContain('composerPlaceholderDraftWhileSetup');
   });
 
   it('gates send and explains why when runtime is not ready', () => {
@@ -40,6 +41,18 @@ describe('chat composer readiness contract (#289, #300)', () => {
     expect(chatSource).toContain('runtimeSetupBannerBody(st)');
     expect(chatSource).toContain('chatCopy.runtimeNoAgentBody');
     expect(chatSource).not.toMatch(/\{st\.reason \?\? chatCopy\.runtimeNotReadyBody\}/);
+  });
+
+  it('centralizes Chat setup/error chrome in chatCopy (#602)', () => {
+    expect(chatSource).toContain('chatCopy.setupPill');
+    expect(chatSource).toContain('chatCopy.connectingLabel');
+    expect(chatSource).toContain('chatCopy.usageLimitSetupSuffix');
+    expect(chatSource).toContain('chatCopy.composerPlaceholderUsageLimit');
+    expect(chatSource).toContain('chatCopy.runtimeConnectingTitle');
+    expect(chatSource).not.toMatch(/pill pill--warn">setup</);
+    expect(chatSource).not.toMatch(/'connecting…'/);
+    expect(chatSource).not.toMatch(/'Draft while setup finishes…'/);
+    expect(chatSource).not.toMatch(/'Connecting to Letta…'/);
   });
 });
 
