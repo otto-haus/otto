@@ -258,5 +258,6 @@ Implementation: **119** (primary default UX), **120** (advanced second agent, pa
 - [Render persistent disks](https://render.com/docs/disks)
 - [WorkOS roles](https://workos.com/docs/authkit/roles-and-permissions)
 - `docs/v1/otto-web-spec.md`
+- `docs/v1/hosted-managed-architecture.md` (**328**)
 - `docs/v1/hosted-health-monitoring.md` (**331** runner heartbeat + support bundle)
 - `docs/v1/contracts/adapter-seam.md`

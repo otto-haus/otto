@@ -3,6 +3,7 @@
 **Status:** proposed (2026-06-14)  
 **Scope:** always-on otto beyond the desktop shell  
 **Umbrella:** `agent-control-plane-spec.md` (**092**) — this doc is the **Cloudflare + Letta topology slice**  
+**Companion:** [`hosted-managed-architecture.md`](hosted-managed-architecture.md) (**328**) — account/session/runtime boundaries + dev/stg/prod  
 **Depends on:** desktop substrate **076** (embedded Letta) for parity; does not block spec  
 **Supersedes:** ad-hoc “Render app + Cloudflare + WorkOS + Letta Cloud” four-authority stack
 
