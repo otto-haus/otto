@@ -139,6 +139,8 @@ export const Sidebar: React.FC<{
     return 'Letta session active';
   }, [connected, rt.status?.model]);
 
+  const sidebarToggleLabel = compact ? 'Expand sidebar' : 'Collapse sidebar';
+
   const navItem = (n: NavDef, nested = false) => {
     const soon = isComingSoon?.(n.id) ?? false;
     return (
@@ -167,8 +169,8 @@ export const Sidebar: React.FC<{
           className="sidebar__toggle has-tip"
           type="button"
           onClick={onToggleCollapsed}
-          aria-label="Collapse sidebar"
-          data-tip="Collapse sidebar"
+          aria-label={sidebarToggleLabel}
+          data-tip={sidebarToggleLabel}
           data-kbd="⌘B"
         >
           {Icon.panel}
@@ -256,7 +258,7 @@ export const Sidebar: React.FC<{
 
         <div className="sidebarProfile" aria-label="Operator profile">
           <span className="sidebarProfile__avatar">
-            <OttoMark size={32} className="ottoMark" />
+            <OttoMark size={32} className="ottoMark" dimmed={!connected} />
           </span>
           <span className="sidebarProfile__text">
             <span className="sidebarProfile__name">Local operator</span>

@@ -178,6 +178,7 @@ export const toastCopy = {
 
 export const chatCopy = {
   sessionTitle: 'What should we work on?',
+  sessionBodyNotReady: 'Finish runtime setup above, then send your first message.',
   starterPrompts: [
     'Help me think through the next step.',
     'Draft a short plan I can react to.',
@@ -205,6 +206,14 @@ export const chatCopy = {
   queuePillWaiting: 'waiting',
   queuePillFailed: 'failed',
   queuePillPosition: (position: number) => `#${position}`,
+  truncatedOnReload: (hiddenChars: number) =>
+    hiddenChars > 0
+      ? `Shortened on reload (${hiddenChars.toLocaleString()} chars hidden).`
+      : 'Shortened on reload.',
+  truncatedShowFull: 'Show full message',
+  truncatedLoading: 'Loading…',
+  errorWhoLabel: "Couldn't complete",
+  errorDetailsSummary: 'Technical details',
   runtimeConnectingEyebrow: 'starting runtime',
   runtimeConnectingTitle: 'Connecting to Letta…',
   runtimeConnectingBody: 'Booting your local agent session. This usually takes a few seconds. If this hangs, export a diagnostics bundle from Settings.',

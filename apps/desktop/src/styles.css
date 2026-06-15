@@ -406,7 +406,7 @@ h1, h2, h3, h4, p { margin: 0; }
   margin-left: auto; font-family: var(--mono); font-size: 10.5px;
   background: var(--line); color: var(--mut); border-radius: 999px; padding: 1px 7px;
 }
-.nav__badge--soon { background: var(--accent-tint); color: var(--mut); text-transform: lowercase; }
+.nav__badge--soon { background: var(--warn-tint); color: var(--warn); text-transform: lowercase; }
 .nav__badge--warn { background: var(--warn-tint); color: var(--warn); }
 .sidebar__spacer { flex: 1; min-height: 8px; }
 .nav__item--settings { margin-top: 0; }
@@ -1160,6 +1160,23 @@ h1, h2, h3, h4, p { margin: 0; }
 }
 .msg { display: grid; gap: 8px; max-width: min(680px, 100%); min-width: 0; }
 .msg__body { font-size: 15px; line-height: 1.65; color: var(--ink); overflow-wrap: anywhere; min-width: 0; }
+.msg__truncation {
+  margin: 6px 0 0;
+  font-size: 13px;
+  color: var(--ink-soft);
+}
+.msg__truncationLink {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--ink);
+  font: inherit;
+  font-weight: 600;
+  text-decoration: underline;
+  cursor: pointer;
+}
+.msg__truncationLink:disabled { opacity: 0.6; cursor: wait; }
+.ottoMark--dimmed { opacity: 0.6; }
 .msg--user { margin-left: auto; max-width: min(560px, 92%); }
 .msg--user .msg__body {
   background: var(--ink);
@@ -1944,7 +1961,6 @@ h1, h2, h3, h4, p { margin: 0; }
 }
 
 .nav__item--soon:not(.is-active) { color: var(--mut); }
-.nav__badge--soon { background: var(--warn-tint); color: var(--warn); }
 
 .comingSoonShell { display: grid; gap: 16px; max-width: 640px; margin: auto; }
 .comingSoonShell__actions { padding-left: 2px; }
