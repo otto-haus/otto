@@ -5,8 +5,9 @@
 - **Test command/output:**
   ```sh
   bun test ./apps/desktop/electron/knowledge-store.test.ts
-  # 2 pass — registry load + ticket_worker routing
+  # 3 pass — registry load, ticket_worker routing, malformed registry fallback
   ```
+- **Staging smoke (2026-06-14):** `docs/receipts/staging/staging-hygiene-proof-20260614143512.json` — `tickets.055.ok: true`, `registryStatus: proposed`
 - **Manual verification (staging):** Open Knowledge pane → registry status pill `proposed` → routing assignments table → Autonomy evaluation shows `knowledge_routing` when classified.
 - **Known limitations:** Routing unratified; AI Frontier Review Routine executor not wired (062); Cognee deferred (040–044). Claims must say Proposed until Curation ratifies routing.
 - **Approval status:** ☐ pending Sebastian (and ratification decision on routing).

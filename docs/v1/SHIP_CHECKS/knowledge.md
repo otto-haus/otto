@@ -54,10 +54,14 @@ Knowledge is maintained external-world understanding. v1 focuses on AI Frontier 
 ## Automated verification
 
 - [x] `KnowledgeStore` tests green.
-  - Evidence: `apps/desktop/electron/knowledge-store.test.ts` — registry load + `resolveModelForRole('ticket_worker')`
-  - Command: `bun test ./apps/desktop/electron/knowledge-store.test.ts`
+  - Evidence: `apps/desktop/electron/knowledge-store.test.ts` — registry load, `resolveModelForRole('ticket_worker')`, malformed registry fallback
+  - Command: `bun test ./apps/desktop/electron/knowledge-store.test.ts` (3 pass)
 
 ## Staging smoke (desktop pane)
+
+- [x] CDP staging proof captured.
+  - Evidence: `docs/receipts/staging/staging-hygiene-proof-20260614143512.json` — `tickets.055.ok: true`, `api.registryStatus: proposed`
+  - Summary: `docs/receipts/staging/hygiene-staging-proof-20260614143512.md`
 
 - Load: Knowledge pane reads `knowledge/ai-frontier/model-registry.yaml` via IPC `otto:knowledge:list`
 - Empty: missing registry shows "Registry not found" with path
