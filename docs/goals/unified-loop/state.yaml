@@ -1,0 +1,75 @@
+# Unified loop state — orchestrator truth
+
+version: 1
+
+program:
+  status: active
+  stop_at: null
+  repo: otto-haus/otto
+  branch: cursor/unified-loop-orchestration-ff52
+
+spawn:
+  mechanism: task_subagents
+  max_concurrent: 8
+  model: auto
+  forbidden:
+    - nohup_bulk_farms
+    - composer_workers
+
+budgets:
+  normal:
+    build: 30
+    ship: 30
+  defer:
+    build: 15
+    ship: 15
+  defer_mode: false
+
+gates:
+  build:
+    build_queue:
+      - 627
+      - 628
+    awaiting_ratification:
+      - 627
+      - 628
+    ratified_in_progress: []
+  ship:
+    in_flight_babysit:
+      - 582
+    reviewed_prs: []
+    ready_for_sebastian: []
+    close_candidates:
+      - pr: 588
+        winner: 618
+      - pr: 596
+        winner: 626
+      - pr: 587
+        winner: 624
+
+ticks:
+  - id: 1
+    at: "2026-06-15T01:00:00Z"
+    spawn_mechanism: nohup_bulk_farms
+    spawn_verification_passed: false
+    notes: "130 bulk nohup workers launched; 0 alive; empty logs. Spawn contract violated."
+    build:
+      spawned: 130
+      completed: 0
+      issues_filed: []
+    ship:
+      spawned: 0
+      completed: 0
+
+  - id: 2
+    at: "2026-06-15T02:00:00Z"
+    spawn_mechanism: nohup_bulk_farms
+    spawn_verification_passed: false
+    notes: "Repeat bulk nohup attempt; 0 alive. Task tool not used."
+    build:
+      spawned: 130
+      completed: 0
+      issues_filed: []
+    ship:
+      spawned: 0
+      completed: 0
