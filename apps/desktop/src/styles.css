@@ -922,6 +922,9 @@ h1, h2, h3, h4, p { margin: 0; }
   font-family: var(--mono); font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase;
   color: var(--faint); padding-top: 6px;
 }
+.chat__thinking--tool,
+.chat__thinking--tool_result { color: var(--mut); }
+.chat__thinking--reasoning { color: var(--faint); }
 .chat__thinkingDots {
   display: inline-flex; align-items: center; gap: 4px;
 }
