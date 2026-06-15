@@ -143,6 +143,28 @@ Truth tables: [`docs/v1/ship-tier-matrix.md`](docs/v1/ship-tier-matrix.md) · [`
 
 ## Install
 
+**Humans:** start with [`docs/install/getting-started.md`](docs/install/getting-started.md) — paths, Letta prerequisites, and troubleshooting.
+
+**Agents:** [`INSTALL_FOR_AGENTS.md`](INSTALL_FOR_AGENTS.md).
+
+**Quick macOS bootstrap** (clone or use cwd, `bun install`):
+
+```bash
+bash scripts/install-otto.sh
+# optional: OTTO_INSTALL_EXTENSION=1 bash scripts/install-otto.sh
+```
+
+Developers need [Bun](https://bun.sh) and [go-task](https://taskfile.dev). For desktop chat, otto uses an **embedded Letta CLI by default** — you do not need a separate Letta Desktop install unless you choose **Existing Letta** in Settings.
+
+```bash
+# macOS
+brew install go-task
+
+git clone https://github.com/otto-haus/otto.git
+cd otto
+bun install
+```
+
 **Letta Code extension**
 
 ```bash

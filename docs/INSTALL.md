@@ -1,5 +1,7 @@
 # Install Otto
 
+Contributor and CI install. **Human getting-started guide:** [`install/getting-started.md`](install/getting-started.md).
+
 ## Development install
 
 ```sh
