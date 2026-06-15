@@ -38,7 +38,8 @@ gates:
       - 636
       - 637
       - 638
-    awaiting_ratification:
+    awaiting_ratification: []
+    ratified_in_progress:
       - 627
       - 628
       - 630
@@ -49,12 +50,14 @@ gates:
       - 636
       - 637
       - 638
-    ratified_in_progress: []
+    ratified_at: "2026-06-15T04:30:00Z"
+    ratified_by: sebastian
     label_debt:
       - 630
       - 631
       - 632
       - 633
+    github_label_pending: "status: in progress (label does not exist — create + apply manually)"
   ship:
     in_flight_babysit: []
     merged_since_last_tick:
@@ -66,18 +69,25 @@ gates:
     ready_for_sebastian:
       - 582
       - 624
+    sebastian_approved_merge:
+      - 582
+      - 624
+    close_approved:
+      - 587
+      - 588
+      - 596
     close_candidates:
       - pr: 588
         winner: 618
         winner_merged: true
-        commented: true
+        close_approved: true
       - pr: 596
         winner: 626
         winner_merged: true
-        commented: true
+        close_approved: true
       - pr: 587
         winner: 624
-        commented: true
+        close_approved: true
 
 ticks:
   - id: 1
@@ -165,6 +175,31 @@ ticks:
         - 582
         - 624
       close_stale_dupes:
+        - 587
+        - 588
+        - 596
+
+  - id: ratification
+    at: "2026-06-15T04:30:00Z"
+    actor: sebastian
+    notes: "Chat approval recorded. BUILD 10 issues ratified in state. SHIP #582/#624 approved merge. Close #587/#588/#596 approved. gh token could not apply labels or close PRs."
+    build:
+      ratified:
+        - 627
+        - 628
+        - 630
+        - 631
+        - 632
+        - 633
+        - 635
+        - 636
+        - 637
+        - 638
+    ship:
+      approved_merge:
+        - 582
+        - 624
+      approved_close:
         - 587
         - 588
         - 596
