@@ -1,4 +1,5 @@
 import type { ChatMsg } from '../runtime';
+import { formatHandoffFooter } from './chat-surface-contract';
 
 export type ConversationMarkdownInput = {
   title: string;
@@ -99,12 +100,12 @@ export function serializeConversationMarkdown(input: ConversationMarkdownInput):
 
   if (input.messages.length === 0) {
     sections.push('_No messages in this thread yet._', '');
-    return sections.join('\n');
+    return sections.join('\n') + formatHandoffFooter();
   }
 
   for (const msg of input.messages) {
     sections.push(formatMessage(msg), '', '---', '');
   }
 
-  return sections.join('\n').replace(/\n---\n\n$/, '\n');
+  return sections.join('\n').replace(/\n---\n\n$/, '\n') + formatHandoffFooter();
 }
