@@ -1,4 +1,5 @@
-import { describe, expect, test } from 'bun:test';
+import { describe, expect, spyOn, test } from 'bun:test';
+import * as fs from 'node:fs';
 import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
@@ -26,6 +27,7 @@ describe('letta-cli capability smoke helpers', () => {
 
 describe('runLettaCliCapabilitySmoke discovery', () => {
   test('embedded mode fails clearly when bundled CLI is absent', async () => {
+    const existsSpy = spyOn(fs, 'existsSync').mockReturnValue(false);
     const prevResources = (process as NodeJS.Process & { resourcesPath?: string }).resourcesPath;
     const prevCli = process.env.LETTA_CLI_PATH;
     const dir = join(tmpdir(), `otto-cap-${Date.now()}`);
@@ -42,6 +44,7 @@ describe('runLettaCliCapabilitySmoke discovery', () => {
         expect(result.nextAction).toMatch(/LETTA_CLI_PATH|Rebuild/);
       }
     } finally {
+      existsSpy.mockRestore();
       (process as NodeJS.Process & { resourcesPath?: string }).resourcesPath = prevResources;
       if (prevCli === undefined) delete process.env.LETTA_CLI_PATH;
       else process.env.LETTA_CLI_PATH = prevCli;
