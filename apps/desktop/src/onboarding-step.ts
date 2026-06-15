@@ -1,5 +1,7 @@
 // Pure onboarding step machine — no React, no persisted chat message counts.
 
+import type { OnboardingConnectionMode } from './onboarding-storage';
+
 export type OnboardingIntent = 'connect' | 'receipts-preview';
 export type OnboardingStep = 'welcome' | 'connect' | 'run' | 'receipt';
 
@@ -29,3 +31,23 @@ export function onboardingDotIndex(step: Exclude<OnboardingStep, 'welcome'>): nu
 }
 
 export const ONBOARDING_STEP_COUNT = 4;
+
+export type OnboardingModePickerInput = {
+  started: boolean;
+  intent: OnboardingIntent;
+  connected: boolean;
+  modeDraft: OnboardingConnectionMode | null;
+};
+
+/** Step 1a — connection mode cards before Settings chrome. */
+export function shouldShowOnboardingModePicker(input: OnboardingModePickerInput): boolean {
+  return input.started && input.intent === 'connect' && !input.connected && !input.modeDraft;
+}
+
+/** Continue stays disabled until a card is selected and persist is not in flight. */
+export function canAdvanceOnboardingModePick(
+  modePick: OnboardingConnectionMode | null,
+  modeBusy: boolean,
+): boolean {
+  return modePick !== null && !modeBusy;
+}

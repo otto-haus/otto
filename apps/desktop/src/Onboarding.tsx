@@ -17,8 +17,10 @@ import {
 } from './onboarding-storage';
 import {
   ONBOARDING_STEP_COUNT,
+  canAdvanceOnboardingModePick,
   onboardingDotIndex,
   resolveOnboardingStep,
+  shouldShowOnboardingModePicker,
   type OnboardingIntent,
 } from './onboarding-step';
 import { OnboardingStepLayout, type OnboardingEvidence } from './OnboardingStepLayout';
@@ -94,7 +96,12 @@ export const Onboarding: React.FC<{ onNavigate: (id: SurfaceId) => void; activeS
     receipt: intent === 'receipts-preview' ? false : sessionFirstMessage,
   };
 
-  const showModePicker = started && intent === 'connect' && !connected && !modeDraft;
+  const showModePicker = shouldShowOnboardingModePicker({
+    started,
+    intent,
+    connected,
+    modeDraft,
+  });
 
   const persistModeAndOpenSettings = async (mode: OnboardingConnectionMode) => {
     setModeBusy(true);
@@ -179,7 +186,7 @@ export const Onboarding: React.FC<{ onNavigate: (id: SurfaceId) => void; activeS
               <button
                 type="button"
                 className="btn btn--primary"
-                disabled={!modePick || modeBusy}
+                disabled={!canAdvanceOnboardingModePick(modePick, modeBusy)}
                 onClick={() => modePick && void persistModeAndOpenSettings(modePick)}
               >
                 {onboardingCopy.modeContinue}
