@@ -1337,7 +1337,7 @@ const LiveChat: React.FC<{
                       ? 'Draft while setup finishes…'
                       : 'Connecting to Letta…'
               }
-              aria-label="Message Otto"
+              aria-label="Message otto"
               value={draft}
               onChange={(e) => setDraft(e.target.value)}
               onPaste={(e) => {
