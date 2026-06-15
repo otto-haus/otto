@@ -283,18 +283,21 @@ export function friendly(code: StatusCode, reason: string): string {
       : "Model preset isn't available in your Letta build. Choose another model or lower reasoning effort.";
   }
   switch (code) {
+    // Keep these messages clean product copy; the raw payload is preserved for
+    // diagnostics via normalizeRuntimeError().details, not leaked into the Chat
+    // header subtitle / setup ink block (#584).
     case 'no-api-key':
-      return `Letta auth failed. For local v1, configure provider auth inside Letta; otto does not need its own API key. (${reason})`;
+      return 'Letta auth failed. For local v1, configure provider auth inside Letta; otto does not need its own API key.';
     case 'unreachable':
       if (reason.includes('Local Letta backend is not running')) return reason;
       if (reason.includes('timed out after')) {
-        return `Letta did not connect in time. Open Letta Desktop or switch to Embedded mode in Settings, then retry. (${reason})`;
+        return 'Letta did not connect in time. Open Letta Desktop or switch to Embedded mode in Settings, then retry.';
       }
-      return `Can't reach the Letta backend — check the base URL in Settings. (${reason})`;
+      return "Can't reach the Letta backend — check the base URL in Settings.";
     case 'no-agent':
       return "Can't find a default local Letta agent — open Letta once or choose an Agent ID override in Settings.";
     case 'stale':
-      return `Saved Letta agent or conversation was stale — choose a valid Agent ID override in Settings or clear the override. (${reason})`;
+      return 'Saved Letta agent or conversation was stale — choose a valid Agent ID override in Settings or clear the override.';
     case 'usage-limit': {
       const provider = usageLimitProviderLabel(reason);
       const reset = parseUsageLimitResetHint(reason);
