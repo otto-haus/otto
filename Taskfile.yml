@@ -117,7 +117,7 @@ tasks:
 
   staging:
     aliases: [deploy]
-    desc: Safe deploy — build + package + install/open isolated /Applications/otto-staging.app
+    desc: Build/package/install/open /Applications/otto-staging.app — requires HEAD=origin/main (#314)
     cmds: [bash apps/desktop/scripts/deploy-staging.sh]
 
   staging:main:

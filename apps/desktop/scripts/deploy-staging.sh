@@ -19,6 +19,12 @@ if [[ "$TARGET_APP_RESOLVED" == "/Applications/otto.app" || "$TARGET_APP_RESOLVE
   exit 1
 fi
 
+# Canonical /Applications/otto-staging.app is the release-candidate preview (#314).
+# Refuse non-main checkouts unless OTTO_STAGING_REQUIRE_MAIN=0 is set explicitly.
+if [[ "$TARGET_APP_RESOLVED" == "/Applications/otto-staging.app" && -z "${OTTO_STAGING_REQUIRE_MAIN+x}" ]]; then
+  export OTTO_STAGING_REQUIRE_MAIN=1
+fi
+
 if [[ "${OTTO_STAGING_FETCH_MAIN:-1}" == "1" ]]; then
   echo "==> Fetching origin/main for source marker"
   git -C "$ROOT" fetch origin main 2>/dev/null || echo "WARN: could not fetch origin/main" >&2

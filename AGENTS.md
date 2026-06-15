@@ -65,7 +65,8 @@ task smoke:cli                # isolated disposable conversation; never default
 After any `apps/desktop/` implementation turn, refresh **staging** (not live):
 
 ```sh
-task staging        # → /Applications/otto-staging.app (isolated HOME; never default conversation)
+task staging        # → /Applications/otto-staging.app; refuses unless HEAD=origin/main (#314)
+task staging:main   # fetch origin/main then staging (same gate when on main)
 ```
 
 Staging smokes (never `/Applications/otto.app`):
