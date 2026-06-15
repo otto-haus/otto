@@ -1544,7 +1544,7 @@ const LiveChat: React.FC<{
               className="btn btn--primary btn--icon promptbox__send"
               aria-label={rt.busy ? 'Queue message' : 'Send message'}
               title={ready ? undefined : chatCopy.composerSendBlockedTitle}
-              disabled={!draft.trim() && attachments.length === 0}
+              disabled={!ready || (!draft.trim() && attachments.length === 0)}
               onClick={submit}
             >
               {Icon.send}
