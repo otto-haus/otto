@@ -1,5 +1,5 @@
 import type React from 'react';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Icon } from '../components/icons';
 import { AppSourceBadge } from '../components/AppSourceBadge';
 import { useToast } from '../components/Toast';
@@ -32,6 +32,8 @@ import {
 } from '../chat/queue-storage';
 import type { ProposalTarget } from '@otto-haus/core';
 import type { ChatMsg } from '../runtime';
+import { CollapsibleMessageBody } from '../chat/CollapsibleMessageBody';
+import { isTypingTarget, jumpTurnAnchor, turnAnchorIndices } from '../chat/turn-navigation';
 
 // In Electron (window.otto present) → the runtime-wired LiveChat.
 // In the web preview → the file-backed PreviewChat (unchanged).
@@ -471,6 +473,7 @@ const LiveChat: React.FC<{
   const streamRef = useRef<HTMLDivElement | null>(null);
   const tailRef = useRef<HTMLDivElement | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
+  const turnFocusRef = useRef(0);
   const st = rt.status;
   const ready = !!st?.ready;
   const requestedModel = st?.modelHandle ?? null;
@@ -619,6 +622,7 @@ const LiveChat: React.FC<{
   };
 
   const streamMessages = [...rt.messages, ...cmdMessages];
+  const turnAnchors = useMemo(() => turnAnchorIndices(streamMessages), [streamMessages]);
   const activeQueue = queueDisplayItemsForThread(queue, rt.activeThreadId);
 
   const copyConversationMarkdown = async () => {
@@ -653,6 +657,10 @@ const LiveChat: React.FC<{
   };
 
   useEffect(() => {
+    if (turnAnchors.length) turnFocusRef.current = turnAnchors[turnAnchors.length - 1] ?? 0;
+  }, [rt.activeThreadId, turnAnchors]);
+
+  useEffect(() => {
     setCmdMessages([]);
   }, [rt.activeThreadId]);
 
@@ -678,6 +686,23 @@ const LiveChat: React.FC<{
   useEffect(() => {
     tailRef.current?.scrollIntoView({ behavior: streamMessages.length > 1 ? 'smooth' : 'auto', block: 'end' });
   }, [streamMessages.length, rt.busy, activeQueue.length]);
+
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (!event.altKey || event.metaKey || event.ctrlKey) return;
+      if (event.key !== 'ArrowUp' && event.key !== 'ArrowDown') return;
+      if (isTypingTarget(document.activeElement)) return;
+      if (!turnAnchors.length) return;
+      event.preventDefault();
+      const direction = event.key === 'ArrowUp' ? 'prev' : 'next';
+      const nextIndex = jumpTurnAnchor(turnAnchors, turnFocusRef.current, direction);
+      if (nextIndex == null) return;
+      turnFocusRef.current = nextIndex;
+      document.getElementById(`chat-turn-${streamMessages[nextIndex]?.id}`)?.scrollIntoView({ block: 'start', behavior: 'smooth' });
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [streamMessages, turnAnchors]);
 
   const attachImages = async (files: File[]) => {
     if (!api || !files.length) return;
@@ -861,6 +886,7 @@ const LiveChat: React.FC<{
             return (
               <div
                 key={m.id}
+                id={showWho ? `chat-turn-${m.id}` : undefined}
                 className={`msgRow${isUser ? ' msgRow--user' : ''}${isError ? ' msgRow--error' : ''}${showWho ? '' : ' msgRow--cont'}`}
               >
                 {!isUser && showWho ? (
@@ -890,9 +916,15 @@ const LiveChat: React.FC<{
                       onOpenReceipts={onNavigate ? () => onNavigate('receipts') : undefined}
                     />
                   ) : null}
-                  <div className="msg__body" style={isError ? { color: 'var(--stop)' } : undefined}>
-                    {m.text ? <MarkdownText text={m.text} /> : null}
-                  </div>
+                  {isError ? (
+                    <div className="msg__body" style={{ color: 'var(--stop)' }}>
+                      {m.text ? <MarkdownText text={m.text} /> : null}
+                    </div>
+                  ) : (
+                    <CollapsibleMessageBody collapsible={!isUser && !!m.text}>
+                      {m.text ? <MarkdownText text={m.text} /> : null}
+                    </CollapsibleMessageBody>
+                  )}
                   {!isUser && !isError && m.text ? (
                     <MessageActions
                       disabled={proposeBusy}
