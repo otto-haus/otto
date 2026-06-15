@@ -180,6 +180,11 @@ export const Charters: React.FC = () => {
       setDetail(null);
       return;
     }
+    setDetail(null);
+    setStatusDraft('active');
+    setStatusSummary('');
+    setRunId('');
+    setReceiptId('');
     let cancelled = false;
     api.charters.get(selectedSlug).then((next) => {
       if (!cancelled) {
@@ -223,15 +228,15 @@ export const Charters: React.FC = () => {
   };
 
   const updateStatus = async () => {
-    if (!api || !detail || detail.status === statusDraft) return;
+    if (!api || !selectedSlug || !detail || detail.slug !== selectedSlug || detail.status === statusDraft) return;
     setBusy(true);
     setError(null);
     try {
-      await api.charters.updateStatus(detail.slug, statusDraft, statusSummary.trim() || `Charter status changed to ${statusDraft}.`);
-      const next = await api.charters.get(detail.slug);
+      await api.charters.updateStatus(selectedSlug, statusDraft, statusSummary.trim() || `Charter status changed to ${statusDraft}.`);
+      const next = await api.charters.get(selectedSlug);
       setDetail(next);
       setStatusSummary('');
-      await refreshList(detail.slug);
+      await refreshList(selectedSlug);
     } catch (e) {
       setError(String(e));
     } finally {
@@ -240,20 +245,20 @@ export const Charters: React.FC = () => {
   };
 
   const linkRunReceipt = async () => {
-    if (!api || !detail || (!runId.trim() && !receiptId.trim())) return;
+    if (!api || !selectedSlug || !detail || detail.slug !== selectedSlug || (!runId.trim() && !receiptId.trim())) return;
     setBusy(true);
     setError(null);
     try {
-      await api.charters.linkRunReceipt(detail.slug, {
+      await api.charters.linkRunReceipt(selectedSlug, {
         runId: runId.trim() || undefined,
         receiptId: receiptId.trim() || undefined,
         summary: 'Charter linked to run/receipt evidence.',
       });
-      const next = await api.charters.get(detail.slug);
+      const next = await api.charters.get(selectedSlug);
       setDetail(next);
       setRunId('');
       setReceiptId('');
-      await refreshList(detail.slug);
+      await refreshList(selectedSlug);
     } catch (e) {
       setError(String(e));
     } finally {
@@ -355,6 +360,7 @@ export const Charters: React.FC = () => {
         detail={
           <CharterDetailView
             detail={detail}
+            selectedSlug={selectedSlug}
             statusDraft={statusDraft}
             statusSummary={statusSummary}
             runId={runId}
@@ -380,6 +386,7 @@ export const Charters: React.FC = () => {
 
 const CharterDetailView: React.FC<{
   detail: CharterDetail | null;
+  selectedSlug: string | null;
   statusDraft: CharterStatus;
   statusSummary: string;
   runId: string;
@@ -393,6 +400,7 @@ const CharterDetailView: React.FC<{
   onLinkRunReceipt: () => void;
 }> = ({
   detail,
+  selectedSlug,
   statusDraft,
   statusSummary,
   runId,
@@ -405,12 +413,23 @@ const CharterDetailView: React.FC<{
   onUpdateStatus,
   onLinkRunReceipt,
 }) => {
-  if (!detail) {
+  if (!selectedSlug) {
     return (
       <div className="detail">
         <div className="detailSection">
           <div className="h-sec">{chartersCopy.selectTitle}</div>
           <p className="muted" style={{ marginTop: 6 }}>{chartersCopy.selectBody}</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!detail || detail.slug !== selectedSlug) {
+    return (
+      <div className="detail">
+        <div className="detailSection">
+          <div className="h-sec">{chartersCopy.loadingTitle}</div>
+          <p className="muted" style={{ marginTop: 6 }}>{selectedSlug}</p>
         </div>
       </div>
     );
