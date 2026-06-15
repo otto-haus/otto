@@ -246,7 +246,7 @@ export const onboardingCopy = {
   modeExistingBody: 'Point otto at a local URL and agent ID.',
   modeContinue: 'Continue →',
   connectTitle: 'Connect your runtime',
-  connectLede: 'Finish setup in Settings. Chat unlocks only when otto is truly connected.',
+  connectLede: 'otto tries to discover Letta Desktop and your current local agent automatically. Open Settings to see the blocker and retry; edit overrides only if discovery picked the wrong target.',
   connectOpenSettings: 'Open Settings',
   connectRetry: 'Retry status',
   runTitle: 'Run one behavior loop',

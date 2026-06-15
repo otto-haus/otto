@@ -211,25 +211,48 @@ cd otto
 bun install
 ```
 
-Install the Letta Code extension and skills:
+Install the Letta Code command files:
 
 ```sh
 bun run install-extension
 # then run /reload in Letta Code
 ```
 
-This installs Charter/Routine commands, skills, and one-way-door permission gates.
+This installs Charter/Routine command files and one-way-door permission gates under
+`~/.letta/extensions/`.
 
-Local desktop app:
+Skill installation is optional and needs an agent memory directory:
 
 ```sh
-# development Electron app; does not update the canonical installed app
-task electron
+MEMORY_DIR=/path/to/agent/memory bun run install-extension
+```
 
+If `MEMORY_DIR` is not set, the command still installs the Letta Code command files and
+prints the manual copy paths for `skill/SKILL.md` and `skill/routine/SKILL.md`.
+
+Choose one desktop launch path:
+
+```sh
+# development Electron app; keeps otto running from this terminal
+task electron
 
 # safe packaged app, isolated from the live profile
 task staging
 ```
+
+`task electron` runs an Electron install preflight first. On macOS, it can repair
+Bun's partial Electron bundle extraction from the local Electron cache before opening
+the development app.
+
+For clean-profile or CI-style runs, set `OTTO_HOME` or `XDG_STATE_HOME` before
+`task electron`. `HOME` alone is not enough to isolate Electron's macOS browser
+profile; `task electron` derives a temp user-data dir from `OTTO_HOME`, then
+`XDG_STATE_HOME`, unless `OTTO_USER_DATA_DIR` is set explicitly.
+
+`task electron` also reports the Letta CLI preflight state. The first runtime connection
+uses Letta Code with auto-update disabled, so update Letta Desktop or Letta Code outside
+otto. Set `LETTA_CLI_PATH=/path/to/letta.js` when Letta is installed outside the default
+macOS app path.
 
 Canonical app boundary:
 
@@ -241,9 +264,9 @@ Connect the desktop app to Letta:
 
 A fresh clone does not include a hosted agent. Live chat requires a local Letta runtime, provider auth configured in Letta, and a target Letta agent.
 
-1. Install/open the latest published GitHub Release build at `/Applications/otto.app`.
+1. Use the window from your launch path: `task electron` opens the development app; `task staging` opens an isolated `/Applications/otto-staging.app`. For the canonical app, install/open the latest published GitHub Release build at `/Applications/otto.app`.
 2. otto tries to discover Letta Desktop and your current local agent automatically.
-3. Use **Settings → General** only for advanced runtime/agent overrides.
+3. If it stays disconnected, open **Settings → General** to read the blocker and retry. Edit the runtime/agent fields only if auto-discovery picked the wrong target.
 4. Provider/model credentials stay in Letta. otto does not ask for provider API keys in v1.
 
 Useful checks:
@@ -252,8 +275,14 @@ Useful checks:
 bun run --cwd apps/desktop typecheck
 bun run --cwd apps/desktop electron:typecheck
 task release:gate
-task smoke:cli   # disposable conversation; never writes to default
+OTTO_AGENT_ID=<agent-id> task smoke:cli   # disposable conversation; never writes to default
 ```
+
+`task smoke:cli` is optional until you have a real local Letta agent. Replace
+`<agent-id>` with the agent id shown by your Letta runtime or otto Settings after
+auto-discovery. Running it before that point reports `SKIP` instead of failing or
+performing a fake smoke. If Letta is installed outside the default macOS app path, set
+`LETTA_CLI_PATH=/path/to/letta.js`.
 
 DevEx docs:
 
@@ -287,7 +316,7 @@ Common commands:
 
 ```sh
 task dev          # Vite web preview; no desktop bridge
-task electron     # Electron app wired to local Letta; does not update canonical app
+task electron     # Electron dev app; chat connects after Letta session initializes; does not update canonical app
 task staging      # build/package/install/open isolated /Applications/otto-staging.app
 task ps           # show otto + spawned Letta CLI processes
 ```
@@ -302,9 +331,14 @@ bun run --cwd apps/desktop electron:build
 
 Runtime truth:
 
-- `OTTO_AGENT_ID` selects the target Letta agent.
+- `OTTO_AGENT_ID` selects the target Letta agent for desktop and smoke checks.
+- `LETTA_AGENT_ID` is also accepted by `task smoke:cli` for direct Letta CLI compatibility.
 - `~/.otto` stores local otto runtime/config/traces.
-- `LETTA_CLI_PATH` may point at a specific Letta CLI bundle.
+- `OTTO_USER_DATA_DIR` may override the Electron browser profile; otherwise `task electron`
+  derives it from `$OTTO_HOME/electron-user-data`, then
+  `$XDG_STATE_HOME/otto/electron-user-data` when those env vars are set.
+- `LETTA_CLI_PATH` may point at a specific Letta CLI bundle, including for `task smoke:cli`.
+- Otto sets `DISABLE_AUTOUPDATER=1` for the spawned Letta Code CLI unless you set it yourself.
 - Chat stays gated until `session.initialize()` succeeds.
 
 Do not claim “connected” unless the SDK initializes against a live agent/session.

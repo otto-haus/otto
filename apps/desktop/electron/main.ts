@@ -1,11 +1,19 @@
 import { mkdirSync, writeFileSync } from 'node:fs';
-import { dirname, join } from 'node:path';
+import { dirname, join, resolve } from 'node:path';
 import { homedir } from 'node:os';
 import { BrowserWindow, app } from 'electron';
 import { registerIpc } from './ipc';
 import { resolveDevRendererUrl } from './main-security';
 
 let mainWindow: BrowserWindow | null = null;
+
+function applyUserDataDirOverride() {
+  const override = process.env.OTTO_USER_DATA_DIR?.trim();
+  if (!override) return;
+  const userDataDir = resolve(override);
+  mkdirSync(userDataDir, { recursive: true });
+  app.setPath('userData', userDataDir);
+}
 
 // A GUI-launched macOS app inherits a minimal PATH (no Homebrew/nvm/etc.). The Letta SDK
 // spawns `node` from PATH to run its CLI, so a packaged Otto would fail to find it and the
@@ -75,6 +83,8 @@ function createWindow() {
 
   return win;
 }
+
+applyUserDataDirOverride();
 
 app.whenReady().then(() => {
   ensurePath();

@@ -54,7 +54,7 @@
       "status": "file",
       "detail": "SKILL.md · routine/SKILL.md",
       "source": "skill/",
-      "action": "Install into a live agent via scripts/install.sh"
+      "action": "Run bun run install-extension; set MEMORY_DIR for automatic skill copy"
     },
     {
       "key": "practices",
