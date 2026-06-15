@@ -1,8 +1,8 @@
 import { describe, expect, spyOn, test } from 'bun:test';
-import * as fs from 'node:fs';
 import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
+import * as runtimeCommon from '../apps/desktop/electron/runtime-transport/runtime-common';
 import {
   capabilityFailure,
   formatCapabilityFailure,
@@ -27,12 +27,12 @@ describe('letta-cli capability smoke helpers', () => {
 
 describe('runLettaCliCapabilitySmoke discovery', () => {
   test('embedded mode fails clearly when bundled CLI is absent', async () => {
-    const existsSpy = spyOn(fs, 'existsSync').mockReturnValue(false);
-    const prevResources = (process as NodeJS.Process & { resourcesPath?: string }).resourcesPath;
-    const prevCli = process.env.LETTA_CLI_PATH;
-    const dir = join(tmpdir(), `otto-cap-${Date.now()}`);
-    delete process.env.LETTA_CLI_PATH;
-    (process as NodeJS.Process & { resourcesPath?: string }).resourcesPath = dir;
+    const resolveCliSpy = spyOn(runtimeCommon, 'resolveCli').mockReturnValue({
+      cliPath: '(bundled @letta-ai/letta-code — not found)',
+      cliResolved: false,
+      cliFallbackReason:
+        'Embedded mode: bundled letta.js not found under app resources or node_modules. Rebuild otto.app or set LETTA_CLI_PATH.',
+    });
     try {
       const result = await runLettaCliCapabilitySmoke({
         connectionMode: 'embedded',
@@ -44,10 +44,7 @@ describe('runLettaCliCapabilitySmoke discovery', () => {
         expect(result.nextAction).toMatch(/LETTA_CLI_PATH|Rebuild/);
       }
     } finally {
-      existsSpy.mockRestore();
-      (process as NodeJS.Process & { resourcesPath?: string }).resourcesPath = prevResources;
-      if (prevCli === undefined) delete process.env.LETTA_CLI_PATH;
-      else process.env.LETTA_CLI_PATH = prevCli;
+      resolveCliSpy.mockRestore();
     }
   });
 
