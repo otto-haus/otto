@@ -1398,7 +1398,15 @@ h1, h2, h3, h4, p { margin: 0; }
 }
 .promptbox input,
 .promptbox textarea { flex: 1; border: 0; outline: 0; background: transparent; font-size: 15px; line-height: 1.5; }
-.promptbox textarea { min-height: 24px; max-height: 200px; resize: none; padding: 8px 2px; }
+.promptbox textarea {
+  min-height: 24px;
+  max-height: 200px;
+  min-width: 0;
+  resize: none;
+  padding: 8px 2px;
+  box-sizing: border-box;
+  overflow-y: hidden;
+}
 .promptbox:focus-within {
   border-color: var(--ink);
   box-shadow: 0 0 0 1px rgba(20,22,26,0.08), 0 14px 36px rgba(16,17,20,0.08);
