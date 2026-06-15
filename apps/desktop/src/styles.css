@@ -377,11 +377,14 @@ h1, h2, h3, h4, p { margin: 0; }
 /* keep the Settings icon reachable in the collapsed rail; hide only the profile chip */
 .sidebar.is-collapsed .sidebar__lower { display: grid; justify-items: center; }
 .sidebar.is-collapsed .sidebarProfile { display: none; }
-.sidebar.is-collapsed .sidebar__toggle { width: 40px; height: 40px; margin: 0; border-radius: 12px; }
-.sidebar.is-collapsed .sidebar__primary { width: 44px; height: 44px; min-height: 44px; justify-content: center; padding: 0; border-radius: 13px; background: var(--ink); color: var(--dark-tx); border-color: var(--ink); }
+.sidebar.is-collapsed .sidebar__toggle { width: 40px; height: 40px; margin: 0; border-radius: 11px; }
+.sidebar.is-collapsed .sidebar__toggle svg { width: 14px; height: 14px; }
+.sidebar.is-collapsed .sidebar__primary { width: 40px; height: 40px; min-height: 40px; justify-content: center; padding: 0; border-radius: 11px; background: var(--ink); color: var(--dark-tx); border-color: var(--ink); }
 .sidebar.is-collapsed .sidebar__primaryIcon { color: currentColor; }
+.sidebar.is-collapsed .sidebar__primaryIcon svg { width: 14px; height: 14px; }
 .sidebar.is-collapsed .nav { width: 100%; align-items: center; gap: 6px; }
-.sidebar.is-collapsed .nav__item { width: 44px; height: 44px; min-height: 44px; justify-content: center; padding: 0; border-radius: 13px; }
+.sidebar.is-collapsed .nav__item { width: 40px; height: 40px; min-height: 40px; justify-content: center; padding: 0; border-radius: 11px; }
+.sidebar.is-collapsed .nav__icon svg { width: 14px; height: 14px; }
 .sidebar.is-collapsed .sidebar__lower { display: flex; width: 100%; align-items: center; gap: 8px; }
 .sidebar.is-collapsed .sidebarProfile { display: none; }
 .sidebar.is-collapsed .nav__item.is-active { box-shadow: none; background: var(--ink); color: var(--dark-tx); }
@@ -2374,7 +2377,7 @@ textarea:focus-visible {
   .sidebar.is-collapsed .brand { gap: 4px; }
   .sidebar.is-collapsed .sidebar__toggle,
   .sidebar.is-collapsed .sidebar__primary,
-  .sidebar.is-collapsed .nav__item { width: 40px; height: 40px; min-height: 40px; border-radius: 12px; }
+  .sidebar.is-collapsed .nav__item { width: 40px; height: 40px; min-height: 40px; border-radius: 11px; }
   .sidebar.is-collapsed .nav { gap: 4px; }
   .sidebar.is-collapsed .sidebar__lower { margin-top: 2px; }
   .brand__text,
