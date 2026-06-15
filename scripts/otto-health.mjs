@@ -4,8 +4,8 @@
  * Live renderer/runtime checks require the otto desktop app (Settings → System health
  * or IPC otto:system:health).
  */
-import { existsSync, readFileSync } from 'node:fs';
-import { homedir } from 'node:os';
+import { existsSync, readFileSync, rmSync } from 'node:fs';
+import { homedir, tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { spawnSync } from 'node:child_process';
@@ -77,11 +77,19 @@ function collectOfflineHealth() {
 
   const readinessScript = join(root, 'apps/desktop/scripts/gen-readiness.mjs');
   if (existsSync(readinessScript)) {
+    // health:otto must be read-only: render readiness to a throwaway temp path so the
+    // tracked apps/desktop/src/data/readiness.json is never mutated by a smoke run (#648).
+    const probeOutput = join(tmpdir(), `otto-health-readiness-${process.pid}.json`);
     const result = spawnSync(process.execPath, [readinessScript], {
       cwd: root,
       encoding: 'utf8',
-      env: { ...process.env, OTTO_READINESS_INCLUDE_LOCAL_CONFIG: '1' },
+      env: {
+        ...process.env,
+        OTTO_READINESS_INCLUDE_LOCAL_CONFIG: '1',
+        OTTO_READINESS_OUTPUT_PATH: probeOutput,
+      },
     });
+    rmSync(probeOutput, { force: true });
     if (result.status === 0) {
       checks.push(check('readiness', 'Readiness generator', 'ok', 'gen-readiness.mjs succeeded'));
     } else {
