@@ -3,7 +3,7 @@ import { mkdtempSync, mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { ConfigStore } from '../config-store';
-import { discoverLocalLettaContext, isLocalLettaBackendListening, resolveInitBaseUrl, resolveModelHandle } from './letta-discovery';
+import { discoverLocalLettaContext, isLocalLettaBackendListening, probeLettaHttpBaseUrl, resolveInitBaseUrl, resolveModelHandle } from './letta-discovery';
 import type { LettaModelOption } from '../shared/types';
 
 const envKeys = ['OTTO_HOME', 'OTTO_LETTA_SETTINGS_PATH', 'OTTO_SKIP_LETTA_LSOF', 'OTTO_AGENT_ID', 'LETTA_BASE_URL'] as const;
@@ -67,28 +67,54 @@ const MODELS: LettaModelOption[] = [
 ];
 
 describe('resolveInitBaseUrl', () => {
-  test('blocks existing mode when local: backend is down', () => {
+  test('blocks existing mode when local: backend is down', async () => {
     process.env.OTTO_SKIP_LETTA_LSOF = '1';
-    const result = resolveInitBaseUrl('local:/Users/seb/.letta/lc-local-backend', 'existing');
+    const result = await resolveInitBaseUrl('local:/Users/seb/.letta/lc-local-backend', 'existing');
     expect(result.blockReason).toMatch(/Local Letta backend is not running/i);
     expect(result.baseUrl).toBe('local:/Users/seb/.letta/lc-local-backend');
   });
 
-  test('omits base URL in embedded mode so bundled CLI can spawn standalone backend', () => {
+  test('omits base URL in embedded mode so bundled CLI can spawn standalone backend', async () => {
     process.env.OTTO_SKIP_LETTA_LSOF = '1';
-    const result = resolveInitBaseUrl('local:/Users/seb/.letta/lc-local-backend', 'embedded');
+    const result = await resolveInitBaseUrl('local:/Users/seb/.letta/lc-local-backend', 'embedded');
     expect(result.blockReason).toBeUndefined();
     expect(result.baseUrl).toBeNull();
+    expect(result.omitBaseUrl).toBe(true);
   });
 
-  test('passes through http URL for cloud mode when listener check is skipped', () => {
+  test('passes through http URL for cloud mode when listener check is skipped', async () => {
     process.env.OTTO_SKIP_LETTA_LSOF = '1';
-    expect(resolveInitBaseUrl('http://127.0.0.1:8283', 'cloud').baseUrl).toBe('http://127.0.0.1:8283');
+    expect((await resolveInitBaseUrl('http://127.0.0.1:8283', 'cloud')).baseUrl).toBe('http://127.0.0.1:8283');
+  });
+
+  test('allows reachable loopback http URL when lsof is skipped', async () => {
+    process.env.OTTO_SKIP_LETTA_LSOF = '1';
+    const originalFetch = globalThis.fetch;
+    globalThis.fetch = (async (input: RequestInfo | URL) => {
+      const url = String(input);
+      if (url.includes('/v1/models/')) {
+        return new Response(JSON.stringify([]), { status: 200 });
+      }
+      return originalFetch(input);
+    }) as typeof fetch;
+    try {
+      const result = await resolveInitBaseUrl('http://127.0.0.1:8283', 'existing');
+      expect(result.blockReason).toBeUndefined();
+      expect(result.baseUrl).toBe('http://127.0.0.1:8283');
+    } finally {
+      globalThis.fetch = originalFetch;
+    }
   });
 
   test('isLocalLettaBackendListening respects OTTO_SKIP_LETTA_LSOF', () => {
     process.env.OTTO_SKIP_LETTA_LSOF = '1';
     expect(isLocalLettaBackendListening()).toBe(false);
+  });
+});
+
+describe('probeLettaHttpBaseUrl', () => {
+  test('returns false for non-http URLs', async () => {
+    expect(await probeLettaHttpBaseUrl('local:/Users/seb/.letta/lc-local-backend')).toBe(false);
   });
 });
 

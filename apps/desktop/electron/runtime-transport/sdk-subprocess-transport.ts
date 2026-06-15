@@ -9,7 +9,7 @@ import { StandardStore } from '../standard-store';
 import { PracticeStore } from '../practice-store';
 import { TraceWriter } from '../trace-writer';
 import { TurnTrailAccumulator, trailTraceSummary } from '../../src/chat/turn-trail';
-import { discoverLocalLettaContext, resolveInitBaseUrl } from './letta-discovery';
+import { discoverLocalLettaContext, resolveInitBaseUrl, type InitBaseUrlResolution } from './letta-discovery';
 import {
   SMOKE_MODE,
   smokeMode,
@@ -157,7 +157,7 @@ export class SdkSubprocessTransport implements OttoRuntimeTransport {
   }
 
   /** Inject stored Letta key + discovered/local base URL into the spawned CLI env (recomputed each reconnect). */
-  private applyConnectionEnv(baseUrl: string | null) {
+  private applyConnectionEnv(resolution: InitBaseUrlResolution) {
     const cli = resolveCli(this.config.connectionMode());
     if (cli.cliResolved) process.env.LETTA_CLI_PATH = cli.cliPath;
     // Otto launch should not repair or mutate a global Letta Code npm install.
@@ -166,9 +166,13 @@ export class SdkSubprocessTransport implements OttoRuntimeTransport {
     const key = getSecret('LETTA_API_KEY');
     if (key) process.env.LETTA_API_KEY = key;
     else Reflect.deleteProperty(process.env, 'LETTA_API_KEY');
-    const resolvedBase = baseUrl ?? this.config.baseUrl() ?? null;
-    if (resolvedBase) process.env.LETTA_BASE_URL = resolvedBase;
-    else Reflect.deleteProperty(process.env, 'LETTA_BASE_URL');
+    if (resolution.omitBaseUrl) {
+      Reflect.deleteProperty(process.env, 'LETTA_BASE_URL');
+    } else {
+      const resolvedBase = resolution.baseUrl ?? this.config.baseUrl() ?? null;
+      if (resolvedBase) process.env.LETTA_BASE_URL = resolvedBase;
+      else Reflect.deleteProperty(process.env, 'LETTA_BASE_URL');
+    }
   }
 
   private hasApiKey(): boolean {
@@ -179,7 +183,7 @@ export class SdkSubprocessTransport implements OttoRuntimeTransport {
   async init(opts?: { freshConversation?: boolean }): Promise<RuntimeStatus> {
     const cli = resolveCli(this.config.connectionMode());
     const context = discoverLocalLettaContext(this.config);
-    const baseResolution = resolveInitBaseUrl(context.baseUrl, this.config.connectionMode());
+    const baseResolution = await resolveInitBaseUrl(context.baseUrl, this.config.connectionMode());
     if (baseResolution.blockReason) {
       this.status = {
         ready: false,
@@ -195,7 +199,7 @@ export class SdkSubprocessTransport implements OttoRuntimeTransport {
       };
       return this.status;
     }
-    this.applyConnectionEnv(baseResolution.baseUrl);
+    this.applyConnectionEnv(baseResolution);
     const agentCandidates = context.agentCandidates;
     const primaryAgentId = agentCandidates[0] ?? null;
 
