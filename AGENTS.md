@@ -60,6 +60,7 @@ task staging                  # build/package/install/open isolated /Application
 task install:release          # canonical otto.app — GitHub Release only; requires OTTO_ALLOW_RELEASE_INSTALL=1
 task smoke:release:metadata   # read-only — compare installed otto.app to latest release tag
 task smoke:cli                # isolated disposable conversation; never default
+task smoke:cron               # opt-in Letta cron create/list/delete smoke; never default
 ```
 
 After any `apps/desktop/` implementation turn, refresh **staging** (not live):

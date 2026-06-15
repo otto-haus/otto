@@ -172,6 +172,10 @@ tasks:
         fi
         node "$CLI_PATH" --agent "$AGENT_ID" --new --no-memfs --no-skills --no-system-info-reminder -p 'Reply exactly: OTTO_SMOKE_OK' --output-format json
 
+  smoke:cron:
+    desc: Optional Letta cron smoke — disposable conversation; create/list/delete reminder task (#296)
+    cmds: [bash scripts/letta-cron-disposable-smoke.sh]
+
   smoke:desktop:
     desc: Non-destructive desktop smoke — launches a temporary second instance, leaves live otto.app alone
     cmds:
