@@ -472,14 +472,20 @@ const LiveChat: React.FC<{
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const st = rt.status;
   const ready = !!st?.ready;
-  const selectedModel = st?.modelHandle ?? st?.model ?? null;
+  const requestedModel = st?.modelHandle ?? null;
+  const activeModel = st?.model ?? st?.modelHandle ?? null;
+  const selectedModel = requestedModel ?? activeModel;
   const selectedEffort = st?.effort ?? 'high';
   const activeThreadTitle = threads.find((t) => t.id === rt.activeThreadId)?.title;
   const headTitle = displayThreadTitle(activeThreadTitle ?? 'New chat');
+  const modelStatusLabel = requestedModel && activeModel && requestedModel !== activeModel
+    ? `${labelForModel(requestedModel, modelOptions)} → ${labelForModel(activeModel, modelOptions)}`
+    : labelForModel(selectedModel, modelOptions);
   const chatStatusLine = st
     ? [
       st.agentId ?? 'no agent',
-      labelForModel(selectedModel, modelOptions),
+      modelStatusLabel,
+      st.transportFallbackReason ?? null,
       st.conversationId ?? 'no conversation',
       st.memfsEnabled ? 'Letta memory' : null,
     ].filter(Boolean).join(' · ')
@@ -492,13 +498,7 @@ const LiveChat: React.FC<{
       .then((models) => {
         if (cancelled || !models.length) return;
         setModelOptions(models);
-        if (!ready || rt.busy) return;
-        const current = selectedModel;
-        if (current && models.some((model) => model.handle === current)) return;
-        const fallback = models.find((model) => model.handle === 'letta/auto')
-          ?? models.find((model) => model.handle === 'openai/gpt-5.5')
-          ?? models[0];
-        if (fallback?.handle) void rt.configure({ modelHandle: fallback.handle });
+        // Do not auto-rewrite the user's persisted model when discovery is transient or incomplete.
       })
       .catch(() => {
         if (!cancelled) setModelOptions(FALLBACK_MODEL_OPTIONS);
@@ -506,7 +506,7 @@ const LiveChat: React.FC<{
     return () => {
       cancelled = true;
     };
-  }, [api, ready, selectedModel, rt.busy]);
+  }, [api]);
 
   useEffect(() => {
     if (!modelOpen && !effortOpen) return;

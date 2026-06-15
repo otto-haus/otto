@@ -98,16 +98,17 @@ export class WsRuntimeTransport implements OttoRuntimeTransport {
       await this.spawnRemote(cli.cliPath, context.baseUrl);
       await this.waitForRuntimeSocket();
       const conversationId = opts?.freshConversation ? null : this.config.get().conversationId;
-      const modelHandle = await confirmedModelHandle(this.config).catch(() => this.config.modelHandle());
-      if (modelHandle && modelHandle !== this.config.modelHandle() && !smokeMode()) {
-        this.config.update({ modelHandle });
-      }
+      const resolved = await confirmedModelHandle(this.config).catch(() => ({
+        requested: this.config.modelHandle(),
+        active: this.config.modelHandle(),
+        fallbackReason: null,
+      }));
       try {
-        await this.syncRuntime(agentId, conversationId ?? null, modelHandle);
+        await this.syncRuntime(agentId, conversationId ?? null, resolved.active);
       } catch (e) {
         if (!conversationId || !this.isStaleConversationError(e)) throw e;
         if (!smokeMode()) this.config.update({ conversationId: null });
-        await this.syncRuntime(agentId, null, modelHandle);
+        await this.syncRuntime(agentId, null, resolved.active);
       }
       if (smokeMode() && this.status.conversationId === 'default') {
         await this.close();
@@ -120,12 +121,13 @@ export class WsRuntimeTransport implements OttoRuntimeTransport {
         baseUrl: context.baseUrl,
         discoverySource: context.source,
         conversationId: this.status.conversationId ?? conversationId,
-        modelHandle,
+        modelHandle: resolved.requested,
+        model: resolved.active ?? undefined,
         effort: this.config.effort(),
         sessionMode: smokeMode() ? 'smoke' : 'default',
         transportMode: 'ws',
         effectiveTransport: 'websocket local',
-        transportFallbackReason: null,
+        transportFallbackReason: resolved.fallbackReason,
         wsListenerPort: this.listenerPort,
         lastReconnectAt: this.lastReconnectAt,
         ...cli,
@@ -220,7 +222,7 @@ export class WsRuntimeTransport implements OttoRuntimeTransport {
         runtime: {
           agent_id: this.status.agentId,
           conversation_id: this.status.conversationId,
-          model: this.status.modelHandle ?? undefined,
+          model: this.status.model ?? this.status.modelHandle ?? undefined,
           reasoning_effort: this.status.effort,
         },
         payload: {
