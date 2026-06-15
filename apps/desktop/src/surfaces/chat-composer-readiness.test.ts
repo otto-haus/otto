@@ -29,9 +29,10 @@ describe('chat composer readiness contract (#289, #300)', () => {
     expect(copySource).toContain('starterBlockedTitle');
   });
 
-  it('surfaces ticket orchestration commands in the empty chat state when ready (#74)', () => {
-    expect(copySource).toContain('ticketCommandHint');
-    expect(chatSource).toContain('{chatCopy.ticketCommandHint}');
+  it('does not leak ticket command grammar in the empty chat state (#74 minimalism)', () => {
+    expect(copySource).not.toContain('ticketCommandHint');
+    expect(chatSource).not.toContain('ticketCommandHint');
+    expect(chatSource).not.toMatch(/compile ticket/i);
   });
 
   it('uses human no-agent copy instead of raw st.reason in runtime banner (#583)', () => {

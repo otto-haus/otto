@@ -139,7 +139,10 @@ const isCoreMemoryReachable = (st: ChatRuntimeStatus): boolean => !!st.ready;
 const lettaMemoryStatusLabel = (st: ChatRuntimeStatus): string =>
   isCoreMemoryReachable(st) ? chatCopy.memoryOn : chatCopy.memoryOff;
 
-/** Product subtitle — model + memory state; no raw agent/conversation ids (#081). */
+/**
+ * Product subtitle — model + memory state only; no raw agent/conversation ids (#081)
+ * and no transport/WS-promotion jargon (kept in the debug tooltip below).
+ */
 const formatChatSessionSubtitle = (
   st: ChatRuntimeStatus,
   modelLabel: string,
@@ -147,7 +150,6 @@ const formatChatSessionSubtitle = (
   [
     modelLabel,
     lettaMemoryStatusLabel(st),
-    st.transportFallbackReason ?? null,
   ].filter(Boolean).join(' · ');
 
 /** Debug/support tooltip only — not shown in default connected chrome. */
@@ -1085,16 +1087,10 @@ const LiveChat: React.FC<{
                 <>
                   <span className={`dot ${rt.busy ? 'dot--idle' : ready ? 'dot--ok' : 'dot--warn'}`} aria-hidden="true" />
                   {rt.busy || !ready ? (
-                    <span>{headerSubtitle}</span>
+                    <span className="chat__idLabel">{headerSubtitle}</span>
                   ) : (
                     <>
-                      <span>{modelStatusLabel}</span>
-                      {st.transportFallbackReason ? (
-                        <>
-                          <span className="chat__idSep" aria-hidden="true">·</span>
-                          <span>{st.transportFallbackReason}</span>
-                        </>
-                      ) : null}
+                      <span className="chat__idLabel">{modelStatusLabel}</span>
                       <span className="chat__idSep" aria-hidden="true">·</span>
                       <button
                         type="button"
@@ -1234,9 +1230,6 @@ const LiveChat: React.FC<{
                   </button>
                 ))}
               </div>
-              {ready ? (
-                <p className="faint chatEmpty__lede">{chatCopy.ticketCommandHint}</p>
-              ) : null}
             </div>
           )}
           {streamMessages.map((m, i) => {
