@@ -57,7 +57,7 @@ Header:
 Thread:
   user messages
   Otto messages
-  tool/activity events collapsed by default
+  tool/activity events collapsed by default (see [`docs/v1/agent-turn-trail.md`](v1/agent-turn-trail.md))
   approval cards inline
   receipt/proposal cards inline
 
