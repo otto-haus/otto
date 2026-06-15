@@ -2,8 +2,16 @@ import { mkdirSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { homedir } from 'node:os';
 import { BrowserWindow, app } from 'electron';
+import { ConfigStore } from './config-store';
+import { windowBackgroundForPref } from './display-theme';
 import { registerIpc } from './ipc';
 import { resolveDevRendererUrl } from './main-security';
+import { attachWindowGeometryHandlers } from './window-geometry';
+import {
+  applyWindowLaunchMode,
+  browserWindowShowsOnCreate,
+  resolveWindowLaunchMode,
+} from './window-launch';
 
 let mainWindow: BrowserWindow | null = null;
 
@@ -27,13 +35,16 @@ function ensurePath() {
 }
 
 function createWindow() {
+  const launchMode = resolveWindowLaunchMode();
+  const config = new ConfigStore();
   const win = new BrowserWindow({
     width: 1040,
     height: 720,
     minWidth: 680,
     minHeight: 480,
-    // Match CSS --bg (warm paper field) so there's no flash/seam before the renderer paints.
-    backgroundColor: '#f8f7f2',
+    show: browserWindowShowsOnCreate(launchMode),
+    // Match the active display theme so there's no flash before the renderer paints.
+    backgroundColor: windowBackgroundForPref(config.get().theme),
     titleBarStyle: 'hiddenInset',
     title: 'otto',
     webPreferences: {
@@ -44,6 +55,8 @@ function createWindow() {
     },
   });
 
+  applyWindowLaunchMode(win, launchMode);
+  attachWindowGeometryHandlers(win);
   registerIpc(win);
 
   // Dev: load the running Vite renderer; Prod: load the built renderer.

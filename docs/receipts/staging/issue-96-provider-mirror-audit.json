@@ -1,0 +1,37 @@
+{
+  "issue": 96,
+  "ticket": "078-provider-capability-mirror-settings",
+  "date": "2026-06-14",
+  "status": "pass",
+  "secret_value_printed": false,
+  "ipc_trace_audit": {
+    "test": "apps/desktop/electron/provider-mirror.test.ts",
+    "covers": [
+      "boolean-only mirror payload",
+      "config.json excludes submitted key",
+      "serialized IPC response excludes key and LETTA_API_KEY name",
+      "renderer/ipc/preload source grep for console key logging"
+    ]
+  },
+  "staging_log_audit": {
+    "script": "scripts/check-provider-mirror-log-audit.sh",
+    "npm_script": "check:provider-mirror-audit",
+    "paths_default": [
+      "$HOME/.codex/admin/otto-staging/profile",
+      "$HOME/.codex/admin/otto-staging/home",
+      "$HOME/.codex/admin/otto-staging/logs"
+    ],
+    "patterns": [
+      "sk-[A-Za-z0-9_-]{10,}",
+      "LETTA_API_KEY=",
+      "providerMirrorAuditFakeSecret"
+    ],
+    "require_flag": "OTTO_RUN_STAGING_LOG_AUDIT=1"
+  },
+  "verification": [
+    "bun install",
+    "bun run typecheck",
+    "bun test apps/desktop/electron/provider-mirror.test.ts",
+    "bun run check:provider-mirror-audit"
+  ]
+}

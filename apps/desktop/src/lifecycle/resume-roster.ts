@@ -53,7 +53,7 @@ export function evaluateResumeRoster(snapshot: ResumeSnapshot): ResumeRosterResu
     detail: draftOk
       ? 'Draft text survived suspend/resume cycle.'
       : `Draft missing expected marker "${snapshot.draftExpected}".`,
-    nextAction: draftOk ? undefined : 'Check localStorage otto.chat.draft.v1 persistence and reload handlers.',
+    nextAction: draftOk ? undefined : 'Check per-thread localStorage otto.chat.draft.<threadId>.v1 persistence and reload handlers.',
   });
 
   const queueMatches = snapshot.queueExpectedTexts.every((expected) =>

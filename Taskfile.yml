@@ -67,6 +67,10 @@ tasks:
     desc: Check local tool availability and Bun pin
     cmds: [bun run doctor]
 
+  check:sensitive-files:
+    desc: Check tracked filenames for obvious secret material
+    cmds: [bun run check:sensitive-files]
+
   verify:
     desc: v0 release gate (scripts/verify-v0.mjs)
     cmds: [bun run verify:v0]
@@ -86,6 +90,10 @@ tasks:
   docs:links:
     desc: Check DevEx docs links (Mintlify)
     cmds: [bun run docs:links]
+
+  docs:check:
+    desc: DevEx docs gate — validate Mintlify config and check links
+    cmds: [bun run docs:check]
 
   build:
     desc: Build the desktop app with committed readiness baseline (main + preload + renderer)
@@ -129,7 +137,19 @@ tasks:
 
   staging:
     aliases: [deploy]
-    desc: Build/package/install/open /Applications/otto-staging.app — requires HEAD=origin/main (#314)
+    desc: Build/package/install/open /Applications/otto-staging.app; background launch by default (no focus steal) — requires HEAD=origin/main (#314)
+    cmds: [bash apps/desktop/scripts/deploy-staging.sh]
+
+  staging:build:
+    desc: Build/package staging app only — no launch (nonintrusive agent verify)
+    env:
+      OTTO_STAGING_LAUNCH: build-only
+    cmds: [bash apps/desktop/scripts/deploy-staging.sh]
+
+  staging:open:
+    desc: Build/package staging app and open visibly (explicit focus — use when debugging UI)
+    env:
+      OTTO_STAGING_LAUNCH: open
     cmds: [bash apps/desktop/scripts/deploy-staging.sh]
 
   staging:main:
@@ -181,6 +201,26 @@ tasks:
     cmds:
       - bun scripts/github-issue-workflow-smoke.ts
 
+  smoke:letta-cli:
+    desc: Letta CLI capability smoke — resolveCli, --version, --help; opt-in disposable turn with LETTA_AGENT_ID (#295)
+    cmds:
+      - bun scripts/letta-cli-capability-smoke.ts
+
+  smoke:attachments:
+    desc: Attachment ingestion smoke — fixture save, runtime context, path/secret leak checks (#299)
+    cmds:
+      - bun test apps/desktop/electron/attachment-ingestion.smoke.test.ts
+
+  smoke:permission:
+    desc: 'Issue #298 — permission tool-call allow/deny round-trip (disposable; no live Letta or app bundles)'
+    cmds:
+      - bun scripts/permission-round-trip-smoke.ts
+
+  smoke:cognee-recall:
+    desc: 'Issue #68 — Cognee recall smoke; path-backed citations + MCP probe; never conversation=default'
+    cmds:
+      - bun scripts/cognee-recall-smoke.ts
+
   smoke:cli:
     desc: Optional Letta CLI smoke; requires OTTO_AGENT_ID or LETTA_AGENT_ID and uses a disposable conversation
     cmds:
@@ -210,7 +250,7 @@ tasks:
         bash -lc 'set -euo pipefail
         SMOKE_DATA="$(mktemp -d /tmp/otto-smoke-data.XXXXXX)"
         SMOKE_CONFIG="$(mktemp -d /tmp/otto-smoke-config.XXXXXX)"
-        OTTO_SMOKE=1 OTTO_CONFIG_DIR="$SMOKE_CONFIG" env -u ELECTRON_RUN_AS_NODE {{.OTTO_APP}}/Contents/MacOS/otto --user-data-dir="$SMOKE_DATA" >/tmp/otto_desktop_smoke.log 2>&1 &
+        OTTO_SMOKE=1 OTTO_WINDOW_MODE=background OTTO_CONFIG_DIR="$SMOKE_CONFIG" env -u ELECTRON_RUN_AS_NODE {{.OTTO_APP}}/Contents/MacOS/otto --user-data-dir="$SMOKE_DATA" >/tmp/otto_desktop_smoke.log 2>&1 &
         SMOKE_PID="$!"
         sleep 3
         ps -p "$SMOKE_PID" >/dev/null
@@ -233,6 +273,10 @@ tasks:
     desc: Lint with Biome (no install — via bunx)
     cmds:
       - bunx --bun @biomejs/biome@1.9.4 lint {{.DESKTOP}}/src {{.DESKTOP}}/electron packages
+
+  lint:changed:
+    desc: Lint changed app/package files with Biome
+    cmds: [bun run lint:changed]
 
   lint:workflows:
     desc: Lint GitHub Actions workflows (actionlint, YAML parse fallback)

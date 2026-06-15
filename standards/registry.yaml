@@ -24,42 +24,49 @@ standards:
     name: Quality / No Fake Done
     status: active
     version: 0.1
+    domain: agent-behavior
     file: standards/quality.md
     meaning: Done means proven, not claimed. Evidence over confidence.
   - slug: judgment
     name: Judgment
     status: active
     version: 0.1
+    domain: agent-behavior
     file: standards/judgment.md
     meaning: Make the right call under uncertainty, own it, and record why.
   - slug: candor-kindness
     name: Candor + Kindness
     status: active
     version: 0.1
+    domain: agent-behavior
     file: standards/candor-kindness.md
     meaning: Say the true, useful thing early — hard on the work, soft on the person.
   - slug: respect-attention
     name: Respect Attention
     status: active
     version: 0.1
+    domain: product
     file: standards/respect-attention.md
     meaning: Attention is a finite one-way door. Spend it deliberately.
   - slug: first-principles
     name: First-Principles Reasoning
     status: active
     version: 0.1
+    domain: engineering
     file: standards/first-principles.md
     meaning: Reason from facts and goals, not cargo-cult, authority, or vibes.
   - slug: winning
     name: Winning / Outcomes Over Motion
     status: active
     version: 0.1
+    domain: agent-behavior
     file: standards/winning.md
     meaning: Finish. Ship proven outcomes, not motion.
   - slug: earned-semver
     name: Earned Semver
     status: active
     version: 0.1
+    domain: release
     file: standards/earned-semver.md
     meaning: Public version numbers are earned by proof and Sebastian sign-off — not branch names or optimism.
 

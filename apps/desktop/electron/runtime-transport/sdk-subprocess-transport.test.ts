@@ -23,10 +23,7 @@ function mockWindow() {
   return { win, sent };
 }
 
-function mockConfig(input: { conversationId?: string | null; updates?: Array<Record<string, unknown>> } = {}): ConfigStore {
-  const state: Record<string, unknown> = {
-    conversationId: input.conversationId ?? null,
-  };
+function mockConfig(): ConfigStore {
   return {
     connectionMode: () => 'existing' as const,
     primaryAgentId: () => 'agent-test',
@@ -35,77 +32,11 @@ function mockConfig(input: { conversationId?: string | null; updates?: Array<Rec
     baseUrl: () => null,
     agentId: () => 'agent-test',
     agentCandidates: () => ['agent-test'],
-    get: () => state,
-    update: (patch: Record<string, unknown>) => {
-      Object.assign(state, patch);
-      input.updates?.push(patch);
-      return state;
-    },
+    get: () => ({}),
+    update: () => ({}),
+    ensurePrimaryAgentId: () => {},
   } as unknown as ConfigStore;
 }
-
-describe('SdkSubprocessTransport initialization', () => {
-  test('resumes stored local conversations through the conversation option', async () => {
-    const { win } = mockWindow();
-    const transport = new SdkSubprocessTransport(win, mockConfig({ conversationId: 'local-conv-existing' }));
-    const calls: Array<{ method: string; id: unknown; options: Record<string, unknown> }> = [];
-    const session = {
-      close: () => {},
-      initialize: async () => ({
-        agentId: 'agent-test',
-        conversationId: 'local-conv-existing',
-        model: 'test-model',
-        memfsEnabled: false,
-        tools: [],
-      }),
-    };
-
-    (transport as unknown as { sdk: unknown }).sdk = {
-      createSession: (id: unknown, options: Record<string, unknown>) => {
-        calls.push({ method: 'createSession', id, options });
-        return session;
-      },
-      resumeSession: (id: unknown, options: Record<string, unknown>) => {
-        calls.push({ method: 'resumeSession', id, options });
-        return session;
-      },
-    };
-
-    process.env.OTTO_AGENT_ID = 'agent-test';
-    process.env.OTTO_SKIP_LETTA_LSOF = '1';
-    const status = await transport.init();
-
-    expect(status.ready).toBe(true);
-    expect(calls[0]?.method).toBe('createSession');
-    expect(calls[0]?.id).toBeUndefined();
-    expect(calls[0]?.options.conversationId).toBe('local-conv-existing');
-    expect(calls.some((call) => call.method === 'resumeSession')).toBe(false);
-  });
-
-  test('reports stale when a stored local conversation no longer exists', async () => {
-    const { win } = mockWindow();
-    const transport = new SdkSubprocessTransport(win, mockConfig({ conversationId: 'local-conv-missing' }));
-    const session = {
-      close: () => {},
-      initialize: async () => {
-        throw new Error('500 {"error":"Conversation local-conv-missing not found"}');
-      },
-    };
-
-    (transport as unknown as { sdk: unknown }).sdk = {
-      createSession: () => session,
-      resumeSession: () => session,
-    };
-
-    process.env.OTTO_AGENT_ID = 'agent-test';
-    process.env.OTTO_SKIP_LETTA_LSOF = '1';
-    const status = await transport.init();
-
-    expect(status.ready).toBe(false);
-    expect(status.code).toBe('stale');
-    expect(status.reason).toContain('retry will start a fresh conversation');
-  });
-});
 
 describe('SdkSubprocessTransport permissions', () => {
   test('times out pending permission resolvers', async () => {

@@ -1,6 +1,19 @@
 import type { SurfaceId } from './components/Sidebar';
 import type { LabFeatureId, LabsConfig } from '../electron/shared/types';
+import { isRemoteLettaCloudEnabled } from '../electron/labs-config';
 import { isSampleReceiptPreview } from './onboarding-sample-receipt';
+
+export { isRemoteLettaCloudEnabled };
+
+export type ConnectionMode = 'embedded' | 'existing' | 'cloud';
+
+/** Clamp persisted cloud mode when Labs gate is off so Ship users cannot stay on cloud via UI. */
+export function effectiveConnectionMode(mode: ConnectionMode, labs: LabsConfig): ConnectionMode {
+  if (mode === 'cloud' && !isRemoteLettaCloudEnabled(labs)) {
+    return 'existing';
+  }
+  return mode;
+}
 
 export type SurfaceTier = 'ship' | 'labs' | 'cut';
 
@@ -17,6 +30,7 @@ export const SURFACE_TIER: Record<SurfaceId, SurfaceTier> = {
   autonomy: 'ship',
   skills: 'ship',
   tickets: 'ship',
+  terminal: 'ship',
   knowledge: 'labs',
   channels: 'labs',
 };
@@ -95,14 +109,12 @@ export function isSurfaceAccessible(id: SurfaceId, labs: LabsConfig): boolean {
 /** Ship-tier workspace panes — file-backed canon exists, but the shell is not product-ready yet. */
 export const WORKSPACE_PREVIEW_SURFACES: ReadonlySet<SurfaceId> = new Set([
   'charters',
-  'standards',
   'practices',
   'routines',
   'curation',
   'checks',
   'autonomy',
   'skills',
-  'tickets',
 ]);
 
 export function isSurfaceComingSoon(id: SurfaceId, labs: LabsConfig): boolean {

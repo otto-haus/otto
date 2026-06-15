@@ -1,8 +1,18 @@
 # Agent goals
 
-Shared operating contract for GoalBuddy / Composer / auditor loops on `otto-haus/otto`.
+Shared operating contract for Codex, Claude, Composer/Cursor, and GoalBuddy loops on `otto-haus/otto`.
 
-Lane-specific prompts live in `docs/agent-prompts/`. GoalBuddy board truth lives in `docs/goals/*/state.yaml`.
+Lane-specific launch contracts live in this directory. GoalBuddy board truth lives in `docs/goals/*/state.yaml`. Supplemental implementer packets live in `docs/agent-prompts/`.
+
+Keep slash-command launches tiny; the markdown file is the contract:
+
+```txt
+/goal Read docs/agent-goals/codex-goal.md and follow it.
+/goal Read docs/agent-goals/claude-goal.md and follow it.
+/goalbuddy Read docs/agent-goals/composer-goal.md and prepare the board.
+```
+
+Chat prompts should only point at the file plus any one-off first target.
 
 ## Per-ticket gates (non-negotiable)
 
@@ -40,9 +50,42 @@ Every Worker/PM handoff must separate awaiting gates from active next work:
 - Ready issues and file collisions, or explicit blocker
 ```
 
-## Launch pointers
+## Current operating model
 
-```txt
-/goal Read docs/agent-prompts/composer-implementer.md and follow it.
-/goalbuddy Read docs/goals/github-ready-loop/goal.md and prepare the board.
-```
+The steady-state model is trunk-based development:
+
+- `main` is the only long-lived integration branch.
+- Feature/fix PR branches are short-lived merge vehicles.
+- Releases are tags + GitHub Release artifacts from `main`, not release branches.
+- `otto-staging.app` should track latest `main` or an explicit release-candidate commit with a visible build/source marker.
+
+The bottleneck is PR → shipped, not ticket → PR. Optimize for short-lived PRs merging quickly to `main`, then release from tags/artifacts.
+
+Temporary integration/cutover branches are allowed only to unwind the current PR backlog, not as the steady-state model.
+
+Native Codex Cloud exhaustive review runs on every push and is the default deep review signal. Local Codex should focus on traffic control, AC/proof mapping, labels, stale PR triage, and trunk/release readiness.
+
+## Throughput rule
+
+Default to parallel execution: one independent ticket = one agent = one branch/worktree.
+
+Safe to parallelize:
+
+- different issues with disjoint files
+- auditor/reviewer work across different PRs
+- tests/docs/UX investigations that do not write the same files
+
+Do not parallelize without coordination:
+
+- two agents editing the same file family
+- release/install scripts
+- runtime transport and app shell work
+- migrations/destructive data changes
+- `/Applications/otto.app` mutation
+- `/Applications/otto-staging.app` mutation unless Sebastian explicitly authorizes that exact run
+
+Sebastian is the merge/release/one-way-door gate. Agents maximize high-quality reviewed PR throughput.
+
+## GitHub workflow state
+
+Use REST Issues/PRs + labels for hot-loop state. Treat Project V2 as dashboard sync, not the live conveyor. Cache item IDs and batch Project updates; do not make every agent repeatedly call Project GraphQL.

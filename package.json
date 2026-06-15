@@ -55,16 +55,22 @@
     "check:shell": "bash scripts/check-shell-syntax.sh",
     "doctor": "bash scripts/dev-doctor.sh",
     "check:docs-tools": "bun scripts/check-mintlify-pins.mjs",
+    "check:sensitive-files": "bash scripts/check-sensitive-file-paths.sh",
+    "check:provider-mirror-audit": "bash scripts/check-provider-mirror-log-audit.sh",
+    "lint:changed": "bash scripts/lint-changed.sh",
+    "check:ship-tier-matrix": "bun scripts/check-ship-tier-matrix.mjs",
     "verify:v0": "bun scripts/verify-v0.mjs",
     "verify:agent-loop": "bun scripts/verify-agent-loop-contract.mjs",
+    "health:otto": "bun scripts/otto-health.mjs",
     "docs:dev": "cd devex && bunx --bun mint@4.2.616 dev",
     "docs:validate": "cd devex && bunx --bun mint@4.2.616 validate",
     "docs:links": "cd devex && bunx --bun mint@4.2.616 broken-links",
+    "docs:check": "bun run docs:validate && bun run docs:links",
     "release:gate": "bash scripts/release-gate.sh",
     "desktop:refresh": "bash scripts/refresh-otto-app.sh",
     "site:dev": "bash site/dev.sh"
   },
   "devDependencies": {
-    "typescript": "^5.6.3"
+    "typescript": "^6.0.3"
   }
 }

@@ -18,6 +18,7 @@ export type SurfaceId =
   | 'knowledge'
   | 'tickets'
   | 'channels'
+  | 'terminal'
   | 'settings';
 
 type NavDef = { id: SurfaceId; label: string; icon: React.ReactNode; shortcut?: string };
@@ -35,11 +36,12 @@ const COLLAPSIBLE_WORKSPACE_ITEMS: NavDef[] = [
   { id: 'curation', label: 'Curation', icon: Icon.curation, shortcut: '⌘6' },
   { id: 'receipts', label: 'Receipts', icon: Icon.receipts, shortcut: '⌘7' },
   { id: 'autonomy', label: 'Autonomy', icon: Icon.autonomy, shortcut: '⌘8' },
-  { id: 'checks', label: 'Checks', icon: Icon.check, shortcut: '⌘9' },
-  { id: 'skills', label: 'Skills', icon: Icon.owl },
-  { id: 'knowledge', label: 'Knowledge', icon: Icon.theme },
+  { id: 'checks', label: 'Checks', icon: Icon.checks, shortcut: '⌘9' },
+  { id: 'skills', label: 'Skills', icon: Icon.owl, shortcut: '⌘0' },
+  { id: 'knowledge', label: 'Knowledge', icon: Icon.theme, shortcut: '⌘⌥0' },
   { id: 'tickets', label: 'Tickets', icon: Icon.plus },
   { id: 'channels', label: 'Channels', icon: Icon.send },
+  { id: 'terminal', label: 'Terminal', icon: Icon.terminal },
 ];
 
 const WORKSPACE_ITEMS: NavDef[] = [...PRIMARY_WORKSPACE_ITEMS, ...COLLAPSIBLE_WORKSPACE_ITEMS];
@@ -80,6 +82,11 @@ export const Sidebar: React.FC<{
   onSelectThread?: (thread: ThreadSummary) => void;
   onPinThread?: (thread: ThreadSummary, pinned: boolean) => void;
   onArchiveThread?: (thread: ThreadSummary) => void;
+  onRestoreThread?: (thread: ThreadSummary) => void;
+  onMoveThread?: (thread: ThreadSummary, target: ThreadSummary) => void;
+  showArchived?: boolean;
+  hasArchived?: boolean;
+  onToggleShowArchived?: (show: boolean) => void;
   isComingSoon?: (id: SurfaceId) => boolean;
 }> = ({
   active,
@@ -94,6 +101,11 @@ export const Sidebar: React.FC<{
   onSelectThread,
   onPinThread,
   onArchiveThread,
+  onRestoreThread,
+  onMoveThread,
+  showArchived,
+  hasArchived,
+  onToggleShowArchived,
   isComingSoon,
 }) => {
   const rt = useRuntimeContext();
@@ -211,9 +223,14 @@ export const Sidebar: React.FC<{
         threads={threads}
         activeThreadId={activeThreadId}
         activeConversationId={activeConversationId}
+        showArchived={showArchived}
+        hasArchived={hasArchived}
+        onToggleShowArchived={onToggleShowArchived}
         onSelect={onSelectThread}
         onPin={onPinThread}
         onArchive={onArchiveThread}
+        onRestore={onRestoreThread}
+        onMove={onMoveThread}
       />
 
       <div className="sidebar__spacer" />

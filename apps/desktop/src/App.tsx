@@ -20,6 +20,7 @@ import {
   Settings,
 } from './surfaces/Panes';
 import { ChecksSurfaceShell } from './surfaces/ChecksSurfaceShell';
+import { Terminal } from './surfaces/Terminal';
 import { Onboarding } from './Onboarding';
 import { LabsProvider, useLabs } from './labs/LabsContext';
 import { ComingSoonSurface } from './labs/ComingSoonSurface';
@@ -29,6 +30,7 @@ import { VALID_SURFACES } from './surface-meta';
 import { labsCopy } from './copy/surfaces';
 import { AppSourceBadge } from './components/AppSourceBadge';
 import { isSampleReceiptPreview, SAMPLE_RECEIPT_LABEL } from './onboarding-sample-receipt';
+import { useOttoDebugContextMenu } from './debug/useOttoDebugContextMenu';
 
 function renderSurface(id: SurfaceId) {
   switch (id) {
@@ -44,6 +46,7 @@ function renderSurface(id: SurfaceId) {
     case 'knowledge': return <Knowledge />;
     case 'tickets': return <Tickets />;
     case 'channels': return <Channels />;
+    case 'terminal': return <Terminal />;
     case 'settings': return <Settings />;
     default: return null;
   }
@@ -71,6 +74,7 @@ const DATA_SOURCE: Partial<Record<SurfaceId, 'live' | 'coming-soon' | 'file'>> =
   knowledge: 'file',
   tickets: 'file',
   channels: 'file',
+  terminal: 'live',
 };
 
 export function App() {
@@ -87,8 +91,18 @@ export function App() {
 
 function AppShell() {
   const rt = useRuntimeContext();
+  const shellDebugMenu = useOttoDebugContextMenu('shell');
   const labs = useLabs();
-  const { threads, refresh: refreshThreads, pinThread } = useChatThreads(rt.activeThreadId);
+  const {
+    threads,
+    hasArchived,
+    showArchived,
+    setShowArchived,
+    refresh: refreshThreads,
+    pinThread,
+    restoreThread,
+    moveThread,
+  } = useChatThreads(rt.activeThreadId);
   const [active, setActiveState] = useState<SurfaceId>(initialSurface());
   const [sidebarHidden, setSidebarHidden] = useState(false);
   const [sidebarCompact, setSidebarCompact] = useState(
@@ -110,6 +124,18 @@ function AppShell() {
     };
     window.addEventListener('hashchange', onHash);
     return () => window.removeEventListener('hashchange', onHash);
+  }, []);
+
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (!(e.metaKey || e.ctrlKey) || e.key.toLowerCase() !== 'b' || e.altKey) return;
+      const tag = (e.target as HTMLElement | null)?.tagName;
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || (e.target as HTMLElement | null)?.isContentEditable) return;
+      e.preventDefault();
+      setSidebarHidden((hidden) => !hidden);
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
   }, []);
 
   const setActive = (id: SurfaceId) => {
@@ -164,7 +190,7 @@ function AppShell() {
 
   return (
     <>
-      <div className={`app${sidebarHidden ? ' app--sidebar-hidden' : ''}${sidebarCompact ? ' app--sidebar-compact' : ''}`}>
+      <div className={`app${sidebarHidden ? ' app--sidebar-hidden' : ''}${sidebarCompact ? ' app--sidebar-compact' : ''}`} onContextMenu={shellDebugMenu.onContextMenu}>
         {!sidebarHidden && (
           <Sidebar
             active={active}
@@ -179,14 +205,29 @@ function AppShell() {
             activeThreadId={rt.activeThreadId}
             onSelectThread={(thread) => {
               setActive('chat');
+              if (thread.archived) {
+                void restoreThread(thread.id)
+                  .then(() => rt.switchThread(thread.id))
+                  .then(() => refreshThreads());
+                return;
+              }
               void rt.switchThread(thread.id).then(() => refreshThreads());
             }}
             onPinThread={(thread, pinned) => {
               void pinThread(thread.id, pinned);
             }}
+            onMoveThread={(thread, target) => {
+              void moveThread(thread.id, target.id);
+            }}
             onArchiveThread={(thread) => {
               void rt.archiveThread(thread.id).then(() => refreshThreads());
             }}
+            onRestoreThread={(thread) => {
+              void restoreThread(thread.id).then(() => refreshThreads());
+            }}
+            showArchived={showArchived}
+            hasArchived={hasArchived}
+            onToggleShowArchived={setShowArchived}
             isComingSoon={labs.isComingSoon}
           />
         )}

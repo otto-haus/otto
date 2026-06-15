@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto';
-import { join } from 'node:path';
 import type { BrowserWindow } from 'electron';
+import { applyEmbeddedLettaSettingsEnv } from '../dream-settings';
 import type { PermissionRequest, PermissionResponse, RuntimePreferences, RuntimeStatus, StatusCode, OttoConfig } from '../shared/types';
 import type { ConfigStore } from '../config-store';
 import { ReceiptWriter } from '../receipt-writer';
@@ -20,6 +20,7 @@ import {
   modelSelectionForCli,
   msg,
   nextActionFor,
+  normalizeRuntimeError,
   promptWithRuntimeContext,
   resolveCli,
   safeWebContentsSend,
@@ -45,9 +46,6 @@ type PendingPermission = {
 type SDK = typeof import('@letta-ai/letta-code-sdk');
 type Session = import('@letta-ai/letta-code-sdk').Session;
 type CreateSessionOptions = import('@letta-ai/letta-code-sdk').CreateSessionOptions;
-type SessionTarget =
-  | { kind: 'conversation'; conversationId: string }
-  | { kind: 'agent'; agentId: string | null };
 
 /** SDK/subprocess path — existing Letta Code session via @letta-ai/letta-code-sdk. */
 export class SdkSubprocessTransport implements OttoRuntimeTransport {
@@ -139,17 +137,19 @@ export class SdkSubprocessTransport implements OttoRuntimeTransport {
     return o;
   }
 
-  /** Inject stored Letta key + discovered/local base URL into the spawned CLI env. */
+  /** Inject stored Letta key + discovered/local base URL into the spawned CLI env (recomputed each reconnect). */
   private applyConnectionEnv(baseUrl: string | null) {
     const cli = resolveCli(this.config.connectionMode());
-    if (cli.cliResolved && !process.env.LETTA_CLI_PATH) process.env.LETTA_CLI_PATH = cli.cliPath;
-    if (this.config.connectionMode() === 'embedded' && !process.env.OTTO_LETTA_SETTINGS_PATH) {
-      const lettaDir = this.config.ensureLettaStateDir();
-      process.env.OTTO_LETTA_SETTINGS_PATH = join(lettaDir, 'settings.json');
-    }
+    if (cli.cliResolved) process.env.LETTA_CLI_PATH = cli.cliPath;
+    // Otto launch should not repair or mutate a global Letta Code npm install.
+    if (!process.env.DISABLE_AUTOUPDATER) process.env.DISABLE_AUTOUPDATER = '1';
+    applyEmbeddedLettaSettingsEnv(this.config);
     const key = getSecret('LETTA_API_KEY');
-    if (key && !process.env.LETTA_API_KEY) process.env.LETTA_API_KEY = key;
-    if (baseUrl) process.env.LETTA_BASE_URL = baseUrl;
+    if (key) process.env.LETTA_API_KEY = key;
+    else Reflect.deleteProperty(process.env, 'LETTA_API_KEY');
+    const resolvedBase = baseUrl ?? this.config.baseUrl() ?? null;
+    if (resolvedBase) process.env.LETTA_BASE_URL = resolvedBase;
+    else Reflect.deleteProperty(process.env, 'LETTA_BASE_URL');
   }
 
   private hasApiKey(): boolean {
@@ -159,6 +159,7 @@ export class SdkSubprocessTransport implements OttoRuntimeTransport {
   /** Connect; recover from stale agents/conversations; never throw to the renderer. */
   async init(opts?: { freshConversation?: boolean }): Promise<RuntimeStatus> {
     const cli = resolveCli(this.config.connectionMode());
+    this.applyConnectionEnv(this.config.baseUrl());
     const context = discoverLocalLettaContext(this.config);
     this.applyConnectionEnv(context.baseUrl);
     const agentCandidates = context.agentCandidates;
@@ -200,18 +201,11 @@ export class SdkSubprocessTransport implements OttoRuntimeTransport {
     }
 
     const fresh = !!opts?.freshConversation;
-    const savedConversationId = this.config.get().conversationId?.trim() || null;
-    const storedConversationId = !fresh && !SMOKE_MODE && savedConversationId !== 'default' ? savedConversationId : null;
-    if (!fresh && !SMOKE_MODE && savedConversationId === 'default') {
-      this.config.update({ conversationId: null });
-    }
-    const tryOnce = async (target: SessionTarget, modelAttempt?: ModelInitAttempt) => {
+    const tryOnce = async (resumeId: string | null, modelAttempt?: ModelInitAttempt) => {
       this.session?.close();
       const sessionOpts = this.options(modelAttempt);
-      const session = target.kind === 'conversation'
-        ? sdk.createSession(undefined, { ...sessionOpts, conversationId: target.conversationId } as CreateSessionOptions & { conversationId: string })
-        : target.agentId
-          ? (fresh || SMOKE_MODE ? sdk.createSession(target.agentId, sessionOpts) : sdk.resumeSession(target.agentId, sessionOpts))
+      const session = resumeId
+        ? (fresh || SMOKE_MODE ? sdk.createSession(resumeId, sessionOpts) : sdk.resumeSession(resumeId, sessionOpts))
         : sdk.createSession(undefined, sessionOpts);
       const init = await session.initialize();
       if (SMOKE_MODE && init.conversationId === 'default') {
@@ -221,13 +215,13 @@ export class SdkSubprocessTransport implements OttoRuntimeTransport {
       return { session, init, modelAttempt };
     };
 
-    const tryWithModelFallback = async (target: SessionTarget) => {
+    const tryWithModelFallback = async (resumeId: string | null) => {
       const attempts = modelInitAttempts(this.config.modelHandle(), this.config.effort());
-      if (attempts.length === 0) return tryOnce(target);
+      if (attempts.length === 0) return tryOnce(resumeId);
       let lastModelError: unknown = null;
       for (const attempt of attempts) {
         try {
-          return await tryOnce(target, attempt);
+          return await tryOnce(resumeId, attempt);
         } catch (e) {
           if (isInvalidModelError(e)) {
             lastModelError = e;
@@ -242,15 +236,13 @@ export class SdkSubprocessTransport implements OttoRuntimeTransport {
     try {
       let r: Awaited<ReturnType<typeof tryOnce>> | null = null;
       let lastAgentError: unknown = null;
-      if (storedConversationId) {
-        // Letta local conversation ids are `local-conv-*`. The SDK's resumeSession()
-        // only recognizes `conv-*`; use the CLI conversation option explicitly.
-        r = await tryWithModelFallback({ kind: 'conversation', conversationId: storedConversationId });
-      }
       const candidates = fresh && primaryAgentId ? [primaryAgentId] : agentCandidates;
-      for (const candidate of r ? [] : candidates) {
+      for (const candidate of candidates) {
         try {
-          r = await tryWithModelFallback({ kind: 'agent', agentId: candidate });
+          // resumeSession's id is the AGENT id (maps to --agent); the conversation is the agent's
+          // default. A stored conversationId is NOT a valid resume id — passing it would send
+          // `--agent <conversationId>` and fail — so always resume with the agent id.
+          r = await tryWithModelFallback(candidate);
           break;
         } catch (e) {
           lastAgentError = e;
@@ -258,7 +250,7 @@ export class SdkSubprocessTransport implements OttoRuntimeTransport {
         }
       }
       if (!r && !SMOKE_MODE && !process.env.OTTO_AGENT_ID) {
-        r = await tryWithModelFallback({ kind: 'agent', agentId: null });
+        r = await tryWithModelFallback(null);
       }
       if (!r) throw lastAgentError ?? new Error(context.reason ?? 'No local Letta agent candidate was available.');
       this.session = r.session;
@@ -271,7 +263,15 @@ export class SdkSubprocessTransport implements OttoRuntimeTransport {
         }
         if (Object.keys(patch).length) this.config.update(patch);
       }
-      if (!SMOKE_MODE) this.config.update({ agentId: r.init.agentId ?? primaryAgentId, baseUrl: context.baseUrl, conversationId: r.init.conversationId ?? null });
+      if (!SMOKE_MODE) {
+        const resolvedAgentId = r.init.agentId ?? primaryAgentId;
+        this.config.update({
+          agentId: resolvedAgentId,
+          baseUrl: context.baseUrl,
+          conversationId: r.init.conversationId ?? null,
+        });
+        this.config.ensurePrimaryAgentId(resolvedAgentId);
+      }
       this.status = {
         ready: true,
         code: 'ready',
@@ -396,7 +396,6 @@ export class SdkSubprocessTransport implements OttoRuntimeTransport {
       await this.session.send(promptWithRuntimeContext(text, startedStatus));
       for await (const message of this.session.stream()) {
         trace.write('event', message);
-        safeWebContentsSend(this.win, 'otto:event', { message });
         const m = message as {
           type: string;
           conversationId?: string;
@@ -406,12 +405,23 @@ export class SdkSubprocessTransport implements OttoRuntimeTransport {
           success?: boolean;
         };
         if (m.type === 'error') {
-          turnError = String(m.message ?? m.error ?? m.reason ?? 'Adapter call failed.');
-          const code = classify(turnError, this.hasApiKey());
-          if (code !== 'error') {
-            this.markNotReady(turnError, code);
+          const raw = String(m.message ?? m.error ?? m.reason ?? 'Adapter call failed.');
+          const normalizedError = normalizeRuntimeError(raw, this.hasApiKey());
+          turnError = raw;
+          if (normalizedError.code !== 'error') {
+            this.markNotReady(raw, normalizedError.code);
             markedNotReady = true;
           }
+          safeWebContentsSend(this.win, 'otto:event', {
+            message: {
+              type: 'error',
+              message: normalizedError.message,
+              ...(normalizedError.details ? { details: normalizedError.details } : {}),
+              uuid: randomUUID(),
+            },
+          });
+        } else {
+          safeWebContentsSend(this.win, 'otto:event', { message });
         }
         if (m.type === 'result') {
           sawResult = true;
@@ -420,14 +430,14 @@ export class SdkSubprocessTransport implements OttoRuntimeTransport {
             this.config.update({ conversationId: m.conversationId });
           }
           if (m.success === false) {
-            const reason = turnError ?? String(m.error ?? m.reason ?? 'Adapter call failed.');
-            const code = classify(reason, this.hasApiKey());
-            if (!markedNotReady) this.markNotReady(reason, code);
-            writeReceipt(code === 'error' ? 'failed' : 'blocked', 'Chat turn did not complete.', {
-              code,
-              message: reason,
-              recoverable: code !== 'error',
-              next_action: nextActionFor(code),
+            const raw = turnError ?? String(m.error ?? m.reason ?? 'Adapter call failed.');
+            const normalizedError = normalizeRuntimeError(raw, this.hasApiKey());
+            if (!markedNotReady) this.markNotReady(raw, normalizedError.code);
+            writeReceipt(normalizedError.code === 'error' ? 'failed' : 'blocked', 'Chat turn did not complete.', {
+              code: normalizedError.code,
+              message: normalizedError.message,
+              recoverable: normalizedError.code !== 'error',
+              next_action: nextActionFor(normalizedError.code),
             });
           } else {
             writeReceipt('success', 'Chat turn completed.', null);
@@ -437,13 +447,13 @@ export class SdkSubprocessTransport implements OttoRuntimeTransport {
         if (this.aborted) break;
       }
       if (turnError && !sawResult) {
-        const code = classify(turnError, this.hasApiKey());
-        if (!markedNotReady) this.markNotReady(turnError, code);
-        writeReceipt(code === 'error' ? 'failed' : 'blocked', 'Chat turn ended without a result.', {
-          code,
-          message: turnError,
-          recoverable: code !== 'error',
-          next_action: nextActionFor(code),
+        const normalizedError = normalizeRuntimeError(turnError, this.hasApiKey());
+        if (!markedNotReady) this.markNotReady(turnError, normalizedError.code);
+        writeReceipt(normalizedError.code === 'error' ? 'failed' : 'blocked', 'Chat turn ended without a result.', {
+          code: normalizedError.code,
+          message: normalizedError.message,
+          recoverable: normalizedError.code !== 'error',
+          next_action: nextActionFor(normalizedError.code),
         });
       }
       if (!sawResult) {
@@ -464,16 +474,16 @@ export class SdkSubprocessTransport implements OttoRuntimeTransport {
         // Mid-send recovery: mark not-ready + clear conversation so the next init recreates it.
         this.markNotReady(reason, 'stale');
       }
-      const code = classify(reason, this.hasApiKey());
+      const normalizedError = normalizeRuntimeError(reason, this.hasApiKey());
       this.writeChatReceipt({
         text,
-        status: code === 'error' ? 'failed' : 'blocked',
+        status: normalizedError.code === 'error' ? 'failed' : 'blocked',
         summary: 'Chat turn failed.',
         blocker: {
-          code,
-          message: reason,
-          recoverable: code !== 'error',
-          next_action: nextActionFor(code),
+          code: normalizedError.code,
+          message: normalizedError.message,
+          recoverable: normalizedError.code !== 'error',
+          next_action: nextActionFor(normalizedError.code),
         },
         startedStatus,
         resultData: {
@@ -486,7 +496,7 @@ export class SdkSubprocessTransport implements OttoRuntimeTransport {
         },
         evidence: [{ kind: 'log', ref: trace.path, note: 'Raw chat trace JSONL' }],
       });
-      this.emitError(reason);
+      this.emitError(normalizedError.message, normalizedError.details);
     } finally {
       trace.close();
     }
@@ -513,9 +523,9 @@ export class SdkSubprocessTransport implements OttoRuntimeTransport {
     return this.sdk;
   }
 
-  private emitError(message: string) {
+  private emitError(message: string, details?: string) {
     safeWebContentsSend(this.win, 'otto:event', {
-      message: { type: 'error', message, uuid: randomUUID() },
+      message: { type: 'error', message, ...(details ? { details } : {}), uuid: randomUUID() },
     });
   }
 

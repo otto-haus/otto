@@ -10,6 +10,7 @@ import {
   resetOnboardingForReplay,
   setOnboardingModeDraft,
   wasFirstMessageDuringOnboarding,
+  wasFirstMessageDuringOnboarding,
   wasOnboarded,
 } from '../src/onboarding-storage';
 
@@ -49,6 +50,15 @@ describe('onboarding storage', () => {
     dismissOnboarding();
     expect(wasOnboarded()).toBe(true);
     expect(localStorage.getItem(ONBOARDED_KEY)).toBe('1');
+  });
+
+  it('resetOnboardingForReplay clears onboarded and first-message flags', () => {
+    notifyOnboardingFirstMessage();
+    expect(wasOnboarded()).toBe(true);
+    expect(wasFirstMessageDuringOnboarding()).toBe(true);
+    resetOnboardingForReplay();
+    expect(wasOnboarded()).toBe(false);
+    expect(wasFirstMessageDuringOnboarding()).toBe(false);
   });
 
   it('persists connection mode draft for onboarding advance (#136)', () => {

@@ -1,6 +1,6 @@
-import { type BrowserWindow, app, ipcMain, shell } from 'electron';
+import { type BrowserWindow, app, clipboard, ipcMain, shell } from 'electron';
 import type { ConnectionInfo, ConnectionInput, CreateProposalFromCorrectionInput, DecideProposalInput, DreamSettings, LabsConfig, OttoConfig, PermissionRequest, PermissionResponse, ProposalClassification, ProposalTarget, RuntimePreferences, RuntimeStatus } from './shared/types';
-import { applyLabsConfigPatch, getLabsConfig, labsConfigToOttoPatch } from './labs-config';
+import { applyLabsConfigPatch, assertConnectionModePatchAllowed, getLabsConfig, labsConfigToOttoPatch } from './labs-config';
 import {
   applyDreamSettingsPatch,
   dreamSettingsToOttoPatch,
@@ -42,11 +42,21 @@ import { OTTO_DIR } from './config-store';
 import { buildProviderMirror } from './provider-mirror';
 import { setSecret, hasSecret } from './secret-store';
 import { CogneeStore } from './cognee-store';
+import { PaperclipIntakeStore } from './paperclip-intake-store';
 import { MemoryStore } from './memory-store';
 import { PgvectorStore } from './pgvector-store';
 import { safeWebContentsSend, smokeMode } from './runtime-transport/runtime-common';
 import { readAppBuildInfo } from './build-info';
+import { showOttoDebugMenu } from './debug-menu';
+import { buildDebugPacket, formatDebugPacketText, formatRuntimeStatusText } from './debug-packet';
+import { resolveDebugEnvelope } from './debug-envelope';
+import { openOttoLogs } from './logs';
+import { syncWindowBackground } from './display-theme';
+import { openSystemTerminal, resolveWorkspaceRoot } from './open-terminal';
 import { getWorkspaceInfo, resolveWorkspaceRepoRoot } from './workspace-root';
+import { collectSystemHealth } from './system-health';
+import { IsolatedAgentStore } from './isolated-agent-store';
+import type { IsolationBoundaryReason } from './isolated-agent';
 
 export function registerIpc(win: BrowserWindow) {
   const config = new ConfigStore();
@@ -73,8 +83,10 @@ export function registerIpc(win: BrowserWindow) {
   const cultureExporter = new CultureExporter();
   const diagnosticsExporter = new DiagnosticsExporter();
   const cognee = new CogneeStore(config);
+  const paperclipIntake = new PaperclipIntakeStore(autonomy);
   const memory = new MemoryStore(config);
   const pgvector = new PgvectorStore();
+  const isolatedAgents = new IsolatedAgentStore(config);
 
   const bindStatusToActiveThread = (status: RuntimeStatus) => {
     if (!status.ready) return;
@@ -84,23 +96,9 @@ export function registerIpc(win: BrowserWindow) {
     });
   };
 
-  const bindStatusToThread = (
-    threadId: string,
-    status: RuntimeStatus,
-    fallback: { agentId?: string | null; lettaConversationId?: string | null },
-  ) => {
-    if (!status.ready) return threads.get(threadId);
-    return threads.update(threadId, {
-      agentId: status.agentId ?? fallback.agentId ?? null,
-      lettaConversationId: status.conversationId ?? fallback.lettaConversationId ?? null,
-    });
-  };
-
   const initWithStaleRecovery = async (opts?: { freshConversation?: boolean }): Promise<RuntimeStatus> => {
     const status = await runner.init(opts);
-    const activeThread = config.get().activeThreadId ? threads.get(config.get().activeThreadId!) : null;
-    const staleConversationId = config.get().conversationId ?? activeThread?.lettaConversationId ?? null;
-    if (status.ready || status.code !== 'stale' || !staleConversationId) {
+    if (status.ready || status.code !== 'stale' || !config.get().conversationId) {
       bindStatusToActiveThread(status);
       return status;
     }
@@ -121,6 +119,19 @@ export function registerIpc(win: BrowserWindow) {
     return initWithStaleRecovery({ freshConversation: true });
   });
   ipcMain.handle('otto:status', () => runner.getStatus());
+  ipcMain.handle('otto:app:build-info', () => readAppBuildInfo());
+  ipcMain.handle('otto:system:health', () =>
+    collectSystemHealth({
+      win,
+      runner,
+      config,
+      memory,
+      autonomy,
+      routines,
+      workers,
+      runs,
+    }),
+  );
   ipcMain.handle('otto:send', (_e, text: string) => runner.send(text));
   ipcMain.handle('otto:abort', () => runner.abort());
   ipcMain.handle('otto:configure', async (_e, input: RuntimePreferences) => {
@@ -141,9 +152,16 @@ export function registerIpc(win: BrowserWindow) {
     permissionSessionStore.clear();
     return { ok: true as const };
   });
+  ipcMain.handle('otto:terminal:workspace-root', () => resolveWorkspaceRoot());
+  ipcMain.handle('otto:terminal:open', () => openSystemTerminal());
 
   ipcMain.handle('otto:config:get', () => config.get());
-  ipcMain.handle('otto:config:set', (_e, patch: Partial<OttoConfig>) => config.update(patch));
+  ipcMain.handle('otto:config:set', (_e, patch: Partial<OttoConfig>) => {
+    assertConnectionModePatchAllowed(config.get(), patch);
+    const next = config.update(patch);
+    if ('theme' in patch) syncWindowBackground(win, next.theme);
+    return next;
+  });
   ipcMain.handle('otto:labs:get', () => getLabsConfig(config.get()));
   ipcMain.handle('otto:labs:set', (_e, patch: Partial<LabsConfig>) => {
     const next = applyLabsConfigPatch(config.get(), patch);
@@ -180,8 +198,16 @@ export function registerIpc(win: BrowserWindow) {
     if (input.baseUrl !== undefined) patch.baseUrl = input.baseUrl || null;
     if (input.agentId !== undefined) patch.agentId = input.agentId || null;
     if (Object.keys(patch).length) config.update(patch);
+    if (input.agentId !== undefined) config.ensurePrimaryAgentId(input.agentId);
     return initWithStaleRecovery(); // reconnect and return fresh status
   });
+
+  ipcMain.handle('otto:isolated-agents:list', () => isolatedAgents.list());
+  ipcMain.handle(
+    'otto:isolated-agents:create',
+    async (_e, input: { boundaryReason: IsolationBoundaryReason; label?: string | null }) =>
+      isolatedAgents.create(input),
+  );
 
   ipcMain.handle('otto:receipts:list', () => receipts.list());
   ipcMain.handle('otto:receipts:get', (_e, id: string) => receipts.get(id));
@@ -247,6 +273,50 @@ export function registerIpc(win: BrowserWindow) {
     return { ok: true };
   });
 
+  const debugDeps = () => ({
+    win,
+    runtimeStatus: runner.getStatus(),
+    config: config.get(),
+  });
+
+  ipcMain.handle('otto:debug:show-menu', (_e, surface?: string) => {
+    showOttoDebugMenu(debugDeps(), typeof surface === 'string' ? surface : undefined);
+    return { ok: true as const };
+  });
+  ipcMain.handle('otto:debug:packet', () => buildDebugPacket({
+    runtimeStatus: runner.getStatus(),
+    config: config.get(),
+    envelope: resolveDebugEnvelope(),
+  }));
+  ipcMain.handle('otto:debug:copy-runtime-status', () => {
+    const deps = debugDeps();
+    clipboard.writeText(formatRuntimeStatusText(deps.runtimeStatus, deps.config));
+    return { ok: true as const };
+  });
+  ipcMain.handle('otto:debug:copy-packet', () => {
+    const deps = debugDeps();
+    const packet = buildDebugPacket({
+      runtimeStatus: deps.runtimeStatus,
+      config: deps.config,
+      envelope: resolveDebugEnvelope(),
+    });
+    clipboard.writeText(formatDebugPacketText(packet));
+    return { ok: true as const };
+  });
+  ipcMain.handle('otto:debug:show-logs', async () => {
+    const target = await openOttoLogs();
+    return { ok: true as const, path: target };
+  });
+  ipcMain.handle('otto:debug:open-profile', () => {
+    const path = app.getPath('userData');
+    void shell.openPath(path);
+    return { ok: true as const, path };
+  });
+  ipcMain.handle('otto:debug:open-devtools', () => {
+    win.webContents.openDevTools({ mode: 'detach' });
+    return { ok: true as const };
+  });
+
   ipcMain.handle('otto:practices:list', () => practices.listResult());
   ipcMain.handle('otto:practices:get', (_e, slug: string) => practices.get(slug));
   ipcMain.handle('otto:practices:resolve-for-text', (_e, text: string) => practices.resolveForText(text));
@@ -309,6 +379,12 @@ export function registerIpc(win: BrowserWindow) {
     'otto:tickets:update-status',
     (_e, ticketId: string, patch: Parameters<TicketStore['updateStatus']>[1]) => tickets.updateStatus(ticketId, patch),
   );
+  ipcMain.handle('otto:adapters:paperclip:snapshot', () => paperclipIntake.snapshot());
+  ipcMain.handle(
+    'otto:adapters:paperclip:connect',
+    (_e, input?: { approved?: boolean; baseUrl?: string | null }) => paperclipIntake.connect(input ?? {}),
+  );
+  ipcMain.handle('otto:adapters:paperclip:sync', () => paperclipIntake.sync());
 
   ipcMain.handle('otto:workers:list', () => workers.list());
   ipcMain.handle('otto:workers:update-status', (_e, id: string, status: import('@otto-haus/core').WorkerStatus, receiptId?: string) =>
@@ -350,78 +426,35 @@ export function registerIpc(win: BrowserWindow) {
   ipcMain.handle('otto:threads:create', async (_e, input?: { title?: string; agentId?: string | null }) => {
     permissionSessionStore.clear();
     const thread = threads.create(input);
-    safeWebContentsSend(win, 'otto:threads:active', {
-      threadId: thread.id,
-      status: {
-        ...runner.getStatus(),
-        ready: false,
-        code: 'error',
-        reason: 'Starting a new conversation…',
-      },
-    });
     const status = await initWithStaleRecovery({ freshConversation: true });
-    const updatedThread = bindStatusToThread(thread.id, status, {
-      agentId: thread.agentId,
-      lettaConversationId: null,
+    const updatedThread = threads.touchActive({
+      agentId: status.agentId ?? thread.agentId,
+      lettaConversationId: status.conversationId ?? null,
     }) ?? thread;
     safeWebContentsSend(win, 'otto:threads:active', { threadId: thread.id, status });
     return { thread: updatedThread, status };
   });
   ipcMain.handle('otto:threads:switch', async (_e, threadId: string) => {
     const thread = threads.switch(threadId);
-    safeWebContentsSend(win, 'otto:threads:active', {
-      threadId: thread.id,
-      status: {
-        ...runner.getStatus(),
-        ready: false,
-        code: 'error',
-        reason: 'Switching conversation…',
-      },
-    });
-    const status = await initWithStaleRecovery({ freshConversation: !thread.lettaConversationId });
-    const updatedThread = bindStatusToThread(thread.id, status, {
-      agentId: thread.agentId,
-      lettaConversationId: thread.lettaConversationId,
+    const status = await initWithStaleRecovery();
+    const updatedThread = threads.touchActive({
+      agentId: status.agentId ?? thread.agentId,
+      lettaConversationId: status.conversationId ?? thread.lettaConversationId,
     }) ?? thread;
     safeWebContentsSend(win, 'otto:threads:active', { threadId: thread.id, status });
     return { thread: updatedThread, status };
   });
   ipcMain.handle('otto:threads:archive', async (_e, threadId: string) => {
-    const wasActive = config.get().activeThreadId === threadId;
-    threads.archive(threadId);
-
-    if (!wasActive) {
-      const activeId = config.get().activeThreadId;
-      const activeThread = activeId ? threads.get(activeId) : null;
-      if (!activeThread) throw new Error(`Active thread missing after archive: ${threadId}`);
-      return { thread: activeThread, status: runner.getStatus() };
+    const archived = threads.archive(threadId);
+    const activeThreadId = config.get().activeThreadId ?? null;
+    if (activeThreadId && activeThreadId !== threadId) {
+      const status = await initWithStaleRecovery();
+      safeWebContentsSend(win, 'otto:threads:active', { threadId: activeThreadId, status });
     }
-
-    let nextThread = config.get().activeThreadId ? threads.get(config.get().activeThreadId!) : null;
-    if (!nextThread) {
-      permissionSessionStore.clear();
-      nextThread = threads.create();
-    }
-
-    safeWebContentsSend(win, 'otto:threads:active', {
-      threadId: nextThread.id,
-      status: {
-        ...runner.getStatus(),
-        ready: false,
-        code: 'error',
-        reason: 'Switching conversation…',
-      },
-    });
-    const status = await initWithStaleRecovery({ freshConversation: !nextThread.lettaConversationId });
-    const updatedThread = bindStatusToThread(nextThread.id, status, {
-      agentId: nextThread.agentId,
-      lettaConversationId: nextThread.lettaConversationId,
-    }) ?? nextThread;
-    safeWebContentsSend(win, 'otto:threads:active', { threadId: nextThread.id, status });
-    return { thread: updatedThread, status };
+    return archived;
   });
+  ipcMain.handle('otto:threads:unarchive', (_e, threadId: string) => threads.unarchive(threadId));
   ipcMain.handle('otto:threads:pin', (_e, threadId: string, pinned: boolean) => threads.pin(threadId, pinned));
-  ipcMain.handle('otto:threads:rename', (_e, threadId: string, title: string) => threads.rename(threadId, title));
   ipcMain.handle('otto:threads:move', (_e, threadId: string, targetId: string) => threads.move(threadId, targetId));
   ipcMain.handle(
     'otto:threads:touch',

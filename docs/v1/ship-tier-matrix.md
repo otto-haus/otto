@@ -11,9 +11,11 @@ Cut   = not in product UI (spec / parked only)
 | Field | Value |
 |-------|--------|
 | **Version line** | `0.1.x` — target first gate tag `v0.1.3` |
-| **Matrix date** | 2026-06-14 |
-| **Branch** | `ship/functional-labs` (integration codename — not semver) |
+| **Matrix date** | 2026-06-15 |
+| **Branch** | `main` @ `38171e8` (gate packet **063** / issue **#84**) |
 | **Sebastian ack** | *Pending* — tiers below are implementer-validated; Sebastian initials required before declare |
+| **Mechanical audit** | `bun run check:ship-tier-matrix` — CI gate for registry ↔ matrix parity |
+| **Reviewer +1** | *Pending independent review* — mechanical proof passes; human +1 on “no aspirational Ship rows” |
 
 **Nav policy (decided):** Labs-tier sidebar items stay **visible** with a neutral `coming soon` badge when disabled — honest product, no hidden debt.
 
@@ -21,6 +23,8 @@ Cut   = not in product UI (spec / parked only)
 
 | Date | Change |
 |------|--------|
+| 2026-06-15 | **084** gate refresh: unit/release gates green; staging rows 3–10 pending Sebastian walk |
+| 2026-06-14 | **129** Mechanical matrix audit script + Ship proof-status column |
 | 2026-06-14 | **137** Labs gate: master + feature toggles; Knowledge/Channels Labs-tier only |
 | 2026-06-14 | Initial matrix from ticket 136 + staging walk |
 
@@ -28,37 +32,38 @@ Cut   = not in product UI (spec / parked only)
 
 ## Sidebar surfaces
 
-| Surface | Tier | Current state | Labs default today | Proof command / path | Owner |
-|---------|------|---------------|-------------------|----------------------|-------|
-| Chat | Ship | Wired; needs live Letta for send | always on | `node scripts/otto-staging-two-thread-smoke.cjs` (disposable conv) | 002, 046 |
-| Settings | Ship | Wired | always on | Settings readiness rows + `bun test apps/desktop/electron/config-store.test.ts` | 001, 076 |
-| Onboarding | Ship | Partial — dock/receipt gaps | n/a | `node scripts/otto-staging-onboarding-smoke.cjs` (runtime required) | 080, 071–073 |
-| Charters | Ship | File-backed pane | preview (Labs off) | Open `~/.otto/charters/` + pane list | 007 |
-| Standards | Ship | File-backed | shipped | `standards/` load + skipped visible (037) | 008, 009 |
-| Practices | Ship | File-backed | preview | `practices/**/practice.yaml` + pane | 010, 011 |
-| Routines | Ship | File-backed | preview | `routines/` + manual run receipt | 012, 013 |
-| Curation | Ship | Proposal queue | shipped | deferred filter smoke (036) | 014–016, 048 |
-| Receipts | Ship | File read | shipped | `~/.otto/receipts/` + pane detail | 004, 005, 124 |
-| Checks | Ship | Culture CI pane + Chat block | preview | `docs/v1/demo-culture-ci.md` + **135** demo | 131–135 |
-| Autonomy | Ship | Policy read/evaluate | shipped | `autonomy/policy.yaml` + evaluate receipt | 017 |
-| Skills | Ship | SkillStore | shipped | `skill/**/SKILL.md` browse | 066 |
-| Knowledge | Labs | Registry file-backed; Cognee optional | **coming soon** (Labs off) | Registry read; enable `knowledge_cognee` in Settings → Labs | 040–044, 055, **137** |
-| Tickets | Ship | Compile/orchestrate | shipped | `node scripts/otto-staging-ticket-proof-capture.cjs` | 049 |
-| Channels | Labs | Contract + config; no live bot | **coming soon** (Labs off) | Enable `channels_outbound` in Settings → Labs | 056, **137** |
+| Surface | Tier | Current state | Labs default today | Staging (063) | Proof command / path | Proof status | Owner |
+|---------|------|---------------|-------------------|---------------|----------------------|--------------|-------|
+| Chat | Ship | Wired; needs live Letta for send | always on | **partial** — unit pass; two-thread smoke pending | `node scripts/otto-staging-two-thread-smoke.cjs` (disposable conv) | staging pending | 002, 046 |
+| Settings | Ship | Wired | always on | **pass** — unit + config-store | Settings readiness rows + `bun test apps/desktop/electron/config-store.test.ts` | unit pass | 001, 076 |
+| Onboarding | Ship | Partial — dock/receipt gaps | n/a | **partial** — smoke exists; dock visuals open | `node scripts/otto-staging-onboarding-smoke.cjs` (runtime required) | staging pending | 080, 071–073 |
+| Charters | Ship | File-backed pane | preview (Labs off) | **pass** — hygiene 2026-06-14 | Open `~/.otto/charters/` + pane list | unit pass | 007 |
+| Standards | Ship | File-backed | shipped | **pass** — hygiene 2026-06-14 | `standards/` load + skipped visible (037) | unit pass | 008, 009 |
+| Practices | Ship | File-backed | preview | **pass** — hygiene 2026-06-14 | `practices/**/practice.yaml` + pane | unit pass | 010, 011 |
+| Routines | Ship | File-backed | preview | **pass** — hygiene 2026-06-14 | `routines/` + manual run receipt | unit pass | 012, 013 |
+| Curation | Ship | Proposal queue | shipped | **pass** — unit + hygiene | deferred filter smoke (036) | unit pass | 014–016, 048 |
+| Receipts | Ship | File read | shipped | **pass** — hygiene 124 | `~/.otto/receipts/` + pane detail | unit pass | 004, 005, 124 |
+| Checks | Ship | Culture CI pane + Chat block | preview | **partial** — unit pass; **135** demo pending | `docs/v1/demo-culture-ci.md` + **135** demo | staging pending | 131–135 |
+| Autonomy | Ship | Policy read/evaluate | shipped | **pass** — unit + prior smoke | `autonomy/policy.yaml` + evaluate receipt | unit pass | 017 |
+| Skills | Ship | SkillStore | shipped | **partial** — file tests pass; live staging **066** open | `skill/**/SKILL.md` browse | staging pending | 066 |
+| Knowledge | Labs | Registry file-backed; Cognee optional | **coming soon** (Labs off) | **pass** — unit default off (**137**) | Registry read; enable `knowledge_cognee` in Settings → Labs | n/a (Labs) | 040–044, 055, **137** |
+| Tickets | Ship | Compile/orchestrate | shipped | **pass** — hygiene 049 | `node scripts/otto-staging-ticket-proof-capture.cjs` | staging pending | 049 |
+| Terminal | Ship | Opens system shell at workspace root | shipped | **pass** — unit | `bun test apps/desktop/electron/open-terminal.test.ts` | unit pass | 283 |
+| Channels | Labs | Contract + config; no live bot | **coming soon** (Labs off) | **pass** — unit default off (**137**) | Enable `channels_outbound` in Settings → Labs | n/a (Labs) | 056, **137** |
 
 ---
 
 ## Chat sub-flows
 
-| Flow | Tier | Current state | Proof | Owner |
-|------|------|---------------|-------|-------|
-| Thread switcher | Ship | Wired | two-thread smoke | 046 |
-| Permission modal / abort | Ship | Fixed in review | chat permission tests | 045 |
-| Propose from correction | Ship | Wired | proposal-store tests + staging | 048 |
-| Ticket orchestration commands | Ship | Wired | chat-ticket-commands tests | 049 |
-| Command Station strip (Chat) | Ship | Partial tiles | rev8 proof screenshots | 059, 127 strip only |
-| Memory writeback gate UI | Ship | Wired when runtime up | memory-store tests | 128 |
-| Correction → ratification moment | Ship | Partial UX | 123, 126 staging | 123, 126 |
+| Flow | Tier | Current state | Proof | Proof status | Owner |
+|------|------|---------------|-------|--------------|-------|
+| Thread switcher | Ship | Wired | two-thread smoke | staging pending | 046 |
+| Permission modal / abort | Ship | Fixed in review | chat permission tests | unit pass | 045 |
+| Propose from correction | Ship | Wired | proposal-store tests + staging | unit pass | 048 |
+| Ticket orchestration commands | Ship | Wired | chat-ticket-commands tests | unit pass | 049 |
+| Command Station strip (Chat) | Ship | Partial tiles | rev8 proof screenshots | staging pending | 059, 127 strip only |
+| Memory writeback gate UI | Ship | Wired when runtime up | memory-store tests | unit pass | 128 |
+| Correction → ratification moment | Ship | Partial UX | 123, 126 staging | staging pending | 123, 126 |
 
 ---
 
@@ -129,25 +134,57 @@ These were premie-dones in `_Done/`; moved to **`planning/hq-tickets/_Backlog/`*
 
 ## Verification bundle (Sebastian gate)
 
+Receipt: [`084-release-gate-verify-20260615.json`](../receipts/staging/084-release-gate-verify-20260615.json) (issue **#84**).
+
+### Automated gates (2026-06-15, `main` @ `38171e8`)
+
+| # | Check | Result |
+|---|--------|--------|
+| 1 | `bun run verify:v0` | **pass** — 5/5; 392 pass / 0 fail / 2 skip |
+| 2 | `bash scripts/release-gate.sh` | **pass** — verify:v0 + electron:typecheck |
+| 3 | Labs off default (fresh `~/.otto`) | **pass** — `config-store.test.ts` (**137**) |
+
+### Staging proof checklist (rows 2–10 — Sebastian walk)
+
 Run on **`/Applications/otto-staging.app` only** — never live `otto.app` or `conversation=default`.
+
+| # | Check | Result |
+|---|--------|--------|
+| 2 | Staging bundle refresh | **pending** — deploy not run this pass |
+| 3 | Labs off default (UI) | **pending** — Sebastian walk |
+| 4 | Labs on knowledge | **pending** — Sebastian walk |
+| 5 | Chat + threads | **pending** — `otto-staging-two-thread-smoke.cjs` |
+| 6 | Rev8 culture strip | **pending** — `otto-staging-rev8-proof.cjs` |
+| 7 | Embedded bootstrap | **partial** — prior receipt; fresh Mac **076** open |
+| 8 | Onboarding smoke | **pending** — runtime required |
+| 9 | Culture CI demo | **pending** — **135** |
+| 10 | Ticket orchestration | **pending** — `otto-staging-ticket-proof-capture.cjs` |
 
 ```sh
 cd /Users/seb/Code/otto
 bun run verify:v0
 bash scripts/release-gate.sh
 
+# Sebastian / staging operator only:
 OTTO_STAGING_REFRESH=1 bash apps/desktop/scripts/deploy-staging.sh
-
 NODE_PATH=$HOME/.codex/admin/node_modules node scripts/otto-staging-rev8-proof.cjs
 NODE_PATH=$HOME/.codex/admin/node_modules node scripts/otto-staging-two-thread-smoke.cjs
 NODE_PATH=$HOME/.codex/admin/node_modules node scripts/otto-staging-076-bootstrap-proof.cjs
-
-# When Letta runtime connected:
 NODE_PATH=$HOME/.codex/admin/node_modules node scripts/otto-staging-onboarding-smoke.cjs
-# Culture CI demo: docs/v1/demo-culture-ci.md
+# Culture CI: docs/v1/demo-culture-ci.md
 ```
 
-Record pass/fail per **Ship** row in this file before Sebastian ack.
+Record pass/fail per **Ship** row in this file before Sebastian ack. **138** owns flipping `staging pending` → `staging pass` with dated receipts.
+
+---
+
+## Reviewer gate (136 / #129)
+
+| Check | Status | Notes |
+|-------|--------|-------|
+| `bun run check:ship-tier-matrix` | pass | Registry ↔ matrix parity; every Ship row names a proof path |
+| Independent reviewer +1 | pending | “No Ship row is aspirational without a proof path” — human sign-off after CI green |
+| Sebastian ack (approved tiers) | pending | Initials + date in header table |
 
 ---
 

@@ -33,6 +33,7 @@ Integration branch `ship/v0.3-integration` is a codename, not semver. The earned
 - [ ] Every **Ship** row has staging pass/fail recorded (not aspirational)
 - [ ] Labs default off verified on fresh `~/.otto/config.json` (**137**)
 - [ ] `bun run verify:v0` green
+- [ ] Remote `CI / checks` green on release PR (ticket **129** / `.github/workflows/ci.yml`)
 - [ ] `bash scripts/release-gate.sh` green
 - [ ] Staging deploy receipt: `OTTO_STAGING_REFRESH=1 bash apps/desktop/scripts/deploy-staging.sh`
 - [ ] Explicit **NOT PUSHED** banner until Sebastian approval
@@ -61,6 +62,7 @@ Run only against **`/Applications/otto-staging.app`**. Record pass/fail in matri
 ```sh
 cd /Users/seb/Code/otto
 bun run verify:v0
+gh pr checks <release-pr> --watch   # CI / checks must be green before Sebastian gate
 bash scripts/release-gate.sh
 
 OTTO_STAGING_REFRESH=1 bash apps/desktop/scripts/deploy-staging.sh

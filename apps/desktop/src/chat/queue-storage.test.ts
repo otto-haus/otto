@@ -1,12 +1,17 @@
 import { afterEach, describe, expect, test } from 'bun:test';
 import {
+  appendFailedQueueItem,
+  composerDraftFromQueueText,
   createQueueItem,
+  enqueueQueueItemForThread,
   hasDuplicateQueueText,
   INFLIGHT_KEY,
+  INFLIGHT_STALE_MS,
   isSmokeQueueText,
   LEGACY_QUEUE_KEY,
   LEGACY_QUEUE_V2_KEY,
   nextQueueItemForThread,
+  parseQueueAttachmentLine,
   previewQueueText,
   promoteQueueItemForThread,
   QUEUE_KEY,
@@ -133,7 +138,31 @@ describe('queue-storage', () => {
     expect(JSON.parse(localStorage.getItem(QUEUE_KEY) ?? '[]')).toEqual(queue);
   });
 
-  test('readQueue rehydrates in-flight messages after queued work with thread scope', () => {
+  test('readQueue marks stale in-flight messages as failed instead of dropping them', () => {
+    installStorage();
+    const staleCreatedAt = Date.now() - INFLIGHT_STALE_MS - 1000;
+    localStorage.setItem(INFLIGHT_KEY, JSON.stringify({
+      id: 'stale-inflight',
+      text: 'Message stuck in flight',
+      createdAt: staleCreatedAt,
+      state: 'sending',
+      threadId: 'thread_a',
+    }));
+
+    const queue = readQueue();
+
+    expect(queue).toEqual([
+      expect.objectContaining({
+        id: 'stale-inflight',
+        state: 'failed',
+        text: 'Message stuck in flight',
+        threadId: 'thread_a',
+      }),
+    ]);
+    expect(localStorage.getItem(INFLIGHT_KEY)).toBeNull();
+  });
+
+  test('readQueue rehydrates in-flight messages before other queued work for the same thread', () => {
     installStorage();
     localStorage.setItem(QUEUE_KEY, JSON.stringify([
       { id: 'queued-a', text: 'Already queued for A.', createdAt: Date.now(), state: 'queued', threadId: 'thread_a' },
@@ -149,10 +178,10 @@ describe('queue-storage', () => {
     const queue = readQueue();
 
     expect(queue.map((item) => `${item.id}:${item.threadId ?? 'legacy'}`)).toEqual([
-      'queued-a:thread_a',
       'inflight-a:thread_a',
+      'queued-a:thread_a',
     ]);
-    expect(nextQueueItemForThread(queue, 'thread_a')?.id).toBe('queued-a');
+    expect(nextQueueItemForThread(queue, 'thread_a')?.id).toBe('inflight-a');
     expect(JSON.parse(localStorage.getItem(QUEUE_KEY) ?? '[]')).toEqual(queue);
   });
 
@@ -222,6 +251,41 @@ describe('queue-storage', () => {
     expect(nextQueueItemForThread(retried, 'thread_a')?.id).toBe('queued-a');
   });
 
+  test('steer enqueue inserts at the front of waiting rows for the active thread', () => {
+    const items: QueueItem[] = [
+      { id: 'queued-a-1', text: 'first for A', createdAt: 1, state: 'queued', threadId: 'thread_a' },
+      { id: 'queued-b', text: 'queued for B', createdAt: 2, state: 'queued', threadId: 'thread_b' },
+    ];
+
+    const steered = enqueueQueueItemForThread(items, 'interrupt for A', 'thread_a', { steer: true });
+
+    expect(steered.map((item) => item.text)).toEqual(['interrupt for A', 'first for A', 'queued for B']);
+    expect(nextQueueItemForThread(steered, 'thread_a')?.text).toBe('interrupt for A');
+  });
+
+  test('ordinary enqueue appends at the end for FIFO drain order', () => {
+    const items: QueueItem[] = [
+      { id: 'queued-a-1', text: 'first for A', createdAt: 1, state: 'queued', threadId: 'thread_a' },
+    ];
+
+    const appended = enqueueQueueItemForThread(items, 'second for A', 'thread_a');
+
+    expect(appended.map((item) => item.text)).toEqual(['first for A', 'second for A']);
+    expect(nextQueueItemForThread(appended, 'thread_a')?.text).toBe('first for A');
+  });
+
+  test('appendFailedQueueItem keeps failed rows after waiting rows', () => {
+    const items: QueueItem[] = [
+      { id: 'queued-a', text: 'still waiting', createdAt: 1, state: 'queued', threadId: 'thread_a' },
+    ];
+    const failed = { id: 'failed-a', text: 'send failed', createdAt: 2, state: 'failed' as const, threadId: 'thread_a' };
+
+    const merged = appendFailedQueueItem(items, failed);
+
+    expect(merged.map((item) => `${item.id}:${item.state}`)).toEqual(['queued-a:queued', 'failed-a:failed']);
+    expect(nextQueueItemForThread(merged, 'thread_a')?.id).toBe('queued-a');
+  });
+
   test('promoteQueueItemForThread moves a waiting item to the front without reordering other threads', () => {
     const items: QueueItem[] = [
       { id: 'queued-a-1', text: 'first for A', createdAt: 1, state: 'queued', threadId: 'thread_a' },
@@ -253,5 +317,21 @@ describe('queue-storage', () => {
     });
     expect(queueHasAttachments(text)).toBe(true);
     expect(previewQueueText(text)).toBe('Please inspect this screenshot. · 1 attachment');
+  });
+
+  test('composerDraftFromQueueText splits body and attachment refs for recall', () => {
+    const text = 'Steer the plan.\n\nAttached local image:\n1. wire.png — /Users/seb/.otto/attachments/wire.png';
+    expect(parseQueueAttachmentLine('1. wire.png — /Users/seb/.otto/attachments/wire.png')).toEqual({
+      name: 'wire.png',
+      path: '/Users/seb/.otto/attachments/wire.png',
+    });
+    expect(composerDraftFromQueueText(text)).toEqual({
+      body: 'Steer the plan.',
+      attachments: [{ name: 'wire.png', path: '/Users/seb/.otto/attachments/wire.png' }],
+    });
+    expect(composerDraftFromQueueText('Plain follow-up only.')).toEqual({
+      body: 'Plain follow-up only.',
+      attachments: [],
+    });
   });
 });

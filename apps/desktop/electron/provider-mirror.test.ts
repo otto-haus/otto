@@ -1,7 +1,7 @@
 import { describe, expect, test } from 'bun:test';
 import { mkdtempSync, readFileSync, rmSync, statSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { join, resolve } from 'node:path';
 import { ConfigStore } from './config-store';
 import { buildProviderMirror } from './provider-mirror';
 import { hasSecret, secretStorePath, setSecret } from './secret-store';
@@ -54,6 +54,26 @@ describe('buildProviderMirror', () => {
     } finally {
       rmSync(tmp, { recursive: true, force: true });
       delete process.env.OTTO_HOME;
+    }
+  });
+
+  test('renderer and IPC sources do not log submitted key material', () => {
+    const desktopRoot = resolve(import.meta.dir, '..');
+    const sources = [
+      join(desktopRoot, 'src/surfaces/Panes.tsx'),
+      join(desktopRoot, 'electron/ipc.ts'),
+      join(desktopRoot, 'electron/preload.ts'),
+    ];
+    const blocked = [
+      /console\.(log|debug|info|warn|error)\([^)]*apiKeyDraft/,
+      /console\.(log|debug|info|warn|error)\([^)]*set-api-key[^)]*value/,
+      /console\.(log|debug|info|warn|error)\([^)]*LETTA_API_KEY[^)]*value/,
+    ];
+    for (const file of sources) {
+      const text = readFileSync(file, 'utf8');
+      for (const pattern of blocked) {
+        expect(text).not.toMatch(pattern);
+      }
     }
   });
 });

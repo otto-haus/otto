@@ -5,6 +5,7 @@ import { join } from 'node:path';
 import { ConfigStore } from './config-store';
 import {
   applyDreamSettingsPatch,
+  applyEmbeddedLettaSettingsEnv,
   DEFAULT_DREAM_SETTINGS,
   getDreamSettings,
   readDreamSettingsFromLetta,
@@ -72,5 +73,17 @@ describe('dream-settings', () => {
   test('resolveLettaSettingsPath honors OTTO_LETTA_SETTINGS_PATH', () => {
     const config = isolatedConfig();
     expect(resolveLettaSettingsPath(config, 'existing')).toBe(process.env.OTTO_LETTA_SETTINGS_PATH);
+  });
+
+  test('embedded mode resolves settings under OTTO_HOME/letta', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'otto-dream-embedded-'));
+    process.env.OTTO_HOME = dir;
+    Reflect.deleteProperty(process.env, 'OTTO_LETTA_SETTINGS_PATH');
+    const config = new ConfigStore();
+    expect(resolveLettaSettingsPath(config, 'embedded')).toBe(join(dir, 'letta', 'settings.json'));
+    const applied = applyEmbeddedLettaSettingsEnv(config);
+    expect(applied).toBe(join(dir, 'letta', 'settings.json'));
+    expect(process.env.OTTO_LETTA_SETTINGS_PATH).toBe(applied);
+    delete process.env.OTTO_HOME;
   });
 });

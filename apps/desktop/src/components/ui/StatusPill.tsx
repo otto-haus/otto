@@ -14,6 +14,7 @@ const toneClass = (s: string): string => {
     s === 'unreachable' ||
     s === 'sdk-missing' ||
     s === 'stale' ||
+    s === 'usage-limit' ||
     s === 'error' ||
     s === 'missing'
   )
@@ -31,6 +32,7 @@ export const STATUS_CODE_LABELS: Record<StatusCode, string> = {
   unreachable: 'unreachable',
   'sdk-missing': 'SDK missing',
   stale: 'stale session',
+  'usage-limit': 'usage limit',
   error: 'not connected',
 };
 

@@ -31,7 +31,8 @@ export class StandardStore {
     for (const ref of registry.standards) {
       const file = this.pathFor(ref.file);
       try {
-        standards.push(readStandard(file, registryPath));
+        const record = readStandard(file, registryPath);
+        standards.push(ref.domain ? { ...record, domain: ref.domain } : record);
       } catch (error) {
         skipped.push({
           slug: ref.slug,
@@ -151,6 +152,7 @@ function normalizeRegistry(value: unknown, file: string): StandardsRegistry {
     status: status(entry.status),
     file: requiredString(entry.file, 'standards[].file'),
     meaning: requiredString(entry.meaning, 'standards[].meaning'),
+    domain: typeof entry.domain === 'string' && entry.domain.trim() ? entry.domain.trim() : undefined,
   }));
 
   return {

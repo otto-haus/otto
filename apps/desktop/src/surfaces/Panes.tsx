@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { PaperclipIntakePanel } from './PaperclipIntakePanel';
 import { Icon } from '../components/icons';
 import { useToast } from '../components/Toast';
 import { EmptyState, StatusPill, statusPill, statusCodePill, SurfaceProof, SurfacePage, SurfaceHero, InkBlock, SurfaceInk, SurfaceStatStrip, SurfaceMeta, SplitLayout, FilterBar, InlineEmpty, WebPreviewFrame, ReceiptCard, CheckBlockBanner } from '../components/ui';
@@ -16,12 +17,28 @@ import {
   ticketsCopy,
   channelsCopy,
   settingsCopy,
+  isolatedAgentBoundaryOptions,
   listEmpty,
   cultureSettingsCopy,
   labsCopy,
   loaderCopy,
 } from '../copy/surfaces';
 import { resetOnboardingForReplay } from '../onboarding-storage';
+import { saveConnectionAndReconnect } from '../connection-reconnect';
+import {
+  STANDARD_DOMAINS,
+  domainForStandard,
+  filterStandards,
+  groupStandardsByDomain,
+  type StandardDomain,
+  type StandardStatusFilter,
+} from '../standards-filter';
+import {
+  persistDisplayTheme,
+  readStoredDisplayTheme,
+  watchSystemDisplayTheme,
+  type DisplayTheme,
+} from '../display-preferences';
 import { LabsBlockedShell } from '../labs/LabsBlockedShell';
 import {
   getSampleReceiptDetail,
@@ -32,7 +49,7 @@ import {
 } from '../onboarding-sample-receipt';
 import { useLabs, LAB_FEATURE_IDS, LAB_FEATURE_META } from '../labs/LabsContext';
 import { AppSourceDetails } from '../components/AppSourceBadge';
-import type { AppBuildInfo, LabFeatureId, WorkspaceInfo } from '../../electron/shared/types';
+import type { AppBuildInfo, IsolatedAgentRecord, LabFeatureId, WorkspaceInfo, SystemHealthReport, HealthCheck } from '../../electron/shared/types';
 import {
   ottoApi,
   type CharterDetail,
@@ -55,6 +72,7 @@ import {
   type AutonomyActionEvaluation,
   type StandardListResult,
   type StandardRecord,
+  type StandardsRegistry,
   type StatusCode,
   type ApprovalListResult,
   type KnowledgeListResult,
@@ -79,6 +97,7 @@ import {
   type ProviderMirrorSnapshot,
   type DreamSettings,
   type DreamTrigger,
+  type ConversationSortMode,
 } from '../runtime';
 import { useRuntimeContext } from '../RuntimeContext';
 import { ReadinessPanel } from '../ReadinessPanel';
@@ -496,11 +515,24 @@ const ChipList: React.FC<{ values: string[]; empty: string }> = ({ values, empty
 );
 
 /* ---------- Standards ---------- */
+function formatStandardDomain(domain: StandardDomain | 'uncategorized'): string {
+  if (domain === 'uncategorized') return 'Other';
+  return domain.split('-').map((part) => part.charAt(0).toUpperCase() + part.slice(1)).join(' ');
+}
+
+function standardStatusPill(status: string) {
+  if (status === 'deprecated') return <StatusPill status={status} label={standardsCopy.filterDeprecated} />;
+  return statusPill(status);
+}
+
 export const Standards: React.FC = () => {
   const api = ottoApi();
   const [result, setResult] = useState<StandardListResult | null>(null);
   const [selectedSlug, setSelectedSlug] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [query, setQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState<StandardStatusFilter>('all');
+  const [domainFilter, setDomainFilter] = useState<'all' | StandardDomain>('all');
 
   useEffect(() => {
     if (!api) return;
@@ -519,13 +551,27 @@ export const Standards: React.FC = () => {
     };
   }, [api]);
 
+  const standards = result?.standards ?? [];
+  const filtered = useMemo(
+    () => filterStandards(standards, { query, status: statusFilter, domain: domainFilter }),
+    [standards, query, statusFilter, domainFilter],
+  );
+  const grouped = useMemo(() => groupStandardsByDomain(filtered), [filtered]);
+  const selected = filtered.find((standard) => standard.slug === selectedSlug)
+    ?? filtered[0]
+    ?? null;
+  const activeCount = standards.filter((s) => s.status === 'active').length;
+
+  useEffect(() => {
+    if (!selectedSlug && filtered[0]) setSelectedSlug(filtered[0].slug);
+    if (selectedSlug && filtered.length && !filtered.some((s) => s.slug === selectedSlug)) {
+      setSelectedSlug(filtered[0]?.slug ?? null);
+    }
+  }, [filtered, selectedSlug]);
+
   if (!api) {
     return <WebPreviewFrame surface="standards" />;
   }
-
-  const standards = result?.standards ?? [];
-  const selected = standards.find((standard) => standard.slug === selectedSlug) ?? standards[0] ?? null;
-  const activeCount = standards.filter((s) => s.status === 'active').length;
 
   return (
     <SurfacePage>
@@ -552,44 +598,107 @@ export const Standards: React.FC = () => {
       )}
       {error && <div className="notice"><span className="dot dot--warn" /> {error}</div>}
       <SkippedLoaderPanel skipped={result?.skipped ?? []} />
+      {result && standards.length > 0 && (
+        <>
+          <input
+            className="charterInput settingsGeneralSection__search"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder={standardsCopy.searchPlaceholder}
+            aria-label={standardsCopy.searchPlaceholder}
+          />
+          <FilterBar
+            options={[
+              { key: 'all', label: standardsCopy.filterAll },
+              { key: 'active', label: standardsCopy.filterActive },
+              { key: 'draft', label: standardsCopy.filterDraft },
+              { key: 'deprecated', label: standardsCopy.filterDeprecated },
+            ]}
+            active={statusFilter}
+            onSelect={(key) => setStatusFilter(key as StandardStatusFilter)}
+          />
+          <FilterBar
+            options={[
+              { key: 'all', label: standardsCopy.filterDomainAll },
+              ...STANDARD_DOMAINS.map((domain) => ({ key: domain, label: formatStandardDomain(domain) })),
+            ]}
+            active={domainFilter}
+            onSelect={(key) => setDomainFilter(key as 'all' | StandardDomain)}
+          />
+        </>
+      )}
       <SplitLayout
         list={
           <>
-            {standards.map((standard) => (
-              <button
-                key={standard.slug}
-                className={`card${standard.slug === selected?.slug ? ' is-selected' : ''}`}
-                onClick={() => setSelectedSlug(standard.slug)}
-              >
-                <div className="between">
-                  <span className="card__title">{standard.name}</span>
-                  {statusPill(standard.status)}
-                </div>
-                <span className="card__sub">{standard.meaning}</span>
-              </button>
-            ))}
             {result === null ? (
               <div className="listEmpty">
                 <p className="muted">{standardsCopy.loadingTitle}</p>
               </div>
             ) : !standards.length ? (
               <InlineEmpty title={listEmpty.standards?.title ?? 'No Standards loaded'} body={listEmpty.standards?.body ?? ''} />
-            ) : null}
+            ) : !filtered.length ? (
+              <InlineEmpty title={standardsCopy.searchNoMatch} body={listEmpty.standards?.body ?? ''} />
+            ) : (
+              grouped.map(({ domain, items }) => (
+                <div key={domain} className="standardsDomainGroup">
+                  <div className="eyebrow">{formatStandardDomain(domain)}</div>
+                  {items.map((standard) => (
+                    <button
+                      key={standard.slug}
+                      className={`card${standard.slug === selected?.slug ? ' is-selected' : ''}`}
+                      onClick={() => setSelectedSlug(standard.slug)}
+                    >
+                      <div className="between">
+                        <span className="card__title">{standard.name}</span>
+                        {standardStatusPill(standard.status)}
+                      </div>
+                      <span className="card__sub">{standard.meaning}</span>
+                    </button>
+                  ))}
+                </div>
+              ))
+            )}
           </>
         }
-        detail={selected ? <StandardDetail standard={selected} /> : null}
+        detail={
+          selected
+            ? <StandardDetail standard={selected} registry={result?.registry ?? null} />
+            : filtered.length
+              ? <InlineEmpty title={standardsCopy.selectTitle} body={standardsCopy.selectBody} />
+              : null
+        }
       />
       {result && (
         <SurfaceMeta label={standardsCopy.metaLabel}>
           <span className="filechip">{standards.length} loaded</span>
+          {filtered.length !== standards.length && (
+            <span className="filechip">{filtered.length} shown</span>
+          )}
         </SurfaceMeta>
       )}
-      <SurfaceProof surface="standards" />
+      {result?.registry?.conflicts?.length ? (
+        <div className="detailSection">
+          <div className="eyebrow">{standardsCopy.tensionMapEyebrow}</div>
+          <ul className="list">
+            {result.registry.conflicts.map((conflict) => (
+              <li key={conflict.between.join('-')}>
+                <button type="button" className="linkish" onClick={() => setSelectedSlug(conflict.between[0] ?? null)}>
+                  {conflict.between.join(' vs ')}
+                </button>
+                <span className="muted"> — {conflict.tie_breaker}</span>
+                {conflict.precedent
+                  ? <span className="filechip">{conflict.precedent}</span>
+                  : <span className="faint"> no case law yet</span>}
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
     </SurfacePage>
   );
 };
 
-const StandardDetail: React.FC<{ standard: StandardRecord }> = ({ standard }) => {
+const StandardDetail: React.FC<{ standard: StandardRecord; registry: StandardsRegistry | null }> = ({ standard, registry }) => {
   const api = ottoApi();
   const [conflict, setConflict] = useState<StandardConflictResult | null>(null);
 
@@ -627,21 +736,37 @@ const StandardDetail: React.FC<{ standard: StandardRecord }> = ({ standard }) =>
         )}
       </div>
     )}
+    {!conflict && (
+      <p className="muted">{standardsCopy.conflictNoneHint}</p>
+    )}
     <div className="detailSection">
       <div className="between">
         <div>
           <div className="eyebrow">standard detail</div>
           <div className="h-sec">{standard.name}</div>
         </div>
-        {statusPill(standard.status)}
+        {standardStatusPill(standard.status)}
       </div>
       <p className="lede" style={{ marginTop: 8 }}>{standard.meaning}</p>
       <dl className="kv charterKv">
         <div><dt>schema</dt><dd>{standard.schema}</dd></div>
         <div><dt>slug</dt><dd className="mono">{standard.slug}</dd></div>
         <div><dt>version</dt><dd>{standard.version}</dd></div>
+        <div><dt>{standardsCopy.domainLabel}</dt><dd>{formatStandardDomain(domainForStandard(standard))}</dd></div>
         <div><dt>file</dt><dd className="mono">{standard.file}</dd></div>
       </dl>
+    </div>
+
+    {standard.markdown && (
+      <div className="detailSection">
+        <div className="eyebrow">{standardsCopy.canonBodyEyebrow}</div>
+        <pre className="mono standardsMarkdownExcerpt">{standard.markdown.slice(0, 1200)}{standard.markdown.length > 1200 ? '…' : ''}</pre>
+      </div>
+    )}
+
+    <div className="detailSection">
+      <div className="eyebrow">{standardsCopy.curationPathEyebrow}</div>
+      <p className="muted">{standardsCopy.curationPathBody}</p>
     </div>
 
     <div className="detailGrid detailGrid--2">
@@ -666,6 +791,20 @@ const StandardDetail: React.FC<{ standard: StandardRecord }> = ({ standard }) =>
         <span className="filechip" style={{ marginTop: 10 }}>{standard.slug} · {standard.file}</span>
       </div>
     </div>
+
+    {!!standard.related_anti_patterns?.length && (
+      <div className="detailSection">
+        <div className="eyebrow">{standardsCopy.antiPatternsEyebrow}</div>
+        <ChipList values={standard.related_anti_patterns} empty="" />
+      </div>
+    )}
+
+    {!!registry?.anti_patterns?.length && (
+      <div className="detailSection">
+        <div className="eyebrow">{standardsCopy.antiPatternsEyebrow} · registry</div>
+        <ChipList values={registry.anti_patterns} empty="" />
+      </div>
+    )}
   </div>
   );
 };
@@ -2639,6 +2778,7 @@ export const Tickets: React.FC = () => {
           { label: ticketsCopy.statReview, value: reviewCount, tone: reviewCount ? 'warn' : 'neutral' },
         ]}
       />
+      <PaperclipIntakePanel />
       {error && <div className="notice"><span className="dot dot--warn" /> {error}</div>}
       {checkBlock && (
         <CheckBlockBanner
@@ -2965,7 +3105,7 @@ const ConnectLetta: React.FC = () => {
   const [baseUrl, setBaseUrl] = useState('');
   const [agentId, setAgentId] = useState('');
   const [primaryAgentId, setPrimaryAgentId] = useState('');
-  const [connectionMode, setConnectionMode] = useState<'embedded' | 'existing' | 'cloud'>('embedded');
+  const [connectionMode, setConnectionMode] = useState<'embedded' | 'existing' | 'cloud'>('existing');
   const [busy, setBusy] = useState(false);
   const [connectError, setConnectError] = useState<string | null>(null);
 
@@ -2977,7 +3117,7 @@ const ConnectLetta: React.FC = () => {
     });
     api.config.get().then((cfg) => {
       setPrimaryAgentId(cfg.primaryAgentId ?? cfg.agentId ?? '');
-      setConnectionMode(cfg.connectionMode ?? 'embedded');
+      setConnectionMode(cfg.connectionMode ?? 'existing');
     });
     api.runtime.status().then(setStatus).catch(() => {});
   }, [api]);
@@ -2997,12 +3137,10 @@ const ConnectLetta: React.FC = () => {
     setBusy(true);
     setConnectError(null);
     try {
-      const next = await api.connection.save({
-        baseUrl: baseUrl.trim() || null,
-        agentId: agentId.trim() || null,
-      });
-      await api.config.set({
-        primaryAgentId: primaryAgentId.trim() || null,
+      const next = await saveConnectionAndReconnect(api, {
+        baseUrl,
+        agentId,
+        primaryAgentId,
         connectionMode,
       });
       setStatus(next);
@@ -3038,6 +3176,11 @@ const ConnectLetta: React.FC = () => {
             spellCheck={false}
           />
         </label>
+      </div>
+      <div className="row settingsGeneralSection__actions">
+        <button type="button" className="btn" onClick={() => void api.runtime.openLetta()}>
+          {settingsCopy.primaryAgentOpenLetta}
+        </button>
       </div>
       <div className="settingsField">
         <label>
@@ -3102,6 +3245,123 @@ const ConnectLetta: React.FC = () => {
           {displayStatus.transportFallbackReason ? ` (fallback: ${displayStatus.transportFallbackReason})` : ''}
         </p>
       )}
+    </div>
+  );
+};
+
+const IsolatedAgentPanel: React.FC = () => {
+  const api = ottoApi();
+  const { push: pushToast } = useToast();
+  const [agents, setAgents] = useState<IsolatedAgentRecord[]>([]);
+  const [boundaryReason, setBoundaryReason] = useState('');
+  const [label, setLabel] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const refresh = () => {
+    if (!api?.isolatedAgents) return;
+    void api.isolatedAgents.list().then((result) => setAgents(result.agents)).catch(() => setAgents([]));
+  };
+
+  useEffect(() => {
+    refresh();
+  }, [api]);
+
+  if (!api?.isolatedAgents) {
+    return (
+      <p className="settingsFieldHint">
+        Isolated agent creation is available in the desktop app after Letta is connected.
+      </p>
+    );
+  }
+
+  const create = async () => {
+    if (!boundaryReason) {
+      setError(settingsCopy.isolatedAgentBoundaryPlaceholder);
+      return;
+    }
+    setBusy(true);
+    setError(null);
+    try {
+      const result = await api.isolatedAgents.create({
+        boundaryReason: boundaryReason as IsolatedAgentRecord['boundaryReason'],
+        label: label.trim() || null,
+      });
+      setBoundaryReason('');
+      setLabel('');
+      refresh();
+      pushToast({
+        title: settingsCopy.isolatedAgentCreateSuccess,
+        body: settingsCopy.isolatedAgentCreateSuccessBody,
+        tone: 'ok',
+      });
+      if (result.receipt?.path) {
+        pushToast({
+          title: settingsCopy.isolatedAgentReceiptNote,
+          body: result.receipt.id,
+          tone: 'info',
+        });
+      }
+    } catch (e) {
+      const message = e instanceof Error ? e.message : String(e);
+      setError(message);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const boundaryLabel = (id: IsolatedAgentRecord['boundaryReason']) =>
+    isolatedAgentBoundaryOptions.find((row) => row.id === id)?.label ?? id;
+
+  return (
+    <div className="settingsBlock">
+      <p className="settingsFieldHint">{settingsCopy.isolatedAgentStandardsNote}</p>
+      <div className="settingsField">
+        <label>
+          <span>{settingsCopy.isolatedAgentBoundaryLabel}</span>
+          <select
+            style={inputStyle}
+            value={boundaryReason}
+            onChange={(e) => setBoundaryReason(e.target.value)}
+          >
+            <option value="">{settingsCopy.isolatedAgentBoundaryPlaceholder}</option>
+            {isolatedAgentBoundaryOptions.map((row) => (
+              <option key={row.id} value={row.id}>{row.label}</option>
+            ))}
+          </select>
+        </label>
+      </div>
+      <div className="settingsField">
+        <label>
+          <span>{settingsCopy.isolatedAgentLabelField}</span>
+          <input
+            style={inputStyle}
+            value={label}
+            onChange={(e) => setLabel(e.target.value)}
+            placeholder={settingsCopy.isolatedAgentLabelPlaceholder}
+            spellCheck={false}
+          />
+        </label>
+      </div>
+      {error ? <p className="faint" style={{ margin: 0, color: 'var(--warn)' }}>{error}</p> : null}
+      <button type="button" className="btn btn--primary" onClick={() => void create()} disabled={busy}>
+        {busy ? settingsCopy.isolatedAgentCreateBusy : settingsCopy.isolatedAgentCreate}
+      </button>
+      <div style={{ marginTop: 16 }}>
+        <div className="settingsFieldRow__title">{settingsCopy.isolatedAgentListTitle}</div>
+        {agents.length === 0 ? (
+          <p className="settingsFieldHint">{settingsCopy.isolatedAgentListEmpty}</p>
+        ) : (
+          <ul className="settingsList">
+            {agents.map((agent) => (
+              <li key={agent.agentId} className="mono" style={{ fontSize: 12, marginBottom: 8 }}>
+                {agent.label || agent.agentId}
+                <span className="muted"> · {boundaryLabel(agent.boundaryReason)} · {agent.agentId}</span>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
     </div>
   );
 };
@@ -3362,6 +3622,83 @@ const SettingsSectionHeader: React.FC<{ title: string; lede: string }> = ({ titl
   </header>
 );
 
+const healthStatusTone = (status: HealthCheck['status']): string => {
+  if (status === 'ok') return 'connected';
+  if (status === 'warn' || status === 'unknown') return 'pending';
+  if (status === 'fail') return 'failed';
+  return 'draft';
+};
+
+const HealthCheckRow: React.FC<{ item: HealthCheck }> = ({ item }) => (
+  <div className="settingsReadinessRow">
+    <div>
+      <div className="settingsReadinessRow__label">{item.label}</div>
+      <div className="settingsReadinessRow__detail">{item.summary}</div>
+      {item.impact ? (
+        <div className="settingsReadinessRow__meta">{settingsCopy.systemHealthImpact}: {item.impact}</div>
+      ) : null}
+      {item.nextAction ? (
+        <div className="settingsReadinessRow__meta">{settingsCopy.systemHealthNext}: {item.nextAction}</div>
+      ) : null}
+    </div>
+    <StatusPill status={healthStatusTone(item.status)} label={item.status} />
+  </div>
+);
+
+const SystemHealthPanel: React.FC = () => {
+  const api = ottoApi();
+  const [report, setReport] = useState<SystemHealthReport | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const refresh = async () => {
+    if (!api?.system?.health) return;
+    setBusy(true);
+    setError(null);
+    try {
+      setReport(await api.system.health());
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  useEffect(() => {
+    void refresh();
+  }, [api]);
+
+  if (!api?.system?.health) return null;
+
+  return (
+    <>
+      <div className="settingsFieldRow">
+        <div className="settingsFieldRow__main">
+          <div className="settingsFieldRow__title">{settingsCopy.systemHealthTitle}</div>
+          <p className="settingsFieldRow__hint">{settingsCopy.systemHealthLede}</p>
+        </div>
+        <button type="button" className="btn" disabled={busy} onClick={() => void refresh()}>
+          {busy ? settingsCopy.systemHealthLoading : settingsCopy.systemHealthRefresh}
+        </button>
+      </div>
+      {error ? <p className="faint settingsStatusBanner settingsStatusBanner--warn">{error}</p> : null}
+      {report ? (
+        <>
+          <div className={`settingsStatusBanner${report.ok ? '' : ' settingsStatusBanner--warn'}`}>
+            {report.ok ? settingsCopy.systemHealthOk : settingsCopy.systemHealthNotOk}
+            <span className="faint mono" style={{ marginLeft: 8 }}>{report.checkedAt}</span>
+          </div>
+          <div className="settingsReadinessGroup">
+            {report.checks.map((check) => <HealthCheckRow key={check.id} item={check} />)}
+          </div>
+        </>
+      ) : busy ? (
+        <p className="faint">{settingsCopy.systemHealthLoading}</p>
+      ) : null}
+    </>
+  );
+};
+
 type ProviderKind = 'local' | 'cloud';
 const PROVIDER_TABS: Array<{
   kind: ProviderKind;
@@ -3398,6 +3735,7 @@ const ModelProviders: React.FC = () => {
   const [apiKeyDraft, setApiKeyDraft] = useState('');
   const [keyBusy, setKeyBusy] = useState(false);
   const [keyMessage, setKeyMessage] = useState<string | null>(null);
+  const [keyError, setKeyError] = useState<string | null>(null);
   const activeModel = `${rt.status?.modelHandle ?? ''} ${rt.status?.model ?? ''}`.toLowerCase();
   const openLetta = () => void api?.runtime.openLetta();
   const rows = MODEL_PROVIDERS.filter((p) => p.kind === tab);
@@ -3437,6 +3775,7 @@ const ModelProviders: React.FC = () => {
     if (!api?.provider || !apiKeyDraft.trim()) return;
     setKeyBusy(true);
     setKeyMessage(null);
+    setKeyError(null);
     try {
       const result = await api.provider.setApiKey(apiKeyDraft);
       setApiKeyDraft('');
@@ -3444,6 +3783,8 @@ const ModelProviders: React.FC = () => {
       refreshMirror();
       const next = await api.runtime.init();
       rt.updateStatus(next);
+    } catch (err) {
+      setKeyError(err instanceof Error ? err.message : String(err));
     } finally {
       setKeyBusy(false);
     }
@@ -3484,8 +3825,9 @@ const ModelProviders: React.FC = () => {
           <button type="button" className="btn btn--primary" onClick={submitApiKey} disabled={keyBusy || !apiKeyDraft.trim()}>
             {keyBusy ? 'Saving…' : settingsCopy.providerSubmitKey}
           </button>
-          {keyMessage && <span className="muted" style={{ fontSize: 13 }}>{keyMessage}</span>}
+          {keyMessage && !keyError && <span className="muted" style={{ fontSize: 13 }}>{keyMessage}</span>}
         </div>
+        {keyError ? <p className="faint settingsStatusBanner settingsStatusBanner--warn">{keyError}</p> : null}
       </div>
 
       <div className="segmented" role="tablist" aria-label="Provider type" onKeyDown={handleProviderTabKeyDown}>
@@ -3710,6 +4052,55 @@ const DreamSettingsPanel: React.FC<{
   );
 };
 
+const DisplaySettingsPanel: React.FC = () => {
+  const api = ottoApi();
+  const [theme, setTheme] = useState<DisplayTheme>(() => readStoredDisplayTheme());
+
+  useEffect(() => {
+    if (!api) return;
+    void api.config.get().then((cfg) => {
+      if (!cfg.theme) return;
+      setTheme(cfg.theme);
+      persistDisplayTheme(cfg.theme);
+    }).catch(() => {});
+  }, [api]);
+
+  useEffect(() => watchSystemDisplayTheme(theme), [theme]);
+
+  const updateTheme = async (next: DisplayTheme) => {
+    setTheme(next);
+    persistDisplayTheme(next);
+    if (api) {
+      try {
+        await api.config.set({ theme: next });
+      } catch {
+        /* best effort */
+      }
+    }
+  };
+
+  return (
+    <div className="settingsBlock">
+      <div className="settingsField">
+        <label>
+          <span>{settingsCopy.displayThemeLabel}</span>
+          <select
+            style={inputStyle}
+            value={theme}
+            onChange={(e) => void updateTheme(e.target.value as DisplayTheme)}
+            aria-label={settingsCopy.displayThemeLabel}
+          >
+            <option value="light">{settingsCopy.displayThemeLight}</option>
+            <option value="dark">{settingsCopy.displayThemeDark}</option>
+            <option value="system">{settingsCopy.displayThemeSystem}</option>
+          </select>
+        </label>
+        <p className="settingsFieldHint">{settingsCopy.displayThemeHint}</p>
+      </div>
+    </div>
+  );
+};
+
 const LabsSettingsPanel: React.FC = () => {
   const { labs, setMasterEnabled, setFeatureEnabled, hydrated } = useLabs();
 
@@ -3760,11 +4151,56 @@ const LabsSettingsPanel: React.FC = () => {
   );
 };
 
+const ConversationSortSetting: React.FC = () => {
+  const api = ottoApi();
+  const [mode, setMode] = useState<ConversationSortMode>('recent');
+  const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    if (!api?.config?.get) return;
+    void api.config.get().then((cfg) => {
+      setMode(cfg.conversationSortMode === 'created' ? 'created' : 'recent');
+    });
+  }, [api]);
+
+  const save = async (next: ConversationSortMode) => {
+    if (!api?.config?.set || busy) return;
+    setBusy(true);
+    try {
+      await api.config.set({ conversationSortMode: next });
+      setMode(next);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <div className="settingsFieldRow">
+      <div className="settingsFieldRow__main">
+        <div className="settingsFieldRow__title">{settingsCopy.conversationSortLabel}</div>
+        <p className="settingsFieldRow__hint">{settingsCopy.conversationSortHint}</p>
+      </div>
+      <select
+        className="charterInput"
+        value={mode}
+        disabled={busy || !api}
+        aria-label={settingsCopy.conversationSortLabel}
+        onChange={(event) => void save(event.target.value as ConversationSortMode)}
+      >
+        <option value="recent">{settingsCopy.conversationSortRecent}</option>
+        <option value="created">{settingsCopy.conversationSortCreated}</option>
+      </select>
+    </div>
+  );
+};
+
+type SettingsSectionId = 'general' | 'display' | 'providers' | 'memory' | 'culture' | 'labs';
+
 export const Settings: React.FC = () => {
   const rt = useRuntimeContext();
   const api = ottoApi();
   const { push: pushToast } = useToast();
-  const [section, setSection] = useState<'general' | 'providers'>('general');
+  const [section, setSection] = useState<SettingsSectionId>('general');
   const [buildInfo, setBuildInfo] = useState<AppBuildInfo | null>(null);
 
   useEffect(() => {
@@ -3775,21 +4211,29 @@ export const Settings: React.FC = () => {
   useEffect(() => {
     try {
       const pending = sessionStorage.getItem('otto.settings.section');
-      if (pending === 'memory' || pending === 'culture' || pending === 'labs') {
-        setSection('general');
+      if (
+        pending === 'general'
+        || pending === 'display'
+        || pending === 'providers'
+        || pending === 'memory'
+        || pending === 'culture'
+        || pending === 'labs'
+      ) {
+        setSection(pending);
         sessionStorage.removeItem('otto.settings.section');
-        requestAnimationFrame(() => {
-          document.getElementById(`settings-${pending}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        });
       }
     } catch { /* best effort */ }
   }, []);
 
   const liveConnected = rt.electron && !!rt.status?.ready;
 
-  const settingsTabs: Array<{ id: typeof section; label: string; icon: React.ReactNode }> = [
+  const settingsTabs: Array<{ id: SettingsSectionId; label: string; icon: React.ReactNode }> = [
     { id: 'general', label: settingsCopy.tabGeneral, icon: Icon.settings },
+    { id: 'display', label: settingsCopy.tabDisplay, icon: Icon.theme },
     { id: 'providers', label: settingsCopy.tabProviders, icon: Icon.lock },
+    { id: 'memory', label: settingsCopy.tabMemory, icon: Icon.curation },
+    { id: 'culture', label: settingsCopy.tabCulture, icon: Icon.file },
+    { id: 'labs', label: settingsCopy.tabLabs, icon: Icon.theme },
   ];
 
   return (
@@ -3818,6 +4262,43 @@ export const Settings: React.FC = () => {
 
       {section === 'providers' ? (
         <ModelProviders />
+      ) : section === 'display' ? (
+        <div className="settingsPage__content">
+          <SettingsSectionHeader title={settingsCopy.displayTitle} lede={settingsCopy.displayLede} />
+          <DisplaySettingsPanel />
+          <p className="faint mono settingsLocalFootnote">{settingsCopy.localOnlyFootnote}</p>
+          <AppSourceDetails info={buildInfo} />
+        </div>
+      ) : section === 'memory' ? (
+        <div className="settingsPage__content">
+          <section id="settings-memory">
+            <SettingsSectionHeader title={settingsCopy.memoryTitle} lede={settingsCopy.memoryLede} />
+            <MemoryObservatory connected={liveConnected} onOpenLetta={() => void ottoApi()?.runtime.openLetta()} />
+          </section>
+          <p className="faint mono settingsLocalFootnote">{settingsCopy.localOnlyFootnote}</p>
+          <AppSourceDetails info={buildInfo} />
+        </div>
+      ) : section === 'culture' ? (
+        <div className="settingsPage__content">
+          <section id="settings-culture">
+            {api ? (
+              <CultureSettingsPanel api={api} pushToast={pushToast} />
+            ) : (
+              <InlineEmpty title={cultureSettingsCopy.title} body={cultureSettingsCopy.lede} />
+            )}
+          </section>
+          <p className="faint mono settingsLocalFootnote">{settingsCopy.localOnlyFootnote}</p>
+          <AppSourceDetails info={buildInfo} />
+        </div>
+      ) : section === 'labs' ? (
+        <div className="settingsPage__content">
+          <section className="settingsLabs" id="settings-labs">
+            <SettingsSectionHeader title={settingsCopy.sectionLabs} lede={labsCopy.lede} />
+            <LabsSettingsPanel />
+          </section>
+          <p className="faint mono settingsLocalFootnote">{settingsCopy.localOnlyFootnote}</p>
+          <AppSourceDetails info={buildInfo} />
+        </div>
       ) : (
         <div className="settingsPage__content">
           <SettingsSectionHeader title={settingsCopy.generalTitle} lede={settingsCopy.generalLede} />
@@ -3828,8 +4309,18 @@ export const Settings: React.FC = () => {
           </section>
 
           <section>
+            <SettingsSectionHeader title={settingsCopy.advancedAgentsTitle} lede={settingsCopy.advancedAgentsLede} />
+            <IsolatedAgentPanel />
+          </section>
+
+          <section>
             <SettingsSectionHeader title={settingsCopy.workspaceTitle} lede={settingsCopy.workspaceLede} />
             <WorkspaceAndPermissionRoute />
+          </section>
+
+          <section>
+            <SettingsSectionHeader title={settingsCopy.conversationSortLabel} lede={settingsCopy.conversationSortHint} />
+            <ConversationSortSetting />
           </section>
 
           {(api?.cognee || api?.pgvector) ? (
@@ -3865,13 +4356,13 @@ export const Settings: React.FC = () => {
           </section>
 
           <section>
-            <SettingsSectionHeader title={settingsCopy.readinessTitle} lede={settingsCopy.readinessLede} />
-            <ReadinessPanel />
+            <SettingsSectionHeader title={settingsCopy.systemHealthTitle} lede={settingsCopy.systemHealthLede} />
+            <SystemHealthPanel />
           </section>
 
-          <section className="settingsGeneralSection" id="settings-memory">
-            <SettingsSectionHeader title={settingsCopy.memoryTitle} lede={settingsCopy.memoryLede} />
-            <MemoryObservatory connected={liveConnected} onOpenLetta={() => void ottoApi()?.runtime.openLetta()} />
+          <section>
+            <SettingsSectionHeader title={settingsCopy.readinessTitle} lede={settingsCopy.readinessLede} />
+            <ReadinessPanel />
           </section>
 
           <section className="settingsGeneralSection" id="settings-dreaming">
@@ -3884,17 +4375,6 @@ export const Settings: React.FC = () => {
               <DiagnosticsSettingsPanel api={api} pushToast={pushToast} />
             </section>
           ) : null}
-
-          {api ? (
-            <section className="settingsGeneralSection" id="settings-culture">
-              <CultureSettingsPanel api={api} pushToast={pushToast} />
-            </section>
-          ) : null}
-
-          <section className="settingsGeneralSection settingsLabs" id="settings-labs">
-            <SettingsSectionHeader title={settingsCopy.sectionLabs} lede={labsCopy.lede} />
-            <LabsSettingsPanel />
-          </section>
 
           <p className="faint mono settingsLocalFootnote">{settingsCopy.localOnlyFootnote}</p>
           <AppSourceDetails info={buildInfo} />

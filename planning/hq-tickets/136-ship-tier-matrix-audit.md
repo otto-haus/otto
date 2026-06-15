@@ -71,6 +71,8 @@ Without a signed matrix, implementers will keep debating “done” while users 
 - [x] `docs/v1/ship-tier-matrix.md` exists with every sidebar surface + listed lab features
 - [x] Each Ship row has a named proof command or smoke script path *(staging pass/fail still open)*
 - [x] Reopen list appended for Ship-tier `_Done/` tickets missing live proof (ticket ids + reason)
+- [x] Ship proof-status column recorded (unit vs staging pending; **138** closes staging gaps)
+- [x] Mechanical audit: `bun run check:ship-tier-matrix` in CI
 - [ ] Sebastian initials or explicit ack recorded in matrix header (date + “approved tiers”)
 - [ ] Reviewer +1: “no Ship row is aspirational without a proof path”
 
@@ -92,3 +94,10 @@ NODE_PATH=$HOME/.codex/admin/node_modules node scripts/otto-staging-onboarding-s
 ## Blocker log
 
 Leave blank unless blocked.
+
+## Execution receipt (2026-06-14, issue #129)
+
+- Added `scripts/check-ship-tier-matrix.mjs` — validates `SURFACE_TIER` / `LabFeatureId` ↔ matrix parity; fails if any Ship row lacks a proof path.
+- Added `Proof status` column to sidebar + chat sub-flow tables (unit pass vs staging pending).
+- Added Reviewer gate section; Sebastian ack still pending.
+- Verify: `bun run check:ship-tier-matrix`, `bun test scripts/check-ship-tier-matrix.test.mjs`

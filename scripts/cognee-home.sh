@@ -94,14 +94,12 @@ start_daemon() {
     nohup "$python_bin" -m uvicorn cognee.api.client:app \
       --host 127.0.0.1 --port "$PORT" >>"$LOG_DIR/cognee-api.log" 2>&1 &
     echo $! >"$PID_FILE"
-    sleep 2
     return 0
   fi
   local cli
   if cli="$(resolve_cognee_cli)"; then
     nohup "$cli" api --host 127.0.0.1 --port "$PORT" >>"$LOG_DIR/cognee-api.log" 2>&1 &
     echo $! >"$PID_FILE"
-    sleep 2
     return 0
   fi
   echo "Cognee not installed — pip install cognee into ~/.otto/cognee/venv (see docs/cognee.md)" >&2
@@ -127,8 +125,14 @@ case "$cmd" in
       exit 0
     fi
     start_daemon
-    sleep 1
-    result="$(health_probe)"
+    result=''
+    for _ in $(seq 1 15); do
+      sleep 1
+      result="$(health_probe)" || true
+      if echo "$result" | grep -q '"ok":true'; then
+        break
+      fi
+    done
     echo "$result"
     if echo "$result" | grep -q '"ok":true'; then
       write_smoke_receipt "$result"

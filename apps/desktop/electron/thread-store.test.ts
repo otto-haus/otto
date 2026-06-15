@@ -369,4 +369,100 @@ describe('ThreadStore', () => {
       delete process.env.OTTO_HOME;
     }
   });
+
+  test('move persists manual order within pinned group', () => {
+    const tmp = mkdtempSync(join(tmpdir(), 'otto-thread-test-'));
+    try {
+      const config = mockConfig(tmp);
+      const store = new ThreadStore(config);
+      const first = store.create({ title: 'First pinned' });
+      const second = store.create({ title: 'Second pinned' });
+      store.pin(first.id, true);
+      store.pin(second.id, true);
+
+      store.move(second.id, first.id);
+
+      expect(store.list().threads.filter((t) => t.pinned).map((t) => t.id)).toEqual([second.id, first.id]);
+      const reloaded = new ThreadStore(new ConfigStore());
+      expect(reloaded.list().threads.filter((t) => t.pinned).map((t) => t.id)).toEqual([second.id, first.id]);
+    } finally {
+      rmSync(tmp, { recursive: true, force: true });
+      delete process.env.OTTO_HOME;
+    }
+  });
+
+  test('pinned manual order survives later touches', () => {
+    const tmp = mkdtempSync(join(tmpdir(), 'otto-thread-test-'));
+    try {
+      const config = mockConfig(tmp);
+      const store = new ThreadStore(config);
+      const first = store.create({ title: 'First pinned' });
+      const second = store.create({ title: 'Second pinned' });
+      store.pin(first.id, true);
+      store.pin(second.id, true);
+
+      store.move(second.id, first.id);
+      store.switch(first.id);
+      store.touchActive({ title: 'First pinned updated' });
+
+      expect(store.list().threads.filter((t) => t.pinned).map((t) => t.id)).toEqual([second.id, first.id]);
+    } finally {
+      rmSync(tmp, { recursive: true, force: true });
+      delete process.env.OTTO_HOME;
+    }
+  });
+
+  test('conversationSortMode created orders recents by createdAt', () => {
+    const tmp = mkdtempSync(join(tmpdir(), 'otto-thread-test-'));
+    try {
+      const config = mockConfig(tmp);
+      config.update({ conversationSortMode: 'created' });
+      const store = new ThreadStore(config);
+      const older = store.create({ title: 'Older' });
+      const newer = store.create({ title: 'Newer' });
+
+      const ids = store.list().threads.filter((t) => !t.pinned).map((t) => t.id);
+      expect(ids).toEqual([newer.id, older.id]);
+    } finally {
+      rmSync(tmp, { recursive: true, force: true });
+      delete process.env.OTTO_HOME;
+    }
+  });
+
+  test('pinned threads stay above unpinned recents sorted by updatedAt', () => {
+    const tmp = mkdtempSync(join(tmpdir(), 'otto-thread-test-'));
+    try {
+      const config = mockConfig(tmp);
+      const store = new ThreadStore(config);
+      const firstRecent = store.create({ title: 'First recent' });
+      const secondRecent = store.create({ title: 'Second recent' });
+      const pinned = store.create({ title: 'Pinned row' });
+      store.pin(pinned.id, true);
+
+      const ids = store.list().threads.map((thread) => thread.id);
+      expect(ids[0]).toBe(pinned.id);
+      expect(ids.slice(1)).toEqual([secondRecent.id, firstRecent.id]);
+    } finally {
+      rmSync(tmp, { recursive: true, force: true });
+      delete process.env.OTTO_HOME;
+    }
+  });
+
+  test('unarchive restores thread to default list', () => {
+    const tmp = mkdtempSync(join(tmpdir(), 'otto-thread-test-'));
+    try {
+      const config = mockConfig(tmp);
+      const store = new ThreadStore(config);
+      const thread = store.create({ title: 'Restore me' });
+      store.archive(thread.id);
+      expect(store.list(false).threads.some((item) => item.id === thread.id)).toBe(false);
+
+      const restored = store.unarchive(thread.id);
+      expect(restored.archived).toBe(false);
+      expect(store.list(false).threads.some((item) => item.id === thread.id)).toBe(true);
+    } finally {
+      rmSync(tmp, { recursive: true, force: true });
+      delete process.env.OTTO_HOME;
+    }
+  });
 });

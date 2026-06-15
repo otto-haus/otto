@@ -79,7 +79,18 @@ Do not report the installed app as tested unless you deliberately ran an install
 `OTTO_ALLOW_RELEASE_INSTALL=1 task install:release` (canonical `/Applications/otto.app` from GitHub Release only).
 `task refresh` is blocked — it must not overwrite `/Applications/otto.app`.
 
-The desktop is honest by design: chat must stay blocked until a real Letta session initializes.
+**Nonintrusive staging (preferred for agents):**
+
+```sh
+task staging:build   # build/package only — no launch, no focus steal
+task staging         # background launch for CDP smokes (OTTO_WINDOW_MODE=background)
+task staging:open    # explicit visible window — use only when debugging UI
+```
+
+When `OTTO_SMOKE=1`, packaged Electron defaults to `OTTO_WINDOW_MODE=background` unless
+overridden. Set `OTTO_WINDOW_MODE=hidden|minimized|visible` explicitly when needed.
+Playwright/CDP smokes (`scripts/otto-staging-*-smoke.cjs`) attach over the debug port and
+do not require a focused window.
 
 Optional CLI smoke:
 

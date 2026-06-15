@@ -236,3 +236,51 @@ Move to _Done?: Yes
 ### Finding
 
 Unit-only reopen closed with committed tree + staging hygiene proof. GitHub PR/tag still Sebastian gate (063) — not blocking 054 alternate path.
+
+## Execution receipt (rev12 — issue #76)
+
+Status: pass  
+Date: 2026-06-14  
+Lane: Cursor implementer  
+GitHub: [#76](https://github.com/otto-haus/otto/issues/76)
+
+### What changed
+
+- Confirmed hygiene artifacts on `main` (runbook, index PR table, SHIP_CHECKS mirror, staging JSON).
+- Updated runbook tree-status section for merged `main` state.
+- Moved ticket **054** to `_Done/` after rev12 verification.
+
+### Staging proof (on main — not re-run this turn)
+
+- `docs/receipts/staging/staging-hygiene-proof-20260614143512.json` — `tickets.054.ok: true`, `runtimeReady: true`
+- Summary: `docs/receipts/staging/hygiene-staging-proof-20260614143512.md`
+
+### Verification
+
+```sh
+cd /Users/seb/Code/otto/.worktrees/p1-issue-76
+bun install
+bun run typecheck                                    # exit 0
+bun test ./apps/desktop/electron/*.test.ts           # 249 pass, 0 fail
+bun test                                             # 396 pass, 0 fail
+bun run verify:v0                                    # 5/5
+```
+
+## Review rev12
+
+Reviewer: Cursor implementer (issue #76 lane)  
+Date: 2026-06-14  
+Verdict: +1  
+Move to _Done?: Yes
+
+### Checked against Done when
+
+- Branch stack documented with PR descriptions: **Pass** — runbook + `000-index.md` PR table on `main`
+- Staging proof beyond unit-only: **Pass** — `staging-hygiene-proof-20260614143512.json` on `main`
+- Verification commands recorded: **Pass** — rev12 receipt + PR body
+- `000-index.md` PR→ticket map: **Pass**
+- No secrets in diff: **Pass**
+
+### Finding
+
+Issue #76 reopen (`proof_class=unit_only`) closed: staging hygiene receipt is tracked on `main`; ticket moves to `_Done/`. Actual PR stack merge order remains Sebastian gate (063).

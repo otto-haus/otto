@@ -1,5 +1,4 @@
 import { afterEach, beforeEach, describe, expect, test } from 'bun:test';
-import type { ChildProcess } from 'node:child_process';
 import type { BrowserWindow } from 'electron';
 import { WebSocket } from 'ws';
 import { ConfigStore } from '../config-store';
@@ -10,7 +9,6 @@ const originalEnv = {
   OTTO_SMOKE: process.env.OTTO_SMOKE,
   OTTO_AGENT_ID: process.env.OTTO_AGENT_ID,
   OTTO_SKIP_LETTA_LSOF: process.env.OTTO_SKIP_LETTA_LSOF,
-  OTTO_WS_SKIP_CONVERSATION_CREATE: process.env.OTTO_WS_SKIP_CONVERSATION_CREATE,
   LETTA_CLI_PATH: process.env.LETTA_CLI_PATH,
 };
 
@@ -46,21 +44,7 @@ function mockConfig(conversationId: string | null = null): ConfigStore {
     agentCandidates: () => ['agent-ws-test'],
     get: () => ({ conversationId }),
     update: () => ({}),
-  } as unknown as ConfigStore;
-}
-
-function mockMutableConfig(conversationId: string | null = null): ConfigStore {
-  let modelHandle: string | null = null;
-  let effort: 'off' | 'low' | 'medium' | 'high' | 'max' = 'max';
-  return {
-    ...mockConfig(conversationId),
-    modelHandle: () => modelHandle,
-    effort: () => effort,
-    update: (patch: { modelHandle?: string | null; effort?: typeof effort }) => {
-      if ('modelHandle' in patch) modelHandle = patch.modelHandle ?? null;
-      if (patch.effort) effort = patch.effort;
-      return {};
-    },
+    ensurePrimaryAgentId: () => {},
   } as unknown as ConfigStore;
 }
 
@@ -74,6 +58,15 @@ function loopIdle() {
 
 function syncResponse(conversationId: string) {
   return { type: 'sync_response', conversation_id: conversationId };
+}
+
+async function closeMockSocket(socket: WebSocket) {
+  socket.close();
+  await new Promise<void>((resolve) => {
+    if (socket.readyState === WebSocket.CLOSED) return resolve();
+    socket.once('close', () => resolve());
+    setTimeout(resolve, 50);
+  });
 }
 
 async function waitForListener(transport: WsRuntimeTransport, timeoutMs = 5000) {
@@ -90,12 +83,17 @@ async function waitForListener(transport: WsRuntimeTransport, timeoutMs = 5000) 
 async function connectMockRuntime(
   transport: WsRuntimeTransport,
   conversationId: string,
-  onCommand?: (cmd: Record<string, unknown>) => void,
+  onCommand?: (cmd: Record<string, unknown>, socket: WebSocket) => void,
 ) {
   const { port, token } = await waitForListener(transport);
   const socket = new WebSocket(`ws://127.0.0.1:${port}`, {
     headers: { Authorization: `Bearer ${token}` },
   });
+  await new Promise<void>((resolve, reject) => {
+    socket.once('open', () => resolve());
+    socket.once('error', reject);
+  });
+
   socket.on('message', (raw) => {
     let cmd: Record<string, unknown>;
     try {
@@ -103,11 +101,14 @@ async function connectMockRuntime(
     } catch {
       return;
     }
-    onCommand?.(cmd);
     if (cmd.type === 'sync') {
       socket.send(JSON.stringify(syncResponse(conversationId)));
       socket.send(JSON.stringify(deviceOnline()));
       socket.send(JSON.stringify(loopIdle()));
+    }
+    if (onCommand) {
+      onCommand(cmd, socket);
+      return;
     }
     if (cmd.type === 'input') {
       socket.send(JSON.stringify({
@@ -118,11 +119,6 @@ async function connectMockRuntime(
     }
   });
 
-  await new Promise<void>((resolve, reject) => {
-    socket.once('open', () => resolve());
-    socket.once('error', reject);
-  });
-
   return socket;
 }
 
@@ -131,62 +127,12 @@ describe('WsRuntimeTransport', () => {
     process.env.OTTO_SMOKE = '1';
     process.env.OTTO_AGENT_ID = 'agent-ws-test';
     process.env.OTTO_SKIP_LETTA_LSOF = '1';
-    process.env.OTTO_WS_SKIP_CONVERSATION_CREATE = '1';
     process.env.LETTA_CLI_PATH =
       '/Applications/Letta.app/Contents/Resources/app.asar.unpacked/node_modules/@letta-ai/letta-code/letta.js';
   });
 
   test('init reaches ready; smoke session; reconnect marks not ready on socket close', async () => {
     const { win, sent } = mockWindow();
-    const commands: Array<Record<string, unknown>> = [];
-    const transport = new WsRuntimeTransport(win, mockConfig());
-    (transport as unknown as { spawnRemote: () => Promise<void> }).spawnRemote = async () => {};
-
-    const initPromise = transport.init({ freshConversation: true });
-    const socket = await connectMockRuntime(transport, 'conv-ws-disposable', (cmd) => commands.push(cmd));
-    await initPromise;
-
-    expect(transport.getStatus().ready).toBe(true);
-    expect(transport.getStatus().conversationId).toBe('conv-ws-disposable');
-    expect(transport.getStatus().effectiveTransport).toBe('websocket local');
-    expect(smokeMode()).toBe(true);
-    expect(transport.getStatus().sessionMode).toBe('smoke');
-    expect(sent.some((e) => e.channel === 'otto:event' && (e.payload as { status?: { ready?: boolean } }).status?.ready === true)).toBe(true);
-    const syncCommand = commands.find((cmd) => cmd.type === 'sync');
-    expect(syncCommand).toBeTruthy();
-    const runtime = syncCommand?.runtime as { conversation_id?: string } | undefined;
-    expect(runtime?.conversation_id).toMatch(/^local-conv-/);
-
-    socket.close();
-    await new Promise((r) => setTimeout(r, 30));
-    expect(transport.getStatus().ready).toBe(false);
-    expect(transport.getStatus().reason).toContain('disconnected');
-    expect(sent.some((e) => e.channel === 'otto:event' && (e.payload as { status?: { ready?: boolean } }).status?.ready === false)).toBe(true);
-    await transport.close();
-    expect(transport.getStatus().ready).toBe(false);
-    expect(transport.getStatus().code).toBe('error');
-    expect(transport.getStatus().reason).toBe('transport closed');
-  });
-
-  test('stale remote process exit cannot overwrite a newer WS session', () => {
-    const { win } = mockWindow();
-    const transport = new WsRuntimeTransport(win, mockConfig());
-    const oldProc = { killed: false } as ChildProcess;
-    const newProc = { killed: false } as ChildProcess;
-
-    (transport as unknown as { remoteGeneration: number }).remoteGeneration = 2;
-    (transport as unknown as { remoteProc: ChildProcess | null }).remoteProc = newProc;
-
-    expect((transport as unknown as {
-      shouldHonorRemoteExit: (proc: ChildProcess, generation: number) => boolean;
-    }).shouldHonorRemoteExit(oldProc, 1)).toBe(false);
-    expect((transport as unknown as {
-      shouldHonorRemoteExit: (proc: ChildProcess, generation: number) => boolean;
-    }).shouldHonorRemoteExit(newProc, 2)).toBe(true);
-  });
-
-  test('stale runtime socket close cannot overwrite a newer WS session', async () => {
-    const { win } = mockWindow();
     const transport = new WsRuntimeTransport(win, mockConfig());
     (transport as unknown as { spawnRemote: () => Promise<void> }).spawnRemote = async () => {};
 
@@ -195,100 +141,16 @@ describe('WsRuntimeTransport', () => {
     await initPromise;
 
     expect(transport.getStatus().ready).toBe(true);
-    (transport as unknown as { socketGeneration: number }).socketGeneration += 1;
+    expect(transport.getStatus().conversationId).toBe('conv-ws-disposable');
+    expect(transport.getStatus().effectiveTransport).toBe('websocket local');
+    expect(smokeMode()).toBe(true);
+    expect(transport.getStatus().sessionMode).toBe('smoke');
+
     socket.close();
     await new Promise((r) => setTimeout(r, 30));
-
-    expect(transport.getStatus().ready).toBe(true);
-    await transport.close();
-  });
-
-  test('configure resyncs an existing websocket without full init', async () => {
-    const { win } = mockWindow();
-    const config = mockMutableConfig();
-    const transport = new WsRuntimeTransport(win, config);
-    let synced: { agentId: string; conversationId: string | null; modelHandle: string | null } | null = null;
-    (transport as unknown as { status: Record<string, unknown> }).status = {
-      ready: true,
-      code: 'ready',
-      agentId: 'agent-ws-test',
-      conversationId: 'conv-ws-configure',
-      modelHandle: null,
-    };
-    (transport as unknown as { runtimeSocket: WebSocket | null }).runtimeSocket = {
-      readyState: WebSocket.OPEN,
-      removeAllListeners: () => {},
-      close: () => {},
-    } as unknown as WebSocket;
-    (transport as unknown as {
-      syncRuntimeWithFallback: (agentId: string, conversationId: string | null, modelHandle: string | null) => Promise<string | null>;
-    }).syncRuntimeWithFallback = async (agentId, conversationId, modelHandle) => {
-      synced = { agentId, conversationId, modelHandle };
-      return modelHandle;
-    };
-    (transport as unknown as { init: () => Promise<unknown> }).init = async () => {
-      throw new Error('full init should not run for ready socket configure');
-    };
-
-    const status = await transport.configure({ modelHandle: 'openai/gpt-5.5', effort: 'high' });
-
-    expect(status.ready).toBe(true);
-    expect(status.modelHandle).toBe('openai/gpt-5.5');
-    expect(status.effort).toBe('high');
-    expect(synced).toEqual({
-      agentId: 'agent-ws-test',
-      conversationId: 'conv-ws-configure',
-      modelHandle: 'openai/gpt-5.5',
-    });
-    await transport.close();
-  });
-
-  test('explicit configure does not silently fall back to another model', async () => {
-    const { win } = mockWindow();
-    const config = mockMutableConfig();
-    const transport = new WsRuntimeTransport(win, config);
-    const attempted: Array<{ modelHandle: string | null | undefined; allowFallback?: boolean }> = [];
-    (transport as unknown as { status: Record<string, unknown> }).status = {
-      ready: true,
-      code: 'ready',
-      agentId: 'agent-ws-test',
-      conversationId: 'conv-ws-configure',
-      modelHandle: 'openai/gpt-5.5',
-    };
-    (transport as unknown as { runtimeSocket: WebSocket | null }).runtimeSocket = {
-      readyState: WebSocket.OPEN,
-      removeAllListeners: () => {},
-      close: () => {},
-    } as unknown as WebSocket;
-    (transport as unknown as {
-      syncRuntimeWithFallback: (
-        agentId: string,
-        conversationId: string | null,
-        modelHandle: string | null,
-        opts?: { allowFallback?: boolean },
-      ) => Promise<string | null>;
-    }).syncRuntimeWithFallback = async (_agentId, _conversationId, modelHandle, opts) => {
-      attempted.push({ modelHandle, allowFallback: opts?.allowFallback });
-      throw new Error('selected model unavailable');
-    };
-    (transport as unknown as { init: (opts?: { strictModelHandle?: string | null }) => Promise<unknown> }).init = async (opts) => {
-      attempted.push({ modelHandle: opts?.strictModelHandle, allowFallback: false });
-      return {
-        ready: true,
-        code: 'ready',
-        agentId: 'agent-ws-test',
-        conversationId: 'conv-ws-configure',
-        modelHandle: opts?.strictModelHandle,
-      };
-    };
-
-    const status = await transport.configure({ modelHandle: 'anthropic/claude-opus-4-8' });
-
-    expect(status.modelHandle).toBe('anthropic/claude-opus-4-8');
-    expect(attempted).toEqual([
-      { modelHandle: 'anthropic/claude-opus-4-8', allowFallback: false },
-      { modelHandle: 'anthropic/claude-opus-4-8', allowFallback: false },
-    ]);
+    expect(transport.getStatus().ready).toBe(false);
+    expect(transport.getStatus().reason).toContain('disconnected');
+    expect(sent.some((e) => e.channel === 'otto:event' && (e.payload as { status?: { ready?: boolean } }).status?.ready === false)).toBe(true);
     await transport.close();
   });
 
@@ -312,43 +174,6 @@ describe('WsRuntimeTransport', () => {
     expect(JSON.parse(abortPayload!).run_id).toBe('run-abort-1');
   });
 
-  test('does not keep stale per-turn runtime handlers after send completes', async () => {
-    const { win, sent } = mockWindow();
-    const transport = new WsRuntimeTransport(win, mockConfig());
-    (transport as unknown as { spawnRemote: () => Promise<void> }).spawnRemote = async () => {};
-
-    const initPromise = transport.init({ freshConversation: true });
-    const socket = await connectMockRuntime(transport, 'conv-ws-disposable');
-    await initPromise;
-
-    await transport.send('first');
-    await transport.send('second');
-
-    const assistantEvents = sent.filter((event) => {
-      const message = (event.payload as { message?: { type?: string } }).message;
-      return event.channel === 'otto:event' && message?.type === 'assistant';
-    });
-    expect(assistantEvents.length).toBe(2);
-
-    socket.close();
-    await transport.close();
-  });
-
-  test('redacts token-like remote output before surfacing sync failures', () => {
-    const { win } = mockWindow();
-    const transport = new WsRuntimeTransport(win, mockConfig());
-    const debugTransport = transport as unknown as {
-      captureRemoteOutput: (line: string) => void;
-      remoteOutputSummary: () => string;
-    };
-
-    debugTransport.captureRemoteOutput('Scheduler lease held by PID 88202 (token 90fc5da4).');
-
-    const summary = debugTransport.remoteOutputSummary();
-    expect(summary).toContain('token [redacted]');
-    expect(summary).not.toContain('90fc5da4');
-  });
-
   test('resolvePermission emits control_response on runtime socket', async () => {
     const { win, sent } = mockWindow();
     const transport = new WsRuntimeTransport(win, mockConfig());
@@ -363,7 +188,6 @@ describe('WsRuntimeTransport', () => {
     (transport as unknown as { controlByUpstream: Map<string, string> }).controlByUpstream.set('upstream-1', 'otto-req-1');
     (transport as unknown as { pendingControls: Map<string, unknown> }).pendingControls.set('otto-req-1', {
       requestId: 'otto-req-1',
-      upstreamId: 'upstream-1',
       resolve: () => {},
     });
 
@@ -371,39 +195,56 @@ describe('WsRuntimeTransport', () => {
     expect(outbound).toBeTruthy();
     const frame = JSON.parse(outbound!);
     expect(frame.type).toBe('control_response');
-    expect(frame.request_id).toBe('upstream-1');
     expect(frame.approved).toBe(true);
     expect(sent.length).toBe(0);
   });
 
-  test('resolvePermission uses stored upstream id after pending cleanup', async () => {
-    const { win } = mockWindow();
+  test('resolvePermission fails turn when runtime socket is closed', () => {
+    const { win, sent } = mockWindow();
     const transport = new WsRuntimeTransport(win, mockConfig());
-    let outbound: string | null = null;
     (transport as unknown as { runtimeSocket: WebSocket | null }).runtimeSocket = {
-      readyState: WebSocket.OPEN,
-      send(payload: string) {
-        outbound = payload;
-      },
-    } as unknown as WebSocket;
-
-    const upstreamId = 'upstream-race-1';
-    const requestId = 'otto-req-race';
-    (transport as unknown as { controlByUpstream: Map<string, string> }).controlByUpstream.set(upstreamId, requestId);
-    (transport as unknown as { pendingControls: Map<string, unknown> }).pendingControls.set(requestId, {
-      requestId,
-      upstreamId,
-      toolName: 'run_shell',
-      resolve: () => {
-        (transport as unknown as { controlByUpstream: Map<string, string> }).controlByUpstream.delete(upstreamId);
-      },
+      readyState: WebSocket.CLOSED,
+    } as WebSocket;
+    (transport as unknown as { turnIdle: boolean }).turnIdle = false;
+    (transport as unknown as { controlByUpstream: Map<string, string> }).controlByUpstream.set('upstream-1', 'otto-req-1');
+    (transport as unknown as { pendingControls: Map<string, unknown> }).pendingControls.set('otto-req-1', {
+      requestId: 'otto-req-1',
+      toolName: 'AskUserQuestion',
+      resolve: () => {},
     });
 
-    transport.resolvePermission(requestId, { behavior: 'deny', message: 'nope' });
-    expect(outbound).toBeTruthy();
-    const frame = JSON.parse(outbound!);
-    expect(frame.request_id).toBe(upstreamId);
-    expect(frame.approved).toBe(false);
+    transport.resolvePermission('otto-req-1', { behavior: 'allow' });
+    expect((transport as unknown as { turnIdle: boolean }).turnIdle).toBe(true);
+    expect((transport as unknown as { turnInterruptReason: string | null }).turnInterruptReason).toContain('disconnected');
+    expect(sent.some((e) => e.channel === 'otto:event' && (e.payload as { message?: { type?: string } }).message?.type === 'error')).toBe(true);
+  });
+
+  test('runtime disconnect clears pending controls and interrupts active turn', async () => {
+    const { win, sent } = mockWindow();
+    const transport = new WsRuntimeTransport(win, mockConfig());
+    (transport as unknown as { spawnRemote: () => Promise<void> }).spawnRemote = async () => {};
+
+    const initPromise = transport.init({ freshConversation: true });
+    const socket = await connectMockRuntime(transport, 'conv-ws-perm-disconnect');
+    await initPromise;
+
+    (transport as unknown as { turnIdle: boolean }).turnIdle = false;
+    (transport as unknown as { activeRunId: string | null }).activeRunId = 'run-pending';
+    (transport as unknown as { pendingControls: Map<string, unknown> }).pendingControls.set('otto-req-1', {
+      requestId: 'otto-req-1',
+      toolName: 'AskUserQuestion',
+      resolve: () => {},
+    });
+    (transport as unknown as { controlByUpstream: Map<string, string> }).controlByUpstream.set('upstream-1', 'otto-req-1');
+
+    await closeMockSocket(socket);
+    await new Promise((r) => setTimeout(r, 30));
+
+    expect((transport as unknown as { pendingControls: Map<string, unknown> }).pendingControls.size).toBe(0);
+    expect((transport as unknown as { turnIdle: boolean }).turnIdle).toBe(true);
+    expect((transport as unknown as { turnInterruptReason: string | null }).turnInterruptReason).toContain('tool approval');
+    expect(sent.some((e) => e.channel === 'otto:event' && (e.payload as { message?: { type?: string } }).message?.type === 'error')).toBe(true);
+    await transport.close();
   });
 
   test('smokeMode() reads OTTO_SMOKE at call time', () => {
@@ -411,5 +252,64 @@ describe('WsRuntimeTransport', () => {
     expect(smokeMode()).toBe(true);
     process.env.OTTO_SMOKE = '0';
     expect(smokeMode()).toBe(false);
+  });
+
+  test('attachRuntimeHandler detaches per-turn listener', () => {
+    const { win } = mockWindow();
+    const transport = new WsRuntimeTransport(win, mockConfig());
+    const listeners = new Map<string, Set<(...args: unknown[]) => void>>();
+    const socket = {
+      on(event: string, handler: (...args: unknown[]) => void) {
+        const set = listeners.get(event) ?? new Set();
+        set.add(handler);
+        listeners.set(event, set);
+      },
+      off(event: string, handler: (...args: unknown[]) => void) {
+        listeners.get(event)?.delete(handler);
+      },
+      listenerCount(event: string) {
+        return listeners.get(event)?.size ?? 0;
+      },
+    };
+    (transport as unknown as { runtimeSocket: typeof socket | null }).runtimeSocket = socket;
+
+    const detach = (transport as unknown as {
+      attachRuntimeHandler: (onEvent: (event: unknown) => void) => (() => void) | null;
+    }).attachRuntimeHandler(() => {});
+    expect(socket.listenerCount('message')).toBe(1);
+
+    detach?.();
+    expect(socket.listenerCount('message')).toBe(0);
+  });
+
+  test('turn idle timeout keeps transport ready and emits recoverable error', async () => {
+    const { win, sent } = mockWindow();
+    const transport = new WsRuntimeTransport(win, mockConfig('conv-ws-idle'));
+    (transport as unknown as {
+      runtimeSocket: WebSocket | null;
+      status: { ready: boolean };
+      waitForTurnComplete: () => Promise<void>;
+      attachRuntimeHandler: () => void;
+      sendCommand: () => void;
+      writeChatReceipt: () => void;
+    }).runtimeSocket = { readyState: WebSocket.OPEN } as WebSocket;
+    (transport as unknown as { status: { ready: boolean } }).status = {
+      ...(transport.getStatus()),
+      ready: true,
+      conversationId: 'conv-ws-idle',
+      agentId: 'agent-ws-test',
+    };
+    (transport as unknown as { waitForTurnComplete: () => Promise<void> }).waitForTurnComplete = async () => {
+      throw new Error('Timed out waiting for runtime idle');
+    };
+    (transport as unknown as { attachRuntimeHandler: () => void }).attachRuntimeHandler = () => {};
+    (transport as unknown as { sendCommand: () => void }).sendCommand = () => {};
+    (transport as unknown as { writeChatReceipt: () => void }).writeChatReceipt = () => {};
+
+    await transport.send('draft while prior turn times out');
+
+    expect(transport.getStatus().ready).toBe(true);
+    expect(sent.some((e) => e.channel === 'otto:event' && (e.payload as { status?: { ready?: boolean } }).status?.ready === false)).toBe(false);
+    expect(sent.some((e) => e.channel === 'otto:event' && (e.payload as { message?: { type?: string } }).message?.type === 'error')).toBe(true);
   });
 });

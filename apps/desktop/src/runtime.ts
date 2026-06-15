@@ -1,5 +1,12 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { flushMessages, readStoredMessages, type StoredChatMsg } from './chat/message-storage';
+import {
+  loadThreadMessages,
+  loadThreadMessagesForView,
+  persistActiveThread,
+  persistLeavingThread,
+} from './chat/thread-messages';
+import { activityFromRuntimeMessage, type TurnActivity } from './chat/turn-activity';
 import type {
   Charter,
   CharterRef,
@@ -48,6 +55,7 @@ export type StatusCode =
   | 'unreachable'
   | 'sdk-missing'
   | 'stale'
+  | 'usage-limit'
   | 'error';
 
 export type RuntimeStatus = {
@@ -77,7 +85,13 @@ export type ConnectionInfo = { baseUrl: string | null; agentId: string | null };
 export type ConnectionInput = { baseUrl?: string | null; agentId?: string | null };
 export type EffortLevel = 'off' | 'low' | 'medium' | 'high' | 'max';
 export type RuntimePreferences = { modelHandle?: string | null; effort?: EffortLevel };
-export type LettaModelOption = { handle: string; label: string; provider?: string | null; displayName?: string | null };
+export type LettaModelOption = {
+  handle: string;
+  label: string;
+  provider?: string | null;
+  displayName?: string | null;
+  deprecated?: boolean;
+};
 export type AttachmentInput = { name: string; mime: string; dataUrl: string };
 export type SavedAttachment = { id: string; name: string; mime: string; path: string; url: string; size: number };
 export type ReceiptStatus = 'success' | 'blocked' | 'failed';
@@ -267,7 +281,16 @@ export type {
   CogneeCaptureReceipt,
 } from '@otto-haus/core';
 
-export type { OttoConfig, LabsConfig, LabFeatureId, TicketReviewRecord, ProviderMirrorSnapshot, DreamSettings, DreamTrigger } from '../electron/shared/types';
+export type {
+  OttoConfig,
+  LabsConfig,
+  LabFeatureId,
+  TicketReviewRecord,
+  ProviderMirrorSnapshot,
+  DreamSettings,
+  DreamTrigger,
+  ConversationSortMode,
+} from '../electron/shared/types';
 export type {
   StandardConflictResult,
   MemoryListResult,
@@ -292,14 +315,11 @@ declare global {
 
 export type OttoBridge = OttoApi;
 
-let cachedOttoApi: OttoApi | null | undefined;
-
-export const ottoApi = (): OttoApi | null => {
-  if (cachedOttoApi !== undefined) return cachedOttoApi;
-  cachedOttoApi = typeof window !== 'undefined' && window.otto ? window.otto : null;
-  return cachedOttoApi;
-};
+export const ottoApi = (): OttoApi | null =>
+  typeof window !== 'undefined' && window.otto ? window.otto : null;
 export const isElectron = (): boolean => ottoApi() !== null;
+
+export type { TurnActivity } from './chat/turn-activity';
 
 export type ChatMsg = StoredChatMsg & {
   checkBlock?: {
@@ -337,29 +357,6 @@ function assistantText(m: Record<string, unknown>): string | null {
   return null;
 }
 
-function loadThreadMessages(
-  threadId: string | null,
-  cache: Map<string, ChatMsg[]>,
-  opts: { allowLegacyFallback?: boolean } = {},
-): ChatMsg[] {
-  if (!threadId) return [];
-  const cached = cache.get(threadId);
-  if (cached) return cached;
-  const loaded = readStoredMessages(threadId, { allowLegacyFallback: opts.allowLegacyFallback });
-  cache.set(threadId, loaded);
-  return loaded;
-}
-
-function shouldAutoTitleThread(title: string | null | undefined): boolean {
-  const t = (title ?? '').trim();
-  if (!t) return true;
-  if (/^new chat$/i.test(t)) return true;
-  if (/^chat session$/i.test(t)) return true;
-  if (/^local_/i.test(t)) return true;
-  if (/^\d{3}-(?:rev\d+-|smoke-)?thread-[ab]-\d{12,14}$/i.test(t)) return true;
-  return false;
-}
-
 export function useRuntime() {
   const api = ottoApi();
   const [status, setStatus] = useState<RuntimeStatus | null>(null);
@@ -367,24 +364,26 @@ export function useRuntime() {
   const [messages, setMessages] = useState<ChatMsg[]>([]);
   const [activeTodos, setActiveTodos] = useState<TodoItem[]>([]);
   const [busy, setBusy] = useState(false);
+  const [turnActivity, setTurnActivity] = useState<TurnActivity | null>(null);
   const activeAssistantStream = useRef<string | null>(null);
-  const seenAssistantChunks = useRef(new Set<string>());
   const sendError = useRef<string | null>(null);
   const activeThreadRef = useRef<string | null>(null);
   const messagesRef = useRef<ChatMsg[]>([]);
   const threadHydrated = useRef(false);
-  const runtimeInitialized = useRef(false);
   const threadMessagesCache = useRef(new Map<string, ChatMsg[]>());
   /** Thread that owns the in-flight Letta turn — events route here, not to the active view. */
   const inflightThreadRef = useRef<string | null>(null);
 
-  const applyThreadView = (threadId: string, opts?: { persistLeaving?: boolean; allowLegacyFallback?: boolean }) => {
-    const leaving = activeThreadRef.current;
-    if (opts?.persistLeaving !== false && leaving && leaving !== threadId) {
-      threadMessagesCache.current.set(leaving, messagesRef.current);
-      flushMessages(leaving, messagesRef.current);
-    }
-    const loaded = loadThreadMessages(threadId, threadMessagesCache.current, { allowLegacyFallback: opts?.allowLegacyFallback });
+  const applyThreadView = (threadId: string, opts?: { allowLegacyFallback?: boolean }) => {
+    persistLeavingThread(
+      threadMessagesCache.current,
+      activeThreadRef.current,
+      threadId,
+      messagesRef.current,
+    );
+    const loaded = loadThreadMessagesForView(threadId, threadMessagesCache.current, {
+      allowLegacyFallback: opts?.allowLegacyFallback,
+    });
     activeThreadRef.current = threadId;
     messagesRef.current = loaded;
     setActiveThreadId(threadId);
@@ -411,7 +410,7 @@ export function useRuntime() {
       threadHydrated.current = true;
       const threadId = result.activeThreadId;
       activeThreadRef.current = threadId;
-      const loaded = loadThreadMessages(threadId, threadMessagesCache.current, { allowLegacyFallback: true });
+      const loaded = loadThreadMessagesForView(threadId, threadMessagesCache.current, { allowLegacyFallback: true });
       messagesRef.current = loaded;
       setActiveThreadId(threadId);
       setMessages(loaded);
@@ -428,7 +427,7 @@ export function useRuntime() {
       threadHydrated.current = true;
       if (status) setStatus(status);
       if (activeThreadRef.current === threadId) {
-        const loaded = loadThreadMessages(threadId, threadMessagesCache.current, { allowLegacyFallback });
+        const loaded = loadThreadMessagesForView(threadId, threadMessagesCache.current, { allowLegacyFallback });
         messagesRef.current = loaded;
         setMessages(loaded);
         return;
@@ -438,38 +437,13 @@ export function useRuntime() {
   }, [api]);
 
   useEffect(() => {
-    if (!api || runtimeInitialized.current) return;
-    runtimeInitialized.current = true;
+    if (!api) return;
     setStatus((current) => current ?? {
       ready: false,
       reason: 'Booting local Letta session…',
       cliPath: '',
       cliResolved: false,
     });
-    api.runtime
-      .init()
-      .then(async (nextStatus) => {
-        setStatus(nextStatus);
-        if (threadHydrated.current) return;
-        try {
-          const result = await api.threads.list();
-          threadHydrated.current = true;
-          const threadId = result.activeThreadId;
-          if (!threadId) return;
-          activeThreadRef.current = threadId;
-          const loaded = loadThreadMessages(threadId, threadMessagesCache.current, { allowLegacyFallback: true });
-          messagesRef.current = loaded;
-          setActiveThreadId(threadId);
-          setMessages(loaded);
-        } catch {
-          // threads.list is retried by the dedicated hydration effect.
-        }
-      })
-      .catch((e) => setStatus({ ready: false, reason: String(e), cliPath: '', cliResolved: false }));
-  }, [api]);
-
-  useEffect(() => {
-    if (!api) return;
     const patchInflightMessages = (updater: (msgs: ChatMsg[]) => ChatMsg[]) => {
       const threadId = inflightThreadRef.current ?? activeThreadRef.current;
       if (!threadId) return;
@@ -483,6 +457,26 @@ export function useRuntime() {
       }
     };
 
+    api.runtime
+      .init()
+      .then(async (nextStatus) => {
+        setStatus(nextStatus);
+        if (threadHydrated.current) return;
+        try {
+          const result = await api.threads.list();
+          threadHydrated.current = true;
+          const threadId = result.activeThreadId;
+          if (!threadId) return;
+          activeThreadRef.current = threadId;
+          const loaded = loadThreadMessagesForView(threadId, threadMessagesCache.current);
+          messagesRef.current = loaded;
+          setActiveThreadId(threadId);
+          setMessages(loaded);
+        } catch {
+          // threads.list is retried by the dedicated hydration effect.
+        }
+      })
+      .catch((e) => setStatus({ ready: false, reason: String(e), cliPath: '', cliResolved: false }));
     const off = api.onEvent((e) => {
       if ('status' in e) {
         setStatus(e.status);
@@ -492,10 +486,8 @@ export function useRuntime() {
       if (m.type === 'assistant') {
         const t = assistantText(m);
         if (t) {
+          setTurnActivity(null);
           const streamId = String(m.uuid ?? m.runId ?? 'assistant');
-          const chunkId = typeof m.chunkId === 'string' && m.chunkId ? `${streamId}:${m.chunkId}` : null;
-          if (chunkId && seenAssistantChunks.current.has(chunkId)) return;
-          if (chunkId) seenAssistantChunks.current.add(chunkId);
           patchInflightMessages((x) => {
             const last = x[x.length - 1];
             if (activeAssistantStream.current === streamId && last?.who === 'otto') {
@@ -526,24 +518,41 @@ export function useRuntime() {
               })),
           );
         }
-      } else if (m.type === 'error') {
+      } else {
+        const activity = activityFromRuntimeMessage(m);
+        if (activity) setTurnActivity(activity);
+      }
+      if (m.type === 'error') {
         const ownedTurn = inflightThreadRef.current;
-        sendError.current = String((m as { message?: unknown }).message ?? 'error');
+        const errorMessage = String((m as { message?: unknown }).message ?? 'error');
+        const errorDetails = typeof (m as { details?: unknown }).details === 'string'
+          ? String((m as { details?: unknown }).details)
+          : undefined;
+        sendError.current = errorMessage;
         activeAssistantStream.current = null;
-        seenAssistantChunks.current.clear();
         patchInflightMessages((x) => [
           ...x,
-          { id: `error-${Date.now()}`, who: 'error', text: String((m as { message?: unknown }).message ?? 'error') },
+          {
+            id: `error-${Date.now()}`,
+            who: 'error',
+            text: errorMessage,
+            ...(errorDetails ? { details: errorDetails } : {}),
+          },
         ]);
         inflightThreadRef.current = null;
+        setTurnActivity(null);
         if (!ownedTurn) setBusy(false);
       } else if (m.type === 'result') {
         activeAssistantStream.current = null;
-        seenAssistantChunks.current.clear();
         inflightThreadRef.current = null;
+        setTurnActivity(null);
         const conversationId = typeof m.conversationId === 'string' ? m.conversationId : null;
         if (conversationId) {
           void api.threads.touch({ lettaConversationId: conversationId });
+        }
+        if ((m as { success?: boolean }).success === false) {
+          const failed = m as { error?: unknown; reason?: unknown; message?: unknown };
+          sendError.current = String(failed.error ?? failed.reason ?? failed.message ?? 'Send failed.');
         }
       }
     });
@@ -567,16 +576,11 @@ export function useRuntime() {
     sendError.current = null;
     activeAssistantStream.current = null;
     setActiveTodos([]);
-    seenAssistantChunks.current.clear();
     inflightThreadRef.current = sendThreadId;
+    setTurnActivity(null);
     const snippet = text.trim().replace(/\s+/g, ' ');
     if (snippet) {
-      void api.threads.list().then((result) => {
-        if (activeThreadRef.current !== sendThreadId) return;
-        const active = result.threads.find((thread) => thread.id === sendThreadId);
-        if (!shouldAutoTitleThread(active?.title)) return;
-        void api.threads.touch({ title: snippet.length > 56 ? `${snippet.slice(0, 53)}…` : snippet });
-      });
+      void api.threads.touch({ title: snippet.length > 56 ? `${snippet.slice(0, 53)}…` : snippet });
     }
     const prev = loadThreadMessages(sendThreadId, threadMessagesCache.current);
     const next: ChatMsg[] = [...prev, { id: `user-${Date.now()}`, who: 'user', text }];
@@ -598,19 +602,13 @@ export function useRuntime() {
     if (!api) return;
     await api.runtime.abort();
     activeAssistantStream.current = null;
-    seenAssistantChunks.current.clear();
     inflightThreadRef.current = null;
+    setTurnActivity(null);
     setBusy(false);
   };
 
   const configure = async (input: RuntimePreferences) => {
     if (!api || busy) return status;
-    setStatus((current) => ({
-      ...(current ?? { cliPath: '', cliResolved: false }),
-      ready: false,
-      code: 'error',
-      reason: 'Switching model…',
-    }));
     const next = await api.runtime.configure(input);
     setStatus(next);
     return next;
@@ -623,25 +621,20 @@ export function useRuntime() {
     sendError.current = null;
     activeAssistantStream.current = null;
     inflightThreadRef.current = null;
+    setTurnActivity(null);
     setBusy(false);
-    setStatus((current) => ({
-      ...(current ?? { cliPath: '', cliResolved: false }),
-      ready: false,
-      code: 'error',
-      reason: 'Starting a new conversation…',
-    }));
     if (activeThreadRef.current) {
-      applyThreadView(activeThreadRef.current, { persistLeaving: true });
+      persistActiveThread(threadMessagesCache.current, activeThreadRef.current, messagesRef.current);
     }
     const { thread, status: next } = await api.threads.create();
-    applyThreadView(thread.id, { persistLeaving: false });
+    applyThreadView(thread.id);
     setStatus(next);
   };
 
   const switchThread = async (threadId: string) => {
     if (!api) return;
     if (threadId === activeThreadRef.current) {
-      applyThreadView(threadId, { persistLeaving: false });
+      applyThreadView(threadId);
       return;
     }
     if (busy) await abort();
@@ -649,47 +642,33 @@ export function useRuntime() {
     sendError.current = null;
     activeAssistantStream.current = null;
     inflightThreadRef.current = null;
+    setTurnActivity(null);
     setBusy(false);
-    setStatus((current) => ({
-      ...(current ?? { cliPath: '', cliResolved: false }),
-      ready: false,
-      code: 'error',
-      reason: 'Switching conversation…',
-    }));
-    if (activeThreadRef.current) {
-      threadMessagesCache.current.set(activeThreadRef.current, messagesRef.current);
-      flushMessages(activeThreadRef.current, messagesRef.current);
-    }
-    applyThreadView(threadId, { persistLeaving: false });
+    applyThreadView(threadId);
     try {
       const { thread, status: next } = await api.threads.switch(threadId);
-      applyThreadView(thread.id, { persistLeaving: false });
+      applyThreadView(thread.id);
       setStatus(next);
     } catch {
       // Still swap local history even if Letta reconnect fails mid-switch.
-      applyThreadView(threadId, { persistLeaving: false });
+      applyThreadView(threadId);
     }
   };
 
   const archiveThread = async (threadId: string) => {
     if (!api) return;
     if (busy) await abort();
-    const wasActive = activeThreadRef.current === threadId;
-    if (wasActive && activeThreadRef.current) {
-      threadMessagesCache.current.set(activeThreadRef.current, messagesRef.current);
-      flushMessages(activeThreadRef.current, messagesRef.current);
-      setStatus((current) => ({
-        ...(current ?? { cliPath: '', cliResolved: false }),
-        ready: false,
-        code: 'error',
-        reason: 'Switching conversation…',
-      }));
+    await api.threads.archive(threadId);
+    const result = await api.threads.list();
+    const nextThreadId = result.activeThreadId;
+    if (nextThreadId) {
+      applyThreadView(nextThreadId);
+      setStatus(await api.runtime.init());
+      return;
     }
-    const { thread, status: next } = await api.threads.archive(threadId);
-    if (wasActive) {
-      applyThreadView(thread.id, { persistLeaving: false });
-      setStatus(next);
-    }
+    const { thread, status: next } = await api.threads.create();
+    applyThreadView(thread.id);
+    setStatus(next);
   };
 
   const refreshThreads = async () => {
@@ -703,6 +682,7 @@ export function useRuntime() {
     messages,
     activeTodos,
     busy,
+    turnActivity,
     activeThreadId,
     send,
     abort,

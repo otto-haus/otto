@@ -57,6 +57,24 @@ export const walkthroughTotalFrames =
   walkthroughClosingFrames +
   walkthroughOutroFrames;
 
+// OttoProductDemo — OpenAI-inspired product cut (~54s @ 30fps)
+export const productDemoHookFrames = 120;
+export const productDemoShellFrames = 150;
+export const productDemoChatFrames = 210;
+export const productDemoLoopFrames = 270;
+export const productDemoMontageBeatFrames = 100;
+export const productDemoRatifyFrames = 210;
+export const productDemoOutroFrames = 360;
+
+export const productDemoTotalFrames =
+  productDemoHookFrames +
+  productDemoShellFrames +
+  productDemoChatFrames +
+  productDemoLoopFrames +
+  productDemoMontageBeatFrames * 3 +
+  productDemoRatifyFrames +
+  productDemoOutroFrames;
+
 const L = (kind: Line["kind"], text?: string): Line => ({ kind, text });
 
 // v0.1 cutline (approved): which demos are ship candidates vs proposed vs deferred.
@@ -72,6 +90,7 @@ export const v01Cutline: Record<string, "ship" | "proposed" | "deferred"> = {
   OttoV01Knowledge: "deferred",
   OttoV01Curation: "proposed",
   OttoV01Tickets: "ship",
+  OttoProductDemo: "ship",
 };
 
 export const features: Feature[] = [

@@ -13,12 +13,11 @@ import {
   requestOnboardingStarter,
   setOnboardingModeDraft,
   type OnboardingConnectionMode,
+  wasFirstMessageDuringOnboarding,
   wasOnboarded,
 } from './onboarding-storage';
 import {
-  ONBOARDING_STEP_COUNT,
   canAdvanceOnboardingModePick,
-  onboardingDotIndex,
   resolveOnboardingStep,
   shouldShowOnboardingModePicker,
   type OnboardingIntent,
@@ -58,7 +57,7 @@ export const Onboarding: React.FC<{ onNavigate: (id: SurfaceId) => void; activeS
   const [dismissed, setDismissed] = useState(wasOnboarded);
   const [started, setStarted] = useState(false);
   const [intent, setIntent] = useState<OnboardingIntent>('connect');
-  const [sessionFirstMessage, setSessionFirstMessage] = useState(false);
+  const [sessionFirstMessage, setSessionFirstMessage] = useState(wasFirstMessageDuringOnboarding);
   const [modeDraft, setModeDraft] = useState<OnboardingConnectionMode | null>(getOnboardingModeDraft);
   const [modePick, setModePick] = useState<OnboardingConnectionMode | null>(null);
   const [modeBusy, setModeBusy] = useState(false);
@@ -109,7 +108,11 @@ export const Onboarding: React.FC<{ onNavigate: (id: SurfaceId) => void; activeS
     try {
       setOnboardingModeDraft(mode);
       setModeDraft(mode);
-      if (api) await api.config.set({ connectionMode: mode });
+      if (api) {
+        await api.config.set({ connectionMode: mode });
+        const next = await api.connection.save({});
+        rt.updateStatus(next);
+      }
       onNavigate('settings');
     } finally {
       setModeBusy(false);
@@ -227,10 +230,9 @@ export const Onboarding: React.FC<{ onNavigate: (id: SurfaceId) => void; activeS
 
   const statusReason = rt.status?.reason?.trim();
   const statusCode = rt.status?.code;
-  const dotAt = onboardingDotIndex(step);
 
   const stepChrome = (() => {
-    if (step === 'connect' && activeSurface === 'settings') {
+    if (step === 'connect') {
       return (
         <OnboardingStepLayout
           step="connect"
@@ -330,47 +332,8 @@ export const Onboarding: React.FC<{ onNavigate: (id: SurfaceId) => void; activeS
     return <div className="onboardStepAnchor">{stepChrome}</div>;
   }
 
-  if (step === 'connect' && activeSurface !== 'settings' && modeDraft) {
-    return (
-      <div className="onboardDock onboardDock--connect">
-        <OnboardingStepLayout
-          step="connect"
-          evidence={evidence}
-          title={onboardingCopy.connectTitle}
-          lede={onboardingCopy.connectLede}
-          canBack
-          onBack={goBack}
-          footer={(
-            <button type="button" className="btn btn--primary" onClick={() => onNavigate('settings')}>
-              {onboardingCopy.connectOpenSettings}
-            </button>
-          )}
-        />
-      </div>
-    );
-  }
-
-  // Legacy dock fallback when step chrome does not attach to the active surface.
-  if (step === 'receipt') {
-    return (
-      <div className="onboardDock onboardDock--receipt">
-        <div className="between" style={{ marginBottom: 10 }}>
-          <span className="onboardEyebrow onboardEyebrow--light">{onboardingCopy.legacyDockEyebrow}</span>
-          <div className="onboardDots" aria-hidden="true">
-            {Array.from({ length: ONBOARDING_STEP_COUNT }, (_, i) => (
-              <span key={i} className={`onboardDot${i === dotAt ? ' is-active' : ''}`} />
-            ))}
-          </div>
-        </div>
-        <div style={{ fontSize: 15, fontWeight: 600 }}>{onboardingCopy.receiptTitle}</div>
-        <p className="onboardBody onboardBody--light" style={{ marginTop: 8 }}>{onboardingCopy.receiptLede}</p>
-        <div className="onboardActions" style={{ marginTop: 16 }}>
-          <button type="button" className="btn btn--primary" onClick={() => onNavigate('receipts')}>{onboardingCopy.receiptOpen}</button>
-          <button type="button" className="btn" onClick={finish}>{onboardingCopy.receiptDone}</button>
-        </div>
-      </div>
-    );
-  }
+  // Run-step chrome stays on Chat; suppress dock on Settings so Save stays reachable.
+  if (step === 'run' && activeSurface === 'settings') return null;
 
   return null;
 };

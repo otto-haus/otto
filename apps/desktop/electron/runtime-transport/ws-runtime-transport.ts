@@ -1,6 +1,6 @@
 import { spawn, type ChildProcess } from 'node:child_process';
 import { randomBytes, randomUUID } from 'node:crypto';
-import { createServer, type IncomingMessage, type Server as HttpServer } from 'node:http';
+import type { IncomingMessage } from 'node:http';
 import type { BrowserWindow } from 'electron';
 import { WebSocket, WebSocketServer } from 'ws';
 import type { PermissionRequest, PermissionResponse, RuntimePreferences, RuntimeStatus, StatusCode } from '../shared/types';
@@ -10,40 +10,45 @@ import { getSecret, hasSecret } from '../secret-store';
 import { StandardStore } from '../standard-store';
 import { PracticeStore } from '../practice-store';
 import { TraceWriter } from '../trace-writer';
-import { confirmedModelHandle, discoverLocalLettaContext, resolveHttpBaseUrl } from './letta-discovery';
+import { applyEmbeddedLettaSettingsEnv } from '../dream-settings';
+import { confirmedModelHandle, discoverLocalLettaContext } from './letta-discovery';
 import {
   smokeMode,
   classify,
   friendly,
   msg,
   nextActionFor,
+  normalizeRuntimeError,
   promptWithRuntimeContext,
   resolveCli,
   safeWebContentsSend,
 } from './runtime-common';
-import { isDeviceOnline, isLoopIdle, normalizeWsEvent, type WsRuntimeEvent } from './ws-protocol';
+import { TodoStreamAccumulator } from './todo-parser';
+import {
+  DEFAULT_CONNECT_TIMEOUT_MS,
+  isDeviceOnline,
+  isLoopIdle,
+  normalizeWsEvent,
+  turnIdleTimeoutMs,
+  type WsRuntimeEvent,
+} from './ws-protocol';
 import { permissionSessionStore } from '../permission-session-store';
 import type { OttoRuntimeTransport, WsTransportDiagnosticsSnapshot } from './types';
 
-const CONNECT_TIMEOUT_MS = 45_000;
-const REMOTE_SHUTDOWN_TIMEOUT_MS = 3_000;
+const CONNECT_TIMEOUT_MS = DEFAULT_CONNECT_TIMEOUT_MS;
 const REMOTE_ENV = process.env.OTTO_WS_REMOTE_ENV ?? 'otto-byor';
-const DEFAULT_WS_MODEL_FALLBACKS = ['openai/gpt-5.5', 'letta/auto'];
 
 type PendingControl = {
   requestId: string;
-  upstreamId: string;
   toolName: string;
   resolve: (r: PermissionResponse) => void;
 };
 
-/** Local BYOR WebSocket server; current Letta Code `server` connects inbound after local registration. */
+/** Local BYOR WebSocket server; Letta Code `remote` connects inbound. */
 export class WsRuntimeTransport implements OttoRuntimeTransport {
   private status: RuntimeStatus = { ready: false, reason: 'not initialized', ...resolveCli('embedded') };
   private server: WebSocketServer | null = null;
   private listenerPort: number | null = null;
-  private registrationServer: HttpServer | null = null;
-  private registrationPort: number | null = null;
   private sessionToken = '';
   private runtimeSocket: WebSocket | null = null;
   private remoteProc: ChildProcess | null = null;
@@ -51,15 +56,12 @@ export class WsRuntimeTransport implements OttoRuntimeTransport {
   private controlByUpstream = new Map<string, string>();
   private aborted = false;
   private turnIdle = false;
+  private turnInterruptReason: string | null = null;
   private activeRunId: string | null = null;
   private receipts = new ReceiptWriter();
   private standards = new StandardStore();
   private practices = new PracticeStore();
   private lastReconnectAt: string | null = null;
-  private remoteOutputChunks: string[] = [];
-  private remoteGeneration = 0;
-  private socketGeneration = 0;
-  private initSerial: Promise<RuntimeStatus> = Promise.resolve(this.status);
 
   constructor(
     private win: BrowserWindow,
@@ -86,13 +88,14 @@ export class WsRuntimeTransport implements OttoRuntimeTransport {
   resolvePermission(requestId: string, response: PermissionResponse) {
     const pending = this.pendingControls.get(requestId);
     if (!pending) return;
-    const upstreamId = pending.upstreamId;
     this.pendingControls.delete(requestId);
     if (response.behavior === 'allow' && response.scope === 'session') {
       permissionSessionStore.allow(pending.toolName);
     }
     pending.resolve(response);
-    if (upstreamId && this.runtimeSocket?.readyState === WebSocket.OPEN) {
+    const upstreamId = [...this.controlByUpstream.entries()].find(([, id]) => id === requestId)?.[0];
+    if (!upstreamId) return;
+    if (this.runtimeSocket?.readyState === WebSocket.OPEN) {
       const approved = response.behavior === 'allow';
       this.sendCommand({
         type: 'control_response',
@@ -101,19 +104,19 @@ export class WsRuntimeTransport implements OttoRuntimeTransport {
         message: approved ? undefined : response.message,
         updated_input: approved ? response.updatedInput ?? undefined : undefined,
       });
+      return;
+    }
+    const reason = 'Tool approval could not reach Letta — runtime disconnected. Reconnect and try again.';
+    this.emitError(reason);
+    if (!this.turnIdle) {
+      this.turnInterruptReason = reason;
+      this.turnIdle = true;
     }
   }
 
-  async init(opts?: { freshConversation?: boolean; strictModelHandle?: string | null }): Promise<RuntimeStatus> {
-    const run = this.initSerial
-      .catch(() => this.status)
-      .then(() => this.initImpl(opts));
-    this.initSerial = run;
-    return run;
-  }
-
-  private async initImpl(opts?: { freshConversation?: boolean; strictModelHandle?: string | null }): Promise<RuntimeStatus> {
+  async init(opts?: { freshConversation?: boolean }): Promise<RuntimeStatus> {
     await this.close();
+    applyEmbeddedLettaSettingsEnv(this.config);
     const cli = resolveCli(this.config.connectionMode());
     const context = discoverLocalLettaContext(this.config);
     const agentId = context.agentCandidates[0] ?? context.agentId;
@@ -126,48 +129,20 @@ export class WsRuntimeTransport implements OttoRuntimeTransport {
 
     try {
       await this.startListener();
-      await this.startRegistrationServer();
       await this.spawnRemote(cli.cliPath, context.baseUrl);
       await this.waitForRuntimeSocket();
-      const savedConversationId = this.config.get().conversationId?.trim() || null;
-      const conversationId = await this.resolveConversationForSync(
-        agentId,
-        context.baseUrl,
-        savedConversationId,
-        !!opts?.freshConversation,
-      );
-      if (!opts?.freshConversation && !smokeMode() && savedConversationId === 'default') {
-        this.config.update({ conversationId: null });
-      }
-      const resolved = opts?.strictModelHandle !== undefined
-        ? {
-            requested: opts.strictModelHandle,
-            active: opts.strictModelHandle,
-            fallbackReason: null,
-          }
-        : await confirmedModelHandle(this.config).catch(() => ({
-            requested: this.config.modelHandle(),
-            active: this.config.modelHandle(),
-            fallbackReason: null,
-          }));
-      if (resolved.active && resolved.active !== this.config.modelHandle() && !smokeMode()) {
-        this.config.update({ modelHandle: resolved.active });
-      }
-      let activeModelHandle = resolved.active;
+      const conversationId = opts?.freshConversation ? null : this.config.get().conversationId;
+      const resolved = await confirmedModelHandle(this.config).catch(() => ({
+        requested: this.config.modelHandle(),
+        active: this.config.modelHandle(),
+        fallbackReason: null,
+      }));
       try {
-        activeModelHandle = await this.syncRuntimeWithFallback(agentId, conversationId ?? null, resolved.active, {
-          allowFallback: opts?.strictModelHandle === undefined,
-        });
+        await this.syncRuntime(agentId, conversationId ?? null, resolved.active);
       } catch (e) {
         if (!conversationId || !this.isStaleConversationError(e)) throw e;
         if (!smokeMode()) this.config.update({ conversationId: null });
-        const replacementConversationId = await this.createBackendConversation(agentId, context.baseUrl);
-        activeModelHandle = await this.syncRuntimeWithFallback(agentId, replacementConversationId, resolved.active, {
-          allowFallback: opts?.strictModelHandle === undefined,
-        });
-      }
-      if (activeModelHandle && activeModelHandle !== this.config.modelHandle() && !smokeMode()) {
-        this.config.update({ modelHandle: activeModelHandle });
+        await this.syncRuntime(agentId, null, resolved.active);
       }
       if (smokeMode() && this.status.conversationId === 'default') {
         await this.close();
@@ -176,13 +151,12 @@ export class WsRuntimeTransport implements OttoRuntimeTransport {
       this.status = {
         ready: true,
         code: 'ready',
-        reason: undefined,
         agentId,
         baseUrl: context.baseUrl,
         discoverySource: context.source,
         conversationId: this.status.conversationId ?? conversationId,
         modelHandle: resolved.requested,
-        model: activeModelHandle ?? undefined,
+        model: resolved.active ?? undefined,
         effort: this.config.effort(),
         sessionMode: smokeMode() ? 'smoke' : 'default',
         transportMode: 'ws',
@@ -198,8 +172,8 @@ export class WsRuntimeTransport implements OttoRuntimeTransport {
           baseUrl: context.baseUrl,
           conversationId: this.status.conversationId ?? null,
         });
+        this.config.ensurePrimaryAgentId(agentId);
       }
-      this.emitStatus();
     } catch (e) {
       await this.close();
       const reason = msg(e);
@@ -215,45 +189,11 @@ export class WsRuntimeTransport implements OttoRuntimeTransport {
   }
 
   async configure(input: RuntimePreferences): Promise<RuntimeStatus> {
-    const strictModelHandle = input.modelHandle !== undefined ? input.modelHandle || null : undefined;
     this.config.update({
       ...(input.modelHandle !== undefined ? { modelHandle: input.modelHandle || null } : {}),
       ...(input.effort !== undefined ? { effort: input.effort } : {}),
     });
-    if (this.status.ready && this.runtimeSocket?.readyState === WebSocket.OPEN && this.status.agentId) {
-      const conversationId = this.status.conversationId ?? this.config.get().conversationId ?? null;
-      try {
-        const activeModelHandle = await this.syncRuntimeWithFallback(
-          this.status.agentId,
-          conversationId,
-          this.config.modelHandle(),
-          { allowFallback: strictModelHandle === undefined },
-        );
-        this.status = {
-          ...this.status,
-          ready: true,
-          code: 'ready',
-          reason: undefined,
-          conversationId: this.status.conversationId ?? conversationId,
-          modelHandle: activeModelHandle,
-          effort: this.config.effort(),
-          transportMode: 'ws',
-          effectiveTransport: 'websocket local',
-          transportFallbackReason: null,
-        };
-        if (!smokeMode()) {
-          this.config.update({
-            conversationId: this.status.conversationId ?? null,
-            modelHandle: activeModelHandle,
-          });
-        }
-        this.emitStatus();
-        return this.status;
-      } catch {
-        // Fall through to a full reconnect if the existing socket cannot resync.
-      }
-    }
-    return this.init({ strictModelHandle });
+    return this.init();
   }
 
   async send(text: string): Promise<void> {
@@ -266,13 +206,16 @@ export class WsRuntimeTransport implements OttoRuntimeTransport {
     const startedStatus = { ...this.status };
     this.aborted = false;
     this.turnIdle = false;
+    this.turnInterruptReason = null;
     this.activeRunId = null;
+    const todoAccumulator = new TodoStreamAccumulator();
     trace.write('prompt', { text, transport: 'ws', agentId: this.status.agentId, conversationId: this.status.conversationId });
-    let detachRuntimeHandler = () => {};
 
+    let detachRuntimeHandler: (() => void) | null = null;
     try {
       let sawAssistant = false;
-      let turnError: string | null = null;
+      let turnErrorRaw: string | null = null;
+      let turnErrorMessage: string | null = null;
       let receiptWritten = false;
       const writeReceipt = (
         status: 'success' | 'blocked' | 'failed',
@@ -283,6 +226,11 @@ export class WsRuntimeTransport implements OttoRuntimeTransport {
         receiptWritten = true;
         this.writeChatReceipt({ text, status, summary, blocker, startedStatus, tracePath: trace.path });
       };
+      const emitResult = (success: boolean) => {
+        safeWebContentsSend(this.win, 'otto:event', {
+          message: { type: 'result', success, conversationId: this.status.conversationId, uuid: randomUUID() },
+        });
+      };
 
       const onRuntimeEvent = (event: WsRuntimeEvent) => {
         trace.write('event', event);
@@ -291,23 +239,43 @@ export class WsRuntimeTransport implements OttoRuntimeTransport {
           return;
         }
         this.trackActiveRun(event);
-        const normalized = normalizeWsEvent(event);
+        const normalized = normalizeWsEvent(event, { todoAccumulator });
         if (normalized) {
-          safeWebContentsSend(this.win, 'otto:event', { message: normalized });
-          if (normalized.type === 'assistant') sawAssistant = true;
-          if (normalized.type === 'error') turnError = String(normalized.message ?? 'error');
+          if (normalized.type === 'error') {
+            const raw = String(normalized.message ?? 'error');
+            const normalizedError = normalizeRuntimeError(raw, this.hasApiKey());
+            turnErrorRaw = raw;
+            turnErrorMessage = normalizedError.message;
+            if (normalizedError.code === 'usage-limit') {
+              this.markNotReady(raw, normalizedError.code);
+            }
+            safeWebContentsSend(this.win, 'otto:event', {
+              message: {
+                type: 'error',
+                message: normalizedError.message,
+                ...(normalizedError.details ? { details: normalizedError.details } : {}),
+                uuid: randomUUID(),
+              },
+            });
+          } else {
+            safeWebContentsSend(this.win, 'otto:event', { message: normalized });
+            if (normalized.type === 'assistant') sawAssistant = true;
+            if (normalized.type === 'todo_update') sawAssistant = true;
+          }
         }
         if (isLoopIdle(event)) {
           this.turnIdle = true;
-          safeWebContentsSend(this.win, 'otto:event', {
-            message: { type: 'result', success: !turnError, conversationId: this.status.conversationId, uuid: randomUUID() },
-          });
-          writeReceipt(turnError ? 'failed' : 'success', turnError ? 'Chat turn failed.' : 'Chat turn completed.', turnError ? {
-            code: 'error',
-            message: turnError,
-            recoverable: true,
-            next_action: nextActionFor('error'),
-          } : null);
+          emitResult(!turnErrorMessage);
+          writeReceipt(turnErrorMessage ? 'failed' : 'success', turnErrorMessage ? 'Chat turn failed.' : 'Chat turn completed.', turnErrorRaw ? (() => {
+            const normalizedError = normalizeRuntimeError(turnErrorRaw, this.hasApiKey());
+            return {
+              code: normalizedError.code,
+              message: normalizedError.message,
+              recoverable: normalizedError.code === 'usage-limit' || normalizedError.code !== 'error',
+              next_action: nextActionFor(normalizedError.code),
+              ...(normalizedError.details ? { details: normalizedError.details } : {}),
+            };
+          })() : null);
         }
       };
 
@@ -318,18 +286,63 @@ export class WsRuntimeTransport implements OttoRuntimeTransport {
         runtime: {
           agent_id: this.status.agentId,
           conversation_id: this.status.conversationId,
-          model: this.status.modelHandle ?? undefined,
+          model: this.status.model ?? this.status.modelHandle ?? undefined,
           reasoning_effort: this.status.effort,
         },
         payload: {
           kind: 'create_message',
-          messages: [{ role: 'user', content: promptWithRuntimeContext(text, this.status), client_message_id: randomUUID() }],
+          messages: [{ role: 'user', content: promptWithRuntimeContext(text, startedStatus), client_message_id: randomUUID() }],
           supports_control_response: true,
         },
       });
 
-      await this.waitForTurnComplete(CONNECT_TIMEOUT_MS, () => this.aborted || this.turnIdle);
-      if (!receiptWritten) {
+      const turnTimeoutMs = turnIdleTimeoutMs(text, CONNECT_TIMEOUT_MS);
+      try {
+        await this.waitForTurnComplete(turnTimeoutMs, () => this.aborted || this.turnIdle);
+      } catch (e) {
+        const idleTimeout = msg(e).includes('Timed out waiting for runtime idle');
+        if (idleTimeout && turnErrorMessage) {
+          emitResult(false);
+          writeReceipt('failed', 'Chat turn failed before idle confirmation.', turnErrorRaw ? (() => {
+            const normalizedError = normalizeRuntimeError(turnErrorRaw, this.hasApiKey());
+            return {
+              code: normalizedError.code,
+              message: normalizedError.message,
+              recoverable: true,
+              next_action: nextActionFor(normalizedError.code),
+              ...(normalizedError.details ? { details: normalizedError.details } : {}),
+            };
+          })() : {
+            code: 'error',
+            message: turnErrorMessage,
+            recoverable: true,
+            next_action: nextActionFor('error'),
+          });
+          this.emitError(turnErrorMessage);
+        } else if (idleTimeout && sawAssistant && !this.activeRunId) {
+          emitResult(true);
+          writeReceipt('success', 'Chat turn completed without idle confirmation.', null);
+        } else if (idleTimeout) {
+          writeReceipt('failed', 'Chat turn timed out before the runtime became idle.', {
+            code: 'idle_timeout',
+            message: 'The runtime did not confirm idle in time. You can wait, send a follow-up, or reconnect.',
+            recoverable: true,
+            next_action: nextActionFor('error'),
+          });
+          this.emitError('Timed out waiting for the runtime to finish. Try again or reconnect if the turn looks stuck.');
+        } else {
+          throw e;
+        }
+      }
+      if (this.turnInterruptReason && !receiptWritten) {
+        emitResult(false);
+        writeReceipt('failed', 'Chat turn failed.', {
+          code: 'error',
+          message: this.turnInterruptReason,
+          recoverable: true,
+          next_action: nextActionFor('error'),
+        });
+      } else if (!receiptWritten) {
         writeReceipt(this.aborted ? 'blocked' : sawAssistant ? 'success' : 'failed', this.aborted ? 'Chat turn was aborted.' : sawAssistant ? 'Chat turn completed.' : 'Chat turn ended without idle signal.', this.aborted ? {
           code: 'aborted',
           message: 'The chat turn was aborted before completion.',
@@ -337,19 +350,29 @@ export class WsRuntimeTransport implements OttoRuntimeTransport {
         } : null);
       }
     } catch (e) {
-      trace.write('error', { message: msg(e) });
-      this.markNotReady(msg(e));
-      this.writeChatReceipt({
-        text,
-        status: 'failed',
-        summary: 'Chat turn failed.',
-        blocker: { code: 'error', message: msg(e), recoverable: true, next_action: nextActionFor('error') },
-        startedStatus,
-        tracePath: trace.path,
-      });
-      this.emitError(msg(e));
+      const reason = msg(e);
+      trace.write('error', { message: reason });
+      const idleTimeout = reason.includes('Timed out waiting for runtime idle');
+      if (!idleTimeout) {
+        const normalizedError = normalizeRuntimeError(reason, this.hasApiKey());
+        this.markNotReady(reason, normalizedError.code);
+        this.writeChatReceipt({
+          text,
+          status: 'failed',
+          summary: 'Chat turn failed.',
+          blocker: {
+            code: normalizedError.code,
+            message: normalizedError.message,
+            recoverable: normalizedError.code === 'usage-limit' || normalizedError.code !== 'error',
+            next_action: nextActionFor(normalizedError.code),
+          },
+          startedStatus,
+          tracePath: trace.path,
+        });
+        this.emitError(normalizedError.message, normalizedError.details);
+      }
     } finally {
-      detachRuntimeHandler();
+      detachRuntimeHandler?.();
       trace.close();
     }
   }
@@ -365,62 +388,22 @@ export class WsRuntimeTransport implements OttoRuntimeTransport {
   }
 
   async close(): Promise<void> {
-    this.socketGeneration += 1;
     this.runtimeSocket?.removeAllListeners();
-    if (this.runtimeSocket) {
-      const socket = this.runtimeSocket as WebSocket & { terminate?: () => void };
-      if (typeof socket.terminate === 'function') socket.terminate();
-      else socket.close();
-    }
+    this.runtimeSocket?.close();
     this.runtimeSocket = null;
-    this.server?.clients.forEach((client) => {
-      client.removeAllListeners();
-      client.terminate();
-    });
-    this.remoteGeneration += 1;
-    const remoteProc = this.remoteProc;
-    if (this.remoteProc === remoteProc) {
-      this.remoteProc = null;
+    if (this.remoteProc && !this.remoteProc.killed) {
+      this.remoteProc.kill('SIGTERM');
     }
-    await this.terminateRemoteProc(remoteProc);
+    this.remoteProc = null;
     await new Promise<void>((resolve) => {
       if (!this.server) return resolve();
-      let done = false;
-      const finish = () => {
-        if (done) return;
-        done = true;
-        clearTimeout(timer);
-        resolve();
-      };
-      const timer = setTimeout(finish, 1000);
-      timer.unref?.();
-      this.server.close(finish);
-    });
-    await new Promise<void>((resolve) => {
-      if (!this.registrationServer) return resolve();
-      let done = false;
-      const finish = () => {
-        if (done) return;
-        done = true;
-        clearTimeout(timer);
-        resolve();
-      };
-      const timer = setTimeout(finish, 1000);
-      timer.unref?.();
-      this.registrationServer.close(finish);
+      this.server.close(() => resolve());
     });
     this.server = null;
     this.listenerPort = null;
-    this.registrationServer = null;
-    this.registrationPort = null;
     this.pendingControls.clear();
     this.controlByUpstream.clear();
-    this.status = {
-      ...this.status,
-      ready: false,
-      code: 'error',
-      reason: 'transport closed',
-    };
+    this.status = { ...this.status, ready: false, reason: 'transport closed' };
   }
 
   private fail(
@@ -454,86 +437,6 @@ export class WsRuntimeTransport implements OttoRuntimeTransport {
     return hasSecret('LETTA_API_KEY') || !!process.env.LETTA_API_KEY;
   }
 
-  private mintConversationId(): string {
-    return `local-conv-${randomUUID()}`;
-  }
-
-  private async resolveConversationForSync(
-    agentId: string,
-    baseUrl: string | null,
-    savedConversationId: string | null,
-    freshConversation: boolean,
-  ): Promise<string> {
-    if (process.env.OTTO_WS_SKIP_CONVERSATION_CREATE === '1') {
-      return freshConversation || savedConversationId === 'default' || !savedConversationId
-        ? this.mintConversationId()
-        : savedConversationId;
-    }
-    if (freshConversation || savedConversationId === 'default' || !savedConversationId) {
-      return this.createBackendConversation(agentId, baseUrl);
-    }
-    if (await this.backendConversationExists(savedConversationId, baseUrl)) {
-      return savedConversationId;
-    }
-    if (!smokeMode()) this.config.update({ conversationId: null });
-    return this.createBackendConversation(agentId, baseUrl);
-  }
-
-  private async createBackendConversation(agentId: string, configuredBaseUrl: string | null): Promise<string> {
-    if (process.env.OTTO_WS_SKIP_CONVERSATION_CREATE === '1') return this.mintConversationId();
-    const baseUrl = resolveHttpBaseUrl(configuredBaseUrl);
-    if (!baseUrl) throw new Error('Could not create Letta conversation: local Letta base URL was not discovered.');
-    const url = new URL('/v1/conversations/', baseUrl);
-    url.searchParams.set('agent_id', agentId);
-    const res = await fetch(url, {
-      method: 'POST',
-      headers: this.localLettaHeaders(baseUrl),
-      body: '{}',
-    });
-    if (!res.ok) {
-      const body = await res.text().catch(() => '');
-      throw new Error(`Could not create Letta conversation (${res.status}${body ? `: ${body.slice(0, 180)}` : ''})`);
-    }
-    const raw = await res.json() as { id?: unknown; conversation_id?: unknown; conversationId?: unknown };
-    const conversationId = [raw.id, raw.conversation_id, raw.conversationId].find((id): id is string =>
-      typeof id === 'string' && id.trim().length > 0,
-    );
-    if (!conversationId) throw new Error('Could not create Letta conversation: response did not include an id.');
-    return conversationId;
-  }
-
-  private async backendConversationExists(conversationId: string, configuredBaseUrl: string | null): Promise<boolean> {
-    const baseUrl = resolveHttpBaseUrl(configuredBaseUrl);
-    if (!baseUrl) return false;
-    try {
-      const url = new URL(`/v1/conversations/${encodeURIComponent(conversationId)}`, baseUrl);
-      const res = await fetch(url, { headers: this.localLettaHeaders(baseUrl) });
-      return res.ok;
-    } catch {
-      return false;
-    }
-  }
-
-  private localLettaHeaders(baseUrl: string): Record<string, string> {
-    const headers: Record<string, string> = {
-      Accept: 'application/json',
-      'Content-Type': 'application/json',
-    };
-    const configuredToken = getSecret('LETTA_API_KEY') || process.env.LETTA_API_KEY;
-    const token = configuredToken || (this.isLoopbackBaseUrl(baseUrl) ? 'local-desktop' : null);
-    if (token) headers.Authorization = `Bearer ${token}`;
-    return headers;
-  }
-
-  private isLoopbackBaseUrl(baseUrl: string): boolean {
-    try {
-      const host = new URL(baseUrl).hostname;
-      return host === '127.0.0.1' || host === 'localhost' || host === '::1';
-    } catch {
-      return false;
-    }
-  }
-
   private async startListener(): Promise<void> {
     this.sessionToken = randomBytes(24).toString('hex');
     this.server = new WebSocketServer({ host: '127.0.0.1', port: 0 });
@@ -558,141 +461,46 @@ export class WsRuntimeTransport implements OttoRuntimeTransport {
         socket.close(1008, 'duplicate runtime connection');
         return;
       }
-      const socketGeneration = ++this.socketGeneration;
       this.runtimeSocket = socket;
       this.lastReconnectAt = new Date().toISOString();
       socket.on('close', () => {
-        if (this.socketGeneration === socketGeneration && this.runtimeSocket === socket) {
+        if (this.runtimeSocket === socket) {
           this.runtimeSocket = null;
-          this.markNotReady('Letta runtime disconnected from Otto WebSocket listener.');
+          this.handleRuntimeDisconnect();
         }
       });
     });
   }
 
-  private async startRegistrationServer(): Promise<void> {
-    if (!this.listenerPort) throw new Error('WebSocket listener not started');
-    const wsUrl = `ws://127.0.0.1:${this.listenerPort}`;
-    const connectionId = `otto-local-${randomUUID()}`;
-
-    this.registrationServer = createServer((req, res) => {
-      const url = new URL(req.url ?? '/', 'http://127.0.0.1');
-      req.resume();
-      if (req.method !== 'POST' || url.pathname !== '/v1/environments/register') {
-        res.writeHead(404, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ error: 'not found' }));
-        return;
-      }
-      if (req.headers.authorization !== `Bearer ${this.sessionToken}`) {
-        res.writeHead(401, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ error: 'unauthorized' }));
-        return;
-      }
-      res.writeHead(200, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({
-        connectionId,
-        wsUrl,
-        supportsSplitStatusChannels: false,
-      }));
-    });
-
-    await new Promise<void>((resolve, reject) => {
-      this.registrationServer!.once('listening', () => {
-        const addr = this.registrationServer!.address();
-        if (addr && typeof addr === 'object') {
-          this.registrationPort = addr.port;
-          resolve();
-        } else reject(new Error('Could not bind loopback registration endpoint'));
-      });
-      this.registrationServer!.once('error', reject);
-      this.registrationServer!.listen(0, '127.0.0.1');
-    });
-  }
-
   private async spawnRemote(cliPath: string, backendBaseUrl: string | null): Promise<void> {
-    if (!this.registrationPort) throw new Error('Registration endpoint not started');
-    const registrationUrl = `http://127.0.0.1:${this.registrationPort}`;
+    if (!this.listenerPort) throw new Error('WebSocket listener not started');
+    applyEmbeddedLettaSettingsEnv(this.config);
+    const key = getSecret('LETTA_API_KEY');
+    const listenerUrl = `http://127.0.0.1:${this.listenerPort}`;
     const env = {
       ...process.env,
-      LETTA_BASE_URL: registrationUrl,
+      LETTA_BASE_URL: listenerUrl,
       IGNORE_SELF_HOSTED_LISTENER_ERROR: '1',
-      LETTA_API_KEY: this.sessionToken,
-      LETTA_LOCAL_BACKEND_EXPERIMENTAL: '1',
+      BYOR_REMOTE_TOKEN: this.sessionToken,
       ...(backendBaseUrl ? { OTTO_LETTA_BACKEND_URL: backendBaseUrl } : {}),
+      ...(key ? { LETTA_API_KEY: key } : {}),
     };
     const nodeBin = process.env.LETTA_NODE?.trim() || 'node';
-    this.remoteOutputChunks = [];
-    const generation = ++this.remoteGeneration;
-    const remoteProc = spawn(nodeBin, [cliPath, 'server', '--env-name', REMOTE_ENV, '--debug'], {
+    const stderrChunks: string[] = [];
+    this.remoteProc = spawn(nodeBin, [cliPath, 'remote', '--env-name', REMOTE_ENV, '--backend', 'local'], {
       env,
       stdio: ['ignore', 'pipe', 'pipe'],
     });
-    this.remoteProc = remoteProc;
-    remoteProc.stdout?.on('data', (chunk: Buffer) => {
+    this.remoteProc.stderr?.on('data', (chunk: Buffer) => {
       const line = String(chunk).trim();
-      if (line) this.captureRemoteOutput(line);
+      if (line) stderrChunks.push(line);
     });
-    remoteProc.stderr?.on('data', (chunk: Buffer) => {
-      const line = String(chunk).trim();
-      if (line) this.captureRemoteOutput(line);
-    });
-    remoteProc.on('exit', (code) => {
-      if (!this.shouldHonorRemoteExit(remoteProc, generation)) return;
+    this.remoteProc.on('exit', (code) => {
       if (code !== 0 && !this.runtimeSocket) {
-        const detail = this.remoteOutputSummary() || `exit ${code}`;
+        const detail = stderrChunks.slice(-3).join(' | ') || `exit ${code}`;
         this.markNotReady(`Letta Code remote exited before connect (${detail}).`, 'unreachable');
       }
     });
-  }
-
-  private shouldHonorRemoteExit(proc: ChildProcess, generation: number): boolean {
-    return proc === this.remoteProc && generation === this.remoteGeneration;
-  }
-
-  private async terminateRemoteProc(proc: ChildProcess | null): Promise<void> {
-    if (!proc) return;
-    if (proc.exitCode !== null || proc.signalCode !== null) return;
-    let done = false;
-    const waitForExit = new Promise<void>((resolve) => {
-      const finish = () => {
-        done = true;
-        proc.off('exit', finish);
-        proc.off('close', finish);
-        proc.off('error', finish);
-        resolve();
-      };
-      proc.once('exit', finish);
-      proc.once('close', finish);
-      proc.once('error', finish);
-    });
-    if (!proc.killed) proc.kill('SIGTERM');
-    await Promise.race([
-      waitForExit,
-      new Promise<void>((resolve) => setTimeout(resolve, REMOTE_SHUTDOWN_TIMEOUT_MS)),
-    ]);
-    if (!done && proc.exitCode === null && proc.signalCode === null) {
-      proc.kill('SIGKILL');
-      await Promise.race([
-        waitForExit,
-        new Promise<void>((resolve) => setTimeout(resolve, 500)),
-      ]);
-    }
-  }
-
-  private captureRemoteOutput(line: string): void {
-    this.remoteOutputChunks.push(this.sanitizeRemoteOutput(line));
-    if (this.remoteOutputChunks.length > 30) this.remoteOutputChunks.shift();
-  }
-
-  private remoteOutputSummary(): string {
-    return this.remoteOutputChunks.slice(-4).join(' | ');
-  }
-
-  private sanitizeRemoteOutput(line: string): string {
-    return line
-      .replace(/\btoken\s+([a-z0-9._-]{6,})\b/gi, 'token [redacted]')
-      .replace(/\bBearer\s+([a-z0-9._-]{6,})\b/gi, 'Bearer [redacted]')
-      .replace(/\b(sk-[a-z0-9_-]{10,})\b/gi, 'sk-[redacted]');
   }
 
   private waitForRuntimeSocket(): Promise<void> {
@@ -701,7 +509,7 @@ export class WsRuntimeTransport implements OttoRuntimeTransport {
       const tick = () => {
         if (this.runtimeSocket?.readyState === WebSocket.OPEN) return resolve();
         if (Date.now() - started > CONNECT_TIMEOUT_MS) {
-          return reject(new Error('Timed out waiting for Letta Code server to connect to Otto local WebSocket registration endpoint.'));
+          return reject(new Error('Timed out waiting for Letta Code remote to connect (letta remote --backend local).'));
         }
         setTimeout(tick, 200);
       };
@@ -716,67 +524,12 @@ export class WsRuntimeTransport implements OttoRuntimeTransport {
     this.runtimeSocket.send(JSON.stringify(command));
   }
 
-  private modelInitAttempts(preferredModelHandle?: string | null, opts?: { allowFallback?: boolean }): (string | null)[] {
-    if (opts?.allowFallback === false) return [preferredModelHandle?.trim() || null];
-    const configuredFallbacks = (process.env.OTTO_WS_MODEL_FALLBACKS ?? '')
-      .split(',')
-      .map((model) => model.trim())
-      .filter(Boolean);
-    const seen = new Set<string>();
-    const attempts: (string | null)[] = [];
-    for (const model of [preferredModelHandle?.trim() || null, ...configuredFallbacks, ...DEFAULT_WS_MODEL_FALLBACKS]) {
-      const key = model ?? '';
-      if (seen.has(key)) continue;
-      seen.add(key);
-      attempts.push(model);
-    }
-    return attempts.length ? attempts : [null];
-  }
-
-  private async syncRuntimeWithFallback(
-    agentId: string,
-    conversationId: string | null,
-    preferredModelHandle?: string | null,
-    opts?: { allowFallback?: boolean },
-  ): Promise<string | null> {
-    let lastError: unknown = null;
-    const attempts = this.modelInitAttempts(preferredModelHandle, opts);
-    for (const [index, modelHandle] of attempts.entries()) {
-      try {
-        await this.syncRuntime(agentId, conversationId, modelHandle);
-        return modelHandle;
-      } catch (e) {
-        lastError = e;
-        if (this.isStaleConversationError(e) || !this.isRetryableSyncError(e) || index === attempts.length - 1) {
-          throw e;
-        }
-      }
-    }
-    throw lastError instanceof Error ? lastError : new Error(String(lastError ?? 'Runtime sync failed'));
-  }
-
-  private isRetryableSyncError(e: unknown): boolean {
-    const text = msg(e).toLowerCase();
-    return text.includes('timed out waiting for runtime sync') || text.includes('model') || text.includes('provider');
-  }
-
   private async syncRuntime(agentId: string, conversationId: string | null, modelHandle?: string | null): Promise<void> {
-    const scopedConversationId = conversationId?.trim() || this.mintConversationId();
-    this.status.conversationId = scopedConversationId;
-    const socket = this.runtimeSocket;
-    if (!socket || socket.readyState !== WebSocket.OPEN) {
-      throw new Error('Letta runtime disconnected before sync.');
-    }
     return new Promise((resolve, reject) => {
       let online = false;
       let idle = false;
-      let timeout: ReturnType<typeof setTimeout>;
-      let settled = false;
+      const timeout = setTimeout(() => reject(new Error('Timed out waiting for runtime sync')), CONNECT_TIMEOUT_MS);
       const handler = (raw: Buffer | ArrayBuffer | Buffer[]) => {
-        if (this.runtimeSocket !== socket) {
-          finish(new Error('Letta runtime socket changed during sync.'));
-          return;
-        }
         let event: WsRuntimeEvent;
         try {
           event = JSON.parse(String(raw)) as WsRuntimeEvent;
@@ -788,47 +541,29 @@ export class WsRuntimeTransport implements OttoRuntimeTransport {
           if (conv) this.status.conversationId = conv;
         }
         if (event.type === 'error') {
-          finish(new Error(String(event.message ?? event.error ?? 'Runtime sync failed')));
-          return;
+          clearTimeout(timeout);
+          this.runtimeSocket?.off('message', handler);
+          reject(new Error(String(event.message ?? event.error ?? 'Runtime sync failed')));
         }
         if (isDeviceOnline(event)) online = true;
         if (isLoopIdle(event)) idle = true;
         if (online && idle) {
-          finish();
+          clearTimeout(timeout);
+          this.runtimeSocket?.off('message', handler);
+          resolve();
         }
       };
-      const cleanup = () => {
-        clearTimeout(timeout);
-        socket.off('message', handler);
-      };
-      const finish = (error?: Error) => {
-        if (settled) return;
-        settled = true;
-        cleanup();
-        if (error) reject(error);
-        else resolve();
-      };
-      timeout = setTimeout(() => {
-        const detail = this.remoteOutputSummary();
-        const modelDetail = modelHandle ? ` for model ${modelHandle}` : '';
-        const outputDetail = detail ? `; latest Letta Code output: ${detail}` : '';
-        finish(new Error(`Timed out waiting for runtime sync${modelDetail}${outputDetail}`));
-      }, CONNECT_TIMEOUT_MS);
-      socket.on('message', handler);
-      try {
-        socket.send(JSON.stringify({
-          type: 'sync',
-          runtime: {
-            agent_id: agentId,
-            conversation_id: scopedConversationId,
-            model: modelHandle ?? undefined,
-            reasoning_effort: this.config.effort(),
-          },
-          recover_approvals: true,
-        }));
-      } catch (e) {
-        finish(e instanceof Error ? e : new Error(String(e)));
-      }
+      this.runtimeSocket!.on('message', handler);
+      this.sendCommand({
+        type: 'sync',
+        runtime: {
+          agent_id: agentId,
+          conversation_id: conversationId ?? undefined,
+          model: modelHandle ?? undefined,
+          reasoning_effort: this.config.effort(),
+        },
+        recover_approvals: true,
+      });
     });
   }
 
@@ -837,9 +572,8 @@ export class WsRuntimeTransport implements OttoRuntimeTransport {
     return text.includes('conversation') && (text.includes('not found') || text.includes('not-found') || text.includes('404') || text.includes('500'));
   }
 
-  private attachRuntimeHandler(onEvent: (event: WsRuntimeEvent) => void): () => void {
-    if (!this.runtimeSocket) return () => {};
-    const socket = this.runtimeSocket;
+  private attachRuntimeHandler(onEvent: (event: WsRuntimeEvent) => void): (() => void) | null {
+    if (!this.runtimeSocket) return null;
     const handler = (raw: Buffer | ArrayBuffer | Buffer[]) => {
       try {
         onEvent(JSON.parse(String(raw)) as WsRuntimeEvent);
@@ -847,8 +581,10 @@ export class WsRuntimeTransport implements OttoRuntimeTransport {
         // ignore malformed frames
       }
     };
-    socket.on('message', handler);
-    return () => socket.off('message', handler);
+    this.runtimeSocket.on('message', handler);
+    return () => {
+      this.runtimeSocket?.off('message', handler);
+    };
   }
 
   private waitForTurnComplete(timeoutMs: number, aborted: () => boolean): Promise<void> {
@@ -893,12 +629,26 @@ export class WsRuntimeTransport implements OttoRuntimeTransport {
     safeWebContentsSend(this.win, 'otto:permission', req);
     this.pendingControls.set(requestId, {
       requestId,
-      upstreamId,
       toolName,
       resolve: () => {
         this.controlByUpstream.delete(upstreamId);
       },
     });
+  }
+
+  private handleRuntimeDisconnect() {
+    const hadPending = this.pendingControls.size > 0;
+    this.pendingControls.clear();
+    this.controlByUpstream.clear();
+    const activeTurn = !this.turnIdle && (hadPending || this.activeRunId !== null);
+    if (activeTurn) {
+      this.turnInterruptReason = hadPending
+        ? 'Letta runtime disconnected while waiting for tool approval. Reconnect and try again.'
+        : 'Letta runtime disconnected during an active turn. Reconnect and try again.';
+      this.turnIdle = true;
+      this.emitError(this.turnInterruptReason);
+    }
+    this.markNotReady('Letta runtime disconnected from Otto WebSocket listener.');
   }
 
   private markNotReady(reason: string, code: StatusCode = 'error') {
@@ -908,16 +658,12 @@ export class WsRuntimeTransport implements OttoRuntimeTransport {
       code,
       reason: friendly(code, reason),
     };
-    this.emitStatus();
-  }
-
-  private emitStatus() {
     safeWebContentsSend(this.win, 'otto:event', { status: this.status });
   }
 
-  private emitError(message: string) {
+  private emitError(message: string, details?: string) {
     safeWebContentsSend(this.win, 'otto:event', {
-      message: { type: 'error', message, uuid: randomUUID() },
+      message: { type: 'error', message, ...(details ? { details } : {}), uuid: randomUUID() },
     });
   }
 

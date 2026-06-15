@@ -44,6 +44,7 @@ export type StatusCode =
   | 'unreachable'
   | 'sdk-missing'
   | 'stale'
+  | 'usage-limit'
   | 'error';
 
 export type RuntimeTransportMode = 'sdk' | 'ws' | 'auto';
@@ -136,6 +137,7 @@ export interface LettaModelOption {
   label: string;
   provider?: string | null;
   displayName?: string | null;
+  deprecated?: boolean;
 }
 
 /** Renderer-provided pasted/dropped image. Saved locally before being referenced in chat. */
@@ -303,6 +305,9 @@ export interface DecideProposalResult {
 
 export type { StandardConflictResult } from '@otto-haus/core';
 
+/** Default sidebar ordering for threads without manual sortOrder (164). */
+export type ConversationSortMode = 'recent' | 'created';
+
 /** Local chat thread index (046). */
 export interface ChatThreadRecord {
   id: string;
@@ -311,7 +316,7 @@ export interface ChatThreadRecord {
   title: string;
   createdAt: string;
   updatedAt: string;
-  /** Manual sidebar order; lower numbers appear first inside pinned/recents groups. */
+  /** Manual drag order within pinned or recents group; null falls back to conversationSortMode. */
   sortOrder?: number | null;
   pinned: boolean;
   archived: boolean;
@@ -425,7 +430,6 @@ export interface ChatThreadRecord {
   title: string;
   createdAt: string;
   updatedAt: string;
-  /** Manual sidebar order; lower numbers appear first inside pinned/recents groups. */
   sortOrder?: number | null;
   pinned: boolean;
   archived: boolean;
@@ -449,8 +453,40 @@ export interface TicketReviewRecord {
   blocker?: string;
 }
 
+/** ADR 093 boundary reason ids — see `isolated-agent.ts` / docs/v1/adr/093-multi-agent-workspace-policy.md */
+export type IsolationBoundaryReason =
+  | 'different_owner'
+  | 'different_authority'
+  | 'different_secrets_tools'
+  | 'different_schedule_channel'
+  | 'different_mission'
+  | 'strong_isolation';
+
+export interface IsolatedAgentRecord {
+  agentId: string;
+  boundaryReason: IsolationBoundaryReason;
+  label?: string | null;
+  createdAt: string;
+  configPath?: string | null;
+  /** v1 blocks shared Standards canon ratify for isolated secondaries (#120). */
+  standardsRatifyBlocked?: boolean;
+}
+
+export interface IsolatedAgentListResult {
+  agents: IsolatedAgentRecord[];
+}
+
+export interface IsolatedAgentCreateResult {
+  agent: IsolatedAgentRecord;
+  receipt: { id: string; path: string };
+}
+
 /** Local-first config at ~/.otto/config.json (shared with gen-readiness.mjs). */
+export type DisplayTheme = 'light' | 'dark' | 'system';
+
 export interface OttoConfig {
+  /** UI theme preference — light, dark, or follow system. */
+  theme?: DisplayTheme;
   agentId?: string | null;
   conversationId?: string | null;
   /** Active local thread id from ~/.otto/threads/index.json (046). */
@@ -463,6 +499,8 @@ export interface OttoConfig {
   primaryAgentId?: string | null;
   /** Connection UX mode — embedded vs bring-your-own vs cloud. */
   connectionMode?: 'embedded' | 'existing' | 'cloud';
+  /** Sidebar default for threads without manual sortOrder (164). */
+  conversationSortMode?: ConversationSortMode;
   /** Legacy / generated readiness shape; modelHandle is the v1 desktop control. */
   model?: { provider?: string; model?: string };
   mcpServers?: unknown[];
@@ -477,6 +515,8 @@ export interface OttoConfig {
   labs?: LabsConfig;
   /** Sleep-time reflection ("dreaming") trigger — synced to Letta settings for the active agent. */
   dreaming?: DreamSettings;
+  /** Secondary agents created via Settings → Advanced (#120). Chat stays on primaryAgentId. */
+  isolatedAgents?: IsolatedAgentRecord[];
 }
 
 /** Letta sleep-time reflection trigger (mirrors letta-code SleeptimeSelector). */
@@ -509,3 +549,69 @@ export type CogneeSettings = {
   enabled: boolean;
   baseUrl: string;
 };
+
+/** Single health probe — machine + human readable. */
+export type HealthCheckStatus = 'ok' | 'warn' | 'fail' | 'unknown' | 'skip';
+
+export interface HealthCheck {
+  id: string;
+  label: string;
+  status: HealthCheckStatus;
+  summary: string;
+  impact?: string;
+  nextAction?: string;
+  data?: Record<string, unknown>;
+}
+
+/** Aggregated live/offline health for agents, CI, and Settings UI. */
+export interface SystemHealthReport {
+  ok: boolean;
+  checkedAt: string;
+  scope: 'live' | 'offline';
+  build: AppBuildInfo;
+  checks: HealthCheck[];
+}
+
+/** Paperclip intake (074) — display-only work_state; never otto Done. */
+export type PaperclipConnectionState = 'not_connected' | 'connected' | 'sync_error';
+
+export interface PaperclipTaskRow {
+  id: string;
+  title: string;
+  status: string;
+  url: string;
+  blocked?: boolean;
+}
+
+export interface PaperclipArtifactRow {
+  id: string;
+  label: string;
+  url: string;
+}
+
+export interface PaperclipIntakeSnapshot {
+  dir: string;
+  connection: PaperclipConnectionState;
+  enabled: boolean;
+  lastSyncAt: string | null;
+  lastSyncError: string | null;
+  sourceBaseUrl: string | null;
+  activeTasks: PaperclipTaskRow[];
+  blockedTasks: PaperclipTaskRow[];
+  recentArtifacts: PaperclipArtifactRow[];
+}
+
+export interface PaperclipConnectResult {
+  ok: boolean;
+  needsApproval?: boolean;
+  message?: string;
+  snapshot: PaperclipIntakeSnapshot;
+  receipt: Receipt & { path: string };
+}
+
+export interface PaperclipSyncResult {
+  ok: boolean;
+  error?: string;
+  snapshot: PaperclipIntakeSnapshot;
+  receipt?: Receipt & { path: string };
+}

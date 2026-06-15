@@ -17,12 +17,14 @@ run_gate() {
   "$@"
 }
 
+run_gate "workflow permissions" bash scripts/verify-workflow-permissions.sh
 run_gate "package manager pin" bun run check:package-manager
 run_gate "core/practices typecheck" bun run typecheck
 run_gate "desktop renderer typecheck" bun run --cwd apps/desktop typecheck
 run_gate "desktop Electron typecheck" bun run --cwd apps/desktop electron:typecheck
 run_gate "shell syntax check" bun run check:shell
 run_gate "unit tests" bun test
+run_gate "sensitive file paths" bun run check:sensitive-files
 run_gate "v0 verifier" bun run verify:v0
 run_gate "docs tool pins" bun run check:docs-tools
 run_gate "docs validate" bun run docs:validate

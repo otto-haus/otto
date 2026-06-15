@@ -1,11 +1,11 @@
 #!/usr/bin/env node
 /**
- * Onboarding staging smoke — extends otto-032 with connected-first (069) and CTA paths (071–072).
- * Uses /Applications/otto-staging.app only — never live /Applications/otto.app.
+ * Onboarding smoke — connected-first (069), CTA paths (071–072), narrow step shell (#91).
+ * Defaults to apps/desktop/dist-app — never /Applications/otto.app or otto-staging.app.
  *
  * Requires: NODE_PATH=$HOME/.codex/admin/node_modules (playwright installed there)
  *
- * Run after: bash apps/desktop/scripts/deploy-staging.sh
+ * Run after: bun run --cwd apps/desktop app:dir
  *
  *   OTTO_RECEIPT_DIR=/Users/seb/Code/otto/docs/receipts/staging \
  *     node scripts/otto-staging-onboarding-smoke.cjs
@@ -17,7 +17,8 @@ const { execFileSync, spawn } = require('node:child_process');
 const { chromium } = require('playwright');
 
 const RUN_ID = process.env.OTTO_STAGING_RUN_ID ?? new Date().toISOString().replace(/[-:.TZ]/g, '').slice(0, 14);
-const APP_TEMPLATE = process.env.OTTO_APP_BUNDLE ?? '/Applications/otto-staging.app';
+const DEFAULT_BUILT = join(process.cwd(), 'apps/desktop/dist-app/mac-arm64/otto.app');
+const APP_TEMPLATE = process.env.OTTO_APP_BUNDLE ?? DEFAULT_BUILT;
 const RECEIPT_DIR = process.env.OTTO_RECEIPT_DIR ?? join(process.cwd(), 'docs/receipts/staging');
 const SMOKE_ROOT = join(tmpdir(), `otto-staging-onboarding-${RUN_ID}`);
 const APP_BUNDLE = join(SMOKE_ROOT, 'otto-staging-smoke.app');
@@ -31,7 +32,10 @@ main().catch((error) => {
 
 async function main() {
   if (APP_TEMPLATE.includes('/Applications/otto.app') && !APP_TEMPLATE.includes('staging')) {
-    throw new Error('Refusing live app — set OTTO_APP_BUNDLE to otto-staging.app');
+    throw new Error('Refusing live app — build dist-app or set OTTO_APP_BUNDLE');
+  }
+  if (APP_TEMPLATE.includes('otto-staging.app')) {
+    throw new Error('Refusing otto-staging.app — build dist-app or set OTTO_APP_BUNDLE to a disposable bundle');
   }
 
   mkdirSync(RECEIPT_DIR, { recursive: true });
@@ -84,8 +88,9 @@ async function main() {
       proof.screenshots.connectedFirst = join(RECEIPT_DIR, '069-connected-first-state.png');
       await page.screenshot({ path: proof.screenshots.connectedFirst, fullPage: false });
       if (!welcomeVisible) {
-        proof.checks.connectedFirstNote =
-          'Welcome not visible when runtime ready on fresh profile — Onboarding.tsx auto-sets started when ready (lines 51–54).';
+        throw new Error(
+          'Welcome not visible when runtime ready on fresh profile (issue #88 / 069 connected-first)',
+        );
       }
     },
   }).catch((error) => {
@@ -132,17 +137,17 @@ async function main() {
       await page.waitForLoadState('domcontentloaded');
       await page.getByRole('heading', { name: 'The behavior layer for persistent agents.' }).waitFor({ timeout: 15000 });
       await page.getByRole('button', { name: 'Get started →' }).click();
-      await page.getByText('Finish connecting otto').waitFor({ timeout: 8000 });
-      proof.checks.primaryCtaConnectDock = true;
-      proof.screenshots.connectDock = join(RECEIPT_DIR, '072-primary-connect-dock.png');
-      await page.screenshot({ path: proof.screenshots.connectDock, fullPage: false });
+      await page.getByText('Connect your runtime').waitFor({ timeout: 8000 });
+      proof.checks.primaryCtaConnectStep = true;
+      proof.screenshots.connectStep = join(RECEIPT_DIR, '072-primary-connect-step.png');
+      await page.screenshot({ path: proof.screenshots.connectStep, fullPage: false });
     },
   }).catch((error) => {
-    proof.checks.primaryCtaConnectDock = false;
+    proof.checks.primaryCtaConnectStep = false;
     proof.checks.primaryCtaError = String(error.message ?? error);
   });
 
-  // Phase D — narrow layout dock not obscuring composer (073)
+  // Phase D — narrow layout step shell not obscuring composer (073 / #91)
   const narrowProfile = join(SMOKE_ROOT, 'profile-narrow');
   mkdirSync(narrowProfile, { recursive: true });
 
@@ -155,19 +160,18 @@ async function main() {
     async exercise(page) {
       await page.waitForLoadState('domcontentloaded');
       await page.getByRole('heading', { name: 'The behavior layer for persistent agents.' }).waitFor({ timeout: 15000 });
-      await page.getByRole('button', { name: 'Skip' }).click();
-      await page.waitForTimeout(500);
-      await page.getByRole('button', { name: 'Get started →' }).click({ timeout: 5000 }).catch(() => {});
-      await page.waitForTimeout(800);
+      await page.getByRole('button', { name: 'Get started →' }).click();
+      await page.getByText('Connect your runtime').waitFor({ timeout: 8000 });
       const composer = page.locator('textarea').first();
       await composer.waitFor({ state: 'visible', timeout: 8000 });
       const composerBox = await composer.boundingBox();
-      const dock = page.locator('.onboardDock').first();
-      const dockRect = (await dock.count()) ? await dock.boundingBox() : null;
+      const stepShell = page.locator('.onboardStepAnchor').first();
+      const stepRect = (await stepShell.count()) ? await stepShell.boundingBox() : null;
       proof.checks.narrowComposerVisible = Boolean(composerBox);
-      if (composerBox && dockRect) {
-        proof.checks.narrowDockNotCoveringComposer =
-          dockRect.y + dockRect.height <= composerBox.y || dockRect.y >= composerBox.y + composerBox.height;
+      proof.checks.narrowStepShellVisible = Boolean(stepRect);
+      if (composerBox && stepRect) {
+        proof.checks.narrowStepNotCoveringComposer =
+          stepRect.y + stepRect.height <= composerBox.y || stepRect.y >= composerBox.y + composerBox.height;
       }
       proof.screenshots.narrowLayout = join(RECEIPT_DIR, '073-narrow-dock-layout.png');
       await page.screenshot({ path: proof.screenshots.narrowLayout, fullPage: false });
@@ -177,9 +181,13 @@ async function main() {
   });
 
   proof.ok =
+    proof.checks.connectedFirstRuntimeReady === true &&
+    proof.checks.connectedFirstWelcomeVisible === true &&
     proof.checks.receiptsCtaShowsSample === true &&
     proof.checks.receiptsCtaNotConnectDock === true &&
-    proof.checks.primaryCtaConnectDock === true;
+    proof.checks.primaryCtaConnectStep === true &&
+    proof.checks.narrowComposerVisible === true &&
+    proof.checks.narrowStepNotCoveringComposer === true;
 
   const outJson = join(RECEIPT_DIR, `onboarding-smoke-${RUN_ID}.json`);
   writeFileSync(outJson, JSON.stringify(proof, null, 2) + '\n');

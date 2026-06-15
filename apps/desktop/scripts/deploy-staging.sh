@@ -12,6 +12,7 @@ OTTO_HOME_DIR="$STAGING_ROOT/otto-home"
 PROFILE_DIR="$STAGING_ROOT/profile"
 PORT="${OTTO_STAGING_PORT:-9445}"
 BUNDLE_ID="${OTTO_STAGING_BUNDLE_ID:-haus.otto.desktop.staging}"
+STAGING_LAUNCH="${OTTO_STAGING_LAUNCH:-background}"
 APP_VERSION="$(node -p "require('$ROOT/package.json').version" 2>/dev/null || echo unknown)"
 
 if [[ "$TARGET_APP_RESOLVED" == "/Applications/otto.app" || "$TARGET_APP_RESOLVED" == "/Applications/otto.app/"* ]]; then
@@ -93,6 +94,9 @@ stamp_bundle() {
   plist_env_set "$plist" OTTO_MAIN_SHA "$MAIN_SHA"
   plist_env_set "$plist" OTTO_MAIN_SHORT_SHA "$MAIN_SHORT"
   plist_env_set "$plist" OTTO_SMOKE "1"
+  # Dogfood default: visible window so external resize (Rectangle) keeps input/paint.
+  # Agent background launch temporarily overrides OTTO_WINDOW_MODE at open time only.
+  plist_env_set "$plist" OTTO_WINDOW_MODE "${OTTO_WINDOW_MODE:-visible}"
   plist_env_set "$plist" ELECTRON_ENABLE_LOGGING "1"
   plist_env_set "$plist" OTTO_BUILD_SHA "$build_sha"
   plist_env_set "$plist" OTTO_BUILD_SHORT_SHA "$build_short"
@@ -137,8 +141,8 @@ NODE
   echo "build_time=$build_time"
   echo "build_channel=$APP_CHANNEL"
   echo "origin_main=$MAIN_SHORT"
-  # Letta discovery reads ~/.letta under isolated HOME — point at real settings for staging proof.
-  if [[ -f "${HOME}/.letta/settings.json" ]]; then
+  # Embedded mode uses OTTO_HOME/letta — opt in to host settings for legacy staging only.
+  if [[ "${OTTO_STAGING_USE_HOST_LETTA:-}" == "1" ]] && [[ -f "${HOME}/.letta/settings.json" ]]; then
     plist_env_set "$plist" OTTO_LETTA_SETTINGS_PATH "${HOME}/.letta/settings.json"
   fi
   if [[ -d "${ROOT}/checks" ]]; then
@@ -195,10 +199,34 @@ stamp_bundle "$TARGET_APP"
 echo "==> Ad-hoc signing staging app"
 codesign --force --deep --sign - "$TARGET_APP" >/dev/null
 
-echo "==> Opening staging app"
-/usr/bin/open -n "$TARGET_APP" --args \
+case "$STAGING_LAUNCH" in
+  build-only)
+    echo "staging_launch=build-only"
+    echo "staging_app=$TARGET_APP"
+    echo "home=$HOME_DIR"
+    echo "otto_home=$OTTO_HOME_DIR"
+    echo "profile=$PROFILE_DIR"
+    echo "port=$PORT"
+    exit 0
+    ;;
+  open)
+    echo "==> Opening staging app (visible — may take focus)"
+    OPEN_FLAGS=()
+    ;;
+  background)
+    echo "==> Launching staging app in background (no focus steal)"
+    plist_env_set "$TARGET_APP/Contents/Info.plist" OTTO_WINDOW_MODE "background"
+    OPEN_FLAGS=(-g)
+    ;;
+esac
+
+/usr/bin/open -n "${OPEN_FLAGS[@]}" "$TARGET_APP" --args \
   "--user-data-dir=$PROFILE_DIR" \
   "--remote-debugging-port=$PORT"
+
+if [[ "$STAGING_LAUNCH" == "background" ]]; then
+  plist_env_set "$TARGET_APP/Contents/Info.plist" OTTO_WINDOW_MODE "visible"
+fi
 
 for _ in {1..50}; do
   PID="$(pgrep -f "$TARGET_APP/Contents/MacOS/otto" | head -1 || true)"

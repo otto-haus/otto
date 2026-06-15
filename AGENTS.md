@@ -29,6 +29,18 @@ If a change does not gate irreversibility or make behavior compound, question it
 - Do not claim done without receipts.
 - Do not add private/product-specific control systems to the OSS core unless behind a clear boundary.
 
+## Agent launch contracts
+
+Keep slash-command launches tiny; the markdown file is the contract:
+
+```txt
+/goal Read docs/agent-goals/codex-goal.md and follow it.
+/goal Read docs/agent-goals/claude-goal.md and follow it.
+/goalbuddy Read docs/agent-goals/composer-goal.md and prepare the board.
+```
+
+See `docs/agent-goals/README.md` for parallelism, collision rules, and trunk workflow. Default throughput: one independent ticket = one agent = one branch/worktree. Sebastian is the merge/release/one-way-door gate.
+
 ## Current issue/review workflow
 
 - Use GitHub Issues for new nits, bugs, polish requests, and follow-up work. Do not create new local ticket files for ordinary intake.
@@ -57,17 +69,32 @@ Desktop:
 
 ```sh
 task electron                 # live Electron app in dev
-task staging                  # build/package/install/open isolated /Applications/otto-staging.app
+task staging                  # build/package/isolated staging app; background launch (no focus steal)
+task staging:build            # build/package only — no launch (preferred for agent verify loops)
+task staging:open             # explicit visible launch when debugging UI
 task install:release          # canonical otto.app — GitHub Release only; requires OTTO_ALLOW_RELEASE_INSTALL=1
 task smoke:release:metadata   # read-only — compare installed otto.app to latest or OTTO_RELEASE_TAG
+task smoke:letta-cli          # resolveCli + version/help; opt-in turn with LETTA_AGENT_ID (#295)
 task smoke:cli                # isolated disposable conversation; never default
 task smoke:cron               # opt-in Letta cron create/list/delete smoke; never default
+task smoke:attachments        # fixture save + runtime attachment context + leak checks (#299)
+task smoke:permission         # #298 permission allow/deny round-trip (mock transport; no app bundles)
 ```
+
+Permission round-trip (#298):
+
+```sh
+bun scripts/permission-round-trip-smoke.ts
+# or: task smoke:permission
+```
+
+**Nonintrusive desktop smoke (default for agents):** prefer `task staging:build` plus CDP/Playwright smokes, or `task staging` (background launch). Staging bundles set `OTTO_SMOKE=1` and default `OTTO_WINDOW_MODE=background` so windows do not steal focus. Use `task staging:open` or `OTTO_WINDOW_MODE=visible` only when a human needs a visible window. Never mutate `/Applications/otto.app`.
 
 After any `apps/desktop/` implementation turn, refresh **staging** (not live):
 
 ```sh
-task staging        # → /Applications/otto-staging.app; refuses unless HEAD=origin/main (#314)
+task staging:build  # preferred — no window focus steal (#326)
+# or task staging    # → /Applications/otto-staging.app; background launch; refuses unless HEAD=origin/main (#314)
 task staging:main   # fetch origin/main then staging (same gate when on main)
 ```
 
@@ -100,6 +127,7 @@ Do not call Electron “connected” unless `session.initialize()` succeeds agai
 packages/core/        shared v0 contract types
 packages/practices/   PracticeSpec loader, validator, CLI
 apps/desktop/         Vite + Electron workspace shell
+docs/agent-goals/     file-native Codex/Claude/Composer launch contracts
 docs/design/          brand guide, onboarding, motion, reference icons (public canon)
 extension/            Letta Code commands and permission gates
 skill/                Charter and Routine skills

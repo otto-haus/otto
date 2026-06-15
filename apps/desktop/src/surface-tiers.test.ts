@@ -2,6 +2,8 @@ import { describe, expect, test } from 'bun:test';
 import { defaultLabsConfig } from '../electron/labs-config';
 import type { SurfaceId } from './components/Sidebar';
 import {
+  effectiveConnectionMode,
+  isRemoteLettaCloudEnabled,
   isSurfaceAccessible,
   isSurfaceComingSoon,
   labsSurfaceGate,
@@ -24,6 +26,7 @@ const ALL_SURFACES: SurfaceId[] = [
   'knowledge',
   'tickets',
   'channels',
+  'terminal',
 ];
 
 describe('surface-tiers', () => {
@@ -37,17 +40,33 @@ describe('surface-tiers', () => {
     const labs = defaultLabsConfig();
     expect(surfaceTier('chat')).toBe('ship');
     expect(surfaceTier('tickets')).toBe('ship');
+    expect(surfaceTier('terminal')).toBe('ship');
     expect(isSurfaceAccessible('charters', labs)).toBe(true);
     expect(isSurfaceComingSoon('charters', labs)).toBe(true);
+    expect(isSurfaceComingSoon('terminal', labs)).toBe(false);
     expect(surfaceGate('charters', labs, true)).toBe('coming-soon');
+    expect(surfaceGate('terminal', labs, true)).toBe('open');
     expect(surfaceGate('chat', labs, true)).toBe('open');
     expect(surfaceGate('settings', labs, true)).toBe('open');
+  });
+
+  test('tickets surface is open for Paperclip intake (#92)', () => {
+    const labs = defaultLabsConfig();
+    expect(isSurfaceComingSoon('tickets', labs)).toBe(false);
+    expect(surfaceGate('tickets', labs, true)).toBe('open');
   });
 
   test('receipts surface is open for onboarding payoff (#139)', () => {
     const labs = defaultLabsConfig();
     expect(isSurfaceComingSoon('receipts', labs)).toBe(false);
     expect(surfaceGate('receipts', labs, true)).toBe('open');
+  });
+
+  test('standards surface is open (#448)', () => {
+    const labs = defaultLabsConfig();
+    expect(surfaceTier('standards')).toBe('ship');
+    expect(isSurfaceComingSoon('standards', labs)).toBe(false);
+    expect(surfaceGate('standards', labs, true)).toBe('open');
   });
 
   test('labs surfaces blocked until master and feature enabled', () => {
@@ -63,7 +82,7 @@ describe('surface-tiers', () => {
     expect(isSurfaceComingSoon('knowledge', on)).toBe(false);
   });
 
-  test('receipts opens during onboarding sample education', () => {
+  test('receipts stays open during onboarding sample education (#139)', () => {
     const labs = defaultLabsConfig();
     const store = new Map<string, string>();
     const prior = globalThis.sessionStorage;
@@ -89,5 +108,21 @@ describe('surface-tiers', () => {
     expect(labsSurfaceGate('knowledge', enabled, false)).toBe('loading');
     expect(labsSurfaceGate('knowledge', enabled, true)).toBe('open');
     expect(labsSurfaceGate('knowledge', defaultLabsConfig(), true)).toBe('coming-soon');
+  });
+
+  test('remote_letta_cloud gate hides cloud connection mode for Ship users (#627)', () => {
+    const off = defaultLabsConfig();
+    expect(isRemoteLettaCloudEnabled(off)).toBe(false);
+    expect(effectiveConnectionMode('cloud', off)).toBe('existing');
+    expect(effectiveConnectionMode('embedded', off)).toBe('embedded');
+    expect(effectiveConnectionMode('existing', off)).toBe('existing');
+
+    const masterOnly = { enabled: true, features: {} };
+    expect(isRemoteLettaCloudEnabled(masterOnly)).toBe(false);
+    expect(effectiveConnectionMode('cloud', masterOnly)).toBe('existing');
+
+    const on = { enabled: true, features: { remote_letta_cloud: true } };
+    expect(isRemoteLettaCloudEnabled(on)).toBe(true);
+    expect(effectiveConnectionMode('cloud', on)).toBe('cloud');
   });
 });

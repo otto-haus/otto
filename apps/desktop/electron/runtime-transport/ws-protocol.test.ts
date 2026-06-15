@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'bun:test';
 import { TodoStreamAccumulator } from './todo-parser';
-import { isLoopIdle, normalizeWsEvent } from './ws-protocol';
+import { countAttachmentsInPrompt, isLoopIdle, normalizeWsEvent, turnIdleTimeoutMs } from './ws-protocol';
 
 describe('ws-protocol', () => {
   test('normalizes assistant stream_delta', () => {
@@ -31,10 +31,48 @@ describe('ws-protocol', () => {
     expect(event?.todos).toEqual([{ id: '1', content: 'Wire todos', status: 'in_progress' }]);
   });
 
+  test('normalizes tool_call_message stream_delta as activity', () => {
+    const event = normalizeWsEvent({
+      type: 'stream_delta',
+      delta: { message_type: 'tool_call_message', name: 'grep' },
+    });
+    expect(event?.type).toBe('activity');
+    expect(event?.label).toBe('Searching…');
+  });
+
+  test('normalizes Letta loop_error deltas as errors', () => {
+    const event = normalizeWsEvent({
+      type: 'stream_delta',
+      delta: {
+        message_type: 'loop_error',
+        message: 'Conversation local-conv-stale not found',
+      },
+    });
+    expect(event?.type).toBe('error');
+    expect(event?.message).toContain('local-conv-stale');
+  });
+
   test('detects loop idle', () => {
     expect(isLoopIdle({
       type: 'update_loop_status',
       loop_status: { status: 'WAITING_ON_INPUT', active_run_ids: [] },
     })).toBe(true);
+  });
+
+  test('counts attachment lines in prompt text', () => {
+    const text = 'review these\n\nAttached local images:\n1. a.png — /tmp/a.png\n2. b.png — /tmp/b.png';
+    expect(countAttachmentsInPrompt(text)).toBe(2);
+    expect(countAttachmentsInPrompt('plain prompt')).toBe(0);
+  });
+
+  test('scales turn idle timeout for attachment-heavy prompts', () => {
+    const prev = process.env.OTTO_WS_TURN_IDLE_TIMEOUT_MS;
+    Reflect.deleteProperty(process.env, 'OTTO_WS_TURN_IDLE_TIMEOUT_MS');
+    const plain = turnIdleTimeoutMs('hello');
+    const heavy = turnIdleTimeoutMs('x\n\nAttached local images:\n1. a — /a\n2. b — /b\n3. c — /c');
+    expect(plain).toBeGreaterThanOrEqual(45_000);
+    expect(heavy).toBeGreaterThan(plain);
+    if (prev === undefined) Reflect.deleteProperty(process.env, 'OTTO_WS_TURN_IDLE_TIMEOUT_MS');
+    else process.env.OTTO_WS_TURN_IDLE_TIMEOUT_MS = prev;
   });
 });

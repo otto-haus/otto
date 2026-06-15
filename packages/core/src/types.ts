@@ -254,6 +254,8 @@ export interface StandardRef {
   status: StandardStatus;
   file: string;
   meaning: string;
+  /** Optional grouping for Standards surface IA (product, agent-behavior, …). */
+  domain?: string;
 }
 
 export interface StandardConflict {
@@ -289,6 +291,8 @@ export interface StandardRecord extends StandardSpec {
   registry_file: string;
   /** Human-readable Markdown body below the YAML block. */
   markdown: string;
+  /** Optional domain grouping from registry.yaml. */
+  domain?: string;
 }
 
 /** Runtime proof path: Runs/Receipts cite Standards by slug plus file reference. */

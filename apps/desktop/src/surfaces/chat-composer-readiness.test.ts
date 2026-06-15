@@ -5,7 +5,7 @@ import { join } from 'node:path';
 const chatSource = readFileSync(join(import.meta.dir, 'Chat.tsx'), 'utf8');
 const copySource = readFileSync(join(import.meta.dir, '../copy/surfaces.ts'), 'utf8');
 
-describe('chat composer readiness contract (#289)', () => {
+describe('chat composer readiness contract (#289, #300)', () => {
   it('keeps the draft textarea editable while runtime is not ready', () => {
     expect(chatSource).not.toMatch(/<textarea[\s\S]*?disabled=\{!ready\}/);
     expect(chatSource).toContain('Draft while setup finishes…');
@@ -25,5 +25,10 @@ describe('chat composer readiness contract (#289)', () => {
 
   it('allows starter prompts to populate draft before runtime is ready', () => {
     expect(chatSource).not.toMatch(/className="chatStarter"[\s\S]*?disabled=\{!ready\}/);
+  });
+
+  it('surfaces ticket orchestration commands in the empty chat state when ready (#74)', () => {
+    expect(copySource).toContain('ticketCommandHint');
+    expect(chatSource).toContain('{chatCopy.ticketCommandHint}');
   });
 });

@@ -7,12 +7,12 @@ import { applyLabsConfigPatch, getLabsConfig, labsConfigToOttoPatch } from './la
 import type { OttoConfig } from './shared/types';
 
 describe('ConfigStore', () => {
-  test('defaults connectionMode to existing local Letta', () => {
+  test('defaults connectionMode to embedded local Letta', () => {
     const tmp = mkdtempSync(join(tmpdir(), 'otto-config-test-'));
     try {
       process.env.OTTO_HOME = tmp;
       const store = new ConfigStore();
-      expect(store.connectionMode()).toBe('existing');
+      expect(store.connectionMode()).toBe('embedded');
     } finally {
       rmSync(tmp, { recursive: true, force: true });
       delete process.env.OTTO_HOME;
@@ -32,8 +32,8 @@ describe('ConfigStore', () => {
       const reloaded = new ConfigStore();
       expect(reloaded.connectionMode()).toBe('existing');
       expect(reloaded.primaryAgentId()).toBe('agent-primary');
-      reloaded.update({ connectionMode: 'cloud' });
-      expect(new ConfigStore().connectionMode()).toBe('cloud');
+      reloaded.update({ connectionMode: 'embedded' });
+      expect(new ConfigStore().connectionMode()).toBe('embedded');
     } finally {
       rmSync(tmp, { recursive: true, force: true });
       delete process.env.OTTO_HOME;
@@ -46,8 +46,8 @@ describe('ConfigStore', () => {
       process.env.OTTO_HOME = tmp;
       writeFileSync(join(tmp, 'config.json'), `${JSON.stringify({ connectionMode: 'sideways' }, null, 2)}\n`);
       const store = new ConfigStore();
-      expect(store.connectionMode()).toBe('existing');
-      expect(store.get().connectionMode).toBe('existing');
+      expect(store.connectionMode()).toBe('embedded');
+      expect(store.get().connectionMode).toBe('embedded');
     } finally {
       rmSync(tmp, { recursive: true, force: true });
       delete process.env.OTTO_HOME;
@@ -60,8 +60,8 @@ describe('ConfigStore', () => {
       process.env.OTTO_HOME = tmp;
       const store = new ConfigStore();
       store.update({ connectionMode: 'sideways' as OttoConfig['connectionMode'] });
-      expect(store.connectionMode()).toBe('existing');
-      expect(JSON.parse(readFileSync(join(tmp, 'config.json'), 'utf8')).connectionMode).toBe('existing');
+      expect(store.connectionMode()).toBe('embedded');
+      expect(JSON.parse(readFileSync(join(tmp, 'config.json'), 'utf8')).connectionMode).toBe('embedded');
     } finally {
       rmSync(tmp, { recursive: true, force: true });
       delete process.env.OTTO_HOME;
@@ -75,6 +75,23 @@ describe('ConfigStore', () => {
       const store = new ConfigStore();
       store.update({ agentId: 'agent-fallback', primaryAgentId: null });
       expect(store.primaryAgentId()).toBe('agent-fallback');
+    } finally {
+      rmSync(tmp, { recursive: true, force: true });
+      delete process.env.OTTO_HOME;
+    }
+  });
+
+  test('ensurePrimaryAgentId writes explicit primary on first connect (119)', () => {
+    const tmp = mkdtempSync(join(tmpdir(), 'otto-config-test-'));
+    try {
+      process.env.OTTO_HOME = tmp;
+      const store = new ConfigStore();
+      store.update({ agentId: 'agent-discovered' });
+      store.ensurePrimaryAgentId('agent-discovered');
+      const onDisk = JSON.parse(readFileSync(join(tmp, 'config.json'), 'utf8'));
+      expect(onDisk.primaryAgentId).toBe('agent-discovered');
+      store.ensurePrimaryAgentId('agent-other');
+      expect(JSON.parse(readFileSync(join(tmp, 'config.json'), 'utf8')).primaryAgentId).toBe('agent-discovered');
     } finally {
       rmSync(tmp, { recursive: true, force: true });
       delete process.env.OTTO_HOME;
