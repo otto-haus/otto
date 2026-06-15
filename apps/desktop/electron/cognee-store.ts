@@ -236,7 +236,7 @@ export class CogneeStore {
     const picks = (ranked.some((r) => r.score > 0) ? ranked.filter((r) => r.score > 0) : ranked)
       .slice(0, 5)
       .map((r) => ({
-        path: r.path,
+        path: toRepoRelativePath(r.path),
         snippet: `Indexed in capture ${latest.id} (${captureTimestamp(latest) || 'unknown time'})`,
       }));
 
@@ -290,6 +290,17 @@ function resolveCaptureScript(): string {
     resolve(process.cwd(), '../../scripts/cognee-capture.sh'),
   ];
   return candidates.find((p) => existsSync(p)) ?? candidates[0]!;
+}
+
+function repoRoot(): string {
+  return process.env.OTTO_ROOT ? resolve(process.env.OTTO_ROOT) : resolve(process.cwd());
+}
+
+function toRepoRelativePath(filePath: string): string {
+  const root = repoRoot();
+  const resolved = resolve(filePath);
+  if (resolved.startsWith(`${root}/`)) return resolved.slice(root.length + 1);
+  return filePath;
 }
 
 export function writeCogneeSmokeReceipt(payload: Record<string, unknown>): string {

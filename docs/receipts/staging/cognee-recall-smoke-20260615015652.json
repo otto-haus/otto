@@ -1,0 +1,38 @@
+{
+  "id": "20260615015652",
+  "ticket": "042-cognee-mcp-recall-bridge",
+  "at": "2026-06-15T01:58:27.876Z",
+  "health": {
+    "status": "ready",
+    "baseUrl": "http://127.0.0.1:8000",
+    "lastError": null,
+    "lastCheckedAt": "2026-06-15T01:58:27.620Z"
+  },
+  "mcp": {
+    "url": "http://127.0.0.1:8001/mcp",
+    "reachable": false,
+    "note": "curl: (7) Failed to connect to 127.0.0.1 port 8001 after 1 ms: Couldn't connect to server"
+  },
+  "captureApply": {
+    "ok": true,
+    "exit": 0
+  },
+  "recall": {
+    "ok": true,
+    "query": "otto receipt precedent",
+    "citationCount": 5,
+    "citations": [
+      "/Users/seb/Code/otto/.worktrees/issue-68/receipts/otto-v01/embedded-letta-smoke-20260614T073959Z.json",
+      "/Users/seb/Code/otto/.worktrees/issue-68/receipts/otto-v01/demo-render-20260614T073944Z.md",
+      "/Users/seb/Code/otto/.worktrees/issue-68/receipts/otto-v01/embedded-letta-smoke-20260614T071347Z.md",
+      "/Users/seb/Code/otto/.worktrees/issue-68/receipts/otto-v01/embedded-letta-smoke-20260614T073959Z.md",
+      "/Users/seb/Code/otto/.worktrees/issue-68/receipts/otto-v01/embedded-letta-smoke-20260614T074004Z.md"
+    ],
+    "error": null,
+    "receiptPath": "/Users/seb/Code/otto/.worktrees/issue-68/receipts/cognee/recall/recall-1781488707704.json"
+  },
+  "unitProof": {
+    "ok": true
+  },
+  "conversation": "none — smoke script only; never conversation=default"
+}
