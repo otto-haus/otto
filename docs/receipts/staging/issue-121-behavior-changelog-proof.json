@@ -1,0 +1,30 @@
+{
+  "issue": 121,
+  "capturedAt": "2026-06-15T00:00:00Z",
+  "surface": "Behavior Changelog (Weekly Culture Digest)",
+  "proofBoundary": "Fixture-backed Electron store proof only. No /Applications/otto-staging.app launch.",
+  "verification": [
+    "bun test apps/desktop/electron/behavior-changelog.test.ts",
+    "bun run typecheck",
+    "bun run --cwd apps/desktop typecheck"
+  ],
+  "doneWhen": {
+    "ratifiedProposalWithReceiptLink": {
+      "pass": true,
+      "proof": "behavior-changelog.test.ts applied proposal entry; BehaviorChangelogPanel Open receipt button"
+    },
+    "emptyWeekHonestEmptyState": {
+      "pass": true,
+      "proof": "empty week returns honest empty message test; InlineEmpty in UI"
+    },
+    "cultureChangeCopy": {
+      "pass": true,
+      "proof": "curationCopy.changelogLede; Command Station changelog card opens Curation changelog tab"
+    }
+  },
+  "fixture": {
+    "emptyMessage": "No behavior changes this week.",
+    "windowDays": 7,
+    "entryFields": ["what", "why", "authority", "receipt_id", "source", "timestamp"]
+  }
+}
