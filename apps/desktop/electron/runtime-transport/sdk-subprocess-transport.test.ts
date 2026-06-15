@@ -354,6 +354,54 @@ describe('SdkSubprocessTransport permissions', () => {
   });
 });
 
+describe('SdkSubprocessTransport init', () => {
+  test('returns unreachable immediately when existing mode targets down local backend', async () => {
+    process.env.OTTO_SKIP_LETTA_LSOF = '1';
+    const { win } = mockWindow();
+    const config = {
+      ...mockConfig(),
+      connectionMode: () => 'existing' as const,
+      baseUrl: () => 'http://127.0.0.1:8283',
+    } as unknown as ConfigStore;
+    const transport = new SdkSubprocessTransport(() => win, config);
+
+    const status = await transport.init();
+
+    expect(status.ready).toBe(false);
+    expect(status.code).toBe('unreachable');
+    expect(status.reason).toMatch(/Local Letta backend is not running/i);
+  });
+
+  test('times out hung session.initialize() with unreachable status', async () => {
+    process.env.OTTO_SKIP_LETTA_LSOF = '1';
+    process.env.OTTO_SESSION_INIT_TIMEOUT_MS = '30';
+    const { win } = mockWindow();
+    const transport = new SdkSubprocessTransport(() => win, mockConfig());
+    let closed = false;
+    const session = {
+      close: () => { closed = true; },
+      initialize: () => new Promise(() => {}),
+      send: async () => {},
+      abort: async () => {},
+      async *stream() {},
+    };
+
+    (transport as unknown as { sdk: unknown }).sdk = {
+      createSession: () => session,
+      resumeSession: () => session,
+    };
+
+    process.env.OTTO_AGENT_ID = 'agent-test';
+    const status = await transport.init({ freshConversation: true });
+
+    expect(status.ready).toBe(false);
+    expect(status.code).toBe('unreachable');
+    expect(status.reason).toMatch(/did not connect in time/i);
+    expect(closed).toBe(true);
+    Reflect.deleteProperty(process.env, 'OTTO_SESSION_INIT_TIMEOUT_MS');
+  });
+});
+
 describe('SdkSubprocessTransport turn trail ordering (blocker #2)', () => {
   test('emits final turn_trail before forwarding the terminal result', async () => {
     const { win, sent } = mockWindow();
