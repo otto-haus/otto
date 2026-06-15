@@ -41,6 +41,21 @@ export class PracticeMiningLoop {
     }
 
     const known = new Set(this.practices.listResult().practices.map((p) => p.slug));
+    // Skip actions that already have a non-terminal practice proposal in the inbox, so repeated
+    // observe scans don't pile up duplicate pending rows. Rejected/applied proposals are terminal,
+    // so a later observe is allowed to re-propose those (#718).
+    const pendingPracticeSlugs = new Set(
+      this.proposals.list().proposals
+        .filter(
+          (p) =>
+            p.target?.kind === 'practice' &&
+            p.target?.action === 'create' &&
+            typeof p.target?.id === 'string' &&
+            p.status !== 'rejected' &&
+            p.status !== 'applied',
+        )
+        .map((p) => p.target.id as string),
+    );
     const candidates: string[] = [];
     const proposals: CurationProposalRecord[] = [];
 
@@ -48,7 +63,7 @@ export class PracticeMiningLoop {
       if (count < minOccurrences) continue;
       const slug = practiceSlugFromAction(action);
       const candidate = `practice-from:${action}`;
-      if (known.has(slug)) continue;
+      if (known.has(slug) || pendingPracticeSlugs.has(slug)) continue;
       candidates.push(candidate);
 
       const practicePath = join(this.practices.listResult().dir, slug, 'practice.yaml');
