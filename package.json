@@ -56,6 +56,7 @@
     "doctor": "bash scripts/dev-doctor.sh",
     "check:docs-tools": "bun scripts/check-mintlify-pins.mjs",
     "check:sensitive-files": "bash scripts/check-sensitive-file-paths.sh",
+    "check:provider-mirror-audit": "bash scripts/check-provider-mirror-log-audit.sh",
     "lint:changed": "bash scripts/lint-changed.sh",
     "verify:v0": "bun scripts/verify-v0.mjs",
     "verify:agent-loop": "bun scripts/verify-agent-loop-contract.mjs",
