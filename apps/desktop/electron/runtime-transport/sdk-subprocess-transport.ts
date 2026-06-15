@@ -20,6 +20,7 @@ import {
   modelSelectionForCli,
   msg,
   nextActionFor,
+  normalizeRuntimeError,
   promptWithRuntimeContext,
   resolveCli,
   safeWebContentsSend,
@@ -386,7 +387,6 @@ export class SdkSubprocessTransport implements OttoRuntimeTransport {
       await this.session.send(promptWithRuntimeContext(text, startedStatus));
       for await (const message of this.session.stream()) {
         trace.write('event', message);
-        safeWebContentsSend(this.win, 'otto:event', { message });
         const m = message as {
           type: string;
           conversationId?: string;
@@ -396,12 +396,23 @@ export class SdkSubprocessTransport implements OttoRuntimeTransport {
           success?: boolean;
         };
         if (m.type === 'error') {
-          turnError = String(m.message ?? m.error ?? m.reason ?? 'Adapter call failed.');
-          const code = classify(turnError, this.hasApiKey());
-          if (code !== 'error') {
-            this.markNotReady(turnError, code);
+          const raw = String(m.message ?? m.error ?? m.reason ?? 'Adapter call failed.');
+          const normalizedError = normalizeRuntimeError(raw, this.hasApiKey());
+          turnError = raw;
+          if (normalizedError.code !== 'error') {
+            this.markNotReady(raw, normalizedError.code);
             markedNotReady = true;
           }
+          safeWebContentsSend(this.win, 'otto:event', {
+            message: {
+              type: 'error',
+              message: normalizedError.message,
+              ...(normalizedError.details ? { details: normalizedError.details } : {}),
+              uuid: randomUUID(),
+            },
+          });
+        } else {
+          safeWebContentsSend(this.win, 'otto:event', { message });
         }
         if (m.type === 'result') {
           sawResult = true;
@@ -410,14 +421,14 @@ export class SdkSubprocessTransport implements OttoRuntimeTransport {
             this.config.update({ conversationId: m.conversationId });
           }
           if (m.success === false) {
-            const reason = turnError ?? String(m.error ?? m.reason ?? 'Adapter call failed.');
-            const code = classify(reason, this.hasApiKey());
-            if (!markedNotReady) this.markNotReady(reason, code);
-            writeReceipt(code === 'error' ? 'failed' : 'blocked', 'Chat turn did not complete.', {
-              code,
-              message: reason,
-              recoverable: code !== 'error',
-              next_action: nextActionFor(code),
+            const raw = turnError ?? String(m.error ?? m.reason ?? 'Adapter call failed.');
+            const normalizedError = normalizeRuntimeError(raw, this.hasApiKey());
+            if (!markedNotReady) this.markNotReady(raw, normalizedError.code);
+            writeReceipt(normalizedError.code === 'error' ? 'failed' : 'blocked', 'Chat turn did not complete.', {
+              code: normalizedError.code,
+              message: normalizedError.message,
+              recoverable: normalizedError.code !== 'error',
+              next_action: nextActionFor(normalizedError.code),
             });
           } else {
             writeReceipt('success', 'Chat turn completed.', null);
@@ -427,13 +438,13 @@ export class SdkSubprocessTransport implements OttoRuntimeTransport {
         if (this.aborted) break;
       }
       if (turnError && !sawResult) {
-        const code = classify(turnError, this.hasApiKey());
-        if (!markedNotReady) this.markNotReady(turnError, code);
-        writeReceipt(code === 'error' ? 'failed' : 'blocked', 'Chat turn ended without a result.', {
-          code,
-          message: turnError,
-          recoverable: code !== 'error',
-          next_action: nextActionFor(code),
+        const normalizedError = normalizeRuntimeError(turnError, this.hasApiKey());
+        if (!markedNotReady) this.markNotReady(turnError, normalizedError.code);
+        writeReceipt(normalizedError.code === 'error' ? 'failed' : 'blocked', 'Chat turn ended without a result.', {
+          code: normalizedError.code,
+          message: normalizedError.message,
+          recoverable: normalizedError.code !== 'error',
+          next_action: nextActionFor(normalizedError.code),
         });
       }
       if (!sawResult) {
@@ -454,16 +465,16 @@ export class SdkSubprocessTransport implements OttoRuntimeTransport {
         // Mid-send recovery: mark not-ready + clear conversation so the next init recreates it.
         this.markNotReady(reason, 'stale');
       }
-      const code = classify(reason, this.hasApiKey());
+      const normalizedError = normalizeRuntimeError(reason, this.hasApiKey());
       this.writeChatReceipt({
         text,
-        status: code === 'error' ? 'failed' : 'blocked',
+        status: normalizedError.code === 'error' ? 'failed' : 'blocked',
         summary: 'Chat turn failed.',
         blocker: {
-          code,
-          message: reason,
-          recoverable: code !== 'error',
-          next_action: nextActionFor(code),
+          code: normalizedError.code,
+          message: normalizedError.message,
+          recoverable: normalizedError.code !== 'error',
+          next_action: nextActionFor(normalizedError.code),
         },
         startedStatus,
         resultData: {
@@ -476,7 +487,7 @@ export class SdkSubprocessTransport implements OttoRuntimeTransport {
         },
         evidence: [{ kind: 'log', ref: trace.path, note: 'Raw chat trace JSONL' }],
       });
-      this.emitError(reason);
+      this.emitError(normalizedError.message, normalizedError.details);
     } finally {
       trace.close();
     }
@@ -503,9 +514,9 @@ export class SdkSubprocessTransport implements OttoRuntimeTransport {
     return this.sdk;
   }
 
-  private emitError(message: string) {
+  private emitError(message: string, details?: string) {
     safeWebContentsSend(this.win, 'otto:event', {
-      message: { type: 'error', message, uuid: randomUUID() },
+      message: { type: 'error', message, ...(details ? { details } : {}), uuid: randomUUID() },
     });
   }
 

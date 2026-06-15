@@ -10,6 +10,7 @@ export type StoredChatMsg = {
   id: string;
   who: 'user' | 'otto' | 'error';
   text: string;
+  details?: string;
   streamId?: string;
 };
 

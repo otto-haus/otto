@@ -3,7 +3,7 @@ import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import type { BrowserWindow } from 'electron';
-import { classify, friendly, isInvalidModelError, modelInitAttempts, modelSelectionForCli, nextActionFor, promptWithRuntimeContext, resolveCli, runtimeContextForPrompt, safeWebContentsSend } from './runtime-common';
+import { classify, friendly, isInvalidModelError, modelInitAttempts, modelSelectionForCli, nextActionFor, normalizeRuntimeError, parseUsageLimitResetHint, promptWithRuntimeContext, resolveCli, runtimeContextForPrompt, safeWebContentsSend } from './runtime-common';
 
 describe('resolveCli connectionMode', () => {
   test('embedded prefers bundled resources path', () => {
@@ -105,10 +105,40 @@ describe('runtime-common status mapping', () => {
     expect(classify('something else broke', false)).toBe('error');
   });
 
+  test('classify maps provider usage-limit errors', () => {
+    const raw =
+      'Codex error: {"type":"error","error":{"type":"usage_limit_reached","message":"limit hit"},"status_code":429,"resets_in":4140}';
+    expect(classify(raw, false)).toBe('usage-limit');
+  });
+
+  test('friendly usage-limit hides raw JSON and includes reset hint', () => {
+    const raw =
+      'Codex error: {"type":"error","error":{"type":"usage_limit_reached"},"status_code":429,"resets_in":4140}';
+    const message = friendly('usage-limit', raw);
+    expect(message).toMatch(/Codex usage limit reached/i);
+    expect(message).toMatch(/Resets in about 69 minutes/i);
+    expect(message).toMatch(/switch provider\/model/i);
+    expect(message).not.toMatch(/status_code/);
+  });
+
+  test('normalizeRuntimeError preserves raw payload as details', () => {
+    const raw =
+      'Codex error: {"type":"error","error":{"type":"usage_limit_reached"},"status_code":429,"resets_in":120}';
+    const normalized = normalizeRuntimeError(raw, false);
+    expect(normalized.code).toBe('usage-limit');
+    expect(normalized.message).toMatch(/Codex usage limit reached/i);
+    expect(normalized.details).toBe(raw);
+  });
+
+  test('parseUsageLimitResetHint reads nested retry metadata', () => {
+    expect(parseUsageLimitResetHint('{"error":{"resets_in":180}}')).toBe('Resets in about 3 minutes.');
+  });
+
   test('friendly and nextActionFor align with StatusCode', () => {
     expect(friendly('unreachable', 'ECONNREFUSED')).toMatch(/Can't reach the Letta backend/i);
     expect(nextActionFor('no-agent')).toMatch(/Agent ID/i);
     expect(nextActionFor('stale')).toMatch(/stale override/i);
+    expect(nextActionFor('usage-limit')).toMatch(/Switch to Auto\/Fast/i);
   });
 });
 

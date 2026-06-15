@@ -44,6 +44,7 @@ export type StatusCode =
   | 'unreachable'
   | 'sdk-missing'
   | 'stale'
+  | 'usage-limit'
   | 'error';
 
 export type RuntimeTransportMode = 'sdk' | 'ws' | 'auto';

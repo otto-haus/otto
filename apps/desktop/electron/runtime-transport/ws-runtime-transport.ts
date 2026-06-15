@@ -17,6 +17,7 @@ import {
   friendly,
   msg,
   nextActionFor,
+  normalizeRuntimeError,
   promptWithRuntimeContext,
   resolveCli,
   safeWebContentsSend,
@@ -192,7 +193,8 @@ export class WsRuntimeTransport implements OttoRuntimeTransport {
 
     try {
       let sawAssistant = false;
-      let turnError: string | null = null;
+      let turnErrorRaw: string | null = null;
+      let turnErrorMessage: string | null = null;
       let receiptWritten = false;
       const writeReceipt = (
         status: 'success' | 'blocked' | 'failed',
@@ -213,22 +215,43 @@ export class WsRuntimeTransport implements OttoRuntimeTransport {
         this.trackActiveRun(event);
         const normalized = normalizeWsEvent(event, { todoAccumulator });
         if (normalized) {
-          safeWebContentsSend(this.win, 'otto:event', { message: normalized });
-          if (normalized.type === 'assistant') sawAssistant = true;
-          if (normalized.type === 'todo_update') sawAssistant = true;
-          if (normalized.type === 'error') turnError = String(normalized.message ?? 'error');
+          if (normalized.type === 'error') {
+            const raw = String(normalized.message ?? 'error');
+            const normalizedError = normalizeRuntimeError(raw, this.hasApiKey());
+            turnErrorRaw = raw;
+            turnErrorMessage = normalizedError.message;
+            if (normalizedError.code === 'usage-limit') {
+              this.markNotReady(raw, normalizedError.code);
+            }
+            safeWebContentsSend(this.win, 'otto:event', {
+              message: {
+                type: 'error',
+                message: normalizedError.message,
+                ...(normalizedError.details ? { details: normalizedError.details } : {}),
+                uuid: randomUUID(),
+              },
+            });
+          } else {
+            safeWebContentsSend(this.win, 'otto:event', { message: normalized });
+            if (normalized.type === 'assistant') sawAssistant = true;
+            if (normalized.type === 'todo_update') sawAssistant = true;
+          }
         }
         if (isLoopIdle(event)) {
           this.turnIdle = true;
           safeWebContentsSend(this.win, 'otto:event', {
-            message: { type: 'result', success: !turnError, conversationId: this.status.conversationId, uuid: randomUUID() },
+            message: { type: 'result', success: !turnErrorMessage, conversationId: this.status.conversationId, uuid: randomUUID() },
           });
-          writeReceipt(turnError ? 'failed' : 'success', turnError ? 'Chat turn failed.' : 'Chat turn completed.', turnError ? {
-            code: 'error',
-            message: turnError,
-            recoverable: true,
-            next_action: nextActionFor('error'),
-          } : null);
+          writeReceipt(turnErrorMessage ? 'failed' : 'success', turnErrorMessage ? 'Chat turn failed.' : 'Chat turn completed.', turnErrorRaw ? (() => {
+            const normalizedError = normalizeRuntimeError(turnErrorRaw, this.hasApiKey());
+            return {
+              code: normalizedError.code,
+              message: normalizedError.message,
+              recoverable: normalizedError.code === 'usage-limit' || normalizedError.code !== 'error',
+              next_action: nextActionFor(normalizedError.code),
+              ...(normalizedError.details ? { details: normalizedError.details } : {}),
+            };
+          })() : null);
         }
       };
 
@@ -258,17 +281,24 @@ export class WsRuntimeTransport implements OttoRuntimeTransport {
         } : null);
       }
     } catch (e) {
-      trace.write('error', { message: msg(e) });
-      this.markNotReady(msg(e));
+      const reason = msg(e);
+      trace.write('error', { message: reason });
+      const normalizedError = normalizeRuntimeError(reason, this.hasApiKey());
+      this.markNotReady(reason, normalizedError.code);
       this.writeChatReceipt({
         text,
         status: 'failed',
         summary: 'Chat turn failed.',
-        blocker: { code: 'error', message: msg(e), recoverable: true, next_action: nextActionFor('error') },
+        blocker: {
+          code: normalizedError.code,
+          message: normalizedError.message,
+          recoverable: normalizedError.code === 'usage-limit' || normalizedError.code !== 'error',
+          next_action: nextActionFor(normalizedError.code),
+        },
         startedStatus,
         tracePath: trace.path,
       });
-      this.emitError(msg(e));
+      this.emitError(normalizedError.message, normalizedError.details);
     } finally {
       trace.close();
     }
@@ -539,9 +569,9 @@ export class WsRuntimeTransport implements OttoRuntimeTransport {
     safeWebContentsSend(this.win, 'otto:event', { status: this.status });
   }
 
-  private emitError(message: string) {
+  private emitError(message: string, details?: string) {
     safeWebContentsSend(this.win, 'otto:event', {
-      message: { type: 'error', message, uuid: randomUUID() },
+      message: { type: 'error', message, ...(details ? { details } : {}), uuid: randomUUID() },
     });
   }
 
