@@ -151,12 +151,11 @@ const CharterModelChain: React.FC<{ status: CharterStatus }> = ({ status }) => {
     { id: 'receipt', label: chartersCopy.modelReceipt },
   ];
   return (
-    <div className="charterModelChain" role="list" aria-label={chartersCopy.modelEyebrow}>
+    <div className="charterModelChain" aria-label={chartersCopy.modelEyebrow}>
       {steps.map((step, index) => (
         <div
           key={step.id}
           className={`charterModelStep${step.id === active ? ' is-active' : ''}`}
-          role="listitem"
         >
           <span className="charterModelStep__index">{index + 1}</span>
           <span className="charterModelStep__label">{step.label}</span>
