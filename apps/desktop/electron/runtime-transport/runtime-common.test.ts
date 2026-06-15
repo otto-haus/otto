@@ -163,6 +163,32 @@ describe('runtime-common status mapping', () => {
     expect(nextActionFor('stale')).toMatch(/stale override/i);
     expect(nextActionFor('usage-limit')).toMatch(/Switch to Auto\/Fast/i);
   });
+
+  test('friendly does not leak raw reason suffix into product copy (#584)', () => {
+    const unreachable = friendly('unreachable', 'ECONNREFUSED 127.0.0.1:8283');
+    expect(unreachable).not.toContain('ECONNREFUSED');
+    expect(unreachable).not.toContain('(');
+
+    const timedOut = friendly('unreachable', 'Letta session.initialize() timed out after 45000ms');
+    expect(timedOut).not.toContain('45000ms');
+    expect(timedOut).not.toContain('(');
+
+    const noKey = friendly('no-api-key', '401 unauthorized letta_api_key {"detail":"x"}');
+    expect(noKey).not.toContain('401');
+    expect(noKey).not.toContain('letta_api_key');
+
+    const stale = friendly('stale', 'conversation not-found id=conv_abc123');
+    expect(stale).not.toContain('conv_abc123');
+    expect(stale).not.toContain('(');
+  });
+
+  test('normalizeRuntimeError keeps the raw payload in details for diagnostics (#584)', () => {
+    const raw = 'ECONNREFUSED 127.0.0.1:8283';
+    const normalized = normalizeRuntimeError(raw, false);
+    expect(normalized.code).toBe('unreachable');
+    expect(normalized.message).not.toContain('ECONNREFUSED');
+    expect(normalized.details).toBe(raw);
+  });
 });
 
 describe('safeWebContentsSend', () => {
