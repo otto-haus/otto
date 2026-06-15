@@ -741,7 +741,6 @@ const LiveChat: React.FC<{
       } else if (action.kind === 'draft') {
         setDraft(action.text);
       }
-      }
     };
     window.addEventListener('otto-onboarding-starter', onStarter);
     return () => window.removeEventListener('otto-onboarding-starter', onStarter);
