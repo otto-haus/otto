@@ -1,4 +1,7 @@
 import { afterEach, describe, expect, test } from 'bun:test';
+import { mkdtempSync, mkdirSync, writeFileSync } from 'node:fs';
+import { join } from 'node:path';
+import { tmpdir } from 'node:os';
 import type { BrowserWindow } from 'electron';
 import { ConfigStore } from '../config-store';
 import { permissionSessionStore } from '../permission-session-store';
@@ -14,6 +17,11 @@ afterEach(() => {
   if (originalInitTimeout === undefined) Reflect.deleteProperty(process.env, 'OTTO_SESSION_INIT_TIMEOUT_MS');
   else process.env.OTTO_SESSION_INIT_TIMEOUT_MS = originalInitTimeout;
 });
+
+const smokeEnvKeys = ['OTTO_SMOKE', 'OTTO_AGENT_ID', 'OTTO_SKIP_LETTA_LSOF', 'OTTO_HOME', 'LETTA_CLI_PATH', 'OTTO_LETTA_SETTINGS_PATH'] as const;
+const originalSmokeEnv = new Map<(typeof smokeEnvKeys)[number], string | undefined>(
+  smokeEnvKeys.map((key) => [key, process.env[key]]),
+);
 
 function mockWindow() {
   const sent: Array<{ channel: string; payload: unknown }> = [];
@@ -304,5 +312,89 @@ describe('SdkSubprocessTransport permissions', () => {
     await sendPromise;
     expect(sent.filter((e) => e.channel === 'otto:permission').length).toBe(1);
     permissionSessionStore.clear();
+  });
+});
+
+describe('SdkSubprocessTransport smoke bootstrap', () => {
+  afterEach(() => {
+    for (const key of smokeEnvKeys) {
+      const value = originalSmokeEnv.get(key);
+      if (value === undefined) Reflect.deleteProperty(process.env, key);
+      else process.env[key] = value;
+    }
+  });
+
+  test('OTTO_SMOKE bootstraps first agent when no agent candidates exist', async () => {
+    const home = mkdtempSync(join(tmpdir(), 'otto-smoke-bootstrap-'));
+    mkdirSync(join(home, 'letta'), { recursive: true });
+    writeFileSync(join(home, 'letta', 'settings.json'), '{}');
+    process.env.OTTO_HOME = home;
+    process.env.OTTO_SMOKE = '1';
+    process.env.OTTO_SKIP_LETTA_LSOF = '1';
+    Reflect.deleteProperty(process.env, 'OTTO_AGENT_ID');
+    process.env.LETTA_CLI_PATH =
+      '/Applications/Letta.app/Contents/Resources/app.asar.unpacked/node_modules/@letta-ai/letta-code/letta.js';
+
+    const config = new ConfigStore();
+    config.update({ connectionMode: 'embedded' });
+    const { win } = mockWindow();
+    const transport = new SdkSubprocessTransport(win, config);
+    const bootstrapCalls: unknown[] = [];
+    const session = {
+      close: () => {},
+      initialize: async () => ({
+        agentId: 'agent-smoke-bootstrap',
+        conversationId: 'conv-smoke-bootstrap',
+        model: 'test-model',
+        memfsEnabled: false,
+        tools: [],
+      }),
+      send: async () => {},
+      abort: async () => {},
+      async *stream() {
+        yield { type: 'result', success: true, conversationId: 'conv-smoke-bootstrap' };
+      },
+    };
+
+    (transport as unknown as { sdk: unknown }).sdk = {
+      createSession: (id: unknown) => {
+        bootstrapCalls.push(id);
+        return session;
+      },
+      resumeSession: () => {
+        throw new Error('should not resume in smoke bootstrap test');
+      },
+    };
+
+    const status = await transport.init();
+    expect(status.ready).toBe(true);
+    expect(bootstrapCalls).toHaveLength(1);
+    expect(bootstrapCalls[0] ?? null).toBeNull();
+  });
+
+  test('OTTO_SMOKE skips null bootstrap when stale agent candidates remain', async () => {
+    process.env.OTTO_SMOKE = '1';
+    process.env.OTTO_SKIP_LETTA_LSOF = '1';
+    Reflect.deleteProperty(process.env, 'OTTO_AGENT_ID');
+    process.env.LETTA_CLI_PATH =
+      '/Applications/Letta.app/Contents/Resources/app.asar.unpacked/node_modules/@letta-ai/letta-code/letta.js';
+
+    const { win } = mockWindow();
+    const transport = new SdkSubprocessTransport(win, mockConfig());
+    const bootstrapCalls: unknown[] = [];
+
+    (transport as unknown as { sdk: unknown }).sdk = {
+      createSession: (id: unknown) => {
+        bootstrapCalls.push(id);
+        throw new Error('agent-not-found');
+      },
+      resumeSession: () => {
+        throw new Error('should not resume in smoke stale-candidate test');
+      },
+    };
+
+    const status = await transport.init();
+    expect(status.ready).toBe(false);
+    expect(bootstrapCalls.every((id) => id !== null && id !== undefined)).toBe(true);
   });
 });

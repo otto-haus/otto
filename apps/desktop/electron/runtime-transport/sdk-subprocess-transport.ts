@@ -11,6 +11,7 @@ import { TraceWriter } from '../trace-writer';
 import { discoverLocalLettaContext, resolveInitBaseUrl } from './letta-discovery';
 import {
   SMOKE_MODE,
+  smokeMode,
   WANT_MEMFS,
   classify,
   friendly,
@@ -291,7 +292,9 @@ export class SdkSubprocessTransport implements OttoRuntimeTransport {
           if (!isNotFound(e)) throw e;
         }
       }
-      if (!r && !SMOKE_MODE && !process.env.OTTO_AGENT_ID) {
+      // Smoke/staging skips agent bootstrap when candidates exist (never pollute live agents),
+      // but fresh embedded settings with no agents still need createSession(undefined).
+      if (!r && !process.env.OTTO_AGENT_ID && (!smokeMode() || agentCandidates.length === 0)) {
         r = await tryWithModelFallback(null);
       }
       if (!r) throw lastAgentError ?? new Error(context.reason ?? 'No local Letta agent candidate was available.');
