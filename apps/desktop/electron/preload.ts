@@ -88,6 +88,13 @@ import type {
   DiagnosticsExportResult,
 } from '@otto-haus/core';
 import type { RuntimeLogsSummary } from './diagnostics-export';
+import type {
+  EnqueueRequest,
+  OutboxSnapshot,
+  QueueItemDetailView,
+  QueueItemView,
+  RecallResult,
+} from './outbox/contract';
 
 const emptyChangelog = (windowDays: number): BehaviorChangelogResult => ({
   dir: '',
@@ -393,6 +400,25 @@ const api = {
       ipcRenderer.invoke('otto:threads:move', threadId, targetId),
     touch: (input: { title?: string; lettaConversationId?: string | null; agentId?: string | null }): Promise<ChatThreadRecord | null> =>
       ipcRenderer.invoke('otto:threads:touch', input),
+  },
+  /** Durable chat outbox (#754) — main-process SQLite source of truth. */
+  outbox: {
+    enqueue: (input: EnqueueRequest): Promise<QueueItemView> => ipcRenderer.invoke('otto:outbox:enqueue', input),
+    list: (threadId?: string | null): Promise<QueueItemView[]> =>
+      ipcRenderer.invoke('otto:outbox:list', { threadId: threadId ?? null }),
+    detail: (id: string): Promise<QueueItemDetailView | null> => ipcRenderer.invoke('otto:outbox:detail', { id }),
+    retry: (id: string): Promise<QueueItemView | null> => ipcRenderer.invoke('otto:outbox:retry', { id }),
+    retryAll: (threadId?: string | null): Promise<QueueItemView[]> =>
+      ipcRenderer.invoke('otto:outbox:retry-all', { threadId: threadId ?? null }),
+    recall: (id: string): Promise<RecallResult | null> => ipcRenderer.invoke('otto:outbox:recall', { id }),
+    cancel: (id: string): Promise<QueueItemView | null> => ipcRenderer.invoke('otto:outbox:cancel', { id }),
+    clear: (threadId?: string | null): Promise<number> =>
+      ipcRenderer.invoke('otto:outbox:clear', { threadId: threadId ?? null }),
+  },
+  onOutbox: (cb: (snapshot: OutboxSnapshot) => void): (() => void) => {
+    const h = (_: unknown, snapshot: OutboxSnapshot) => cb(snapshot);
+    ipcRenderer.on('otto:outbox', h);
+    return () => ipcRenderer.removeListener('otto:outbox', h);
   },
   onEvent: (cb: (e: OttoEvent) => void): (() => void) => {
     const h = (_: unknown, e: OttoEvent) => cb(e);

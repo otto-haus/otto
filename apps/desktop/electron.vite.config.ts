@@ -20,7 +20,14 @@ export default defineConfig({
       // must also re-externalize the Letta SDK here — otherwise it gets inlined into a chunk
       // and resolves its bundled CLI from the wrong base dir. Keep both external so the bundle
       // does `require("electron")` / `require("@letta-ai/...")` and loads them from node_modules.
-      rollupOptions: { external: ['electron', 'pg', /^@letta-ai\//], output: { entryFileNames: 'index.cjs' } },
+      // `better-sqlite3` is a native addon (.node) and MUST stay external — it cannot be bundled.
+      // It is rebuilt against the Electron ABI (scripts/ensure-native-modules.mjs) and copied into
+      // the packaged app by electron-builder (asar:false). p-queue/drizzle/zod are pure JS and are
+      // bundled into the CJS main chunk (p-queue is ESM-only, so bundling is required).
+      rollupOptions: {
+        external: ['electron', 'pg', 'better-sqlite3', /^@letta-ai\//],
+        output: { entryFileNames: 'index.cjs' },
+      },
     },
   },
   preload: {

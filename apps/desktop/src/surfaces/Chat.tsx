@@ -36,30 +36,13 @@ import {
 import { serializeConversationMarkdown } from '../chat/conversation-markdown';
 import { runTicketCommand } from '../chat/ticket-commands';
 import { formatResolvedModelLabel, helpTextForModelOption } from '../chat/model-option-help';
-import { planQueueDrain, runQueuedSend } from '../chat/queue-drain';
 import {
-  appendFailedQueueItem,
-  clearInFlight,
-  clearInFlightForThread,
   composerDraftFromQueueText,
-  createQueueItem,
-  enqueueQueueItemForThread,
-  hasDuplicateQueueText,
-  nextQueueItemForThread,
-  persistInFlight,
-  previewQueueText,
-  promoteQueueItemForThread,
-  QUEUE_KEY,
-  queueDisplayItemsForThread,
-  queueMatchesThread,
-  readQueue,
-  removeQueueItem,
-  retryFailedQueueItemsForThread,
   splitQueueText,
   type QueueAttachmentRef,
-  type QueueDisplayItem,
-  type QueueItem,
 } from '../chat/queue-storage';
+import { useOutbox } from '../chat/useOutbox';
+import { OutboxBanner } from '../chat/OutboxBanner';
 import type { ProposalTarget } from '@otto-haus/core';
 import type { ChatMsg } from '../runtime';
 import { TurnTrailLive } from '../chat/TurnTrailLive';
@@ -440,125 +423,6 @@ const persist = (key: string, value: unknown) => {
   try { localStorage.setItem(key, JSON.stringify(value)); } catch { /* best effort */ }
 };
 
-const QueueStrip: React.FC<{
-  queue: QueueDisplayItem[];
-  recalledQueueId: string | null;
-  onClear: () => void;
-  onRetryAll: () => void;
-  onRetryOne: (id: string) => void;
-  onRemove: (id: string) => void;
-  onRecall: (id: string) => void;
-  onSendNow: (id: string) => void;
-}> = ({ queue, recalledQueueId, onClear, onRetryAll, onRetryOne, onRemove, onRecall, onSendNow }) => {
-  const failedCount = queue.filter((item) => item.state === 'failed').length;
-  const pendingCount = queue.length - failedCount;
-  const summary = failedCount && pendingCount
-    ? chatCopy.queueMixed(pendingCount, failedCount)
-    : failedCount
-      ? chatCopy.queueFailed(failedCount)
-      : chatCopy.queuePending(pendingCount);
-  const nextItem = queue.find((item) => item.isNext);
-  const summaryText = nextItem ? chatCopy.queueNextSummary(summary, previewQueueText(nextItem.text)) : summary;
-  const [expanded, setExpanded] = useState(queue.length <= 2);
-  const [inspectedId, setInspectedId] = useState<string | null>(null);
-
-  return (
-    <div className={`queuebar${failedCount ? ' queuebar--warn' : ''}${expanded ? ' queuebar--expanded' : ' queuebar--compact'}`} aria-label="Unsent messages">
-      <div className="queuebar__head">
-        <span className={`dot ${failedCount ? 'dot--warn' : 'dot--idle'}`} aria-hidden="true" />
-        <span className="queuebar__summary">{summaryText}</span>
-        <div className="queuebar__actions">
-          {failedCount > 0 && (
-            <button type="button" className="queuebar__action queuebar__action--primary" onClick={onRetryAll}>
-              {chatCopy.queueRetryAll}
-            </button>
-          )}
-          {queue.length > 2 && (
-            <button type="button" className="queuebar__action" onClick={() => setExpanded((x) => !x)}>
-              {expanded ? chatCopy.queueHide : chatCopy.queueShow}
-            </button>
-          )}
-          <button type="button" className="queuebar__action" onClick={onClear}>
-            {chatCopy.queueClearAll}
-          </button>
-        </div>
-      </div>
-      <div className="queuebar__items" aria-hidden={!expanded}>
-          {queue.map((item) => {
-            const inspected = inspectedId === item.id;
-            const recalled = recalledQueueId === item.id;
-            const { body, attachmentLines } = splitQueueText(item.text);
-            return (
-              <div className={`queueitem${inspected ? ' queueitem--inspected' : ''}${recalled ? ' queueitem--recalled' : ''}`} key={item.id}>
-                <div className="queueitem__row">
-                  <span className={`queueitem__pill queueitem__pill--${item.isNext ? 'next' : item.state}`}>
-                    {item.state === 'failed'
-                      ? chatCopy.queuePillFailed
-                      : item.isNext
-                        ? chatCopy.queuePillNext
-                        : item.sendPosition
-                          ? chatCopy.queuePillPosition(item.sendPosition)
-                          : chatCopy.queuePillWaiting}
-                  </span>
-                  <button
-                    type="button"
-                    className="queueitem__text queueitem__text--recall"
-                    title={item.text}
-                    onClick={() => onRecall(item.id)}
-                  >
-                    {previewQueueText(item.text)}
-                  </button>
-                  <div className="queueitem__controls">
-                    <button
-                      type="button"
-                      className="queueitem__action"
-                      aria-expanded={inspected}
-                      onClick={() => setInspectedId((current) => (current === item.id ? null : item.id))}
-                    >
-                      {inspected ? chatCopy.queueHideFull : chatCopy.queueViewFull}
-                    </button>
-                    <button type="button" className="queueitem__action" onClick={() => onRecall(item.id)}>
-                      {chatCopy.queueEdit}
-                    </button>
-                    {item.state === 'failed' ? (
-                      <button type="button" className="queueitem__action queueitem__action--primary" onClick={() => onRetryOne(item.id)}>
-                        {chatCopy.queueRetryOne}
-                      </button>
-                    ) : item.state === 'queued' && !item.isNext ? (
-                      <button type="button" className="queueitem__action queueitem__action--primary" onClick={() => onSendNow(item.id)}>
-                        {chatCopy.queueSendNow}
-                      </button>
-                    ) : null}
-                    <button
-                      type="button"
-                      className="queueitem__remove"
-                      aria-label={chatCopy.queueRemoveOne}
-                      onClick={() => onRemove(item.id)}
-                    >
-                      {Icon.x}
-                    </button>
-                  </div>
-                </div>
-                {inspected && (
-                  <div className="queueitem__detail" aria-live="polite">
-                    {body ? <div className="queueitem__body">{body}</div> : null}
-                    {attachmentLines.length > 0 && (
-                      <ul className="queueitem__attachments">
-                        {attachmentLines.map((line) => (
-                          <li key={line}>{line}</li>
-                        ))}
-                      </ul>
-                    )}
-                  </div>
-                )}
-              </div>
-            );
-          })}
-      </div>
-    </div>
-  );
-};
-
 const LiveChat: React.FC<{
   onOpenSettings?: () => void;
   onNavigate?: (id: SurfaceId) => void;
@@ -585,7 +449,7 @@ const LiveChat: React.FC<{
   activeThreadIdRef.current = rt.activeThreadId;
   const [attachmentError, setAttachmentError] = useState<string | null>(null);
   const [draggingImage, setDraggingImage] = useState(false);
-  const [queue, setQueue] = useState<QueueItem[]>(readQueue);
+  const outbox = useOutbox(rt.activeThreadId);
   const [recalledQueueId, setRecalledQueueId] = useState<string | null>(null);
   const [modelOptions, setModelOptions] = useState<LettaModelOption[]>(FALLBACK_MODEL_OPTIONS);
   const [modelOpen, setModelOpen] = useState(false);
@@ -603,7 +467,6 @@ const LiveChat: React.FC<{
   const preview = usePreviewPane();
   const previewShellRef = useRef<HTMLDivElement | null>(null);
   const resizeRef = useRef<{ startX: number; startWidth: number; containerWidth: number } | null>(null);
-  const draining = useRef(false);
   const pickerRef = useRef<HTMLDivElement | null>(null);
   const streamRef = useRef<HTMLDivElement | null>(null);
   const tailRef = useRef<HTMLDivElement | null>(null);
@@ -681,7 +544,7 @@ const LiveChat: React.FC<{
       const detail = (event as CustomEvent<{ text?: string; send?: boolean }>).detail;
       const action = resolveOnboardingStarterAction(detail, { ready: !!ready, hasApi: !!api });
       if (action.kind === 'queue') {
-        setQueue((items) => enqueueQueueItemForThread(items, action.text, rt.activeThreadId));
+        if (rt.activeThreadId) void outbox.enqueue({ threadId: rt.activeThreadId, text: action.text });
       } else if (action.kind === 'draft') {
         setDraft(action.text);
       }
@@ -790,7 +653,7 @@ const LiveChat: React.FC<{
       toast.push({ title: 'Could not copy', tone: 'warn' });
     }
   };
-  const activeQueue = queueDisplayItemsForThread(queue, rt.activeThreadId);
+  const activeQueue = outbox.items;
   const lastRuntimeMessage = rt.messages[rt.messages.length - 1];
   const assistantStreaming = rt.busy && lastRuntimeMessage?.who === 'otto' && !!lastRuntimeMessage.text;
   const streamingRuntimeMessageIndex = assistantStreaming ? rt.messages.length - 1 : -1;
@@ -854,10 +717,6 @@ const LiveChat: React.FC<{
   }, [draft]);
 
   useEffect(() => {
-    persist(QUEUE_KEY, queue);
-  }, [queue]);
-
-  useEffect(() => {
     writeStoredAttachments(
       activeThreadIdRef.current,
       attachments.map(({ previewUrl: _previewUrl, ...rest }) => rest),
@@ -913,19 +772,22 @@ const LiveChat: React.FC<{
   };
 
   const recallQueueItem = (id: string) => {
-    const item = queue.find((entry) => entry.id === id);
-    if (!item) return;
     void (async () => {
-      const { body, attachments: attachmentRefs } = composerDraftFromQueueText(item.text);
-      const unresolvedIds = attachmentRefs.filter((ref) => ref.id && !ref.path).map((ref) => ref.id!);
+      const recalled = await outbox.recall(id);
+      if (!recalled) return;
+      const { body, attachments: attachmentRefs } = composerDraftFromQueueText(recalled.text);
+      const mergedRefs = recalled.attachments.length
+        ? recalled.attachments.map((a) => ({ name: a.name, path: a.path ?? '', id: '', mime: a.mime }))
+        : attachmentRefs;
+      const unresolvedIds = mergedRefs.filter((ref) => ref.id && !ref.path).map((ref) => ref.id!);
       const resolved = unresolvedIds.length && api ? await api.attachments.resolve(unresolvedIds) : [];
-      const mergedRefs = attachmentRefs.map((ref) => {
+      const withPaths = mergedRefs.map((ref) => {
         if (ref.path) return ref;
         const found = resolved.find((record) => record.id === ref.id);
         return found ? { ...ref, path: found.path } : ref;
       });
       setDraft(body);
-      setAttachments(attachmentDraftsFromQueueRefs(mergedRefs));
+      setAttachments(attachmentDraftsFromQueueRefs(withPaths));
       setRecalledQueueId(id);
       toast.push({ title: chatCopy.queueRecalledToast, tone: 'ok' });
       requestAnimationFrame(() => {
@@ -933,6 +795,16 @@ const LiveChat: React.FC<{
         textareaRef.current?.setSelectionRange(body.length, body.length);
       });
     })();
+  };
+
+  const enqueueOutboxPayload = (threadId: string, payload: ReturnType<typeof buildRuntimeSendPayload>) => {
+    void outbox.enqueue({
+      threadId,
+      text: payload.storedText,
+      attachments: payload.attachments.map(({ name, path, mime }) => ({ name, path, mime })),
+      model: selectedModel ?? undefined,
+      effort: selectedEffort,
+    });
   };
 
   const submit = () => {
@@ -959,75 +831,32 @@ const LiveChat: React.FC<{
         if (recalledId) setRecalledQueueId(null);
         return;
       }
+      const threadId = rt.activeThreadId;
       const steering = rt.busy;
-      if (!ready || steering) {
-        setQueue((items) => {
-          const withoutRecalled = recalledId ? removeQueueItem(items, recalledId) : items;
-          return enqueueQueueItemForThread(withoutRecalled, payload.storedText, rt.activeThreadId, { steer: steering });
-        });
+      const pendingQueued = outbox.items.some(
+        (item) => item.threadId === threadId && item.state === 'queued',
+      );
+      if (threadId && (!ready || steering || pendingQueued)) {
         if (recalledId) setRecalledQueueId(null);
+        enqueueOutboxPayload(threadId, payload);
         if (steering) void rt.abort();
         setDraft('');
         setAttachments([]);
         return;
       }
       if (recalledId) setRecalledQueueId(null);
-      const pendingQueued = nextQueueItemForThread(queue, rt.activeThreadId);
-      if (pendingQueued) {
-        setQueue((items) => {
-          const withoutRecalled = recalledId ? removeQueueItem(items, recalledId) : items;
-          return enqueueQueueItemForThread(withoutRecalled, payload.storedText, rt.activeThreadId);
-        });
-        setDraft('');
-        setAttachments([]);
-        return;
-      }
-      if (recalledId) {
-        setQueue((items) => removeQueueItem(items, recalledId));
-      }
       setDraft('');
       setAttachments([]);
       try {
         await rt.send(payload);
         notifyOnboardingFirstMessage();
-      } catch (err) {
-        const reason = err instanceof Error ? err.message : String(err);
-        setQueue((items) => appendFailedQueueItem(items, createQueueItem(payload.storedText, 'failed', rt.activeThreadId), reason));
+      } catch {
+        if (threadId) enqueueOutboxPayload(threadId, payload);
       }
     })();
   };
 
-  useEffect(() => {
-    const plan = planQueueDrain({
-      queue,
-      ready,
-      activeThreadId: rt.activeThreadId,
-      busy: rt.busy,
-      draining: draining.current,
-    });
-    if (plan.action !== 'send') return;
-    const { item: next } = plan;
-    draining.current = true;
-    persistInFlight({ ...next, state: 'sending' });
-    setQueue((items) => items.filter((item) => item.id !== next.id));
-    void runQueuedSend(
-      (text) => rt.send({ storedText: text, promptText: '', attachments: [] }),
-      next.text,
-    )
-      .then((outcome) => {
-        clearInFlight(next.id);
-        if (outcome.ok) {
-          notifyOnboardingFirstMessage();
-          return;
-        }
-        setQueue((items) => appendFailedQueueItem(items, next, outcome.reason));
-      })
-      .finally(() => {
-        draining.current = false;
-      });
-  }, [queue, ready, rt.activeThreadId, rt.busy, rt.send]);
-
-  // Failed sends remain durable in the queue; the user can retry or remove them.
+  // Draining the durable queue is owned by the MAIN-process pump (#754).
 
   const openMessagePreview = (message: ChatMsg) => {
     if (!message.text?.trim()) return;
@@ -1423,22 +1252,22 @@ const LiveChat: React.FC<{
       <div className="promptbar">
         <div className="chat__column">
         {ready && activeQueue.length > 0 && (
-          <QueueStrip
-            queue={activeQueue}
-            recalledQueueId={recalledQueueId}
+          <OutboxBanner
+            items={outbox.items}
+            threadId={rt.activeThreadId}
+            recalledId={recalledQueueId}
             onClear={() => {
               setRecalledQueueId(null);
-              clearInFlightForThread(rt.activeThreadId);
-              setQueue((items) => items.filter((item) => !queueMatchesThread(item, rt.activeThreadId)));
+              void outbox.clear();
             }}
-            onRetryAll={() => setQueue((items) => retryFailedQueueItemsForThread(items, rt.activeThreadId))}
-            onRetryOne={(id) => setQueue((items) => retryFailedQueueItemsForThread(items, rt.activeThreadId, id))}
+            onRetryAll={() => void outbox.retryAll()}
+            onRetryOne={(id) => void outbox.retry(id)}
+            onRecall={recallQueueItem}
             onRemove={(id) => {
               if (recalledQueueId === id) setRecalledQueueId(null);
-              setQueue((items) => removeQueueItem(items, id));
+              void outbox.cancel(id);
             }}
-            onRecall={recallQueueItem}
-            onSendNow={(id) => setQueue((items) => promoteQueueItemForThread(items, rt.activeThreadId, id))}
+            getDetail={outbox.detail}
           />
         )}
         {attachments.length > 0 && (

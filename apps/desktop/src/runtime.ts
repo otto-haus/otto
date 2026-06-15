@@ -307,6 +307,15 @@ import type { OttoApi } from '../electron/preload';
 
 export type { OttoApi };
 
+export type {
+  QueueItemView,
+  QueueItemDetailView,
+  TurnEventView,
+  OutboxSnapshot,
+  EnqueueRequest,
+  RecallResult,
+} from '../electron/outbox/contract';
+
 export type OttoEvent =
   | { message: { type: string; [k: string]: unknown } }
   | { status: RuntimeStatus };

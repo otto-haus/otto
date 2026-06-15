@@ -8,6 +8,7 @@ import {
   readdirSync,
   readFileSync,
   rmSync,
+  renameSync,
   statSync,
   writeFileSync,
 } from "node:fs";
@@ -27,14 +28,14 @@ const pathFile = path.join(electronDir, "path.txt");
 const platformPath = getPlatformPath();
 
 if (electronReady()) {
-  warnIfLettaCliWillBootstrap();
+  finishReady();
   process.exit(0);
 }
 
 if (process.platform !== "darwin") {
   runElectronInstall();
   if (electronReady()) {
-    warnIfLettaCliWillBootstrap();
+    finishReady();
     process.exit(0);
   }
   fail(
@@ -63,7 +64,58 @@ if (!electronReady()) {
 }
 
 console.log("repaired Electron macOS bundle from Bun cache");
-warnIfLettaCliWillBootstrap();
+finishReady();
+
+function finishReady() {
+  ensureNativeModulesForElectron();
+  warnIfLettaCliWillBootstrap();
+}
+
+// Native modules (better-sqlite3, #754 durable outbox) must match Electron's NODE_MODULE_VERSION,
+// not the system Node ABI that `bun install` builds against. Rebuild once per Electron version
+// (stamp-guarded so normal dev launches stay fast). Dev-only: this never runs in CI install or
+// the packaged build (electron-builder rebuilds the bundled copy itself).
+function ensureNativeModulesForElectron() {
+  const NATIVE_MODULES = ["better-sqlite3"];
+  const electronVersion = electronPackage.version;
+  const stampFile = path.join(desktopDir, "node_modules", ".otto-native-abi");
+  try {
+    if (existsSync(stampFile) && readFileSync(stampFile, "utf8").trim() === electronVersion) {
+      return;
+    }
+  } catch {
+    // fall through and rebuild
+  }
+
+  console.log(`rebuilding native modules for Electron ${electronVersion}: ${NATIVE_MODULES.join(", ")}`);
+  const result = spawnSync(
+    "bunx",
+    [
+      "electron-rebuild",
+      "--version",
+      electronVersion,
+      "--module-dir",
+      desktopDir,
+      ...NATIVE_MODULES.flatMap((m) => ["--only", m]),
+    ],
+    { cwd: repoRoot, env: process.env, stdio: "inherit" },
+  );
+
+  if (result.status !== 0) {
+    console.warn(
+      "WARN: could not rebuild native modules for Electron. The durable chat outbox (better-sqlite3) may fail to load in dev; otto will degrade to an honest empty queue. Run `bunx electron-rebuild` manually if needed.",
+    );
+    return;
+  }
+
+  try {
+    const tmp = `${stampFile}.${process.pid}.tmp`;
+    writeFileSync(tmp, `${electronVersion}\n`);
+    renameSync(tmp, stampFile);
+  } catch {
+    // Stamp is an optimization only; a missing stamp just means we rebuild again next launch.
+  }
+}
 
 function electronReady() {
   try {
