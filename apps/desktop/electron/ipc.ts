@@ -65,7 +65,7 @@ import { showOttoDebugMenu } from './debug-menu';
 import { buildDebugPacket, formatDebugPacketText, formatRuntimeStatusText } from './debug-packet';
 import { resolveDebugEnvelope } from './debug-envelope';
 import { openOttoLogs } from './logs';
-import { syncWindowBackground } from './display-theme';
+import { syncWindowBackground, watchSystemWindowBackground } from './display-theme';
 import { openSystemTerminal, resolveWorkspaceRoot } from './open-terminal';
 import { planOpenLettaTarget } from './open-letta';
 import { getWorkspaceInfo, resolveWorkspaceRepoRoot } from './workspace-root';
@@ -90,6 +90,7 @@ export function registerIpc(): IpcRegistration {
   ipcRegistered = true;
 
   const config = new ConfigStore();
+  watchSystemWindowBackground(() => config.get().theme, getMainWindow);
   const runner = new LettaRunner(getMainWindow, config);
   const receipts = new ReceiptStore();
   const charters = new CharterStore();
