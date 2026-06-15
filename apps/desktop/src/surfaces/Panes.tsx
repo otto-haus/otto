@@ -1097,7 +1097,32 @@ const PracticeDetail: React.FC<{
         {statusPill(practice.status)}
       </div>
       <p className="lede" style={{ marginTop: 6 }}>{practice.summary}</p>
+      <dl className="kv charterKv" style={{ marginTop: 12 }}>
+        <div><dt>owner</dt><dd>{practice.owner}</dd></div>
+        <div><dt>version</dt><dd>{practice.version}</dd></div>
+        <div><dt>slug</dt><dd className="mono">{practice.slug}</dd></div>
+      </dl>
       <ChipList values={practice.invocations ?? []} empty={practicesCopy.noInvocations} />
+    </div>
+    <div className="detailGrid detailGrid--2">
+      <div className="detailSection">
+        <div className="eyebrow">triggers</div>
+        <ul className="list">{(practice.triggers ?? []).map((item, index) => <li key={index}>{item}</li>)}</ul>
+      </div>
+      <div className="detailSection">
+        <div className="eyebrow">inputs</div>
+        <ul className="list">{(practice.inputs ?? []).map((item, index) => <li key={index}>{item}</li>)}</ul>
+      </div>
+    </div>
+    <div className="detailGrid detailGrid--2">
+      <div className="detailSection">
+        <div className="eyebrow">outputs</div>
+        <ul className="list">{(practice.outputs ?? []).map((item, index) => <li key={index}>{item}</li>)}</ul>
+      </div>
+      <div className="detailSection">
+        <div className="eyebrow">state paths</div>
+        <ChipList values={practice.state_paths ?? []} empty="No state paths declared." />
+      </div>
     </div>
     {runnable && (
       <div className="detailSection">
