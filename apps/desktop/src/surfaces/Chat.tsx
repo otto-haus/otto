@@ -1532,7 +1532,7 @@ const LiveChat: React.FC<{
                   onSelectEffort={(value) => { void rt.configure({ effort: value }); }}
                   modelOptions={modelOptions}
                   compact
-                  menuPlacement="down"
+                  menuPlacement="up"
                 />
               </div>
             ) : null}

@@ -7,12 +7,12 @@ import {
 } from './composer-keyboard';
 
 describe('composer keyboard (#48)', () => {
-  it('defaults to Tab send for steering-first compose', () => {
-    expect(DEFAULT_COMPOSER_SEND_SHORTCUT).toBe('tab');
-    expect(normalizeComposerSendShortcut(undefined)).toBe('tab');
-    expect(normalizeComposerSendShortcut('tab')).toBe('tab');
+  it('defaults to Enter send; Tab send stays opt-in', () => {
+    expect(DEFAULT_COMPOSER_SEND_SHORTCUT).toBe('enter');
+    expect(normalizeComposerSendShortcut(undefined)).toBe('enter');
+    expect(normalizeComposerSendShortcut('bogus')).toBe('enter');
     expect(normalizeComposerSendShortcut('enter')).toBe('enter');
-    expect(normalizeComposerSendShortcut('bogus')).toBe('tab');
+    expect(normalizeComposerSendShortcut('tab')).toBe('tab');
   });
 
   it('maps shortcut modes to submit keys', () => {

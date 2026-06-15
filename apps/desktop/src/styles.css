@@ -1635,6 +1635,11 @@ h1, h2, h3, h4, p { margin: 0; }
   margin-left: auto;
 }
 .promptbar__pickers .promptControls { margin-left: 0; width: auto; }
+/* Footer pickers sit at the bottom-right of the chat column. Open menus
+   upward (handled by base .picker__menu) and right-anchor them so the wide
+   model menu (560px) extends leftward into the column instead of clipping
+   off the right edge under .content--chat { overflow: hidden }. */
+.promptbar__pickers .picker__menu { right: 0; left: auto; }
 .knowledgeRecallGrid { margin-top: 12px; }
 .knowledgePanel { height: 100%; }
 .promptbar__meta { display: flex; gap: 14px; flex-wrap: wrap; font-family: var(--mono); font-size: 11px; color: var(--faint); }

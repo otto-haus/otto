@@ -4475,13 +4475,13 @@ type SettingsSectionId = 'general' | 'display' | 'providers' | 'memory' | 'cultu
 
 const ComposerSendShortcutSetting: React.FC = () => {
   const api = ottoApi();
-  const [shortcut, setShortcut] = useState<ComposerSendShortcut>('tab');
+  const [shortcut, setShortcut] = useState<ComposerSendShortcut>('enter');
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
     if (!api?.config?.get) return;
     void api.config.get().then((cfg) => {
-      setShortcut(cfg.composerSendShortcut === 'enter' ? 'enter' : 'tab');
+      setShortcut(cfg.composerSendShortcut === 'tab' ? 'tab' : 'enter');
     });
   }, [api]);
 
@@ -4509,8 +4509,8 @@ const ComposerSendShortcutSetting: React.FC = () => {
         aria-label={settingsCopy.composerShortcutLabel}
         onChange={(event) => void save(event.target.value as ComposerSendShortcut)}
       >
-        <option value="tab">{settingsCopy.composerShortcutTab}</option>
         <option value="enter">{settingsCopy.composerShortcutEnter}</option>
+        <option value="tab">{settingsCopy.composerShortcutTab}</option>
       </select>
     </div>
   );

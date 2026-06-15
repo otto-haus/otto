@@ -174,7 +174,7 @@ function normalizeConfig(config: OttoConfig): OttoConfig {
   if (composerSendShortcut) {
     next.composerSendShortcut = composerSendShortcut;
   } else if ('composerSendShortcut' in config) {
-    next.composerSendShortcut = 'tab';
+    next.composerSendShortcut = 'enter';
   }
   return next;
 }

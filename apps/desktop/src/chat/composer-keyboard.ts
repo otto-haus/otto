@@ -1,9 +1,11 @@
 import type { ComposerSendShortcut } from '../runtime';
 
-export const DEFAULT_COMPOSER_SEND_SHORTCUT: ComposerSendShortcut = 'tab';
+export const DEFAULT_COMPOSER_SEND_SHORTCUT: ComposerSendShortcut = 'enter';
 
 export function normalizeComposerSendShortcut(value: unknown): ComposerSendShortcut {
-  return value === 'enter' ? 'enter' : DEFAULT_COMPOSER_SEND_SHORTCUT;
+  if (value === 'tab') return 'tab';
+  if (value === 'enter') return 'enter';
+  return DEFAULT_COMPOSER_SEND_SHORTCUT;
 }
 
 export function composerHintKey(shortcut: ComposerSendShortcut): 'tab' | 'enter' {

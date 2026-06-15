@@ -818,7 +818,7 @@ export const settingsCopy = {
   conversationSortRecent: 'Most recent activity',
   conversationSortCreated: 'Newest first',
   composerShortcutLabel: 'Composer send shortcut',
-  composerShortcutHint: 'How to send or queue from Chat. Enter always adds a new line when Tab sends.',
+  composerShortcutHint: 'How to send or queue from Chat. Default: Enter sends, Shift+Enter for a new line. Choose Tab sends to keep Enter for new lines.',
   composerShortcutTab: 'Tab sends',
   composerShortcutEnter: 'Enter sends',
   connectionLocalUrlLabel: 'Local Letta URL · advanced override',

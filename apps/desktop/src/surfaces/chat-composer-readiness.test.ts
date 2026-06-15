@@ -49,14 +49,16 @@ describe('chat composer chrome (#48)', () => {
     expect(chatSource).not.toContain('promptbox__stop');
   });
 
-  it('places model and effort pickers in the footer row', () => {
+  it('places model and effort pickers in the footer row, opening upward to avoid clipping', () => {
     expect(chatSource).toContain('className="promptbar__footer"');
-    expect(chatSource).toContain('menuPlacement="down"');
+    expect(chatSource).toContain('menuPlacement="up"');
+    expect(chatSource).not.toContain('menuPlacement="down"');
   });
 
-  it('documents Tab-first send with Settings override', () => {
+  it('documents Enter-default send with Tab opt-in via Settings', () => {
     expect(chatSource).toContain('shouldComposerShortcutSubmit');
     expect(chatSource).toContain('composerSendShortcut');
+    expect(copySource).toContain('composerHintEnter');
     expect(copySource).toContain('composerHintTab');
     expect(copySource).toContain('composerShortcutLabel');
   });
