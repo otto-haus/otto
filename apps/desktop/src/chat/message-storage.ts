@@ -1,3 +1,5 @@
+import type { ToolActivity } from './tool-activity';
+
 /** Per-thread localStorage keys for chat history (046). */
 import type { TurnTrail } from './turn-trail';
 
@@ -13,7 +15,7 @@ export const LEGACY_RESTORED_TRUNCATION_SUFFIX =
 
 export type StoredChatMsg = {
   id: string;
-  who: 'user' | 'otto' | 'error';
+  who: 'user' | 'otto' | 'error' | 'tool';
   text: string;
   details?: string;
   streamId?: string;
@@ -22,7 +24,19 @@ export type StoredChatMsg = {
   truncated?: boolean;
   /** Original character count before restore shortening. */
   truncatedFromLength?: number;
+  /** ISO timestamp for reconstructing turn order without cluttering the stream. */
+  at?: string;
+  toolActivity?: ToolActivity;
 };
+
+function isValidWho(who: unknown): who is StoredChatMsg['who'] {
+  return who === 'user' || who === 'otto' || who === 'error' || who === 'tool';
+}
+
+function restoredMessageSize(m: StoredChatMsg): number {
+  if (m.toolActivity?.output) return m.toolActivity.output.length;
+  return m.text.length;
+}
 
 export function messagesKey(threadId: string | null): string {
   return threadId ? `otto.chat.messages.${threadId}.v1` : LEGACY_MESSAGES_KEY;
@@ -32,9 +46,7 @@ function isStoredChatMsg(m: unknown): m is StoredChatMsg {
   return !!m
     && typeof (m as StoredChatMsg).id === 'string'
     && typeof (m as StoredChatMsg).text === 'string'
-    && ((m as StoredChatMsg).who === 'user'
-      || (m as StoredChatMsg).who === 'otto'
-      || (m as StoredChatMsg).who === 'error');
+    && isValidWho((m as StoredChatMsg).who);
 }
 
 function readRawMessageArray(
@@ -63,6 +75,11 @@ function parseMessages(raw: string | null): StoredChatMsg[] {
   let restoredChars = 0;
   for (const m of parsed.slice(-MAX_RESTORED_MESSAGES).reverse()) {
     if (restoredChars >= MAX_RESTORED_THREAD_CHARS) break;
+    if (m.who === 'tool') {
+      restored.push({ ...m });
+      restoredChars += restoredMessageSize(m);
+      continue;
+    }
     const fullText = stripLegacyTruncationSuffix(m.text);
     const truncated = fullText.length > MAX_RESTORED_TEXT_CHARS;
     const text = truncated ? fullText.slice(0, MAX_RESTORED_TEXT_CHARS) : fullText;

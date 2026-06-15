@@ -32,13 +32,49 @@ describe('ws-protocol', () => {
     expect(event?.todos).toEqual([{ id: '1', content: 'Wire todos', status: 'in_progress' }]);
   });
 
-  test('normalizes tool_call_message stream_delta as activity', () => {
+  test('normalizes nested Letta tool_call stream_delta', () => {
     const event = normalizeWsEvent({
       type: 'stream_delta',
-      delta: { message_type: 'tool_call_message', name: 'grep' },
+      delta: {
+        message_type: 'tool_call_message',
+        tool_call: {
+          tool_call_id: 'tc-1',
+          name: 'Bash',
+          arguments: JSON.stringify({ command: 'git status' }),
+        },
+      },
     });
-    expect(event?.type).toBe('activity');
-    expect(event?.label).toBe('Searching…');
+    expect(event?.type).toBe('tool_call');
+    expect(event?.toolName).toBe('Bash');
+    expect(event?.toolCallId).toBe('tc-1');
+    expect(event?.toolInput).toEqual({ command: 'git status' });
+  });
+
+  test('normalizes flat tool call stream_delta fallback', () => {
+    const event = normalizeWsEvent({
+      type: 'stream_delta',
+      delta: {
+        message_type: 'tool_call_message',
+        tool_call_id: 'tc-1',
+        tool_name: 'Bash',
+        tool_input: { command: 'git status' },
+      },
+    });
+    expect(event?.type).toBe('tool_call');
+    expect(event?.toolName).toBe('Bash');
+  });
+
+  test('normalizes tool result stream_delta', () => {
+    const event = normalizeWsEvent({
+      type: 'stream_delta',
+      delta: {
+        message_type: 'tool_return_message',
+        tool_call_id: 'tc-1',
+        content: 'done',
+      },
+    });
+    expect(event?.type).toBe('tool_result');
+    expect(event?.content).toBe('done');
   });
 
   test('normalizes Letta loop_error deltas as errors', () => {

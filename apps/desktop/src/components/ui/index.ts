@@ -28,5 +28,6 @@ export { ContextDrawer } from './ContextDrawer';
 export { PermissionCard } from './PermissionCard';
 export type { PermissionRequestView, PermissionDecision } from './PermissionCard';
 export { MessageActions } from './MessageActions';
+export { ToolActivityCard } from './ToolActivityCard';
 export { ThreadList } from './ThreadList';
 export type { ThreadSummary } from './ThreadList';

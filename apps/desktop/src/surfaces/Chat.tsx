@@ -10,7 +10,7 @@ import { isElectron, ottoApi, type EffortLevel, type LettaModelOption, type Save
 import { useRuntimeContext } from '../runtime-context';
 import type { SurfaceId } from '../components/Sidebar';
 import { OttoMark } from '../components/OttoMark';
-import { CheckBlockBanner, ContextDrawer, MessageActions, Modal, PermissionCard, ReceiptInlineCard, type PermissionDecision, type PermissionRequestView } from '../components/ui';
+import { CheckBlockBanner, ContextDrawer, MessageActions, Modal, PermissionCard, ReceiptInlineCard, ToolActivityCard, type PermissionDecision, type PermissionRequestView } from '../components/ui';
 import { TodoPanel } from '../components/TodoPanel';
 import { displayThreadTitle } from '../components/ui/ThreadList';
 import { chatCopy, permissionCopy, previewCopy, projectCopy, toastCopy } from '../copy/surfaces';
@@ -765,6 +765,17 @@ const LiveChat: React.FC<{
     [rt.messages, cmdMessages],
   );
   const turnAnchors = useMemo(() => turnAnchorIndices(streamMessages), [streamMessages]);
+  const hasRunningTool = streamMessages.some((m) => m.toolActivity?.status === 'running');
+
+  const copyMessageText = async (text: string) => {
+    if (!text.trim()) return;
+    try {
+      await navigator.clipboard.writeText(text);
+      toast.push({ title: chatCopy.copiedToast, tone: 'ok' });
+    } catch {
+      toast.push({ title: 'Could not copy', tone: 'warn' });
+    }
+  };
   const activeQueue = queueDisplayItemsForThread(queue, rt.activeThreadId);
   const lastRuntimeMessage = rt.messages[rt.messages.length - 1];
   const assistantStreaming = rt.busy && lastRuntimeMessage?.who === 'otto' && !!lastRuntimeMessage.text;
@@ -1233,6 +1244,18 @@ const LiveChat: React.FC<{
             </div>
           )}
           {streamMessages.map((m, i) => {
+            if (m.who === 'tool' && m.toolActivity) {
+              return (
+                <div key={m.id} className="msgRow msgRow--tool">
+                  <span className="msgRow__avatar msgRow__avatar--spacer" aria-hidden="true" />
+                  <ToolActivityCard
+                    activity={m.toolActivity}
+                    timestamp={m.at}
+                    onCopied={() => toast.push({ title: chatCopy.copiedToast, tone: 'ok' })}
+                  />
+                </div>
+              );
+            }
             const showWho = i === 0 || streamMessages[i - 1].who !== m.who;
             const isUser = m.who === 'user';
             const isError = m.who === 'error';
@@ -1252,6 +1275,7 @@ const LiveChat: React.FC<{
                 ) : !isUser ? <span className="msgRow__avatar msgRow__avatar--spacer" aria-hidden="true" /> : null}
                 <div className={`msg${isUser ? ' msg--user' : ''}${showWho ? '' : ' msg--cont'}`}>
                   <span className="srOnly">{whoLabel}</span>
+                  {m.at ? <time className="msg__time" dateTime={m.at}>{new Date(m.at).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}</time> : null}
                   {m.checkBlock && onNavigate ? (
                     <CheckBlockBanner
                       checkName={m.checkBlock.checkName}
@@ -1318,28 +1342,23 @@ const LiveChat: React.FC<{
                       setExpandedMessageTexts((prev) => ({ ...prev, [messageId]: fullText }));
                     }}
                   />
-                  {!isUser && !isError && displayText ? (
+                  {displayText ? (
                     <MessageActions
                       disabled={proposeBusy}
-                      onPreview={() => openMessagePreview(m)}
-                      onCorrectThis={() => setProposeContext({
+                      onCopy={() => { void copyMessageText(displayText); }}
+                      onPreview={isUser ? () => openMessagePreview(m) : undefined}
+                      onCorrectThis={!isUser && !isError ? () => setProposeContext({
                         messageId: m.id,
                         messageText: displayText,
                         who: 'otto',
-                      })}
-                    />
-                  ) : null}
-                  {isUser && m.text ? (
-                    <MessageActions
-                      disabled={proposeBusy}
-                      onPreview={() => openMessagePreview(m)}
+                      }) : undefined}
                     />
                   ) : null}
                 </div>
               </div>
             );
           })}
-          {rt.busy && liveTrailSteps > 0 ? (
+          {rt.busy && liveTrailSteps > 0 && !assistantStreaming && !hasRunningTool ? (
             <div className="msgRow">
               <span className="msgRow__avatar" aria-hidden="true"><OttoMark size={26} className="ottoMark" /></span>
               <div className="chat__thinking chat__thinking--trail" aria-live="polite">

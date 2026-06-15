@@ -6,10 +6,23 @@ export const MessageActions: React.FC<{
   onPropose?: () => void;
   onCorrectThis?: () => void;
   onPreview?: () => void;
-}> = ({ disabled = false, onPropose, onCorrectThis, onPreview }) => {
-  if (!onPropose && !onCorrectThis && !onPreview) return null;
+  onCopy?: () => void;
+}> = ({ disabled = false, onPropose, onCorrectThis, onPreview, onCopy }) => {
+  if (!onPropose && !onCorrectThis && !onPreview && !onCopy) return null;
   return (
     <div className="msgActions">
+      {onCopy ? (
+        <button
+          type="button"
+          className="msgActions__btn"
+          disabled={disabled}
+          title={chatCopy.copyMessage}
+          aria-label={chatCopy.copyMessage}
+          onClick={onCopy}
+        >
+          {chatCopy.copy}
+        </button>
+      ) : null}
       {onPreview ? (
         <button
           type="button"
