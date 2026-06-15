@@ -189,6 +189,13 @@ export const chatCopy = {
   queueFailed: (count: number) => `${count} couldn't send`,
   queueMixed: (pending: number, failed: number) =>
     `${pending} waiting · ${failed} failed`,
+  queueEyebrow: 'Outbox',
+  queueNextPreview: (next: string) => `Next: ${next}`,
+  queueFailedOnlySummary: (count: number) =>
+    count === 1 ? '1 message needs retry' : `${count} messages need retry`,
+  queuePillWaitCount: (count: number) => `${count} wait`,
+  queuePillFailCount: (count: number) => `${count} fail`,
+  queueMoreFailed: (count: number) => `+${count} more failed`,
   queueNextSummary: (summary: string, next: string) => `${summary} · next: ${next}`,
   queueClearAll: 'Clear queue',
   queueRetryAll: 'Retry all',

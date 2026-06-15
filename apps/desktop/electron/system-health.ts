@@ -50,15 +50,26 @@ async function readQueueSnapshot(win?: BrowserWindow | null): Promise<QueueSnaps
     const raw = await win.webContents.executeJavaScript(
       `(() => {
         try {
+          const STALE_MS = ${10 * 60 * 1000};
           const raw = localStorage.getItem('otto.chat.queue.v3');
           const inflightRaw = localStorage.getItem('otto.chat.inflight.v1');
-          const items = raw ? JSON.parse(raw) : [];
-          const inflight = inflightRaw ? JSON.parse(inflightRaw) : null;
-          const list = Array.isArray(items) ? items : [];
+          const parsed = raw ? JSON.parse(raw) : [];
+          const list = Array.isArray(parsed) ? parsed : [];
           const queued = list.filter((i) => i && i.state === 'queued').length;
-          const failed = list.filter((i) => i && i.state === 'failed').length;
-          const sending = list.filter((i) => i && i.state === 'sending').length + (inflight ? 1 : 0);
-          return { queued, failed, sending, total: list.length + (inflight ? 1 : 0) };
+          const failedStored = list.filter((i) => i && i.state === 'failed').length;
+          let inflightActive = 0;
+          let inflightFailed = 0;
+          try {
+            const inflight = inflightRaw ? JSON.parse(inflightRaw) : null;
+            if (inflight && typeof inflight.id === 'string') {
+              const createdAt = typeof inflight.createdAt === 'number' ? inflight.createdAt : Date.now();
+              if (Date.now() - createdAt > STALE_MS) inflightFailed = 1;
+              else inflightActive = 1;
+            }
+          } catch {}
+          const failed = failedStored + inflightFailed;
+          const sending = inflightActive;
+          return { queued, failed, sending, total: list.length + inflightActive + inflightFailed };
         } catch {
           return { queued: 0, failed: 0, sending: 0, total: 0, error: true };
         }

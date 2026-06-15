@@ -14,6 +14,12 @@ import {
   parseQueueAttachmentLine,
   previewQueueText,
   promoteQueueItemForThread,
+  dedupeQueue,
+  persistQueue,
+  queueSnapshotFromStorage,
+  queueThreadCounts,
+  QUEUE_STALE_SEND_ERROR,
+  sortQueueDisplayItems,
   QUEUE_KEY,
   queueDisplayItemsForThread,
   queueHasAttachments,
@@ -157,6 +163,7 @@ describe('queue-storage', () => {
         state: 'failed',
         text: 'Message stuck in flight',
         threadId: 'thread_a',
+        error: QUEUE_STALE_SEND_ERROR,
       }),
     ]);
     expect(localStorage.getItem(INFLIGHT_KEY)).toBeNull();
@@ -333,5 +340,58 @@ describe('queue-storage', () => {
       body: 'Plain follow-up only.',
       attachments: [],
     });
+  });
+
+  test('sortQueueDisplayItems puts failed rows first when any failure exists', () => {
+    const items = queueDisplayItemsForThread([
+      { id: 'q1', text: 'waiting', createdAt: 1, state: 'queued', threadId: 't' },
+      { id: 'f1', text: 'failed one', createdAt: 2, state: 'failed', threadId: 't' },
+      { id: 'q2', text: 'also waiting', createdAt: 3, state: 'queued', threadId: 't' },
+    ], 't');
+    expect(sortQueueDisplayItems(items).map((item) => item.id)).toEqual(['f1', 'q1', 'q2']);
+  });
+
+  test('queueSnapshotFromStorage counts stale in-flight as failed', () => {
+    const staleCreatedAt = Date.now() - INFLIGHT_STALE_MS - 500;
+    const snap = queueSnapshotFromStorage(
+      JSON.stringify([]),
+      JSON.stringify({
+        id: 'stale',
+        text: 'stuck',
+        createdAt: staleCreatedAt,
+        state: 'sending',
+      }),
+    );
+    expect(snap).toEqual({ queued: 0, failed: 1, sending: 0, total: 1 });
+  });
+
+  test('sanitizeQueue keeps failed rows when queued list exceeds cap', () => {
+    const queued = Array.from({ length: 12 }, (_, index) =>
+      createQueueItem(`queued ${index}`, 'queued'),
+    );
+    const failed = createQueueItem('send failed', 'failed');
+    failed.error = 'network';
+    expect(sanitizeQueue([...queued, failed]).map((item) => item.state)).toContain('failed');
+    expect(sanitizeQueue([...queued, failed]).length).toBe(12);
+  });
+
+  test('persistQueue sanitizes before writing storage', () => {
+    installStorage();
+    const items: QueueItem[] = [
+      { id: 'smoke', text: '046-rev10-thread-a-20260614141000', createdAt: Date.now(), state: 'failed' },
+      { id: 'keep', text: 'real follow-up', createdAt: Date.now(), state: 'queued' },
+    ];
+    persistQueue(items);
+    expect(JSON.parse(localStorage.getItem(QUEUE_KEY) ?? '[]')).toEqual([
+      expect.objectContaining({ id: 'keep' }),
+    ]);
+  });
+
+  test('queueThreadCounts summarizes pending and failed rows', () => {
+    const items = queueDisplayItemsForThread([
+      { id: 'q1', text: 'a', createdAt: 1, state: 'queued', threadId: 't' },
+      { id: 'f1', text: 'b', createdAt: 2, state: 'failed', threadId: 't' },
+    ], 't');
+    expect(queueThreadCounts(items)).toEqual({ pending: 1, failed: 1, hasNext: true });
   });
 });

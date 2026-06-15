@@ -28,7 +28,15 @@
  * 7. Failed rows stay visible after waiting rows and never auto-drain.
  */
 export type QueueState = 'queued' | 'sending' | 'failed';
-export type QueueItem = { id: string; text: string; createdAt: number; state: QueueState; threadId?: string | null };
+export type QueueItem = {
+  id: string;
+  text: string;
+  createdAt: number;
+  state: QueueState;
+  threadId?: string | null;
+  /** Operator-facing reason when state is failed. */
+  error?: string;
+};
 export type QueueDisplayItem = QueueItem & { isNext: boolean; sendPosition: number | null };
 
 export const QUEUE_KEY = 'otto.chat.queue.v3';
@@ -40,6 +48,8 @@ const SMOKE_QUEUE_TEXT = /\b\d{3}-(?:rev\d+-|smoke-)?thread-[ab]-\d{12,14}\b/i;
 const MAX_QUEUE_ITEMS = 12;
 const FAILED_TTL_MS = 1000 * 60 * 60 * 24;
 export const INFLIGHT_STALE_MS = 1000 * 60 * 10;
+export const QUEUE_STALE_SEND_ERROR = 'Send timed out — message may not have reached the runtime';
+export const QUEUE_SEND_FAILED_ERROR = 'Send failed — runtime rejected the message';
 let fallbackQueueIdSequence = 0;
 
 export const isSmokeQueueText = (text: string): boolean => SMOKE_QUEUE_TEXT.test(text.trim());
@@ -171,6 +181,24 @@ export const mergeInflightIntoQueue = (
 export const appendFailedQueueItem = (items: QueueItem[], failed: QueueItem): QueueItem[] =>
   dedupeQueue([...items, { ...failed, state: 'failed' }]);
 
+/** Failed rows first when any failure exists — keeps operator attention on recovery. */
+export const sortQueueDisplayItems = (items: QueueDisplayItem[]): QueueDisplayItem[] => {
+  const failed = items.filter((item) => item.state === 'failed');
+  if (!failed.length) return items;
+  const pending = items.filter((item) => item.state !== 'failed');
+  return [...failed, ...pending];
+};
+
+export type QueueThreadCounts = { pending: number; failed: number; hasNext: boolean };
+
+export const queueThreadCounts = (
+  items: QueueDisplayItem[],
+): QueueThreadCounts => ({
+  pending: items.filter((item) => item.state === 'queued').length,
+  failed: items.filter((item) => item.state === 'failed').length,
+  hasNext: items.some((item) => item.isNext),
+});
+
 export const promoteQueueItemForThread = (
   items: QueueItem[],
   threadId: string | null | undefined,
@@ -215,7 +243,7 @@ export const retryFailedQueueItemsForThread = (
   return [...kept, ...retried];
 };
 
-const dedupeQueue = (items: Array<QueueItem | null>): QueueItem[] => {
+export const dedupeQueue = (items: Array<QueueItem | null>): QueueItem[] => {
   const out: QueueItem[] = [];
   for (const item of items) {
     if (item && !out.some((x) => x.id === item.id)) out.push(item);
@@ -233,12 +261,14 @@ export const sanitizeQueue = (items: QueueItem[]): QueueItem[] => {
 
   if (!cleaned.length) return [];
 
-  const queued = cleaned.filter((item) => item.state === 'queued');
   const failed = cleaned
     .filter((item) => item.state === 'failed')
     .sort((a, b) => b.createdAt - a.createdAt);
+  const queued = cleaned.filter((item) => item.state === 'queued');
+  const failedKept = failed.slice(0, MAX_QUEUE_ITEMS);
+  const cappedQueued = queued.slice(0, Math.max(0, MAX_QUEUE_ITEMS - failedKept.length));
 
-  return [...queued, ...failed].slice(0, MAX_QUEUE_ITEMS);
+  return [...cappedQueued, ...failedKept];
 };
 
 export const readInFlight = (): QueueItem | null => {
@@ -254,6 +284,7 @@ export const readInFlight = (): QueueItem | null => {
         createdAt,
         state: 'failed',
         threadId: typeof item.threadId === 'string' ? item.threadId : null,
+        error: QUEUE_STALE_SEND_ERROR,
       };
     }
     return {
@@ -327,4 +358,36 @@ export const clearInFlight = (id: string) => {
     const item = JSON.parse(localStorage.getItem(INFLIGHT_KEY) ?? 'null') as QueueItem | null;
     if (item?.id === id) localStorage.removeItem(INFLIGHT_KEY);
   } catch { /* best effort */ }
+};
+
+export const persistQueue = (items: QueueItem[]): void => {
+  try {
+    localStorage.setItem(QUEUE_KEY, JSON.stringify(sanitizeQueue(items)));
+  } catch { /* best effort */ }
+};
+
+export type QueueSnapshot = { queued: number; failed: number; sending: number; total: number };
+
+/** Count queue rows from raw storage (matches readQueue stale in-flight handling). */
+export const queueSnapshotFromStorage = (
+  raw: string | null,
+  inflightRaw: string | null,
+  now = Date.now(),
+): QueueSnapshot => {
+  const list = parseStoredQueue(raw);
+  let inflightActive = 0;
+  let inflightFailed = 0;
+  try {
+    const inflight = inflightRaw ? JSON.parse(inflightRaw) as QueueItem | null : null;
+    if (inflight && typeof inflight.id === 'string') {
+      const createdAt = typeof inflight.createdAt === 'number' ? inflight.createdAt : now;
+      if (now - createdAt > INFLIGHT_STALE_MS) inflightFailed = 1;
+      else inflightActive = 1;
+    }
+  } catch { /* ignore */ }
+  const queued = list.filter((item) => item.state === 'queued').length;
+  const failed = list.filter((item) => item.state === 'failed').length + inflightFailed;
+  const sending = inflightActive;
+  const inflightExtra = inflightActive + inflightFailed;
+  return { queued, failed, sending, total: list.length + inflightExtra };
 };
