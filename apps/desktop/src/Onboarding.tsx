@@ -235,7 +235,7 @@ export const Onboarding: React.FC<{ onNavigate: (id: SurfaceId) => void; activeS
 
   const retryStatus = async () => {
     if (!api) return;
-    const next = await api.runtime.status();
+    const next = await api.runtime.init();
     rt.updateStatus(next);
   };
 
