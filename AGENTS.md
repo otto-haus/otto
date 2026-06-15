@@ -60,6 +60,7 @@ task electron                 # live Electron app in dev
 task staging                  # build/package/install/open isolated /Applications/otto-staging.app
 task install:release          # canonical otto.app — GitHub Release only; requires OTTO_ALLOW_RELEASE_INSTALL=1
 task smoke:release:metadata   # read-only — compare installed otto.app to latest or OTTO_RELEASE_TAG
+task smoke:letta-cli          # resolveCli + version/help; opt-in turn with LETTA_AGENT_ID (#295)
 task smoke:cli                # isolated disposable conversation; never default
 task smoke:cron               # opt-in Letta cron create/list/delete smoke; never default
 ```

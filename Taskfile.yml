@@ -181,6 +181,11 @@ tasks:
     cmds:
       - bun scripts/github-issue-workflow-smoke.ts
 
+  smoke:letta-cli:
+    desc: Letta CLI capability smoke — resolveCli, --version, --help; opt-in disposable turn with LETTA_AGENT_ID (#295)
+    cmds:
+      - bun scripts/letta-cli-capability-smoke.ts
+
   smoke:cli:
     desc: Optional Letta CLI smoke; requires OTTO_AGENT_ID or LETTA_AGENT_ID and uses a disposable conversation
     cmds:
