@@ -5,6 +5,7 @@ Product-facing design docs safe to ship in the open repo.
 | File | Role |
 |------|------|
 | `brand-style-guide.html` | Tokens, typography, voice, motion (§09), preview/Labs (§10) |
+| `owl-usage.md` | Portrait mark sizes, EmptyState vs InlineEmpty, runtime dimming |
 | `onboarding.md` | First-run journey — copy, gates, sample receipt; **Veto style reference (voice, not content)** |
 | `settings.md` | Settings tabs + sections — same style-vs-content rule as onboarding |
 | `motion-section.html` | Standalone §09 Motion (also in brand guide) |
