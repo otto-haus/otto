@@ -1,4 +1,4 @@
-import { buildRuntimeMessageWithAttachments } from '../attachment-message';
+import { buildRuntimeMessageWithAttachments, formatAttachmentTrayLabel } from '../attachment-message';
 import type React from 'react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Icon } from '../components/icons';
@@ -1015,7 +1015,6 @@ const LiveChat: React.FC<{
           </button>
         )}
         <div className="chat__column chat__headInner">
-          <span className="chat__avatar"><OttoMark size={30} className="ottoMark" /></span>
           <div className="chat__titleBlock">
             <div className="chat__title">{headTitle}</div>
             <div className="chat__id" title={st ? chatStatusLine : undefined}>
@@ -1028,6 +1027,25 @@ const LiveChat: React.FC<{
             </div>
           </div>
           <div className="chat__headActions">
+            {ready && st ? (
+              <div ref={pickerRef}>
+                <ModelEffortPickers
+                  busy={rt.busy}
+                  selectedModel={selectedModel}
+                  selectedEffort={selectedEffort}
+                  modelOpen={modelOpen}
+                  effortOpen={effortOpen}
+                  onToggleModel={() => { setModelOpen((x) => !x); setEffortOpen(false); }}
+                  onToggleEffort={() => { setEffortOpen((x) => !x); setModelOpen(false); }}
+                  onClose={() => { setModelOpen(false); setEffortOpen(false); }}
+                  onSelectModel={(value) => { void rt.configure({ modelHandle: value }); }}
+                  onSelectEffort={(value) => { void rt.configure({ effort: value }); }}
+                  modelOptions={modelOptions}
+                  compact
+                  menuPlacement="down"
+                />
+              </div>
+            ) : null}
             <AppSourceBadge compact />
             {st ? (
               <>
@@ -1134,11 +1152,6 @@ const LiveChat: React.FC<{
                 id={showWho ? `chat-turn-${m.id}` : undefined}
                 className={`msgRow${isUser ? ' msgRow--user' : ''}${isError ? ' msgRow--error' : ''}${showWho ? '' : ' msgRow--cont'}`}
               >
-                {!isUser && showWho ? (
-                  <span className="msgRow__avatar" aria-hidden="true">
-                    <OttoMark size={26} className="ottoMark" />
-                  </span>
-                ) : !isUser ? <span className="msgRow__avatar msgRow__avatar--spacer" aria-hidden="true" /> : null}
                 <div className={`msg${isUser ? ' msg--user' : ''}${showWho ? '' : ' msg--cont'}`}>
                   <span className="srOnly">{whoLabel}</span>
                   {m.checkBlock && onNavigate ? (
@@ -1192,7 +1205,6 @@ const LiveChat: React.FC<{
           })}
           {rt.busy && !assistantStreaming && (
             <div className="msgRow">
-              <span className="msgRow__avatar" aria-hidden="true"><OttoMark size={26} className="ottoMark" /></span>
               <div
                 className={`chat__thinking${rt.turnActivity ? ` chat__thinking--${rt.turnActivity.kind}` : ''}`}
                 aria-live="polite"
@@ -1232,13 +1244,10 @@ const LiveChat: React.FC<{
         {attachments.length > 0 && (
           <div className="attachmentTray" aria-label="Image attachments">
             {attachments.map((a) => (
-              <div className="attachment" key={a.id}>
-                <img src={a.previewUrl} alt="" />
-                <div className="attachment__meta">
-                  <span>{a.name}</span>
-                  <span className="faint">{formatBytes(a.size)}</span>
-                </div>
-                <button type="button" className="attachment__remove" aria-label={`Remove ${a.name}`} onClick={() => setAttachments((items) => items.filter((x) => x.id !== a.id))}>
+              <div className="attachmentChip" key={a.id}>
+                <img className="attachmentChip__thumb" src={a.previewUrl} alt="" />
+                <span className="attachmentChip__name">{formatAttachmentTrayLabel(a)}</span>
+                <button type="button" className="attachmentChip__remove" aria-label={`Remove ${a.name}`} onClick={() => setAttachments((items) => items.filter((x) => x.id !== a.id))}>
                   {Icon.x}
                 </button>
               </div>
@@ -1246,23 +1255,6 @@ const LiveChat: React.FC<{
           </div>
         )}
         {attachmentError && <div className="attachmentError">{attachmentError}</div>}
-        {ready && st ? (
-          <div className="promptbar__pickers" ref={pickerRef}>
-            <ModelEffortPickers
-              busy={rt.busy}
-              selectedModel={selectedModel}
-              selectedEffort={selectedEffort}
-              modelOpen={modelOpen}
-              effortOpen={effortOpen}
-              onToggleModel={() => { setModelOpen((x) => !x); setEffortOpen(false); }}
-              onToggleEffort={() => { setEffortOpen((x) => !x); setModelOpen(false); }}
-              onClose={() => { setModelOpen(false); setEffortOpen(false); }}
-              onSelectModel={(value) => { void rt.configure({ modelHandle: value }); }}
-              onSelectEffort={(value) => { void rt.configure({ effort: value }); }}
-              modelOptions={modelOptions}
-            />
-          </div>
-        ) : null}
         <div className="promptCompose">
           <div className={`promptbox${ready ? '' : ' promptbox--send-blocked'}`}>
             <input
@@ -1308,21 +1300,25 @@ const LiveChat: React.FC<{
               }}
               rows={1}
             />
-            {rt.busy && (
-              <button type="button" className="btn btn--icon promptbox__stop" aria-label="Abort current run" onClick={rt.abort}>{Icon.stop}</button>
-            )}
-            <button
-              type="button"
-              className="btn btn--primary btn--icon promptbox__send"
-              aria-label={rt.busy ? 'Queue message' : 'Send message'}
-              title={ready ? undefined : chatCopy.composerSendBlockedTitle}
-              disabled={!ready || (!draft.trim() && attachments.length === 0)}
-              onClick={submit}
-            >
-              {Icon.send}
-            </button>
+            <div className="promptbox__actions">
+              {rt.busy ? (
+                <button type="button" className="btn btn--icon promptbox__stop" aria-label="Abort current run" onClick={rt.abort}>{Icon.stop}</button>
+              ) : (
+                <span className="promptbox__stopSlot" aria-hidden="true" />
+              )}
+              <button
+                type="button"
+                className="btn btn--primary btn--icon promptbox__send"
+                aria-label={rt.busy ? 'Queue message' : 'Send message'}
+                title={ready ? undefined : chatCopy.composerSendBlockedTitle}
+                disabled={!ready || (!draft.trim() && attachments.length === 0)}
+                onClick={submit}
+              >
+                {Icon.send}
+              </button>
+            </div>
           </div>
-          <div className="promptbar__hint">{ready ? chatCopy.composerHint : chatCopy.composerNotReadyHint}</div>
+          {!ready ? <div className="promptbar__hint">{chatCopy.composerNotReadyHint}</div> : null}
         </div>
         </div>
       </div>

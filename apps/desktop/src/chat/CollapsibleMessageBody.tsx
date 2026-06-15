@@ -61,7 +61,7 @@ export const CollapsibleMessageBody: React.FC<CollapsibleMessageBodyProps> = ({ 
       <div className="msg__body">{children}</div>
       {collapsible && overflows ? (
         <button type="button" className="msg__expand" onClick={toggle} aria-expanded={expanded}>
-          {expanded ? 'Show less' : 'Show more'}
+          {expanded ? 'Less' : 'More'}
         </button>
       ) : null}
     </div>
