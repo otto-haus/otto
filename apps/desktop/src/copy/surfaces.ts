@@ -429,6 +429,7 @@ export const chartersCopy = {
   slugLabel: 'Slug',
   createButton: 'Create charter',
   loadingList: 'Loading charters…',
+  loadingTitle: 'Loading charter…',
   selectTitle: 'Select a charter',
   selectBody: 'Charter state appears after creation.',
   detailEyebrow: 'charter detail',
