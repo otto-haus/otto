@@ -74,8 +74,10 @@ If the preflight reports a missing Letta CLI, record that exact state. Otto disa
 Code auto-update during dev launch, so do not run global npm repair commands as part of a
 clean-profile smoke. Do not call the desktop connected until `session.initialize()`
 succeeds against a live Letta agent.
-Do not report the installed app as tested unless you deliberately ran the installed-app path
-(`task refresh`), which writes `/Applications/otto.app`.
+Do not report the installed app as tested unless you deliberately ran an installed-app path:
+`task staging` (isolated `/Applications/otto-staging.app`) or, with Sebastian approval,
+`OTTO_ALLOW_RELEASE_INSTALL=1 task install:release` (canonical `/Applications/otto.app` from GitHub Release only).
+`task refresh` is blocked — it must not overwrite `/Applications/otto.app`.
 
 The desktop is honest by design: chat must stay blocked until a real Letta session initializes.
 

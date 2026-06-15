@@ -75,6 +75,7 @@ import type {
   ConstitutionResult,
   CultureExportResult,
   CultureImportPreview,
+  DiagnosticsExportResult,
 } from '@otto-haus/core';
 
 const emptyChangelog = (windowDays: number): BehaviorChangelogResult => ({
@@ -309,6 +310,10 @@ const api = {
     export: (): Promise<CultureExportResult> => ipcRenderer.invoke('otto:culture:export'),
     importPreview: (bundlePath: string): Promise<CultureImportPreview> =>
       ipcRenderer.invoke('otto:culture:import-preview', bundlePath),
+  },
+  diagnostics: {
+    export: (): Promise<DiagnosticsExportResult> => ipcRenderer.invoke('otto:diagnostics:export'),
+    reveal: (bundlePath: string): Promise<{ ok: boolean }> => ipcRenderer.invoke('otto:diagnostics:reveal', bundlePath),
   },
   permission: {
     respond: (requestId: string, response: PermissionResponse): void =>

@@ -24,6 +24,7 @@ run_gate "desktop Electron typecheck" bun run --cwd apps/desktop electron:typech
 run_gate "shell syntax check" bun run check:shell
 run_gate "unit tests" bun test
 run_gate "v0 verifier" bun run verify:v0
+run_gate "docs tool pins" bun run check:docs-tools
 run_gate "docs validate" bun run docs:validate
 run_gate "docs links" bun run docs:links
 run_gate "desktop Electron build" env OTTO_READINESS_IGNORE_LOCAL_CONFIG=1 bun run --cwd apps/desktop electron:build

@@ -21,6 +21,7 @@ import { runTicketCommand } from '../chat/ticket-commands';
 import {
   clearInFlight,
   createQueueItem,
+  hasDuplicateQueueText,
   nextQueueItemForThread,
   persistInFlight,
   previewQueueText,
@@ -264,6 +265,11 @@ const dedupeQueue = (items: Array<QueueItem | null>): QueueItem[] => {
     if (item && !out.some((x) => x.id === item.id)) out.push(item);
   }
   return out;
+};
+
+const appendQueueItem = (items: QueueItem[], text: string, threadId: string | null | undefined): QueueItem[] => {
+  if (hasDuplicateQueueText(items, threadId, text)) return items;
+  return [...items, createQueueItem(text, 'queued', threadId ?? null)];
 };
 
 const QueueStrip: React.FC<{
@@ -616,7 +622,7 @@ const LiveChat: React.FC<{
       const text = detail?.text?.trim();
       if (!text) return;
       if (detail?.send && ready && api) {
-        setQueue((items) => [...items, createQueueItem(text, 'queued', rt.activeThreadId)]);
+        setQueue((items) => appendQueueItem(items, text, rt.activeThreadId));
         return;
       }
       setDraft(text);
@@ -870,44 +876,46 @@ const LiveChat: React.FC<{
             {Icon.panel}
           </button>
         )}
-        <span className="chat__avatar"><OttoMark size={30} className="ottoMark" /></span>
-        <div className="chat__titleBlock">
-          <div className="chat__title">{headTitle}</div>
-          <div className="chat__id" title={st ? chatStatusLine : undefined}>
+        <div className="chat__column chat__headInner">
+          <span className="chat__avatar"><OttoMark size={30} className="ottoMark" /></span>
+          <div className="chat__titleBlock">
+            <div className="chat__title">{headTitle}</div>
+            <div className="chat__id" title={st ? chatStatusLine : undefined}>
+              {st ? (
+                <>
+                  <span className={`dot ${ready ? 'dot--ok' : 'dot--warn'}`} aria-hidden="true" />
+                  <span>{ready ? chatStatusLine : formatRuntimeSubtitle(ready, st.reason, labelForModel(selectedModel, modelOptions))}</span>
+                </>
+              ) : 'connecting…'}
+            </div>
+          </div>
+          <div className="chat__headActions">
+            <AppSourceBadge compact />
             {st ? (
               <>
-                <span className={`dot ${ready ? 'dot--ok' : 'dot--warn'}`} aria-hidden="true" />
-                <span>{ready ? chatStatusLine : formatRuntimeSubtitle(ready, st.reason, labelForModel(selectedModel, modelOptions))}</span>
+                <button
+                  type="button"
+                  className="btn btn--ghost-d"
+                  disabled={streamMessages.length === 0}
+                  title={chatCopy.copyMarkdownHint}
+                  onClick={() => { void copyConversationMarkdown(); }}
+                >
+                  {chatCopy.copyMarkdown}
+                </button>
+                <span className={`pill ${ready ? 'pill--ok' : 'pill--warn'}`}>
+                  {ready ? 'connected' : 'setup'}
+                </span>
               </>
-            ) : 'connecting…'}
+            ) : null}
+            {!st ? (
+              <>
+                <button type="button" className="btn btn--ghost-d" onClick={() => { void rt.retry(); }}>{chatCopy.pickerRetry}</button>
+                {onOpenSettings && (
+                  <button type="button" className="btn btn--solid-d" onClick={onOpenSettings}>{chatCopy.pickerOpenSettings}</button>
+                )}
+              </>
+            ) : null}
           </div>
-        </div>
-        <div className="chat__headActions">
-          <AppSourceBadge compact />
-          {st ? (
-            <>
-              <button
-                type="button"
-                className="btn btn--ghost-d"
-                disabled={streamMessages.length === 0}
-                title={chatCopy.copyMarkdownHint}
-                onClick={() => { void copyConversationMarkdown(); }}
-              >
-                {chatCopy.copyMarkdown}
-              </button>
-              <span className={`pill ${ready ? 'pill--ok' : 'pill--warn'}`}>
-                {ready ? 'connected' : 'setup'}
-              </span>
-            </>
-          ) : null}
-          {!st ? (
-            <>
-              <button type="button" className="btn btn--ghost-d" onClick={() => { void rt.retry(); }}>{chatCopy.pickerRetry}</button>
-              {onOpenSettings && (
-                <button type="button" className="btn btn--solid-d" onClick={onOpenSettings}>{chatCopy.pickerOpenSettings}</button>
-              )}
-            </>
-          ) : null}
         </div>
       </div>
 
@@ -936,7 +944,21 @@ const LiveChat: React.FC<{
               <div className="inkblock__actions">
                 <button type="button" className="btn btn--solid-d" onClick={() => { void rt.retry(); }}>Retry</button>
                 {onOpenSettings && <button type="button" className="btn btn--ghost-d" onClick={onOpenSettings}>Open Settings</button>}
+                {ottoApi()?.diagnostics ? (
+                  <button
+                    type="button"
+                    className="btn btn--ghost-d"
+                    onClick={() => {
+                      void ottoApi()?.diagnostics?.export().then((result) => {
+                        void ottoApi()?.diagnostics?.reveal(result.bundlePath);
+                      });
+                    }}
+                  >
+                    {chatCopy.exportDiagnostics}
+                  </button>
+                ) : null}
               </div>
+              <p className="faint" style={{ marginTop: 8, fontSize: 13 }}>{chatCopy.diagnosticsHint}</p>
             </div>
           )}
           {streamMessages.length === 0 && (
@@ -1037,6 +1059,7 @@ const LiveChat: React.FC<{
       </div>
 
       <div className="promptbar">
+        <div className="chat__column">
         {ready && activeQueue.length > 0 && (
           <QueueStrip
             queue={activeQueue}
@@ -1147,6 +1170,7 @@ const LiveChat: React.FC<{
           </div>
           <div className="promptbar__hint">{ready ? chatCopy.composerHint : chatCopy.composerNotReadyHint}</div>
         </div>
+        </div>
       </div>
 
       <Modal
@@ -1201,6 +1225,7 @@ const PreviewChat: React.FC = () => (
     </div>
 
     <div className="promptbar">
+      <div className="chat__column">
       {!isReady && (
         <div
           style={{
@@ -1233,6 +1258,7 @@ const PreviewChat: React.FC = () => (
       <div className="promptbar__meta">
         <span>desktop bridge unavailable</span>
         <span className="faint">runtime: not connected</span>
+      </div>
       </div>
     </div>
   </div>

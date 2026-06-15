@@ -28,6 +28,7 @@
   --dark: oklch(0.175 0.008 270);
   --dark-tx: oklch(0.97 0.002 270);
   --dark-mut: oklch(0.70 0.006 270);
+  --chat-column-max: 780px;
   --radius: 10px;
   --radius-lg: 16px;
   --sans: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
@@ -760,8 +761,16 @@ h1, h2, h3, h4, p { margin: 0; }
   font-family: var(--mono); font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase;
   pointer-events: none;
 }
+.chat__column {
+  width: 100%;
+  max-width: var(--chat-column-max);
+  margin-inline: auto;
+  min-width: 0;
+}
 .chat__head {
-  display: flex; align-items: center; gap: 14px;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
   padding: 14px 28px;
   border-bottom: 1px solid var(--line);
   background: rgba(248,247,242,0.88);
@@ -769,14 +778,27 @@ h1, h2, h3, h4, p { margin: 0; }
   -webkit-backdrop-filter: blur(12px);
   position: sticky; top: 0; z-index: 8;
   flex: none;
-  flex-wrap: wrap; min-width: 0;
+  min-width: 0;
   overflow: hidden;
   max-height: 120px;
+}
+.chat__headInner {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  min-width: 0;
 }
 .chat__headActions { margin-left: auto; display: flex; align-items: center; gap: 8px; min-width: 0; }
 .promptControls--head { flex-wrap: wrap; justify-content: flex-end; }
 .promptControls--head .picker__button { max-width: min(220px, 42vw); font-size: 12.5px; min-height: 32px; }
-.chat__head--inset { padding-left: 78px; }
+.chat__head--inset .chat__sidebarButton {
+  position: absolute;
+  left: 28px;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 1;
+}
 .chat__sidebarButton { margin-right: 2px; }
 .chat__avatar {
   width: 36px; height: 36px; min-width: 36px; max-width: 36px;
@@ -810,9 +832,9 @@ h1, h2, h3, h4, p { margin: 0; }
   scroll-behavior: smooth;
 }
 .chat__streamInner {
-  max-width: 780px;
+  max-width: var(--chat-column-max);
   width: 100%;
-  margin: 0 auto;
+  margin-inline: auto;
   padding: 28px 28px 32px;
   display: flex;
   flex-direction: column;
@@ -1062,7 +1084,7 @@ h1, h2, h3, h4, p { margin: 0; }
   left: 0; right: 0; top: -56px; height: 56px;
   background: linear-gradient(to bottom, rgba(248,247,242,0), var(--bg));
 }
-.promptCompose { display: grid; gap: 8px; max-width: 780px; width: 100%; margin: 0 auto; position: relative; z-index: 2; }
+.promptCompose { display: grid; gap: 8px; width: 100%; position: relative; z-index: 2; }
 .promptbox {
   display: flex; align-items: flex-end; gap: 8px;
   border: 1px solid var(--line-strong);
@@ -1095,7 +1117,7 @@ h1, h2, h3, h4, p { margin: 0; }
 }
 .promptbar__pickers {
   display: flex;
-  justify-content: flex-end;
+  justify-content: flex-start;
   margin-bottom: 8px;
 }
 .promptbar__pickers .promptControls { margin-left: 0; width: 100%; }
@@ -1896,6 +1918,15 @@ h1, h2, h3, h4, p { margin: 0; }
   color: var(--ok);
   font-weight: 500;
 }
+.onboardReadiness { margin-top: 4px; }
+.onboardReadiness--loading { padding: 8px 0; }
+.onboardReadiness__checking {
+  margin: 0;
+  font-size: 14px;
+  color: var(--mut);
+}
+.onboardReadiness__banner { margin-bottom: 8px; }
+.onboardReadiness__rows { margin-top: 0; }
 .onboardSampleNote {
   font-size: 13px;
   color: var(--mut);
@@ -2185,6 +2216,7 @@ textarea:focus-visible {
   .topbar { padding: 18px 18px 14px; gap: 12px; }
   .topbar h1 { font-size: 22px; }
   .chat__head { padding-left: 16px; padding-right: 16px; }
+  .chat__head--inset .chat__sidebarButton { left: 16px; }
   .chat__streamInner { padding-left: 16px; padding-right: 16px; }
   .promptbar { padding-left: 16px; padding-right: 16px; }
   .receiptSearch { width: 100%; max-width: none; }

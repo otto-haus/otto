@@ -71,6 +71,10 @@ tasks:
     desc: v0 release gate (scripts/verify-v0.mjs)
     cmds: [bun run verify:v0]
 
+  audit:
+    desc: Dependency vulnerability audit (same check used by CI)
+    cmds: [bun audit]
+
   docs:dev:
     desc: DevEx docs preview (Mintlify)
     cmds: [bun run docs:dev]
@@ -141,6 +145,11 @@ tasks:
     desc: Clean-machine E2E — isolated HOME through embedded first chat (#291); uses dist-app, never otto.app or otto-staging.app
     cmds:
       - node scripts/otto-clean-machine-e2e-smoke.cjs
+
+  smoke:staging:sleep-wake:
+    desc: Playwright smoke — sleep/wake draft+queue+runtime resume roster (#318)
+    cmds:
+      - node scripts/otto-staging-sleep-wake-smoke.cjs
 
   _refresh-live:
     internal: true

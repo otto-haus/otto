@@ -1,13 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import {
-  readiness,
-  requiredMissing,
-  type ReadyItem,
-  type ReadyStatus,
-} from '../readiness';
 import { Icon } from '../components/icons';
 import { useToast } from '../components/Toast';
-import { EmptyState, StatusPill, statusPill, statusCodePill, readyStatusPill, SurfaceProof, SurfacePage, SurfaceHero, InkBlock, SurfaceInk, SurfaceStatStrip, SurfaceMeta, SplitLayout, FilterBar, InlineEmpty, WebPreviewFrame, ReceiptCard, CheckBlockBanner } from '../components/ui';
+import { EmptyState, StatusPill, statusPill, statusCodePill, SurfaceProof, SurfacePage, SurfaceHero, InkBlock, SurfaceInk, SurfaceStatStrip, SurfaceMeta, SplitLayout, FilterBar, InlineEmpty, WebPreviewFrame, ReceiptCard, CheckBlockBanner } from '../components/ui';
 import {
   toastCopy,
   curationCopy,
@@ -87,6 +81,7 @@ import {
   type DreamTrigger,
 } from '../runtime';
 import { useRuntimeContext } from '../RuntimeContext';
+import { ReadinessPanel } from '../ReadinessPanel';
 import type { SurfaceId } from '../components/Sidebar';
 
 const EmptySurface = EmptyState;
@@ -3367,21 +3362,6 @@ const SettingsSectionHeader: React.FC<{ title: string; lede: string }> = ({ titl
   </header>
 );
 
-const ReadyRow: React.FC<{ item: ReadyItem }> = ({ item }) => (
-  <div className="settingsReadinessRow">
-    <div>
-      <div className="settingsReadinessRow__label">
-        {item.label}
-        {item.required && <span className="faint" style={{ fontWeight: 400, fontSize: 12 }}> · required</span>}
-      </div>
-      <div className="settingsReadinessRow__detail">{item.detail}</div>
-      {item.source && <span className="filechip" style={{ marginTop: 8 }}>{Icon.file} {item.source}</span>}
-      <div className="settingsReadinessRow__meta">↳ {item.action}</div>
-    </div>
-    {readyStatusPill(item.status)}
-  </div>
-);
-
 type ProviderKind = 'local' | 'cloud';
 const PROVIDER_TABS: Array<{
   kind: ProviderKind;
@@ -3805,59 +3785,7 @@ export const Settings: React.FC = () => {
     } catch { /* best effort */ }
   }, []);
 
-  // Live runtime is the source of truth in Electron; the file-backed checklist describes local
-  // config only. Never let the readiness panel say "Setup required" while the runtime is connected.
   const liveConnected = rt.electron && !!rt.status?.ready;
-  const liveRows: ReadyItem[] = liveConnected ? [
-    {
-      key: 'runtime',
-      label: 'Letta runtime',
-      required: true,
-      status: 'connected',
-      detail: 'Live Letta session initialized',
-      source: 'RuntimeStatus',
-      action: 'session.initialize() returned ready',
-    },
-    {
-      key: 'agent',
-      label: 'Agent identity',
-      required: true,
-      status: 'configured',
-      detail: 'Letta session active',
-      source: 'RuntimeStatus',
-      action: 'Resolved from the live Letta session',
-    },
-    {
-      key: 'model',
-      label: 'Model provider',
-      required: false,
-      status: 'connected',
-      detail: rt.status?.model ?? 'owned by live Letta runtime',
-      source: 'RuntimeStatus',
-      action: 'Configure providers in Letta Desktop / Letta local runtime',
-    },
-    {
-      key: 'memory',
-      label: 'Memory / MemFS',
-      required: true,
-      status: rt.status?.memfsEnabled ? 'connected' : 'configured',
-      detail: rt.status?.memfsEnabled ? 'MemFS enabled by live runtime' : 'Connected through live runtime; MemFS not enabled',
-      source: 'RuntimeStatus',
-      action: rt.status?.memfsEnabled ? 'Available in the initialized session' : 'Enable OTTO_MEMFS=1 only for backends that support it',
-    },
-    {
-      key: 'functions',
-      label: 'Runtime tools',
-      required: false,
-      status: (rt.status?.tools?.length ?? 0) > 0 ? 'configured' : 'not-wired',
-      detail: `${rt.status?.tools?.length ?? 0} tool${(rt.status?.tools?.length ?? 0) === 1 ? '' : 's'} available`,
-      source: 'RuntimeStatus',
-      action: 'Forwarded by the initialized Letta session',
-    },
-  ] : [];
-  const liveByKey = new Map(liveRows.map((r) => [r.key, r]));
-  const ready = liveConnected || requiredMissing.length === 0;
-  const group = (keys: string[]) => readiness.filter((r) => keys.includes(r.key)).map((r) => liveByKey.get(r.key) ?? r);
 
   const settingsTabs: Array<{ id: typeof section; label: string; icon: React.ReactNode }> = [
     { id: 'general', label: settingsCopy.tabGeneral, icon: Icon.settings },
@@ -3938,30 +3866,7 @@ export const Settings: React.FC = () => {
 
           <section>
             <SettingsSectionHeader title={settingsCopy.readinessTitle} lede={settingsCopy.readinessLede} />
-            <div className={`settingsStatusBanner${!ready && !liveConnected ? ' settingsStatusBanner--warn' : ''}`}>
-              {liveConnected
-                ? `${settingsCopy.readinessConnected}${rt.status?.model ? ` · ${rt.status.model}` : ''}`
-                : ready
-                  ? settingsCopy.readinessReadyFallback
-                  : `${settingsCopy.readinessNotReady} ${requiredMissing.map((r) => r.label).join(' · ')}`}
-            </div>
-            <details className="settingsReadinessDetails">
-              <summary>{settingsCopy.readinessDetail}</summary>
-              <div className="settingsReadinessGroup">
-                <div className="faint settingsReadinessGroup__label">{settingsCopy.readinessGroupRuntime}</div>
-                {group(['runtime', 'agent', 'model', 'memory', 'workspace']).map((r) => <ReadyRow key={r.key} item={r} />)}
-              </div>
-              <div className="settingsReadinessGroup">
-                <div className="faint settingsReadinessGroup__label">{settingsCopy.readinessGroupCapabilities}</div>
-                {group(['skills', 'practices', 'mcp', 'functions', 'permissions']).map((r) => <ReadyRow key={r.key} item={r} />)}
-              </div>
-              <div className="settingsReadinessGroup">
-                <div className="faint settingsReadinessGroup__label">{settingsCopy.readinessGroupSurfaces}</div>
-                {group(['charters', 'standards', 'routines', 'curation', 'receipts', 'autonomy', 'knowledge', 'tickets', 'channels']).map((r) => (
-                  <ReadyRow key={r.key} item={r} />
-                ))}
-              </div>
-            </details>
+            <ReadinessPanel />
           </section>
 
           <section className="settingsGeneralSection" id="settings-memory">
@@ -3973,6 +3878,12 @@ export const Settings: React.FC = () => {
             <SettingsSectionHeader title={settingsCopy.dreamingTitle} lede={settingsCopy.dreamingLede} />
             <DreamSettingsPanel memfsEnabled={!!rt.status?.memfsEnabled} pushToast={pushToast} />
           </section>
+
+          {api ? (
+            <section className="settingsGeneralSection" id="settings-diagnostics">
+              <DiagnosticsSettingsPanel api={api} pushToast={pushToast} />
+            </section>
+          ) : null}
 
           {api ? (
             <section className="settingsGeneralSection" id="settings-culture">
@@ -3992,6 +3903,48 @@ export const Settings: React.FC = () => {
       </div>
       <SurfaceProof surface="settings" />
     </SurfacePage>
+  );
+};
+
+const DiagnosticsSettingsPanel: React.FC<{
+  api: NonNullable<ReturnType<typeof ottoApi>>;
+  pushToast: ReturnType<typeof useToast>['push'];
+}> = ({ api, pushToast }) => {
+  const [bundlePath, setBundlePath] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const exportDiagnostics = async () => {
+    setBusy(true);
+    setError(null);
+    try {
+      const result = await api.diagnostics.export();
+      setBundlePath(result.bundlePath);
+      await api.diagnostics.reveal(result.bundlePath);
+      pushToast({
+        title: settingsCopy.diagnosticsExportDone,
+        body: result.bundlePath,
+        tone: 'ok',
+      });
+    } catch (e) {
+      setError(String(e));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <>
+      <SettingsSectionHeader title={settingsCopy.diagnosticsTitle} lede={settingsCopy.diagnosticsLede} />
+      <div className="row" style={{ flexWrap: 'wrap', gap: 8 }}>
+        <button type="button" className="btn btn--solid-d" disabled={busy} onClick={() => void exportDiagnostics()}>
+          {settingsCopy.diagnosticsExport}
+        </button>
+      </div>
+      {bundlePath ? <p className="mono faint" style={{ fontSize: 11.5 }}>{bundlePath}</p> : null}
+      <p className="faint" style={{ fontSize: 12, marginTop: 8 }}>{settingsCopy.diagnosticsCommand}</p>
+      {error ? <p className="faint" style={{ color: 'var(--warn)' }}>{error}</p> : null}
+    </>
   );
 };
 

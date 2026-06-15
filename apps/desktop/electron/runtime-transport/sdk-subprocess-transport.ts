@@ -26,7 +26,7 @@ import {
   type ModelInitAttempt,
 } from './runtime-common';
 import { permissionSessionStore } from '../permission-session-store';
-import type { OttoRuntimeTransport } from './types';
+import type { OttoRuntimeTransport, SdkTransportDiagnosticsSnapshot } from './types';
 
 const DEFAULT_PERMISSION_TIMEOUT_MS = 120_000;
 
@@ -67,6 +67,14 @@ export class SdkSubprocessTransport implements OttoRuntimeTransport {
 
   getStatus(): RuntimeStatus {
     return this.status;
+  }
+
+  getDiagnosticsSnapshot(): SdkTransportDiagnosticsSnapshot {
+    return {
+      pendingPermissionCount: this.pending.size,
+      sessionInitialized: !!this.session,
+      aborted: this.aborted,
+    };
   }
 
   resolvePermission(requestId: string, response: PermissionResponse) {

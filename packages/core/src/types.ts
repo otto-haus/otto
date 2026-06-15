@@ -871,6 +871,20 @@ export interface CultureImportPreview {
   blocked_reason?: string;
 }
 
+export interface DiagnosticsExportManifest {
+  schema: 'otto.diagnostics-export.v1';
+  exported_at: ISO8601;
+  workspace: string;
+  includes: string[];
+  redacted: string[];
+}
+
+export interface DiagnosticsExportResult {
+  bundlePath: string;
+  manifest: DiagnosticsExportManifest;
+  receipt: Receipt & { path: string };
+}
+
 // ---------------------------------------------------------------------------
 // Cognee — local knowledge graph stubs (041–044)
 // ---------------------------------------------------------------------------
