@@ -43,6 +43,30 @@
   -webkit-font-smoothing: antialiased;
 }
 
+[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: oklch(0.16 0.008 270);
+  --bg-2: oklch(0.19 0.008 270);
+  --panel: oklch(0.21 0.008 270);
+  --ink: oklch(0.94 0.005 270);
+  --ink-soft: oklch(0.82 0.005 270);
+  --mut: oklch(0.68 0.006 270);
+  --faint: oklch(0.58 0.006 270);
+  --line: oklch(0.28 0.008 270);
+  --line-strong: oklch(0.34 0.008 270);
+  --accent: var(--ink);
+  --accent-tint: oklch(0.24 0.010 270);
+  --ok: oklch(0.62 0.10 155);
+  --ok-tint: oklch(0.24 0.04 155);
+  --warn: oklch(0.72 0.11 80);
+  --warn-tint: oklch(0.26 0.035 80);
+  --stop: oklch(0.68 0.16 27);
+  --stop-tint: oklch(0.26 0.04 27);
+  --dark: oklch(0.12 0.008 270);
+  --dark-tx: oklch(0.94 0.002 270);
+  --dark-mut: oklch(0.62 0.006 270);
+}
+
 * { box-sizing: border-box; }
 html, body, #root { height: 100%; margin: 0; min-height: 0; }
 body { min-height: 100vh; background: var(--bg); }

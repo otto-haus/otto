@@ -1,6 +1,7 @@
 import React, { Component, type ErrorInfo, type ReactNode } from 'react';
 import ReactDOM from 'react-dom/client';
 import { App } from './App.js';
+import { applyDisplayTheme, readStoredDisplayTheme, watchSystemDisplayTheme } from './display-preferences.js';
 import './styles.css';
 import { isElectron, ottoApi } from './runtime';
 
@@ -34,6 +35,9 @@ class AppErrorBoundary extends Component<{ children: ReactNode }, { error: Error
     return this.props.children;
   }
 }
+
+applyDisplayTheme(readStoredDisplayTheme());
+watchSystemDisplayTheme(readStoredDisplayTheme());
 
 ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
   <React.StrictMode>

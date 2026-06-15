@@ -51,6 +51,7 @@ import { showOttoDebugMenu } from './debug-menu';
 import { buildDebugPacket, formatDebugPacketText, formatRuntimeStatusText } from './debug-packet';
 import { resolveDebugEnvelope } from './debug-envelope';
 import { openOttoLogs } from './logs';
+import { syncWindowBackground } from './display-theme';
 import { openSystemTerminal, resolveWorkspaceRoot } from './open-terminal';
 import { getWorkspaceInfo, resolveWorkspaceRepoRoot } from './workspace-root';
 import { collectSystemHealth } from './system-health';
@@ -152,7 +153,11 @@ export function registerIpc(win: BrowserWindow) {
   ipcMain.handle('otto:terminal:open', () => openSystemTerminal());
 
   ipcMain.handle('otto:config:get', () => config.get());
-  ipcMain.handle('otto:config:set', (_e, patch: Partial<OttoConfig>) => config.update(patch));
+  ipcMain.handle('otto:config:set', (_e, patch: Partial<OttoConfig>) => {
+    const next = config.update(patch);
+    if ('theme' in patch) syncWindowBackground(win, next.theme);
+    return next;
+  });
   ipcMain.handle('otto:labs:get', () => getLabsConfig(config.get()));
   ipcMain.handle('otto:labs:set', (_e, patch: Partial<LabsConfig>) => {
     const next = applyLabsConfigPatch(config.get(), patch);

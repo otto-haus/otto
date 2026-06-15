@@ -454,7 +454,11 @@ export interface TicketReviewRecord {
 }
 
 /** Local-first config at ~/.otto/config.json (shared with gen-readiness.mjs). */
+export type DisplayTheme = 'light' | 'dark' | 'system';
+
 export interface OttoConfig {
+  /** UI theme preference — light, dark, or follow system. */
+  theme?: DisplayTheme;
   agentId?: string | null;
   conversationId?: string | null;
   /** Active local thread id from ~/.otto/threads/index.json (046). */

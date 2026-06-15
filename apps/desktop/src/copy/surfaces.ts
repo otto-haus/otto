@@ -661,6 +661,7 @@ export const settingsCopy = {
   statRequired: 'Required gaps',
   metaReadiness: 'Readiness detail',
   tabGeneral: 'General',
+  tabDisplay: 'Display',
   tabProviders: 'Model providers',
   tabMemory: 'Memory',
   tabCulture: 'Culture',
@@ -765,6 +766,13 @@ export const settingsCopy = {
   permissionRouteClear: 'Clear session allowances',
   permissionRouteClearToastTitle: 'Session allowances cleared',
   permissionRouteClearToastBody: 'Future tool runs will prompt again until you allow them.',
+  displayTitle: 'Appearance',
+  displayLede: 'Theme controls how otto renders in the workspace shell. Density and chat layout prefs ship later.',
+  displayThemeLabel: 'Theme',
+  displayThemeHint: 'Light is the default warm-paper look. System follows macOS appearance.',
+  displayThemeLight: 'Light',
+  displayThemeDark: 'Dark',
+  displayThemeSystem: 'System',
 } as const;
 
 export const receiptsCopy = {
