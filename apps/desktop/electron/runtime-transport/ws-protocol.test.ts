@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto';
 import { describe, expect, test } from 'bun:test';
 import { TodoStreamAccumulator } from './todo-parser';
 import { countAttachmentsInPrompt, isLoopIdle, normalizeWsEvent, turnIdleTimeoutMs } from './ws-protocol';
@@ -10,6 +11,31 @@ describe('ws-protocol', () => {
     });
     expect(event?.type).toBe('assistant');
     expect(event?.text).toBe('Hello');
+  });
+
+  test('shares one uuid across assistant deltas of a turn, differs across turns', () => {
+    const turnA = randomUUID();
+    const first = normalizeWsEvent(
+      { type: 'stream_delta', delta: { message_type: 'assistant_message', content: 'Hel' } },
+      { assistantStreamId: turnA },
+    );
+    const second = normalizeWsEvent(
+      { type: 'stream_delta', delta: { message_type: 'assistant_message', content: 'lo' } },
+      { assistantStreamId: turnA },
+    );
+    // Both chunks of the same reply must carry the same uuid so the renderer appends to one bubble.
+    expect(first?.uuid).toBe(turnA);
+    expect(second?.uuid).toBe(turnA);
+    expect(first?.uuid).toBe(second?.uuid);
+
+    // A new turn uses a different stream id so consecutive replies stay as separate bubbles.
+    const turnB = randomUUID();
+    const next = normalizeWsEvent(
+      { type: 'stream_delta', delta: { message_type: 'assistant_message', content: 'Bye' } },
+      { assistantStreamId: turnB },
+    );
+    expect(next?.uuid).toBe(turnB);
+    expect(next?.uuid).not.toBe(first?.uuid);
   });
 
   test('normalizes TodoWrite tool_call_message stream_delta', () => {

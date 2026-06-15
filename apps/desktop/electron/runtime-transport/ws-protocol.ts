@@ -6,6 +6,13 @@ export type WsRuntimeEvent = Record<string, unknown> & { type?: string };
 
 export type WsNormalizeContext = {
   todoAccumulator?: { ingestStreamDelta(delta: Record<string, unknown>): TodoItem[] | null };
+  /**
+   * Stable id shared by every assistant `stream_delta` of one turn. The renderer only appends a
+   * delta to the in-flight assistant bubble when the stream id is identical across chunks, so a
+   * fresh id per chunk fragments one reply into many bubbles (#WS-stream-fragmentation). Threaded
+   * per turn from `send()`; each turn generates a new id so consecutive replies stay separate.
+   */
+  assistantStreamId?: string;
 };
 
 /** Map Letta BYOR stream_delta into Otto chat event shape. */
@@ -34,7 +41,7 @@ export function normalizeWsEvent(
       if (messageType === 'assistant_message') {
         const text = extractDeltaText(delta.content);
         if (!text) return null;
-        return { type: 'assistant', text, content: delta.content, uuid: randomUUID() };
+        return { type: 'assistant', text, content: delta.content, uuid: ctx.assistantStreamId ?? randomUUID() };
       }
       const activity = activityFromWsDelta(delta);
       if (activity) {

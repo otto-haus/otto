@@ -223,6 +223,9 @@ export class WsRuntimeTransport implements OttoRuntimeTransport {
     this.turnInterruptReason = null;
     this.activeRunId = null;
     const todoAccumulator = new TodoStreamAccumulator();
+    // One stable id per turn so every assistant stream_delta lands in a single chat bubble; a fresh
+    // id each turn keeps consecutive replies as separate bubbles (#WS-stream-fragmentation).
+    const assistantStreamId = randomUUID();
     trace.write('prompt', { text, transport: 'ws', agentId: this.status.agentId, conversationId: this.status.conversationId });
 
     let detachRuntimeHandler: (() => void) | null = null;
@@ -253,7 +256,7 @@ export class WsRuntimeTransport implements OttoRuntimeTransport {
           return;
         }
         this.trackActiveRun(event);
-        const normalized = normalizeWsEvent(event, { todoAccumulator });
+        const normalized = normalizeWsEvent(event, { todoAccumulator, assistantStreamId });
         if (normalized) {
           if (normalized.type === 'error') {
             const raw = String(normalized.message ?? 'error');
