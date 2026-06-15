@@ -17,6 +17,12 @@ import { useChatThreads } from '../chat/useChatThreads';
 import { isTableStart, parseTableBlock, type MarkdownTable } from '../chat/markdown-tables';
 import { notifyOnboardingFirstMessage, resolveOnboardingStarterAction } from '../onboarding-storage';
 import { ProposeCorrectionModal, type ProposeCorrectionContext } from '../chat/ProposeCorrectionModal';
+import {
+  readStoredAttachments,
+  readStoredDraft,
+  writeStoredAttachments,
+  writeStoredDraft,
+} from '../chat/composer-storage';
 import { serializeConversationMarkdown } from '../chat/conversation-markdown';
 import { runTicketCommand } from '../chat/ticket-commands';
 import { formatResolvedModelLabel, helpTextForModelOption } from '../chat/model-option-help';
@@ -72,9 +78,6 @@ export const Chat: React.FC<{
 
 /* ---------- LiveChat (Electron, wired to the Letta runtime) ---------- */
 type AttachmentDraft = SavedAttachment & { previewUrl: string };
-
-const DRAFT_KEY = 'otto.chat.draft.v1';
-const ATTACHMENTS_KEY = 'otto.chat.attachments.v1';
 
 const FALLBACK_MODEL_OPTIONS: LettaModelOption[] = [
   { label: 'GPT-5.5 (ChatGPT)', handle: 'chatgpt-plus-pro/gpt-5.5' },
@@ -393,21 +396,8 @@ const attachmentDraftsFromQueueRefs = (refs: QueueAttachmentRef[]): AttachmentDr
     previewUrl: pathToPreviewUrl(ref.path),
   }));
 
-const readDraft = (): string => {
-  try { return localStorage.getItem(DRAFT_KEY) ?? ''; } catch { return ''; }
-};
-
-const readAttachments = (): AttachmentDraft[] => {
-  try {
-    const parsed = JSON.parse(localStorage.getItem(ATTACHMENTS_KEY) ?? '[]') as SavedAttachment[];
-    if (!Array.isArray(parsed)) return [];
-    return parsed
-      .filter((item) => typeof item?.id === 'string' && typeof item.path === 'string' && typeof item.url === 'string')
-      .map((item) => ({ ...item, previewUrl: item.url }));
-  } catch {
-    return [];
-  }
-};
+const attachmentDraftsFromStored = (items: SavedAttachment[]): AttachmentDraft[] =>
+  items.map((item) => ({ ...item, previewUrl: item.url }));
 
 const persist = (key: string, value: unknown) => {
   try { localStorage.setItem(key, JSON.stringify(value)); } catch { /* best effort */ }
@@ -695,8 +685,10 @@ const LiveChat: React.FC<{
   const runtimeSetupDebugMenu = useOttoDebugContextMenu('runtime-setup');
   const { threads } = useChatThreads(rt.activeThreadId);
   const toast = useToast();
-  const [draft, setDraft] = useState(readDraft);
-  const [attachments, setAttachments] = useState<AttachmentDraft[]>(readAttachments);
+  const [draft, setDraft] = useState('');
+  const [attachments, setAttachments] = useState<AttachmentDraft[]>([]);
+  const activeThreadIdRef = useRef(rt.activeThreadId);
+  activeThreadIdRef.current = rt.activeThreadId;
   const [attachmentError, setAttachmentError] = useState<string | null>(null);
   const [draggingImage, setDraggingImage] = useState(false);
   const [queue, setQueue] = useState<QueueItem[]>(readQueue);
@@ -911,10 +903,12 @@ const LiveChat: React.FC<{
   useEffect(() => {
     setCmdMessages([]);
     setRecalledQueueId(null);
+    setDraft(readStoredDraft(rt.activeThreadId));
+    setAttachments(attachmentDraftsFromStored(readStoredAttachments(rt.activeThreadId)));
   }, [rt.activeThreadId]);
 
   useEffect(() => {
-    try { localStorage.setItem(DRAFT_KEY, draft); } catch { /* best effort */ }
+    writeStoredDraft(activeThreadIdRef.current, draft);
   }, [draft]);
 
   useEffect(() => {
@@ -922,7 +916,10 @@ const LiveChat: React.FC<{
   }, [queue]);
 
   useEffect(() => {
-    persist(ATTACHMENTS_KEY, attachments.map(({ previewUrl: _previewUrl, ...rest }) => rest));
+    writeStoredAttachments(
+      activeThreadIdRef.current,
+      attachments.map(({ previewUrl: _previewUrl, ...rest }) => rest),
+    );
   }, [attachments]);
 
   useEffect(() => {
