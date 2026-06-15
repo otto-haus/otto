@@ -67,6 +67,32 @@ bun test ./apps/desktop/electron/check-runner.test.ts
 bun test ./apps/desktop/electron/check-compiler.test.ts
 ```
 
+## Demo fixtures (reset without mock prod data)
+
+Seed checks ship in repo `checks/` and auto-copy on first launch (`check-store.ensureSeeded`):
+
+- `checks/completion-requires-receipts.yaml` — `done_claim` block for No Fake Done path
+- `checks/one-way-door-approval.yaml` — autonomy red-zone gate
+
+Disposable profile only — never seed into `conversation=default`. Staging deploy copies seeds into isolated `$OTTO_HOME/checks` (`apps/desktop/scripts/deploy-staging.sh`).
+
+## Marketing hooks (065 otto.haus)
+
+Copy block for hero + behavior loop diagram — **Culture CI** step (prose category; product noun **Checks**):
+
+```txt
+Category (prose): Culture CI
+Product noun (UI): Checks
+Hero: Otto is CI for agent behavior. Every correction can become a regression test.
+Loop step: Correction → ratify → compiled Check → next violation blocked with receipt
+Block line (demo): Not done: missing mapped proof.
+Boundary pill: The human ratifies. otto records the proof.
+```
+
+Loop diagram labels (left → right): *Correct* → *Curation* → *Checks* → *Block + Receipt*
+
+Hero asset: `docs/receipts/staging/135-culture-ci-block.png` (CheckBlockBanner in Chat)
+
 ## Capture for marketing (064)
 
 - Resolution: 1280×720, captions on block message
