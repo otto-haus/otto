@@ -9,7 +9,7 @@ import { StandardStore } from '../standard-store';
 import { PracticeStore } from '../practice-store';
 import { TraceWriter } from '../trace-writer';
 import { TurnTrailAccumulator, trailTraceSummary } from '../../src/chat/turn-trail';
-import { discoverLocalLettaContext, resolveInitBaseUrl, resolveLiveLocalLettaContext, type InitBaseUrlResolution } from './letta-discovery';
+import { resolveInitBaseUrl, resolveLiveLocalLettaContext, type InitBaseUrlResolution } from './letta-discovery';
 import {
   SMOKE_MODE,
   smokeMode,
