@@ -71,13 +71,6 @@ export const Onboarding: React.FC<{ onNavigate: (id: SurfaceId) => void; activeS
 
   const connected = !!rt.status?.ready;
 
-  // Chat-first: connected operators skip the onboarding theater.
-  useEffect(() => {
-    if (!connected || dismissed || started) return;
-    dismissOnboarding();
-    setDismissed(true);
-  }, [connected, dismissed, started]);
-
   if (!rt.electron || dismissed || !hydrated) return null;
   const step = resolveOnboardingStep({
     started,
@@ -141,7 +134,11 @@ export const Onboarding: React.FC<{ onNavigate: (id: SurfaceId) => void; activeS
           <p className="onboardBody" style={{ maxWidth: '46ch' }}>{onboardingCopy.welcomeBody}</p>
           <div className="onboardAuthority">{onboardingCopy.authorityLine}</div>
           <div className="onboardActions">
-            <button type="button" className="btn btn--solid-d" onClick={() => startPath('connect', 'settings')}>
+            <button
+              type="button"
+              className="btn btn--solid-d"
+              onClick={() => startPath('connect', connected ? 'chat' : 'settings')}
+            >
               {onboardingCopy.primaryStart}
             </button>
             <button
