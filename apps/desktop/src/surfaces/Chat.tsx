@@ -9,6 +9,7 @@ import { useRuntimeContext } from '../RuntimeContext';
 import type { SurfaceId } from '../components/Sidebar';
 import { OttoMark } from '../components/OttoMark';
 import { CheckBlockBanner, MessageActions, Modal, PermissionCard, ReceiptInlineCard, type PermissionDecision, type PermissionRequestView } from '../components/ui';
+import { TodoPanel } from '../components/TodoPanel';
 import { displayThreadTitle } from '../components/ui/ThreadList';
 import { chatCopy, permissionCopy, toastCopy } from '../copy/surfaces';
 import { useChatThreads } from '../chat/useChatThreads';
@@ -875,6 +876,7 @@ const LiveChat: React.FC<{
 
       <div className="chat__stream" ref={streamRef}>
         <div className="chat__streamInner">
+          {rt.activeTodos.length > 0 && <TodoPanel todos={rt.activeTodos} />}
           {!ready && (
             <div className="inkblock chat__setup">
               {!st ? (

@@ -1,0 +1,19 @@
+{
+  "issue": 279,
+  "title": "Show todo lists in otto like the Letta app",
+  "before": "WS transport dropped tool_call_message stream deltas; no todo surface in chat.",
+  "after": "TodoWrite tool_call_message deltas normalize to todo_update events; chat renders a compact task checklist that updates in place and clears on thread switch / new send.",
+  "files": [
+    "apps/desktop/electron/runtime-transport/todo-parser.ts",
+    "apps/desktop/electron/runtime-transport/ws-protocol.ts",
+    "apps/desktop/electron/runtime-transport/ws-runtime-transport.ts",
+    "apps/desktop/src/components/TodoPanel.tsx",
+    "apps/desktop/src/runtime.ts",
+    "apps/desktop/src/surfaces/Chat.tsx"
+  ],
+  "verify": [
+    "bun test apps/desktop/electron/runtime-transport/todo-parser.test.ts",
+    "bun test apps/desktop/electron/runtime-transport/ws-protocol.test.ts",
+    "bun run --cwd apps/desktop typecheck"
+  ]
+}

@@ -21,6 +21,7 @@ import {
   resolveCli,
   safeWebContentsSend,
 } from './runtime-common';
+import { TodoStreamAccumulator } from './todo-parser';
 import { isDeviceOnline, isLoopIdle, normalizeWsEvent, type WsRuntimeEvent } from './ws-protocol';
 import { permissionSessionStore } from '../permission-session-store';
 import type { OttoRuntimeTransport } from './types';
@@ -173,6 +174,7 @@ export class WsRuntimeTransport implements OttoRuntimeTransport {
     this.aborted = false;
     this.turnIdle = false;
     this.activeRunId = null;
+    const todoAccumulator = new TodoStreamAccumulator();
     trace.write('prompt', { text, transport: 'ws', agentId: this.status.agentId, conversationId: this.status.conversationId });
 
     try {
@@ -196,10 +198,11 @@ export class WsRuntimeTransport implements OttoRuntimeTransport {
           return;
         }
         this.trackActiveRun(event);
-        const normalized = normalizeWsEvent(event);
+        const normalized = normalizeWsEvent(event, { todoAccumulator });
         if (normalized) {
           safeWebContentsSend(this.win, 'otto:event', { message: normalized });
           if (normalized.type === 'assistant') sawAssistant = true;
+          if (normalized.type === 'todo_update') sawAssistant = true;
           if (normalized.type === 'error') turnError = String(normalized.message ?? 'error');
         }
         if (isLoopIdle(event)) {
