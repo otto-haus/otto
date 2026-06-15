@@ -428,4 +428,37 @@ describe('ThreadStore', () => {
       delete process.env.OTTO_HOME;
     }
   });
+
+  test('rename persists title in thread index', () => {
+    const tmp = mkdtempSync(join(tmpdir(), 'otto-thread-test-'));
+    try {
+      const config = mockConfig(tmp);
+      const store = new ThreadStore(config);
+      const thread = store.create({ title: 'Before' });
+      const renamed = store.rename(thread.id, '  After rename  ');
+      expect(renamed.title).toBe('After rename');
+      expect(store.get(thread.id)?.title).toBe('After rename');
+      expect(store.list(true).threads.find((item) => item.id === thread.id)?.title).toBe('After rename');
+    } finally {
+      rmSync(tmp, { recursive: true, force: true });
+      delete process.env.OTTO_HOME;
+    }
+  });
+
+  test('archive moves thread out of default list and into archived list', () => {
+    const tmp = mkdtempSync(join(tmpdir(), 'otto-thread-test-'));
+    try {
+      const config = mockConfig(tmp);
+      const store = new ThreadStore(config);
+      const keep = store.create({ title: 'Keep visible' });
+      const doomed = store.create({ title: 'Archive me' });
+      store.archive(doomed.id);
+
+      expect(store.list(false).threads.map((thread) => thread.id)).toEqual([keep.id]);
+      expect(store.list(true).threads.some((thread) => thread.id === doomed.id && thread.archived)).toBe(true);
+    } finally {
+      rmSync(tmp, { recursive: true, force: true });
+      delete process.env.OTTO_HOME;
+    }
+  });
 });

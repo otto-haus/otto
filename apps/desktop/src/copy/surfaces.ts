@@ -356,6 +356,8 @@ export const threadCopy = {
   pin: 'Pin conversation — keep in Pinned',
   unpin: 'Unpin conversation — move to Recents',
   archive: 'Archive conversation',
+  rename: 'Rename conversation',
+  renameHint: 'Double-click a title to rename',
   restore: 'Restore to recents',
   archivedLabel: 'Archived',
   archivedEmpty: 'Archived conversations appear here.',

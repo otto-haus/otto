@@ -208,6 +208,12 @@ export class ThreadStore {
     return this.update(threadId, { pinned });
   }
 
+  rename(threadId: string, title: string): ChatThreadRecord {
+    const trimmed = title.trim();
+    if (!trimmed) throw new Error('Thread title cannot be empty.');
+    return this.update(threadId, { title: trimmed });
+  }
+
   move(threadId: string, targetId: string): ThreadListResult {
     if (threadId === targetId) return this.list();
     const mode = this.sortMode();
