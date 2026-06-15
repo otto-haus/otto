@@ -18,6 +18,7 @@
     "electron:dev": "electron-vite dev",
     "gen:practices": "node scripts/gen-practices.mjs",
     "gen:readiness": "node scripts/gen-readiness.mjs",
+    "gen:staging-icon": "node scripts/generate-staging-icon.mjs",
     "app:dir": "bun run electron:build && electron-builder --mac dir --arm64"
   },
   "dependencies": {
