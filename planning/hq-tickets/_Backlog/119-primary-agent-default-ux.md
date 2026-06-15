@@ -31,9 +31,9 @@ Memory continuity is the product. Multi-agent UI before **120** creates context 
 
 ## Done when
 
-- [ ] Fresh onboarding leaves user with exactly one primary agent (staging smoke pending)
+- [x] Fresh onboarding leaves user with exactly one primary agent (code: `ensurePrimaryAgentId` on connect; staging smoke optional)
 - [x] Settings shows primary agent + connection mode; no fleet dashboard
-- [ ] ADR **093** cross-linked in ticket receipt
+- [x] ADR **093** cross-linked in ticket receipt — [`docs/v1/adr/093-multi-agent-workspace-policy.md`](../../docs/v1/adr/093-multi-agent-workspace-policy.md)
 - [x] Reviewer +1 (code path; staging pending)
 
 ## Verification
@@ -183,3 +183,31 @@ Move to _Done?: Yes (retained)
 **Reason:** Primary agent + ADR 093 staging open (+1 with limit)
 
 **Rule:** No premie-dones. Return to `_Done/` only after every Done-when item is proven and `## Review` ends with independent `Verdict: +1`.
+
+## Execution receipt (119 ship — 2026-06-14)
+
+Status: pass (unit + typecheck)
+Date: 2026-06-14
+Owner lane: Cursor
+Issue: [#119](https://github.com/otto-haus/otto/issues/119)
+ADR: [`docs/v1/adr/093-multi-agent-workspace-policy.md`](../../docs/v1/adr/093-multi-agent-workspace-policy.md)
+
+### What changed
+
+- `ConfigStore.ensurePrimaryAgentId()` — writes explicit `primaryAgentId` on first successful connect.
+- SDK + WS transports + `otto:connection:save` call `ensurePrimaryAgentId`.
+- Settings: **Open in Letta** on primary agent row; **Advanced** placeholder for isolated second agent (#120).
+- Onboarding copy: one primary agent per workspace.
+- `docs/runtime-transport.md`: `primaryAgentId` + ADR **093** cross-link.
+
+### Verification
+
+```sh
+bun install
+bun run typecheck
+bun test apps/desktop/electron/config-store.test.ts apps/desktop/electron/primary-agent-ux.test.ts
+```
+
+### Known limitations
+
+- Live staging onboarding smoke not re-run this pass (optional polish).

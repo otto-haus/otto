@@ -3003,7 +3003,7 @@ const ConnectLetta: React.FC = () => {
         agentId: agentId.trim() || null,
       });
       await api.config.set({
-        primaryAgentId: primaryAgentId.trim() || null,
+        primaryAgentId: primaryAgentId.trim() || agentId.trim() || null,
         connectionMode,
       });
       setStatus(next);
@@ -3039,6 +3039,11 @@ const ConnectLetta: React.FC = () => {
             spellCheck={false}
           />
         </label>
+      </div>
+      <div className="row settingsGeneralSection__actions">
+        <button type="button" className="btn" onClick={() => void api.runtime.openLetta()}>
+          {settingsCopy.primaryAgentOpenLetta}
+        </button>
       </div>
       <div className="settingsField">
         <label>
@@ -3869,6 +3874,11 @@ export const Settings: React.FC = () => {
           <section>
             <SettingsSectionHeader title={settingsCopy.connectionTitle} lede={settingsCopy.connectionLede} />
             <ConnectLetta />
+          </section>
+
+          <section>
+            <SettingsSectionHeader title={settingsCopy.advancedAgentsTitle} lede={settingsCopy.advancedAgentsLede} />
+            <p className="settingsFieldHint">{settingsCopy.isolatedSecondAgentComingSoon}</p>
           </section>
 
           <section>

@@ -81,6 +81,23 @@ describe('ConfigStore', () => {
     }
   });
 
+  test('ensurePrimaryAgentId writes explicit primary on first connect (119)', () => {
+    const tmp = mkdtempSync(join(tmpdir(), 'otto-config-test-'));
+    try {
+      process.env.OTTO_HOME = tmp;
+      const store = new ConfigStore();
+      store.update({ agentId: 'agent-discovered' });
+      store.ensurePrimaryAgentId('agent-discovered');
+      const onDisk = JSON.parse(readFileSync(join(tmp, 'config.json'), 'utf8'));
+      expect(onDisk.primaryAgentId).toBe('agent-discovered');
+      store.ensurePrimaryAgentId('agent-other');
+      expect(JSON.parse(readFileSync(join(tmp, 'config.json'), 'utf8')).primaryAgentId).toBe('agent-discovered');
+    } finally {
+      rmSync(tmp, { recursive: true, force: true });
+      delete process.env.OTTO_HOME;
+    }
+  });
+
   test('labs defaults false on fresh profile', () => {
     const tmp = mkdtempSync(join(tmpdir(), 'otto-config-test-'));
     try {

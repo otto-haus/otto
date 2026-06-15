@@ -154,6 +154,7 @@ export class WsRuntimeTransport implements OttoRuntimeTransport {
           baseUrl: context.baseUrl,
           conversationId: this.status.conversationId ?? null,
         });
+        this.config.ensurePrimaryAgentId(agentId);
       }
     } catch (e) {
       await this.close();

@@ -170,6 +170,7 @@ export function registerIpc(win: BrowserWindow) {
     if (input.baseUrl !== undefined) patch.baseUrl = input.baseUrl || null;
     if (input.agentId !== undefined) patch.agentId = input.agentId || null;
     if (Object.keys(patch).length) config.update(patch);
+    if (input.agentId !== undefined) config.ensurePrimaryAgentId(input.agentId);
     return initWithStaleRecovery(); // reconnect and return fresh status
   });
 

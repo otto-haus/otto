@@ -44,6 +44,7 @@ function mockConfig(conversationId: string | null = null): ConfigStore {
     agentCandidates: () => ['agent-ws-test'],
     get: () => ({ conversationId }),
     update: () => ({}),
+    ensurePrimaryAgentId: () => {},
   } as unknown as ConfigStore;
 }
 
