@@ -240,7 +240,7 @@ Lane: Cursor implementer (#123)
 | Step | Commit | Result | Run |
 |------|--------|--------|-----|
 | Break | `ee3dacc` — `export const __ciGateBreakProbe: number = 'break'` | **fail** | https://github.com/otto-haus/otto/actions/runs/27518011139 |
-| Fix | (this commit) — revert probe | **pass** (pending push) | (filled after green run) |
+| Fix | `71c058a` — revert probe | **pass** | https://github.com/otto-haus/otto/actions/runs/27518159765 |
 
 PR: https://github.com/otto-haus/otto/pull/417
 
