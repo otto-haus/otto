@@ -8,6 +8,7 @@ import {
   persistLeavingThread,
 } from './chat/thread-messages';
 import { activityFromRuntimeMessage, type TurnActivity } from './chat/turn-activity';
+import { mergeToolResult, type ToolActivity } from './chat/tool-activity';
 import { currentTurnAssistantIndex, type TurnTrail } from './chat/turn-trail';
 import type {
   Charter,
@@ -360,6 +361,56 @@ function assistantText(m: Record<string, unknown>): string | null {
   return null;
 }
 
+function readToolCall(event: Record<string, unknown>) {
+  const toolCallId = String(event.toolCallId ?? event.tool_call_id ?? '');
+  const toolName = String(event.toolName ?? event.tool_name ?? 'tool');
+  const toolInput = (event.toolInput ?? event.tool_input ?? {}) as Record<string, unknown>;
+  return { toolCallId, toolName, toolInput };
+}
+
+function readToolResult(event: Record<string, unknown>) {
+  const toolCallId = String(event.toolCallId ?? event.tool_call_id ?? '');
+  const content = String(event.content ?? event.output ?? '');
+  const isError = Boolean(event.isError ?? event.is_error);
+  return { toolCallId, content, isError };
+}
+
+function upsertToolCall(
+  messages: ChatMsg[],
+  toolCallId: string,
+  toolName: string,
+  toolInput: Record<string, unknown>,
+  at: string,
+): ChatMsg[] {
+  const existingIdx = messages.findIndex((msg) => msg.toolActivity?.toolCallId === toolCallId);
+  const activity: ToolActivity = {
+    toolCallId,
+    toolName,
+    toolInput,
+    status: 'running',
+    startedAt: at,
+  };
+  if (existingIdx >= 0) {
+    return messages.map((msg, idx) => (idx === existingIdx ? { ...msg, at, toolActivity: activity } : msg));
+  }
+  return [
+    ...messages,
+    {
+      id: toolCallId || `tool-${Date.now()}`,
+      who: 'tool',
+      text: '',
+      at,
+      toolActivity: activity,
+    },
+  ];
+}
+
+function applyToolResult(messages: ChatMsg[], toolCallId: string, content: string, isError: boolean, endedAt: string): ChatMsg[] {
+  const next = messages.map((msg) => ({ ...msg, toolActivity: msg.toolActivity ? { ...msg.toolActivity } : undefined }));
+  if (!mergeToolResult(next, toolCallId, content, isError, endedAt)) return messages;
+  return next;
+}
+
 export function useRuntime() {
   const api = ottoApi();
   const [status, setStatus] = useState<RuntimeStatus | null>(null);
@@ -518,13 +569,14 @@ export function useRuntime() {
         if (t) {
           setTurnActivity(null);
           const streamId = String(m.uuid ?? m.runId ?? 'assistant');
+          const at = new Date().toISOString();
           patchInflightMessages((x) => {
             const last = x[x.length - 1];
             if (activeAssistantStream.current === streamId && last?.who === 'otto') {
               return [...x.slice(0, -1), { ...last, text: `${last.text}${t}` }];
             }
             activeAssistantStream.current = streamId;
-            return [...x, { id: streamId, who: 'otto', text: t, streamId }];
+            return [...x, { id: streamId, who: 'otto', text: t, streamId, at }];
           });
         }
       } else if (m.type === 'turn_trail' && m.trail && typeof m.trail === 'object') {
@@ -553,6 +605,16 @@ export function useRuntime() {
               })),
           );
         }
+      } else if (m.type === 'tool_call') {
+        setTurnActivity(null);
+        const { toolCallId, toolName, toolInput } = readToolCall(m);
+        const at = new Date().toISOString();
+        patchInflightMessages((x) => upsertToolCall(x, toolCallId, toolName, toolInput, at));
+      } else if (m.type === 'tool_result') {
+        setTurnActivity(null);
+        const { toolCallId, content, isError } = readToolResult(m);
+        const endedAt = new Date().toISOString();
+        patchInflightMessages((x) => applyToolResult(x, toolCallId, content, isError, endedAt));
       } else {
         const activity = activityFromRuntimeMessage(m);
         if (activity) setTurnActivity(activity);
@@ -625,8 +687,9 @@ export function useRuntime() {
     if (snippet) {
       void api.threads.touch({ title: snippet.length > 56 ? `${snippet.slice(0, 53)}…` : snippet });
     }
+    const at = new Date().toISOString();
     const prev = loadThreadMessages(sendThreadId, threadMessagesCache.current);
-    const next: ChatMsg[] = [...prev, { id: `user-${Date.now()}`, who: 'user', text: storedText }];
+    const next: ChatMsg[] = [...prev, { id: `user-${Date.now()}`, who: 'user', text: storedText, at }];
     threadMessagesCache.current.set(sendThreadId, next);
     flushMessages(sendThreadId, next);
     messagesRef.current = next;

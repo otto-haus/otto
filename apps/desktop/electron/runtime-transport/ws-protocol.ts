@@ -41,6 +41,16 @@ export function normalizeWsEvent(
         if (!text) return null;
         return { type: 'assistant', text, content: delta.content, uuid: randomUUID() };
       }
+      if (messageType === 'tool_call_message' || messageType === 'tool_call') {
+        const { toolCallId, toolName, toolInput } = readToolCallFromDelta(delta);
+        return { type: 'tool_call', toolCallId, toolName, toolInput, uuid: randomUUID() };
+      }
+      if (messageType === 'tool_return_message' || messageType === 'tool_result') {
+        const toolCallId = pickToolCallIdFromDelta(delta);
+        const content = extractDeltaText(delta.content) ?? String(delta.tool_return ?? delta.output ?? '');
+        const isError = Boolean(delta.is_error ?? delta.isError);
+        return { type: 'tool_result', toolCallId, content, isError, uuid: randomUUID() };
+      }
       const activity = activityFromWsDelta(delta);
       if (activity) {
         return { type: 'activity', kind: activity.kind, label: activity.label, uuid: randomUUID() };
@@ -99,6 +109,71 @@ export function turnIdleTimeoutMs(
   const attachments = attachmentCount ?? countAttachmentsInPrompt(text);
   const scaled = TURN_IDLE_TIMEOUT_BASE_MS + attachments * TURN_IDLE_TIMEOUT_PER_ATTACHMENT_MS;
   return Math.max(connectTimeoutMs, Math.min(scaled, TURN_IDLE_TIMEOUT_MAX_MS));
+}
+
+type ToolCallShape = {
+  tool_call_id?: string;
+  toolCallId?: string;
+  name?: string;
+  tool_name?: string;
+  toolName?: string;
+  arguments?: string | Record<string, unknown>;
+};
+
+function readNestedToolCall(delta: Record<string, unknown>): ToolCallShape | null {
+  const direct = delta.tool_call;
+  if (direct && typeof direct === 'object') return direct as ToolCallShape;
+  const calls = delta.tool_calls;
+  if (Array.isArray(calls) && calls[0] && typeof calls[0] === 'object') {
+    return calls[0] as ToolCallShape;
+  }
+  return null;
+}
+
+function parseToolInput(raw: unknown): Record<string, unknown> {
+  if (typeof raw === 'string') {
+    try {
+      const parsed = JSON.parse(raw) as unknown;
+      if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+        return parsed as Record<string, unknown>;
+      }
+    } catch {
+      return {};
+    }
+  }
+  if (raw && typeof raw === 'object' && !Array.isArray(raw)) {
+    return raw as Record<string, unknown>;
+  }
+  return {};
+}
+
+function readToolCallFromDelta(delta: Record<string, unknown>): {
+  toolCallId: string;
+  toolName: string;
+  toolInput: Record<string, unknown>;
+} {
+  const nested = readNestedToolCall(delta);
+  const toolCallId = String(
+    nested?.tool_call_id ?? nested?.toolCallId
+    ?? delta.tool_call_id ?? delta.toolCallId
+    ?? randomUUID(),
+  );
+  const toolName = String(
+    nested?.name ?? nested?.tool_name ?? nested?.toolName
+    ?? delta.tool_name ?? delta.toolName ?? delta.name
+    ?? 'tool',
+  );
+  const toolInput = nested?.arguments !== undefined
+    ? parseToolInput(nested.arguments)
+    : parseToolInput(delta.tool_input ?? delta.toolInput ?? delta.arguments ?? {});
+  return { toolCallId, toolName, toolInput };
+}
+
+function pickToolCallIdFromDelta(delta: Record<string, unknown>): string {
+  const nested = readNestedToolCall(delta);
+  const raw = delta.tool_call_id ?? delta.toolCallId
+    ?? nested?.tool_call_id ?? nested?.toolCallId;
+  return typeof raw === 'string' && raw.trim() ? raw.trim() : '';
 }
 
 function extractDeltaText(content: unknown): string | null {
