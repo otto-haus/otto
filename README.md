@@ -50,15 +50,15 @@ completed one real issue round-trip — not before.
   </a>
   <br />
   <a href="https://github.com/otto-haus/otto/releases/latest/download/otto-v01-desktop.mp4">
-    <img src="docs/assets/desktop-demo.gif" alt="otto desktop walkthrough preview" width="820" />
+    <img src="docs/assets/desktop-demo.gif" alt="otto v0.1 desktop walkthrough — Remotion re-enactment of setup, chat, and behavior surfaces" width="820" />
   </a>
   <br />
   <sub>
     <em>
-      <a href="https://github.com/otto-haus/otto/releases/latest/download/otto-v01-desktop.mp4">▶&nbsp;45s desktop walkthrough</a>
-      · Remotion re-enactment, not a live screen capture —
-      <a href="demo/README.md">demo/README.md</a>
-      · Hero cut <code>OttoProductDemo</code> in
+      <a href="https://github.com/otto-haus/otto/releases/latest/download/otto-v01-desktop.mp4">▶&nbsp;44s desktop walkthrough</a>
+      (MP4) · GIF from <code>OttoV01DesktopWalkthrough</code> —
+      <a href="demo/README.md#honesty-note">Remotion re-enactment</a>, not live screen capture —
+      hero screenshot is staging UI · cinematic cut <code>OttoProductDemo</code> in
       <a href="https://github.com/otto-haus/otto/pull/525">PR&nbsp;#525</a>
       (full render: <a href="https://github.com/otto-haus/otto/issues/577">#577</a>)
     </em>
