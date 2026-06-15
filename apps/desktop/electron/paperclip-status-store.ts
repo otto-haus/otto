@@ -93,8 +93,8 @@ export class PaperclipStatusStore {
         },
       },
       evidence: paperclipUrl
-        ? [{ kind: 'url', ref: paperclipUrl, note: 'Paperclip task' }]
-        : [{ kind: 'other', ref: event.paperclip_task_id, note: 'Paperclip task id' }],
+        ? [{ kind: 'link', ref: paperclipUrl, note: 'Paperclip task' }]
+        : [{ kind: 'log', ref: event.paperclip_task_id, note: 'Paperclip task id' }],
       blocker: null,
     });
 
