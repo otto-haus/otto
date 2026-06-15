@@ -41,7 +41,7 @@ Cut   = not in product UI (spec / parked only)
 | Charters | Ship | File-backed pane | preview (Labs off) | **pass** — hygiene 2026-06-14 | Open `~/.otto/charters/` + pane list | unit pass | 007 |
 | Standards | Ship | File-backed | shipped | **pass** — hygiene 2026-06-14 | `standards/` load + skipped visible (037) | unit pass | 008, 009 |
 | Practices | Ship | File-backed | preview | **pass** — hygiene 2026-06-14 | `practices/**/practice.yaml` + pane | unit pass | 010, 011 |
-| Routines | Ship | File-backed | preview | **pass** — hygiene 2026-06-14 | `routines/` + manual run receipt | unit pass | 012, 013 |
+| Routines | Ship | File-backed | shipped | **pass** — gate open #450 | `routines/` + manual run receipt | unit pass | 012, 013, **450** |
 | Curation | Ship | Proposal queue | shipped | **pass** — unit + hygiene | deferred filter smoke (036) | unit pass | 014–016, 048 |
 | Receipts | Ship | File read | shipped | **pass** — hygiene 124 | `~/.otto/receipts/` + pane detail | unit pass | 004, 005, 124 |
 | Checks | Ship | Culture CI pane + Chat block | preview | **partial** — unit pass; **135** demo pending | `docs/v1/demo-culture-ci.md` + **135** demo | staging pending | 131–135 |
@@ -51,7 +51,6 @@ Cut   = not in product UI (spec / parked only)
 | Tickets | Ship | Compile/orchestrate | shipped | **pass** — hygiene 049 | `node scripts/otto-staging-ticket-proof-capture.cjs` | staging pending | 049 |
 | Terminal | Ship | Opens system shell at workspace root | shipped | **pass** — unit | `bun test apps/desktop/electron/open-terminal.test.ts` | unit pass | 283 |
 | Channels | Ship | Contract + config; no live bot | **open** | **pass** — Settings IA (**556**) | `channels/channels.yaml` + pane; optional `channels_outbound` | unit pass | 056, **556** |
-
 ---
 
 ## Chat sub-flows
