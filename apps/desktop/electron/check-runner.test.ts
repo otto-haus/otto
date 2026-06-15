@@ -2,7 +2,8 @@ import { describe, expect, test } from 'bun:test';
 import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { CheckRunner } from './check-runner';
+import { CheckRunner, checkFailureAuthority, standardLabelFromCheck } from './check-runner';
+import type { Check } from '@otto-haus/core';
 import { CheckStore } from './check-store';
 import { ReceiptStore } from './receipt-store';
 import { ReceiptWriter } from './receipt-writer';
@@ -32,6 +33,10 @@ describe('CheckRunner', () => {
       expect(receipt?.subject.id).toBe('completion-requires-receipts');
       expect(receipt?.input?.trigger).toBe('done_claim');
       expect(receipt?.result?.data?.check_id).toBe('completion-requires-receipts');
+      expect(receipt?.result?.data?.authority).toBe(
+        'check · completion-requires-receipts · standard · no-fake-done',
+      );
+      expect(receipt?.result?.data?.standard).toBe('no-fake-done');
       expect(receipt?.blocker?.code).toBe('check_failed');
     } finally {
       rmSync(dir, { recursive: true, force: true });
@@ -76,5 +81,15 @@ describe('CheckRunner', () => {
       rmSync(dir, { recursive: true, force: true });
       delete process.env.OTTO_CHECKS_DIR;
     }
+  });
+
+  test('checkFailureAuthority prefers standard_slug when present', () => {
+    const check = {
+      id: 'demo-check',
+      source: 'standard/no-fake-done.md',
+      standard_slug: 'earned-semver',
+    } as Check;
+    expect(standardLabelFromCheck(check)).toBe('earned-semver');
+    expect(checkFailureAuthority(check)).toBe('check · demo-check · standard · earned-semver');
   });
 });
