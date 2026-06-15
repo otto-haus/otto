@@ -1010,6 +1010,7 @@ export const cultureSettingsCopy = {
   amendTitle: 'Amend constitution (YAML)',
   amendSave: 'Save amendment',
   exportDone: 'Culture bundle exported',
+  exportLabsGate: 'Culture export and import preview are Labs-only. Enable Labs → Culture export in Settings.',
   writebackGate: 'Memory changes only after you accept in Curation.',
 } as const;
 
