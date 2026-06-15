@@ -1,0 +1,230 @@
+# Unified loop state — orchestrator truth
+
+version: 1
+
+program:
+  status: active
+  stop_at: null
+  repo: otto-haus/otto
+  branch: cursor/unified-loop-orchestration-f040
+
+spawn:
+  mechanism: task_subagents
+  max_concurrent: 8
+  model: auto
+  forbidden:
+    - nohup_bulk_farms
+    - composer_workers
+
+budgets:
+  normal:
+    build: 30
+    ship: 30
+  defer:
+    build: 15
+    ship: 15
+  defer_mode: false
+
+gates:
+  build:
+    build_queue:
+      - 627
+      - 628
+      - 630
+      - 631
+      - 632
+      - 633
+      - 635
+      - 636
+      - 637
+      - 638
+      - 639
+      - 640
+      - 641
+      - 642
+      - 643
+      - 644
+      - 645
+    awaiting_ratification:
+      - 627
+      - 628
+      - 630
+      - 631
+      - 632
+      - 633
+      - 635
+      - 636
+      - 637
+      - 638
+      - 639
+      - 640
+      - 641
+      - 642
+      - 643
+      - 644
+      - 645
+    ratified_in_progress: []
+    label_debt:
+      - 630
+      - 631
+      - 632
+      - 633
+      - 639
+      - 640
+      - 641
+      - 642
+      - 643
+      - 644
+      - 645
+  ship:
+    in_flight_babysit: []
+    merged_since_last_tick:
+      - 618
+      - 626
+    reviewed_prs:
+      - 582
+      - 624
+      - 625
+      - 623
+      - 622
+    ready_for_sebastian:
+      - 582
+      - 624
+      - 625
+      - 623
+      - 622
+    close_candidates:
+      - pr: 588
+        winner: 618
+        winner_merged: true
+        commented: true
+      - pr: 596
+        winner: 626
+        winner_merged: true
+        commented: true
+      - pr: 587
+        winner: 624
+        commented: true
+
+ticks:
+  - id: 1
+    at: "2026-06-15T01:00:00Z"
+    spawn_mechanism: nohup_bulk_farms
+    spawn_verification_passed: false
+    notes: "130 bulk nohup workers launched; 0 alive; empty logs. Spawn contract violated."
+    build:
+      spawned: 130
+      completed: 0
+      issues_filed: []
+    ship:
+      spawned: 0
+      completed: 0
+
+  - id: 2
+    at: "2026-06-15T02:00:00Z"
+    spawn_mechanism: nohup_bulk_farms
+    spawn_verification_passed: false
+    notes: "Repeat bulk nohup attempt; 0 alive. Task tool not used."
+    build:
+      spawned: 130
+      completed: 0
+      issues_filed: []
+    ship:
+      spawned: 0
+      completed: 0
+
+  - id: 3
+    at: "2026-06-15T03:38:25Z"
+    spawn_mechanism: task_subagents
+    spawn_verification_passed: true
+    global_agents: 8
+    defer_mode: false
+    notes: "First compliant tick. 4 Task subagents spawned (3 BUILD completed, merge_prep blocked readonly). Orchestrator triaged SHIP + filed 4 issues."
+    build:
+      spawned: 3
+      completed: 3
+      issues_filed:
+        - 630
+        - 631
+        - 632
+        - 633
+      awaiting_ratification:
+        - 627
+        - 628
+        - 630
+        - 631
+        - 632
+        - 633
+    ship:
+      intake: no_safe_work
+      spawned: 1
+      completed: 0
+      ship_candidates:
+        - 618
+        - 624
+        - 626
+      close_candidates_commented:
+        - 587
+        - 588
+        - 596
+
+  - id: 4
+    at: "2026-06-15T04:00:00Z"
+    spawn_mechanism: task_subagents
+    spawn_verification_passed: true
+    global_agents: 11
+    defer_mode: false
+    notes: "3 BUILD Task subagents; 4 new issues. #618/#626 merged. SHIP candidates #582 #624."
+    build:
+      spawned: 3
+      completed: 3
+      issues_filed:
+        - 635
+        - 636
+        - 637
+        - 638
+    ship:
+      intake: no_safe_work
+      merged:
+        - 618
+        - 626
+      ship_candidates:
+        - 582
+        - 624
+      close_stale_dupes:
+        - 587
+        - 588
+        - 596
+
+  - id: 5
+    at: "2026-06-15T04:05:00Z"
+    spawn_mechanism: task_subagents
+    spawn_verification_passed: true
+    global_agents: 5
+    defer_mode: false
+    notes: "6 Task subagents (4 BUILD + 2 SHIP); 7 new issues #639-#645. 3 new SHIP_CANDIDATEs #625 #623 #622."
+    build:
+      spawned: 4
+      completed: 4
+      issues_filed:
+        - 639
+        - 640
+        - 641
+        - 642
+        - 643
+        - 644
+        - 645
+    ship:
+      intake: no_safe_work
+      spawned: 2
+      completed: 2
+      ship_candidates:
+        - 582
+        - 624
+        - 625
+        - 623
+        - 622
+      close_stale_dupes:
+        - 587
+        - 588
+        - 596
