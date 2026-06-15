@@ -261,8 +261,6 @@ export const onboardingCopy = {
   secondarySample: 'See what Receipts will prove',
   advancedExisting: 'Advanced: existing Letta install',
   skip: 'Skip',
-  helpLabel: 'Need help?',
-  helpUrl: 'https://github.com/otto-haus/otto/blob/main/docs/design/onboarding.md',
   progressWelcome: 'Welcome',
   progressConnect: 'Connect',
   progressRun: 'Run',
