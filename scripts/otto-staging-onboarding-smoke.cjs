@@ -112,10 +112,11 @@ async function main() {
       await page.waitForLoadState('domcontentloaded');
       await page.getByRole('heading', { name: 'The behavior layer for persistent agents.' }).waitFor({ timeout: 15000 });
       await page.getByRole('button', { name: 'See what Receipts will prove' }).click();
+      await page.getByRole('heading', { name: 'First Receipt' }).waitFor({ state: 'visible', timeout: 10000 });
       await page.getByText('Sample proof record').waitFor({ state: 'visible', timeout: 10000 });
       proof.checks.receiptsCtaShowsSample = true;
       proof.checks.receiptsCtaNotConnectDock =
-        (await page.getByText('Connect otto to your local Letta').count()) === 0;
+        (await page.getByRole('heading', { name: 'Connect your runtime' }).count()) === 0;
       proof.screenshots.receiptsSample = join(RECEIPT_DIR, '071-072-receipts-sample-onboarding.png');
       await page.screenshot({ path: proof.screenshots.receiptsSample, fullPage: false });
     },

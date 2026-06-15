@@ -51,8 +51,8 @@ Phases:
 | Phase | Ticket | Asserts |
 |-------|--------|---------|
 | A | 069 | Fresh profile + Letta `ready` — capture state (Welcome should show; see receipt if auto-started) |
-| B | 071, 072 | Secondary CTA → Receipts + visible **Sample proof record** (not connect dock) |
-| C | 072 | Primary **Get started →** CTA → connect dock (`Finish connecting otto`) |
+| B | 071, 072 | Secondary CTA → Receipts + **First Receipt** dock + **Sample proof record** (not connect dock) |
+| C | 072 | Primary **Get started →** CTA → connect dock (`Connect your runtime`) |
 | D | 073 | 880px viewport — composer visible after Skip |
 
 Latest smoke: `onboarding-smoke-20260614062759.json` (all phases ok).
