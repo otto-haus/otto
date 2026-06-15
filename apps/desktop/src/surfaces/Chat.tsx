@@ -40,6 +40,11 @@ import type { ProposalTarget } from '@otto-haus/core';
 import type { ChatMsg } from '../runtime';
 import { CollapsibleMessageBody } from '../chat/CollapsibleMessageBody';
 import { isTypingTarget, jumpTurnAnchor, turnAnchorIndices } from '../chat/turn-navigation';
+import {
+  curateModelOptions,
+  labelForCuratedModel,
+  visiblePickerModels,
+} from '../chat/model-picker-curation';
 
 // In Electron (window.otto present) → the runtime-wired LiveChat.
 // In the web preview → the file-backed PreviewChat (unchanged).
@@ -117,7 +122,24 @@ const ModelEffortPickers: React.FC<{
   modelOptions,
   compact = false,
   menuPlacement = 'up',
-}) => (
+}) => {
+  const [showLegacy, setShowLegacy] = useState(false);
+  const [customOpen, setCustomOpen] = useState(false);
+  const [customHandle, setCustomHandle] = useState('');
+  const curatedModels = curateModelOptions(modelOptions);
+  const visibleModels = visiblePickerModels(curatedModels, showLegacy, selectedModel);
+  const hiddenLegacyCount = curatedModels.filter((model) => model.tier !== 'primary').length;
+
+  const applyCustomHandle = () => {
+    const handle = customHandle.trim();
+    if (!handle) return;
+    onClose();
+    setCustomOpen(false);
+    setCustomHandle('');
+    onSelectModel(handle);
+  };
+
+  return (
   <div className={`promptControls${compact ? ' promptControls--head' : ''}`} onClick={(e) => e.stopPropagation()}>
     <div className="picker" data-open={modelOpen ? 'true' : 'false'}>
       <button
@@ -139,7 +161,7 @@ const ModelEffortPickers: React.FC<{
           aria-label={chatCopy.selectModelTitle}
         >
           <div className="picker__title">{chatCopy.selectModelTitle}</div>
-          {modelOptions.map((m) => (
+          {visibleModels.map((m) => (
             <button
               type="button"
               key={m.handle}
@@ -151,10 +173,61 @@ const ModelEffortPickers: React.FC<{
                 onSelectModel(m.handle);
               }}
             >
-              <span>{m.label}</span>
+              <span className="picker__optionLabel">
+                {labelForCuratedModel(m)}
+                {(m.deprecated || m.tier === 'legacy') && (
+                  <span className="picker__badge">
+                    {m.deprecated ? chatCopy.modelDeprecatedBadge : chatCopy.modelLegacyBadge}
+                  </span>
+                )}
+              </span>
               <span className="mono faint">{m.handle}</span>
             </button>
           ))}
+          {hiddenLegacyCount > 0 && (
+            <button
+              type="button"
+              className="picker__advanced"
+              onClick={() => {
+                setCustomOpen(false);
+                setShowLegacy((value) => !value);
+              }}
+            >
+              {showLegacy ? chatCopy.hideLegacyModels : chatCopy.showLegacyModels}
+            </button>
+          )}
+          {!customOpen ? (
+            <button
+              type="button"
+              className="picker__advanced"
+              onClick={() => setCustomOpen(true)}
+            >
+              {chatCopy.customModelAction}
+            </button>
+          ) : (
+            <div className="picker__custom">
+              <label className="picker__customLabel" htmlFor="otto-custom-model-handle">{chatCopy.customModelPrompt}</label>
+              <div className="picker__customRow">
+                <input
+                  id="otto-custom-model-handle"
+                  className="picker__customInput mono"
+                  value={customHandle}
+                  onChange={(event) => setCustomHandle(event.target.value)}
+                  onKeyDown={(event) => {
+                    if (event.key === 'Enter') {
+                      event.preventDefault();
+                      applyCustomHandle();
+                    }
+                  }}
+                  placeholder="provider/model"
+                  autoFocus
+                />
+                <button type="button" className="btn btn--ghost" onClick={applyCustomHandle} disabled={!customHandle.trim()}>
+                  {chatCopy.customModelApply}
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>
@@ -205,7 +278,8 @@ const ModelEffortPickers: React.FC<{
       )}
     </div>
   </div>
-);
+  );
+};
 
 const imageFiles = (files: FileList | File[]): File[] =>
   Array.from(files).filter((file) => file.type.startsWith('image/'));

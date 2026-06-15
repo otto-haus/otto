@@ -1394,6 +1394,43 @@ h1, h2, h3, h4, p { margin: 0; }
 }
 .picker__option:hover,
 .picker__option.is-selected { background: var(--accent-tint); color: var(--ink); }
+.picker__optionLabel { display: inline-flex; align-items: center; gap: 6px; min-width: 0; }
+.picker__badge {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--faint);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 1px 6px;
+}
+.picker__advanced {
+  width: 100%;
+  margin-top: 4px;
+  border: 0;
+  border-top: 1px solid var(--line);
+  background: transparent;
+  color: var(--accent);
+  font-size: 12.5px;
+  text-align: left;
+  padding: 10px 9px 6px;
+  cursor: pointer;
+}
+.picker__advanced:hover { color: var(--ink); }
+.picker__custom { padding: 8px 9px 4px; border-top: 1px solid var(--line); margin-top: 4px; }
+.picker__customLabel { display: block; font-size: 12px; color: var(--faint); margin-bottom: 6px; }
+.picker__customRow { display: flex; gap: 8px; align-items: center; }
+.picker__customInput {
+  flex: 1;
+  min-width: 0;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--bg);
+  color: var(--ink);
+  padding: 6px 8px;
+  font-size: 12px;
+}
 .effortDots { display: inline-flex; align-items: center; gap: 3px; }
 .effortDots i { width: 5px; height: 5px; border-radius: 999px; background: var(--line-strong); }
 .effortDots i[data-on="true"] { background: var(--ok); }

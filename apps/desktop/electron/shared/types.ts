@@ -136,6 +136,7 @@ export interface LettaModelOption {
   label: string;
   provider?: string | null;
   displayName?: string | null;
+  deprecated?: boolean;
 }
 
 /** Renderer-provided pasted/dropped image. Saved locally before being referenced in chat. */

@@ -78,7 +78,13 @@ export type ConnectionInfo = { baseUrl: string | null; agentId: string | null };
 export type ConnectionInput = { baseUrl?: string | null; agentId?: string | null };
 export type EffortLevel = 'off' | 'low' | 'medium' | 'high' | 'max';
 export type RuntimePreferences = { modelHandle?: string | null; effort?: EffortLevel };
-export type LettaModelOption = { handle: string; label: string; provider?: string | null; displayName?: string | null };
+export type LettaModelOption = {
+  handle: string;
+  label: string;
+  provider?: string | null;
+  displayName?: string | null;
+  deprecated?: boolean;
+};
 export type AttachmentInput = { name: string; mime: string; dataUrl: string };
 export type SavedAttachment = { id: string; name: string; mime: string; path: string; url: string; size: number };
 export type ReceiptStatus = 'success' | 'blocked' | 'failed';
