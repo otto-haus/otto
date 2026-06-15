@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
 import { RuntimeProvider } from './RuntimeContext';
 import { useRuntimeContext } from './runtime-context';
+import { ottoApi } from './runtime';
 import { ToastProvider } from './components/Toast';
-import { Sidebar, type SurfaceId } from './components/Sidebar';
+import { Sidebar, NUMERIC_SURFACE_SHORTCUTS, type SurfaceId } from './components/Sidebar';
 import { Icon } from './components/icons';
 import { Chat } from './surfaces/Chat';
 import { useChatThreads } from './chat/useChatThreads';
@@ -131,11 +132,21 @@ function AppShell() {
 
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
-      if (!(e.metaKey || e.ctrlKey) || e.key.toLowerCase() !== 'b' || e.altKey) return;
+      if (!(e.metaKey || e.ctrlKey) || e.altKey) return;
       const tag = (e.target as HTMLElement | null)?.tagName;
       if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || (e.target as HTMLElement | null)?.isContentEditable) return;
-      e.preventDefault();
-      setSidebarHidden((hidden) => !hidden);
+      if (e.key.toLowerCase() === 'b') {
+        e.preventDefault();
+        setSidebarHidden((hidden) => !hidden);
+        return;
+      }
+      // ⌘1–⌘9 / ⌘0 jump to the surface promised by the sidebar's data-kbd hint (#612).
+      const surface = NUMERIC_SURFACE_SHORTCUTS[e.key];
+      if (surface) {
+        e.preventDefault();
+        setActiveState(surface);
+        if (typeof location !== 'undefined') location.hash = surface;
+      }
     };
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
@@ -145,7 +156,32 @@ function AppShell() {
     setActiveState(id);
     if (typeof location !== 'undefined') location.hash = id;
   };
-  const counts: Partial<Record<SurfaceId, number>> = {};
+
+  // Populate sidebar badges with live attention counts instead of a permanently empty
+  // literal (#635). Best-effort; refreshes on surface change and when the runtime becomes ready.
+  const [counts, setCounts] = useState<Partial<Record<SurfaceId, number>>>({});
+  useEffect(() => {
+    const api = ottoApi();
+    if (!api) return;
+    let cancelled = false;
+    void (async () => {
+      const next: Partial<Record<SurfaceId, number>> = {};
+      const [proposals, tickets] = await Promise.all([
+        api.curation?.proposals.list().catch(() => null) ?? null,
+        api.tickets?.list().catch(() => null) ?? null,
+      ]);
+      if (proposals) {
+        next.curation = proposals.proposals.filter(
+          (p) => p.status === 'proposed' || p.status === 'needs_approval' || p.status === 'deferred',
+        ).length;
+      }
+      if (tickets) next.tickets = tickets.tickets.length;
+      if (!cancelled) setCounts(next);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [active, rt.status?.ready]);
 
   const openLabsSettings = () => {
     try {
