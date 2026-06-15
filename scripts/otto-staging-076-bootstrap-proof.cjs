@@ -132,8 +132,9 @@ async function main() {
       }
     }
 
-    const lettaStateDir = join(STAGING_HOME, '.letta');
-    proof.checks.lettaStateUnderIsolatedHome = existsSync(lettaStateDir);
+    const lettaStateDir = join(STAGING_OTTO_HOME, 'letta');
+    proof.checks.lettaStateUnderOttoHome = existsSync(lettaStateDir);
+    proof.checks.lettaStateUnderIsolatedHome = proof.checks.lettaStateUnderOttoHome;
 
     await page.getByRole('button', { name: 'Chat', exact: true }).click().catch(() => {});
     await page.waitForTimeout(600);

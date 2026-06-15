@@ -3,6 +3,7 @@ import { readFileSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { join } from 'node:path';
 import type { ConfigStore } from '../config-store';
+import { applyEmbeddedLettaSettingsEnv, resolveLettaSettingsPath } from '../dream-settings';
 import type { LettaModelOption } from '../shared/types';
 
 export type LocalLettaContext = {
@@ -21,7 +22,8 @@ type LettaSettings = {
 };
 
 export function discoverLocalLettaContext(config: ConfigStore): LocalLettaContext {
-  const settings = readLettaSettings();
+  applyEmbeddedLettaSettingsEnv(config);
+  const settings = readLettaSettings(config);
   const configuredBase = config.baseUrl();
   const discoveredUrl = normalizeBaseUrl(configuredBase) ?? discoverLocalLettaUrl() ?? discoverSettingsHttpBaseUrl(settings);
   const settingsAgent = discoverSettingsAgentId(settings, discoveredUrl);
@@ -36,13 +38,24 @@ export function discoverLocalLettaContext(config: ConfigStore): LocalLettaContex
     agentId: agentCandidates[0] ?? null,
     agentCandidates,
     source,
-    reason: agentCandidates.length === 0 ? 'no last local agent or session was found in ~/.letta/settings.json' : undefined,
+    reason: agentCandidates.length === 0
+      ? `no last local agent or session was found in ${resolveLettaSettingsPath(config, config.connectionMode())}`
+      : undefined,
   };
 }
 
-function readLettaSettings(): LettaSettings | null {
+function readLettaSettingsFromEnv(): LettaSettings | null {
   try {
-    const settingsPath = process.env.OTTO_LETTA_SETTINGS_PATH || join(homedir(), '.letta', 'settings.json');
+    const settingsPath = process.env.OTTO_LETTA_SETTINGS_PATH?.trim() || join(homedir(), '.letta', 'settings.json');
+    return JSON.parse(readFileSync(settingsPath, 'utf8')) as LettaSettings;
+  } catch {
+    return null;
+  }
+}
+
+function readLettaSettings(config: ConfigStore): LettaSettings | null {
+  try {
+    const settingsPath = resolveLettaSettingsPath(config, config.connectionMode());
     return JSON.parse(readFileSync(settingsPath, 'utf8')) as LettaSettings;
   } catch {
     return null;
@@ -59,16 +72,19 @@ export function normalizeBaseUrl(value?: string | null): string | null {
 }
 
 /** Map `local:` or missing base URLs to a loopback HTTP endpoint for read-only fetches (047). */
-export function resolveHttpBaseUrl(configured?: string | null): string | null {
+export function resolveHttpBaseUrl(configured?: string | null, config?: ConfigStore): string | null {
   const direct = normalizeBaseUrl(configured);
   if (direct && /^https?:\/\//i.test(direct)) return direct;
-  const fromSettings = discoverSettingsHttpBaseUrl(readLettaSettings());
+  if (config) applyEmbeddedLettaSettingsEnv(config);
+  const fromSettings = discoverSettingsHttpBaseUrl(
+    config ? readLettaSettings(config) : readLettaSettingsFromEnv(),
+  );
   if (fromSettings && /^https?:\/\//i.test(fromSettings)) return fromSettings;
   return discoverLocalLettaUrl();
 }
 
 export async function listLocalLettaModels(config: ConfigStore): Promise<LettaModelOption[]> {
-  const base = resolveHttpBaseUrl(config.baseUrl());
+  const base = resolveHttpBaseUrl(config.baseUrl(), config);
   if (!base) return [];
   const res = await fetch(`${base}/v1/models/`);
   if (!res.ok) throw new Error(`Could not list Letta models (${res.status})`);

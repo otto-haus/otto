@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto';
-import { join } from 'node:path';
 import type { BrowserWindow } from 'electron';
+import { applyEmbeddedLettaSettingsEnv } from '../dream-settings';
 import type { PermissionRequest, PermissionResponse, RuntimePreferences, RuntimeStatus, StatusCode, OttoConfig } from '../shared/types';
 import type { ConfigStore } from '../config-store';
 import { ReceiptWriter } from '../receipt-writer';
@@ -143,10 +143,7 @@ export class SdkSubprocessTransport implements OttoRuntimeTransport {
     if (cli.cliResolved) process.env.LETTA_CLI_PATH = cli.cliPath;
     // Otto launch should not repair or mutate a global Letta Code npm install.
     if (!process.env.DISABLE_AUTOUPDATER) process.env.DISABLE_AUTOUPDATER = '1';
-    if (this.config.connectionMode() === 'embedded' && !process.env.OTTO_LETTA_SETTINGS_PATH) {
-      const lettaDir = this.config.ensureLettaStateDir();
-      process.env.OTTO_LETTA_SETTINGS_PATH = join(lettaDir, 'settings.json');
-    }
+    applyEmbeddedLettaSettingsEnv(this.config);
     const key = getSecret('LETTA_API_KEY');
     if (key) process.env.LETTA_API_KEY = key;
     else Reflect.deleteProperty(process.env, 'LETTA_API_KEY');
@@ -162,6 +159,7 @@ export class SdkSubprocessTransport implements OttoRuntimeTransport {
   /** Connect; recover from stale agents/conversations; never throw to the renderer. */
   async init(opts?: { freshConversation?: boolean }): Promise<RuntimeStatus> {
     const cli = resolveCli(this.config.connectionMode());
+    this.applyConnectionEnv(this.config.baseUrl());
     const context = discoverLocalLettaContext(this.config);
     this.applyConnectionEnv(context.baseUrl);
     const agentCandidates = context.agentCandidates;

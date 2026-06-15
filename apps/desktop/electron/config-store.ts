@@ -1,6 +1,7 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { join, resolve } from 'node:path';
+import { resolveLettaSettingsPath } from './dream-settings';
 import type { EffortLevel, OttoConfig, ConversationSortMode } from './shared/types';
 
 export const defaultOttoDir = () => {
@@ -54,7 +55,11 @@ export class ConfigStore {
   /** Agent candidates in priority order: explicit otto override, then local Letta's recent agents. */
   agentCandidates(): string[] {
     const nested = (this.cfg as OttoConfig & { agent?: { id?: string | null } }).agent?.id;
-    return unique([process.env.OTTO_AGENT_ID, this.cfg.agentId, nested, ...discoverLettaAgentIds()]);
+    const mode = this.connectionMode();
+    const primary = resolveLettaSettingsPath(this, mode);
+    const settingsPaths =
+      mode === 'existing' ? unique([primary, LETTA_SETTINGS_LOCAL, LETTA_SETTINGS]) : [primary];
+    return unique([process.env.OTTO_AGENT_ID, this.cfg.agentId, nested, ...discoverLettaAgentIds(settingsPaths)]);
   }
 
   /** Letta base URL for local/self-hosted backends: LETTA_BASE_URL env wins, then config. */
@@ -73,7 +78,7 @@ export class ConfigStore {
   }
 
   connectionMode(): NonNullable<OttoConfig['connectionMode']> {
-    return normalizeConnectionMode(this.cfg.connectionMode) ?? 'existing';
+    return normalizeConnectionMode(this.cfg.connectionMode) ?? 'embedded';
   }
 
   /** Isolated Letta settings root for embedded mode (076) — under ~/.otto/letta by default. */
@@ -110,12 +115,9 @@ function readJson<T>(path: string): T | null {
   }
 }
 
-function discoverLettaAgentIds(): string[] {
+function discoverLettaAgentIds(settingsPaths: string[]): string[] {
   const candidates: Array<string | null | undefined> = [];
-  const paths = process.env.OTTO_LETTA_SETTINGS_PATH
-    ? [process.env.OTTO_LETTA_SETTINGS_PATH]
-    : [LETTA_SETTINGS_LOCAL, LETTA_SETTINGS];
-  for (const path of paths) {
+  for (const path of settingsPaths) {
     const settings = readJson<LettaSettings>(path);
     candidates.push(settings?.lastSession?.agentId, settings?.lastAgent);
     for (const session of Object.values(settings?.sessionsByServer ?? {})) {
@@ -145,7 +147,7 @@ function normalizeConfig(config: OttoConfig): OttoConfig {
   if (connectionMode) {
     next.connectionMode = connectionMode;
   } else if ('connectionMode' in config) {
-    next.connectionMode = 'existing';
+    next.connectionMode = 'embedded';
   }
   const conversationSortMode = normalizeConversationSortMode(config.conversationSortMode);
   if (conversationSortMode) {
