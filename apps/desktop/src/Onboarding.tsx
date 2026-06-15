@@ -25,6 +25,7 @@ import {
 import { OnboardingStepLayout, type OnboardingEvidence } from './OnboardingStepLayout';
 import { enableSampleReceiptPreview, SAMPLE_RECEIPT_LABEL } from './onboarding-sample-receipt';
 import { ReadinessPanel } from './ReadinessPanel';
+import { OttoMark } from './components/OttoMark';
 
 const ModeCard: React.FC<{
   title: string;
@@ -139,6 +140,9 @@ export const Onboarding: React.FC<{ onNavigate: (id: SurfaceId) => void; activeS
     return (
       <div className="onboardOverlay onboardOverlay--takeover">
         <div className="onboardCard onboardCard--welcome">
+          <div className="onboardWelcomeOwl" aria-hidden="true">
+            <OttoMark size={48} className="ottoMark onboardWelcomeOwl__mark" />
+          </div>
           <div className="onboardEyebrow onboardEyebrow--dark">{onboardingCopy.eyebrow}</div>
           <h2 className="onboardTitle">{onboardingCopy.welcomeTitle}</h2>
           <p className="onboardBody">{onboardingCopy.welcomeBody}</p>
