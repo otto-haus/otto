@@ -9,6 +9,7 @@ import { permissionSessionStore } from '../permission-session-store';
 import { permissionTimeoutMs, SdkSubprocessTransport } from './sdk-subprocess-transport';
 
 const originalTimeout = process.env.OTTO_PERMISSION_TIMEOUT_MS;
+const originalLettaSettingsPath = process.env.OTTO_LETTA_SETTINGS_PATH;
 const SMOKE_CONV = 'conv-perm-smoke-298';
 const SMOKE_AGENT = 'agent-perm-smoke-298';
 
@@ -16,6 +17,8 @@ afterEach(() => {
   permissionSessionStore.clear();
   if (originalTimeout === undefined) Reflect.deleteProperty(process.env, 'OTTO_PERMISSION_TIMEOUT_MS');
   else process.env.OTTO_PERMISSION_TIMEOUT_MS = originalTimeout;
+  if (originalLettaSettingsPath === undefined) Reflect.deleteProperty(process.env, 'OTTO_LETTA_SETTINGS_PATH');
+  else process.env.OTTO_LETTA_SETTINGS_PATH = originalLettaSettingsPath;
 });
 
 function mockWindow() {
@@ -95,6 +98,7 @@ function wireTransport(transport: SdkSubprocessTransport, run: (canUseTool: CanU
 
   process.env.OTTO_AGENT_ID = SMOKE_AGENT;
   process.env.OTTO_SKIP_LETTA_LSOF = '1';
+  process.env.OTTO_LETTA_SETTINGS_PATH = `/tmp/otto-letta-settings-perm-${Date.now()}.json`;
   return canUseToolRef;
 }
 
@@ -227,6 +231,7 @@ describe('permission tool-call round-trip (#298)', () => {
     };
     process.env.OTTO_AGENT_ID = SMOKE_AGENT;
     process.env.OTTO_SKIP_LETTA_LSOF = '1';
+    process.env.OTTO_LETTA_SETTINGS_PATH = `/tmp/otto-letta-settings-perm-abort-${Date.now()}.json`;
 
     await transport.init({ freshConversation: true });
     const sendPromise = transport.send('abort during permission');

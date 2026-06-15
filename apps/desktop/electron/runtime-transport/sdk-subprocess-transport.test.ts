@@ -3,12 +3,16 @@ import type { BrowserWindow } from 'electron';
 import { ConfigStore } from '../config-store';
 import { permissionSessionStore } from '../permission-session-store';
 import { permissionTimeoutMs, SdkSubprocessTransport } from './sdk-subprocess-transport';
+import { sessionInitTimeoutMs } from './runtime-common';
 
 const originalTimeout = process.env.OTTO_PERMISSION_TIMEOUT_MS;
+const originalInitTimeout = process.env.OTTO_SESSION_INIT_TIMEOUT_MS;
 
 afterEach(() => {
   if (originalTimeout === undefined) Reflect.deleteProperty(process.env, 'OTTO_PERMISSION_TIMEOUT_MS');
   else process.env.OTTO_PERMISSION_TIMEOUT_MS = originalTimeout;
+  if (originalInitTimeout === undefined) Reflect.deleteProperty(process.env, 'OTTO_SESSION_INIT_TIMEOUT_MS');
+  else process.env.OTTO_SESSION_INIT_TIMEOUT_MS = originalInitTimeout;
 });
 
 function mockWindow() {
@@ -37,6 +41,57 @@ function mockConfig(): ConfigStore {
     ensurePrimaryAgentId: () => {},
   } as unknown as ConfigStore;
 }
+
+describe('SdkSubprocessTransport init resilience', () => {
+  test('preflight fails fast for existing mode when local backend is down', async () => {
+    process.env.OTTO_SKIP_LETTA_LSOF = '1';
+    const { win } = mockWindow();
+    const transport = new SdkSubprocessTransport(win, {
+      ...mockConfig(),
+      connectionMode: () => 'existing' as const,
+      baseUrl: () => 'local:/Users/seb/.letta/lc-local-backend',
+      agentCandidates: () => ['agent-test'],
+    } as ConfigStore);
+
+    const status = await transport.init();
+    expect(status.ready).toBe(false);
+    expect(status.code).toBe('unreachable');
+    expect(status.reason).toMatch(/Local Letta backend is not running/i);
+  });
+
+  test('session.initialize timeout returns unreachable instead of hanging', async () => {
+    process.env.OTTO_SESSION_INIT_TIMEOUT_MS = '30';
+    process.env.OTTO_AGENT_ID = 'agent-test';
+    process.env.OTTO_SKIP_LETTA_LSOF = '1';
+    process.env.OTTO_LETTA_SETTINGS_PATH = `/tmp/otto-letta-settings-missing-${Date.now()}.json`;
+    const { win } = mockWindow();
+    const transport = new SdkSubprocessTransport(win, {
+      ...mockConfig(),
+      connectionMode: () => 'existing' as const,
+      baseUrl: () => null,
+    } as ConfigStore);
+
+    const session = {
+      close: () => {},
+      initialize: () => new Promise(() => {}),
+      send: async () => {},
+      abort: async () => {},
+      async *stream() {},
+    };
+
+    (transport as unknown as { sdk: unknown }).sdk = {
+      createSession: () => session,
+      resumeSession: () => session,
+    };
+
+    const started = Date.now();
+    const status = await transport.init({ freshConversation: true });
+    expect(Date.now() - started).toBeLessThan(sessionInitTimeoutMs() + 500);
+    expect(status.ready).toBe(false);
+    expect(status.code).toBe('unreachable');
+    expect(status.reason).toMatch(/did not connect in time/i);
+  });
+});
 
 describe('SdkSubprocessTransport permissions', () => {
   test('times out pending permission resolvers', async () => {
