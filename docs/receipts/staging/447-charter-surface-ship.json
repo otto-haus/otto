@@ -1,0 +1,19 @@
+{
+  "issue": 447,
+  "surface": "charters",
+  "branch": "surface-charter-447",
+  "verified_at": "2026-06-14",
+  "checks": {
+    "surface_gate_open": "surfaceGate('charters') === 'open'",
+    "tests": "bun test apps/desktop/src/surface-tiers.test.ts apps/desktop/electron/charter-store.test.ts — 14 pass",
+    "typecheck": "bun run --cwd apps/desktop typecheck — pass"
+  },
+  "ui_changes": [
+    "Removed charters from WORKSPACE_PREVIEW_SURFACES",
+    "Explainer panel: charter vs GitHub Issue",
+    "Intent → Charter → State → Receipt model chain on detail",
+    "AC proof pending/linked pills",
+    "Continue charter scroll-to-actions for active/blocked"
+  ],
+  "staging_smoke": "pending — run task staging:build + manual Charters pane open"
+}

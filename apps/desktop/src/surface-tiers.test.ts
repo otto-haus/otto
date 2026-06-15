@@ -36,15 +36,20 @@ describe('surface-tiers', () => {
     }
   });
 
+  test('charters surface is open for ship (#447)', () => {
+    const labs = defaultLabsConfig();
+    expect(surfaceTier('charters')).toBe('ship');
+    expect(isSurfaceAccessible('charters', labs)).toBe(true);
+    expect(isSurfaceComingSoon('charters', labs)).toBe(false);
+    expect(surfaceGate('charters', labs, true)).toBe('open');
+  });
+
   test('ship workspace previews show coming soon in the product shell', () => {
     const labs = defaultLabsConfig();
     expect(surfaceTier('chat')).toBe('ship');
     expect(surfaceTier('tickets')).toBe('ship');
     expect(surfaceTier('terminal')).toBe('ship');
-    expect(isSurfaceAccessible('charters', labs)).toBe(true);
-    expect(isSurfaceComingSoon('charters', labs)).toBe(true);
     expect(isSurfaceComingSoon('terminal', labs)).toBe(false);
-    expect(surfaceGate('charters', labs, true)).toBe('coming-soon');
     expect(surfaceGate('terminal', labs, true)).toBe('open');
     expect(surfaceGate('chat', labs, true)).toBe('open');
     expect(surfaceGate('settings', labs, true)).toBe('open');
@@ -96,7 +101,7 @@ describe('surface-tiers', () => {
       expect(surfaceGate('receipts', labs, true)).toBe('open');
       store.set('otto.onboarding.sampleReceipt.v1', '1');
       expect(surfaceGate('receipts', labs, true)).toBe('open');
-      expect(surfaceGate('charters', labs, true)).toBe('coming-soon');
+      expect(surfaceGate('charters', labs, true)).toBe('open');
     } finally {
       globalThis.sessionStorage = prior;
     }

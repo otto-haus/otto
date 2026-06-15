@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { PaperclipIntakePanel } from './PaperclipIntakePanel';
 import { Icon } from '../components/icons';
 import { useToast } from '../components/Toast';
@@ -134,6 +134,38 @@ const SkippedLoaderPanel: React.FC<{ skipped: SkippedFile[]; noun?: string }> = 
 /* ---------- Charters ---------- */
 const CHARTER_STATUSES: CharterStatus[] = ['proposed', 'draft', 'active', 'blocked', 'complete', 'cancelled'];
 
+type CharterModelStep = 'intent' | 'charter' | 'state' | 'receipt';
+
+function charterModelStep(status: CharterStatus): CharterModelStep {
+  if (status === 'complete') return 'receipt';
+  if (status === 'active' || status === 'blocked') return 'state';
+  return 'charter';
+}
+
+const CharterModelChain: React.FC<{ status: CharterStatus }> = ({ status }) => {
+  const active = charterModelStep(status);
+  const steps: { id: CharterModelStep; label: string }[] = [
+    { id: 'intent', label: chartersCopy.modelIntent },
+    { id: 'charter', label: chartersCopy.modelCharter },
+    { id: 'state', label: chartersCopy.modelState },
+    { id: 'receipt', label: chartersCopy.modelReceipt },
+  ];
+  return (
+    <div className="charterModelChain" role="list" aria-label={chartersCopy.modelEyebrow}>
+      {steps.map((step, index) => (
+        <div
+          key={step.id}
+          className={`charterModelStep${step.id === active ? ' is-active' : ''}`}
+          role="listitem"
+        >
+          <span className="charterModelStep__index">{index + 1}</span>
+          <span className="charterModelStep__label">{step.label}</span>
+        </div>
+      ))}
+    </div>
+  );
+};
+
 export const Charters: React.FC = () => {
   const api = ottoApi();
   const [result, setResult] = useState<CharterListResult | null>(null);
@@ -148,6 +180,7 @@ export const Charters: React.FC = () => {
   const [receiptId, setReceiptId] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const actionsRef = useRef<HTMLDivElement | null>(null);
 
   const refreshList = async (preferSlug?: string) => {
     if (!api) return;
@@ -284,6 +317,11 @@ export const Charters: React.FC = () => {
           { label: chartersCopy.statComplete, value: completeCount },
         ]}
       />
+      <div className="panel charterExplainer">
+        <div className="eyebrow">{chartersCopy.explainerEyebrow}</div>
+        <p className="muted" style={{ marginTop: 8 }}>{chartersCopy.explainerBody}</p>
+        <p className="faint" style={{ marginTop: 8 }}>{chartersCopy.issuesRelationship}</p>
+      </div>
       {error && <div className="notice"><span className="dot dot--warn" /> {error}</div>}
 
       <div className="panel charterCreatePanel">
@@ -366,6 +404,7 @@ export const Charters: React.FC = () => {
             setReceiptId={setReceiptId}
             onUpdateStatus={updateStatus}
             onLinkRunReceipt={linkRunReceipt}
+            actionsRef={actionsRef}
           />
         }
       />
@@ -391,6 +430,7 @@ const CharterDetailView: React.FC<{
   setReceiptId: (value: string) => void;
   onUpdateStatus: () => void;
   onLinkRunReceipt: () => void;
+  actionsRef: React.RefObject<HTMLDivElement | null>;
 }> = ({
   detail,
   statusDraft,
@@ -404,6 +444,7 @@ const CharterDetailView: React.FC<{
   setReceiptId,
   onUpdateStatus,
   onLinkRunReceipt,
+  actionsRef,
 }) => {
   if (!detail) {
     return (
@@ -424,9 +465,24 @@ const CharterDetailView: React.FC<{
             <div className="eyebrow">{chartersCopy.detailEyebrow}</div>
             <div className="h-sec" style={{ marginTop: 6 }}>{detail.title}</div>
           </div>
-          {statusPill(detail.status)}
+          <div className="row" style={{ gap: 8, alignItems: 'center' }}>
+            {(detail.status === 'active' || detail.status === 'blocked') && (
+              <button
+                type="button"
+                className="btn btn--primary"
+                onClick={() => actionsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
+              >
+                {chartersCopy.continueButton}
+              </button>
+            )}
+            {statusPill(detail.status)}
+          </div>
         </div>
         <p className="lede" style={{ marginTop: 8 }}>{detail.objective}</p>
+        <div style={{ marginTop: 12 }}>
+          <div className="eyebrow">{chartersCopy.modelEyebrow}</div>
+          <CharterModelChain status={detail.status} />
+        </div>
         <dl className="kv charterKv">
           <div><dt>schema</dt><dd>{detail.schema}</dd></div>
           <div><dt>id</dt><dd className="mono">{detail.id}</dd></div>
@@ -441,8 +497,17 @@ const CharterDetailView: React.FC<{
           <ul className="list">
             {detail.acceptance_criteria.map((ac) => (
               <li key={ac.id}>
-                <strong>{ac.id}</strong> {ac.text}
-                {!!ac.receipts.length && <span className="faint"> · {ac.receipts.length} receipt{ac.receipts.length === 1 ? '' : 's'}</span>}
+                <div className="between" style={{ gap: 8, alignItems: 'flex-start' }}>
+                  <span><strong>{ac.id}</strong> {ac.text}</span>
+                  <span className={`pill${ac.receipts.length ? ' pill--ok' : ' pill--warn'}`}>
+                    {ac.receipts.length ? chartersCopy.proofOk : chartersCopy.proofPending}
+                  </span>
+                </div>
+                {!!ac.receipts.length && (
+                  <span className="faint mono" style={{ display: 'block', marginTop: 4 }}>
+                    {ac.receipts.join(', ')}
+                  </span>
+                )}
               </li>
             ))}
           </ul>
@@ -466,7 +531,7 @@ const CharterDetailView: React.FC<{
         </div>
       </div>
 
-      <div className="detailGrid detailGrid--2">
+      <div className="detailGrid detailGrid--2" ref={actionsRef} id="charter-actions">
         <div className="detailSection charterAction">
           <div className="eyebrow">{chartersCopy.attachEyebrow}</div>
           <input className="charterInput mono" value={runId} onChange={(e) => setRunId(e.target.value)} placeholder={chartersCopy.runIdPlaceholder} aria-label="Run ID" />
