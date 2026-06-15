@@ -22,7 +22,7 @@ Mental model: **Paperclip is the office, otto is the culture layer, Letta is the
   ratification → Standard). Adapters and Plugins are two different Paperclip surfaces — v1 is an
   adapter, not a plugin. v1 carries only a tiny `receiptRef` placeholder, no real culture.
 - **Do NOT archive the Electron shell in v1.** Keep `apps/desktop/` as the internal lab / Letta
-  cockpit; build the adapter in its own package. Archive shell surfaces only **after** the Paperclip
+  console; build the adapter in its own package. Archive shell surfaces only **after** the Paperclip
   adapter completes one real issue round-trip. The governance layer (`standards/`, `practices/`,
   `routines/`, `receipts/`, `skill/`, `autonomy/`) is kept for v2.
 
