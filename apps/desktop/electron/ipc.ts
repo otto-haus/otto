@@ -72,11 +72,21 @@ import { getWorkspaceInfo, resolveWorkspaceRepoRoot } from './workspace-root';
 import { collectSystemHealth } from './system-health';
 import { IsolatedAgentStore } from './isolated-agent-store';
 import type { IsolationBoundaryReason } from './isolated-agent';
+import { ShutdownCoordinator } from './shutdown-coordinator';
+import { readShutdownStatus } from './shutdown-lifecycle';
+import type { SafeResetResult, ShutdownStatus } from './shared/types';
+
+export type IpcRegistration = {
+  shutdown: (reason?: string) => Promise<void>;
+  safeReset: () => Promise<SafeResetResult>;
+  getShutdownStatus: () => ShutdownStatus;
+};
 
 let ipcRegistered = false;
+let ipcRegistration: IpcRegistration | null = null;
 
-export function registerIpc() {
-  if (ipcRegistered) return;
+export function registerIpc(): IpcRegistration {
+  if (ipcRegistered && ipcRegistration) return ipcRegistration;
   ipcRegistered = true;
 
   const config = new ConfigStore();
@@ -168,6 +178,19 @@ export function registerIpc() {
     bindStatusToActiveThread(recovered);
     return recovered;
   };
+
+  const shutdownCoordinator = new ShutdownCoordinator({
+    getWin: getMainWindow,
+    runner,
+    cognee,
+    reinit: async () => {
+      const status = await initWithStaleRecovery();
+      return { ready: status.ready };
+    },
+  });
+
+  ipcMain.handle('otto:shutdown:status', () => readShutdownStatus());
+  ipcMain.handle('otto:safe-reset', () => shutdownCoordinator.safeReset());
 
   ipcMain.handle('otto:init', async () => {
     threads.ensureActiveThread(config.agentId());
@@ -701,4 +724,11 @@ export function registerIpc() {
       return { ok: true, requestId, toolName: req.toolName };
     },
   );
+
+  ipcRegistration = {
+    shutdown: (reason?: string) => shutdownCoordinator.gracefulShutdown(reason),
+    safeReset: () => shutdownCoordinator.safeReset(),
+    getShutdownStatus: () => readShutdownStatus(),
+  };
+  return ipcRegistration;
 }

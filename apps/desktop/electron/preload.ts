@@ -76,6 +76,8 @@ import type {
   IsolatedAgentCreateResult,
   IsolatedAgentListResult,
   IsolationBoundaryReason,
+  ShutdownStatus,
+  SafeResetResult,
 } from './shared/types';
 import type { RuntimeSendPayload } from '../src/attachment-message';
 import type {
@@ -152,6 +154,8 @@ const api = {
   },
   system: {
     health: (): Promise<SystemHealthReport> => ipcRenderer.invoke('otto:system:health'),
+    shutdownStatus: (): Promise<ShutdownStatus> => ipcRenderer.invoke('otto:shutdown:status'),
+    safeReset: (): Promise<SafeResetResult> => ipcRenderer.invoke('otto:safe-reset'),
   },
   models: {
     list: (): Promise<LettaModelOption[]> => ipcRenderer.invoke('otto:models:list'),

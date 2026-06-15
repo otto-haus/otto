@@ -4,7 +4,7 @@ import { homedir } from 'node:os';
 import { BrowserWindow, app } from 'electron';
 import { ConfigStore } from './config-store';
 import { windowBackgroundForPref } from './display-theme';
-import { registerIpc } from './ipc';
+import { registerIpc, type IpcRegistration } from './ipc';
 import { getMainWindow, setMainWindow } from './main-window';
 import { resolveDevRendererUrl } from './main-security';
 import { attachWindowGeometryHandlers } from './window-geometry';
@@ -16,6 +16,10 @@ import {
   shouldEnforceSingleInstance,
   surfaceWindow,
 } from './window-launch';
+import { markCleanShutdown, noteAppSessionStart } from './shutdown-lifecycle';
+
+let ipcRegistration: IpcRegistration | null = null;
+let shuttingDown = false;
 
 function applyUserDataDirOverride() {
   const override = process.env.OTTO_USER_DATA_DIR?.trim();
@@ -98,6 +102,31 @@ function createWindow() {
   return win;
 }
 
+function bindShutdownHooks() {
+  const runShutdown = async (reason: string) => {
+    if (shuttingDown) return;
+    shuttingDown = true;
+    try {
+      await ipcRegistration?.shutdown(reason);
+      markCleanShutdown();
+    } catch (err) {
+      console.error('[otto] graceful shutdown failed:', err);
+    }
+  };
+
+  app.on('before-quit', (event) => {
+    if (shuttingDown) return;
+    event.preventDefault();
+    void runShutdown('before-quit').finally(() => app.exit(0));
+  });
+
+  for (const signal of ['SIGINT', 'SIGTERM'] as const) {
+    process.once(signal, () => {
+      void runShutdown(signal).finally(() => process.exit(0));
+    });
+  }
+}
+
 // Set userData (the single-instance lock scope) before requesting the lock, so isolated
 // instances (OTTO_USER_DATA_DIR) keep independent locks and only true same-dir double
 // launches are deduped.
@@ -113,8 +142,10 @@ if (shouldEnforceSingleInstance() && !app.requestSingleInstanceLock()) {
   });
 
   app.whenReady().then(() => {
+    noteAppSessionStart();
     ensurePath();
-    registerIpc();
+    bindShutdownHooks();
+    ipcRegistration = registerIpc();
     createWindow();
     app.on('activate', () => {
       const win = getMainWindow();

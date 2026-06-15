@@ -2,6 +2,7 @@ import { afterEach, describe, expect, test } from 'bun:test';
 import {
   appendFailedQueueItem,
   clearInFlightForThread,
+  clearQueueStorage,
   composerDraftFromQueueText,
   createQueueItem,
   enqueueQueueItemForThread,
@@ -46,6 +47,16 @@ afterEach(() => {
 });
 
 describe('queue-storage', () => {
+  test('clearQueueStorage removes queue and inflight keys', () => {
+    const store = installStorage();
+    store.set(QUEUE_KEY, '[]');
+    store.set(INFLIGHT_KEY, '{}');
+    const cleared = clearQueueStorage();
+    expect(cleared).toContain(QUEUE_KEY);
+    expect(store.has(QUEUE_KEY)).toBe(false);
+    expect(store.has(INFLIGHT_KEY)).toBe(false);
+  });
+
   test('drops smoke-test thread markers', () => {
     const items: QueueItem[] = [
       { id: '1', text: '046-rev10-thread-a-20260614141000', createdAt: Date.now(), state: 'failed' },

@@ -50,4 +50,8 @@ export class LettaRunner {
   abort(): Promise<void> {
     return this.supervisor.abort();
   }
+
+  close(): Promise<void> {
+    return this.supervisor.close();
+  }
 }
