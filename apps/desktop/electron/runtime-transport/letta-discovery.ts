@@ -4,6 +4,7 @@ import { homedir } from 'node:os';
 import { join } from 'node:path';
 import type { ConfigStore } from '../config-store';
 import type { LettaModelOption } from '../shared/types';
+import type { ConnectionMode } from './runtime-common';
 
 export type LocalLettaContext = {
   baseUrl: string | null;
@@ -47,6 +48,49 @@ function readLettaSettings(): LettaSettings | null {
   } catch {
     return null;
   }
+}
+
+export type InitBaseUrlResolution = {
+  baseUrl: string | null;
+  /** When set, skip SDK init and return unreachable immediately. */
+  blockReason?: string;
+};
+
+/** True when a Letta process is listening on loopback (Letta Desktop open or embedded backend up). */
+export function isLocalLettaBackendListening(): boolean {
+  return discoverLocalLettaUrl() !== null;
+}
+
+/**
+ * Resolve LETTA_BASE_URL for session init.
+ * - existing + local: backend down → block with Settings guidance (no infinite hang).
+ * - embedded + local: backend down → omit URL so bundled CLI can spawn standalone backend.
+ */
+export function resolveInitBaseUrl(
+  configured: string | null | undefined,
+  connectionMode: ConnectionMode,
+): InitBaseUrlResolution {
+  const normalized = normalizeBaseUrl(configured);
+  if (!normalized) return { baseUrl: null };
+
+  const isLocalScheme = /^local:/i.test(normalized);
+  const isLoopbackHttp = /^https?:\/\/(?:127\.0\.0\.1|localhost)(?::\d+)?/i.test(normalized);
+  const listening = isLocalLettaBackendListening();
+
+  if ((isLocalScheme || isLoopbackHttp) && !listening) {
+    if (connectionMode === 'embedded') {
+      return { baseUrl: null };
+    }
+    if (connectionMode === 'existing') {
+      return {
+        baseUrl: normalized,
+        blockReason:
+          'Local Letta backend is not running. Open Letta Desktop once, or switch Connection mode to Embedded in Settings.',
+      };
+    }
+  }
+
+  return { baseUrl: normalized };
 }
 
 export function normalizeBaseUrl(value?: string | null): string | null {
@@ -194,7 +238,7 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return !!value && typeof value === 'object';
 }
 
-function discoverLocalLettaUrl(): string | null {
+export function discoverLocalLettaUrl(): string | null {
   if (process.env.OTTO_SKIP_LETTA_LSOF === '1') return null;
   if (process.platform !== 'darwin') return null;
   try {

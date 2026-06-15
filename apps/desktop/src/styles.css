@@ -1750,6 +1750,26 @@ h1, h2, h3, h4, p { margin: 0; }
 
 .comingSoonShell { display: grid; gap: 16px; max-width: 640px; margin: auto; }
 .comingSoonShell__actions { padding-left: 2px; }
+
+.errorBoundary {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: var(--bg, #f8f7f2);
+}
+.errorBoundary__card {
+  max-width: 520px;
+  display: grid;
+  gap: 12px;
+  padding: 24px;
+  border: 1px solid var(--border, #e5e3dc);
+  border-radius: 12px;
+  background: var(--surface, #fff);
+}
+.errorBoundary__title { margin: 0; font-size: 1.25rem; font-weight: 600; }
+.errorBoundary__body { margin: 0; color: var(--muted, #5c5a54); line-height: 1.5; }
+.errorBoundary__actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 4px; }
 .labsBlockedShell { display: grid; gap: 16px; max-width: 640px; margin-top: 12px; }
 .labsBlockedShell__actions { display: flex; flex-wrap: wrap; gap: 8px; padding-left: 2px; }
 .receiptInline { margin-top: 10px; border-left: 3px solid var(--line); }

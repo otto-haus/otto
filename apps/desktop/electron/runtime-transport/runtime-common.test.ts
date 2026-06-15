@@ -3,7 +3,19 @@ import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import type { BrowserWindow } from 'electron';
-import { classify, friendly, isInvalidModelError, modelInitAttempts, modelSelectionForCli, nextActionFor, normalizeRuntimeError, parseUsageLimitResetHint, promptWithRuntimeContext, resolveCli, runtimeContextForPrompt, safeWebContentsSend } from './runtime-common';
+import { classify, friendly, isInvalidModelError, modelInitAttempts, modelSelectionForCli, nextActionFor, normalizeRuntimeError, parseUsageLimitResetHint, promptWithRuntimeContext, resolveCli, runtimeContextForPrompt, safeWebContentsSend, withTimeout } from './runtime-common';
+
+describe('withTimeout', () => {
+  test('resolves when promise completes first', async () => {
+    await expect(withTimeout(Promise.resolve(42), 500, 'test')).resolves.toBe(42);
+  });
+
+  test('rejects when promise exceeds budget', async () => {
+    await expect(
+      withTimeout(new Promise<number>((resolve) => setTimeout(() => resolve(1), 80)), 20, 'Letta session.initialize()'),
+    ).rejects.toThrow(/timed out after 20ms/i);
+  });
+});
 
 describe('resolveCli connectionMode', () => {
   test('embedded prefers bundled resources path', () => {
@@ -142,6 +154,7 @@ describe('runtime-common status mapping', () => {
 
   test('friendly and nextActionFor align with StatusCode', () => {
     expect(friendly('unreachable', 'ECONNREFUSED')).toMatch(/Can't reach the Letta backend/i);
+    expect(friendly('unreachable', 'Letta session.initialize() timed out after 45000ms')).toMatch(/did not connect in time/i);
     expect(nextActionFor('no-agent')).toMatch(/Agent ID/i);
     expect(nextActionFor('stale')).toMatch(/stale override/i);
     expect(nextActionFor('usage-limit')).toMatch(/Switch to Auto\/Fast/i);
