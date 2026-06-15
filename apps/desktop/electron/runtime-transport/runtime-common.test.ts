@@ -90,6 +90,14 @@ describe('modelInitAttempts', () => {
     expect(offAttempts.map((a) => a.cliModel)).not.toContain('gpt-5.5-plus-pro-medium');
     expect(offAttempts.map((a) => a.cliModel)).not.toContain('gpt-5.5-plus-pro-high');
   });
+
+  test('caps alternate provider attempts at medium or lower', () => {
+    const maxAttempts = modelInitAttempts('chatgpt-plus-pro/gpt-5.5', 'max');
+    const alternateAttempts = maxAttempts.filter((a) => a.modelHandle !== 'chatgpt-plus-pro/gpt-5.5');
+    expect(alternateAttempts.length).toBeGreaterThan(0);
+    expect(alternateAttempts.every((a) => a.effort === 'medium' || a.effort === 'low' || a.effort === 'off')).toBe(true);
+    expect(alternateAttempts.some((a) => a.effort === 'high' || a.effort === 'max')).toBe(false);
+  });
 });
 
 describe('isInvalidModelError', () => {
