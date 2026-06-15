@@ -23,10 +23,9 @@ describe('ModelProviders tab accessibility contract', () => {
     expect(panesSource).toContain("querySelectorAll<HTMLButtonElement>('[role=\"tab\"]')");
   });
 
-  it('surfaces provider API key save failures to the user', () => {
-    expect(panesSource).toContain('setKeyError(null);');
-    expect(panesSource).toContain('} catch (err) {');
-    expect(panesSource).toContain('setKeyError(err instanceof Error ? err.message : String(err));');
-    expect(panesSource).toContain('{keyError ? <p className="faint settingsStatusBanner settingsStatusBanner--warn">{keyError}</p> : null}');
+  it('does not expose an otto-side API key entry field (#633)', () => {
+    expect(panesSource).not.toContain('type="password"');
+    expect(panesSource).not.toContain('setApiKey');
+    expect(panesSource).toContain('providerKeysInLettaHint');
   });
 });
