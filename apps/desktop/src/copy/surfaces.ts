@@ -927,6 +927,7 @@ export const cultureSettingsCopy = {
   eyebrow: 'culture',
   title: 'Constitution & export',
   lede: 'Read and amend workspace culture. Export a portable bundle without secrets or Letta memory.',
+  loadingTitle: 'Loading constitution…',
   openConstitution: 'Open constitution.yaml',
   exportCulture: 'Export culture…',
   importPreview: 'Import preview (dry-run)',

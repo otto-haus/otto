@@ -1053,9 +1053,7 @@ export const Practices: React.FC = () => {
               </button>
             ))}
             {result === null ? (
-              <div className="panel">
-                <p className="muted">Loading practices…</p>
-              </div>
+              <PaneLoading label="Loading practices…" variant="list" />
             ) : !practices.length ? (
               <InlineEmpty title={listEmpty.practices?.title ?? 'No practices loaded'} body={listEmpty.practices?.body ?? ''} />
             ) : null}
@@ -1252,9 +1250,7 @@ export const Routines: React.FC = () => {
         list={
           <>
             {result === null ? (
-              <div className="panel">
-                <p className="muted">Loading routines…</p>
-              </div>
+              <PaneLoading label="Loading routines…" variant="list" />
             ) : routines.map((routine) => (
               <button
                 key={routine.slug}
@@ -3791,9 +3787,13 @@ const SystemHealthPanel: React.FC = () => {
             {report.ok ? settingsCopy.systemHealthOk : settingsCopy.systemHealthNotOk}
             <span className="faint mono" style={{ marginLeft: 8 }}>{report.checkedAt}</span>
           </div>
-          <div className="settingsReadinessGroup">
-            {report.checks.map((check) => <HealthCheckRow key={check.id} item={check} />)}
-          </div>
+          {busy ? (
+            <PaneLoading label={settingsCopy.systemHealthLoading} variant="rows" />
+          ) : (
+            <div className="settingsReadinessGroup">
+              {report.checks.map((check) => <HealthCheckRow key={check.id} item={check} />)}
+            </div>
+          )}
         </>
       ) : busy ? (
         <PaneLoading label={settingsCopy.systemHealthLoading} variant="rows" />
@@ -4221,6 +4221,10 @@ const DisplaySettingsPanel: React.FC = () => {
 const LabsSettingsPanel: React.FC = () => {
   const { labs, setMasterEnabled, setFeatureEnabled, hydrated } = useLabs();
 
+  if (!hydrated) {
+    return <PaneLoading label={labsCopy.loadingTitle} variant="rows" />;
+  }
+
   return (
     <>
       <div className="settingsLabsWarn">{settingsCopy.labsWarn}</div>
@@ -4555,15 +4559,20 @@ const CultureSettingsPanel: React.FC<{
   const [importPreview, setImportPreview] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [initialLoading, setInitialLoading] = useState(true);
 
   useEffect(() => {
     let cancelled = false;
+    setInitialLoading(true);
     api.constitution.get()
       .then((result) => {
         if (!cancelled) setYamlDraft(result.rawYaml);
       })
       .catch((e) => {
         if (!cancelled) setError(String(e));
+      })
+      .finally(() => {
+        if (!cancelled) setInitialLoading(false);
       });
     return () => {
       cancelled = true;
@@ -4630,6 +4639,10 @@ const CultureSettingsPanel: React.FC<{
       setBusy(false);
     }
   };
+
+  if (initialLoading && !error) {
+    return <PaneLoading label={cultureSettingsCopy.loadingTitle} variant="detail" />;
+  }
 
   return (
     <>
