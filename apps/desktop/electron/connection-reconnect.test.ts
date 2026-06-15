@@ -31,9 +31,13 @@ describe('saveConnectionAndReconnect (#538)', () => {
 
   it('clears manual baseUrl when saving embedded mode (#705)', async () => {
     let savedBaseUrl: string | null | undefined;
+    let configPatch: Partial<{ baseUrl: string | null }> | undefined;
     const api: ConnectionReconnectApi = {
       config: {
-        set: async () => ({} as Awaited<ReturnType<ConnectionReconnectApi['config']['set']>>),
+        set: async (patch) => {
+          configPatch = patch;
+          return {} as Awaited<ReturnType<ConnectionReconnectApi['config']['set']>>;
+        },
       },
       connection: {
         save: async (input) => {
@@ -51,6 +55,7 @@ describe('saveConnectionAndReconnect (#538)', () => {
     });
 
     expect(savedBaseUrl).toBeNull();
+    expect(configPatch?.baseUrl).toBeNull();
   });
 
   it('persists manual baseUrl for existing local mode (#705)', async () => {

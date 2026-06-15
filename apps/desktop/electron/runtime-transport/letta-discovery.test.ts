@@ -3,7 +3,7 @@ import { mkdtempSync, mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { ConfigStore } from '../config-store';
-import { discoverLocalLettaContext, isLocalLettaBackendListening, probeLettaHttpBaseUrl, resolveInitBaseUrl, resolveModelHandle } from './letta-discovery';
+import { discoverLocalLettaContext, isLocalLettaBackendListening, probeLettaHttpBaseUrl, resolveInitBaseUrl, resolveLiveLocalLettaContext, resolveModelHandle } from './letta-discovery';
 import type { LettaModelOption } from '../shared/types';
 
 const envKeys = ['OTTO_HOME', 'OTTO_LETTA_SETTINGS_PATH', 'OTTO_SKIP_LETTA_LSOF', 'OTTO_AGENT_ID', 'LETTA_BASE_URL'] as const;
@@ -82,9 +82,44 @@ describe('resolveInitBaseUrl', () => {
     expect(result.omitBaseUrl).toBe(true);
   });
 
+  test('omits dead loopback override in embedded mode so bundled CLI can boot fresh', async () => {
+    process.env.OTTO_SKIP_LETTA_LSOF = '1';
+    const result = await resolveInitBaseUrl('http://127.0.0.1:59647', 'embedded');
+    expect(result.blockReason).toBeUndefined();
+    expect(result.baseUrl).toBeNull();
+    expect(result.omitBaseUrl).toBe(true);
+    expect(result.clearStaleOverride).toBe(true);
+  });
+
+  test('embedded resolveLiveLocalLettaContext drops dead loopback override when nothing is live', async () => {
+    const tmp = mkdtempSync(join(tmpdir(), 'otto-letta-discovery-'));
+    const originalFetch = globalThis.fetch;
+    globalThis.fetch = (async () => new Response('', { status: 503 })) as typeof fetch;
+    try {
+      process.env.OTTO_HOME = tmp;
+      process.env.OTTO_SKIP_LETTA_LSOF = '1';
+      mkdirSync(join(tmp, 'letta'), { recursive: true });
+      writeFileSync(join(tmp, 'letta', 'settings.json'), `${JSON.stringify({}, null, 2)}\n`, 'utf8');
+      const config = new ConfigStore();
+      config.update({ connectionMode: 'embedded', baseUrl: 'http://127.0.0.1:59647' });
+      const context = await resolveLiveLocalLettaContext(config);
+      expect(context.baseUrl).toBeNull();
+    } finally {
+      globalThis.fetch = originalFetch;
+      rmSync(tmp, { recursive: true, force: true });
+    }
+  });
+
   test('passes through http URL for cloud mode when listener check is skipped', async () => {
     process.env.OTTO_SKIP_LETTA_LSOF = '1';
     expect((await resolveInitBaseUrl('http://127.0.0.1:8283', 'cloud')).baseUrl).toBe('http://127.0.0.1:8283');
+  });
+
+  test('blocks existing mode when loopback probe fails', async () => {
+    process.env.OTTO_SKIP_LETTA_LSOF = '1';
+    const result = await resolveInitBaseUrl('http://127.0.0.1:59647', 'existing');
+    expect(result.blockReason).toMatch(/Local Letta backend is not running/i);
+    expect(result.baseUrl).toBe('http://127.0.0.1:59647');
   });
 
   test('allows reachable loopback http URL when lsof is skipped', async () => {

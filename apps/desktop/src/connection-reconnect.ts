@@ -23,6 +23,7 @@ export async function saveConnectionAndReconnect(
   await api.config.set({
     primaryAgentId: fields.primaryAgentId.trim() || fields.agentId.trim() || null,
     connectionMode: fields.connectionMode,
+    ...(fields.connectionMode === 'embedded' ? { baseUrl: null } : {}),
   });
   const baseUrl =
     fields.connectionMode === 'embedded' ? null : fields.baseUrl.trim() || null;
