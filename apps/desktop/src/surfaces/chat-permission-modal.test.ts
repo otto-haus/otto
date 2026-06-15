@@ -1,0 +1,47 @@
+import { describe, expect, it } from 'bun:test';
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
+
+const chatSource = readFileSync(join(import.meta.dir, 'Chat.tsx'), 'utf8');
+const preloadSource = readFileSync(join(import.meta.dir, '../../electron/preload.ts'), 'utf8');
+const ipcSource = readFileSync(join(import.meta.dir, '../../electron/ipc.ts'), 'utf8');
+const permissionCardSource = readFileSync(join(import.meta.dir, '../components/ui/PermissionCard.tsx'), 'utf8');
+
+describe('chat permission modal contract (#71 / 045)', () => {
+  it('subscribes to runtime permission requests and opens Modal + PermissionCard', () => {
+    expect(chatSource).toContain('api.onPermission((req) => setPermission(req as PermissionRequestView))');
+    expect(chatSource).toContain('<Modal');
+    expect(chatSource).toContain('open={!!permission}');
+    expect(chatSource).toContain('<PermissionCard');
+    expect(chatSource).toContain('title={permissionCopy.modalTitle}');
+  });
+
+  it('maps allow/deny/session decisions to runtime permission.respond', () => {
+    expect(chatSource).toContain("decision === 'deny'");
+    expect(chatSource).toContain("decision === 'allow-session'");
+    expect(chatSource).toContain("api.permission.respond(active.requestId, { behavior: 'deny', message: msg })");
+    expect(chatSource).toContain("api.permission.respond(active.requestId, { behavior: 'allow', scope: 'session' })");
+    expect(chatSource).toContain("api.permission.respond(active.requestId, { behavior: 'allow', scope: 'once' })");
+    expect(chatSource).toContain('setPermission(null)');
+  });
+
+  it('deny path writes a blocked receipt inline in chat', () => {
+    expect(chatSource).toContain('api.permission.denyReceipt');
+    expect(chatSource).toContain("action: 'autonomy.permission.deny'");
+  });
+
+  it('exposes smoke-only permission trigger for staging modal capture', () => {
+    expect(preloadSource).toContain('otto:smoke:trigger-permission');
+    expect(preloadSource).toContain('triggerPermission:');
+    expect(ipcSource).toContain("'otto:smoke:trigger-permission'");
+    expect(ipcSource).toContain("safeWebContentsSend(win, 'otto:permission', req)");
+    expect(ipcSource).toContain('OTTO_SMOKE=1');
+  });
+
+  it('PermissionCard renders allow once, allow session, and deny actions', () => {
+    expect(permissionCardSource).toContain("'allow-once'");
+    expect(permissionCardSource).toContain("'allow-session'");
+    expect(permissionCardSource).toContain("'deny'");
+    expect(permissionCardSource).toContain('permissionCard__tool');
+  });
+});

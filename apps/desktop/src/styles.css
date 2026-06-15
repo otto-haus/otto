@@ -2326,6 +2326,13 @@ textarea:focus-visible {
   .charterChangeRow,
   .receiptEvidenceRow { grid-template-columns: 1fr; }
   .sidebar.is-collapsed .has-tip::after { max-width: min(220px, calc(100vw - 96px)); }
+  .onboardStepAnchor {
+    max-height: min(38vh, 240px);
+    overflow: auto;
+    margin-bottom: 8px;
+  }
+  .onboardStepHost__title { font-size: 18px; }
+  .onboardStepHost__footer { gap: 8px; }
   .onboardDock {
     left: 16px;
     right: 16px;
