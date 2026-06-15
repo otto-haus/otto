@@ -1164,14 +1164,15 @@ h1, h2, h3, h4, p { margin: 0; }
 }
 .permissionCard__actions { display: flex; flex-wrap: wrap; gap: 8px; }
 
-.proposeModal { display: grid; gap: 12px; }
-.proposeModal__field { display: grid; gap: 6px; font-size: 13px; }
-.proposeModal__field textarea,
-.proposeModal__field select {
-  width: 100%; font: inherit; border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; background: var(--paper);
+.proposeModal { display: grid; gap: 16px; }
+.proposeModal__lede { margin: 0; font-size: 14px; line-height: 1.45; }
+.proposeModal__field { display: grid; gap: 8px; font-size: 13px; }
+.proposeModal__field--hero > span { font-size: 14px; font-weight: 600; color: var(--ink); }
+.proposeModal__field textarea {
+  width: 100%; font: inherit; border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px; background: var(--paper);
+  min-height: 120px; font-size: 14px; line-height: 1.5; resize: vertical;
 }
-.proposeModal__preview { padding: 12px; font-size: 13px; }
-.proposeModal__actions { display: flex; justify-content: flex-end; gap: 8px; flex-wrap: wrap; }
+.proposeModal__actions { display: flex; justify-content: flex-end; gap: 8px; flex-wrap: wrap; margin-top: 4px; }
 
 .btn { border: 1px solid var(--line-strong); background: var(--panel); color: var(--ink); border-radius: 8px; padding: 8px 16px; font-weight: 500; font-size: 13.5px; cursor: pointer; transition: transform 120ms var(--ease), background 120ms var(--ease), border-color 120ms var(--ease), opacity 120ms var(--ease); }
 .btn--primary { background: var(--accent); color: var(--dark-tx); border-color: var(--accent); }
