@@ -27,3 +27,28 @@ OTTO_CLEAN_MACHINE_PACKAGING_ONLY=1 node scripts/otto-clean-machine-e2e-smoke.cj
 ```
 
 Failure output includes `failureCategory`: `packaging` | `setup` | `runtime` | `chat`, plus `nextAction`.
+
+## Sleep/wake robustness (#318)
+
+`scripts/otto-staging-sleep-wake-smoke.cjs` exercises suspend/resume using disposable state:
+
+- Seeds chat draft + unsent queue in isolated localStorage
+- Simulates Mac sleep via `visibilitychange` hidden/visible, then reload + app relaunch
+- Asserts draft/queue survive, runtime status is readable, scheduled routines report deferred/allowed explicitly
+- Dreams/background loops report `not_wired` until Labs ships that surface
+
+Never uses `/Applications/otto.app`. Default template is `/Applications/otto-staging.app` (read-only copy via `ditto` into `/tmp`).
+
+```sh
+NODE_PATH=$HOME/.codex/admin/node_modules \
+  OTTO_RECEIPT_DIR=$PWD/docs/receipts/staging \
+  node scripts/otto-staging-sleep-wake-smoke.cjs
+```
+
+Or via task:
+
+```sh
+NODE_PATH=$HOME/.codex/admin/node_modules \
+  OTTO_RECEIPT_DIR=$PWD/docs/receipts/staging \
+  task smoke:staging:sleep-wake
+```

@@ -138,6 +138,11 @@ tasks:
     cmds:
       - node scripts/otto-clean-machine-e2e-smoke.cjs
 
+  smoke:staging:sleep-wake:
+    desc: Playwright smoke — sleep/wake draft+queue+runtime resume roster (#318)
+    cmds:
+      - node scripts/otto-staging-sleep-wake-smoke.cjs
+
   _refresh-live:
     internal: true
     preconditions:
