@@ -43,6 +43,30 @@
   -webkit-font-smoothing: antialiased;
 }
 
+[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: oklch(0.16 0.008 270);
+  --bg-2: oklch(0.19 0.008 270);
+  --panel: oklch(0.21 0.008 270);
+  --ink: oklch(0.94 0.005 270);
+  --ink-soft: oklch(0.82 0.005 270);
+  --mut: oklch(0.68 0.006 270);
+  --faint: oklch(0.58 0.006 270);
+  --line: oklch(0.28 0.008 270);
+  --line-strong: oklch(0.34 0.008 270);
+  --accent: var(--ink);
+  --accent-tint: oklch(0.24 0.010 270);
+  --ok: oklch(0.62 0.10 155);
+  --ok-tint: oklch(0.24 0.04 155);
+  --warn: oklch(0.72 0.11 80);
+  --warn-tint: oklch(0.26 0.035 80);
+  --stop: oklch(0.68 0.16 27);
+  --stop-tint: oklch(0.26 0.04 27);
+  --dark: oklch(0.12 0.008 270);
+  --dark-tx: oklch(0.94 0.002 270);
+  --dark-mut: oklch(0.62 0.006 270);
+}
+
 * { box-sizing: border-box; }
 html, body, #root { height: 100%; margin: 0; min-height: 0; }
 body { min-height: 100vh; background: var(--bg); }
@@ -1377,6 +1401,7 @@ h1, h2, h3, h4, p { margin: 0; }
   cursor: pointer;
 }
 .picker__button span:first-child { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.picker__resolved { font-size: 11px; max-width: 140px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .picker__button:hover:not(:disabled),
 .picker[data-open="true"] .picker__button { background: var(--panel); border-color: var(--line-strong); color: var(--ink); }
 .picker__button:disabled { opacity: 0.55; cursor: not-allowed; }
@@ -1416,6 +1441,11 @@ h1, h2, h3, h4, p { margin: 0; }
   font-size: 13.5px;
 }
 .picker__option span:first-child { flex: none; }
+.picker__option--with-help { align-items: flex-start; }
+.picker__optionMain { display: flex; flex-direction: column; gap: 4px; min-width: 0; flex: 1; }
+.picker__optionLabel { display: flex; align-items: center; justify-content: space-between; gap: 12px; width: 100%; }
+.picker__optionDesc,
+.picker__optionResolved { font-size: 12px; line-height: 1.35; color: var(--faint); text-align: left; white-space: normal; }
 .picker__option span:last-child {
   min-width: 0;
   overflow: hidden;

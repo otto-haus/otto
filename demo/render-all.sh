@@ -37,6 +37,7 @@ render OttoV01Desktop             otto-v01-desktop
 render OttoV01Knowledge           otto-v01-knowledge
 render OttoV01Curation            otto-v01-curation
 render OttoV01Tickets             otto-v01-tickets
+render OttoProductDemo            otto-product-demo
 render_walkthrough
 
 echo "ALL_RENDERS_DONE"

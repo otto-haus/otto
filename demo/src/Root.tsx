@@ -4,6 +4,7 @@ import { FeatureDemo } from "./FeatureDemo";
 import { OttoV01DesktopWalkthrough } from "./OttoV01DesktopWalkthrough";
 import { OttoV01Curation } from "./OttoV01Curation";
 import { OttoV01Tickets } from "./OttoV01Tickets";
+import { OttoProductDemo } from "./OttoProductDemo";
 import {
   features,
   curationFeature,
@@ -11,6 +12,7 @@ import {
   totalFrames,
   FPS,
   walkthroughTotalFrames,
+  productDemoTotalFrames,
 } from "./features";
 
 export const RemotionRoot: React.FC = () => {
@@ -49,6 +51,14 @@ export const RemotionRoot: React.FC = () => {
         id="OttoV01Tickets"
         component={OttoV01Tickets}
         durationInFrames={totalFrames(ticketsFeature.lines.length)}
+        fps={FPS}
+        width={1920}
+        height={1080}
+      />
+      <Composition
+        id="OttoProductDemo"
+        component={OttoProductDemo}
+        durationInFrames={productDemoTotalFrames}
         fps={FPS}
         width={1920}
         height={1080}

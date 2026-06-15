@@ -1,4 +1,4 @@
-import { type BrowserWindow, app, ipcMain, shell } from 'electron';
+import { type BrowserWindow, app, clipboard, ipcMain, shell } from 'electron';
 import type { ConnectionInfo, ConnectionInput, CreateProposalFromCorrectionInput, DecideProposalInput, DreamSettings, LabsConfig, OttoConfig, PermissionRequest, PermissionResponse, ProposalClassification, ProposalTarget, RuntimePreferences, RuntimeStatus } from './shared/types';
 import { applyLabsConfigPatch, getLabsConfig, labsConfigToOttoPatch } from './labs-config';
 import {
@@ -42,13 +42,21 @@ import { OTTO_DIR } from './config-store';
 import { buildProviderMirror } from './provider-mirror';
 import { setSecret, hasSecret } from './secret-store';
 import { CogneeStore } from './cognee-store';
+import { PaperclipIntakeStore } from './paperclip-intake-store';
 import { MemoryStore } from './memory-store';
 import { PgvectorStore } from './pgvector-store';
 import { safeWebContentsSend, smokeMode } from './runtime-transport/runtime-common';
 import { readAppBuildInfo } from './build-info';
+import { showOttoDebugMenu } from './debug-menu';
+import { buildDebugPacket, formatDebugPacketText, formatRuntimeStatusText } from './debug-packet';
+import { resolveDebugEnvelope } from './debug-envelope';
+import { openOttoLogs } from './logs';
+import { syncWindowBackground } from './display-theme';
 import { openSystemTerminal, resolveWorkspaceRoot } from './open-terminal';
 import { getWorkspaceInfo, resolveWorkspaceRepoRoot } from './workspace-root';
 import { collectSystemHealth } from './system-health';
+import { IsolatedAgentStore } from './isolated-agent-store';
+import type { IsolationBoundaryReason } from './isolated-agent';
 
 export function registerIpc(win: BrowserWindow) {
   const config = new ConfigStore();
@@ -75,8 +83,10 @@ export function registerIpc(win: BrowserWindow) {
   const cultureExporter = new CultureExporter();
   const diagnosticsExporter = new DiagnosticsExporter();
   const cognee = new CogneeStore(config);
+  const paperclipIntake = new PaperclipIntakeStore(autonomy);
   const memory = new MemoryStore(config);
   const pgvector = new PgvectorStore();
+  const isolatedAgents = new IsolatedAgentStore(config);
 
   const bindStatusToActiveThread = (status: RuntimeStatus) => {
     if (!status.ready) return;
@@ -146,7 +156,11 @@ export function registerIpc(win: BrowserWindow) {
   ipcMain.handle('otto:terminal:open', () => openSystemTerminal());
 
   ipcMain.handle('otto:config:get', () => config.get());
-  ipcMain.handle('otto:config:set', (_e, patch: Partial<OttoConfig>) => config.update(patch));
+  ipcMain.handle('otto:config:set', (_e, patch: Partial<OttoConfig>) => {
+    const next = config.update(patch);
+    if ('theme' in patch) syncWindowBackground(win, next.theme);
+    return next;
+  });
   ipcMain.handle('otto:labs:get', () => getLabsConfig(config.get()));
   ipcMain.handle('otto:labs:set', (_e, patch: Partial<LabsConfig>) => {
     const next = applyLabsConfigPatch(config.get(), patch);
@@ -186,6 +200,13 @@ export function registerIpc(win: BrowserWindow) {
     if (input.agentId !== undefined) config.ensurePrimaryAgentId(input.agentId);
     return initWithStaleRecovery(); // reconnect and return fresh status
   });
+
+  ipcMain.handle('otto:isolated-agents:list', () => isolatedAgents.list());
+  ipcMain.handle(
+    'otto:isolated-agents:create',
+    async (_e, input: { boundaryReason: IsolationBoundaryReason; label?: string | null }) =>
+      isolatedAgents.create(input),
+  );
 
   ipcMain.handle('otto:receipts:list', () => receipts.list());
   ipcMain.handle('otto:receipts:get', (_e, id: string) => receipts.get(id));
@@ -251,6 +272,50 @@ export function registerIpc(win: BrowserWindow) {
     return { ok: true };
   });
 
+  const debugDeps = () => ({
+    win,
+    runtimeStatus: runner.getStatus(),
+    config: config.get(),
+  });
+
+  ipcMain.handle('otto:debug:show-menu', (_e, surface?: string) => {
+    showOttoDebugMenu(debugDeps(), typeof surface === 'string' ? surface : undefined);
+    return { ok: true as const };
+  });
+  ipcMain.handle('otto:debug:packet', () => buildDebugPacket({
+    runtimeStatus: runner.getStatus(),
+    config: config.get(),
+    envelope: resolveDebugEnvelope(),
+  }));
+  ipcMain.handle('otto:debug:copy-runtime-status', () => {
+    const deps = debugDeps();
+    clipboard.writeText(formatRuntimeStatusText(deps.runtimeStatus, deps.config));
+    return { ok: true as const };
+  });
+  ipcMain.handle('otto:debug:copy-packet', () => {
+    const deps = debugDeps();
+    const packet = buildDebugPacket({
+      runtimeStatus: deps.runtimeStatus,
+      config: deps.config,
+      envelope: resolveDebugEnvelope(),
+    });
+    clipboard.writeText(formatDebugPacketText(packet));
+    return { ok: true as const };
+  });
+  ipcMain.handle('otto:debug:show-logs', async () => {
+    const target = await openOttoLogs();
+    return { ok: true as const, path: target };
+  });
+  ipcMain.handle('otto:debug:open-profile', () => {
+    const path = app.getPath('userData');
+    void shell.openPath(path);
+    return { ok: true as const, path };
+  });
+  ipcMain.handle('otto:debug:open-devtools', () => {
+    win.webContents.openDevTools({ mode: 'detach' });
+    return { ok: true as const };
+  });
+
   ipcMain.handle('otto:practices:list', () => practices.listResult());
   ipcMain.handle('otto:practices:get', (_e, slug: string) => practices.get(slug));
   ipcMain.handle('otto:practices:resolve-for-text', (_e, text: string) => practices.resolveForText(text));
@@ -313,6 +378,12 @@ export function registerIpc(win: BrowserWindow) {
     'otto:tickets:update-status',
     (_e, ticketId: string, patch: Parameters<TicketStore['updateStatus']>[1]) => tickets.updateStatus(ticketId, patch),
   );
+  ipcMain.handle('otto:adapters:paperclip:snapshot', () => paperclipIntake.snapshot());
+  ipcMain.handle(
+    'otto:adapters:paperclip:connect',
+    (_e, input?: { approved?: boolean; baseUrl?: string | null }) => paperclipIntake.connect(input ?? {}),
+  );
+  ipcMain.handle('otto:adapters:paperclip:sync', () => paperclipIntake.sync());
 
   ipcMain.handle('otto:workers:list', () => workers.list());
   ipcMain.handle('otto:workers:update-status', (_e, id: string, status: import('@otto-haus/core').WorkerStatus, receiptId?: string) =>

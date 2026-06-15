@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { PaperclipIntakePanel } from './PaperclipIntakePanel';
 import { Icon } from '../components/icons';
 import { useToast } from '../components/Toast';
 import { EmptyState, StatusPill, statusPill, statusCodePill, SurfaceProof, SurfacePage, SurfaceHero, InkBlock, SurfaceInk, SurfaceStatStrip, SurfaceMeta, SplitLayout, FilterBar, InlineEmpty, WebPreviewFrame, ReceiptCard, CheckBlockBanner } from '../components/ui';
@@ -16,12 +17,27 @@ import {
   ticketsCopy,
   channelsCopy,
   settingsCopy,
+  isolatedAgentBoundaryOptions,
   listEmpty,
   cultureSettingsCopy,
   labsCopy,
   loaderCopy,
 } from '../copy/surfaces';
 import { resetOnboardingForReplay } from '../onboarding-storage';
+import {
+  STANDARD_DOMAINS,
+  domainForStandard,
+  filterStandards,
+  groupStandardsByDomain,
+  type StandardDomain,
+  type StandardStatusFilter,
+} from '../standards-filter';
+import {
+  persistDisplayTheme,
+  readStoredDisplayTheme,
+  watchSystemDisplayTheme,
+  type DisplayTheme,
+} from '../display-preferences';
 import { LabsBlockedShell } from '../labs/LabsBlockedShell';
 import {
   getSampleReceiptDetail,
@@ -32,7 +48,7 @@ import {
 } from '../onboarding-sample-receipt';
 import { useLabs, LAB_FEATURE_IDS, LAB_FEATURE_META } from '../labs/LabsContext';
 import { AppSourceDetails } from '../components/AppSourceBadge';
-import type { AppBuildInfo, LabFeatureId, WorkspaceInfo, SystemHealthReport, HealthCheck } from '../../electron/shared/types';
+import type { AppBuildInfo, IsolatedAgentRecord, LabFeatureId, WorkspaceInfo, SystemHealthReport, HealthCheck } from '../../electron/shared/types';
 import {
   ottoApi,
   type CharterDetail,
@@ -55,6 +71,7 @@ import {
   type AutonomyActionEvaluation,
   type StandardListResult,
   type StandardRecord,
+  type StandardsRegistry,
   type StatusCode,
   type ApprovalListResult,
   type KnowledgeListResult,
@@ -497,11 +514,24 @@ const ChipList: React.FC<{ values: string[]; empty: string }> = ({ values, empty
 );
 
 /* ---------- Standards ---------- */
+function formatStandardDomain(domain: StandardDomain | 'uncategorized'): string {
+  if (domain === 'uncategorized') return 'Other';
+  return domain.split('-').map((part) => part.charAt(0).toUpperCase() + part.slice(1)).join(' ');
+}
+
+function standardStatusPill(status: string) {
+  if (status === 'deprecated') return <StatusPill status={status} label={standardsCopy.filterDeprecated} />;
+  return statusPill(status);
+}
+
 export const Standards: React.FC = () => {
   const api = ottoApi();
   const [result, setResult] = useState<StandardListResult | null>(null);
   const [selectedSlug, setSelectedSlug] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [query, setQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState<StandardStatusFilter>('all');
+  const [domainFilter, setDomainFilter] = useState<'all' | StandardDomain>('all');
 
   useEffect(() => {
     if (!api) return;
@@ -520,13 +550,27 @@ export const Standards: React.FC = () => {
     };
   }, [api]);
 
+  const standards = result?.standards ?? [];
+  const filtered = useMemo(
+    () => filterStandards(standards, { query, status: statusFilter, domain: domainFilter }),
+    [standards, query, statusFilter, domainFilter],
+  );
+  const grouped = useMemo(() => groupStandardsByDomain(filtered), [filtered]);
+  const selected = filtered.find((standard) => standard.slug === selectedSlug)
+    ?? filtered[0]
+    ?? null;
+  const activeCount = standards.filter((s) => s.status === 'active').length;
+
+  useEffect(() => {
+    if (!selectedSlug && filtered[0]) setSelectedSlug(filtered[0].slug);
+    if (selectedSlug && filtered.length && !filtered.some((s) => s.slug === selectedSlug)) {
+      setSelectedSlug(filtered[0]?.slug ?? null);
+    }
+  }, [filtered, selectedSlug]);
+
   if (!api) {
     return <WebPreviewFrame surface="standards" />;
   }
-
-  const standards = result?.standards ?? [];
-  const selected = standards.find((standard) => standard.slug === selectedSlug) ?? standards[0] ?? null;
-  const activeCount = standards.filter((s) => s.status === 'active').length;
 
   return (
     <SurfacePage>
@@ -553,44 +597,107 @@ export const Standards: React.FC = () => {
       )}
       {error && <div className="notice"><span className="dot dot--warn" /> {error}</div>}
       <SkippedLoaderPanel skipped={result?.skipped ?? []} />
+      {result && standards.length > 0 && (
+        <>
+          <input
+            className="charterInput settingsGeneralSection__search"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder={standardsCopy.searchPlaceholder}
+            aria-label={standardsCopy.searchPlaceholder}
+          />
+          <FilterBar
+            options={[
+              { key: 'all', label: standardsCopy.filterAll },
+              { key: 'active', label: standardsCopy.filterActive },
+              { key: 'draft', label: standardsCopy.filterDraft },
+              { key: 'deprecated', label: standardsCopy.filterDeprecated },
+            ]}
+            active={statusFilter}
+            onSelect={(key) => setStatusFilter(key as StandardStatusFilter)}
+          />
+          <FilterBar
+            options={[
+              { key: 'all', label: standardsCopy.filterDomainAll },
+              ...STANDARD_DOMAINS.map((domain) => ({ key: domain, label: formatStandardDomain(domain) })),
+            ]}
+            active={domainFilter}
+            onSelect={(key) => setDomainFilter(key as 'all' | StandardDomain)}
+          />
+        </>
+      )}
       <SplitLayout
         list={
           <>
-            {standards.map((standard) => (
-              <button
-                key={standard.slug}
-                className={`card${standard.slug === selected?.slug ? ' is-selected' : ''}`}
-                onClick={() => setSelectedSlug(standard.slug)}
-              >
-                <div className="between">
-                  <span className="card__title">{standard.name}</span>
-                  {statusPill(standard.status)}
-                </div>
-                <span className="card__sub">{standard.meaning}</span>
-              </button>
-            ))}
             {result === null ? (
               <div className="listEmpty">
                 <p className="muted">{standardsCopy.loadingTitle}</p>
               </div>
             ) : !standards.length ? (
               <InlineEmpty title={listEmpty.standards?.title ?? 'No Standards loaded'} body={listEmpty.standards?.body ?? ''} />
-            ) : null}
+            ) : !filtered.length ? (
+              <InlineEmpty title={standardsCopy.searchNoMatch} body={listEmpty.standards?.body ?? ''} />
+            ) : (
+              grouped.map(({ domain, items }) => (
+                <div key={domain} className="standardsDomainGroup">
+                  <div className="eyebrow">{formatStandardDomain(domain)}</div>
+                  {items.map((standard) => (
+                    <button
+                      key={standard.slug}
+                      className={`card${standard.slug === selected?.slug ? ' is-selected' : ''}`}
+                      onClick={() => setSelectedSlug(standard.slug)}
+                    >
+                      <div className="between">
+                        <span className="card__title">{standard.name}</span>
+                        {standardStatusPill(standard.status)}
+                      </div>
+                      <span className="card__sub">{standard.meaning}</span>
+                    </button>
+                  ))}
+                </div>
+              ))
+            )}
           </>
         }
-        detail={selected ? <StandardDetail standard={selected} /> : null}
+        detail={
+          selected
+            ? <StandardDetail standard={selected} registry={result?.registry ?? null} />
+            : filtered.length
+              ? <InlineEmpty title={standardsCopy.selectTitle} body={standardsCopy.selectBody} />
+              : null
+        }
       />
       {result && (
         <SurfaceMeta label={standardsCopy.metaLabel}>
           <span className="filechip">{standards.length} loaded</span>
+          {filtered.length !== standards.length && (
+            <span className="filechip">{filtered.length} shown</span>
+          )}
         </SurfaceMeta>
       )}
-      <SurfaceProof surface="standards" />
+      {result?.registry?.conflicts?.length ? (
+        <div className="detailSection">
+          <div className="eyebrow">{standardsCopy.tensionMapEyebrow}</div>
+          <ul className="list">
+            {result.registry.conflicts.map((conflict) => (
+              <li key={conflict.between.join('-')}>
+                <button type="button" className="linkish" onClick={() => setSelectedSlug(conflict.between[0] ?? null)}>
+                  {conflict.between.join(' vs ')}
+                </button>
+                <span className="muted"> — {conflict.tie_breaker}</span>
+                {conflict.precedent
+                  ? <span className="filechip">{conflict.precedent}</span>
+                  : <span className="faint"> no case law yet</span>}
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
     </SurfacePage>
   );
 };
 
-const StandardDetail: React.FC<{ standard: StandardRecord }> = ({ standard }) => {
+const StandardDetail: React.FC<{ standard: StandardRecord; registry: StandardsRegistry | null }> = ({ standard, registry }) => {
   const api = ottoApi();
   const [conflict, setConflict] = useState<StandardConflictResult | null>(null);
 
@@ -628,21 +735,37 @@ const StandardDetail: React.FC<{ standard: StandardRecord }> = ({ standard }) =>
         )}
       </div>
     )}
+    {!conflict && (
+      <p className="muted">{standardsCopy.conflictNoneHint}</p>
+    )}
     <div className="detailSection">
       <div className="between">
         <div>
           <div className="eyebrow">standard detail</div>
           <div className="h-sec">{standard.name}</div>
         </div>
-        {statusPill(standard.status)}
+        {standardStatusPill(standard.status)}
       </div>
       <p className="lede" style={{ marginTop: 8 }}>{standard.meaning}</p>
       <dl className="kv charterKv">
         <div><dt>schema</dt><dd>{standard.schema}</dd></div>
         <div><dt>slug</dt><dd className="mono">{standard.slug}</dd></div>
         <div><dt>version</dt><dd>{standard.version}</dd></div>
+        <div><dt>{standardsCopy.domainLabel}</dt><dd>{formatStandardDomain(domainForStandard(standard))}</dd></div>
         <div><dt>file</dt><dd className="mono">{standard.file}</dd></div>
       </dl>
+    </div>
+
+    {standard.markdown && (
+      <div className="detailSection">
+        <div className="eyebrow">{standardsCopy.canonBodyEyebrow}</div>
+        <pre className="mono standardsMarkdownExcerpt">{standard.markdown.slice(0, 1200)}{standard.markdown.length > 1200 ? '…' : ''}</pre>
+      </div>
+    )}
+
+    <div className="detailSection">
+      <div className="eyebrow">{standardsCopy.curationPathEyebrow}</div>
+      <p className="muted">{standardsCopy.curationPathBody}</p>
     </div>
 
     <div className="detailGrid detailGrid--2">
@@ -667,6 +790,20 @@ const StandardDetail: React.FC<{ standard: StandardRecord }> = ({ standard }) =>
         <span className="filechip" style={{ marginTop: 10 }}>{standard.slug} · {standard.file}</span>
       </div>
     </div>
+
+    {!!standard.related_anti_patterns?.length && (
+      <div className="detailSection">
+        <div className="eyebrow">{standardsCopy.antiPatternsEyebrow}</div>
+        <ChipList values={standard.related_anti_patterns} empty="" />
+      </div>
+    )}
+
+    {!!registry?.anti_patterns?.length && (
+      <div className="detailSection">
+        <div className="eyebrow">{standardsCopy.antiPatternsEyebrow} · registry</div>
+        <ChipList values={registry.anti_patterns} empty="" />
+      </div>
+    )}
   </div>
   );
 };
@@ -2640,6 +2777,7 @@ export const Tickets: React.FC = () => {
           { label: ticketsCopy.statReview, value: reviewCount, tone: reviewCount ? 'warn' : 'neutral' },
         ]}
       />
+      <PaperclipIntakePanel />
       {error && <div className="notice"><span className="dot dot--warn" /> {error}</div>}
       {checkBlock && (
         <CheckBlockBanner
@@ -3108,6 +3246,123 @@ const ConnectLetta: React.FC = () => {
           {displayStatus.transportFallbackReason ? ` (fallback: ${displayStatus.transportFallbackReason})` : ''}
         </p>
       )}
+    </div>
+  );
+};
+
+const IsolatedAgentPanel: React.FC = () => {
+  const api = ottoApi();
+  const { push: pushToast } = useToast();
+  const [agents, setAgents] = useState<IsolatedAgentRecord[]>([]);
+  const [boundaryReason, setBoundaryReason] = useState('');
+  const [label, setLabel] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const refresh = () => {
+    if (!api?.isolatedAgents) return;
+    void api.isolatedAgents.list().then((result) => setAgents(result.agents)).catch(() => setAgents([]));
+  };
+
+  useEffect(() => {
+    refresh();
+  }, [api]);
+
+  if (!api?.isolatedAgents) {
+    return (
+      <p className="settingsFieldHint">
+        Isolated agent creation is available in the desktop app after Letta is connected.
+      </p>
+    );
+  }
+
+  const create = async () => {
+    if (!boundaryReason) {
+      setError(settingsCopy.isolatedAgentBoundaryPlaceholder);
+      return;
+    }
+    setBusy(true);
+    setError(null);
+    try {
+      const result = await api.isolatedAgents.create({
+        boundaryReason: boundaryReason as IsolatedAgentRecord['boundaryReason'],
+        label: label.trim() || null,
+      });
+      setBoundaryReason('');
+      setLabel('');
+      refresh();
+      pushToast({
+        title: settingsCopy.isolatedAgentCreateSuccess,
+        body: settingsCopy.isolatedAgentCreateSuccessBody,
+        tone: 'ok',
+      });
+      if (result.receipt?.path) {
+        pushToast({
+          title: settingsCopy.isolatedAgentReceiptNote,
+          body: result.receipt.id,
+          tone: 'info',
+        });
+      }
+    } catch (e) {
+      const message = e instanceof Error ? e.message : String(e);
+      setError(message);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const boundaryLabel = (id: IsolatedAgentRecord['boundaryReason']) =>
+    isolatedAgentBoundaryOptions.find((row) => row.id === id)?.label ?? id;
+
+  return (
+    <div className="settingsBlock">
+      <p className="settingsFieldHint">{settingsCopy.isolatedAgentStandardsNote}</p>
+      <div className="settingsField">
+        <label>
+          <span>{settingsCopy.isolatedAgentBoundaryLabel}</span>
+          <select
+            style={inputStyle}
+            value={boundaryReason}
+            onChange={(e) => setBoundaryReason(e.target.value)}
+          >
+            <option value="">{settingsCopy.isolatedAgentBoundaryPlaceholder}</option>
+            {isolatedAgentBoundaryOptions.map((row) => (
+              <option key={row.id} value={row.id}>{row.label}</option>
+            ))}
+          </select>
+        </label>
+      </div>
+      <div className="settingsField">
+        <label>
+          <span>{settingsCopy.isolatedAgentLabelField}</span>
+          <input
+            style={inputStyle}
+            value={label}
+            onChange={(e) => setLabel(e.target.value)}
+            placeholder={settingsCopy.isolatedAgentLabelPlaceholder}
+            spellCheck={false}
+          />
+        </label>
+      </div>
+      {error ? <p className="faint" style={{ margin: 0, color: 'var(--warn)' }}>{error}</p> : null}
+      <button type="button" className="btn btn--primary" onClick={() => void create()} disabled={busy}>
+        {busy ? settingsCopy.isolatedAgentCreateBusy : settingsCopy.isolatedAgentCreate}
+      </button>
+      <div style={{ marginTop: 16 }}>
+        <div className="settingsFieldRow__title">{settingsCopy.isolatedAgentListTitle}</div>
+        {agents.length === 0 ? (
+          <p className="settingsFieldHint">{settingsCopy.isolatedAgentListEmpty}</p>
+        ) : (
+          <ul className="settingsList">
+            {agents.map((agent) => (
+              <li key={agent.agentId} className="mono" style={{ fontSize: 12, marginBottom: 8 }}>
+                {agent.label || agent.agentId}
+                <span className="muted"> · {boundaryLabel(agent.boundaryReason)} · {agent.agentId}</span>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
     </div>
   );
 };
@@ -3793,6 +4048,55 @@ const DreamSettingsPanel: React.FC<{
   );
 };
 
+const DisplaySettingsPanel: React.FC = () => {
+  const api = ottoApi();
+  const [theme, setTheme] = useState<DisplayTheme>(() => readStoredDisplayTheme());
+
+  useEffect(() => {
+    if (!api) return;
+    void api.config.get().then((cfg) => {
+      if (!cfg.theme) return;
+      setTheme(cfg.theme);
+      persistDisplayTheme(cfg.theme);
+    }).catch(() => {});
+  }, [api]);
+
+  useEffect(() => watchSystemDisplayTheme(theme), [theme]);
+
+  const updateTheme = async (next: DisplayTheme) => {
+    setTheme(next);
+    persistDisplayTheme(next);
+    if (api) {
+      try {
+        await api.config.set({ theme: next });
+      } catch {
+        /* best effort */
+      }
+    }
+  };
+
+  return (
+    <div className="settingsBlock">
+      <div className="settingsField">
+        <label>
+          <span>{settingsCopy.displayThemeLabel}</span>
+          <select
+            style={inputStyle}
+            value={theme}
+            onChange={(e) => void updateTheme(e.target.value as DisplayTheme)}
+            aria-label={settingsCopy.displayThemeLabel}
+          >
+            <option value="light">{settingsCopy.displayThemeLight}</option>
+            <option value="dark">{settingsCopy.displayThemeDark}</option>
+            <option value="system">{settingsCopy.displayThemeSystem}</option>
+          </select>
+        </label>
+        <p className="settingsFieldHint">{settingsCopy.displayThemeHint}</p>
+      </div>
+    </div>
+  );
+};
+
 const LabsSettingsPanel: React.FC = () => {
   const { labs, setMasterEnabled, setFeatureEnabled, hydrated } = useLabs();
 
@@ -3886,7 +4190,7 @@ const ConversationSortSetting: React.FC = () => {
   );
 };
 
-type SettingsSectionId = 'general' | 'providers' | 'memory' | 'culture' | 'labs';
+type SettingsSectionId = 'general' | 'display' | 'providers' | 'memory' | 'culture' | 'labs';
 
 export const Settings: React.FC = () => {
   const rt = useRuntimeContext();
@@ -3905,6 +4209,7 @@ export const Settings: React.FC = () => {
       const pending = sessionStorage.getItem('otto.settings.section');
       if (
         pending === 'general'
+        || pending === 'display'
         || pending === 'providers'
         || pending === 'memory'
         || pending === 'culture'
@@ -3920,6 +4225,7 @@ export const Settings: React.FC = () => {
 
   const settingsTabs: Array<{ id: SettingsSectionId; label: string; icon: React.ReactNode }> = [
     { id: 'general', label: settingsCopy.tabGeneral, icon: Icon.settings },
+    { id: 'display', label: settingsCopy.tabDisplay, icon: Icon.theme },
     { id: 'providers', label: settingsCopy.tabProviders, icon: Icon.lock },
     { id: 'memory', label: settingsCopy.tabMemory, icon: Icon.curation },
     { id: 'culture', label: settingsCopy.tabCulture, icon: Icon.file },
@@ -3952,6 +4258,13 @@ export const Settings: React.FC = () => {
 
       {section === 'providers' ? (
         <ModelProviders />
+      ) : section === 'display' ? (
+        <div className="settingsPage__content">
+          <SettingsSectionHeader title={settingsCopy.displayTitle} lede={settingsCopy.displayLede} />
+          <DisplaySettingsPanel />
+          <p className="faint mono settingsLocalFootnote">{settingsCopy.localOnlyFootnote}</p>
+          <AppSourceDetails info={buildInfo} />
+        </div>
       ) : section === 'memory' ? (
         <div className="settingsPage__content">
           <section id="settings-memory">
@@ -3993,7 +4306,7 @@ export const Settings: React.FC = () => {
 
           <section>
             <SettingsSectionHeader title={settingsCopy.advancedAgentsTitle} lede={settingsCopy.advancedAgentsLede} />
-            <p className="settingsFieldHint">{settingsCopy.isolatedSecondAgentComingSoon}</p>
+            <IsolatedAgentPanel />
           </section>
 
           <section>

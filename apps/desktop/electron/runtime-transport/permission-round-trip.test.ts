@@ -41,6 +41,7 @@ function mockConfig(): ConfigStore {
     agentCandidates: () => [SMOKE_AGENT],
     get: () => ({}),
     update: () => ({}),
+    ensurePrimaryAgentId: () => {},
   } as unknown as ConfigStore;
 }
 

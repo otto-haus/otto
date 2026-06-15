@@ -58,6 +58,7 @@
     "check:sensitive-files": "bash scripts/check-sensitive-file-paths.sh",
     "check:provider-mirror-audit": "bash scripts/check-provider-mirror-log-audit.sh",
     "lint:changed": "bash scripts/lint-changed.sh",
+    "check:ship-tier-matrix": "bun scripts/check-ship-tier-matrix.mjs",
     "verify:v0": "bun scripts/verify-v0.mjs",
     "verify:agent-loop": "bun scripts/verify-agent-loop-contract.mjs",
     "health:otto": "bun scripts/otto-health.mjs",

@@ -135,9 +135,8 @@ Merge `config/cognee-mcp.template.json` into your MCP config (path varies by cli
 ```json
 {
   "mcpServers": {
-    "cognee-local": {
-      "command": "cognee",
-      "args": ["mcp"],
+    "cognee-local-http": {
+      "url": "http://127.0.0.1:8001/mcp",
       "env": {
         "OTTO_COGNEE_ENABLED": "1",
         "OTTO_COGNEE_BASE_URL": "http://127.0.0.1:8000"
@@ -146,6 +145,8 @@ Merge `config/cognee-mcp.template.json` into your MCP config (path varies by cli
   }
 }
 ```
+
+Full template with stdio fallback: `config/cognee-mcp.template.json`. Cognee 1.1.x prefers HTTP MCP on `:8001` when started via `cognee-cli -ui`; stdio `cognee-cli mcp` only when your install ships it.
 
 **Read tools (green — `cognee.recall`):** search, recall, read_graph, context  
 **Write tools (yellow — `cognee.capture`):** ingest, remember, add, cognify — use `scripts/cognee-capture.sh` batch path with receipt  
@@ -159,11 +160,12 @@ Autonomy mapping lives in `autonomy/policy.yaml` under `actions.cognee.*`. Unit 
 export OTTO_COGNEE_ENABLED=1
 ./scripts/cognee-home.sh start
 ./scripts/cognee-home.sh health
-# In a disposable Letta conversation (never default):
-# ask one recall question → expect cited paths from latest capture receipt
+task smoke:cognee-recall
+# Optional Letta path (never conversation=default):
+# OTTO_AGENT_ID=<agent-id> task smoke:cli — then one MCP recall question in a --new thread
 ```
 
-Optional recall receipt template: `receipts/cognee/recall/<id>.json` (log-only in v1).
+Recall receipts: `receipts/cognee/recall/<id>.json` (`kind: cognee_recall`, query → path citations). Staging bundle: `docs/receipts/staging/cognee-recall-smoke-*.json`.
 
 ---
 

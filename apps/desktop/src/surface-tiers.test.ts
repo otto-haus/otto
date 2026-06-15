@@ -48,10 +48,23 @@ describe('surface-tiers', () => {
     expect(surfaceGate('settings', labs, true)).toBe('open');
   });
 
+  test('tickets surface is open for Paperclip intake (#92)', () => {
+    const labs = defaultLabsConfig();
+    expect(isSurfaceComingSoon('tickets', labs)).toBe(false);
+    expect(surfaceGate('tickets', labs, true)).toBe('open');
+  });
+
   test('receipts surface is open for onboarding payoff (#139)', () => {
     const labs = defaultLabsConfig();
     expect(isSurfaceComingSoon('receipts', labs)).toBe(false);
     expect(surfaceGate('receipts', labs, true)).toBe('open');
+  });
+
+  test('standards surface is open (#448)', () => {
+    const labs = defaultLabsConfig();
+    expect(surfaceTier('standards')).toBe('ship');
+    expect(isSurfaceComingSoon('standards', labs)).toBe(false);
+    expect(surfaceGate('standards', labs, true)).toBe('open');
   });
 
   test('labs surfaces blocked until master and feature enabled', () => {

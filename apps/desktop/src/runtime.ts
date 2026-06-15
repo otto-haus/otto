@@ -1,5 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { flushMessages, readStoredMessages, type StoredChatMsg } from './chat/message-storage';
+import {
+  loadThreadMessages,
+  loadThreadMessagesForView,
+  persistActiveThread,
+  persistLeavingThread,
+} from './chat/thread-messages';
 import { activityFromRuntimeMessage, type TurnActivity } from './chat/turn-activity';
 import type {
   Charter,
@@ -351,19 +357,6 @@ function assistantText(m: Record<string, unknown>): string | null {
   return null;
 }
 
-function loadThreadMessages(
-  threadId: string | null,
-  cache: Map<string, ChatMsg[]>,
-  opts: { allowLegacyFallback?: boolean } = {},
-): ChatMsg[] {
-  if (!threadId) return [];
-  const cached = cache.get(threadId);
-  if (cached) return cached;
-  const loaded = readStoredMessages(threadId, { allowLegacyFallback: opts.allowLegacyFallback });
-  cache.set(threadId, loaded);
-  return loaded;
-}
-
 export function useRuntime() {
   const api = ottoApi();
   const [status, setStatus] = useState<RuntimeStatus | null>(null);
@@ -381,13 +374,16 @@ export function useRuntime() {
   /** Thread that owns the in-flight Letta turn — events route here, not to the active view. */
   const inflightThreadRef = useRef<string | null>(null);
 
-  const applyThreadView = (threadId: string, opts?: { persistLeaving?: boolean; allowLegacyFallback?: boolean }) => {
-    const leaving = activeThreadRef.current;
-    if (opts?.persistLeaving !== false && leaving && leaving !== threadId) {
-      threadMessagesCache.current.set(leaving, messagesRef.current);
-      flushMessages(leaving, messagesRef.current);
-    }
-    const loaded = loadThreadMessages(threadId, threadMessagesCache.current, { allowLegacyFallback: opts?.allowLegacyFallback });
+  const applyThreadView = (threadId: string, opts?: { allowLegacyFallback?: boolean }) => {
+    persistLeavingThread(
+      threadMessagesCache.current,
+      activeThreadRef.current,
+      threadId,
+      messagesRef.current,
+    );
+    const loaded = loadThreadMessagesForView(threadId, threadMessagesCache.current, {
+      allowLegacyFallback: opts?.allowLegacyFallback,
+    });
     activeThreadRef.current = threadId;
     messagesRef.current = loaded;
     setActiveThreadId(threadId);
@@ -414,7 +410,7 @@ export function useRuntime() {
       threadHydrated.current = true;
       const threadId = result.activeThreadId;
       activeThreadRef.current = threadId;
-      const loaded = loadThreadMessages(threadId, threadMessagesCache.current, { allowLegacyFallback: true });
+      const loaded = loadThreadMessagesForView(threadId, threadMessagesCache.current, { allowLegacyFallback: true });
       messagesRef.current = loaded;
       setActiveThreadId(threadId);
       setMessages(loaded);
@@ -431,7 +427,7 @@ export function useRuntime() {
       threadHydrated.current = true;
       if (status) setStatus(status);
       if (activeThreadRef.current === threadId) {
-        const loaded = loadThreadMessages(threadId, threadMessagesCache.current, { allowLegacyFallback });
+        const loaded = loadThreadMessagesForView(threadId, threadMessagesCache.current, { allowLegacyFallback });
         messagesRef.current = loaded;
         setMessages(loaded);
         return;
@@ -472,7 +468,7 @@ export function useRuntime() {
           const threadId = result.activeThreadId;
           if (!threadId) return;
           activeThreadRef.current = threadId;
-          const loaded = loadThreadMessages(threadId, threadMessagesCache.current);
+          const loaded = loadThreadMessagesForView(threadId, threadMessagesCache.current);
           messagesRef.current = loaded;
           setActiveThreadId(threadId);
           setMessages(loaded);
@@ -554,6 +550,10 @@ export function useRuntime() {
         if (conversationId) {
           void api.threads.touch({ lettaConversationId: conversationId });
         }
+        if ((m as { success?: boolean }).success === false) {
+          const failed = m as { error?: unknown; reason?: unknown; message?: unknown };
+          sendError.current = String(failed.error ?? failed.reason ?? failed.message ?? 'Send failed.');
+        }
       }
     });
     return off;
@@ -624,17 +624,17 @@ export function useRuntime() {
     setTurnActivity(null);
     setBusy(false);
     if (activeThreadRef.current) {
-      applyThreadView(activeThreadRef.current, { persistLeaving: true });
+      persistActiveThread(threadMessagesCache.current, activeThreadRef.current, messagesRef.current);
     }
     const { thread, status: next } = await api.threads.create();
-    applyThreadView(thread.id, { persistLeaving: false });
+    applyThreadView(thread.id);
     setStatus(next);
   };
 
   const switchThread = async (threadId: string) => {
     if (!api) return;
     if (threadId === activeThreadRef.current) {
-      applyThreadView(threadId, { persistLeaving: false });
+      applyThreadView(threadId);
       return;
     }
     if (busy) await abort();
@@ -644,18 +644,14 @@ export function useRuntime() {
     inflightThreadRef.current = null;
     setTurnActivity(null);
     setBusy(false);
-    if (activeThreadRef.current) {
-      threadMessagesCache.current.set(activeThreadRef.current, messagesRef.current);
-      flushMessages(activeThreadRef.current, messagesRef.current);
-    }
-    applyThreadView(threadId, { persistLeaving: false });
+    applyThreadView(threadId);
     try {
       const { thread, status: next } = await api.threads.switch(threadId);
-      applyThreadView(thread.id, { persistLeaving: false });
+      applyThreadView(thread.id);
       setStatus(next);
     } catch {
       // Still swap local history even if Letta reconnect fails mid-switch.
-      applyThreadView(threadId, { persistLeaving: false });
+      applyThreadView(threadId);
     }
   };
 
@@ -666,12 +662,12 @@ export function useRuntime() {
     const result = await api.threads.list();
     const nextThreadId = result.activeThreadId;
     if (nextThreadId) {
-      applyThreadView(nextThreadId, { persistLeaving: false });
+      applyThreadView(nextThreadId);
       setStatus(await api.runtime.init());
       return;
     }
     const { thread, status: next } = await api.threads.create();
-    applyThreadView(thread.id, { persistLeaving: false });
+    applyThreadView(thread.id);
     setStatus(next);
   };
 

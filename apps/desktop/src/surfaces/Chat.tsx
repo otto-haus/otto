@@ -9,7 +9,7 @@ import { isElectron, ottoApi, type EffortLevel, type LettaModelOption, type Save
 import { useRuntimeContext } from '../RuntimeContext';
 import type { SurfaceId } from '../components/Sidebar';
 import { OttoMark } from '../components/OttoMark';
-import { CheckBlockBanner, MessageActions, Modal, PermissionCard, ReceiptInlineCard, type PermissionDecision, type PermissionRequestView } from '../components/ui';
+import { CheckBlockBanner, CommandStationStrip, MessageActions, Modal, PermissionCard, ReceiptInlineCard, type PermissionDecision, type PermissionRequestView } from '../components/ui';
 import { TodoPanel } from '../components/TodoPanel';
 import { displayThreadTitle } from '../components/ui/ThreadList';
 import { chatCopy, permissionCopy, toastCopy } from '../copy/surfaces';
@@ -19,10 +19,13 @@ import { notifyOnboardingFirstMessage, resolveOnboardingStarterAction } from '..
 import { ProposeCorrectionModal, type ProposeCorrectionContext } from '../chat/ProposeCorrectionModal';
 import { serializeConversationMarkdown } from '../chat/conversation-markdown';
 import { runTicketCommand } from '../chat/ticket-commands';
+import { formatResolvedModelLabel, helpTextForModelOption } from '../chat/model-option-help';
 import {
+  appendFailedQueueItem,
   clearInFlight,
   composerDraftFromQueueText,
   createQueueItem,
+  enqueueQueueItemForThread,
   hasDuplicateQueueText,
   nextQueueItemForThread,
   persistInFlight,
@@ -42,6 +45,7 @@ import {
 import type { ProposalTarget } from '@otto-haus/core';
 import type { ChatMsg } from '../runtime';
 import { CollapsibleMessageBody } from '../chat/CollapsibleMessageBody';
+import { useOttoDebugContextMenu } from '../debug/useOttoDebugContextMenu';
 import { isTypingTarget, jumpTurnAnchor, turnAnchorIndices } from '../chat/turn-navigation';
 import {
   curateModelOptions,
@@ -97,9 +101,33 @@ const formatRuntimeSubtitle = (ready: boolean, reason: string | undefined, model
   return `${text.slice(0, 93)}…`;
 };
 
+type ChatRuntimeStatus = NonNullable<ReturnType<typeof useRuntimeContext>['status']>;
+
+/** Product subtitle — model + memory state; no raw agent/conversation ids (#081). */
+const formatChatSessionSubtitle = (
+  st: ChatRuntimeStatus,
+  modelLabel: string,
+): string =>
+  [
+    modelLabel,
+    st.memfsEnabled ? 'Letta memory on' : 'Letta memory off',
+    st.transportFallbackReason ?? null,
+  ].filter(Boolean).join(' · ');
+
+/** Debug/support tooltip only — not shown in default connected chrome. */
+const formatChatDebugTitle = (st: ChatRuntimeStatus, modelLabel: string): string =>
+  [
+    st.agentId ?? 'no agent',
+    modelLabel,
+    st.transportFallbackReason ?? null,
+    st.conversationId ?? 'no conversation',
+    st.memfsEnabled ? 'Letta memory on' : 'Letta memory off',
+  ].filter(Boolean).join(' · ');
+
 const ModelEffortPickers: React.FC<{
   busy: boolean;
   selectedModel: string | null;
+  resolvedModelLabel: string | null;
   selectedEffort: EffortLevel;
   modelOpen: boolean;
   effortOpen: boolean;
@@ -114,6 +142,7 @@ const ModelEffortPickers: React.FC<{
 }> = ({
   busy,
   selectedModel,
+  resolvedModelLabel,
   selectedEffort,
   modelOpen,
   effortOpen,
@@ -152,9 +181,17 @@ const ModelEffortPickers: React.FC<{
         disabled={busy}
         aria-haspopup="menu"
         aria-expanded={modelOpen}
-        aria-label={`Model: ${labelForModel(selectedModel, modelOptions)}`}
+        aria-label={resolvedModelLabel
+          ? `Model: ${labelForModel(selectedModel, modelOptions)} (${chatCopy.autoModelResolvedPrefix}: ${resolvedModelLabel})`
+          : `Model: ${labelForModel(selectedModel, modelOptions)}`}
+        title={resolvedModelLabel
+          ? `${chatCopy.autoModelResolvedPrefix}: ${resolvedModelLabel}`
+          : undefined}
       >
         <span>{labelForModel(selectedModel, modelOptions)}</span>
+        {resolvedModelLabel && (
+          <span className="picker__resolved mono faint">{chatCopy.autoModelResolvedPrefix}: {resolvedModelLabel}</span>
+        )}
         <span className="picker__chev">›</span>
       </button>
       {modelOpen && (
@@ -164,29 +201,45 @@ const ModelEffortPickers: React.FC<{
           aria-label={chatCopy.selectModelTitle}
         >
           <div className="picker__title">{chatCopy.selectModelTitle}</div>
-          {visibleModels.map((m) => (
-            <button
-              type="button"
-              key={m.handle}
-              role="menuitemradio"
-              aria-checked={selectedModel === m.handle}
-              className={`picker__option${selectedModel === m.handle ? ' is-selected' : ''}`}
-              onClick={() => {
-                onClose();
-                onSelectModel(m.handle);
-              }}
-            >
-              <span className="picker__optionLabel">
-                {labelForCuratedModel(m)}
-                {(m.deprecated || m.tier === 'legacy') && (
-                  <span className="picker__badge">
-                    {m.deprecated ? chatCopy.modelDeprecatedBadge : chatCopy.modelLegacyBadge}
+          {visibleModels.map((m) => {
+            const helpText = helpTextForModelOption(m);
+            const resolvedForOption = selectedModel === m.handle ? resolvedModelLabel : null;
+            return (
+              <button
+                type="button"
+                key={m.handle}
+                role="menuitemradio"
+                aria-checked={selectedModel === m.handle}
+                aria-describedby={helpText ? `model-help-${m.handle}` : undefined}
+                title={helpText ?? undefined}
+                className={`picker__option${helpText ? ' picker__option--with-help' : ''}${selectedModel === m.handle ? ' is-selected' : ''}`}
+                onClick={() => {
+                  onClose();
+                  onSelectModel(m.handle);
+                }}
+              >
+                <span className="picker__optionMain">
+                  <span className="picker__optionLabel">
+                    {labelForCuratedModel(m)}
+                    {(m.deprecated || m.tier === 'legacy') && (
+                      <span className="picker__badge">
+                        {m.deprecated ? chatCopy.modelDeprecatedBadge : chatCopy.modelLegacyBadge}
+                      </span>
+                    )}
                   </span>
-                )}
-              </span>
-              <span className="mono faint">{m.handle}</span>
-            </button>
-          ))}
+                  {helpText && (
+                    <span className="picker__optionDesc" id={`model-help-${m.handle}`}>{helpText}</span>
+                  )}
+                  {resolvedForOption && (
+                    <span className="picker__optionResolved mono faint">
+                      {chatCopy.autoModelResolvedPrefix}: {resolvedForOption}
+                    </span>
+                  )}
+                </span>
+                <span className="mono faint">{m.handle}</span>
+              </button>
+            );
+          })}
           {hiddenLegacyCount > 0 && (
             <button
               type="button"
@@ -358,19 +411,6 @@ const readAttachments = (): AttachmentDraft[] => {
 
 const persist = (key: string, value: unknown) => {
   try { localStorage.setItem(key, JSON.stringify(value)); } catch { /* best effort */ }
-};
-
-const dedupeQueue = (items: Array<QueueItem | null>): QueueItem[] => {
-  const out: QueueItem[] = [];
-  for (const item of items) {
-    if (item && !out.some((x) => x.id === item.id)) out.push(item);
-  }
-  return out;
-};
-
-const appendQueueItem = (items: QueueItem[], text: string, threadId: string | null | undefined): QueueItem[] => {
-  if (hasDuplicateQueueText(items, threadId, text)) return items;
-  return [...items, createQueueItem(text, 'queued', threadId ?? null)];
 };
 
 const QueueStrip: React.FC<{
@@ -650,6 +690,9 @@ const LiveChat: React.FC<{
 }) => {
   const api = ottoApi();
   const rt = useRuntimeContext();
+  const chatDebugMenu = useOttoDebugContextMenu('chat');
+  const runtimeStatusDebugMenu = useOttoDebugContextMenu('runtime-status');
+  const runtimeSetupDebugMenu = useOttoDebugContextMenu('runtime-setup');
   const { threads } = useChatThreads(rt.activeThreadId);
   const toast = useToast();
   const [draft, setDraft] = useState(readDraft);
@@ -679,20 +722,14 @@ const LiveChat: React.FC<{
   const activeModel = st?.model ?? st?.modelHandle ?? null;
   const selectedModel = requestedModel ?? activeModel;
   const selectedEffort = st?.effort ?? 'high';
+  const resolvedModelLabel = formatResolvedModelLabel(requestedModel, activeModel, modelOptions, labelForModel);
   const activeThreadTitle = threads.find((t) => t.id === rt.activeThreadId)?.title;
   const headTitle = displayThreadTitle(activeThreadTitle ?? 'New chat');
-  const modelStatusLabel = requestedModel && activeModel && requestedModel !== activeModel
-    ? `${labelForModel(requestedModel, modelOptions)} → ${labelForModel(activeModel, modelOptions)}`
+  const modelStatusLabel = resolvedModelLabel
+    ? `${labelForModel(requestedModel, modelOptions)} → ${resolvedModelLabel}`
     : labelForModel(selectedModel, modelOptions);
-  const chatStatusLine = st
-    ? [
-      st.agentId ?? 'no agent',
-      modelStatusLabel,
-      st.transportFallbackReason ?? null,
-      st.conversationId ?? 'no conversation',
-      st.memfsEnabled ? 'Letta memory' : null,
-    ].filter(Boolean).join(' · ')
-    : 'connecting…';
+  const chatSessionSubtitle = st ? formatChatSessionSubtitle(st, modelStatusLabel) : 'connecting…';
+  const chatDebugTitle = st ? formatChatDebugTitle(st, modelStatusLabel) : undefined;
 
   useEffect(() => {
     if (!api) return;
@@ -732,7 +769,7 @@ const LiveChat: React.FC<{
       const detail = (event as CustomEvent<{ text?: string; send?: boolean }>).detail;
       const action = resolveOnboardingStarterAction(detail, { ready: !!ready, hasApi: !!api });
       if (action.kind === 'queue') {
-        setQueue((items) => appendQueueItem(items, action.text, rt.activeThreadId));
+        setQueue((items) => enqueueQueueItemForThread(items, action.text, rt.activeThreadId));
       } else if (action.kind === 'draft') {
         setDraft(action.text);
       }
@@ -828,6 +865,13 @@ const LiveChat: React.FC<{
   const lastStreamMessage = streamMessages[streamMessages.length - 1];
   const assistantStreaming = rt.busy && lastStreamMessage?.who === 'otto' && !!lastStreamMessage.text;
   const activityLabel = rt.turnActivity?.label ?? chatCopy.workingPulse;
+  const headerSubtitle = st
+    ? (rt.busy
+      ? activityLabel
+      : ready
+        ? chatSessionSubtitle
+        : formatRuntimeSubtitle(ready, st.reason, labelForModel(selectedModel, modelOptions)))
+    : 'connecting…';
 
   const copyConversationMarkdown = async () => {
     if (streamMessages.length === 0) {
@@ -957,12 +1001,13 @@ const LiveChat: React.FC<{
         if (recalledId) setRecalledQueueId(null);
         return;
       }
+      const steering = rt.busy;
       setQueue((items) => {
         const withoutRecalled = recalledId ? removeQueueItem(items, recalledId) : items;
-        return appendQueueItem(withoutRecalled, text, rt.activeThreadId);
+        return enqueueQueueItemForThread(withoutRecalled, text, rt.activeThreadId, { steer: steering });
       });
       if (recalledId) setRecalledQueueId(null);
-      if (rt.busy) void rt.abort();
+      if (steering) void rt.abort();
       setDraft('');
       setAttachments([]);
     })();
@@ -982,7 +1027,7 @@ const LiveChat: React.FC<{
       })
       .catch(() => {
         clearInFlight(next.id);
-        setQueue((items) => dedupeQueue([{ ...next, state: 'failed' }, ...items]));
+        setQueue((items) => appendFailedQueueItem(items, next));
       })
       .finally(() => {
         draining.current = false;
@@ -994,6 +1039,7 @@ const LiveChat: React.FC<{
   return (
     <div
       className={`chat${draggingImage ? ' is-dragging-image' : ''}`}
+      onContextMenu={chatDebugMenu.onContextMenu}
       onDragOver={(e) => {
         if (!imageFilesFromTransfer(e.dataTransfer).length) return;
         e.preventDefault();
@@ -1018,11 +1064,11 @@ const LiveChat: React.FC<{
           <span className="chat__avatar"><OttoMark size={30} className="ottoMark" /></span>
           <div className="chat__titleBlock">
             <div className="chat__title">{headTitle}</div>
-            <div className="chat__id" title={st ? chatStatusLine : undefined}>
+            <div className="chat__id" title={chatDebugTitle} onContextMenu={runtimeStatusDebugMenu.onContextMenu}>
               {st ? (
                 <>
-                  <span className={`dot ${ready ? 'dot--ok' : 'dot--warn'}`} aria-hidden="true" />
-                  <span>{ready ? chatStatusLine : formatRuntimeSubtitle(ready, st.reason, labelForModel(selectedModel, modelOptions))}</span>
+                  <span className={`dot ${rt.busy ? 'dot--idle' : ready ? 'dot--ok' : 'dot--warn'}`} aria-hidden="true" />
+                  <span>{headerSubtitle}</span>
                 </>
               ) : 'connecting…'}
             </div>
@@ -1040,9 +1086,9 @@ const LiveChat: React.FC<{
                 >
                   {chatCopy.copyMarkdown}
                 </button>
-                <span className={`pill ${ready ? 'pill--ok' : 'pill--warn'}`}>
-                  {ready ? 'connected' : 'setup'}
-                </span>
+                {!ready ? (
+                  <span className="pill pill--warn">setup</span>
+                ) : null}
               </>
             ) : null}
             {!st ? (
@@ -1061,7 +1107,7 @@ const LiveChat: React.FC<{
         <div className="chat__streamInner">
           {rt.activeTodos.length > 0 && <TodoPanel todos={rt.activeTodos} />}
           {!ready && (
-            <div className="inkblock chat__setup">
+            <div className="inkblock chat__setup" onContextMenu={runtimeSetupDebugMenu.onContextMenu}>
               {!st ? (
                 <>
                   <div className="inkblock__eyebrow"><span className="dot dot--idle" /> {chatCopy.runtimeConnectingEyebrow}</div>
@@ -1102,6 +1148,9 @@ const LiveChat: React.FC<{
               <p className="faint" style={{ marginTop: 8, fontSize: 13 }}>{chatCopy.diagnosticsHint}</p>
             </div>
           )}
+          {ready && streamMessages.length === 0 && onNavigate ? (
+            <CommandStationStrip onNavigate={onNavigate} />
+          ) : null}
           {streamMessages.length === 0 && (
             <div className={`chatEmpty${ready ? '' : ' chatEmpty--muted'}`}>
               <div className="eyebrow">{chatCopy.sessionEyebrow}</div>
@@ -1251,6 +1300,7 @@ const LiveChat: React.FC<{
             <ModelEffortPickers
               busy={rt.busy}
               selectedModel={selectedModel}
+              resolvedModelLabel={resolvedModelLabel}
               selectedEffort={selectedEffort}
               modelOpen={modelOpen}
               effortOpen={effortOpen}

@@ -225,6 +225,7 @@ export const chatCopy = {
   customModelApply: 'Apply',
   modelDeprecatedBadge: 'deprecated',
   modelLegacyBadge: 'legacy',
+  autoModelResolvedPrefix: 'Resolved',
   reasoningTitle: 'Reasoning',
   pickerRetry: 'Retry',
   pickerOpenSettings: 'Open Settings',
@@ -429,6 +430,22 @@ export const standardsCopy = {
   conflictEyebrow: 'conflict · case law',
   conflictTieBreaker: 'Tie-breaker:',
   conflictProposeCuration: 'Propose a Curation Standards change instead of improvising in chat.',
+  filterAll: 'All',
+  filterActive: 'Active',
+  filterDraft: 'Draft',
+  filterDeprecated: 'Superseded',
+  filterDomainAll: 'All domains',
+  searchPlaceholder: 'Search standards, rationale, examples…',
+  searchNoMatch: 'No matching Standards',
+  selectTitle: 'Select a Standard',
+  selectBody: 'Pick an explicit rule to see what otto rewards, refuses, and how case law resolves tension with other Standards.',
+  conflictNoneHint: 'No registered tension map entry for this Standard.',
+  tensionMapEyebrow: 'tension map',
+  antiPatternsEyebrow: 'anti-patterns',
+  domainLabel: 'Domain',
+  canonBodyEyebrow: 'canon · rationale',
+  curationPathEyebrow: 'curation path',
+  curationPathBody: 'Propose changes through Curation; Sebastian ratifies registry updates — never auto-apply.',
 } as const;
 
 export const practicesCopy = {
@@ -553,6 +570,28 @@ export const ticketsCopy = {
   noChecks: 'No checks',
 } as const;
 
+export const paperclipIntakeCopy = {
+  eyebrow: 'intake',
+  title: 'Paperclip context (read-only)',
+  lede: 'Imported work_state from Paperclip — display-only. Paperclip status is never otto Done.',
+  notConnectedTitle: 'Paperclip not connected',
+  notConnectedBody: 'Connect through the approval door (021). No mock rows appear here.',
+  connect: 'Connect Paperclip',
+  confirmConnect: 'Approve connect',
+  sync: 'Sync now',
+  lastSync: (at: string) => `Last sync · ${new Date(at).toLocaleString()}`,
+  noSyncYet: 'Connected — no sync yet',
+  syncErrorTitle: 'Sync error',
+  emptySyncTitle: 'No imported tasks yet',
+  emptySyncBody: 'Run sync after 021 writes export.json or set OTTO_PAPERCLIP_EXPORT.',
+  activeEyebrow: 'active tasks',
+  blockedEyebrow: 'blocked tasks',
+  artifactsEyebrow: 'recent artifacts',
+  openInPaperclip: 'Open in Paperclip',
+  approvalRequired: 'Approval required before enabling the connector.',
+  storageLabel: 'Adapter storage',
+} as const;
+
 export const channelsCopy = {
   eyebrow: 'reachability',
   title: 'Channels reach the human.',
@@ -622,6 +661,7 @@ export const settingsCopy = {
   statRequired: 'Required gaps',
   metaReadiness: 'Readiness detail',
   tabGeneral: 'General',
+  tabDisplay: 'Display',
   tabProviders: 'Model providers',
   tabMemory: 'Memory',
   tabCulture: 'Culture',
@@ -654,7 +694,18 @@ export const settingsCopy = {
   primaryAgentOpenLetta: 'Open in Letta',
   advancedAgentsTitle: 'Advanced',
   advancedAgentsLede: 'Second agents need a real isolation boundary (ADR 093).',
-  isolatedSecondAgentComingSoon: 'Isolated second agent — coming soon (#120).',
+  isolatedAgentBoundaryLabel: 'Isolation boundary',
+  isolatedAgentBoundaryPlaceholder: 'Select why this agent must be isolated',
+  isolatedAgentLabelField: 'Agent label (optional)',
+  isolatedAgentLabelPlaceholder: 'e.g. finance-ops',
+  isolatedAgentCreate: 'Create isolated agent',
+  isolatedAgentCreateBusy: 'Creating…',
+  isolatedAgentCreateSuccess: 'Isolated agent created',
+  isolatedAgentCreateSuccessBody: 'Receipt recorded. Chat still uses your primary agent.',
+  isolatedAgentListTitle: 'Isolated agents',
+  isolatedAgentListEmpty: 'No isolated secondary agents yet.',
+  isolatedAgentReceiptNote: 'Receipt',
+  isolatedAgentStandardsNote: 'Shared Standards canon ratify is blocked for isolated agents in v1.',
   connectionModeLabel: 'Connection mode',
   connectionEmbedded: 'Embedded (bundled Letta)',
   connectionExisting: 'Existing local Letta',
@@ -726,7 +777,24 @@ export const settingsCopy = {
   permissionRouteClear: 'Clear session allowances',
   permissionRouteClearToastTitle: 'Session allowances cleared',
   permissionRouteClearToastBody: 'Future tool runs will prompt again until you allow them.',
+  displayTitle: 'Appearance',
+  displayLede: 'Theme controls how otto renders in the workspace shell. Density and chat layout prefs ship later.',
+  displayThemeLabel: 'Theme',
+  displayThemeHint: 'Light is the default warm-paper look. System follows macOS appearance.',
+  displayThemeLight: 'Light',
+  displayThemeDark: 'Dark',
+  displayThemeSystem: 'System',
 } as const;
+
+/** ADR 093 boundary enum — keep aligned with `electron/isolated-agent.ts`. */
+export const isolatedAgentBoundaryOptions = [
+  { id: 'different_owner', label: 'Different human owner' },
+  { id: 'different_authority', label: 'Different authority level' },
+  { id: 'different_secrets_tools', label: 'Different secrets or tools' },
+  { id: 'different_schedule_channel', label: 'Different schedule or channel' },
+  { id: 'different_mission', label: 'Different long-running mission' },
+  { id: 'strong_isolation', label: 'Strong isolation need' },
+] as const;
 
 export const receiptsCopy = {
   eyebrow: 'proof trail',

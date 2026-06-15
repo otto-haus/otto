@@ -197,7 +197,6 @@ export function parseUsageLimitResetHint(reason: string): string | null {
 export function classify(reason: string, hasKey: boolean): StatusCode {
   const r = reason.toLowerCase();
   void hasKey;
-  if (r.includes('usage_limit_reached') || r.includes('usage limit reached')) return 'error';
   if (r.includes('letta_api_key') || r.includes('api key') || r.includes('unauthorized') || r.includes('401'))
     return 'no-api-key';
   if (
@@ -243,9 +242,11 @@ export function parseUsageLimitError(reason: string): { message: string; resetHi
 }
 
 export function friendly(code: StatusCode, reason: string): string {
-  const usageLimit = parseUsageLimitError(reason);
-  if (usageLimit) {
-    return usageLimit.resetHint ? `${usageLimit.message} ${usageLimit.resetHint}` : usageLimit.message;
+  if (code === 'error') {
+    const usageLimit = parseUsageLimitError(reason);
+    if (usageLimit) {
+      return usageLimit.resetHint ? `${usageLimit.message} ${usageLimit.resetHint}` : usageLimit.message;
+    }
   }
   const lower = reason.toLowerCase();
   if (lower.includes('invalid model')) {

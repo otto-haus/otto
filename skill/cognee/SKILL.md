@@ -39,3 +39,12 @@ MCP template: `config/cognee-mcp.template.json` (HTTP :8001 preferred on cognee 
 - `cognee.delete`: red (explicit approval)
 
 Run `autonomy.evaluateAction` before capture or any mutating MCP tool.
+
+## Smoke
+
+```sh
+export OTTO_COGNEE_ENABLED=1
+task smoke:cognee-recall
+```
+
+Writes `receipts/cognee/recall/*.json` when Cognee health is `ready` and a capture receipt exists. Never uses `conversation=default`.

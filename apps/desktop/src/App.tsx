@@ -30,6 +30,7 @@ import { VALID_SURFACES } from './surface-meta';
 import { labsCopy } from './copy/surfaces';
 import { AppSourceBadge } from './components/AppSourceBadge';
 import { isSampleReceiptPreview, SAMPLE_RECEIPT_LABEL } from './onboarding-sample-receipt';
+import { useOttoDebugContextMenu } from './debug/useOttoDebugContextMenu';
 
 function renderSurface(id: SurfaceId) {
   switch (id) {
@@ -90,6 +91,7 @@ export function App() {
 
 function AppShell() {
   const rt = useRuntimeContext();
+  const shellDebugMenu = useOttoDebugContextMenu('shell');
   const labs = useLabs();
   const {
     threads,
@@ -122,6 +124,18 @@ function AppShell() {
     };
     window.addEventListener('hashchange', onHash);
     return () => window.removeEventListener('hashchange', onHash);
+  }, []);
+
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (!(e.metaKey || e.ctrlKey) || e.key.toLowerCase() !== 'b' || e.altKey) return;
+      const tag = (e.target as HTMLElement | null)?.tagName;
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || (e.target as HTMLElement | null)?.isContentEditable) return;
+      e.preventDefault();
+      setSidebarHidden((hidden) => !hidden);
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
   }, []);
 
   const setActive = (id: SurfaceId) => {
@@ -176,7 +190,7 @@ function AppShell() {
 
   return (
     <>
-      <div className={`app${sidebarHidden ? ' app--sidebar-hidden' : ''}${sidebarCompact ? ' app--sidebar-compact' : ''}`}>
+      <div className={`app${sidebarHidden ? ' app--sidebar-hidden' : ''}${sidebarCompact ? ' app--sidebar-compact' : ''}`} onContextMenu={shellDebugMenu.onContextMenu}>
         {!sidebarHidden && (
           <Sidebar
             active={active}

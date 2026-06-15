@@ -69,8 +69,13 @@ import type {
   ThreadSwitchResult,
   ProviderMirrorSnapshot,
   WorkspaceInfo,
+  PaperclipIntakeSnapshot,
+  PaperclipConnectResult,
+  PaperclipSyncResult,
+  IsolatedAgentCreateResult,
+  IsolatedAgentListResult,
+  IsolationBoundaryReason,
 } from './shared/types';
-import type { CheckListResult, CheckRunResult } from '@otto-haus/core';
 import type {
   BehaviorChangelogResult,
   ConstitutionResult,
@@ -78,6 +83,7 @@ import type {
   CultureImportPreview,
   DiagnosticsExportResult,
 } from '@otto-haus/core';
+import type { CheckListResult, CheckRunResult } from '@otto-haus/core';
 
 const emptyChangelog = (windowDays: number): BehaviorChangelogResult => ({
   dir: '',
@@ -164,6 +170,11 @@ const api = {
   connection: {
     get: (): Promise<ConnectionInfo> => ipcRenderer.invoke('otto:connection:get'),
     save: (input: ConnectionInput): Promise<RuntimeStatus> => ipcRenderer.invoke('otto:connection:save', input),
+  },
+  isolatedAgents: {
+    list: (): Promise<IsolatedAgentListResult> => ipcRenderer.invoke('otto:isolated-agents:list'),
+    create: (input: { boundaryReason: IsolationBoundaryReason; label?: string | null }): Promise<IsolatedAgentCreateResult> =>
+      ipcRenderer.invoke('otto:isolated-agents:create', input),
   },
   workspace: {
     get: (): Promise<WorkspaceInfo> => ipcRenderer.invoke('otto:workspace:get'),
@@ -266,6 +277,12 @@ const api = {
       patch: Partial<Pick<TicketRecord, 'status' | 'owner' | 'model'>> & { review?: TicketReviewRecord },
     ) => ipcRenderer.invoke('otto:tickets:update-status', ticketId, patch),
   },
+  paperclip: {
+    snapshot: (): Promise<PaperclipIntakeSnapshot> => ipcRenderer.invoke('otto:adapters:paperclip:snapshot'),
+    connect: (input?: { approved?: boolean; baseUrl?: string | null }): Promise<PaperclipConnectResult> =>
+      ipcRenderer.invoke('otto:adapters:paperclip:connect', input),
+    sync: (): Promise<PaperclipSyncResult> => ipcRenderer.invoke('otto:adapters:paperclip:sync'),
+  },
   checks: {
     list: (): Promise<CheckListResult> => ipcRenderer.invoke('otto:checks:list'),
     get: (id: string) => ipcRenderer.invoke('otto:checks:get', id),
@@ -322,6 +339,16 @@ const api = {
   diagnostics: {
     export: (): Promise<DiagnosticsExportResult> => ipcRenderer.invoke('otto:diagnostics:export'),
     reveal: (bundlePath: string): Promise<{ ok: boolean }> => ipcRenderer.invoke('otto:diagnostics:reveal', bundlePath),
+  },
+  debug: {
+    showContextMenu: (surface?: string): Promise<{ ok: boolean }> =>
+      ipcRenderer.invoke('otto:debug:show-menu', surface),
+    packet: (): Promise<Record<string, unknown>> => ipcRenderer.invoke('otto:debug:packet'),
+    copyRuntimeStatus: (): Promise<{ ok: boolean }> => ipcRenderer.invoke('otto:debug:copy-runtime-status'),
+    copyPacket: (): Promise<{ ok: boolean }> => ipcRenderer.invoke('otto:debug:copy-packet'),
+    showLogs: (): Promise<{ ok: boolean; path?: string }> => ipcRenderer.invoke('otto:debug:show-logs'),
+    openProfileFolder: (): Promise<{ ok: boolean; path?: string }> => ipcRenderer.invoke('otto:debug:open-profile'),
+    openDevTools: (): Promise<{ ok: boolean }> => ipcRenderer.invoke('otto:debug:open-devtools'),
   },
   permission: {
     respond: (requestId: string, response: PermissionResponse): void =>

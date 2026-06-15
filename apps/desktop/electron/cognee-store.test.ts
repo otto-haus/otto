@@ -115,7 +115,10 @@ describe('CogneeStore helpers', () => {
       const result = store.recallSmoke('receipt precedent');
       expect(result.ok).toBe(true);
       expect(result.citations.length).toBeGreaterThan(0);
-      expect(result.citations.map((citation) => citation.path)).toEqual([receiptPath, precedentPath]);
+      expect(result.citations.map((citation) => citation.path)).toEqual([
+        'receipts/otto-v01/sample.md',
+        'standards/precedents/foo.md',
+      ]);
       store.health = healthSpy;
     } finally {
       if (prevRoot !== undefined) process.env.OTTO_ROOT = prevRoot;
