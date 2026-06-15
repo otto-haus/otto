@@ -269,6 +269,18 @@ export function registerIpc() {
       Promise.resolve(cognee.health()),
       Promise.resolve(pgvector.status()),
     ]);
+    const diagWin = getMainWindow();
+    const windowSnapshot = diagWin
+      ? {
+          visible: diagWin.isVisible(),
+          minimized: diagWin.isMinimized(),
+          maximized: diagWin.isMaximized(),
+          bounds: (() => {
+            const b = diagWin.getBounds();
+            return { width: b.width, height: b.height };
+          })(),
+        }
+      : null;
     return diagnosticsExporter.exportBundle({
       buildInfo: {
         ...buildInfo,
@@ -287,6 +299,7 @@ export function registerIpc() {
       routines: routines.listResult(),
       cognee: cogneeHealth,
       pgvector: pgvectorStatus,
+      window: windowSnapshot,
     });
   });
   ipcMain.handle('otto:diagnostics:reveal', (_e, bundlePath: string) => {
