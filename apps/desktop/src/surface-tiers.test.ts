@@ -113,7 +113,7 @@ describe('surface-tiers', () => {
 
   test('labsSurfaceGate no longer blocks on hydration', () => {
     expect(labsSurfaceGate('knowledge', defaultLabsConfig(), false)).toBe('open');
-    expect(labsSurfaceGate('charters', defaultLabsConfig(), false)).toBe('coming-soon');
+    expect(labsSurfaceGate('practices', defaultLabsConfig(), false)).toBe('coming-soon');
   });
 
   test('remote_letta_cloud gate hides cloud connection mode for Ship users (#627)', () => {
