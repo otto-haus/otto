@@ -75,6 +75,12 @@ describe('surface-tiers', () => {
     expect(surfaceGate('standards', labs, true)).toBe('open');
   });
 
+  test('routines surface is open for recurring cadence (#450)', () => {
+    const labs = defaultLabsConfig();
+    expect(isSurfaceComingSoon('routines', labs)).toBe(false);
+    expect(surfaceGate('routines', labs, true)).toBe('open');
+  });
+
   test('practices surface is open for ship (#449)', () => {
     const labs = defaultLabsConfig();
     expect(isSurfaceComingSoon('practices', labs)).toBe(false);
@@ -113,7 +119,7 @@ describe('surface-tiers', () => {
 
   test('labsSurfaceGate no longer blocks on hydration', () => {
     expect(labsSurfaceGate('knowledge', defaultLabsConfig(), false)).toBe('open');
-    expect(labsSurfaceGate('routines', defaultLabsConfig(), false)).toBe('coming-soon');
+    expect(labsSurfaceGate('routines', defaultLabsConfig(), false)).toBe('open');
   });
 
   test('remote_letta_cloud gate hides cloud connection mode for Ship users (#627)', () => {
