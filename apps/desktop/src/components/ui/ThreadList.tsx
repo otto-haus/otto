@@ -281,6 +281,7 @@ export const ThreadList: React.FC<{
   onRestore?: (thread: ThreadSummary) => void;
   onRename?: (thread: ThreadSummary, title: string) => void;
   onMove?: (thread: ThreadSummary, target: ThreadSummary) => void;
+  chatActive?: boolean;
 }> = ({
   threads,
   activeThreadId,
@@ -294,6 +295,7 @@ export const ThreadList: React.FC<{
   onRestore,
   onRename,
   onMove,
+  chatActive = false,
 }) => {
   const [draggingId, setDraggingId] = useState<string | null>(null);
   const { pinned, recents, archived } = splitThreadSections(threads);
@@ -301,7 +303,7 @@ export const ThreadList: React.FC<{
 
   if (!activeCount && !showArchived) {
     return (
-      <div className="sidebar__conversations sidebar__threads">
+      <div className={`sidebar__conversations sidebar__threads${chatActive ? ' is-chatActive' : ''}`}>
         <p className="sidebarSection__empty threadGroup__empty">{threadCopy.empty}</p>
         {hasArchived && onToggleShowArchived ? (
           <button
@@ -327,10 +329,13 @@ export const ThreadList: React.FC<{
   };
 
   return (
-    <div className="sidebar__conversations sidebar__threads" aria-label="Conversations">
-      <Section label={threadCopy.pinnedLabel} storageKey="otto.sidebar.pinned" defaultOpen>
-        {pinned.length > 0 ? (
-          pinned.map((thread) => (
+    <div
+      className={`sidebar__conversations sidebar__threads${chatActive ? ' is-chatActive' : ''}`}
+      aria-label="Conversations"
+    >
+      {pinned.length > 0 ? (
+        <Section label={threadCopy.pinnedLabel} storageKey="otto.sidebar.pinned" defaultOpen>
+          {pinned.map((thread) => (
             <ConversationRow
               key={thread.id}
               thread={thread}
@@ -345,11 +350,9 @@ export const ThreadList: React.FC<{
               onDragThreadStart={setDraggingId}
               onDragThreadEnd={() => setDraggingId(null)}
             />
-          ))
-        ) : (
-          <p className="sidebarSection__empty">{threadCopy.pinnedEmpty}</p>
-        )}
-      </Section>
+          ))}
+        </Section>
+      ) : null}
       <Section label={threadCopy.recentsLabel} storageKey="otto.sidebar.recents" defaultOpen>
         {recents.length > 0 ? (
           recents.map((thread) => (

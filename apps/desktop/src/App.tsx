@@ -25,12 +25,13 @@ import { ChecksSurfaceShell } from './surfaces/ChecksSurfaceShell';
 import { Terminal } from './surfaces/Terminal';
 import { Onboarding } from './Onboarding';
 import { ComingSoonSurface } from './labs/ComingSoonSurface';
-import { isSurfaceComingSoon, surfaceDataKind, surfaceGate } from './surface-tiers';
+import { isSurfaceComingSoon, isSurfaceInSidebar, surfaceDataKind, surfaceGate } from './surface-tiers';
 import { LabsProvider } from './labs/LabsContext';
 import { VALID_SURFACES } from './surface-meta';
 import { AppSourceBadge } from './components/AppSourceBadge';
 import { isSampleReceiptPreview, SAMPLE_RECEIPT_LABEL } from './onboarding-sample-receipt';
 import { useOttoDebugContextMenu } from './debug/useOttoDebugContextMenu';
+import { isTypingTarget } from './chat/turn-navigation';
 
 function renderSurface(id: SurfaceId) {
   switch (id) {
@@ -110,13 +111,14 @@ function AppShell() {
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
       if (!(e.metaKey || e.ctrlKey) || e.altKey) return;
-      const tag = (e.target as HTMLElement | null)?.tagName;
-      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || (e.target as HTMLElement | null)?.isContentEditable) return;
       if (e.key.toLowerCase() === 'b') {
+        if (isTypingTarget(document.activeElement)) return;
         e.preventDefault();
         setSidebarHidden((hidden) => !hidden);
         return;
       }
+      const tag = (e.target as HTMLElement | null)?.tagName;
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || (e.target as HTMLElement | null)?.isContentEditable) return;
       // ⌘1–⌘9 / ⌘0 jump to the surface promised by the sidebar's data-kbd hint (#612).
       const surface = NUMERIC_SURFACE_SHORTCUTS[e.key];
       if (surface) {
@@ -234,6 +236,7 @@ function AppShell() {
             hasArchived={hasArchived}
             onToggleShowArchived={setShowArchived}
             isComingSoon={isSurfaceComingSoon}
+            isNavVisible={(id) => isSurfaceInSidebar(id, labs.labs, labs.hydrated)}
           />
         )}
         <main className="main">

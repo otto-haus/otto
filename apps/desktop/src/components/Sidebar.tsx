@@ -106,6 +106,7 @@ export const Sidebar: React.FC<{
   hasArchived?: boolean;
   onToggleShowArchived?: (show: boolean) => void;
   isComingSoon?: (id: SurfaceId) => boolean;
+  isNavVisible?: (id: SurfaceId) => boolean;
 }> = ({
   active,
   onSelect,
@@ -126,10 +127,28 @@ export const Sidebar: React.FC<{
   hasArchived,
   onToggleShowArchived,
   isComingSoon,
+  isNavVisible,
 }) => {
   const rt = useRuntimeContext();
   const connected = rt.electron ? !!rt.status?.ready : false;
   const workspaceActive = COLLAPSIBLE_WORKSPACE_IDS.has(active);
+
+  const visiblePrimary = useMemo(
+    () => PRIMARY_WORKSPACE_ITEMS.filter((item) => isNavVisible?.(item.id) ?? true),
+    [isNavVisible],
+  );
+  const visibleUtility = useMemo(
+    () => UTILITY_NAV_ITEMS.filter((item) => isNavVisible?.(item.id) ?? true),
+    [isNavVisible],
+  );
+  const visibleCollapsible = useMemo(
+    () => COLLAPSIBLE_WORKSPACE_ITEMS.filter((item) => isNavVisible?.(item.id) ?? true),
+    [isNavVisible],
+  );
+  const visibleWorkspace = useMemo(
+    () => [...visiblePrimary, ...visibleUtility, ...visibleCollapsible],
+    [visiblePrimary, visibleUtility, visibleCollapsible],
+  );
 
   const [workspaceOpen, setWorkspaceOpen] = useState(() => readWorkspaceOpen(workspaceActive));
 
@@ -213,13 +232,14 @@ export const Sidebar: React.FC<{
         {compact ? (
           <>
             {navItem(CHAT_ITEM)}
-            {WORKSPACE_ITEMS.map((item) => navItem(item))}
+            {visibleWorkspace.map((item) => navItem(item))}
           </>
         ) : (
           <>
             {navItem(CHAT_ITEM)}
-            {PRIMARY_WORKSPACE_ITEMS.map((item) => navItem(item))}
-            {UTILITY_NAV_ITEMS.map((item) => navItem(item))}
+            {visiblePrimary.map((item) => navItem(item))}
+            {visibleUtility.map((item) => navItem(item))}
+            {visibleCollapsible.length > 0 ? (
             <div className={`navGroup${workspaceOpen ? ' is-open' : ''}${workspaceActive ? ' is-activeGroup' : ''}`}>
               <button
                 type="button"
@@ -233,10 +253,11 @@ export const Sidebar: React.FC<{
               </button>
               {workspaceOpen ? (
                 <div className="navGroup__items">
-                  {COLLAPSIBLE_WORKSPACE_ITEMS.map((item) => navItem(item, true))}
+                  {visibleCollapsible.map((item) => navItem(item, true))}
                 </div>
               ) : null}
             </div>
+            ) : null}
           </>
         )}
       </nav>
