@@ -1733,6 +1733,7 @@ h1, h2, h3, h4, p { margin: 0; }
   height: 3px;
   border-radius: 999px;
   background: var(--line);
+  transition: background 240ms var(--ease);
 }
 .onboardRail__seg.is-filled .onboardRail__bar,
 .onboardRail__seg.is-active .onboardRail__bar { background: var(--ink); }
