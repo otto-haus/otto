@@ -20,10 +20,11 @@ bun install --frozen-lockfile
 ## First checks
 
 ```sh
-bun run typecheck
-bun test
-bun run verify:v0
+task ci
 ```
+
+`task ci` runs the same local gate that GitHub CI runs for pull requests. See
+[Local CI gate](/ci-gate) for the current command list.
 
 ## Agent extension
 
