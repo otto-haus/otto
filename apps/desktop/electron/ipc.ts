@@ -31,7 +31,9 @@ import { TicketOrchestrator } from './ticket-orchestrator';
 import { TicketStore } from './ticket-store';
 import { WorkerStore } from './worker-store';
 import { WorkerRunner } from './worker-runner';
-import { ReceiptWriter } from './receipt-writer';
+import { ReceiptWriter, RECEIPTS_DIR } from './receipt-writer';
+import { PracticeMiningLoop } from './practice-mining';
+import { triggerPracticeMining } from './practice-mining-trigger';
 import { CheckRunner } from './check-runner';
 import { ThreadStore } from './thread-store';
 import { permissionSessionStore } from './permission-session-store';
@@ -366,6 +368,16 @@ export function registerIpc() {
   ipcMain.handle('otto:practices:resolve-for-text', (_e, text: string) => practices.resolveForText(text));
   ipcMain.handle('otto:practices:metrics', (_e, slug: string) => practiceRunner.metricsFor(slug));
   ipcMain.handle('otto:practices:run', (_e, input: import('./practice-runner').PracticeRunInput) => practiceRunner.run(input));
+  // #636: first-class, Labs-gated trigger for the receipt → practice-mining → Curation leg.
+  ipcMain.handle('otto:practices:mine', () => {
+    const labs = getLabsConfig(config.get());
+    const enabled = labs.enabled === true && labs.features?.practice_mining === true;
+    return triggerPracticeMining({
+      enabled,
+      loop: new PracticeMiningLoop(practices, proposals, new ReceiptWriter()),
+      receiptsDir: RECEIPTS_DIR,
+    });
+  });
 
   ipcMain.handle('otto:routines:list', () => routines.listResult());
   ipcMain.handle('otto:routines:get', (_e, slug: string) => routines.get(slug));

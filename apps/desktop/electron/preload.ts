@@ -1,4 +1,5 @@
 import { contextBridge, ipcRenderer } from 'electron';
+import type { PracticeMiningTriggerResult } from './practice-mining-trigger';
 import type {
   ConnectionInfo,
   ConnectionInput,
@@ -214,6 +215,7 @@ const api = {
     resolveForText: (text: string): Promise<PracticeReference | null> => ipcRenderer.invoke('otto:practices:resolve-for-text', text),
     metrics: (slug: string): Promise<PracticeMetricsSnapshot> => ipcRenderer.invoke('otto:practices:metrics', slug),
     run: (input: PracticeRunInput): Promise<PracticeRunResult> => ipcRenderer.invoke('otto:practices:run', input),
+    mine: (): Promise<PracticeMiningTriggerResult> => ipcRenderer.invoke('otto:practices:mine'),
   },
   routines: {
     list: (): Promise<RoutineListResult> => ipcRenderer.invoke('otto:routines:list'),
