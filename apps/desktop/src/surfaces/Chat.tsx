@@ -9,7 +9,7 @@ import { isElectron, ottoApi, type EffortLevel, type LettaModelOption, type Save
 import { useRuntimeContext } from '../RuntimeContext';
 import type { SurfaceId } from '../components/Sidebar';
 import { OttoMark } from '../components/OttoMark';
-import { CheckBlockBanner, CommandStationStrip, MessageActions, Modal, PermissionCard, ReceiptInlineCard, type PermissionDecision, type PermissionRequestView } from '../components/ui';
+import { CheckBlockBanner, CommandStationStrip, MessageActions, Modal, PermissionCard, ReceiptInlineCard, type CommandStationCounts, type CultureHomeData, type PermissionDecision, type PermissionRequestView } from '../components/ui';
 import { TodoPanel } from '../components/TodoPanel';
 import { displayThreadTitle } from '../components/ui/ThreadList';
 import { chatCopy, permissionCopy, toastCopy } from '../copy/surfaces';
@@ -41,6 +41,7 @@ import {
 } from '../chat/queue-storage';
 import type { ProposalTarget } from '@otto-haus/core';
 import type { ChatMsg } from '../runtime';
+import { buildCultureHome } from '../chat/culture-home';
 import { CollapsibleMessageBody } from '../chat/CollapsibleMessageBody';
 import { isTypingTarget, jumpTurnAnchor, turnAnchorIndices } from '../chat/turn-navigation';
 import {
@@ -675,6 +676,8 @@ const LiveChat: React.FC<{
   const rt = useRuntimeContext();
   const { threads } = useChatThreads(rt.activeThreadId);
   const toast = useToast();
+  const [stationCounts, setStationCounts] = useState<CommandStationCounts>({});
+  const [cultureHome, setCultureHome] = useState<CultureHomeData>({});
   const [draft, setDraft] = useState(readDraft);
   const [attachments, setAttachments] = useState<AttachmentDraft[]>(readAttachments);
   const [attachmentError, setAttachmentError] = useState<string | null>(null);
@@ -726,6 +729,40 @@ const LiveChat: React.FC<{
       cancelled = true;
     };
   }, [api]);
+
+  useEffect(() => {
+    if (!api || !ready) {
+      setStationCounts({});
+      setCultureHome({});
+      return;
+    }
+    let cancelled = false;
+    void Promise.all([
+      api.curation.proposals.list(),
+      api.receipts.list(),
+      api.tickets.list(),
+      api.curation.approvals.list(),
+      api.constitution.get(),
+      api.changelog.list(7),
+    ]).then(([proposals, receipts, tickets, approvals, constitution, changelog]) => {
+      if (cancelled) return;
+      const pending = proposals.proposals.filter((p) => p.status === 'proposed' || p.status === 'needs_approval').length;
+      const openTickets = tickets.tickets.filter((t) => t.status !== 'merged' && t.status !== 'cancelled').length;
+      setStationCounts({
+        curationPending: pending || undefined,
+        openTickets: openTickets || undefined,
+        autonomyDoors: approvals.approvals.length || undefined,
+      });
+      setCultureHome(buildCultureHome({
+        constitution,
+        changelog,
+        latestReceipt: receipts.receipts[0] ?? null,
+      }));
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [api, ready, rt.busy]);
 
   useEffect(() => {
     if (!modelOpen && !effortOpen) return;
@@ -1082,6 +1119,11 @@ const LiveChat: React.FC<{
 
       <div className="chat__stream" ref={streamRef}>
         <div className="chat__streamInner">
+          {ready && onNavigate ? (
+            <div className="chat__commandStation">
+              <CommandStationStrip onNavigate={onNavigate} counts={stationCounts} culture={cultureHome} />
+            </div>
+          ) : null}
           {rt.activeTodos.length > 0 && <TodoPanel todos={rt.activeTodos} />}
           {!ready && (
             <div className="inkblock chat__setup">
@@ -1125,9 +1167,6 @@ const LiveChat: React.FC<{
               <p className="faint" style={{ marginTop: 8, fontSize: 13 }}>{chatCopy.diagnosticsHint}</p>
             </div>
           )}
-          {ready && streamMessages.length === 0 && onNavigate ? (
-            <CommandStationStrip onNavigate={onNavigate} />
-          ) : null}
           {streamMessages.length === 0 && (
             <div className={`chatEmpty${ready ? '' : ' chatEmpty--muted'}`}>
               <div className="eyebrow">{chatCopy.sessionEyebrow}</div>

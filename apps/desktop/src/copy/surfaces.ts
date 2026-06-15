@@ -809,6 +809,8 @@ export const memoryWritebackCopy = {
 export const commandStationCopy = {
   eyebrow: 'command station',
   title: 'What needs you',
+  cultureRow: 'Culture',
+  opsRow: 'Operations',
   curation: { label: 'Curation', hint: 'Pending proposals' },
   receipts: { label: 'Recent proof', hint: 'Latest receipts' },
   tickets: { label: 'Tickets', hint: 'Open worker slices' },
@@ -817,6 +819,12 @@ export const commandStationCopy = {
   changelog: { label: 'Changelog', hint: 'What changed' },
   latestProof: { label: 'Latest proof', hint: 'Authority + status' },
   needsRatification: { label: 'Needs ratification', hint: 'Pending Curation' },
+  changelogNone: 'No behavior changes this week',
+  latestProofNone: 'No receipts yet',
+  constitutionForbidden: (count: number) => `${count} forbidden action${count === 1 ? '' : 's'}`,
+  constitutionAmended: (count: number, when: string) => `${count} forbidden · amended ${when}`,
+  changelogRecent: (count: number) => `${count} change${count === 1 ? '' : 's'} this week`,
+  latestProofSummary: (status: string, authority: string) => `${status} · ${authority}`,
 } as const;
 
 export const cultureSettingsCopy = {

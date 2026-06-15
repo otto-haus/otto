@@ -22,7 +22,7 @@ export type { ReceiptInlineCardProps } from './ReceiptInlineCard';
 export { CultureCard } from './CultureCard';
 export { MemoryWritebackGate } from './MemoryWritebackGate';
 export { CheckBlockBanner } from './CheckBlockBanner';
-export type { CommandStationCounts } from './CommandStationStrip';
+export type { CommandStationCounts, CultureHomeData } from './CommandStationStrip';
 export { Modal } from './Modal';
 export { PermissionCard } from './PermissionCard';
 export type { PermissionRequestView, PermissionDecision } from './PermissionCard';

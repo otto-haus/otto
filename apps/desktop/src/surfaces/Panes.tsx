@@ -1133,6 +1133,16 @@ export const Curation: React.FC<{ initialPanel?: CurationMainPanel }> = ({ initi
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
+  useEffect(() => {
+    try {
+      const pending = sessionStorage.getItem('otto.curation.panel');
+      if (pending === 'inbox' || pending === 'changelog') {
+        setMainPanel(pending);
+        sessionStorage.removeItem('otto.curation.panel');
+      }
+    } catch { /* best effort */ }
+  }, []);
+
   const reload = () => {
     if (!api) return Promise.resolve();
     return Promise.all([
