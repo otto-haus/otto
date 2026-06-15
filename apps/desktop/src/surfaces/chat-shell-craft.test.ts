@@ -15,7 +15,15 @@ describe('chat shell craft polish (#081 / #98)', () => {
     expect(chatSource).toContain('Letta memory off');
     expect(chatSource).toContain('formatChatSessionSubtitle');
     expect(chatSource).toContain('formatChatDebugTitle');
+    expect(chatSource).toContain('lettaMemoryStatusLabel');
     expect(chatSource).not.toContain('chatStatusLine');
+  });
+
+  it('links Chat memory subtitle to Settings observatory (#73)', () => {
+    expect(chatSource).toContain('openMemoryObservatory');
+    expect(chatSource).toContain("sessionStorage.setItem('otto.settings.section', 'memory')");
+    expect(chatSource).toContain('chat__memoryLink');
+    expect(chatSource).not.toMatch(/memfsEnabled\s*\?\s*chatCopy\.memoryOn/);
   });
 
   it('shows working pulse in the header while a turn is active', () => {

@@ -106,6 +106,9 @@ const formatRuntimeSubtitle = (ready: boolean, reason: string | undefined, model
 
 type ChatRuntimeStatus = NonNullable<ReturnType<typeof useRuntimeContext>['status']>;
 
+const lettaMemoryStatusLabel = (st: ChatRuntimeStatus): string =>
+  (st.agentId?.trim() ? 'Letta memory on' : 'Letta memory off');
+
 /** Product subtitle — model + memory state; no raw agent/conversation ids (#081). */
 const formatChatSessionSubtitle = (
   st: ChatRuntimeStatus,
@@ -113,7 +116,7 @@ const formatChatSessionSubtitle = (
 ): string =>
   [
     modelLabel,
-    st.memfsEnabled ? 'Letta memory on' : 'Letta memory off',
+    lettaMemoryStatusLabel(st),
     st.transportFallbackReason ?? null,
   ].filter(Boolean).join(' · ');
 
@@ -124,7 +127,7 @@ const formatChatDebugTitle = (st: ChatRuntimeStatus, modelLabel: string): string
     modelLabel,
     st.transportFallbackReason ?? null,
     st.conversationId ?? 'no conversation',
-    st.memfsEnabled ? 'Letta memory on' : 'Letta memory off',
+    lettaMemoryStatusLabel(st),
   ].filter(Boolean).join(' · ');
 
 const ModelEffortPickers: React.FC<{
@@ -722,7 +725,7 @@ const LiveChat: React.FC<{
     : labelForModel(selectedModel, modelOptions);
   const chatSessionSubtitle = st ? formatChatSessionSubtitle(st, modelStatusLabel) : 'connecting…';
   const chatDebugTitle = st ? formatChatDebugTitle(st, modelStatusLabel) : undefined;
-  const memoryLabel = st?.memfsEnabled ? chatCopy.memoryOn : chatCopy.memoryOff;
+  const memoryLabel = st?.agentId?.trim() ? chatCopy.memoryOn : chatCopy.memoryOff;
 
   const openMemoryObservatory = () => {
     try {
