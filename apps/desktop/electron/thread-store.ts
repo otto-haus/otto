@@ -63,11 +63,18 @@ function sortThreads(threads: ChatThreadRecord[], mode: ConversationSortMode): C
   });
 }
 
+function normalizeConversationId(conversationId: string | null | undefined): string | null {
+  const trimmed = conversationId?.trim();
+  if (!trimmed || trimmed === 'default') return null;
+  return trimmed;
+}
+
 function normalizeThread(thread: ChatThreadRecord): ChatThreadRecord {
   return {
     ...thread,
     pinned: !!thread.pinned,
     archived: !!thread.archived,
+    lettaConversationId: normalizeConversationId(thread.lettaConversationId),
   };
 }
 
@@ -96,6 +103,25 @@ function isJunkThread(thread: ChatThreadRecord): boolean {
   return /^chat session$/i.test(title);
 }
 
+function initialSortOrderForNewThread(threads: ChatThreadRecord[]): number | null {
+  const recents = threads.filter((thread) => !thread.archived && !thread.pinned);
+  const orders = recents
+    .map(sortableOrder)
+    .filter((value): value is number => value !== null);
+  if (!orders.length) return null;
+  return Math.min(...orders) - 1;
+}
+
+function isInactiveEmptyNewChat(thread: ChatThreadRecord, activeThreadId: string | null): boolean {
+  return (
+    thread.id !== activeThreadId &&
+    !thread.pinned &&
+    !thread.archived &&
+    !normalizeConversationId(thread.lettaConversationId) &&
+    /^new chat$/i.test(thread.title.trim())
+  );
+}
+
 export class ThreadStore {
   constructor(private config: ConfigStore) {}
 
@@ -109,8 +135,10 @@ export class ThreadStore {
     const raw = readIndex();
     const normalized = normalizeThreads(raw, mode);
     if (JSON.stringify(normalized) !== JSON.stringify(raw)) writeIndex(normalized, mode);
-    const threads = normalized.filter((t) => includeArchived || !t.archived);
     const configuredActiveId = this.config.get().activeThreadId ?? null;
+    const threads = normalized
+      .filter((t) => includeArchived || !t.archived)
+      .filter((t) => includeArchived || !isInactiveEmptyNewChat(t, configuredActiveId));
     const activeThreadId = configuredActiveId && threads.some((t) => t.id === configuredActiveId)
       ? configuredActiveId
       : threads[0]?.id ?? null;
@@ -118,7 +146,7 @@ export class ThreadStore {
       const active = threads.find((t) => t.id === activeThreadId) ?? null;
       this.config.update({
         activeThreadId,
-        conversationId: active?.lettaConversationId ?? null,
+        conversationId: normalizeConversationId(active?.lettaConversationId),
       });
     }
     return { dir: threadsDir(), activeThreadId, threads };
@@ -137,7 +165,7 @@ export class ThreadStore {
       title: input?.title?.trim() || 'New chat',
       createdAt: now,
       updatedAt: now,
-      sortOrder: null,
+      sortOrder: initialSortOrderForNewThread(readIndex()),
       pinned: false,
       archived: false,
     };
@@ -154,7 +182,7 @@ export class ThreadStore {
     if (thread.archived) throw new Error(`Thread is archived: ${threadId}`);
     this.config.update({
       activeThreadId: thread.id,
-      conversationId: thread.lettaConversationId,
+      conversationId: normalizeConversationId(thread.lettaConversationId),
     });
     return thread;
   }
@@ -173,6 +201,9 @@ export class ThreadStore {
     const updated: ChatThreadRecord = {
       ...threads[idx],
       ...patch,
+      lettaConversationId: patch.lettaConversationId !== undefined
+        ? normalizeConversationId(patch.lettaConversationId)
+        : normalizeConversationId(threads[idx].lettaConversationId),
       sortOrder: patch.sortOrder !== undefined
         ? patch.sortOrder
         : crossesGroups
@@ -183,7 +214,7 @@ export class ThreadStore {
     threads[idx] = updated;
     writeIndex(sortThreads(threads, mode), mode);
     if (this.config.get().activeThreadId === threadId && patch.lettaConversationId !== undefined) {
-      this.config.update({ conversationId: patch.lettaConversationId });
+      this.config.update({ conversationId: normalizeConversationId(patch.lettaConversationId) });
     }
     return updated;
   }
@@ -198,7 +229,7 @@ export class ThreadStore {
       const next = sortThreads(readIndex(), this.sortMode()).find((t) => !t.archived) ?? null;
       this.config.update({
         activeThreadId: next?.id ?? null,
-        conversationId: next?.lettaConversationId ?? null,
+        conversationId: normalizeConversationId(next?.lettaConversationId),
       });
     }
     return archived;
@@ -259,7 +290,7 @@ export class ThreadStore {
       const picked = threads[0];
       this.config.update({
         activeThreadId: picked.id,
-        conversationId: picked.lettaConversationId,
+        conversationId: normalizeConversationId(picked.lettaConversationId),
       });
       return picked;
     }
