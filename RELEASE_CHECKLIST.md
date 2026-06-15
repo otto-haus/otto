@@ -118,6 +118,7 @@ bun test                               → 208 pass / 0 fail (1 skip)
 
 Per-feature receipts: [`receipts/otto-v01/`](receipts/otto-v01/). Demos: [`demo/README.md`](demo/README.md).
 Staging smoke: `docs/receipts/staging/`. PR stack: `docs/v1/runbooks/pr-stack-ship-v03.md`.
+Live install + rollback runbook: [`docs/v1/runbooks/live-vs-staging.md`](docs/v1/runbooks/live-vs-staging.md) (Tier 3 + rollback section).
 
 ## Rename / packaging sweep
 
@@ -153,6 +154,7 @@ Ceremony: [`docs/v1/runbooks/sebastian-release-sign-off.md`](docs/v1/runbooks/se
 | README public story (Ship tier only) | ☐ |
 | Demo videos / walkthrough | ☐ |
 | Test receipts (`verify:v0` + `release-gate.sh` green) | ☐ |
+| Rollback path documented + `OTTO_RELEASE_TAG` smoke exercised on staging tag | ☐ |
 | Namespace `otto-haus` / `@otto-haus` | ☐ |
 | **Push + tag `v0.1.3`** (explicit — Red until signed) | ☐ |
 

@@ -180,14 +180,58 @@ asset=<downloaded artifact name>
 sebastian_approved=yes
 ```
 
+### Rollback to a previous release (#324)
+
+When the latest release is bad, roll back to a **selected published tag** — same artifact path as forward install, never a local branch build.
+
+**1. Pick the target tag** (must have a desktop `.zip`/`.dmg` asset):
+
+```sh
+gh release list -R otto-haus/otto --limit 10
+```
+
+**2. Read-only proof** (never mutates live app — safe for agents):
+
+```sh
+cd /Users/seb/Code/otto
+OTTO_RELEASE_TAG=v0.1.2 task smoke:release:metadata
+# optional: OTTO_APP=/Applications/otto.app OTTO_RELEASE_REQUIRE_INSTALLED=1
+```
+
+Pass when `checks.releaseTagMatchesInstalled` is true and `ok` is true.
+
+**3. Install rollback** (Sebastian only — same gate as forward install):
+
+```sh
+OTTO_ALLOW_RELEASE_INSTALL=1 OTTO_RELEASE_TAG=v0.1.2 task install:release
+```
+
+**4. Re-verify after install:**
+
+```sh
+OTTO_RELEASE_TAG=v0.1.2 OTTO_RELEASE_REQUIRE_INSTALLED=1 task smoke:release:metadata
+```
+
+### Rollback receipt (Sebastian)
+
+```txt
+live_app=/Applications/otto.app
+rollback_from=<bad tag or "latest">
+rollback_to=<selected tag>
+install_cmd=OTTO_ALLOW_RELEASE_INSTALL=1 OTTO_RELEASE_TAG=<tag> task install:release
+smoke_cmd=OTTO_RELEASE_TAG=<tag> task smoke:release:metadata
+metadata_ok=true
+sebastian_approved=yes
+```
+
 ## Task aliases
 
 | Task | Command |
 |------|---------|
 | `task electron` | Dev shell |
 | `task staging` | Build + deploy `/Applications/otto-staging.app` |
-| `task install:release` | Install live `/Applications/otto.app` from latest GitHub Release (gated) |
-| `task smoke:release:metadata` | Read-only release tag vs installed app check |
+| `task install:release` | Install live `/Applications/otto.app` from GitHub Release (latest or `OTTO_RELEASE_TAG`; gated) |
+| `task smoke:release:metadata` | Read-only release tag vs installed app check (latest or `OTTO_RELEASE_TAG`) |
 | `task refresh:local` | Sebastian-only local branch build into live app (double-gated) |
 | `task smoke:desktop` | Non-destructive second instance (temp dirs; live app untouched) |
 | `task smoke:desktop:live` | **Dangerous** — quits/reopens live app |

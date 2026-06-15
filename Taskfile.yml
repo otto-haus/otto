@@ -92,11 +92,11 @@ tasks:
       - bunx electron-builder --mac dir --arm64
 
   install:release:
-    desc: Canonical live install — latest GitHub Release desktop artifact to /Applications/otto.app (requires OTTO_ALLOW_RELEASE_INSTALL=1)
+    desc: Canonical live install — GitHub Release desktop artifact to /Applications/otto.app (latest, or OTTO_RELEASE_TAG for rollback; requires OTTO_ALLOW_RELEASE_INSTALL=1)
     cmds: [bash scripts/install-otto-release.sh]
 
   smoke:release:metadata:
-    desc: Read-only check — compare installed otto.app metadata to latest GitHub Release (never mutates otto.app)
+    desc: Read-only check — compare installed otto.app to latest or OTTO_RELEASE_TAG GitHub Release (never mutates otto.app)
     cmds:
       - node scripts/otto-release-metadata-check.mjs
 

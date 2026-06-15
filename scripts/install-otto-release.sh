@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# Issue #305 — canonical install of /Applications/otto.app from latest GitHub Release artifact.
+# Issue #305 / #324 — canonical install of /Applications/otto.app from GitHub Release artifact.
+# Default: latest release. Rollback: OTTO_RELEASE_TAG=v0.1.2 OTTO_ALLOW_RELEASE_INSTALL=1 task install:release
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -45,9 +46,15 @@ EOF
   exit 2
 fi
 
-echo "==> Resolving latest GitHub Release for $REPO"
-RELEASE_JSON="$(curl -fsSL -H 'Accept: application/vnd.github+json' -H 'User-Agent: otto-install-release' \
-  "https://api.github.com/repos/${REPO}/releases/latest")"
+if [[ -n "${OTTO_RELEASE_TAG:-}" ]]; then
+  echo "==> Resolving GitHub Release ${OTTO_RELEASE_TAG} for $REPO (rollback path)"
+  RELEASE_JSON="$(curl -fsSL -H 'Accept: application/vnd.github+json' -H 'User-Agent: otto-install-release' \
+    "https://api.github.com/repos/${REPO}/releases/tags/${OTTO_RELEASE_TAG}")"
+else
+  echo "==> Resolving latest GitHub Release for $REPO"
+  RELEASE_JSON="$(curl -fsSL -H 'Accept: application/vnd.github+json' -H 'User-Agent: otto-install-release' \
+    "https://api.github.com/repos/${REPO}/releases/latest")"
+fi
 
 TAG="$(python3 - <<'PY' "$RELEASE_JSON"
 import json, sys
@@ -166,7 +173,11 @@ mv "$TMP_TARGET" "$TARGET_APP"
 echo "installed_app=$TARGET_APP"
 echo "release_tag=$TAG"
 echo "asset=$ASSET_NAME"
-echo "install_cmd=OTTO_ALLOW_RELEASE_INSTALL=1 task install:release"
+if [[ -n "${OTTO_RELEASE_TAG:-}" ]]; then
+  echo "install_cmd=OTTO_ALLOW_RELEASE_INSTALL=1 OTTO_RELEASE_TAG=${OTTO_RELEASE_TAG} task install:release"
+else
+  echo "install_cmd=OTTO_ALLOW_RELEASE_INSTALL=1 task install:release"
+fi
 
 if [[ "${OTTO_RELEASE_OPEN:-1}" == "1" ]]; then
   env -u ELECTRON_RUN_AS_NODE open "$TARGET_APP"

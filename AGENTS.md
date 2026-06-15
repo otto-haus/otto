@@ -58,7 +58,7 @@ Desktop:
 task electron                 # live Electron app in dev
 task staging                  # build/package/install/open isolated /Applications/otto-staging.app
 task install:release          # canonical otto.app — GitHub Release only; requires OTTO_ALLOW_RELEASE_INSTALL=1
-task smoke:release:metadata   # read-only — compare installed otto.app to latest release tag
+task smoke:release:metadata   # read-only — compare installed otto.app to latest or OTTO_RELEASE_TAG
 task smoke:cli                # isolated disposable conversation; never default
 ```
 
@@ -77,9 +77,10 @@ NODE_PATH=$HOME/.codex/admin/node_modules OTTO_RECEIPT_DIR=$PWD/docs/receipts/st
 
 Canonical app boundary:
 
-- `/Applications/otto.app` must only be installed or updated from the latest published GitHub Release artifact.
+- `/Applications/otto.app` must only be installed or updated from a published GitHub Release desktop artifact (latest or rollback tag via `OTTO_RELEASE_TAG`).
 - Do not use `task refresh` or any local branch build to overwrite the canonical app.
 - Use disposable/staging app bundles for local desktop proof unless Sebastian explicitly authorizes touching an official bundle.
+- Rollback: `OTTO_RELEASE_TAG=<tag> task smoke:release:metadata` (read-only proof); install only with Sebastian approval via `OTTO_ALLOW_RELEASE_INSTALL=1 OTTO_RELEASE_TAG=<tag> task install:release`.
 
 Do not call Electron “connected” unless `session.initialize()` succeeds against a live Letta agent.
 

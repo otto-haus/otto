@@ -1,5 +1,5 @@
 /**
- * Shared helpers for #305 — compare installed /Applications/otto.app metadata to GitHub Release.
+ * Shared helpers for #305 / #324 — compare installed /Applications/otto.app metadata to GitHub Release.
  */
 
 import { execFileSync } from 'node:child_process';
@@ -32,6 +32,15 @@ export function tagsMatch(installed, releaseTag) {
   return a.startsWith(`${b}+`) || a.startsWith(`${b}-`);
 }
 
+function parseReleasePayload(data) {
+  return {
+    tag: data.tag_name ?? null,
+    name: data.name ?? null,
+    publishedAt: data.published_at ?? null,
+    assets: Array.isArray(data.assets) ? data.assets.map((a) => ({ name: a.name, url: a.browser_download_url })) : [],
+  };
+}
+
 export async function fetchLatestRelease(repo = DEFAULT_REPO, fetchImpl = fetch) {
   const res = await fetchImpl(`https://api.github.com/repos/${repo}/releases/latest`, {
     headers: { Accept: 'application/vnd.github+json', 'User-Agent': 'otto-release-metadata-check' },
@@ -39,13 +48,30 @@ export async function fetchLatestRelease(repo = DEFAULT_REPO, fetchImpl = fetch)
   if (!res.ok) {
     throw new Error(`GitHub releases/latest failed: HTTP ${res.status}`);
   }
-  const data = await res.json();
-  return {
-    tag: data.tag_name ?? null,
-    name: data.name ?? null,
-    publishedAt: data.published_at ?? null,
-    assets: Array.isArray(data.assets) ? data.assets.map((a) => ({ name: a.name, url: a.browser_download_url })) : [],
-  };
+  return parseReleasePayload(await res.json());
+}
+
+/** Issue #324 — fetch a specific published release tag for rollback verification. */
+export async function fetchReleaseByTag(tag, repo = DEFAULT_REPO, fetchImpl = fetch) {
+  const trimmed = tag?.trim();
+  if (!trimmed) {
+    throw new Error('Release tag is required');
+  }
+  const encoded = encodeURIComponent(trimmed);
+  const res = await fetchImpl(`https://api.github.com/repos/${repo}/releases/tags/${encoded}`, {
+    headers: { Accept: 'application/vnd.github+json', 'User-Agent': 'otto-release-metadata-check' },
+  });
+  if (!res.ok) {
+    throw new Error(`GitHub release tag ${trimmed} failed: HTTP ${res.status}`);
+  }
+  return parseReleasePayload(await res.json());
+}
+
+export async function fetchRelease({ tag, repo = DEFAULT_REPO, fetchImpl = fetch } = {}) {
+  if (tag?.trim()) {
+    return fetchReleaseByTag(tag.trim(), repo, fetchImpl);
+  }
+  return fetchLatestRelease(repo, fetchImpl);
 }
 
 function readPlistEnv(plistPath, key) {
