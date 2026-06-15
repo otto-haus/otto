@@ -75,6 +75,8 @@ export interface RuntimeStatus {
   effectiveTransport?: EffectiveTransport;
   /** Visible reason when auto mode fell back to SDK. */
   transportFallbackReason?: string | null;
+  /** Human-readable reason when session model differs from requested handle (BYOK discovery gap). */
+  modelFallbackReason?: string | null;
   /** ISO timestamp of last runtime socket reconnect. */
   lastReconnectAt?: string | null;
   /** Loopback BYOR listener port when WS transport is active. */
