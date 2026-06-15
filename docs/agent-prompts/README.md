@@ -8,6 +8,8 @@ Core rule:
 Auditors create/verify issues. Composer fixes. Sebastian merges/releases only at one-way doors.
 ```
 
+Merge and review gates are **per ticket / per PR** — they pause only that issue. The lane continues on the next file-disjoint Ready issue. Shared contract: `docs/agent-goals/README.md`. GoalBuddy board: `docs/goals/github-ready-loop/`.
+
 ## Files
 
 - `codex-auditor-reviewer.md` — correctness/runtime/security/tests/release-safety auditor.

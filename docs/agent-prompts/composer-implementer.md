@@ -65,8 +65,31 @@ For each issue:
 8. Stage only intended files.
 9. Commit only when the workflow asks for it or when preparing a PR.
 10. Open/update a PR linking the issue.
-11. Move issue/PR to `In review` or label `status: needs-verification` if board access is unavailable.
-12. Stop working that issue until an auditor reviews.
+11. Move issue/PR to `In review` or label `status: ready for review` when CI is green.
+12. Stop working **only that issue** until an auditor reviews or Sebastian merges.
+13. Immediately scout/implement the next **file-disjoint** Ready issue — do not wait for merge.
+
+## Per-ticket gates (lane never idles)
+
+- Review and merge gates block **that PR only**, not the whole lane.
+- After handoff, the PM loop picks the next highest-priority Ready issue whose files do not collide with open PRs (`gh pr diff <n> --name-only`).
+- If every Ready issue collides, comment the collision map and record `no_safe_work` on the GoalBuddy board — only then may the lane pause.
+- Never set `active_task: null` while disjoint Ready work exists.
+
+## Handoff summary (required)
+
+Separate awaiting gates from next work:
+
+```md
+## Awaiting review / merge (per-ticket — lane continues)
+- PR #N · Fixes #X · status · key files
+
+## Active next work
+- Scout/Worker target: #Y · branch/worktree · collision check
+
+## No safe work (only if true)
+- collisions or blocker
+```
 
 ## Required proof
 
