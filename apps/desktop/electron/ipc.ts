@@ -1,4 +1,4 @@
-import { type BrowserWindow, app, ipcMain, shell } from 'electron';
+import { type BrowserWindow, app, clipboard, ipcMain, shell } from 'electron';
 import type { ConnectionInfo, ConnectionInput, CreateProposalFromCorrectionInput, DecideProposalInput, DreamSettings, LabsConfig, OttoConfig, PermissionRequest, PermissionResponse, ProposalClassification, ProposalTarget, RuntimePreferences, RuntimeStatus } from './shared/types';
 import { applyLabsConfigPatch, getLabsConfig, labsConfigToOttoPatch } from './labs-config';
 import {
@@ -47,6 +47,10 @@ import { MemoryStore } from './memory-store';
 import { PgvectorStore } from './pgvector-store';
 import { safeWebContentsSend, smokeMode } from './runtime-transport/runtime-common';
 import { readAppBuildInfo } from './build-info';
+import { showOttoDebugMenu } from './debug-menu';
+import { buildDebugPacket, formatDebugPacketText, formatRuntimeStatusText } from './debug-packet';
+import { resolveDebugEnvelope } from './debug-envelope';
+import { openOttoLogs } from './logs';
 import { openSystemTerminal, resolveWorkspaceRoot } from './open-terminal';
 import { getWorkspaceInfo, resolveWorkspaceRepoRoot } from './workspace-root';
 import { collectSystemHealth } from './system-health';
@@ -251,6 +255,50 @@ export function registerIpc(win: BrowserWindow) {
   ipcMain.handle('otto:diagnostics:reveal', (_e, bundlePath: string) => {
     shell.showItemInFolder(bundlePath);
     return { ok: true };
+  });
+
+  const debugDeps = () => ({
+    win,
+    runtimeStatus: runner.getStatus(),
+    config: config.get(),
+  });
+
+  ipcMain.handle('otto:debug:show-menu', (_e, surface?: string) => {
+    showOttoDebugMenu(debugDeps(), typeof surface === 'string' ? surface : undefined);
+    return { ok: true as const };
+  });
+  ipcMain.handle('otto:debug:packet', () => buildDebugPacket({
+    runtimeStatus: runner.getStatus(),
+    config: config.get(),
+    envelope: resolveDebugEnvelope(),
+  }));
+  ipcMain.handle('otto:debug:copy-runtime-status', () => {
+    const deps = debugDeps();
+    clipboard.writeText(formatRuntimeStatusText(deps.runtimeStatus, deps.config));
+    return { ok: true as const };
+  });
+  ipcMain.handle('otto:debug:copy-packet', () => {
+    const deps = debugDeps();
+    const packet = buildDebugPacket({
+      runtimeStatus: deps.runtimeStatus,
+      config: deps.config,
+      envelope: resolveDebugEnvelope(),
+    });
+    clipboard.writeText(formatDebugPacketText(packet));
+    return { ok: true as const };
+  });
+  ipcMain.handle('otto:debug:show-logs', async () => {
+    const target = await openOttoLogs();
+    return { ok: true as const, path: target };
+  });
+  ipcMain.handle('otto:debug:open-profile', () => {
+    const path = app.getPath('userData');
+    void shell.openPath(path);
+    return { ok: true as const, path };
+  });
+  ipcMain.handle('otto:debug:open-devtools', () => {
+    win.webContents.openDevTools({ mode: 'detach' });
+    return { ok: true as const };
   });
 
   ipcMain.handle('otto:practices:list', () => practices.listResult());

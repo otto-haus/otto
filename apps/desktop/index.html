@@ -37,5 +37,16 @@
       </div>
     </div>
     <script type="module" src="/src/main.tsx"></script>
+    <script>
+      (function () {
+        const shell = document.getElementById('otto-boot-shell');
+        if (!shell) return;
+        shell.addEventListener('contextmenu', function (event) {
+          event.preventDefault();
+          const api = window.otto && window.otto.debug;
+          if (api && api.showContextMenu) api.showContextMenu('boot');
+        });
+      })();
+    </script>
   </body>
 </html>

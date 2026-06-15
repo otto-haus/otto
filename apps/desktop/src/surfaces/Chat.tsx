@@ -42,6 +42,7 @@ import {
 import type { ProposalTarget } from '@otto-haus/core';
 import type { ChatMsg } from '../runtime';
 import { CollapsibleMessageBody } from '../chat/CollapsibleMessageBody';
+import { useOttoDebugContextMenu } from '../debug/useOttoDebugContextMenu';
 import { isTypingTarget, jumpTurnAnchor, turnAnchorIndices } from '../chat/turn-navigation';
 import {
   curateModelOptions,
@@ -673,6 +674,9 @@ const LiveChat: React.FC<{
 }) => {
   const api = ottoApi();
   const rt = useRuntimeContext();
+  const chatDebugMenu = useOttoDebugContextMenu('chat');
+  const runtimeStatusDebugMenu = useOttoDebugContextMenu('runtime-status');
+  const runtimeSetupDebugMenu = useOttoDebugContextMenu('runtime-setup');
   const { threads } = useChatThreads(rt.activeThreadId);
   const toast = useToast();
   const [draft, setDraft] = useState(readDraft);
@@ -1017,6 +1021,7 @@ const LiveChat: React.FC<{
   return (
     <div
       className={`chat${draggingImage ? ' is-dragging-image' : ''}`}
+      onContextMenu={chatDebugMenu.onContextMenu}
       onDragOver={(e) => {
         if (!imageFilesFromTransfer(e.dataTransfer).length) return;
         e.preventDefault();
@@ -1041,7 +1046,7 @@ const LiveChat: React.FC<{
           <span className="chat__avatar"><OttoMark size={30} className="ottoMark" /></span>
           <div className="chat__titleBlock">
             <div className="chat__title">{headTitle}</div>
-            <div className="chat__id" title={chatDebugTitle}>
+            <div className="chat__id" title={chatDebugTitle} onContextMenu={runtimeStatusDebugMenu.onContextMenu}>
               {st ? (
                 <>
                   <span className={`dot ${rt.busy ? 'dot--idle' : ready ? 'dot--ok' : 'dot--warn'}`} aria-hidden="true" />
@@ -1084,7 +1089,7 @@ const LiveChat: React.FC<{
         <div className="chat__streamInner">
           {rt.activeTodos.length > 0 && <TodoPanel todos={rt.activeTodos} />}
           {!ready && (
-            <div className="inkblock chat__setup">
+            <div className="inkblock chat__setup" onContextMenu={runtimeSetupDebugMenu.onContextMenu}>
               {!st ? (
                 <>
                   <div className="inkblock__eyebrow"><span className="dot dot--idle" /> {chatCopy.runtimeConnectingEyebrow}</div>
