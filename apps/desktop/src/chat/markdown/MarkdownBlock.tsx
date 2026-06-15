@@ -1,8 +1,6 @@
 import type React from 'react';
 import { memo, useEffect, useMemo, useRef, useState } from 'react';
-import ReactMarkdown from 'react-markdown';
-import remarkGfm from 'remark-gfm';
-import type { Components } from 'react-markdown';
+import { Streamdown } from 'streamdown';
 import {
   accumulateMarkdownBlocks,
   blockRenderKey,
@@ -11,28 +9,10 @@ import {
   type SealedMarkdownBlock,
 } from './block-accumulator';
 import { redactForDisplay } from './redact-for-display';
+import { streamdownCommonProps } from './streamdown-components';
 
 const TAIL_DEBOUNCE_MS = 75;
 const TAIL_PLAINTEXT_THRESHOLD = 16_384;
-
-const markdownComponents: Components = {
-  p: ({ children }) => <p className="md__p">{children}</p>,
-  h1: ({ children }) => <h3 className="md__heading">{children}</h3>,
-  h2: ({ children }) => <h4 className="md__heading">{children}</h4>,
-  h3: ({ children }) => <h5 className="md__heading">{children}</h5>,
-  h4: ({ children }) => <h5 className="md__heading">{children}</h5>,
-  h5: ({ children }) => <h5 className="md__heading">{children}</h5>,
-  h6: ({ children }) => <h5 className="md__heading">{children}</h5>,
-  ul: ({ children }) => <ul className="md__list">{children}</ul>,
-  ol: ({ children }) => <ol className="md__list">{children}</ol>,
-  blockquote: ({ children }) => <blockquote className="md__quote">{children}</blockquote>,
-  pre: ({ children }) => <pre className="md__pre">{children}</pre>,
-  table: ({ children }) => (
-    <div className="md__tableWrap">
-      <table className="md__table">{children}</table>
-    </div>
-  ),
-};
 
 type MarkdownBlockProps = {
   blockKey: string;
@@ -57,9 +37,13 @@ export const MarkdownBlock = memo(function MarkdownBlock({ blockKey, redactedMar
   markdownBlockRenderCounts.set(blockKey, (__getMarkdownBlockRenderCount(blockKey)) + 1);
 
   return (
-    <ReactMarkdown remarkPlugins={[remarkGfm]} components={markdownComponents}>
+    <Streamdown
+      {...streamdownCommonProps}
+      mode="static"
+      parseIncompleteMarkdown={false}
+    >
       {redactedMarkdown}
-    </ReactMarkdown>
+    </Streamdown>
   );
 }, markdownBlockPropsAreEqual);
 
@@ -87,13 +71,18 @@ const StreamingTailBlock: React.FC<{ tail: string; streaming: boolean }> = ({ ta
   if (!displayTail) return null;
 
   if (displayTail.length >= TAIL_PLAINTEXT_THRESHOLD) {
-    return <pre className="md__pre">{displayTail}</pre>;
+    return <pre className="md__pre md__streamingPlain">{displayTail}</pre>;
   }
 
   return (
-    <ReactMarkdown remarkPlugins={[remarkGfm]} components={markdownComponents}>
+    <Streamdown
+      {...streamdownCommonProps}
+      mode="streaming"
+      parseIncompleteMarkdown
+      isAnimating={streaming}
+    >
       {redactForDisplay(displayTail)}
-    </ReactMarkdown>
+    </Streamdown>
   );
 };
 
