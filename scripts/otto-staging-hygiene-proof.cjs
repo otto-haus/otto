@@ -136,18 +136,37 @@ async function main() {
     proof.screenshots['058'] = join(RECEIPT_DIR, `058-settings-${RUN_ID}.png`);
     await page.screenshot({ path: proof.screenshots['058'], fullPage: false });
 
-    // —— 053 Practices Run (charter) ——
+    // —— 053 Practices Run (charter + field-note) ——
     await openSurface(page, 'Practices');
     await page.waitForTimeout(800);
     const practiceRun = await page.evaluate(async () => {
       if (!window.otto?.practices?.run) return { ok: false, reason: 'practices.run missing' };
-      try {
-        const result = await window.otto.practices.run({ slug: 'charter' });
+      const runPractice = async (input) => {
+        const result = await window.otto.practices.run(input);
         return {
           ok: true,
           receiptId: result.receipt?.id,
           runId: result.run?.id,
           slug: result.practice?.slug,
+          artifactPath: result.artifactPath ?? null,
+        };
+      };
+      try {
+        const charter = await runPractice({ slug: 'charter' });
+        const fieldNote = await runPractice({
+          slug: 'field-note',
+          payload: {
+            raw_note: 'Staging hygiene proof: operator asked for receipt before wire.',
+            source: { who: 'hygiene smoke', role: 'agent', where: 'staging', when: new Date().toISOString() },
+          },
+        });
+        return {
+          ok: charter.ok && fieldNote.ok,
+          charter,
+          fieldNote,
+          receiptId: charter.receiptId,
+          runId: charter.runId,
+          slug: charter.slug,
         };
       } catch (e) {
         return { ok: false, reason: String(e) };
@@ -157,7 +176,11 @@ async function main() {
       ...practiceRun,
       paneVisible: (await page.getByText(/charter|review|field note/i).count()) > 0,
     };
-    proof.tickets['053'].ok = practiceRun.ok && !!practiceRun.receiptId;
+    proof.tickets['053'].ok =
+      practiceRun.ok &&
+      !!practiceRun.receiptId &&
+      !!practiceRun.fieldNote?.receiptId &&
+      !!practiceRun.fieldNote?.artifactPath;
     proof.screenshots['053'] = join(RECEIPT_DIR, `053-practices-charter-${RUN_ID}.png`);
     await page.screenshot({ path: proof.screenshots['053'], fullPage: false });
 
@@ -239,7 +262,7 @@ async function main() {
 | 055 | ${proof.tickets['055']?.ok ? 'pass' : 'fail'} | Knowledge pane |
 | 056 | ${proof.tickets['056']?.ok ? 'pass' : 'fail'} | Skills/Tickets/Channels |
 | 058 | ${proof.tickets['058']?.ok ? 'pass' : 'fail'} | Settings status |
-| 053 | ${proof.tickets['053']?.ok ? 'pass' : 'fail'} | Practices charter run |
+| 053 | ${proof.tickets['053']?.ok ? 'pass' : 'fail'} | Practices charter + field-note run |
 | 049 | ${proof.tickets['049']?.ok ? 'pass' : 'fail'} | orchestrate ticket_035 |
 
 JSON: \`staging-hygiene-proof-${RUN_ID}.json\`
