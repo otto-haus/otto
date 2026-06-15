@@ -109,6 +109,13 @@ export const webPreviewEmpty: Record<Exclude<SurfaceId, 'chat' | 'settings'>, We
     path: '~/.otto/checks/',
     next: 'Open the desktop app to inspect active checks and block provenance.',
   },
+  terminal: {
+    eyebrow: 'terminal',
+    title: 'Terminal opens from the desktop app.',
+    body: 'Launch a local shell at the workspace root for agent workflows — not a web preview.',
+    path: 'repo root',
+    next: 'Open the packaged desktop app and choose Terminal in the workspace nav.',
+  },
 };
 
 export const listEmpty: Partial<Record<SurfaceId, ListEmpty>> = {
@@ -786,4 +793,19 @@ export const cultureSettingsCopy = {
   amendSave: 'Save amendment',
   exportDone: 'Culture bundle exported',
   writebackGate: 'Memory changes only after you accept in Curation.',
+} as const;
+
+export const terminalCopy = {
+  eyebrow: 'terminal',
+  title: 'Local shell',
+  body: 'Open your system terminal at the workspace root — for git, tasks, and local agent workflows.',
+  open: 'Open in Terminal',
+  opening: 'Opening…',
+  openFailed: 'Could not open a terminal window.',
+  workspaceLabel: 'Workspace root',
+  workspaceLoading: 'Resolving…',
+  lastOpenedLabel: 'Last opened',
+  inkLead: 'Opens your system terminal at',
+  inkMuted: 'the workspace root',
+  embeddedNote: 'An embedded PTY inside otto is planned; this surface opens Terminal.app (or your platform default) today.',
 } as const;

@@ -18,6 +18,7 @@ export type SurfaceId =
   | 'knowledge'
   | 'tickets'
   | 'channels'
+  | 'terminal'
   | 'settings';
 
 type NavDef = { id: SurfaceId; label: string; icon: React.ReactNode; shortcut?: string };
@@ -40,6 +41,7 @@ const COLLAPSIBLE_WORKSPACE_ITEMS: NavDef[] = [
   { id: 'knowledge', label: 'Knowledge', icon: Icon.theme },
   { id: 'tickets', label: 'Tickets', icon: Icon.plus },
   { id: 'channels', label: 'Channels', icon: Icon.send },
+  { id: 'terminal', label: 'Terminal', icon: Icon.terminal },
 ];
 
 const WORKSPACE_ITEMS: NavDef[] = [...PRIMARY_WORKSPACE_ITEMS, ...COLLAPSIBLE_WORKSPACE_ITEMS];

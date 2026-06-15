@@ -24,6 +24,7 @@ const ALL_SURFACES: SurfaceId[] = [
   'knowledge',
   'tickets',
   'channels',
+  'terminal',
 ];
 
 describe('surface-tiers', () => {
@@ -37,9 +38,12 @@ describe('surface-tiers', () => {
     const labs = defaultLabsConfig();
     expect(surfaceTier('chat')).toBe('ship');
     expect(surfaceTier('tickets')).toBe('ship');
+    expect(surfaceTier('terminal')).toBe('ship');
     expect(isSurfaceAccessible('charters', labs)).toBe(true);
     expect(isSurfaceComingSoon('charters', labs)).toBe(true);
+    expect(isSurfaceComingSoon('terminal', labs)).toBe(false);
     expect(surfaceGate('charters', labs, true)).toBe('coming-soon');
+    expect(surfaceGate('terminal', labs, true)).toBe('open');
     expect(surfaceGate('chat', labs, true)).toBe('open');
     expect(surfaceGate('settings', labs, true)).toBe('open');
   });
@@ -63,7 +67,7 @@ describe('surface-tiers', () => {
     expect(isSurfaceComingSoon('knowledge', on)).toBe(false);
   });
 
-  test('receipts opens during onboarding sample education', () => {
+  test('receipts stays open during onboarding sample education (#139)', () => {
     const labs = defaultLabsConfig();
     const store = new Map<string, string>();
     const prior = globalThis.sessionStorage;
@@ -74,7 +78,7 @@ describe('surface-tiers', () => {
     } as Storage;
 
     try {
-      expect(surfaceGate('receipts', labs, true)).toBe('coming-soon');
+      expect(surfaceGate('receipts', labs, true)).toBe('open');
       store.set('otto.onboarding.sampleReceipt.v1', '1');
       expect(surfaceGate('receipts', labs, true)).toBe('open');
       expect(surfaceGate('charters', labs, true)).toBe('coming-soon');

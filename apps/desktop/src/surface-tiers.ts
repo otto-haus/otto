@@ -17,6 +17,7 @@ export const SURFACE_TIER: Record<SurfaceId, SurfaceTier> = {
   autonomy: 'ship',
   skills: 'ship',
   tickets: 'ship',
+  terminal: 'ship',
   knowledge: 'labs',
   channels: 'labs',
 };
