@@ -435,6 +435,7 @@ export function registerIpc(win: BrowserWindow) {
     return { thread: updatedThread, status };
   });
   ipcMain.handle('otto:threads:switch', async (_e, threadId: string) => {
+    permissionSessionStore.clear();
     const thread = threads.switch(threadId);
     const status = await initWithStaleRecovery();
     const updatedThread = threads.touchActive({
@@ -445,6 +446,7 @@ export function registerIpc(win: BrowserWindow) {
     return { thread: updatedThread, status };
   });
   ipcMain.handle('otto:threads:archive', async (_e, threadId: string) => {
+    permissionSessionStore.clear();
     const archived = threads.archive(threadId);
     const activeThreadId = config.get().activeThreadId ?? null;
     if (activeThreadId && activeThreadId !== threadId) {
