@@ -8,7 +8,8 @@ const copySource = readFileSync(join(import.meta.dir, '../copy/surfaces.ts'), 'u
 describe('chat composer readiness contract (#289, #300)', () => {
   it('keeps the draft textarea editable while runtime is not ready', () => {
     expect(chatSource).not.toMatch(/<textarea[\s\S]*?disabled=\{!ready\}/);
-    expect(chatSource).toContain('Draft while setup finishes…');
+    expect(chatSource).toContain('chatCopy.composerPlaceholderDraftWhileSetup');
+    expect(copySource).toContain('composerPlaceholderDraftWhileSetup');
   });
 
   it('gates send and explains why when runtime is not ready', () => {

@@ -116,7 +116,7 @@ const formatRuntimeSubtitle = (
 ): string => {
   if (ready) return modelLabel;
   if (st?.code === 'no-agent') return chatCopy.runtimeNoAgentSubtitle;
-  const text = st?.reason?.trim() ?? 'connecting…';
+  const text = st?.reason?.trim() ?? chatCopy.subtitleConnecting;
   if (text.length <= 96) return text;
   return `${text.slice(0, 93)}…`;
 };
@@ -1021,7 +1021,7 @@ const LiveChat: React.FC<{
                   {chatCopy.copyMarkdown}
                 </button>
                 {!ready ? (
-                  <span className="pill pill--warn">setup</span>
+                  <span className="pill pill--warn">{chatCopy.headerSetupPill}</span>
                 ) : null}
               </>
             ) : null}
@@ -1058,7 +1058,7 @@ const LiveChat: React.FC<{
                   <div className="inkblock__meta">
                     <span>{runtimeSetupBannerBody(st)}</span>
                     {st.code === 'usage-limit' ? (
-                      <span className="faint"> Switch model or provider in Settings, or wait for the limit to reset.</span>
+                      <span className="faint">{chatCopy.usageLimitHint}</span>
                     ) : null}
                   </div>
                 </>
@@ -1123,7 +1123,7 @@ const LiveChat: React.FC<{
             const isError = m.who === 'error';
             const isStreamingMessage = assistantStreaming && i === streamingRuntimeMessageIndex && !isUser && !isError;
             const displayText = expandedMessageTexts[m.id] ?? m.text;
-            const whoLabel = isUser ? 'You' : isError ? chatCopy.errorWhoLabel : 'otto';
+            const whoLabel = isUser ? chatCopy.whoYou : isError ? chatCopy.errorWhoLabel : chatCopy.whoOtto;
             return (
               <div
                 key={m.id}
@@ -1321,14 +1321,14 @@ const LiveChat: React.FC<{
               ref={textareaRef}
               placeholder={
                 ready
-                  ? (rt.busy ? 'Steer this reply…' : 'Message otto…')
+                  ? (rt.busy ? chatCopy.composerPlaceholderBusy : chatCopy.composerPlaceholderReady)
                   : st?.code === 'usage-limit'
-                    ? 'Usage limit reached — switch model/provider in Settings or wait for reset'
+                    ? chatCopy.composerPlaceholderUsageLimit
                     : st
-                      ? 'Draft while setup finishes…'
-                      : 'Connecting to Letta…'
+                      ? chatCopy.composerPlaceholderDraftWhileSetup
+                      : chatCopy.composerPlaceholderConnecting
               }
-              aria-label="Message otto"
+              aria-label={chatCopy.composerAriaLabel}
               value={draft}
               onChange={(e) => setDraft(e.target.value)}
               onPaste={(e) => {
