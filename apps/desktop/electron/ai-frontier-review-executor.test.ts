@@ -59,6 +59,7 @@ describe('AiFrontierReviewExecutor', () => {
     try {
       seedKnowledge(tmp);
       const notesPath = join(tmp, 'ai-frontier', 'capability-notes.md');
+      const registryPath = join(tmp, 'ai-frontier', 'model-registry.yaml');
       const today = new Date().toISOString().slice(0, 10);
       const marker = `<!-- ai-frontier-review ${today} -->`;
       const executor = new AiFrontierReviewExecutor(
@@ -67,11 +68,16 @@ describe('AiFrontierReviewExecutor', () => {
         new ProposalStore(join(tmp, 'proposals')),
       );
 
-      executor.run();
-      executor.run();
+      const first = executor.run();
+      const second = executor.run();
 
       const notes = readFileSync(notesPath, 'utf8');
       expect(notes.split(marker).length - 1).toBe(1);
+      expect(first.touched).toContain(notesPath);
+      expect(second.touched).not.toContain(notesPath);
+      expect(second.touched).toContain(registryPath);
+      expect(first.receipt.action).toBe('knowledge.frontier_review.manual');
+      expect(second.receipt.action).toBe('knowledge.frontier_review.manual');
     } finally {
       rmSync(tmp, { recursive: true, force: true });
     }
