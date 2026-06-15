@@ -3,7 +3,6 @@ import {
   LEGACY_MESSAGES_KEY,
   messagesKey,
   readStoredMessages,
-  type StoredChatMsg,
 } from '../src/chat/message-storage';
 
 const installStorage = () => {
@@ -49,28 +48,12 @@ describe('chat message storage keys (046)', () => {
   });
 
   test('empty thread does not inherit legacy chat history by default', () => {
-    const legacy: StoredChatMsg = { id: 'legacy-1', who: 'user', text: 'old default history' };
-    const storage = fakeStorage({ [LEGACY_MESSAGES_KEY]: JSON.stringify([legacy]) });
-
-    expect(readStoredMessages('thread_new', { storage })).toEqual([]);
-  });
-
-  test('legacy chat history fallback is explicit for first-load migration', () => {
-    const legacy: StoredChatMsg = { id: 'legacy-1', who: 'otto', text: 'migrate me' };
-    const storage = fakeStorage({ [LEGACY_MESSAGES_KEY]: JSON.stringify([legacy]) });
-
-    expect(readStoredMessages('thread_initial', { storage, allowLegacyFallback: true })).toEqual([legacy]);
-  });
-
-  test('explicit legacy fallback does not override thread-specific history', () => {
-    const legacy: StoredChatMsg = { id: 'legacy-1', who: 'user', text: 'old default history' };
-    const thread: StoredChatMsg = { id: 'thread-1', who: 'otto', text: 'current thread history' };
-    const storage = fakeStorage({
-      [LEGACY_MESSAGES_KEY]: JSON.stringify([legacy]),
-      [messagesKey('thread_existing')]: JSON.stringify([thread]),
-    });
-
-    expect(readStoredMessages('thread_existing', { storage, allowLegacyFallback: true })).toEqual([thread]);
+    installStorage();
+    localStorage.setItem(
+      LEGACY_MESSAGES_KEY,
+      JSON.stringify([{ id: 'legacy-1', who: 'user', text: 'old default history' }]),
+    );
+    expect(readStoredMessages('thread_new')).toEqual([]);
   });
 
   test('valid 73k thread history restores the bounded recent tail', () => {
@@ -115,9 +98,3 @@ describe('chat message storage keys (046)', () => {
     expect(restored[0]?.text).toContain('too large to restore safely at startup');
   });
 });
-
-function fakeStorage(entries: Record<string, string>): Pick<Storage, 'getItem'> {
-  return {
-    getItem: (key: string) => entries[key] ?? null,
-  };
-}

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { flushMessages, readStoredMessages, type StoredChatMsg } from './chat/message-storage';
+import { flushMessages, migrateLegacyMessagesToThread, readStoredMessages, type StoredChatMsg } from './chat/message-storage';
 import type {
   Charter,
   CharterRef,
@@ -292,8 +292,13 @@ declare global {
 
 export type OttoBridge = OttoApi;
 
-export const ottoApi = (): OttoApi | null =>
-  typeof window !== 'undefined' && window.otto ? window.otto : null;
+let cachedOttoApi: OttoApi | null | undefined;
+
+export const ottoApi = (): OttoApi | null => {
+  if (cachedOttoApi !== undefined) return cachedOttoApi;
+  cachedOttoApi = typeof window !== 'undefined' && window.otto ? window.otto : null;
+  return cachedOttoApi;
+};
 export const isElectron = (): boolean => ottoApi() !== null;
 
 export type ChatMsg = StoredChatMsg & {
@@ -335,14 +340,24 @@ function assistantText(m: Record<string, unknown>): string | null {
 function loadThreadMessages(
   threadId: string | null,
   cache: Map<string, ChatMsg[]>,
-  opts: { allowLegacyFallback?: boolean } = {},
 ): ChatMsg[] {
   if (!threadId) return [];
   const cached = cache.get(threadId);
   if (cached) return cached;
-  const loaded = readStoredMessages(threadId, { allowLegacyFallback: opts.allowLegacyFallback });
+  migrateLegacyMessagesToThread(threadId);
+  const loaded = readStoredMessages(threadId);
   cache.set(threadId, loaded);
   return loaded;
+}
+
+function shouldAutoTitleThread(title: string | null | undefined): boolean {
+  const t = (title ?? '').trim();
+  if (!t) return true;
+  if (/^new chat$/i.test(t)) return true;
+  if (/^chat session$/i.test(t)) return true;
+  if (/^local_/i.test(t)) return true;
+  if (/^\d{3}-(?:rev\d+-|smoke-)?thread-[ab]-\d{12,14}$/i.test(t)) return true;
+  return false;
 }
 
 export function useRuntime() {
@@ -353,21 +368,23 @@ export function useRuntime() {
   const [activeTodos, setActiveTodos] = useState<TodoItem[]>([]);
   const [busy, setBusy] = useState(false);
   const activeAssistantStream = useRef<string | null>(null);
+  const seenAssistantChunks = useRef(new Set<string>());
   const sendError = useRef<string | null>(null);
   const activeThreadRef = useRef<string | null>(null);
   const messagesRef = useRef<ChatMsg[]>([]);
   const threadHydrated = useRef(false);
+  const runtimeInitialized = useRef(false);
   const threadMessagesCache = useRef(new Map<string, ChatMsg[]>());
   /** Thread that owns the in-flight Letta turn — events route here, not to the active view. */
   const inflightThreadRef = useRef<string | null>(null);
 
-  const applyThreadView = (threadId: string, opts?: { persistLeaving?: boolean; allowLegacyFallback?: boolean }) => {
+  const applyThreadView = (threadId: string, opts?: { persistLeaving?: boolean }) => {
     const leaving = activeThreadRef.current;
     if (opts?.persistLeaving !== false && leaving && leaving !== threadId) {
       threadMessagesCache.current.set(leaving, messagesRef.current);
       flushMessages(leaving, messagesRef.current);
     }
-    const loaded = loadThreadMessages(threadId, threadMessagesCache.current, { allowLegacyFallback: opts?.allowLegacyFallback });
+    const loaded = loadThreadMessages(threadId, threadMessagesCache.current);
     activeThreadRef.current = threadId;
     messagesRef.current = loaded;
     setActiveThreadId(threadId);
@@ -394,7 +411,7 @@ export function useRuntime() {
       threadHydrated.current = true;
       const threadId = result.activeThreadId;
       activeThreadRef.current = threadId;
-      const loaded = loadThreadMessages(threadId, threadMessagesCache.current, { allowLegacyFallback: true });
+      const loaded = loadThreadMessages(threadId, threadMessagesCache.current);
       messagesRef.current = loaded;
       setActiveThreadId(threadId);
       setMessages(loaded);
@@ -407,40 +424,27 @@ export function useRuntime() {
   useEffect(() => {
     if (!api?.onActiveThread) return;
     return api.onActiveThread(({ threadId, status }) => {
-      const allowLegacyFallback = !threadHydrated.current;
       threadHydrated.current = true;
       if (status) setStatus(status);
       if (activeThreadRef.current === threadId) {
-        const loaded = loadThreadMessages(threadId, threadMessagesCache.current, { allowLegacyFallback });
+        const loaded = loadThreadMessages(threadId, threadMessagesCache.current);
         messagesRef.current = loaded;
         setMessages(loaded);
         return;
       }
-      applyThreadView(threadId, { allowLegacyFallback });
+      applyThreadView(threadId);
     });
   }, [api]);
 
   useEffect(() => {
-    if (!api) return;
+    if (!api || runtimeInitialized.current) return;
+    runtimeInitialized.current = true;
     setStatus((current) => current ?? {
       ready: false,
       reason: 'Booting local Letta session…',
       cliPath: '',
       cliResolved: false,
     });
-    const patchInflightMessages = (updater: (msgs: ChatMsg[]) => ChatMsg[]) => {
-      const threadId = inflightThreadRef.current ?? activeThreadRef.current;
-      if (!threadId) return;
-      const prev = loadThreadMessages(threadId, threadMessagesCache.current);
-      const next = updater(prev);
-      threadMessagesCache.current.set(threadId, next);
-      flushMessages(threadId, next);
-      if (activeThreadRef.current === threadId) {
-        messagesRef.current = next;
-        setMessages(next);
-      }
-    };
-
     api.runtime
       .init()
       .then(async (nextStatus) => {
@@ -461,6 +465,23 @@ export function useRuntime() {
         }
       })
       .catch((e) => setStatus({ ready: false, reason: String(e), cliPath: '', cliResolved: false }));
+  }, [api]);
+
+  useEffect(() => {
+    if (!api) return;
+    const patchInflightMessages = (updater: (msgs: ChatMsg[]) => ChatMsg[]) => {
+      const threadId = inflightThreadRef.current ?? activeThreadRef.current;
+      if (!threadId) return;
+      const prev = loadThreadMessages(threadId, threadMessagesCache.current);
+      const next = updater(prev);
+      threadMessagesCache.current.set(threadId, next);
+      flushMessages(threadId, next);
+      if (activeThreadRef.current === threadId) {
+        messagesRef.current = next;
+        setMessages(next);
+      }
+    };
+
     const off = api.onEvent((e) => {
       if ('status' in e) {
         setStatus(e.status);
@@ -471,6 +492,9 @@ export function useRuntime() {
         const t = assistantText(m);
         if (t) {
           const streamId = String(m.uuid ?? m.runId ?? 'assistant');
+          const chunkId = typeof m.chunkId === 'string' && m.chunkId ? `${streamId}:${m.chunkId}` : null;
+          if (chunkId && seenAssistantChunks.current.has(chunkId)) return;
+          if (chunkId) seenAssistantChunks.current.add(chunkId);
           patchInflightMessages((x) => {
             const last = x[x.length - 1];
             if (activeAssistantStream.current === streamId && last?.who === 'otto') {
@@ -505,6 +529,7 @@ export function useRuntime() {
         const ownedTurn = inflightThreadRef.current;
         sendError.current = String((m as { message?: unknown }).message ?? 'error');
         activeAssistantStream.current = null;
+        seenAssistantChunks.current.clear();
         patchInflightMessages((x) => [
           ...x,
           { id: `error-${Date.now()}`, who: 'error', text: String((m as { message?: unknown }).message ?? 'error') },
@@ -513,6 +538,7 @@ export function useRuntime() {
         if (!ownedTurn) setBusy(false);
       } else if (m.type === 'result') {
         activeAssistantStream.current = null;
+        seenAssistantChunks.current.clear();
         inflightThreadRef.current = null;
         const conversationId = typeof m.conversationId === 'string' ? m.conversationId : null;
         if (conversationId) {
@@ -540,10 +566,16 @@ export function useRuntime() {
     sendError.current = null;
     activeAssistantStream.current = null;
     setActiveTodos([]);
+    seenAssistantChunks.current.clear();
     inflightThreadRef.current = sendThreadId;
     const snippet = text.trim().replace(/\s+/g, ' ');
     if (snippet) {
-      void api.threads.touch({ title: snippet.length > 56 ? `${snippet.slice(0, 53)}…` : snippet });
+      void api.threads.list().then((result) => {
+        if (activeThreadRef.current !== sendThreadId) return;
+        const active = result.threads.find((thread) => thread.id === sendThreadId);
+        if (!shouldAutoTitleThread(active?.title)) return;
+        void api.threads.touch({ title: snippet.length > 56 ? `${snippet.slice(0, 53)}…` : snippet });
+      });
     }
     const prev = loadThreadMessages(sendThreadId, threadMessagesCache.current);
     const next: ChatMsg[] = [...prev, { id: `user-${Date.now()}`, who: 'user', text }];
@@ -565,12 +597,19 @@ export function useRuntime() {
     if (!api) return;
     await api.runtime.abort();
     activeAssistantStream.current = null;
+    seenAssistantChunks.current.clear();
     inflightThreadRef.current = null;
     setBusy(false);
   };
 
   const configure = async (input: RuntimePreferences) => {
     if (!api || busy) return status;
+    setStatus((current) => ({
+      ...(current ?? { cliPath: '', cliResolved: false }),
+      ready: false,
+      code: 'error',
+      reason: 'Switching model…',
+    }));
     const next = await api.runtime.configure(input);
     setStatus(next);
     return next;
@@ -584,6 +623,12 @@ export function useRuntime() {
     activeAssistantStream.current = null;
     inflightThreadRef.current = null;
     setBusy(false);
+    setStatus((current) => ({
+      ...(current ?? { cliPath: '', cliResolved: false }),
+      ready: false,
+      code: 'error',
+      reason: 'Starting a new conversation…',
+    }));
     if (activeThreadRef.current) {
       applyThreadView(activeThreadRef.current, { persistLeaving: true });
     }
@@ -604,6 +649,12 @@ export function useRuntime() {
     activeAssistantStream.current = null;
     inflightThreadRef.current = null;
     setBusy(false);
+    setStatus((current) => ({
+      ...(current ?? { cliPath: '', cliResolved: false }),
+      ready: false,
+      code: 'error',
+      reason: 'Switching conversation…',
+    }));
     if (activeThreadRef.current) {
       threadMessagesCache.current.set(activeThreadRef.current, messagesRef.current);
       flushMessages(activeThreadRef.current, messagesRef.current);

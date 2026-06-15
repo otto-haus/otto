@@ -311,6 +311,8 @@ export interface ChatThreadRecord {
   title: string;
   createdAt: string;
   updatedAt: string;
+  /** Manual sidebar order; lower numbers appear first inside pinned/recents groups. */
+  sortOrder?: number | null;
   pinned: boolean;
   archived: boolean;
 }
@@ -423,6 +425,8 @@ export interface ChatThreadRecord {
   title: string;
   createdAt: string;
   updatedAt: string;
+  /** Manual sidebar order; lower numbers appear first inside pinned/recents groups. */
+  sortOrder?: number | null;
   pinned: boolean;
   archived: boolean;
 }
