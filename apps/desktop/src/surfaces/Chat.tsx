@@ -76,6 +76,12 @@ import {
   labelForCuratedModel,
   visiblePickerModels,
 } from '../chat/model-picker-curation';
+import {
+  composerHintKey,
+  DEFAULT_COMPOSER_SEND_SHORTCUT,
+  normalizeComposerSendShortcut,
+  shouldComposerShortcutSubmit,
+} from '../chat/composer-keyboard';
 
 // In Electron (window.otto present) → the runtime-wired LiveChat.
 // In the web preview → the file-backed PreviewChat (unchanged).
@@ -585,6 +591,7 @@ const LiveChat: React.FC<{
   const [modelOpen, setModelOpen] = useState(false);
   const [effortOpen, setEffortOpen] = useState(false);
   const [permissionQueue, setPermissionQueue] = useState<PermissionRequestView[]>([]);
+  const [composerSendShortcut, setComposerSendShortcut] = useState(DEFAULT_COMPOSER_SEND_SHORTCUT);
   const [permissionBusy, setPermissionBusy] = useState(false);
   const permission = headPermissionRequest(permissionQueue);
   const pendingPermissionCount = permissionQueue.length;
@@ -641,6 +648,13 @@ const LiveChat: React.FC<{
     return () => {
       cancelled = true;
     };
+  }, [api]);
+
+  useEffect(() => {
+    if (!api?.config?.get) return;
+    void api.config.get().then((cfg) => {
+      setComposerSendShortcut(normalizeComposerSendShortcut(cfg.composerSendShortcut));
+    });
   }, [api]);
 
   useEffect(() => {
@@ -1444,24 +1458,6 @@ const LiveChat: React.FC<{
           </div>
         )}
         {attachmentError && <div className="attachmentError">{attachmentError}</div>}
-        {ready && st ? (
-          <div className="promptbar__pickers" ref={pickerRef}>
-            <ModelEffortPickers
-              busy={rt.busy}
-              selectedModel={selectedModel}
-              resolvedModelLabel={resolvedModelLabel}
-              selectedEffort={selectedEffort}
-              modelOpen={modelOpen}
-              effortOpen={effortOpen}
-              onToggleModel={() => { setModelOpen((x) => !x); setEffortOpen(false); }}
-              onToggleEffort={() => { setEffortOpen((x) => !x); setModelOpen(false); }}
-              onClose={() => { setModelOpen(false); setEffortOpen(false); }}
-              onSelectModel={(value) => { void rt.configure({ modelHandle: value }); }}
-              onSelectEffort={(value) => { void rt.configure({ effort: value }); }}
-              modelOptions={modelOptions}
-            />
-          </div>
-        ) : null}
         <div className="promptCompose">
           <div className={`promptbox${ready ? '' : ' promptbox--send-blocked'}`}>
             <textarea
@@ -1485,17 +1481,22 @@ const LiveChat: React.FC<{
                 void attachImages(files);
               }}
               onKeyDown={(e) => {
-                if (e.key === 'Enter' && !e.shiftKey) {
-                  e.preventDefault();
-                  if (ready) submit();
+                if (e.key === 'Escape') {
+                  setDraft('');
+                  e.currentTarget.blur();
+                  return;
                 }
-                else if (e.key === 'Escape') { setDraft(''); e.currentTarget.blur(); }
+                const canSend = ready && (draft.trim() || attachments.length > 0);
+                if (
+                  canSend
+                  && shouldComposerShortcutSubmit(e.key, e.shiftKey, composerSendShortcut)
+                ) {
+                  e.preventDefault();
+                  submit();
+                }
               }}
               rows={1}
             />
-            {rt.busy && (
-              <button type="button" className="btn btn--icon promptbox__stop" aria-label="Abort current run" onClick={rt.abort}>{Icon.stop}</button>
-            )}
             <button
               type="button"
               className="btn btn--primary btn--icon promptbox__send"
@@ -1507,7 +1508,35 @@ const LiveChat: React.FC<{
               {Icon.send}
             </button>
           </div>
-          {!ready && <div className="promptbar__hint">{chatCopy.composerNotReadyHint}</div>}
+          <div className="promptbar__footer">
+            <div className="promptbar__hint">
+              {ready
+                ? (composerHintKey(composerSendShortcut) === 'enter'
+                  ? chatCopy.composerHintEnter
+                  : chatCopy.composerHintTab)
+                : chatCopy.composerNotReadyHint}
+            </div>
+            {ready && st ? (
+              <div className="promptbar__pickers" ref={pickerRef}>
+                <ModelEffortPickers
+                  busy={rt.busy}
+                  selectedModel={selectedModel}
+                  resolvedModelLabel={resolvedModelLabel}
+                  selectedEffort={selectedEffort}
+                  modelOpen={modelOpen}
+                  effortOpen={effortOpen}
+                  onToggleModel={() => { setModelOpen((x) => !x); setEffortOpen(false); }}
+                  onToggleEffort={() => { setEffortOpen((x) => !x); setModelOpen(false); }}
+                  onClose={() => { setModelOpen(false); setEffortOpen(false); }}
+                  onSelectModel={(value) => { void rt.configure({ modelHandle: value }); }}
+                  onSelectEffort={(value) => { void rt.configure({ effort: value }); }}
+                  modelOptions={modelOptions}
+                  compact
+                  menuPlacement="down"
+                />
+              </div>
+            ) : null}
+          </div>
         </div>
         </div>
       </div>

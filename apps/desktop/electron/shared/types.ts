@@ -308,6 +308,9 @@ export type { StandardConflictResult } from '@otto-haus/core';
 /** Default sidebar ordering for threads without manual sortOrder (164). */
 export type ConversationSortMode = 'recent' | 'created';
 
+/** Chat composer send/queue shortcut — default Tab keeps Enter for steering/newlines (#48). */
+export type ComposerSendShortcut = 'tab' | 'enter';
+
 /** Local chat thread index (046). */
 export interface ChatThreadRecord {
   id: string;
@@ -504,6 +507,8 @@ export interface OttoConfig {
   connectionMode?: 'embedded' | 'existing' | 'cloud';
   /** Sidebar default for threads without manual sortOrder (164). */
   conversationSortMode?: ConversationSortMode;
+  /** Chat composer keyboard send shortcut (#48). Default tab when unset. */
+  composerSendShortcut?: ComposerSendShortcut;
   /** Legacy / generated readiness shape; modelHandle is the v1 desktop control. */
   model?: { provider?: string; model?: string };
   mcpServers?: unknown[];

@@ -2,7 +2,12 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { resolveLettaSettingsPath } from './dream-settings';
-import type { EffortLevel, OttoConfig, ConversationSortMode } from './shared/types';
+import type {
+  EffortLevel,
+  OttoConfig,
+  ConversationSortMode,
+  ComposerSendShortcut,
+} from './shared/types';
 import { normalizeDisplayTheme } from './shared/display-theme';
 
 export const defaultOttoDir = () => {
@@ -165,11 +170,22 @@ function normalizeConfig(config: OttoConfig): OttoConfig {
   if ('theme' in config) {
     next.theme = normalizeDisplayTheme((config as { theme?: unknown }).theme);
   }
+  const composerSendShortcut = normalizeComposerSendShortcut(config.composerSendShortcut);
+  if (composerSendShortcut) {
+    next.composerSendShortcut = composerSendShortcut;
+  } else if ('composerSendShortcut' in config) {
+    next.composerSendShortcut = 'tab';
+  }
   return next;
 }
 
 function normalizeConversationSortMode(value: unknown): ConversationSortMode | null {
   if (value === 'recent' || value === 'created') return value;
+  return null;
+}
+
+function normalizeComposerSendShortcut(value: unknown): ComposerSendShortcut | null {
+  if (value === 'tab' || value === 'enter') return value;
   return null;
 }
 

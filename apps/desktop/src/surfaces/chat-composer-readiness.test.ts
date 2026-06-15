@@ -2,7 +2,7 @@ import { describe, expect, it } from 'bun:test';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
-const chatSource = readFileSync(join(import.meta.dir, 'Chat.tsx'), 'utf8');
+const chatSource = readFileSync(join(import.meta.dir, '../surfaces/Chat.tsx'), 'utf8');
 const copySource = readFileSync(join(import.meta.dir, '../copy/surfaces.ts'), 'utf8');
 
 describe('chat composer readiness contract (#289, #300)', () => {
@@ -40,5 +40,24 @@ describe('chat composer readiness contract (#289, #300)', () => {
     expect(chatSource).toContain('runtimeSetupBannerBody(st)');
     expect(chatSource).toContain('chatCopy.runtimeNoAgentBody');
     expect(chatSource).not.toMatch(/\{st\.reason \?\? chatCopy\.runtimeNotReadyBody\}/);
+  });
+});
+
+describe('chat composer chrome (#48)', () => {
+  it('removes attach and stop controls from the primary prompt box', () => {
+    expect(chatSource).not.toContain('promptbox__attach');
+    expect(chatSource).not.toContain('promptbox__stop');
+  });
+
+  it('places model and effort pickers in the footer row', () => {
+    expect(chatSource).toContain('className="promptbar__footer"');
+    expect(chatSource).toContain('menuPlacement="down"');
+  });
+
+  it('documents Tab-first send with Settings override', () => {
+    expect(chatSource).toContain('shouldComposerShortcutSubmit');
+    expect(chatSource).toContain('composerSendShortcut');
+    expect(copySource).toContain('composerHintTab');
+    expect(copySource).toContain('composerShortcutLabel');
   });
 });
