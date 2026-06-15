@@ -34,10 +34,11 @@ import {
 import { serializeConversationMarkdown } from '../chat/conversation-markdown';
 import { runTicketCommand } from '../chat/ticket-commands';
 import { formatResolvedModelLabel, helpTextForModelOption } from '../chat/model-option-help';
-import { planQueueDrain } from '../chat/queue-drain';
+import { planQueueDrain, runQueuedSend } from '../chat/queue-drain';
 import {
   appendFailedQueueItem,
   clearInFlight,
+  clearInFlightForThread,
   composerDraftFromQueueText,
   createQueueItem,
   enqueueQueueItemForThread,
@@ -931,8 +932,9 @@ const LiveChat: React.FC<{
       try {
         await rt.send(text);
         notifyOnboardingFirstMessage();
-      } catch {
-        setQueue((items) => appendFailedQueueItem(items, createQueueItem(text, 'failed', rt.activeThreadId)));
+      } catch (err) {
+        const reason = err instanceof Error ? err.message : String(err);
+        setQueue((items) => appendFailedQueueItem(items, createQueueItem(text, 'failed', rt.activeThreadId), reason));
       }
     })();
   };
@@ -950,14 +952,14 @@ const LiveChat: React.FC<{
     draining.current = true;
     persistInFlight({ ...next, state: 'sending' });
     setQueue((items) => items.filter((item) => item.id !== next.id));
-    void rt.send(next.text)
-      .then(() => {
+    void runQueuedSend((text) => rt.send(text), next.text)
+      .then((outcome) => {
         clearInFlight(next.id);
-        notifyOnboardingFirstMessage();
-      })
-      .catch(() => {
-        clearInFlight(next.id);
-        setQueue((items) => appendFailedQueueItem(items, next));
+        if (outcome.ok) {
+          notifyOnboardingFirstMessage();
+          return;
+        }
+        setQueue((items) => appendFailedQueueItem(items, next, outcome.reason));
       })
       .finally(() => {
         draining.current = false;
@@ -1277,6 +1279,7 @@ const LiveChat: React.FC<{
             recalledQueueId={recalledQueueId}
             onClear={() => {
               setRecalledQueueId(null);
+              clearInFlightForThread(rt.activeThreadId);
               setQueue((items) => items.filter((item) => !queueMatchesThread(item, rt.activeThreadId)));
             }}
             onRetryAll={() => setQueue((items) => retryFailedQueueItemsForThread(items, rt.activeThreadId))}

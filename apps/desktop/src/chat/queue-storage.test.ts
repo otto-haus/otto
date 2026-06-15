@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, test } from 'bun:test';
 import {
   appendFailedQueueItem,
+  clearInFlightForThread,
   composerDraftFromQueueText,
   createQueueItem,
   enqueueQueueItemForThread,
@@ -280,10 +281,28 @@ describe('queue-storage', () => {
     ];
     const failed = { id: 'failed-a', text: 'send failed', createdAt: 2, state: 'failed' as const, threadId: 'thread_a' };
 
-    const merged = appendFailedQueueItem(items, failed);
+    const merged = appendFailedQueueItem(items, failed, 'Timed out waiting for the runtime to finish.');
 
     expect(merged.map((item) => `${item.id}:${item.state}`)).toEqual(['queued-a:queued', 'failed-a:failed']);
+    expect(merged.find((item) => item.id === 'failed-a')?.failureReason).toBe(
+      'Timed out waiting for the runtime to finish.',
+    );
     expect(nextQueueItemForThread(merged, 'thread_a')?.id).toBe('queued-a');
+  });
+
+  test('clearInFlightForThread removes persisted in-flight rows for the active thread', () => {
+    installStorage();
+    localStorage.setItem(INFLIGHT_KEY, JSON.stringify({
+      id: 'inflight-a',
+      text: 'Sending…',
+      createdAt: Date.now(),
+      state: 'sending',
+      threadId: 'thread_a',
+    }));
+
+    clearInFlightForThread('thread_a');
+
+    expect(localStorage.getItem(INFLIGHT_KEY)).toBeNull();
   });
 
   test('promoteQueueItemForThread moves a waiting item to the front without reordering other threads', () => {

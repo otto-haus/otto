@@ -5,7 +5,7 @@ import { join } from 'node:path';
 const runtimeSource = readFileSync(join(import.meta.dir, 'runtime.ts'), 'utf8');
 
 describe('runtime busy/inflight lifecycle (Codex P2)', () => {
-  it('keeps busy on owned-turn error events until terminal result', () => {
+  it('keeps busy on owned-turn error events until send() settles', () => {
     expect(runtimeSource).toMatch(
       /if \(m\.type === 'error'\) \{[\s\S]*?const ownedTurn = inflightThreadRef\.current;[\s\S]*?if \(!ownedTurn\) setBusy\(false\);/,
     );
@@ -14,9 +14,9 @@ describe('runtime busy/inflight lifecycle (Codex P2)', () => {
     );
   });
 
-  it('clears busy and inflight when send() rejects before runtime events', () => {
+  it('always releases busy when send() settles even if error cleared inflight first', () => {
     expect(runtimeSource).toMatch(
-      /finally \{[\s\S]*?if \(inflightThreadRef\.current === sendThreadId\) \{[\s\S]*?inflightThreadRef\.current = null;[\s\S]*?setBusy\(false\);/,
+      /finally \{[\s\S]*?if \(inflightThreadRef\.current === sendThreadId\) \{[\s\S]*?inflightThreadRef\.current = null;[\s\S]*?\}[\s\S]*?setBusy\(false\);/,
     );
   });
 

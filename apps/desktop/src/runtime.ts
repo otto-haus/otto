@@ -655,8 +655,9 @@ export function useRuntime() {
     } finally {
       if (inflightThreadRef.current === sendThreadId) {
         inflightThreadRef.current = null;
-        setBusy(false);
       }
+      // Owned-turn error events clear inflight before send() settles; still release busy here.
+      setBusy(false);
     }
   }, [api, status, busy]);
 

@@ -28,7 +28,14 @@
  * 7. Failed rows stay visible after waiting rows and never auto-drain.
  */
 export type QueueState = 'queued' | 'sending' | 'failed';
-export type QueueItem = { id: string; text: string; createdAt: number; state: QueueState; threadId?: string | null };
+export type QueueItem = {
+  id: string;
+  text: string;
+  createdAt: number;
+  state: QueueState;
+  threadId?: string | null;
+  failureReason?: string;
+};
 export type QueueDisplayItem = QueueItem & { isNext: boolean; sendPosition: number | null };
 
 export const QUEUE_KEY = 'otto.chat.queue.v3';
@@ -168,8 +175,16 @@ export const mergeInflightIntoQueue = (
   return [...without.slice(0, insertAt), inFlight, ...without.slice(insertAt)];
 };
 
-export const appendFailedQueueItem = (items: QueueItem[], failed: QueueItem): QueueItem[] =>
-  dedupeQueue([...items, { ...failed, state: 'failed' }]);
+export const appendFailedQueueItem = (
+  items: QueueItem[],
+  failed: QueueItem,
+  failureReason?: string,
+): QueueItem[] =>
+  dedupeQueue([...items, {
+    ...failed,
+    state: 'failed',
+    failureReason: failureReason ?? failed.failureReason ?? 'Send failed.',
+  }]);
 
 export const promoteQueueItemForThread = (
   items: QueueItem[],
@@ -208,7 +223,7 @@ export const retryFailedQueueItemsForThread = (
       && queueMatchesThread(item, threadId)
       && (!id || item.id === id);
 
-    if (shouldRetry) retried.push({ ...item, state: 'queued' });
+    if (shouldRetry) retried.push({ ...item, state: 'queued', failureReason: undefined });
     else kept.push(item);
   }
 
@@ -326,5 +341,13 @@ export const clearInFlight = (id: string) => {
   try {
     const item = JSON.parse(localStorage.getItem(INFLIGHT_KEY) ?? 'null') as QueueItem | null;
     if (item?.id === id) localStorage.removeItem(INFLIGHT_KEY);
+  } catch { /* best effort */ }
+};
+
+/** Drop persisted in-flight row when it belongs to the cleared thread. */
+export const clearInFlightForThread = (threadId: string | null | undefined) => {
+  try {
+    const item = JSON.parse(localStorage.getItem(INFLIGHT_KEY) ?? 'null') as QueueItem | null;
+    if (item && queueMatchesThread(item, threadId)) localStorage.removeItem(INFLIGHT_KEY);
   } catch { /* best effort */ }
 };
