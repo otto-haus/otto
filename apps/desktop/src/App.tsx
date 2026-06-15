@@ -91,7 +91,16 @@ export function App() {
 function AppShell() {
   const rt = useRuntimeContext();
   const labs = useLabs();
-  const { threads, refresh: refreshThreads, pinThread, moveThread } = useChatThreads(rt.activeThreadId);
+  const {
+    threads,
+    hasArchived,
+    showArchived,
+    setShowArchived,
+    refresh: refreshThreads,
+    pinThread,
+    restoreThread,
+    moveThread,
+  } = useChatThreads(rt.activeThreadId);
   const [active, setActiveState] = useState<SurfaceId>(initialSurface());
   const [sidebarHidden, setSidebarHidden] = useState(false);
   const [sidebarCompact, setSidebarCompact] = useState(
@@ -182,6 +191,12 @@ function AppShell() {
             activeThreadId={rt.activeThreadId}
             onSelectThread={(thread) => {
               setActive('chat');
+              if (thread.archived) {
+                void restoreThread(thread.id)
+                  .then(() => rt.switchThread(thread.id))
+                  .then(() => refreshThreads());
+                return;
+              }
               void rt.switchThread(thread.id).then(() => refreshThreads());
             }}
             onPinThread={(thread, pinned) => {
@@ -193,6 +208,12 @@ function AppShell() {
             onArchiveThread={(thread) => {
               void rt.archiveThread(thread.id).then(() => refreshThreads());
             }}
+            onRestoreThread={(thread) => {
+              void restoreThread(thread.id).then(() => refreshThreads());
+            }}
+            showArchived={showArchived}
+            hasArchived={hasArchived}
+            onToggleShowArchived={setShowArchived}
             isComingSoon={labs.isComingSoon}
           />
         )}

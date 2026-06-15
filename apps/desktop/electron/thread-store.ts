@@ -188,6 +188,10 @@ export class ThreadStore {
     return updated;
   }
 
+  unarchive(threadId: string): ChatThreadRecord {
+    return this.update(threadId, { archived: false });
+  }
+
   archive(threadId: string): ChatThreadRecord {
     const archived = this.update(threadId, { archived: true, pinned: false });
     if (this.config.get().activeThreadId === threadId) {
