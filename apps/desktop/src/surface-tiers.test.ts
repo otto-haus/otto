@@ -7,6 +7,7 @@ import {
   isRemoteLettaCloudEnabled,
   isSurfaceAccessible,
   isSurfaceComingSoon,
+  isSurfaceInSidebar,
   labsSurfaceGate,
   surfaceDataKind,
   surfaceGate,
@@ -156,6 +157,18 @@ describe('surface-tiers', () => {
     expect(surfaceDataKind('charters')).toBe('file');
     expect(surfaceDataKind('knowledge')).toBe('file');
     expect(surfaceDataKind('receipts')).toBe('file');
+  });
+
+  test('isSurfaceInSidebar hides preview surfaces from nav', () => {
+    const labs = defaultLabsConfig();
+    expect(isSurfaceInSidebar('chat', labs, true)).toBe(false);
+    expect(isSurfaceInSidebar('settings', labs, true)).toBe(false);
+    expect(isSurfaceInSidebar('charters', labs, true)).toBe(true);
+    expect(isSurfaceInSidebar('knowledge', labs, true)).toBe(true);
+    expect(isSurfaceInSidebar('curation', labs, true)).toBe(false);
+    expect(isSurfaceInSidebar('checks', labs, true)).toBe(false);
+    expect(isSurfaceInSidebar('autonomy', labs, true)).toBe(false);
+    expect(isSurfaceInSidebar('skills', labs, true)).toBe(false);
   });
 
 });

@@ -151,6 +151,12 @@ export function surfaceDataKind(id: SurfaceId): SurfaceDataKind | undefined {
   return 'file';
 }
 
+/** Sidebar shows shipped surfaces only — preview/Labs-locked items stay out of nav. */
+export function isSurfaceInSidebar(id: SurfaceId, labs: LabsConfig, hydrated: boolean): boolean {
+  if (id === 'chat' || id === 'settings') return false;
+  return surfaceGate(id, labs, hydrated) === 'open';
+}
+
 export function surfaceLabel(id: SurfaceId): string {
   const fromFeature = Object.entries(SURFACE_LAB_FEATURE).find(([sid]) => sid === id);
   if (fromFeature) {
