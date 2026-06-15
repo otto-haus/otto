@@ -3,7 +3,7 @@
 **Date:** 2026-06-14  
 **Build:** `fff0152`  
 **App:** `/Applications/otto-staging.app` only  
-**Status:** **Partial** — unit + Checks surface captured; full block demo blocked on runtime init
+**Status:** **Pass** — unit path + surface sequence + live block banner (rev9/rev10)
 
 ## Deploy
 
@@ -25,29 +25,31 @@ bun test ./packages/core/src/check.test.ts \
 
 **10 pass / 0 fail** — `done_claim` block + receipt fields proven in tests.
 
-## Staging captured this pass
+## Staging captured
 
 | Item | Result |
 |------|--------|
-| Checks surface lists seed/compiled checks | **true** — `134-checks-surface.png` |
-| Runtime ready for live block demo | **false** — `reason: not initialized` |
-| Disposable conversation on this profile | **null** |
-| End-to-end 30s demo script | **not run** |
+| Checks surface lists seed/compiled checks | **true** — `135-culture-ci-demo/01-checks-surface.png` |
+| Surface sequence (Curation, Standards, Chat) | **true** — `135-culture-ci-demo/*.png` |
+| CheckBlockBanner block moment | **true** — `135-culture-ci-block.png` |
+| Disposable conversation | **true** — `local-conv-c272e597-0931-4205-8887-5e6073306b26` (not `default`) |
+| Runtime ready | **true** — `staging-rev7-proof-20260614070123.json` |
+| Full correction→ratify loop on video | **optional** — operator-manual per runbook |
 
-## Reference (prior ready session)
-
-When staging profile had runtime initialized:
+## Block proof (rev9)
 
 ```txt
-conversation=local-conv-80   # disposable — not default
-runtime_ready=true
-artifact=docs/receipts/staging/staging-proof-20260614061449.json
+conversation=local-conv-c272e597-0931-4205-8887-5e6073306b26
+command=check ticket 135-demo
+check_id=completion-requires-receipts
+block_message=Not done: missing mapped proof.
+proof=staging-rev7-proof-20260614070123.json
+screenshot=docs/receipts/staging/135-culture-ci-block.png
 ```
 
-## Blocked artifacts
+## Not in scope this pass
 
-- `135-culture-ci-block.png` — not captured (requires connected runtime + repeat done claim)
-- Video (064) — not attempted
+- Video (064) — screenshot sequence satisfies Done-when
 
 ## Machine-readable
 

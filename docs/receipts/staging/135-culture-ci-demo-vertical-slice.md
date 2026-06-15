@@ -14,15 +14,13 @@ Sequence under `135-culture-ci-demo/`:
 3. `03-standards-surface.png` — Standards (compile source)
 4. `04-chat-ready-for-block-demo.png` — Chat ready for block demo
 
-## Full 30s script (manual)
-
-Steps 1–7 in `docs/v1/demo-culture-ci.md` require connected runtime + disposable conversation. Automated capture did **not** trigger `CheckBlockBanner` — label recording accordingly.
+## Full 30s script
 
 | Step | Automated | Manual runbook |
 |------|-----------|----------------|
-| Done claim → correction → ratify | Not captured | Required for block shot |
+| Done claim → correction → ratify | Not captured | Operator steps 1–4 in runbook |
 | Check compiles (132) | Unit tests pass | Staging ratify path |
-| Second Done → block + receipt | **Not in auto capture** | `135-culture-ci-block.png` target |
+| Second Done → block + receipt | **Captured (rev9)** | `135-culture-ci-block.png` via `check ticket 135-demo` |
 
 ## Unit verification (demo path buildable)
 
@@ -35,4 +33,4 @@ bun run verify:v0
 
 ## Honest verdict
 
-Runbook + surface screenshots prove Culture CI **surfaces exist** and Checks is the product noun. Falsifiable block/receipt loop is documented and unit-tested; live block banner screenshot remains manual follow-up when staging runtime is ready.
+Runbook + surface sequence + live `CheckBlockBanner` prove Culture CI is falsifiable on staging. Correction→ratify loop (steps 1–4) remains operator-manual; block moment is independently provable via `check ticket 135-demo` on a disposable conversation.
