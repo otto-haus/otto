@@ -302,6 +302,7 @@ Conflict rule: **folder/ticket state on disk remains truth** until explicit clou
 - [Letta — Scheduling](https://docs.letta.com/letta-code/scheduling/)
 - `docs/v1/contracts/adapter-seam.md`
 - `docs/v1/agent-control-plane-spec.md` (**092** umbrella)
+- `docs/v1/hosted-health-monitoring.md` (**331** health/status/support contract)
 - `docs/channels.md`
 - `planning/hq-tickets/076-embedded-letta-one-app-distribution.md`
 - `planning/hq-tickets/_Parked/077-letta-cloud-remote-mode.md`
