@@ -1,8 +1,10 @@
 import { describe, expect, test } from 'bun:test';
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { randomUUID } from 'node:crypto';
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { PROPOSALS_DIR } from './proposal-store';
 import { KnowledgeStore } from './knowledge-store';
 import { PracticeMetricsStore } from './practice-metrics-store';
 import { PracticeRunner } from './practice-runner';
@@ -218,24 +220,34 @@ created_at: "2026-06-13T00:00:00Z"
   test('practice-mining manual run creates Curation proposal on repeated receipts', () => {
     const tmp = mkdtempSync(join(tmpdir(), 'otto-routine-test-'));
     process.env.OTTO_HOME = tmp;
+    // PROPOSALS_DIR is resolved from OTTO_DIR at import time, so setting OTTO_HOME above does not
+    // redirect proposal writes — they land in the shared ~/.otto. Use a unique action per run so a
+    // leftover proposal from a previous `bun test` invocation can't dedupe this one away (#718), and
+    // clean up the rows we create so the test stays idempotent and doesn't pollute ~/.otto.
+    const action = `otto.test.repeated-mining-${randomUUID()}`;
+    let proposalIds: string[] = [];
     try {
       const receiptsDir = join(tmp, 'receipts');
       mkdirSync(receiptsDir, { recursive: true });
       for (let i = 0; i < 2; i += 1) {
         writeFileSync(
           join(receiptsDir, `repeat-${i}.json`),
-          JSON.stringify({ action: 'otto.test.repeated-mining-action', id: `r${i}` }),
+          JSON.stringify({ action, id: `r${i}` }),
         );
       }
 
       const store = new RoutineStore(routinesDir, new ReceiptWriter(receiptsDir));
       const result = store.runManual('practice-mining');
+      proposalIds = result.proposalIds ?? [];
 
       expect(result.observeReceiptId).toBeTruthy();
       expect(result.proposalIds?.length).toBe(1);
       expect(result.receipt.result.data.proposalCount).toBe(1);
       expect(result.receipt.input.proposalIds).toHaveLength(1);
     } finally {
+      for (const id of proposalIds) {
+        rmSync(join(PROPOSALS_DIR, `${id}.json`), { force: true });
+      }
       delete process.env.OTTO_HOME;
       rmSync(tmp, { recursive: true, force: true });
     }
