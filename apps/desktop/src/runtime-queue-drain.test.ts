@@ -12,10 +12,9 @@ describe('queue drain failure contract (#545)', () => {
     expect(runtimeSource).toContain('if (sendError.current) throw new Error(sendError.current);');
   });
 
-  it('re-queues drained items when rt.send rejects', () => {
-    expect(chatSource).toContain('runQueuedSend(');
-    expect(chatSource).toContain("rt.send({ storedText: text, promptText: '', attachments: [] })");
-    expect(chatSource).toContain('appendFailedQueueItem(items, next, outcome.reason)');
+  it('persists a durable outbox row when an immediate rt.send rejects (#754)', () => {
+    expect(chatSource).toContain('enqueueOutboxPayload');
+    expect(chatSource).toContain('if (threadId) enqueueOutboxPayload(threadId, payload)');
   });
 });
 
@@ -32,5 +31,11 @@ describe('thread hydration for queue drain', () => {
     expect(runtimeSource).not.toMatch(
       /\.init\(\)[\s\S]*?if \(threadHydrated\.current\) return;/,
     );
+  });
+
+  it('renders the queue banner from main-process outbox state, not a renderer drain loop (#754)', () => {
+    expect(chatSource).toContain('useOutbox');
+    expect(chatSource).toContain('OutboxBanner');
+    expect(chatSource).not.toContain('planQueueDrain');
   });
 });

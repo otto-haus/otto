@@ -18,6 +18,10 @@ import { CharterStore } from './charter-store';
 import { ConfigStore } from './config-store';
 import { LettaRunner } from './letta-runner';
 import { resolveLiveLocalLettaContext } from './runtime-transport/letta-discovery';
+import { OutboxService } from './outbox/service';
+import type { RuntimeSendPort } from './outbox/pump';
+import { enqueueRequestSchema, itemIdSchema, threadScopeSchema } from './outbox/contract';
+import { defaultOttoDir } from './config-store';
 import { listLocalLettaModels } from './runtime-transport/letta-discovery';
 import { ReceiptStore } from './receipt-store';
 import { StandardStore } from './standard-store';
@@ -109,6 +113,40 @@ export function registerIpc() {
     return labs.enabled === true && labs.features?.memory_observatory === true;
   };
 
+  // Durable chat outbox (#754): SQLite source of truth in MAIN. The pump drives Letta through the
+  // existing runner; the renderer subscribes to `otto:outbox` snapshots (no localStorage source).
+  const outboxPort: RuntimeSendPort = {
+    getStatus: () => {
+      const s = runner.getStatus();
+      return { ready: s.ready, code: s.code ?? null, reason: s.reason ?? null };
+    },
+    send: async (input, hooks) => {
+      hooks?.onStreaming?.();
+      await runner.send(input);
+    },
+  };
+  const broadcastOutbox = (snapshot: unknown) => {
+    const win = getMainWindow();
+    if (win) safeWebContentsSend(win, 'otto:outbox', snapshot);
+  };
+  let outbox: OutboxService | null = null;
+  try {
+    outbox = OutboxService.open({
+      dir: join(defaultOttoDir(), 'queue'),
+      port: outboxPort,
+      broadcast: broadcastOutbox,
+    });
+  } catch (err) {
+    console.error('[outbox] failed to open durable queue store — outbox disabled:', err);
+    outbox = null;
+  }
+  const requireOutbox = (): OutboxService => {
+    if (!outbox) throw new Error('Durable outbox is unavailable (queue store failed to open).');
+    return outbox;
+  };
+  const activeThreadId = (): string | null => config.get().activeThreadId ?? null;
+
+
   const bindStatusToActiveThread = (status: RuntimeStatus) => {
     if (!status.ready) return;
     threads.touchActive({
@@ -132,7 +170,11 @@ export function registerIpc() {
 
   ipcMain.handle('otto:init', async () => {
     threads.ensureActiveThread(config.agentId());
-    return initWithStaleRecovery();
+    const status = await initWithStaleRecovery();
+    // Runtime is ready → drain any rows that piled up while it was blocked.
+    const threadId = activeThreadId();
+    if (status.ready && threadId) outbox?.resume(threadId);
+    return status;
   });
   ipcMain.handle('otto:new-chat', async () => {
     permissionSessionStore.clear();
@@ -166,6 +208,32 @@ export function registerIpc() {
   });
   ipcMain.handle('otto:send', (_e, input: RuntimeSendPayload | string) => runner.send(input));
   ipcMain.handle('otto:abort', () => runner.abort());
+
+  // ── Durable outbox (#754) — Zod-validated IPC; renderer holds no durable queue state ──
+  ipcMain.handle('otto:outbox:enqueue', (_e, input: unknown) =>
+    requireOutbox().enqueue(enqueueRequestSchema.parse(input)),
+  );
+  ipcMain.handle('otto:outbox:list', (_e, input: unknown) =>
+    requireOutbox().list(threadScopeSchema.parse(input ?? {}).threadId ?? null),
+  );
+  ipcMain.handle('otto:outbox:detail', (_e, input: unknown) =>
+    requireOutbox().detail(itemIdSchema.parse(input).id),
+  );
+  ipcMain.handle('otto:outbox:retry', (_e, input: unknown) =>
+    requireOutbox().retry(itemIdSchema.parse(input).id),
+  );
+  ipcMain.handle('otto:outbox:retry-all', (_e, input: unknown) =>
+    requireOutbox().retryAll(threadScopeSchema.parse(input ?? {}).threadId ?? null),
+  );
+  ipcMain.handle('otto:outbox:recall', (_e, input: unknown) =>
+    requireOutbox().recall(itemIdSchema.parse(input).id),
+  );
+  ipcMain.handle('otto:outbox:cancel', (_e, input: unknown) =>
+    requireOutbox().cancel(itemIdSchema.parse(input).id),
+  );
+  ipcMain.handle('otto:outbox:clear', (_e, input: unknown) =>
+    requireOutbox().clear(threadScopeSchema.parse(input ?? {}).threadId ?? null),
+  );
   ipcMain.handle('otto:configure', async (_e, input: RuntimePreferences) => {
     const status = await runner.configure(input);
     bindStatusToActiveThread(status);
