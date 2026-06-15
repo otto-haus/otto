@@ -313,6 +313,9 @@ const parseStoredQueue = (raw: string | null): QueueItem[] => {
         createdAt: typeof item.createdAt === 'number' ? item.createdAt : Date.now(),
         state: item.state === 'failed' ? 'failed' : 'queued',
         threadId: typeof item.threadId === 'string' ? item.threadId : null,
+        ...(item.state === 'failed' && typeof item.error === 'string' && item.error.trim()
+          ? { error: item.error.trim() }
+          : {}),
       }));
   } catch {
     return [];

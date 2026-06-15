@@ -387,6 +387,22 @@ describe('queue-storage', () => {
     ]);
   });
 
+  test('parseStoredQueue preserves failed error reasons across reload', () => {
+    installStorage();
+    localStorage.setItem(QUEUE_KEY, JSON.stringify([
+      {
+        id: 'f1',
+        text: 'retry me',
+        createdAt: Date.now(),
+        state: 'failed',
+        error: 'Connection refused',
+      },
+    ]));
+    expect(readQueue()).toEqual([
+      expect.objectContaining({ id: 'f1', state: 'failed', error: 'Connection refused' }),
+    ]);
+  });
+
   test('queueThreadCounts summarizes pending and failed rows', () => {
     const items = queueDisplayItemsForThread([
       { id: 'q1', text: 'a', createdAt: 1, state: 'queued', threadId: 't' },
