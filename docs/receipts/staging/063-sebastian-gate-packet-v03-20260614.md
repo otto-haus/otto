@@ -1,8 +1,18 @@
 # 063 — Sebastian gate packet (v0.1.3 draft — hold)
 
-Date: 2026-06-14 (updated 14:45 local)  
-Branch: `ship/functional-labs` @ `b8ed206`  
+Date: 2026-06-15 (issue **#84** refresh on `main` @ `38171e8`)  
+Branch: `main` @ `38171e8`  
 Tag: **`v0.1.3`** pre-release on **otto-haus/otto** with asset `otto-v01-desktop.mp4` — **not Latest / not Shipped** until Sebastian approves.
+
+## Proposed tag metadata (NOT PUSHED)
+
+| Field | Value |
+|-------|--------|
+| Tag | `v0.1.3` |
+| Title | otto v0.1.3 (Sebastian gate) |
+| Prerelease | yes |
+| Asset | `otto-v01-desktop.mp4` (from **064**) |
+| Body (draft) | Ship-tier matrix refreshed (**084**). Labs default off (**137**). Unit + release gates green. Staging walk rows 3–10 pending Sebastian sign-off. See `docs/v1/ship-tier-matrix.md` and `084-release-gate-verify-20260615.json`. |
 
 ## What to try (staging only)
 
@@ -15,10 +25,12 @@ Tag: **`v0.1.3`** pre-release on **otto-haus/otto** with asset `otto-v01-desktop
 
 | Gate | Result |
 |------|--------|
-| `bun run verify:v0` | 5/5 pass (208 unit tests) @ 2026-06-14 |
-| `bash scripts/release-gate.sh` | pass @ 2026-06-14 (verify:v0 + electron:typecheck) |
-| Staging deploy | `OTTO_STAGING_REFRESH=1 bash apps/desktop/scripts/deploy-staging.sh` — `/Applications/otto-staging.app`, CDP **9445**, profile `~/.codex/admin/otto-staging/profile` |
-| Hygiene staging proof | `scripts/otto-staging-hygiene-proof.cjs` → `staging-hygiene-proof-20260614143512.json` (054–058, 049, 053 all `ok: true`) |
+| `bun run verify:v0` | 5/5 pass (392 unit tests) @ 2026-06-15 — issue **#84** |
+| `bash scripts/release-gate.sh` | pass @ 2026-06-15 |
+| Labs default off (**137**) | pass — `config-store.test.ts` fresh profile |
+| Gate receipt | [`084-release-gate-verify-20260615.json`](084-release-gate-verify-20260615.json) |
+| Staging deploy | **pending** — not run 2026-06-15 (Sebastian operator) |
+| Hygiene staging proof | `scripts/otto-staging-hygiene-proof.cjs` → `staging-hygiene-proof-20260614143512.json` (054–058, 049, 053 all `ok: true`) @ 2026-06-14 |
 | Craft checklist | `docs/receipts/staging/craft-checklist-v03-20260614.md` |
 | Remotion | Local MP4 + https://github.com/otto-haus/otto/releases/tag/v0.1.3 (`otto-v01-desktop.mp4`, pre-release) |
 
