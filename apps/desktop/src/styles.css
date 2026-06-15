@@ -1915,11 +1915,73 @@ h1, h2, h3, h4, p { margin: 0; }
   position: fixed; inset: 0; z-index: 100; display: grid; place-items: center;
   background: rgba(15,16,20,0.55); backdrop-filter: blur(3px);
 }
+.onboardOverlay--takeover {
+  background: var(--bg);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
 .onboardCard {
   background: var(--dark); border: 1px solid #2C2E32; border-radius: 18px;
   padding: 34px 36px; max-width: 520px; box-shadow: 0 40px 90px -30px rgba(0,0,0,0.6);
   color: var(--dark-tx);
 }
+.onboardCard--welcome {
+  padding: 28px 32px;
+  max-width: 440px;
+}
+.onboardCard--welcome .onboardTitle {
+  color: var(--dark-tx);
+  margin-top: 6px;
+  font-size: 24px;
+}
+.onboardCard--welcome .onboardBody {
+  max-width: 42ch;
+  margin-top: 8px;
+  font-size: 14.5px;
+}
+.onboardWelcomeStack {
+  display: grid;
+  gap: 14px;
+  margin-top: 22px;
+}
+.onboardWelcomeStack__primary {
+  width: 100%;
+  justify-content: center;
+}
+.onboardLinkSecondary {
+  border: 0;
+  background: transparent;
+  color: var(--dark-mut);
+  font-size: 13.5px;
+  font-weight: 500;
+  cursor: pointer;
+  padding: 0;
+  text-align: left;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-color: rgba(255,255,255,0.22);
+}
+.onboardLinkSecondary:hover {
+  color: var(--dark-tx);
+  text-decoration-color: rgba(255,255,255,0.42);
+}
+.onboardTertiary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 14px;
+  margin-top: 4px;
+  padding-top: 14px;
+  border-top: 1px solid #2C2E32;
+}
+.onboardLinkTertiary {
+  border: 0;
+  background: transparent;
+  color: #9D9EA2;
+  font-size: 12px;
+  cursor: pointer;
+  padding: 0;
+}
+.onboardLinkTertiary:hover { color: #C9CACE; }
 .onboardDock {
   position: fixed; right: 24px; bottom: 120px; z-index: 90; width: 344px; max-width: calc(100vw - 48px);
   background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 18px 20px;
