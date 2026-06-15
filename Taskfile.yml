@@ -129,6 +129,11 @@ tasks:
     cmds:
       - node scripts/otto-staging-source-marker-smoke.cjs
 
+  smoke:clean-machine:
+    desc: Clean-machine E2E — isolated HOME through embedded first chat (#291); uses dist-app, never otto.app or otto-staging.app
+    cmds:
+      - node scripts/otto-clean-machine-e2e-smoke.cjs
+
   _refresh-live:
     internal: true
     preconditions:
