@@ -429,6 +429,22 @@ export const standardsCopy = {
   conflictEyebrow: 'conflict · case law',
   conflictTieBreaker: 'Tie-breaker:',
   conflictProposeCuration: 'Propose a Curation Standards change instead of improvising in chat.',
+  filterAll: 'All',
+  filterActive: 'Active',
+  filterDraft: 'Draft',
+  filterDeprecated: 'Superseded',
+  filterDomainAll: 'All domains',
+  searchPlaceholder: 'Search standards, rationale, examples…',
+  searchNoMatch: 'No matching Standards',
+  selectTitle: 'Select a Standard',
+  selectBody: 'Pick an explicit rule to see what otto rewards, refuses, and how case law resolves tension with other Standards.',
+  conflictNoneHint: 'No registered tension map entry for this Standard.',
+  tensionMapEyebrow: 'tension map',
+  antiPatternsEyebrow: 'anti-patterns',
+  domainLabel: 'Domain',
+  canonBodyEyebrow: 'canon · rationale',
+  curationPathEyebrow: 'curation path',
+  curationPathBody: 'Propose changes through Curation; Sebastian ratifies registry updates — never auto-apply.',
 } as const;
 
 export const practicesCopy = {

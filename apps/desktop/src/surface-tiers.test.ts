@@ -60,6 +60,13 @@ describe('surface-tiers', () => {
     expect(surfaceGate('receipts', labs, true)).toBe('open');
   });
 
+  test('standards surface is open (#448)', () => {
+    const labs = defaultLabsConfig();
+    expect(surfaceTier('standards')).toBe('ship');
+    expect(isSurfaceComingSoon('standards', labs)).toBe(false);
+    expect(surfaceGate('standards', labs, true)).toBe('open');
+  });
+
   test('labs surfaces blocked until master and feature enabled', () => {
     const off = defaultLabsConfig();
     expect(isSurfaceComingSoon('knowledge', off)).toBe(true);
