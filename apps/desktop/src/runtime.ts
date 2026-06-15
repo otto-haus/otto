@@ -427,9 +427,7 @@ export function useRuntime() {
       threadHydrated.current = true;
       if (status) setStatus(status);
       if (activeThreadRef.current === threadId) {
-        const loaded = loadThreadMessagesForView(threadId, threadMessagesCache.current, { allowLegacyFallback });
-        messagesRef.current = loaded;
-        setMessages(loaded);
+        // Already showing this thread — avoid clobbering in-memory history on IPC refresh.
         return;
       }
       applyThreadView(threadId, { allowLegacyFallback });
@@ -445,7 +443,7 @@ export function useRuntime() {
       cliResolved: false,
     });
     const patchInflightMessages = (updater: (msgs: ChatMsg[]) => ChatMsg[]) => {
-      const threadId = inflightThreadRef.current ?? activeThreadRef.current;
+      const threadId = inflightThreadRef.current;
       if (!threadId) return;
       const prev = loadThreadMessages(threadId, threadMessagesCache.current);
       const next = updater(prev);
@@ -523,7 +521,6 @@ export function useRuntime() {
         if (activity) setTurnActivity(activity);
       }
       if (m.type === 'error') {
-        const ownedTurn = inflightThreadRef.current;
         const errorMessage = String((m as { message?: unknown }).message ?? 'error');
         const errorDetails = typeof (m as { details?: unknown }).details === 'string'
           ? String((m as { details?: unknown }).details)
@@ -541,11 +538,12 @@ export function useRuntime() {
         ]);
         inflightThreadRef.current = null;
         setTurnActivity(null);
-        if (!ownedTurn) setBusy(false);
+        setBusy(false);
       } else if (m.type === 'result') {
         activeAssistantStream.current = null;
         inflightThreadRef.current = null;
         setTurnActivity(null);
+        setBusy(false);
         const conversationId = typeof m.conversationId === 'string' ? m.conversationId : null;
         if (conversationId) {
           void api.threads.touch({ lettaConversationId: conversationId });
@@ -593,8 +591,7 @@ export function useRuntime() {
       await api.runtime.send(text);
       if (sendError.current) throw new Error(sendError.current);
     } finally {
-      inflightThreadRef.current = null;
-      setBusy(false);
+      if (!inflightThreadRef.current) setBusy(false);
     }
   }, [api, status, busy]);
 

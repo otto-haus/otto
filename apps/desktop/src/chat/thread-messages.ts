@@ -9,8 +9,9 @@ export function persistActiveThread(
   messages: ThreadChatMsg[],
 ): void {
   if (!threadId) return;
-  cache.set(threadId, messages);
-  flushMessages(threadId, messages);
+  const snapshot = cache.get(threadId) ?? messages;
+  cache.set(threadId, snapshot);
+  flushMessages(threadId, snapshot);
 }
 
 /** Persist the thread we are leaving before loading another thread's history. */
@@ -21,8 +22,9 @@ export function persistLeavingThread(
   messages: ThreadChatMsg[],
 ): void {
   if (!leaving || leaving === nextThreadId) return;
-  cache.set(leaving, messages);
-  flushMessages(leaving, messages);
+  const snapshot = cache.get(leaving) ?? messages;
+  cache.set(leaving, snapshot);
+  flushMessages(leaving, snapshot);
 }
 
 /** Load a thread view from disk so reload/switch never reuse a stale in-memory cache. */
