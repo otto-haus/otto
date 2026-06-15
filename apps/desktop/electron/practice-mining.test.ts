@@ -22,7 +22,7 @@ describe('PracticeMiningLoop', () => {
 
       const loop = new PracticeMiningLoop(
         new PracticeStore(),
-        new ProposalStore(),
+        new ProposalStore(join(dir, 'curation', 'proposals')),
         new ReceiptWriter(),
       );
       const result = loop.observe(receiptsDir);
@@ -52,7 +52,7 @@ describe('PracticeMiningLoop', () => {
 
       const loop = new PracticeMiningLoop(
         new PracticeStore(),
-        new ProposalStore(),
+        new ProposalStore(join(dir, 'curation', 'proposals')),
         new ReceiptWriter(),
       );
       const result = loop.observe(receiptsDir);
@@ -64,6 +64,69 @@ describe('PracticeMiningLoop', () => {
       expect(result.proposals[0]?.status).toBe('needs_approval');
       expect(result.candidates).toContain('practice-from:ticket.compile');
       expect(result.receipt.result.data.proposalIds).toHaveLength(1);
+    } finally {
+      delete process.env.OTTO_HOME;
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  test('does not re-propose when a pending proposal already exists (#718)', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'otto-mining-'));
+    process.env.OTTO_HOME = dir;
+    try {
+      const receiptsDir = join(dir, 'receipts');
+      mkdirSync(receiptsDir, { recursive: true });
+      for (let i = 0; i < 2; i += 1) {
+        writeFileSync(
+          join(receiptsDir, `repeat-${i}.json`),
+          JSON.stringify({ action: 'ticket.compile', id: `r${i}` }),
+        );
+      }
+
+      const proposals = new ProposalStore(join(dir, 'curation', 'proposals'));
+      const loop = new PracticeMiningLoop(new PracticeStore(), proposals, new ReceiptWriter());
+
+      const first = loop.observe(receiptsDir);
+      expect(first.proposals).toHaveLength(1);
+
+      const second = loop.observe(receiptsDir);
+      expect(second.proposals).toHaveLength(0);
+      expect(second.candidates).toHaveLength(0);
+
+      // Only the original proposal remains in the inbox; no duplicate row.
+      const pending = proposals
+        .list()
+        .proposals.filter((p) => p.target?.kind === 'practice' && p.target?.id === 'ticket-compile');
+      expect(pending).toHaveLength(1);
+    } finally {
+      delete process.env.OTTO_HOME;
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  test('re-proposes after the prior proposal was rejected (#718)', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'otto-mining-'));
+    process.env.OTTO_HOME = dir;
+    try {
+      const receiptsDir = join(dir, 'receipts');
+      mkdirSync(receiptsDir, { recursive: true });
+      for (let i = 0; i < 2; i += 1) {
+        writeFileSync(
+          join(receiptsDir, `repeat-${i}.json`),
+          JSON.stringify({ action: 'ticket.compile', id: `r${i}` }),
+        );
+      }
+
+      const proposals = new ProposalStore(join(dir, 'curation', 'proposals'));
+      const loop = new PracticeMiningLoop(new PracticeStore(), proposals, new ReceiptWriter());
+
+      const first = loop.observe(receiptsDir);
+      const proposalId = first.proposals[0]!.id;
+      proposals.decide(proposalId, { decision: 'reject' });
+
+      const second = loop.observe(receiptsDir);
+      expect(second.proposals).toHaveLength(1);
+      expect(second.proposals[0]?.id).not.toBe(proposalId);
     } finally {
       delete process.env.OTTO_HOME;
       rmSync(dir, { recursive: true, force: true });
@@ -85,7 +148,7 @@ describe('PracticeMiningLoop', () => {
         );
       }
 
-      const proposals = new ProposalStore();
+      const proposals = new ProposalStore(join(dir, 'curation', 'proposals'));
       const loop = new PracticeMiningLoop(
         new PracticeStore(practicesDir),
         proposals,
