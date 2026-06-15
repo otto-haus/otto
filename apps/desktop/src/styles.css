@@ -7,22 +7,22 @@
 :root {
   color-scheme: light;
 
-  /* oklch tokens — brand guide ink/status; warm paper grounds per MASTER */
-  --bg: oklch(0.975 0.012 85);
-  --bg-2: oklch(0.965 0.010 85);
-  --panel: oklch(0.995 0.006 85);
-  --ink: oklch(0.18 0.005 270);
-  --ink-soft: oklch(0.30 0.005 270);
-  --mut: oklch(0.46 0.005 270);
-  --faint: oklch(0.62 0.006 270);
-  --line: oklch(0.92 0.008 85);
-  --line-strong: oklch(0.88 0.010 85);
+  /* oklch tokens — neutral zinc surfaces, near-black ink, semantic status hues */
+  --bg: oklch(0.985 0.002 270);
+  --bg-2: oklch(0.97 0.002 270);
+  --panel: oklch(1 0 0);
+  --ink: oklch(0.145 0.004 270);
+  --ink-soft: oklch(0.30 0.004 270);
+  --mut: oklch(0.46 0.004 270);
+  --faint: oklch(0.62 0.004 270);
+  --line: oklch(0.92 0.004 270);
+  --line-strong: oklch(0.87 0.004 270);
   --accent: var(--ink);
-  --accent-tint: oklch(0.96 0.010 85);
+  --accent-tint: oklch(0.96 0.002 270);
   --ok: oklch(0.48 0.10 155);
   --ok-tint: oklch(0.965 0.04 155);
   --warn: oklch(0.52 0.11 60);
-  --warn-tint: oklch(0.97 0.035 80);
+  --warn-tint: oklch(0.97 0.02 270);
   --stop: oklch(0.55 0.18 27);
   --stop-tint: oklch(0.97 0.04 27);
   --dark: oklch(0.175 0.008 270);

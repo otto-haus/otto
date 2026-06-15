@@ -21,7 +21,7 @@ describe('display preferences', () => {
   });
 
   test('windowBackgroundForTheme maps to shell colors', () => {
-    expect(windowBackgroundForTheme('light')).toBe('#f8f7f2');
+    expect(windowBackgroundForTheme('light')).toBe('#fafafa');
     expect(windowBackgroundForTheme('dark')).toBe('#17171a');
   });
 
