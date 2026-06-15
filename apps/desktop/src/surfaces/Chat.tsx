@@ -121,8 +121,6 @@ const formatRuntimeSubtitle = (
   return `${text.slice(0, 93)}…`;
 };
 
-type ChatRuntimeStatus = NonNullable<ReturnType<typeof useRuntimeContext>['status']>;
-
 const lettaMemoryStatusLabel = (st: ChatRuntimeStatus): string =>
   (st.agentId?.trim() ? 'Letta memory on' : 'Letta memory off');
 
