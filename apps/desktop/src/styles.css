@@ -244,6 +244,8 @@ h1, h2, h3, h4, p { margin: 0; }
 .sidebarConvWrap .sidebarConv { flex: 1; min-width: 0; }
 .sidebarConvWrap.is-active { background: rgba(20,22,26,0.07); }
 .sidebarConvWrap.is-active .sidebarConv.is-active { background: transparent; }
+.sidebarConvWrap.is-pinned:not(.is-active) .sidebarConv__label { font-weight: 550; }
+.sidebarConvWrap[data-thread-variant="pinned"] .sidebarConv { padding-left: 10px; }
 .sidebarConv__pin,
 .sidebarConv__archive {
   flex: none;

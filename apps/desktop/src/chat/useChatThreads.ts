@@ -46,8 +46,15 @@ export function useChatThreads(activeThreadId?: string | null) {
   const pinThread = useCallback(async (threadId: string, pinned: boolean) => {
     const api = ottoApi();
     if (!api || !isElectron()) return;
-    await api.threads.pin(threadId, pinned);
-    await refresh();
+    setThreads((current) => current.map((thread) => (
+      thread.id === threadId ? { ...thread, pinned } : thread
+    )));
+    try {
+      await api.threads.pin(threadId, pinned);
+      await refresh();
+    } catch {
+      await refresh();
+    }
   }, [refresh]);
 
   const archiveThread = useCallback(async (threadId: string) => {

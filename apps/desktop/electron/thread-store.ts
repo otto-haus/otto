@@ -43,9 +43,17 @@ function sortThreads(threads: ChatThreadRecord[]): ChatThreadRecord[] {
   });
 }
 
+function normalizeThread(thread: ChatThreadRecord): ChatThreadRecord {
+  return {
+    ...thread,
+    pinned: !!thread.pinned,
+    archived: !!thread.archived,
+  };
+}
+
 function normalizeThreads(threads: ChatThreadRecord[]): ChatThreadRecord[] {
   const seen = new Set<string>();
-  return sortThreads(threads).filter((thread) => {
+  return sortThreads(threads).map(normalizeThread).filter((thread) => {
     if (isJunkThread(thread)) return false;
     if (seen.has(thread.id)) return false;
     seen.add(thread.id);
