@@ -4024,10 +4024,6 @@ const ModelProviders: React.FC<{ onShowGeneral?: () => void }> = ({ onShowGenera
   const [tab, setTab] = useState<ProviderKind>('local');
   const [mirror, setMirror] = useState<ProviderMirrorSnapshot | null>(null);
   const [mirrorLoading, setMirrorLoading] = useState(!!api?.provider);
-  const [apiKeyDraft, setApiKeyDraft] = useState('');
-  const [keyBusy, setKeyBusy] = useState(false);
-  const [keyMessage, setKeyMessage] = useState<string | null>(null);
-  const [keyError, setKeyError] = useState<string | null>(null);
   const activeModel = `${rt.status?.modelHandle ?? ''} ${rt.status?.model ?? ''}`.toLowerCase();
   const openLetta = () => void api?.runtime.openLetta();
   const rows = MODEL_PROVIDERS.filter((p) => p.kind === tab);
@@ -4070,25 +4066,6 @@ const ModelProviders: React.FC<{ onShowGeneral?: () => void }> = ({ onShowGenera
     refreshMirror();
   }, [api, rt.status?.ready]);
 
-  const submitApiKey = async () => {
-    if (!api?.provider || !apiKeyDraft.trim()) return;
-    setKeyBusy(true);
-    setKeyMessage(null);
-    setKeyError(null);
-    try {
-      const result = await api.provider.setApiKey(apiKeyDraft);
-      setApiKeyDraft('');
-      setKeyMessage(result.hasApiKey ? settingsCopy.providerApiKeyPresent : settingsCopy.providerApiKeyMissing);
-      refreshMirror();
-      const next = await api.runtime.init();
-      rt.updateStatus(next);
-    } catch (err) {
-      setKeyError(err instanceof Error ? err.message : String(err));
-    } finally {
-      setKeyBusy(false);
-    }
-  };
-
   return (
     <div className="settingsPage__content providersScreen">
       <SettingsSectionHeader title={settingsCopy.providersTitle} lede={settingsCopy.providersLede} />
@@ -4120,26 +4097,7 @@ const ModelProviders: React.FC<{ onShowGeneral?: () => void }> = ({ onShowGenera
           {mirror?.modelHandle && <span className="filechip mono">{mirror.modelHandle}</span>}
         </div>
         <p className="settingsFieldHint">{mirror?.note ?? settingsCopy.providerMirrorNote}</p>
-        <div className="settingsField">
-          <label>
-            <span>{settingsCopy.providerSubmitKey}</span>
-            <input
-              type="password"
-              autoComplete="off"
-              style={inputStyle}
-              value={apiKeyDraft}
-              onChange={(e) => setApiKeyDraft(e.target.value)}
-              placeholder="Paste key once — never shown again"
-            />
-          </label>
-        </div>
-        <div className="row" style={{ gap: 8, alignItems: 'center' }}>
-          <button type="button" className="btn btn--primary" onClick={submitApiKey} disabled={keyBusy || !apiKeyDraft.trim()}>
-            {keyBusy ? 'Saving…' : settingsCopy.providerSubmitKey}
-          </button>
-          {keyMessage && !keyError && <span className="muted" style={{ fontSize: 13 }}>{keyMessage}</span>}
-        </div>
-        {keyError ? <p className="faint settingsStatusBanner settingsStatusBanner--warn">{keyError}</p> : null}
+        <p className="settingsFieldHint">{settingsCopy.providerKeysInLettaHint}</p>
         </>
         )}
       </div>
