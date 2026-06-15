@@ -14,7 +14,7 @@ import { displayThreadTitle } from '../components/ui/ThreadList';
 import { chatCopy, permissionCopy, toastCopy } from '../copy/surfaces';
 import { useChatThreads } from '../chat/useChatThreads';
 import { isTableStart, parseTableBlock, type MarkdownTable } from '../chat/markdown-tables';
-import { notifyOnboardingFirstMessage } from '../onboarding-storage';
+import { notifyOnboardingFirstMessage, resolveOnboardingStarterAction } from '../onboarding-storage';
 import { ProposeCorrectionModal, type ProposeCorrectionContext } from '../chat/ProposeCorrectionModal';
 import { serializeConversationMarkdown } from '../chat/conversation-markdown';
 import { runTicketCommand } from '../chat/ticket-commands';
@@ -693,13 +693,12 @@ const LiveChat: React.FC<{
   useEffect(() => {
     const onStarter = (event: Event) => {
       const detail = (event as CustomEvent<{ text?: string; send?: boolean }>).detail;
-      const text = detail?.text?.trim();
-      if (!text) return;
-      if (detail?.send && ready && api) {
-        setQueue((items) => appendQueueItem(items, text, rt.activeThreadId));
-        return;
+      const action = resolveOnboardingStarterAction(detail, { ready: !!ready, hasApi: !!api });
+      if (action.kind === 'queue') {
+        setQueue((items) => appendQueueItem(items, action.text, rt.activeThreadId));
+      } else if (action.kind === 'draft') {
+        setDraft(action.text);
       }
-      setDraft(text);
     };
     window.addEventListener('otto-onboarding-starter', onStarter);
     return () => window.removeEventListener('otto-onboarding-starter', onStarter);
