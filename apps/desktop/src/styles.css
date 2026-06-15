@@ -1855,6 +1855,8 @@ h1, h2, h3, h4, p { margin: 0; }
 .settingsFieldRow__main { min-width: 0; }
 .settingsFieldRow__title { font-size: 14px; font-weight: 600; color: var(--ink); }
 .settingsFieldRow__hint { margin: 4px 0 0; font-size: 13px; color: var(--mut); line-height: 1.45; }
+/* keep the action button intact; let the hint text wrap instead of the button label */
+.settingsFieldRow .btn { flex: none; white-space: nowrap; }
 
 .settingsStatusBanner {
   padding: 12px 14px;
