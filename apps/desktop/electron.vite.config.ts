@@ -34,6 +34,12 @@ export default defineConfig({
   renderer: {
     root,
     plugins: [react()],
+    resolve: {
+      dedupe: ['react', 'react-dom'],
+    },
+    optimizeDeps: {
+      include: ['streamdown'],
+    },
     build: {
       outDir: 'out/renderer',
       rollupOptions: { input: resolve(root, 'index.html') },
