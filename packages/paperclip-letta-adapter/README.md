@@ -81,7 +81,7 @@ bun run --cwd packages/paperclip-letta-adapter build
 
 # From the Paperclip UI: Settings -> Adapters -> Install Adapter -> local path
 # Or via API (local path install):
-curl -X POST http://localhost:3102/api/adapters \
+curl -X POST http://localhost:3102/api/adapters/install \
   -H "Authorization: Bearer <token>" \
   -H "Content-Type: application/json" \
   -d '{"packageName": "/ABS/PATH/packages/paperclip-letta-adapter", "isLocalPath": true}'
