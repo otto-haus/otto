@@ -57,6 +57,26 @@ describe('surface-tiers', () => {
     expect(isSurfaceComingSoon('knowledge', on)).toBe(false);
   });
 
+  test('receipts opens during onboarding sample education', () => {
+    const labs = defaultLabsConfig();
+    const store = new Map<string, string>();
+    const prior = globalThis.sessionStorage;
+    globalThis.sessionStorage = {
+      getItem: (key: string) => store.get(key) ?? null,
+      setItem: (key: string, value: string) => { store.set(key, value); },
+      removeItem: (key: string) => { store.delete(key); },
+    } as Storage;
+
+    try {
+      expect(surfaceGate('receipts', labs, true)).toBe('coming-soon');
+      store.set('otto.onboarding.sampleReceipt.v1', '1');
+      expect(surfaceGate('receipts', labs, true)).toBe('open');
+      expect(surfaceGate('charters', labs, true)).toBe('coming-soon');
+    } finally {
+      globalThis.sessionStorage = prior;
+    }
+  });
+
   test('labsSurfaceGate waits for hydration before coming soon', () => {
     const enabled = { enabled: true, features: { knowledge_cognee: true } };
     expect(labsSurfaceGate('charters', enabled, false)).toBe('open');

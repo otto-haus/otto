@@ -1,5 +1,6 @@
 import type { SurfaceId } from './components/Sidebar';
 import type { LabFeatureId, LabsConfig } from '../electron/shared/types';
+import { isSampleReceiptPreview } from './onboarding-sample-receipt';
 
 export type SurfaceTier = 'ship' | 'labs' | 'cut';
 
@@ -125,7 +126,10 @@ export function surfaceGate(id: SurfaceId, labs: LabsConfig, hydrated: boolean):
   if (id === 'chat' || id === 'settings') return 'open';
   const labsGate = labsSurfaceGate(id, labs, hydrated);
   if (labsGate !== 'open') return labsGate;
-  if (WORKSPACE_PREVIEW_SURFACES.has(id)) return 'coming-soon';
+  if (WORKSPACE_PREVIEW_SURFACES.has(id)) {
+    if (id === 'receipts' && isSampleReceiptPreview()) return 'open';
+    return 'coming-soon';
+  }
   return 'open';
 }
 
