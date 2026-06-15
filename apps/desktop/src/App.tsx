@@ -28,6 +28,7 @@ import { EmptyState } from './components/ui';
 import { VALID_SURFACES } from './surface-meta';
 import { labsCopy } from './copy/surfaces';
 import { AppSourceBadge } from './components/AppSourceBadge';
+import { isSampleReceiptPreview, SAMPLE_RECEIPT_LABEL } from './onboarding-sample-receipt';
 
 function renderSurface(id: SurfaceId) {
   switch (id) {
@@ -124,7 +125,10 @@ function AppShell() {
     setActive('settings');
   };
 
+  const sampleReceiptPreview = active === 'receipts' && isSampleReceiptPreview();
+
   const sourcePill = () => {
+    if (sampleReceiptPreview) return <span className="pill">{SAMPLE_RECEIPT_LABEL}</span>;
     if (labs.isComingSoon(active)) return <span className="pill">coming soon</span>;
     if (active === 'settings' && rt.electron) {
       if (rt.status?.ready) return <span className="pill pill--ok">live runtime</span>;
@@ -150,6 +154,9 @@ function AppShell() {
       );
     }
     if (gate === 'coming-soon') {
+      if (active === 'receipts' && isSampleReceiptPreview()) {
+        return renderSurface(active);
+      }
       return <ComingSoonSurface id={active} onOpenLabs={openLabsSettings} />;
     }
     return renderSurface(active);
