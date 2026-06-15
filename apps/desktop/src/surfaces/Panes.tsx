@@ -3975,6 +3975,12 @@ export const Settings: React.FC = () => {
           </section>
 
           {api ? (
+            <section className="settingsGeneralSection" id="settings-diagnostics">
+              <DiagnosticsSettingsPanel api={api} pushToast={pushToast} />
+            </section>
+          ) : null}
+
+          {api ? (
             <section className="settingsGeneralSection" id="settings-culture">
               <CultureSettingsPanel api={api} pushToast={pushToast} />
             </section>
@@ -3992,6 +3998,48 @@ export const Settings: React.FC = () => {
       </div>
       <SurfaceProof surface="settings" />
     </SurfacePage>
+  );
+};
+
+const DiagnosticsSettingsPanel: React.FC<{
+  api: NonNullable<ReturnType<typeof ottoApi>>;
+  pushToast: ReturnType<typeof useToast>['push'];
+}> = ({ api, pushToast }) => {
+  const [bundlePath, setBundlePath] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const exportDiagnostics = async () => {
+    setBusy(true);
+    setError(null);
+    try {
+      const result = await api.diagnostics.export();
+      setBundlePath(result.bundlePath);
+      await api.diagnostics.reveal(result.bundlePath);
+      pushToast({
+        title: settingsCopy.diagnosticsExportDone,
+        body: result.bundlePath,
+        tone: 'ok',
+      });
+    } catch (e) {
+      setError(String(e));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <>
+      <SettingsSectionHeader title={settingsCopy.diagnosticsTitle} lede={settingsCopy.diagnosticsLede} />
+      <div className="row" style={{ flexWrap: 'wrap', gap: 8 }}>
+        <button type="button" className="btn btn--solid-d" disabled={busy} onClick={() => void exportDiagnostics()}>
+          {settingsCopy.diagnosticsExport}
+        </button>
+      </div>
+      {bundlePath ? <p className="mono faint" style={{ fontSize: 11.5 }}>{bundlePath}</p> : null}
+      <p className="faint" style={{ fontSize: 12, marginTop: 8 }}>{settingsCopy.diagnosticsCommand}</p>
+      {error ? <p className="faint" style={{ color: 'var(--warn)' }}>{error}</p> : null}
+    </>
   );
 };
 

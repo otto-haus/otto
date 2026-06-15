@@ -1,4 +1,4 @@
-import { type BrowserWindow, ipcMain, shell } from 'electron';
+import { type BrowserWindow, app, ipcMain, shell } from 'electron';
 import type { ConnectionInfo, ConnectionInput, CreateProposalFromCorrectionInput, DecideProposalInput, DreamSettings, LabsConfig, OttoConfig, PermissionRequest, PermissionResponse, ProposalClassification, ProposalTarget, RuntimePreferences, RuntimeStatus } from './shared/types';
 import { applyLabsConfigPatch, getLabsConfig, labsConfigToOttoPatch } from './labs-config';
 import {
@@ -37,6 +37,8 @@ import { permissionSessionStore } from './permission-session-store';
 import { BehaviorChangelog } from './behavior-changelog';
 import { ConstitutionStore, CONSTITUTION_MD, CONSTITUTION_YAML } from './constitution-store';
 import { CultureExporter } from './culture-export';
+import { DiagnosticsExporter } from './diagnostics-export';
+import { OTTO_DIR } from './config-store';
 import { buildProviderMirror } from './provider-mirror';
 import { setSecret, hasSecret } from './secret-store';
 import { CogneeStore } from './cognee-store';
@@ -69,6 +71,7 @@ export function registerIpc(win: BrowserWindow) {
   const constitution = new ConstitutionStore(CONSTITUTION_YAML, CONSTITUTION_MD);
   const changelog = new BehaviorChangelog(proposals, receipts, constitution);
   const cultureExporter = new CultureExporter();
+  const diagnosticsExporter = new DiagnosticsExporter();
   const cognee = new CogneeStore(config);
   const memory = new MemoryStore(config);
   const pgvector = new PgvectorStore();
@@ -197,6 +200,39 @@ export function registerIpc(win: BrowserWindow) {
 
   ipcMain.handle('otto:culture:export', () => cultureExporter.exportBundle());
   ipcMain.handle('otto:culture:import-preview', (_e, bundlePath: string) => cultureExporter.previewImport(bundlePath));
+
+  ipcMain.handle('otto:diagnostics:export', async () => {
+    const buildInfo = readAppBuildInfo();
+    const runtimeStatus = runner.getStatus();
+    const [memoryHealth, cogneeHealth, pgvectorStatus] = await Promise.all([
+      memory.listBlocks(),
+      Promise.resolve(cognee.health()),
+      Promise.resolve(pgvector.status()),
+    ]);
+    return diagnosticsExporter.exportBundle({
+      buildInfo: {
+        ...buildInfo,
+        appPath: buildInfo.appPath ?? app.getAppPath(),
+        profilePath: buildInfo.profilePath ?? app.getPath('userData'),
+        homePath: buildInfo.homePath ?? app.getPath('home'),
+      },
+      runtimeStatus,
+      config: config.get(),
+      userDataPath: app.getPath('userData'),
+      ottoDir: OTTO_DIR,
+      permissionSession: permissionSessionStore.list(),
+      transport: runner.getDiagnosticsSnapshot(),
+      threads: threads.list(true),
+      memory: memoryHealth,
+      routines: routines.listResult(),
+      cognee: cogneeHealth,
+      pgvector: pgvectorStatus,
+    });
+  });
+  ipcMain.handle('otto:diagnostics:reveal', (_e, bundlePath: string) => {
+    shell.showItemInFolder(bundlePath);
+    return { ok: true };
+  });
 
   ipcMain.handle('otto:practices:list', () => practices.listResult());
   ipcMain.handle('otto:practices:get', (_e, slug: string) => practices.get(slug));
