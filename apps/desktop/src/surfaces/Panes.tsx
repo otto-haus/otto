@@ -4490,6 +4490,8 @@ export const Settings: React.FC = () => {
   const rt = useRuntimeContext();
   const api = ottoApi();
   const { push: pushToast } = useToast();
+  const { hydrated, isFeatureEnabled } = useLabs();
+  const memoryObservatoryEnabled = hydrated && isFeatureEnabled('memory_observatory');
   const [section, setSection] = useState<SettingsSectionId>('general');
   const [buildInfo, setBuildInfo] = useState<AppBuildInfo | null>(null);
 
@@ -4564,7 +4566,11 @@ export const Settings: React.FC = () => {
         <div className="settingsPage__content">
           <section id="settings-memory">
             <SettingsSectionHeader title={settingsCopy.memoryTitle} lede={settingsCopy.memoryLede} />
-            <MemoryObservatory connected={liveConnected} onOpenLetta={() => void ottoApi()?.runtime.openLetta()} />
+            {memoryObservatoryEnabled ? (
+              <MemoryObservatory connected={liveConnected} onOpenLetta={() => void ottoApi()?.runtime.openLetta()} />
+            ) : (
+              <p className="faint" style={{ fontSize: 12, marginTop: 8 }}>{settingsCopy.memoryLabsGate}</p>
+            )}
           </section>
           <p className="faint mono settingsLocalFootnote">{settingsCopy.localOnlyFootnote}</p>
           <AppSourceDetails info={buildInfo} />
