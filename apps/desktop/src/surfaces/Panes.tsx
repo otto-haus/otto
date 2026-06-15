@@ -63,6 +63,7 @@ import {
   type AutonomyActionEvaluation,
   type StandardListResult,
   type StandardRecord,
+  type StandardsRegistry,
   type StatusCode,
   type ApprovalListResult,
   type KnowledgeListResult,
@@ -510,6 +511,11 @@ function formatStandardDomain(domain: StandardDomain | 'uncategorized'): string 
   return domain.split('-').map((part) => part.charAt(0).toUpperCase() + part.slice(1)).join(' ');
 }
 
+function standardStatusPill(status: string) {
+  if (status === 'deprecated') return <StatusPill status={status} label={standardsCopy.filterDeprecated} />;
+  return statusPill(status);
+}
+
 export const Standards: React.FC = () => {
   const api = ottoApi();
   const [result, setResult] = useState<StandardListResult | null>(null);
@@ -635,7 +641,7 @@ export const Standards: React.FC = () => {
                     >
                       <div className="between">
                         <span className="card__title">{standard.name}</span>
-                        {statusPill(standard.status)}
+                        {standardStatusPill(standard.status)}
                       </div>
                       <span className="card__sub">{standard.meaning}</span>
                     </button>
@@ -645,7 +651,13 @@ export const Standards: React.FC = () => {
             )}
           </>
         }
-        detail={selected ? <StandardDetail standard={selected} /> : null}
+        detail={
+          selected
+            ? <StandardDetail standard={selected} registry={result?.registry ?? null} />
+            : filtered.length
+              ? <InlineEmpty title={standardsCopy.selectTitle} body={standardsCopy.selectBody} />
+              : null
+        }
       />
       {result && (
         <SurfaceMeta label={standardsCopy.metaLabel}>
@@ -655,12 +667,29 @@ export const Standards: React.FC = () => {
           )}
         </SurfaceMeta>
       )}
-      <SurfaceProof surface="standards" />
+      {result?.registry?.conflicts?.length ? (
+        <div className="detailSection">
+          <div className="eyebrow">{standardsCopy.tensionMapEyebrow}</div>
+          <ul className="list">
+            {result.registry.conflicts.map((conflict) => (
+              <li key={conflict.between.join('-')}>
+                <button type="button" className="linkish" onClick={() => setSelectedSlug(conflict.between[0] ?? null)}>
+                  {conflict.between.join(' vs ')}
+                </button>
+                <span className="muted"> — {conflict.tie_breaker}</span>
+                {conflict.precedent
+                  ? <span className="filechip">{conflict.precedent}</span>
+                  : <span className="faint"> no case law yet</span>}
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
     </SurfacePage>
   );
 };
 
-const StandardDetail: React.FC<{ standard: StandardRecord }> = ({ standard }) => {
+const StandardDetail: React.FC<{ standard: StandardRecord; registry: StandardsRegistry | null }> = ({ standard, registry }) => {
   const api = ottoApi();
   const [conflict, setConflict] = useState<StandardConflictResult | null>(null);
 
@@ -698,13 +727,16 @@ const StandardDetail: React.FC<{ standard: StandardRecord }> = ({ standard }) =>
         )}
       </div>
     )}
+    {!conflict && (
+      <p className="muted">{standardsCopy.conflictNoneHint}</p>
+    )}
     <div className="detailSection">
       <div className="between">
         <div>
           <div className="eyebrow">standard detail</div>
           <div className="h-sec">{standard.name}</div>
         </div>
-        {statusPill(standard.status)}
+        {standardStatusPill(standard.status)}
       </div>
       <p className="lede" style={{ marginTop: 8 }}>{standard.meaning}</p>
       <dl className="kv charterKv">
@@ -750,6 +782,20 @@ const StandardDetail: React.FC<{ standard: StandardRecord }> = ({ standard }) =>
         <span className="filechip" style={{ marginTop: 10 }}>{standard.slug} · {standard.file}</span>
       </div>
     </div>
+
+    {!!standard.related_anti_patterns?.length && (
+      <div className="detailSection">
+        <div className="eyebrow">{standardsCopy.antiPatternsEyebrow}</div>
+        <ChipList values={standard.related_anti_patterns} empty="" />
+      </div>
+    )}
+
+    {!!registry?.anti_patterns?.length && (
+      <div className="detailSection">
+        <div className="eyebrow">{standardsCopy.antiPatternsEyebrow} · registry</div>
+        <ChipList values={registry.anti_patterns} empty="" />
+      </div>
+    )}
   </div>
   );
 };
