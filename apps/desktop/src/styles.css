@@ -2091,6 +2091,7 @@ h1, h2, h3, h4, p { margin: 0; }
   color: var(--ink);
   animation: surfaceIn 180ms var(--ease) both;
 }
+.emptySurface__mark { margin-bottom: 4px; }
 .emptySurface--chat { margin: auto; align-items: center; text-align: center; }
 .emptySurface h2 { font-size: 28px; line-height: 1.08; letter-spacing: -0.04em; text-wrap: balance; }
 .emptySurface p { color: var(--mut); font-size: 15px; line-height: 1.6; max-width: 560px; text-wrap: pretty; }

@@ -1,4 +1,5 @@
 import React from 'react';
+import { OttoMark } from '../OttoMark';
 import { Icon } from '../icons';
 
 export const EmptyState: React.FC<{
@@ -10,6 +11,9 @@ export const EmptyState: React.FC<{
   variant?: 'default' | 'chat';
 }> = ({ eyebrow, title, body, path, next, variant = 'default' }) => (
   <div className={`emptySurface${variant === 'chat' ? ' emptySurface--chat' : ''}`}>
+    {variant === 'default' ? (
+      <OttoMark size={48} className="ottoMark emptySurface__mark" aria-hidden />
+    ) : null}
     <div className="eyebrow">{eyebrow}</div>
     <h2>{title}</h2>
     <p>{body}</p>
