@@ -386,10 +386,41 @@ export class WsRuntimeTransport implements OttoRuntimeTransport {
     }
   }
 
+  private rejectPendingPermissions(message: string) {
+    for (const [, pending] of this.pendingControls) {
+      try {
+        pending.resolve({ behavior: 'deny', message });
+      } catch {
+        // ignore resolver errors during abort
+      }
+    }
+    if (this.runtimeSocket?.readyState === WebSocket.OPEN) {
+      for (const [upstreamId] of this.controlByUpstream) {
+        try {
+          this.sendCommand({
+            type: 'control_response',
+            request_id: upstreamId,
+            approved: false,
+            message,
+          });
+        } catch {
+          // ignore send failures during abort
+        }
+      }
+    }
+    this.pendingControls.clear();
+    this.controlByUpstream.clear();
+  }
+
   async abort(): Promise<void> {
     this.aborted = true;
+    this.rejectPendingPermissions('Chat turn was aborted.');
     if (this.activeRunId && this.runtimeSocket?.readyState === WebSocket.OPEN) {
-      this.sendCommand({ type: 'abort_message', run_id: this.activeRunId });
+      try {
+        this.sendCommand({ type: 'abort_message', run_id: this.activeRunId });
+      } catch {
+        // ignore abort_message failures during disconnect
+      }
     }
     if (this.status.ready) {
       this.status = { ...this.status, code: 'ready', reason: 'Turn abort requested' };

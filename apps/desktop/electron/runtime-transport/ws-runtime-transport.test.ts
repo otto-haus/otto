@@ -157,11 +157,11 @@ describe('WsRuntimeTransport', () => {
   test('abort sends abort_message for active run and completes turn', async () => {
     const { win } = mockWindow();
     const transport = new WsRuntimeTransport(win, mockConfig());
-    let abortPayload: string | null = null;
+    const sent: string[] = [];
     (transport as unknown as { runtimeSocket: WebSocket | null }).runtimeSocket = {
       readyState: WebSocket.OPEN,
       send(payload: string) {
-        abortPayload = payload;
+        sent.push(payload);
       },
     } as unknown as WebSocket;
     (transport as unknown as { activeRunId: string | null }).activeRunId = 'run-abort-1';
@@ -169,9 +169,46 @@ describe('WsRuntimeTransport', () => {
 
     await transport.abort();
     expect((transport as unknown as { aborted: boolean }).aborted).toBe(true);
+    const abortPayload = sent.find((payload) => JSON.parse(payload).type === 'abort_message');
     expect(abortPayload).toBeTruthy();
-    expect(JSON.parse(abortPayload!).type).toBe('abort_message');
     expect(JSON.parse(abortPayload!).run_id).toBe('run-abort-1');
+  });
+
+  test('abort rejects pending permission and sends denied control_response', async () => {
+    const { win } = mockWindow();
+    const transport = new WsRuntimeTransport(win, mockConfig());
+    const sent: string[] = [];
+    (transport as unknown as { runtimeSocket: WebSocket | null }).runtimeSocket = {
+      readyState: WebSocket.OPEN,
+      send(payload: string) {
+        sent.push(payload);
+      },
+    } as unknown as WebSocket;
+    (transport as unknown as { activeRunId: string | null }).activeRunId = 'run-abort-1';
+    (transport as unknown as { controlByUpstream: Map<string, string> }).controlByUpstream.set('upstream-1', 'otto-req-1');
+    (transport as unknown as { pendingControls: Map<string, unknown> }).pendingControls.set('otto-req-1', {
+      requestId: 'otto-req-1',
+      toolName: 'run_shell',
+      resolve: () => {},
+    });
+
+    expect(transport.getDiagnosticsSnapshot().pendingPermissionCount).toBe(1);
+
+    await transport.abort();
+
+    expect(transport.getDiagnosticsSnapshot().pendingPermissionCount).toBe(0);
+    expect((transport as unknown as { pendingControls: Map<string, unknown> }).pendingControls.size).toBe(0);
+    expect((transport as unknown as { controlByUpstream: Map<string, string> }).controlByUpstream.size).toBe(0);
+
+    const controlResponse = sent.find((payload) => JSON.parse(payload).type === 'control_response');
+    expect(controlResponse).toBeTruthy();
+    const frame = JSON.parse(controlResponse!);
+    expect(frame.approved).toBe(false);
+    expect(frame.request_id).toBe('upstream-1');
+    expect(frame.message).toContain('aborted');
+
+    const abortPayload = sent.find((payload) => JSON.parse(payload).type === 'abort_message');
+    expect(abortPayload).toBeTruthy();
   });
 
   test('resolvePermission emits control_response on runtime socket', async () => {
