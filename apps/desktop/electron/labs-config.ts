@@ -9,7 +9,6 @@ export const LAB_FEATURE_IDS: LabFeatureId[] = [
   'practice_mining',
   'culture_export',
   'remote_letta_cloud',
-  'command_station_full',
   'turn_phase_timeline',
 ];
 
