@@ -624,6 +624,7 @@ export interface PaperclipSyncResult {
   receipt?: Receipt & { path: string };
 }
 
+
 /** Active project / workspace paths and session context (#316). */
 export type WorkspaceContext = {
   projectRoot: string;
@@ -670,3 +671,15 @@ export type PermissionState = {
   sessionAllowed: string[];
   recent: PermissionLogEntry[];
 };
+
+export interface ShutdownStatus {
+  dirtyShutdown: boolean;
+  lastCleanShutdownAt: string | null;
+}
+
+export interface SafeResetResult {
+  ok: true;
+  clearedQueueKeys: string[];
+  reconnected: boolean;
+  reason: string;
+}

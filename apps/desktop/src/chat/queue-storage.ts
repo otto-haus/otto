@@ -306,6 +306,16 @@ const parseStoredQueue = (raw: string | null): QueueItem[] => {
   }
 };
 
+export const clearQueueStorage = (): string[] => {
+  const keys = [QUEUE_KEY, LEGACY_QUEUE_V2_KEY, LEGACY_QUEUE_KEY, INFLIGHT_KEY];
+  for (const key of keys) {
+    try {
+      localStorage.removeItem(key);
+    } catch { /* best effort */ }
+  }
+  return keys;
+};
+
 export const readQueue = (): QueueItem[] => {
   try {
     const legacyV2Raw = localStorage.getItem(LEGACY_QUEUE_V2_KEY);

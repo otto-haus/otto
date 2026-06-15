@@ -10,6 +10,7 @@ import type { HealthCheck, HealthCheckStatus, SystemHealthReport } from './share
 import { readAppBuildInfo } from './build-info';
 import { getLabsConfig } from './labs-config';
 import { permissionSessionStore } from './permission-session-store';
+import { readShutdownStatus } from './shutdown-lifecycle';
 
 export type { HealthCheck, HealthCheckStatus, SystemHealthReport };
 
@@ -298,12 +299,27 @@ function buildMarkerCheck(): HealthCheck {
   });
 }
 
+function shutdownCheck(): HealthCheck {
+  const status = readShutdownStatus();
+  if (status.dirtyShutdown) {
+    return check('shutdown', 'Last shutdown', 'warn', 'Previous session did not exit cleanly', {
+      impact: 'Hung runtime listeners, stale queue rows, or blank Chat on relaunch are more likely.',
+      nextAction: 'Settings → Diagnostics → Safe reset, then retry Chat.',
+      data: { dirtyShutdown: true, lastCleanShutdownAt: status.lastCleanShutdownAt },
+    });
+  }
+  return check('shutdown', 'Last shutdown', 'ok', 'Last exit was clean', {
+    data: { dirtyShutdown: false, lastCleanShutdownAt: status.lastCleanShutdownAt },
+  });
+}
+
 /** Collect live health from the Electron main process. */
 export async function collectSystemHealth(deps: SystemHealthDeps): Promise<SystemHealthReport> {
   const status = deps.runner.getStatus();
   const queueSnapshot = await readQueueSnapshot(deps.win);
   const checks: HealthCheck[] = [
     rendererCheck(deps.win),
+    shutdownCheck(),
     ...runtimeChecks(status),
     await memoryCheck(deps.memory, status.ready),
     permissionsCheck(deps.autonomy),

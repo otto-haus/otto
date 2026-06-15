@@ -4712,6 +4712,8 @@ const DiagnosticsSettingsPanel: React.FC<{
 }> = ({ api, pushToast }) => {
   const [bundlePath, setBundlePath] = useState('');
   const [busy, setBusy] = useState(false);
+  const [resetBusy, setResetBusy] = useState(false);
+  const [dirtyShutdown, setDirtyShutdown] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [logsBusy, setLogsBusy] = useState(false);
   const [logsError, setLogsError] = useState<string | null>(null);
@@ -4738,6 +4740,18 @@ const DiagnosticsSettingsPanel: React.FC<{
     void refreshLogs();
   }, [api]);
 
+  useEffect(() => {
+    let cancelled = false;
+    api.system.shutdownStatus()
+      .then((status) => {
+        if (!cancelled) setDirtyShutdown(status.dirtyShutdown);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [api]);
+
   const exportDiagnostics = async () => {
     setBusy(true);
     setError(null);
@@ -4761,9 +4775,32 @@ const DiagnosticsSettingsPanel: React.FC<{
     ?? logsSummary?.entries.find((entry) => entry.tail)
     ?? logsSummary?.entries[0];
 
+  const runSafeReset = async () => {
+    setResetBusy(true);
+    setError(null);
+    try {
+      const result = await api.system.safeReset();
+      setDirtyShutdown(false);
+      pushToast({
+        title: settingsCopy.safeResetDoneTitle,
+        body: result.reason,
+        tone: result.reconnected ? 'ok' : 'warn',
+      });
+    } catch (e) {
+      setError(String(e));
+    } finally {
+      setResetBusy(false);
+    }
+  };
+
   return (
     <>
       <SettingsSectionHeader title={settingsCopy.diagnosticsTitle} lede={settingsCopy.diagnosticsLede} />
+      {dirtyShutdown ? (
+        <p className="faint" style={{ color: 'var(--warn)', fontSize: 12.5, marginBottom: 10 }}>
+          {settingsCopy.safeResetDirtyBody}
+        </p>
+      ) : null}
       <div className="row" style={{ flexWrap: 'wrap', gap: 8 }}>
         <button type="button" className="btn btn--solid-d" disabled={busy} onClick={() => void exportDiagnostics()}>
           {settingsCopy.diagnosticsExport}
@@ -4809,6 +4846,21 @@ const DiagnosticsSettingsPanel: React.FC<{
         </div>
       ) : null}
       <p className="faint" style={{ fontSize: 12, marginTop: 8 }}>{settingsCopy.diagnosticsCommand}</p>
+
+      <SettingsSectionHeader title={settingsCopy.safeResetTitle} lede={settingsCopy.safeResetLede} />
+      <p className="settingsFieldRow__hint">{settingsCopy.safeResetClears}</p>
+      <p className="settingsFieldRow__hint">{settingsCopy.safeResetPreserves}</p>
+      <div className="row" style={{ flexWrap: 'wrap', gap: 8, marginTop: 8 }}>
+        <button
+          type="button"
+          className="btn"
+          disabled={resetBusy || busy}
+          onClick={() => void runSafeReset()}
+        >
+          {resetBusy ? settingsCopy.safeResetBusy : settingsCopy.safeResetAction}
+        </button>
+      </div>
+
       {error ? <p className="faint" style={{ color: 'var(--warn)' }}>{error}</p> : null}
       {logsError ? <p className="faint" style={{ color: 'var(--warn)' }}>{logsError}</p> : null}
     </>
