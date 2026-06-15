@@ -397,4 +397,140 @@ describe('SdkSubprocessTransport smoke bootstrap', () => {
     expect(status.ready).toBe(false);
     expect(bootstrapCalls.every((id) => id !== null && id !== undefined)).toBe(true);
   });
+
+  test('runtime OTTO_SMOKE after module load bootstraps empty candidates with guards active', async () => {
+    const home = mkdtempSync(join(tmpdir(), 'otto-smoke-late-bootstrap-'));
+    const lettaDir = join(home, 'letta');
+    mkdirSync(lettaDir, { recursive: true });
+    const settingsPath = join(lettaDir, 'settings.json');
+    writeFileSync(settingsPath, '{}');
+    process.env.OTTO_HOME = home;
+    process.env.OTTO_LETTA_SETTINGS_PATH = settingsPath;
+    Reflect.deleteProperty(process.env, 'OTTO_SMOKE');
+    process.env.OTTO_SMOKE = '1';
+    process.env.OTTO_SKIP_LETTA_LSOF = '1';
+    Reflect.deleteProperty(process.env, 'OTTO_AGENT_ID');
+    process.env.LETTA_CLI_PATH =
+      '/Applications/Letta.app/Contents/Resources/app.asar.unpacked/node_modules/@letta-ai/letta-code/letta.js';
+
+    const configUpdates: unknown[] = [];
+    const config = {
+      connectionMode: () => 'embedded' as const,
+      primaryAgentId: () => null,
+      modelHandle: () => null,
+      effort: () => 'max' as const,
+      baseUrl: () => null,
+      agentId: () => null,
+      agentCandidates: () => [],
+      lettaStateDir: () => lettaDir,
+      get: () => ({}),
+      update: (patch: unknown) => {
+        configUpdates.push(patch);
+      },
+      ensurePrimaryAgentId: () => {},
+    } as unknown as ConfigStore;
+
+    const { win } = mockWindow();
+    const transport = new SdkSubprocessTransport(win, config);
+    const bootstrapCalls: unknown[] = [];
+    const session = {
+      close: () => {},
+      initialize: async () => ({
+        agentId: 'agent-smoke-late',
+        conversationId: 'conv-smoke-late',
+        model: 'test-model',
+        memfsEnabled: false,
+        tools: [],
+      }),
+      send: async () => {},
+      abort: async () => {},
+      async *stream() {
+        yield { type: 'result', success: true, conversationId: 'conv-smoke-late' };
+      },
+    };
+
+    (transport as unknown as { sdk: unknown }).sdk = {
+      createSession: (id: unknown) => {
+        bootstrapCalls.push(id);
+        return session;
+      },
+      resumeSession: () => {
+        throw new Error('should not resume in late smoke bootstrap test');
+      },
+    };
+
+    const status = await transport.init();
+    expect(status.ready).toBe(true);
+    expect(status.sessionMode).toBe('smoke');
+    expect(bootstrapCalls).toHaveLength(1);
+    expect(bootstrapCalls[0] ?? null).toBeNull();
+    expect(configUpdates).toHaveLength(0);
+  });
+
+  test('runtime OTTO_SMOKE after module load refuses conversation=default on bootstrap', async () => {
+    const home = mkdtempSync(join(tmpdir(), 'otto-smoke-late-default-'));
+    const lettaDir = join(home, 'letta');
+    mkdirSync(lettaDir, { recursive: true });
+    const settingsPath = join(lettaDir, 'settings.json');
+    writeFileSync(settingsPath, '{}');
+    process.env.OTTO_HOME = home;
+    process.env.OTTO_LETTA_SETTINGS_PATH = settingsPath;
+    Reflect.deleteProperty(process.env, 'OTTO_SMOKE');
+    process.env.OTTO_SMOKE = '1';
+    process.env.OTTO_SKIP_LETTA_LSOF = '1';
+    Reflect.deleteProperty(process.env, 'OTTO_AGENT_ID');
+    process.env.LETTA_CLI_PATH =
+      '/Applications/Letta.app/Contents/Resources/app.asar.unpacked/node_modules/@letta-ai/letta-code/letta.js';
+
+    const configUpdates: unknown[] = [];
+    const config = {
+      connectionMode: () => 'embedded' as const,
+      primaryAgentId: () => null,
+      modelHandle: () => null,
+      effort: () => 'max' as const,
+      baseUrl: () => null,
+      agentId: () => null,
+      agentCandidates: () => [],
+      lettaStateDir: () => lettaDir,
+      get: () => ({}),
+      update: (patch: unknown) => {
+        configUpdates.push(patch);
+      },
+      ensurePrimaryAgentId: () => {},
+    } as unknown as ConfigStore;
+
+    const { win } = mockWindow();
+    const transport = new SdkSubprocessTransport(win, config);
+    const bootstrapCalls: unknown[] = [];
+    const session = {
+      close: () => {},
+      initialize: async () => ({
+        agentId: 'agent-smoke-late',
+        conversationId: 'default',
+        model: 'test-model',
+        memfsEnabled: false,
+        tools: [],
+      }),
+      send: async () => {},
+      abort: async () => {},
+      async *stream() {},
+    };
+
+    (transport as unknown as { sdk: unknown }).sdk = {
+      createSession: (id: unknown) => {
+        bootstrapCalls.push(id);
+        return session;
+      },
+      resumeSession: () => {
+        throw new Error('should not resume in late smoke default-conversation test');
+      },
+    };
+
+    const status = await transport.init();
+    expect(status.ready).toBe(false);
+    expect(status.reason).toMatch(/conversation=default/i);
+    expect(bootstrapCalls).toHaveLength(1);
+    expect(bootstrapCalls[0] ?? null).toBeNull();
+    expect(configUpdates).toHaveLength(0);
+  });
 });

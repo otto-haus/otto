@@ -176,6 +176,7 @@ export class SdkSubprocessTransport implements OttoRuntimeTransport {
 
   /** Connect; recover from stale agents/conversations; never throw to the renderer. */
   async init(opts?: { freshConversation?: boolean }): Promise<RuntimeStatus> {
+    const isSmoke = smokeMode();
     const cli = resolveCli(this.config.connectionMode());
     const context = discoverLocalLettaContext(this.config);
     const baseResolution = resolveInitBaseUrl(context.baseUrl, this.config.connectionMode());
@@ -189,7 +190,7 @@ export class SdkSubprocessTransport implements OttoRuntimeTransport {
         discoverySource: context.source,
         modelHandle: this.config.modelHandle(),
         effort: this.config.effort(),
-        sessionMode: SMOKE_MODE ? 'smoke' : 'default',
+        sessionMode: isSmoke ? 'smoke' : 'default',
         ...cli,
       };
       return this.status;
@@ -208,7 +209,7 @@ export class SdkSubprocessTransport implements OttoRuntimeTransport {
         discoverySource: context.source,
         modelHandle: this.config.modelHandle(),
         effort: this.config.effort(),
-        sessionMode: SMOKE_MODE ? 'smoke' : 'default',
+        sessionMode: isSmoke ? 'smoke' : 'default',
         ...cli,
       };
       return this.status;
@@ -227,7 +228,7 @@ export class SdkSubprocessTransport implements OttoRuntimeTransport {
         discoverySource: context.source,
         modelHandle: this.config.modelHandle(),
         effort: this.config.effort(),
-        sessionMode: SMOKE_MODE ? 'smoke' : 'default',
+        sessionMode: isSmoke ? 'smoke' : 'default',
         ...cli,
       };
       return this.status;
@@ -238,7 +239,7 @@ export class SdkSubprocessTransport implements OttoRuntimeTransport {
       this.session?.close();
       const sessionOpts = this.options(modelAttempt);
       const session = resumeId
-        ? (fresh || SMOKE_MODE ? sdk.createSession(resumeId, sessionOpts) : sdk.resumeSession(resumeId, sessionOpts))
+        ? (fresh || isSmoke ? sdk.createSession(resumeId, sessionOpts) : sdk.resumeSession(resumeId, sessionOpts))
         : sdk.createSession(undefined, sessionOpts);
       let init: Awaited<ReturnType<Session['initialize']>>;
       try {
@@ -251,7 +252,7 @@ export class SdkSubprocessTransport implements OttoRuntimeTransport {
         session.close();
         throw e;
       }
-      if (SMOKE_MODE && init.conversationId === 'default') {
+      if (isSmoke && init.conversationId === 'default') {
         session.close();
         throw new Error('Smoke test refused to use conversation=default');
       }
@@ -294,13 +295,13 @@ export class SdkSubprocessTransport implements OttoRuntimeTransport {
       }
       // Smoke/staging skips agent bootstrap when candidates exist (never pollute live agents),
       // but fresh embedded settings with no agents still need createSession(undefined).
-      if (!r && !process.env.OTTO_AGENT_ID && (!smokeMode() || agentCandidates.length === 0)) {
+      if (!r && !process.env.OTTO_AGENT_ID && (!isSmoke || agentCandidates.length === 0)) {
         r = await tryWithModelFallback(null);
       }
       if (!r) throw lastAgentError ?? new Error(context.reason ?? 'No local Letta agent candidate was available.');
       this.session = r.session;
       const usedAttempt = r.modelAttempt;
-      if (usedAttempt && !SMOKE_MODE) {
+      if (usedAttempt && !isSmoke) {
         const patch: Partial<OttoConfig> = {};
         if (usedAttempt.effort !== this.config.effort()) patch.effort = usedAttempt.effort;
         if (usedAttempt.modelHandle && usedAttempt.modelHandle !== this.config.modelHandle()) {
@@ -308,7 +309,7 @@ export class SdkSubprocessTransport implements OttoRuntimeTransport {
         }
         if (Object.keys(patch).length) this.config.update(patch);
       }
-      if (!SMOKE_MODE) {
+      if (!isSmoke) {
         const resolvedAgentId = r.init.agentId ?? primaryAgentId;
         this.config.update({
           agentId: resolvedAgentId,
@@ -327,7 +328,7 @@ export class SdkSubprocessTransport implements OttoRuntimeTransport {
         model: r.init.model,
         modelHandle: this.config.modelHandle(),
         effort: this.config.effort(),
-        sessionMode: SMOKE_MODE ? 'smoke' : 'default',
+        sessionMode: isSmoke ? 'smoke' : 'default',
         memfsEnabled: r.init.memfsEnabled,
         tools: r.init.tools,
         transportMode: 'sdk',
@@ -347,7 +348,7 @@ export class SdkSubprocessTransport implements OttoRuntimeTransport {
         discoverySource: context.source,
         modelHandle: this.config.modelHandle(),
         effort: this.config.effort(),
-        sessionMode: SMOKE_MODE ? 'smoke' : 'default',
+        sessionMode: isSmoke ? 'smoke' : 'default',
         ...cli,
       };
     }
@@ -358,7 +359,7 @@ export class SdkSubprocessTransport implements OttoRuntimeTransport {
   async newChat(): Promise<RuntimeStatus> {
     this.session?.close();
     this.session = null;
-    if (!SMOKE_MODE) this.config.update({ conversationId: null });
+    if (!smokeMode()) this.config.update({ conversationId: null });
     return this.init({ freshConversation: true });
   }
 
