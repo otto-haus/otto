@@ -1,0 +1,45 @@
+status: pass
+installed: 7
+held: 0
+date: 2026-06-14
+branch: otto-skills-install
+vet_script: ~/Code/omnara/codex/skills/skill-vetter/scripts/vet_skill.py
+install_method: npx skills add <source> --skill <name> -y --copy
+location: .agents/skills/
+lockfile: skills-lock.json
+
+skills:
+  - name: find-skills
+    source: vercel-labs/skills
+    vet: pass
+    warnings: [deploy marker in SKILL.md]
+  - name: ai-video-generation
+    source: qu-skills/skills
+    vet: pass
+    gates: [inference.sh spend]
+  - name: remotion-render
+    source: qu-skills/skills
+    vet: pass
+    gates: [inference.sh spend]
+  - name: ai-avatar-video
+    source: qu-skills/skills
+    vet: pass
+    gates: [inference.sh spend]
+  - name: ai-image-generation
+    source: qu-skills/skills
+    vet: pass
+    gates: [inference.sh spend]
+  - name: twitter-automation
+    source: qu-skills/skills
+    vet: pass
+    warnings: [post to marker]
+    overlay: .agents/skills/twitter-automation/OTTO-GATES.md
+  - name: just-scrape
+    source: scrapegraphai/just-scrape
+    vet: pass
+    overlay: .agents/skills/just-scrape/OTTO-ROUTING.md
+
+next:
+  - Sebastian merge review
+  - Coordinate demo video lane with Discord 485aee71
+  - Vet belt-sh/cli before twitter/video skills are used in production

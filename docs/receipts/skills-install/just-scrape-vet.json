@@ -1,0 +1,11 @@
+{
+  "checked_count": 2,
+  "external_scans_optional_escalation": [
+    "Socket/Snyk/Promptfoo are parked unless a concrete external tool-promotion packet needs them",
+    "Run external scans only with sandbox or explicit consent"
+  ],
+  "fail_count": 0,
+  "findings": [],
+  "findings_count": 0,
+  "status": "pass"
+}

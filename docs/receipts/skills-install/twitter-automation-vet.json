@@ -1,0 +1,18 @@
+{
+  "checked_count": 2,
+  "external_scans_optional_escalation": [
+    "Socket/Snyk/Promptfoo are parked unless a concrete external tool-promotion packet needs them",
+    "Run external scans only with sandbox or explicit consent"
+  ],
+  "fail_count": 0,
+  "findings": [
+    {
+      "code": "high_risk_marker",
+      "file": "/Users/seb/Code/otto/.worktrees/otto-skills-install/.agents/skills/twitter-automation/SKILL.md",
+      "marker": "post to",
+      "severity": "warn"
+    }
+  ],
+  "findings_count": 1,
+  "status": "pass"
+}
