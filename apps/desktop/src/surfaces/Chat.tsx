@@ -1170,6 +1170,9 @@ const LiveChat: React.FC<{
                   </button>
                 ))}
               </div>
+              {ready ? (
+                <p className="faint chatEmpty__lede">{chatCopy.ticketCommandHint}</p>
+              ) : null}
             </div>
           )}
           {streamMessages.map((m, i) => {
