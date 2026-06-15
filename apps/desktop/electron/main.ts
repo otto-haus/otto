@@ -6,6 +6,7 @@ import { ConfigStore } from './config-store';
 import { windowBackgroundForPref } from './display-theme';
 import { registerIpc } from './ipc';
 import { resolveDevRendererUrl } from './main-security';
+import { attachWindowGeometryHandlers } from './window-geometry';
 import {
   applyWindowLaunchMode,
   browserWindowShowsOnCreate,
@@ -55,6 +56,7 @@ function createWindow() {
   });
 
   applyWindowLaunchMode(win, launchMode);
+  attachWindowGeometryHandlers(win);
   registerIpc(win);
 
   // Dev: load the running Vite renderer; Prod: load the built renderer.

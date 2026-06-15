@@ -13,6 +13,7 @@ import {
   requestOnboardingStarter,
   setOnboardingModeDraft,
   type OnboardingConnectionMode,
+  wasFirstMessageDuringOnboarding,
   wasOnboarded,
 } from './onboarding-storage';
 import {
@@ -56,7 +57,7 @@ export const Onboarding: React.FC<{ onNavigate: (id: SurfaceId) => void; activeS
   const [dismissed, setDismissed] = useState(wasOnboarded);
   const [started, setStarted] = useState(false);
   const [intent, setIntent] = useState<OnboardingIntent>('connect');
-  const [sessionFirstMessage, setSessionFirstMessage] = useState(false);
+  const [sessionFirstMessage, setSessionFirstMessage] = useState(wasFirstMessageDuringOnboarding);
   const [modeDraft, setModeDraft] = useState<OnboardingConnectionMode | null>(getOnboardingModeDraft);
   const [modePick, setModePick] = useState<OnboardingConnectionMode | null>(null);
   const [modeBusy, setModeBusy] = useState(false);
@@ -107,7 +108,11 @@ export const Onboarding: React.FC<{ onNavigate: (id: SurfaceId) => void; activeS
     try {
       setOnboardingModeDraft(mode);
       setModeDraft(mode);
-      if (api) await api.config.set({ connectionMode: mode });
+      if (api) {
+        await api.config.set({ connectionMode: mode });
+        const next = await api.connection.save({});
+        rt.updateStatus(next);
+      }
       onNavigate('settings');
     } finally {
       setModeBusy(false);

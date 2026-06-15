@@ -56,6 +56,7 @@ export class WsRuntimeTransport implements OttoRuntimeTransport {
   private controlByUpstream = new Map<string, string>();
   private aborted = false;
   private turnIdle = false;
+  private turnInterruptReason: string | null = null;
   private activeRunId: string | null = null;
   private receipts = new ReceiptWriter();
   private standards = new StandardStore();
@@ -93,7 +94,8 @@ export class WsRuntimeTransport implements OttoRuntimeTransport {
     }
     pending.resolve(response);
     const upstreamId = [...this.controlByUpstream.entries()].find(([, id]) => id === requestId)?.[0];
-    if (upstreamId && this.runtimeSocket?.readyState === WebSocket.OPEN) {
+    if (!upstreamId) return;
+    if (this.runtimeSocket?.readyState === WebSocket.OPEN) {
       const approved = response.behavior === 'allow';
       this.sendCommand({
         type: 'control_response',
@@ -102,6 +104,13 @@ export class WsRuntimeTransport implements OttoRuntimeTransport {
         message: approved ? undefined : response.message,
         updated_input: approved ? response.updatedInput ?? undefined : undefined,
       });
+      return;
+    }
+    const reason = 'Tool approval could not reach Letta — runtime disconnected. Reconnect and try again.';
+    this.emitError(reason);
+    if (!this.turnIdle) {
+      this.turnInterruptReason = reason;
+      this.turnIdle = true;
     }
   }
 
@@ -195,10 +204,12 @@ export class WsRuntimeTransport implements OttoRuntimeTransport {
     const startedStatus = { ...this.status };
     this.aborted = false;
     this.turnIdle = false;
+    this.turnInterruptReason = null;
     this.activeRunId = null;
     const todoAccumulator = new TodoStreamAccumulator();
     trace.write('prompt', { text, transport: 'ws', agentId: this.status.agentId, conversationId: this.status.conversationId });
 
+    let detachRuntimeHandler: (() => void) | null = null;
     try {
       let sawAssistant = false;
       let turnErrorRaw: string | null = null;
@@ -266,7 +277,7 @@ export class WsRuntimeTransport implements OttoRuntimeTransport {
         }
       };
 
-      this.attachRuntimeHandler(onRuntimeEvent);
+      detachRuntimeHandler = this.attachRuntimeHandler(onRuntimeEvent);
 
       this.sendCommand({
         type: 'input',
@@ -321,7 +332,15 @@ export class WsRuntimeTransport implements OttoRuntimeTransport {
           throw e;
         }
       }
-      if (!receiptWritten) {
+      if (this.turnInterruptReason && !receiptWritten) {
+        emitResult(false);
+        writeReceipt('failed', 'Chat turn failed.', {
+          code: 'error',
+          message: this.turnInterruptReason,
+          recoverable: true,
+          next_action: nextActionFor('error'),
+        });
+      } else if (!receiptWritten) {
         writeReceipt(this.aborted ? 'blocked' : sawAssistant ? 'success' : 'failed', this.aborted ? 'Chat turn was aborted.' : sawAssistant ? 'Chat turn completed.' : 'Chat turn ended without idle signal.', this.aborted ? {
           code: 'aborted',
           message: 'The chat turn was aborted before completion.',
@@ -351,6 +370,7 @@ export class WsRuntimeTransport implements OttoRuntimeTransport {
         this.emitError(normalizedError.message, normalizedError.details);
       }
     } finally {
+      detachRuntimeHandler?.();
       trace.close();
     }
   }
@@ -444,7 +464,7 @@ export class WsRuntimeTransport implements OttoRuntimeTransport {
       socket.on('close', () => {
         if (this.runtimeSocket === socket) {
           this.runtimeSocket = null;
-          this.markNotReady('Letta runtime disconnected from Otto WebSocket listener.');
+          this.handleRuntimeDisconnect();
         }
       });
     });
@@ -550,8 +570,8 @@ export class WsRuntimeTransport implements OttoRuntimeTransport {
     return text.includes('conversation') && (text.includes('not found') || text.includes('not-found') || text.includes('404') || text.includes('500'));
   }
 
-  private attachRuntimeHandler(onEvent: (event: WsRuntimeEvent) => void) {
-    if (!this.runtimeSocket) return;
+  private attachRuntimeHandler(onEvent: (event: WsRuntimeEvent) => void): (() => void) | null {
+    if (!this.runtimeSocket) return null;
     const handler = (raw: Buffer | ArrayBuffer | Buffer[]) => {
       try {
         onEvent(JSON.parse(String(raw)) as WsRuntimeEvent);
@@ -560,6 +580,9 @@ export class WsRuntimeTransport implements OttoRuntimeTransport {
       }
     };
     this.runtimeSocket.on('message', handler);
+    return () => {
+      this.runtimeSocket?.off('message', handler);
+    };
   }
 
   private waitForTurnComplete(timeoutMs: number, aborted: () => boolean): Promise<void> {
@@ -609,6 +632,21 @@ export class WsRuntimeTransport implements OttoRuntimeTransport {
         this.controlByUpstream.delete(upstreamId);
       },
     });
+  }
+
+  private handleRuntimeDisconnect() {
+    const hadPending = this.pendingControls.size > 0;
+    this.pendingControls.clear();
+    this.controlByUpstream.clear();
+    const activeTurn = !this.turnIdle && (hadPending || this.activeRunId !== null);
+    if (activeTurn) {
+      this.turnInterruptReason = hadPending
+        ? 'Letta runtime disconnected while waiting for tool approval. Reconnect and try again.'
+        : 'Letta runtime disconnected during an active turn. Reconnect and try again.';
+      this.turnIdle = true;
+      this.emitError(this.turnInterruptReason);
+    }
+    this.markNotReady('Letta runtime disconnected from Otto WebSocket listener.');
   }
 
   private markNotReady(reason: string, code: StatusCode = 'error') {

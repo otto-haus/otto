@@ -22,4 +22,10 @@ describe('labs IPC guard (141)', () => {
     expect(ipcSrc.includes('applyLabsConfigPatch')).toBe(true);
     expect(ipcSrc.includes('otto:labs:set')).toBe(true);
   });
+
+  test('config set IPC validates cloud connectionMode against Labs (#628)', () => {
+    const ipcSrc = readFileSync(join(import.meta.dir, 'ipc.ts'), 'utf8');
+    expect(ipcSrc.includes('assertConnectionModePatchAllowed')).toBe(true);
+    expect(ipcSrc.includes('otto:config:set')).toBe(true);
+  });
 });

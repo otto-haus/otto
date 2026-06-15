@@ -550,6 +550,10 @@ export function useRuntime() {
         if (conversationId) {
           void api.threads.touch({ lettaConversationId: conversationId });
         }
+        if ((m as { success?: boolean }).success === false) {
+          const failed = m as { error?: unknown; reason?: unknown; message?: unknown };
+          sendError.current = String(failed.error ?? failed.reason ?? failed.message ?? 'Send failed.');
+        }
       }
     });
     return off;

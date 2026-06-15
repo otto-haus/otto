@@ -32,8 +32,8 @@ describe('ConfigStore', () => {
       const reloaded = new ConfigStore();
       expect(reloaded.connectionMode()).toBe('existing');
       expect(reloaded.primaryAgentId()).toBe('agent-primary');
-      reloaded.update({ connectionMode: 'cloud' });
-      expect(new ConfigStore().connectionMode()).toBe('cloud');
+      reloaded.update({ connectionMode: 'embedded' });
+      expect(new ConfigStore().connectionMode()).toBe('embedded');
     } finally {
       rmSync(tmp, { recursive: true, force: true });
       delete process.env.OTTO_HOME;
