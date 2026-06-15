@@ -59,6 +59,6 @@
     "site:dev": "bash site/dev.sh"
   },
   "devDependencies": {
-    "typescript": "^5.6.3"
+    "typescript": "^6.0.3"
   }
 }
