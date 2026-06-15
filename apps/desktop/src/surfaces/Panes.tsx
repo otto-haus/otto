@@ -1368,19 +1368,52 @@ const RoutineDetail: React.FC<{
 type ProposalInboxFilter = 'pending' | 'decided' | 'all';
 type CurationMainPanel = 'inbox' | 'changelog';
 
+const CURATION_PANEL_KEY = 'otto.curation.panel';
+const RECEIPTS_SELECTED_KEY = 'otto.receipts.selectedId';
+
+function readStoredCurationPanel(): CurationMainPanel | null {
+  try {
+    const value = sessionStorage.getItem(CURATION_PANEL_KEY);
+    if (value === 'changelog' || value === 'inbox') {
+      sessionStorage.removeItem(CURATION_PANEL_KEY);
+      return value;
+    }
+  } catch { /* best effort */ }
+  return null;
+}
+
+function readStoredReceiptSelection(): string | null {
+  try {
+    const value = sessionStorage.getItem(RECEIPTS_SELECTED_KEY);
+    if (value) sessionStorage.removeItem(RECEIPTS_SELECTED_KEY);
+    return value || null;
+  } catch {
+    return null;
+  }
+}
+
+function openReceiptFromChangelog(receiptId: string) {
+  try {
+    sessionStorage.setItem(RECEIPTS_SELECTED_KEY, receiptId);
+  } catch { /* best effort */ }
+  location.hash = 'receipts';
+}
+
 const PENDING_STATUSES = new Set(['proposed', 'needs_approval']);
 const isPendingProposal = (status: string) => PENDING_STATUSES.has(status);
 const canDecideProposal = (status: string) => status === 'proposed' || status === 'needs_approval';
 const isMemoryWritebackProposal = (kind: string) => kind === 'memory_writeback';
 
-export const Curation: React.FC<{ initialPanel?: CurationMainPanel }> = ({ initialPanel = 'inbox' }) => {
+export const Curation: React.FC<{ initialPanel?: CurationMainPanel }> = ({ initialPanel }) => {
   const api = ottoApi();
   const { push: pushToast } = useToast();
   const [result, setResult] = useState<ProposalListResult | null>(null);
   const [approvals, setApprovals] = useState<ApprovalListResult | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [filter, setFilter] = useState<ProposalInboxFilter>('pending');
-  const [mainPanel, setMainPanel] = useState<CurationMainPanel>(initialPanel);
+  const [mainPanel, setMainPanel] = useState<CurationMainPanel>(
+    () => initialPanel ?? readStoredCurationPanel() ?? 'inbox',
+  );
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
@@ -1413,7 +1446,7 @@ export const Curation: React.FC<{ initialPanel?: CurationMainPanel }> = ({ initi
   }, [api]);
 
   useEffect(() => {
-    setMainPanel(initialPanel);
+    if (initialPanel) setMainPanel(initialPanel);
   }, [initialPanel]);
 
   const proposals = result?.proposals ?? [];
@@ -1691,8 +1724,16 @@ const BehaviorChangelogPanel: React.FC = () => {
                 <div className="card__title">{entry.what}</div>
                 <p className="muted" style={{ marginTop: 4 }}>{entry.why}</p>
                 <div className="mono receiptEvidenceRef" style={{ marginTop: 6 }}>
-                  {entry.authority} · receipt {entry.receipt_id} · {formatReceiptTime(entry.timestamp)}
+                  {entry.authority} · {formatReceiptTime(entry.timestamp)}
                 </div>
+                <button
+                  type="button"
+                  className="btn btn--ghost"
+                  style={{ marginTop: 8, padding: 0, minHeight: 0, fontSize: 'inherit' }}
+                  onClick={() => openReceiptFromChangelog(entry.receipt_id)}
+                >
+                  Open receipt {entry.receipt_id}
+                </button>
               </div>
             </div>
           ))}
@@ -1821,6 +1862,12 @@ export const Receipts: React.FC = () => {
         if (cancelled) return;
         setResult(next);
         setRunsResult(runList);
+        const pendingReceiptId = readStoredReceiptSelection();
+        if (pendingReceiptId && next.receipts.some((receipt) => receipt.id === pendingReceiptId)) {
+          setSelectedId(pendingReceiptId);
+          setQuery(pendingReceiptId);
+          return;
+        }
         setSelectedId((current) =>
           current && next.receipts.some((receipt) => receipt.id === current)
             ? current

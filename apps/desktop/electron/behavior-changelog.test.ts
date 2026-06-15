@@ -94,4 +94,43 @@ describe('BehaviorChangelog', () => {
       rmSync(tmp, { recursive: true, force: true });
     }
   });
+
+  test('staging proof contract matches issue-121 acceptance', () => {
+    const tmp = mkdtempSync(join(tmpdir(), 'otto-changelog-proof-'));
+    const proposalsDir = join(tmp, 'curation', 'proposals');
+    const receiptsDir = join(tmp, 'receipts');
+    const canonPath = join(tmp, 'practice.yaml');
+    writeFileSync(canonPath, 'slug: demo\nname: Demo\nguardrails: []\n');
+    try {
+      const store = new ProposalStore(proposalsDir, new ReceiptWriter(receiptsDir), new ReceiptStore(receiptsDir));
+      const created = store.createFromCorrection({
+        correction: 'Always cite receipts when changing canon.',
+        rationale: 'Missing proof on last change.',
+        target: { kind: 'practice', id: 'demo', path: canonPath, action: 'update' },
+      });
+      store.decide(created.proposal.id, { decision: 'accept' });
+
+      const empty = new BehaviorChangelog(
+        new ProposalStore(join(tmp, 'empty', 'proposals'), new ReceiptWriter(receiptsDir)),
+        new ReceiptStore(receiptsDir),
+        new ConstitutionStore(join(tmp, 'constitution.yaml'), join(tmp, 'constitution.md'), new ReceiptWriter(receiptsDir)),
+      ).list();
+      expect(empty.entries).toHaveLength(0);
+      expect(empty.empty_message).toBe('No behavior changes this week.');
+
+      const populated = new BehaviorChangelog(
+        store,
+        new ReceiptStore(receiptsDir),
+        new ConstitutionStore(join(tmp, 'constitution.yaml'), join(tmp, 'constitution.md'), new ReceiptWriter(receiptsDir)),
+      ).list();
+      const entry = populated.entries[0];
+      expect(entry?.what).toBeTruthy();
+      expect(entry?.why).toBeTruthy();
+      expect(entry?.authority).toBeTruthy();
+      expect(entry?.receipt_id).toMatch(/^receipt-/);
+      expect(entry?.source).toBe('proposal_ratified');
+    } finally {
+      rmSync(tmp, { recursive: true, force: true });
+    }
+  });
 });
