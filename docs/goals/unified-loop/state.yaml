@@ -34,6 +34,10 @@ gates:
       - 631
       - 632
       - 633
+      - 635
+      - 636
+      - 637
+      - 638
     awaiting_ratification:
       - 627
       - 628
@@ -41,23 +45,35 @@ gates:
       - 631
       - 632
       - 633
+      - 635
+      - 636
+      - 637
+      - 638
     ratified_in_progress: []
+    label_debt:
+      - 630
+      - 631
+      - 632
+      - 633
   ship:
     in_flight_babysit: []
+    merged_since_last_tick:
+      - 618
+      - 626
     reviewed_prs:
-      - 618
+      - 582
       - 624
-      - 626
     ready_for_sebastian:
-      - 618
+      - 582
       - 624
-      - 626
     close_candidates:
       - pr: 588
         winner: 618
+        winner_merged: true
         commented: true
       - pr: 596
         winner: 626
+        winner_merged: true
         commented: true
       - pr: 587
         winner: 624
@@ -121,6 +137,34 @@ ticks:
         - 624
         - 626
       close_candidates_commented:
+        - 587
+        - 588
+        - 596
+
+  - id: 4
+    at: "2026-06-15T04:00:00Z"
+    spawn_mechanism: task_subagents
+    spawn_verification_passed: true
+    global_agents: 11
+    defer_mode: false
+    notes: "3 BUILD Task subagents; 4 new issues. #618/#626 merged. SHIP candidates #582 #624."
+    build:
+      spawned: 3
+      completed: 3
+      issues_filed:
+        - 635
+        - 636
+        - 637
+        - 638
+    ship:
+      intake: no_safe_work
+      merged:
+        - 618
+        - 626
+      ship_candidates:
+        - 582
+        - 624
+      close_stale_dupes:
         - 587
         - 588
         - 596
