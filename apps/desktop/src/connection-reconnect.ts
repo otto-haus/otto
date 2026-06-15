@@ -24,8 +24,10 @@ export async function saveConnectionAndReconnect(
     primaryAgentId: fields.primaryAgentId.trim() || fields.agentId.trim() || null,
     connectionMode: fields.connectionMode,
   });
+  const baseUrl =
+    fields.connectionMode === 'embedded' ? null : fields.baseUrl.trim() || null;
   return api.connection.save({
-    baseUrl: fields.baseUrl.trim() || null,
+    baseUrl,
     agentId: fields.agentId.trim() || null,
   });
 }
