@@ -722,6 +722,15 @@ const LiveChat: React.FC<{
     : labelForModel(selectedModel, modelOptions);
   const chatSessionSubtitle = st ? formatChatSessionSubtitle(st, modelStatusLabel) : 'connecting…';
   const chatDebugTitle = st ? formatChatDebugTitle(st, modelStatusLabel) : undefined;
+  const memoryLabel = st?.memfsEnabled ? chatCopy.memoryOn : chatCopy.memoryOff;
+
+  const openMemoryObservatory = () => {
+    try {
+      sessionStorage.setItem('otto.settings.section', 'memory');
+    } catch { /* best effort */ }
+    if (onNavigate) onNavigate('settings');
+    else onOpenSettings?.();
+  };
 
   useEffect(() => {
     if (!api) return;
@@ -1065,7 +1074,28 @@ const LiveChat: React.FC<{
               {st ? (
                 <>
                   <span className={`dot ${rt.busy ? 'dot--idle' : ready ? 'dot--ok' : 'dot--warn'}`} aria-hidden="true" />
-                  <span>{headerSubtitle}</span>
+                  {rt.busy || !ready ? (
+                    <span>{headerSubtitle}</span>
+                  ) : (
+                    <>
+                      <span>{modelStatusLabel}</span>
+                      {st.transportFallbackReason ? (
+                        <>
+                          <span className="chat__idSep" aria-hidden="true">·</span>
+                          <span>{st.transportFallbackReason}</span>
+                        </>
+                      ) : null}
+                      <span className="chat__idSep" aria-hidden="true">·</span>
+                      <button
+                        type="button"
+                        className="chat__memoryLink"
+                        onClick={openMemoryObservatory}
+                        title={chatCopy.memoryLinkTitle}
+                      >
+                        {memoryLabel}
+                      </button>
+                    </>
+                  )}
                 </>
               ) : 'connecting…'}
             </div>

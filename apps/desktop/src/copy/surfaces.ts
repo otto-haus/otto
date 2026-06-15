@@ -252,6 +252,9 @@ export const chatCopy = {
   copyMarkdownDone: 'Conversation copied',
   copyMarkdownDoneBody: 'Markdown is on your clipboard. Local paths and likely secrets were redacted.',
   copyMarkdownFailed: 'Could not copy conversation',
+  memoryOn: 'Letta memory on',
+  memoryOff: 'Letta memory off',
+  memoryLinkTitle: 'Open Memory observatory in Settings',
 } as const;
 
 export const onboardingCopy = {
