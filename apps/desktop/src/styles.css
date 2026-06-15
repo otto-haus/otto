@@ -1126,8 +1126,8 @@ h1, h2, h3, h4, p { margin: 0; }
   flex: none;
 }
 .queuebar__action,
-.queueitem__remove,
-.queueitem__retry {
+.queueitem__action,
+.queueitem__remove {
   border: 0;
   background: transparent;
   color: var(--mut);
@@ -1136,24 +1136,29 @@ h1, h2, h3, h4, p { margin: 0; }
   padding: 4px 6px;
   border-radius: 7px;
 }
-.queuebar__action--primary { color: var(--accent); font-weight: 560; }
+.queuebar__action--primary,
+.queueitem__action--primary { color: var(--accent); font-weight: 560; }
 .queuebar__action:hover,
-.queueitem__remove:hover,
-.queueitem__retry:hover { color: var(--ink); background: rgba(20,22,26,0.05); }
+.queueitem__action:hover,
+.queueitem__remove:hover { color: var(--ink); background: rgba(20,22,26,0.05); }
 .queuebar__items {
   display: grid;
-  max-height: min(220px, 34vh);
+  max-height: min(280px, 40vh);
   overflow-y: auto;
 }
 .queueitem {
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto 28px;
-  align-items: center;
-  gap: 8px;
+  gap: 0;
   padding: 8px 12px;
   border-top: 1px solid rgba(226,223,214,0.66);
 }
 .queueitem:first-child { border-top: 0; }
+.queueitem__row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+}
 .queueitem__pill {
   font-family: var(--mono);
   font-size: 10px;
@@ -1183,9 +1188,32 @@ h1, h2, h3, h4, p { margin: 0; }
   color: var(--ink-soft);
   font-size: 13px;
 }
-.queueitem__retry { font-family: var(--mono); font-size: 11px; color: var(--accent); }
-.queueitem__remove { width: 28px; height: 28px; display: grid; place-items: center; }
+.queueitem__controls {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+.queueitem__remove { width: 28px; height: 28px; display: grid; place-items: center; padding: 0; }
 .queueitem__remove svg { width: 15px; height: 15px; }
+.queueitem--inspected { background: rgba(20,22,26,0.02); }
+.queueitem__detail {
+  margin-top: 8px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: rgba(255,254,250,0.96);
+  border: 1px solid var(--line);
+  color: var(--ink);
+  font-size: 13px;
+  line-height: 1.45;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+.queueitem__attachments {
+  margin: 8px 0 0;
+  padding-left: 18px;
+  color: var(--ink-soft);
+  font-size: 12px;
+}
 
 .promptControls { display: flex; align-items: center; gap: 8px; position: relative; flex-wrap: wrap; justify-content: flex-end; margin-left: auto; }
 .picker { position: relative; }

@@ -1,3 +1,14 @@
+/**
+ * Chat unsent-message queue states (operator-facing labels in parentheses):
+ *
+ * - `queued` (waiting): durable row waiting for the runtime to drain.
+ * - `sending` (sending): handed to the runtime; stored separately in INFLIGHT_KEY until ack/fail.
+ * - `failed` (failed): send rejected; stays visible until retry or remove.
+ *
+ * Terminal states outside the queue store:
+ * - cancelled: user removed the row (`removeQueueItem`).
+ * - sent: runtime accepted the message; row is dropped and INFLIGHT_KEY cleared.
+ */
 export type QueueState = 'queued' | 'sending' | 'failed';
 export type QueueItem = { id: string; text: string; createdAt: number; state: QueueState; threadId?: string | null };
 export type QueueDisplayItem = QueueItem & { isNext: boolean; sendPosition: number | null };
@@ -15,11 +26,29 @@ let fallbackQueueIdSequence = 0;
 
 export const isSmokeQueueText = (text: string): boolean => SMOKE_QUEUE_TEXT.test(text.trim());
 
+export const splitQueueText = (text: string): { body: string; attachmentLines: string[] } => {
+  const markerMatch = text.match(/\n\nAttached local images?:\n/);
+  if (!markerMatch || markerMatch.index == null) return { body: text, attachmentLines: [] };
+  const body = text.slice(0, markerMatch.index).trimEnd();
+  const footer = text.slice(markerMatch.index + markerMatch[0].length);
+  const attachmentLines = footer.split('\n').map((line) => line.trim()).filter(Boolean);
+  return { body, attachmentLines };
+};
+
+export const queueHasAttachments = (text: string): boolean => splitQueueText(text).attachmentLines.length > 0;
+
 export const previewQueueText = (text: string): string => {
-  const trimmed = text.trim().replace(/\s+/g, ' ');
+  const { body, attachmentLines } = splitQueueText(text);
+  const trimmed = body.trim().replace(/\s+/g, ' ');
+  if (!trimmed && attachmentLines.length) {
+    return attachmentLines.length === 1 ? 'Image attachment' : `${attachmentLines.length} image attachments`;
+  }
   if (!trimmed) return 'Empty message';
   if (isSmokeQueueText(trimmed)) return 'Automated smoke message';
-  return trimmed.length > 96 ? `${trimmed.slice(0, 96)}…` : trimmed;
+  const preview = trimmed.length > 96 ? `${trimmed.slice(0, 96)}…` : trimmed;
+  if (!attachmentLines.length) return preview;
+  const suffix = attachmentLines.length === 1 ? ' · 1 attachment' : ` · ${attachmentLines.length} attachments`;
+  return `${preview}${suffix}`;
 };
 
 export const createQueueItem = (text: string, state: QueueState = 'queued', threadId: string | null = null): QueueItem => {
@@ -48,6 +77,30 @@ export const queueDisplayItemsForThread = (
       return { ...item, isNext: sendPosition === 1, sendPosition };
     });
 };
+
+export const promoteQueueItemForThread = (
+  items: QueueItem[],
+  threadId: string | null | undefined,
+  id: string,
+): QueueItem[] => {
+  const index = items.findIndex((item) => item.id === id);
+  if (index === -1) return items;
+  const target = items[index];
+  if (target.state !== 'queued' || !queueMatchesThread(target, threadId)) return items;
+
+  const without = items.filter((item) => item.id !== id);
+  const insertAt = without.findIndex(
+    (item) => item.state === 'queued' && queueMatchesThread(item, threadId),
+  );
+  if (insertAt === -1) return [...without, target];
+  return [...without.slice(0, insertAt), target, ...without.slice(insertAt)];
+};
+
+export const updateQueueItemText = (items: QueueItem[], id: string, text: string): QueueItem[] =>
+  items.map((item) => (item.id === id ? { ...item, text } : item));
+
+export const removeQueueItem = (items: QueueItem[], id: string): QueueItem[] =>
+  items.filter((item) => item.id !== id);
 
 export const retryFailedQueueItemsForThread = (
   items: QueueItem[],

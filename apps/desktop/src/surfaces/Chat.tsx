@@ -21,11 +21,14 @@ import {
   nextQueueItemForThread,
   persistInFlight,
   previewQueueText,
+  promoteQueueItemForThread,
   QUEUE_KEY,
   queueDisplayItemsForThread,
   queueMatchesThread,
   readQueue,
+  removeQueueItem,
   retryFailedQueueItemsForThread,
+  splitQueueText,
   type QueueDisplayItem,
   type QueueItem,
 } from '../chat/queue-storage';
@@ -264,7 +267,9 @@ const QueueStrip: React.FC<{
   onRetryAll: () => void;
   onRetryOne: (id: string) => void;
   onRemove: (id: string) => void;
-}> = ({ queue, onClear, onRetryAll, onRetryOne, onRemove }) => {
+  onEdit: (id: string) => void;
+  onSendNow: (id: string) => void;
+}> = ({ queue, onClear, onRetryAll, onRetryOne, onRemove, onEdit, onSendNow }) => {
   const failedCount = queue.filter((item) => item.state === 'failed').length;
   const pendingCount = queue.length - failedCount;
   const summary = failedCount && pendingCount
@@ -274,7 +279,8 @@ const QueueStrip: React.FC<{
       : chatCopy.queuePending(pendingCount);
   const nextItem = queue.find((item) => item.isNext);
   const summaryText = nextItem ? chatCopy.queueNextSummary(summary, previewQueueText(nextItem.text)) : summary;
-  const [expanded, setExpanded] = useState(queue.length <= 2 && failedCount === 0);
+  const [expanded, setExpanded] = useState(queue.length <= 2);
+  const [inspectedId, setInspectedId] = useState<string | null>(null);
 
   return (
     <div className={`queuebar${failedCount ? ' queuebar--warn' : ''}${expanded ? ' queuebar--expanded' : ' queuebar--compact'}`} aria-label="Unsent messages">
@@ -299,31 +305,68 @@ const QueueStrip: React.FC<{
       </div>
       {expanded && (
         <div className="queuebar__items">
-          {queue.map((item) => (
-            <div className="queueitem" key={item.id}>
-              <span className={`queueitem__pill queueitem__pill--${item.isNext ? 'next' : item.state}`}>
-                {item.state === 'failed'
-                  ? chatCopy.queuePillFailed
-                  : item.isNext
-                    ? chatCopy.queuePillNext
-                    : chatCopy.queuePillWaiting}
-              </span>
-              <span className="queueitem__text">{previewQueueText(item.text)}</span>
-              {item.state === 'failed' && (
-                <button type="button" className="queueitem__retry" onClick={() => onRetryOne(item.id)}>
-                  {chatCopy.queueRetryOne}
-                </button>
-              )}
-              <button
-                type="button"
-                className="queueitem__remove"
-                aria-label="Remove unsent message"
-                onClick={() => onRemove(item.id)}
-              >
-                {Icon.x}
-              </button>
-            </div>
-          ))}
+          {queue.map((item) => {
+            const inspected = inspectedId === item.id;
+            const { body, attachmentLines } = splitQueueText(item.text);
+            return (
+              <div className={`queueitem${inspected ? ' queueitem--inspected' : ''}`} key={item.id}>
+                <div className="queueitem__row">
+                  <span className={`queueitem__pill queueitem__pill--${item.isNext ? 'next' : item.state}`}>
+                    {item.state === 'failed'
+                      ? chatCopy.queuePillFailed
+                      : item.isNext
+                        ? chatCopy.queuePillNext
+                        : item.sendPosition
+                          ? chatCopy.queuePillPosition(item.sendPosition)
+                          : chatCopy.queuePillWaiting}
+                  </span>
+                  <span className="queueitem__text" title={item.text}>{previewQueueText(item.text)}</span>
+                  <div className="queueitem__controls">
+                    <button
+                      type="button"
+                      className="queueitem__action"
+                      aria-expanded={inspected}
+                      onClick={() => setInspectedId((current) => (current === item.id ? null : item.id))}
+                    >
+                      {inspected ? chatCopy.queueHideFull : chatCopy.queueViewFull}
+                    </button>
+                    <button type="button" className="queueitem__action" onClick={() => onEdit(item.id)}>
+                      {chatCopy.queueEdit}
+                    </button>
+                    {item.state === 'failed' ? (
+                      <button type="button" className="queueitem__action queueitem__action--primary" onClick={() => onRetryOne(item.id)}>
+                        {chatCopy.queueRetryOne}
+                      </button>
+                    ) : item.state === 'queued' && !item.isNext ? (
+                      <button type="button" className="queueitem__action queueitem__action--primary" onClick={() => onSendNow(item.id)}>
+                        {chatCopy.queueSendNow}
+                      </button>
+                    ) : null}
+                    <button
+                      type="button"
+                      className="queueitem__remove"
+                      aria-label={chatCopy.queueRemoveOne}
+                      onClick={() => onRemove(item.id)}
+                    >
+                      {Icon.x}
+                    </button>
+                  </div>
+                </div>
+                {inspected && (
+                  <div className="queueitem__detail" aria-live="polite">
+                    {body ? <div className="queueitem__body">{body}</div> : null}
+                    {attachmentLines.length > 0 && (
+                      <ul className="queueitem__attachments">
+                        {attachmentLines.map((line) => (
+                          <li key={line}>{line}</li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                )}
+              </div>
+            );
+          })}
         </div>
       )}
     </div>
@@ -887,7 +930,15 @@ const LiveChat: React.FC<{
             onClear={() => setQueue((items) => items.filter((item) => !queueMatchesThread(item, rt.activeThreadId)))}
             onRetryAll={() => setQueue((items) => retryFailedQueueItemsForThread(items, rt.activeThreadId))}
             onRetryOne={(id) => setQueue((items) => retryFailedQueueItemsForThread(items, rt.activeThreadId, id))}
-            onRemove={(id) => setQueue((items) => items.filter((item) => item.id !== id))}
+            onRemove={(id) => setQueue((items) => removeQueueItem(items, id))}
+            onEdit={(id) => {
+              const item = queue.find((entry) => entry.id === id);
+              if (!item) return;
+              const { body } = splitQueueText(item.text);
+              setDraft(body);
+              setQueue((items) => removeQueueItem(items, id));
+            }}
+            onSendNow={(id) => setQueue((items) => promoteQueueItemForThread(items, rt.activeThreadId, id))}
           />
         )}
         {attachments.length > 0 && (
