@@ -802,7 +802,6 @@ const LiveChat: React.FC<{
                     key={prompt}
                     type="button"
                     className="chatStarter"
-                    disabled={!ready}
                     onClick={() => setDraft(prompt)}
                   >
                     {prompt}
@@ -925,7 +924,7 @@ const LiveChat: React.FC<{
           </div>
         ) : null}
         <div className="promptCompose">
-          <div className={`promptbox${ready ? '' : ' promptbox--disabled'}`}>
+          <div className={`promptbox${ready ? '' : ' promptbox--draft-only'}`}>
             <input
               ref={fileInput}
               type="file"
@@ -946,8 +945,8 @@ const LiveChat: React.FC<{
                 ready
                   ? (rt.busy ? 'Steer this reply…' : 'Message otto…')
                   : st
-                    ? 'Runtime not ready — finish setup above'
-                    : 'Connecting to Letta…'
+                    ? 'Draft a message — send unlocks after setup'
+                    : 'Draft a message — connecting to Letta…'
               }
               aria-label="Message Otto"
               value={draft}
@@ -965,7 +964,6 @@ const LiveChat: React.FC<{
                 }
                 else if (e.key === 'Escape') { setDraft(''); e.currentTarget.blur(); }
               }}
-              disabled={!ready}
               rows={1}
             />
             {rt.busy && (
@@ -981,7 +979,9 @@ const LiveChat: React.FC<{
               {Icon.send}
             </button>
           </div>
-          {ready ? <div className="promptbar__hint">{chatCopy.composerHint}</div> : null}
+          <div className="promptbar__hint">
+            {ready ? chatCopy.composerHint : 'Send stays disabled until runtime setup completes. Your draft is kept here.'}
+          </div>
         </div>
       </div>
 
