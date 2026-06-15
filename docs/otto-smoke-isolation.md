@@ -5,6 +5,7 @@ Smoke tests must not write into Sebastian's live `conversation=default`.
 Use one of these paths:
 
 - Direct CLI: `task smoke:cli` — runs with `--new`, `--no-memfs`, `--no-skills`.
+- Letta cron / reminders: `OTTO_AGENT_ID=<agent-id> task smoke:cron` — creates a one-shot task on `otto-cron-smoke-<timestamp>`, verifies prompt/agent/conversation binding, then deletes it.
 - Desktop/app harness: launch the app executable with `OTTO_SMOKE=1` so Otto creates a disposable conversation and does not persist that conversation id.
 - Clean machine E2E (#291): `task smoke:clean-machine` — isolated `HOME`/`OTTO_HOME`, disposable copied `dist-app` bundle, embedded runtime through first chat turn. Never uses `/Applications/otto.app` or `otto-staging.app`.
 
