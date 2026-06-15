@@ -7,7 +7,7 @@ import {
   persistLeavingThread,
 } from './chat/thread-messages';
 import { activityFromRuntimeMessage, type TurnActivity } from './chat/turn-activity';
-import type { TurnTrail } from './chat/turn-trail';
+import { currentTurnAssistantIndex, type TurnTrail } from './chat/turn-trail';
 import type {
   Charter,
   CharterRef,
@@ -463,18 +463,8 @@ export function useRuntime() {
     const attachTrailToLastAssistant = (trail: TurnTrail) => {
       if (!trail.spans.length) return;
       patchInflightMessages((msgs) => {
-        let lastUserIdx = -1;
-        for (let i = msgs.length - 1; i >= 0; i--) {
-          if (msgs[i]?.who === 'user') {
-            lastUserIdx = i;
-            break;
-          }
-        }
-        const searchFrom = lastUserIdx + 1;
-        const slice = msgs.slice(searchFrom);
-        const idx = [...slice].reverse().findIndex((m) => m.who === 'otto');
-        if (idx < 0) return msgs;
-        const realIdx = searchFrom + slice.length - 1 - idx;
+        const realIdx = currentTurnAssistantIndex(msgs);
+        if (realIdx < 0) return msgs;
         const target = msgs[realIdx];
         if (!target) return msgs;
         const next = [...msgs];
@@ -583,9 +573,11 @@ export function useRuntime() {
             ...(errorDetails ? { details: errorDetails } : {}),
           },
         ]);
-        inflightThreadRef.current = null;
         setTurnActivity(null);
+        // Attach/finalize the trail BEFORE clearing inflight — patchInflightMessages no-ops once
+        // inflightThreadRef is null, so the order matters for trail persistence (blocker #1).
         finalizeTurnTrail(null);
+        inflightThreadRef.current = null;
         if (!ownedTurn) setBusy(false);
       } else if (m.type === 'result') {
         activeAssistantStream.current = null;

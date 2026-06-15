@@ -315,6 +315,52 @@ describe('SdkSubprocessTransport permissions', () => {
   });
 });
 
+describe('SdkSubprocessTransport turn trail ordering (blocker #2)', () => {
+  test('emits final turn_trail before forwarding the terminal result', async () => {
+    const { win, sent } = mockWindow();
+    const transport = new SdkSubprocessTransport(() => win, mockConfig());
+
+    const session = {
+      close: () => {},
+      initialize: async () => ({
+        agentId: 'agent-test',
+        conversationId: 'conv-test',
+        model: 'test-model',
+        memfsEnabled: false,
+        tools: [],
+      }),
+      send: async () => {},
+      abort: async () => {},
+      async *stream() {
+        yield { type: 'tool_call', toolCallId: 'c1', name: 'read_file', arguments: JSON.stringify({ path: 'a.ts' }) };
+        yield { type: 'tool_result', toolCallId: 'c1' };
+        yield { type: 'assistant', text: 'done', uuid: 'a1' };
+        yield { type: 'result', success: true, conversationId: 'conv-test' };
+      },
+    };
+
+    (transport as unknown as { sdk: unknown }).sdk = {
+      createSession: () => session,
+      resumeSession: () => session,
+    };
+
+    process.env.OTTO_AGENT_ID = 'agent-test';
+    process.env.OTTO_SKIP_LETTA_LSOF = '1';
+    await transport.init({ freshConversation: true });
+
+    await transport.send('trail ordering');
+
+    const eventMessages = sent
+      .filter((e) => e.channel === 'otto:event')
+      .map((e) => (e.payload as { message?: { type?: string; final?: boolean } }).message);
+    const finalTrailIdx = eventMessages.findIndex((m) => m?.type === 'turn_trail' && m?.final === true);
+    const resultIdx = eventMessages.findIndex((m) => m?.type === 'result');
+    expect(finalTrailIdx).toBeGreaterThanOrEqual(0);
+    expect(resultIdx).toBeGreaterThanOrEqual(0);
+    expect(finalTrailIdx).toBeLessThan(resultIdx);
+  });
+});
+
 describe('SdkSubprocessTransport smoke bootstrap', () => {
   afterEach(() => {
     for (const key of smokeEnvKeys) {

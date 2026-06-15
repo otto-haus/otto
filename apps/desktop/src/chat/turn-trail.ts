@@ -262,6 +262,18 @@ function toolNameFromUnknown(value: unknown): string | null {
   return null;
 }
 
+/**
+ * Resolve a tool-call id from any of the field-name variants emitted across the SDK and WS
+ * transports. Both open (tool_call) and close (tool_return) paths must read the same set so a
+ * span opened under a real id is also closed/relabeled under that same id (see blocker #4).
+ */
+function pickToolCallId(source: unknown): string | null {
+  if (!source || typeof source !== 'object') return null;
+  const rec = source as Record<string, unknown>;
+  const raw = rec.tool_call_id ?? rec.toolCallId ?? rec.tool_callId ?? rec.toolCallID;
+  return typeof raw === 'string' && raw.trim() ? raw.trim() : null;
+}
+
 type ToolCallShape = {
   tool_call_id?: string;
   name?: string;
@@ -342,13 +354,16 @@ export class TurnTrailAccumulator {
       case 'tool_call': {
         const toolName = String(message.toolName ?? message.name ?? 'tool');
         const input = message.toolInput ?? message.input ?? message.arguments;
-        const callId = String(
-          message.toolCallId ?? message.tool_call_id ?? message.id ?? `sdk-${++this.seq}`,
-        );
+        const callId =
+          pickToolCallId(message)
+          ?? (typeof message.id === 'string' && message.id.trim() ? message.id.trim() : `sdk-${++this.seq}`);
         return this.openToolSpan(callId, toolName, input);
       }
       case 'tool_result': {
-        const id = String(message.toolCallId ?? message.tool_call_id ?? message.id ?? `sdk-${this.seq}`);
+        // Resolve the real id when present; otherwise closeSpan falls back to the most recent
+        // still-running tool span. Do NOT synthesize `sdk-${seq}` here — interleaved reasoning
+        // spans bump `seq`, so a synthetic id would miss the span it was meant to close.
+        const id = pickToolCallId(message) ?? (typeof message.id === 'string' ? message.id.trim() : '');
         return this.closeSpan(id, 'done');
       }
       case 'stream_event': {
@@ -399,12 +414,10 @@ export class TurnTrailAccumulator {
   }
 
   private ingestSingleToolCall(toolCall: ToolCallShape, delta: Record<string, unknown>): TurnTrail | null {
-    const callId = String(
-      toolCall.tool_call_id
-      ?? delta.tool_call_id
-      ?? delta.toolCallId
-      ?? `ws-${++this.seq}`,
-    );
+    const callId =
+      pickToolCallId(toolCall)
+      ?? pickToolCallId(delta)
+      ?? `ws-${++this.seq}`;
     if (toolCall?.name) this.nameByCallId.set(callId, toolCall.name);
     if (typeof toolCall?.arguments === 'string' && toolCall.arguments.length > 0) {
       this.argsByCallId.set(callId, `${this.argsByCallId.get(callId) ?? ''}${toolCall.arguments}`);
@@ -425,6 +438,20 @@ export class TurnTrailAccumulator {
   private openToolSpan(callId: string, toolName: string, input: unknown): TurnTrail {
     const now = Date.now();
     closeReasoningSpan(this.spans, now);
+    // Remember the call args so the close/relabel can keep the real target (e.g. "Read a.ts"
+    // not "Read file"). WS already accumulates partial args under this id, so don't clobber them.
+    if (input != null && !this.argsByCallId.has(callId)) {
+      const serialized = typeof input === 'string'
+        ? input
+        : (() => {
+            try {
+              return JSON.stringify(input);
+            } catch {
+              return null;
+            }
+          })();
+      if (serialized) this.argsByCallId.set(callId, serialized);
+    }
     const existing = this.spans.find((s) => s.id === callId && s.status === 'running');
     if (existing) {
       const { label, detail } = spanLabelFromTool(toolName, input, 'call');
@@ -447,14 +474,12 @@ export class TurnTrailAccumulator {
   }
 
   private closeToolReturn(delta: Record<string, unknown>): TurnTrail | null {
-    const callId = String(
-      delta.tool_call_id
-      ?? delta.tool_callId
-      ?? (delta.tool_call && typeof delta.tool_call === 'object'
-        ? (delta.tool_call as Record<string, unknown>).tool_call_id
-        : null)
-      ?? '',
-    );
+    // Read the same id variants the open path uses; fall back to the most recent running tool
+    // span when the close delta omits/renames the id, so the span still closes (blocker #4).
+    const callId =
+      pickToolCallId(delta)
+      ?? pickToolCallId(delta.tool_call)
+      ?? this.lastRunningToolId();
     if (!callId) return null;
     const span = this.spans.find((s) => s.id === callId);
     const toolName = span?.toolName ?? this.nameByCallId.get(callId) ?? 'tool';
@@ -471,6 +496,12 @@ export class TurnTrailAccumulator {
     return closed;
   }
 
+  /** Id of the most recent still-running tool span, used as a close fallback. */
+  private lastRunningToolId(): string {
+    const span = [...this.spans].reverse().find((s) => s.kind === 'tool' && s.status === 'running');
+    return span?.id ?? '';
+  }
+
   private closeSpan(
     callId: string,
     status: TurnSpanStatus,
@@ -478,14 +509,19 @@ export class TurnTrailAccumulator {
     input?: unknown,
   ): TurnTrail {
     const now = Date.now();
-    const span = this.spans.find((s) => s.id === callId && s.status === 'running');
+    let span = callId ? this.spans.find((s) => s.id === callId && s.status === 'running') : undefined;
+    if (!span) {
+      // Some transports omit or rename the id on close; match the most recent still-running
+      // tool span instead of leaving it stuck as 'running' until finalize() (blocker #4).
+      span = [...this.spans].reverse().find((s) => s.kind === 'tool' && s.status === 'running');
+    }
     if (span) {
       span.status = status;
       span.endedAt = now;
       span.durationMs = Math.max(0, now - span.startedAt);
       const resolvedTool = toolName ?? span.toolName;
       const resolvedInput = input ?? (() => {
-        const raw = this.argsByCallId.get(callId);
+        const raw = this.argsByCallId.get(span!.id);
         if (!raw) return null;
         try {
           return JSON.parse(raw);
@@ -501,6 +537,26 @@ export class TurnTrailAccumulator {
     }
     return this.snapshot();
   }
+}
+
+/**
+ * Index of the assistant message that owns the current turn, or -1 if none.
+ *
+ * Scopes the search to messages AFTER the most recent user message so a tool-only turn (one that
+ * produces spans but no assistant text) never attaches its trail to a previous answer (blocker #3).
+ */
+export function currentTurnAssistantIndex(messages: ReadonlyArray<{ who: string }>): number {
+  let lastUserIdx = -1;
+  for (let i = messages.length - 1; i >= 0; i--) {
+    if (messages[i]?.who === 'user') {
+      lastUserIdx = i;
+      break;
+    }
+  }
+  for (let i = messages.length - 1; i > lastUserIdx; i--) {
+    if (messages[i]?.who === 'otto') return i;
+  }
+  return -1;
 }
 
 export function trailTraceSummary(trail: TurnTrail): Record<string, unknown> {

@@ -2,6 +2,7 @@ import { describe, expect, test } from 'bun:test';
 import {
   TurnTrailAccumulator,
   collapsedTrailSummary,
+  currentTurnAssistantIndex,
   deriveTurnPhases,
   redactTrailText,
   spanLabelFromTool,
@@ -116,6 +117,83 @@ describe('turn-trail accumulator', () => {
     acc.ingestWsDelta({ message_type: 'tool_return_message', tool_call_id: 'b' });
     const trail = acc.finalize();
     expect(collapsedTrailSummary(trail)).toMatch(/^Explored 2 files ·/);
+  });
+});
+
+describe('turn-trail tool-call id matching (blocker #4)', () => {
+  test('SDK closes the open span when tool_result omits the id and reasoning bumped seq', () => {
+    const acc = new TurnTrailAccumulator();
+    // No id on the call → opens under a synthetic id.
+    acc.ingestRuntimeMessage({ type: 'tool_call', name: 'read_file', arguments: JSON.stringify({ path: 'a.ts' }) });
+    // Reasoning between call and result advances the internal seq counter.
+    acc.ingestRuntimeMessage({ type: 'reasoning' });
+    // No id on the result → must still close the matching tool span (not a stale `sdk-${seq}`).
+    acc.ingestRuntimeMessage({ type: 'tool_result' });
+    const toolSpan = acc.snapshot().spans.find((s) => s.toolName === 'read_file');
+    expect(toolSpan?.status).toBe('done');
+    expect(toolSpan?.label).toBe('Read a.ts');
+  });
+
+  test('SDK matches real tool-call ids for open and close', () => {
+    const acc = new TurnTrailAccumulator();
+    acc.ingestRuntimeMessage({ type: 'tool_call', toolCallId: 'call_42', name: 'grep', arguments: JSON.stringify({ pattern: 'foo' }) });
+    acc.ingestRuntimeMessage({ type: 'tool_result', toolCallId: 'call_42' });
+    const span = acc.snapshot().spans[0];
+    expect(span?.id).toBe('call_42');
+    expect(span?.status).toBe('done');
+    expect(span?.label).toBe('Searched for foo');
+  });
+
+  test('WS reads camelCase ids on both open and close', () => {
+    const acc = new TurnTrailAccumulator();
+    acc.ingestWsDelta({
+      message_type: 'tool_call_message',
+      tool_call: { toolCallId: 'tc-y', name: 'read_file', arguments: JSON.stringify({ path: 'b.ts' }) },
+    });
+    acc.ingestWsDelta({ message_type: 'tool_return_message', toolCallId: 'tc-y' });
+    const span = acc.snapshot().spans[0];
+    expect(span?.status).toBe('done');
+    expect(span?.label).toBe('Read b.ts');
+  });
+
+  test('WS falls back to the running span when the return delta drops the id', () => {
+    const acc = new TurnTrailAccumulator();
+    acc.ingestWsDelta({
+      message_type: 'tool_call_message',
+      tool_call: { tool_call_id: 'tc-z', name: 'grep', arguments: JSON.stringify({ pattern: 'bar' }) },
+    });
+    acc.ingestWsDelta({ message_type: 'tool_return_message' });
+    const span = acc.snapshot().spans[0];
+    expect(span?.status).toBe('done');
+    expect(span?.label).toBe('Searched for bar');
+  });
+});
+
+describe('currentTurnAssistantIndex (blocker #3 — turn-scoped attach)', () => {
+  test('selects the assistant answer for the current turn', () => {
+    const msgs = [
+      { who: 'user' },
+      { who: 'otto' },
+      { who: 'user' },
+      { who: 'otto' },
+    ];
+    expect(currentTurnAssistantIndex(msgs)).toBe(3);
+  });
+
+  test('tool-only turn does not attach to a previous answer', () => {
+    // Prior turn produced an answer; current turn (after last user) only emitted tool spans and an error.
+    const msgs = [
+      { who: 'user' },
+      { who: 'otto' },
+      { who: 'user' },
+      { who: 'error' },
+    ];
+    expect(currentTurnAssistantIndex(msgs)).toBe(-1);
+  });
+
+  test('returns -1 when there is no assistant message at all', () => {
+    expect(currentTurnAssistantIndex([{ who: 'user' }])).toBe(-1);
+    expect(currentTurnAssistantIndex([])).toBe(-1);
   });
 });
 
