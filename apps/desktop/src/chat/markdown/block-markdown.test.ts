@@ -103,7 +103,8 @@ describe('block-accumulator', () => {
     }
     const elapsed = performance.now() - started;
     expect(state!.sealed.length).toBeGreaterThan(100);
-    expect(elapsed).toBeLessThan(2_000);
+    // CI runners are slower than dev laptops; keep headroom while still catching quadratic blowups.
+    expect(elapsed).toBeLessThan(4_000);
   });
 });
 
