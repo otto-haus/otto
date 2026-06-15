@@ -13,7 +13,7 @@ import {
   syncDreamSettingsToLetta,
 } from './dream-settings';
 
-const envKeys = ['OTTO_CONFIG_DIR', 'OTTO_LETTA_SETTINGS_PATH'] as const;
+const envKeys = ['OTTO_CONFIG_DIR', 'OTTO_LETTA_SETTINGS_PATH', 'LETTA_SETTINGS_PATH', 'LETTA_MEMORY_DIR'] as const;
 const originalEnv = new Map(envKeys.map((k) => [k, process.env[k]]));
 
 afterEach(() => {
@@ -84,6 +84,22 @@ describe('dream-settings', () => {
     const applied = applyEmbeddedLettaSettingsEnv(config);
     expect(applied).toBe(join(dir, 'letta', 'settings.json'));
     expect(process.env.OTTO_LETTA_SETTINGS_PATH).toBe(applied);
+    // The spawned Letta Code engine must read the isolated ~/.otto/letta state, not ~/.letta (#674).
+    expect(process.env.LETTA_SETTINGS_PATH).toBe(applied);
+    expect(process.env.LETTA_MEMORY_DIR).toBe(join(dir, 'letta', 'memory'));
     delete process.env.OTTO_HOME;
+  });
+
+  test('existing mode does not redirect the engine state env', () => {
+    Reflect.deleteProperty(process.env, 'OTTO_LETTA_SETTINGS_PATH');
+    Reflect.deleteProperty(process.env, 'LETTA_SETTINGS_PATH');
+    Reflect.deleteProperty(process.env, 'LETTA_MEMORY_DIR');
+    const dir = mkdtempSync(join(tmpdir(), 'otto-dream-existing-'));
+    process.env.OTTO_CONFIG_DIR = join(dir, 'otto');
+    const config = new ConfigStore();
+    config.update({ connectionMode: 'existing' });
+    applyEmbeddedLettaSettingsEnv(config);
+    expect(process.env.LETTA_SETTINGS_PATH).toBeUndefined();
+    expect(process.env.LETTA_MEMORY_DIR).toBeUndefined();
   });
 });

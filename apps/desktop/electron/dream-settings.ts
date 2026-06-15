@@ -81,15 +81,29 @@ export function resolveLettaSettingsPath(config: Pick<ConfigStore, 'lettaStateDi
   return join(homedir(), '.letta', 'settings.json');
 }
 
-/** Ensure embedded Letta state lives under OTTO_HOME/letta and expose settings path to subprocesses. */
+/**
+ * Ensure embedded Letta state lives under OTTO_HOME/letta and expose it to the spawned engine.
+ *
+ * otto previously only set OTTO_LETTA_SETTINGS_PATH (otto's own dream-settings reads), while the
+ * embedded Letta Code CLI reads LETTA_SETTINGS_PATH / LETTA_MEMORY_DIR. That desynced otto's writes
+ * (~/.otto/letta) from the engine's reads (~/.letta). For embedded mode we now point the engine's
+ * state env at the isolated ~/.otto/letta dir so This Mac never touches a dev ~/.letta install (#674).
+ * Existing/cloud modes are untouched (advanced users keep their own ~/.letta paths).
+ */
 export function applyEmbeddedLettaSettingsEnv(config: ConfigStore): string {
   const mode = config.connectionMode();
   const path = resolveLettaSettingsPath(config, mode);
-  if (mode === 'embedded' && !process.env.OTTO_LETTA_SETTINGS_PATH?.trim()) {
-    config.ensureLettaStateDir();
+  if (mode !== 'embedded') {
+    return process.env.OTTO_LETTA_SETTINGS_PATH?.trim() || path;
+  }
+  const stateDir = config.ensureLettaStateDir();
+  if (!process.env.OTTO_LETTA_SETTINGS_PATH?.trim()) {
     process.env.OTTO_LETTA_SETTINGS_PATH = path;
   }
-  return process.env.OTTO_LETTA_SETTINGS_PATH?.trim() || path;
+  const effective = process.env.OTTO_LETTA_SETTINGS_PATH?.trim() || path;
+  if (!process.env.LETTA_SETTINGS_PATH?.trim()) process.env.LETTA_SETTINGS_PATH = effective;
+  if (!process.env.LETTA_MEMORY_DIR?.trim()) process.env.LETTA_MEMORY_DIR = join(stateDir, 'memory');
+  return effective;
 }
 
 function readLettaSettings(path: string): LettaSettingsCarrier {
