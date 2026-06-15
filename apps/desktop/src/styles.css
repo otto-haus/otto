@@ -1512,12 +1512,17 @@ h1, h2, h3, h4, p { margin: 0; }
 .queueitem__remove:hover { color: var(--ink); background: rgba(20,22,26,0.05); }
 .queuebar__items {
   display: grid;
-  min-height: 0;
+  max-height: 0;
+  opacity: 0;
   overflow: hidden;
+  pointer-events: none;
+  transition: max-height 180ms var(--ease), opacity 180ms var(--ease);
 }
 .queuebar--expanded .queuebar__items {
   max-height: min(280px, 40vh);
+  opacity: 1;
   overflow-y: auto;
+  pointer-events: auto;
 }
 .queueitem {
   display: grid;
@@ -2099,19 +2104,6 @@ h1, h2, h3, h4, p { margin: 0; }
 }
 .onboardInlineHint__skip:hover { background: rgba(20,22,26,0.06); color: var(--ink); }
 
-.onboardWelcomeOwl {
-  display: flex;
-  justify-content: center;
-  margin-bottom: 18px;
-}
-.onboardWelcomeOwl__mark {
-  border-radius: 12px;
-  animation: owlSettle 240ms var(--ease) both;
-}
-@keyframes owlSettle {
-  from { opacity: 0; transform: scale(0.98); }
-  to { opacity: 1; transform: scale(1); }
-}
 .onboardBadge {
   display: inline-flex;
   align-items: center;
