@@ -1,176 +1,210 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>otto: CI for agent behavior</title>
-<meta name="description" content="otto is CI for agent behavior: every correction becomes a test your agent has to pass before it can call a task done." />
-<meta property="og:title" content="otto: CI for agent behavior" />
-<meta property="og:description" content="Every correction becomes a test your agent has to pass. Teach it once; the lesson holds." />
-<meta property="og:image" content="https://otto.haus/og.png" />
-<meta property="og:type" content="website" />
-<meta name="twitter:card" content="summary_large_image" />
-<meta name="twitter:image" content="https://otto.haus/og.png" />
-<meta name="theme-color" content="#f6f1e6" />
-<link rel="icon" type="image/png" href="owl.png" />
-<link rel="preconnect" href="https://fonts.googleapis.com" />
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400;1,9..144,500&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet" />
-<style>
-  :root{
-    --paper:#f6f1e6; --paper-2:#efe8d6; --ink:#211d17; --soft:#4a443a; --mut:#756d5d;
-    --faint:#a89f8d; --teal:#1c5d5d; --rule:rgba(33,29,23,.14); --dark:#211d17;
-    --dark-tx:#f3ecdd; --dark-mut:#b6ab96; --dark-line:rgba(246,241,230,.15); --maxw:1080px;
-    --f-disp:"Fraunces", Georgia, serif; --f-mono:"Geist Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
-  }
-  *{box-sizing:border-box} html{-webkit-font-smoothing:antialiased;scroll-behavior:smooth} body{margin:0;background:var(--paper);color:var(--soft);font-family:var(--f-mono);font-size:15.5px;line-height:1.72} ::selection{background:var(--ink);color:var(--paper)} a{color:inherit;text-decoration:none} h1,h2,h3,h4,p{margin:0} :focus-visible{outline:2px solid var(--ink);outline-offset:3px;border-radius:2px}
-  .wrap{max-width:var(--maxw);margin:0 auto;padding:0 40px}@media(max-width:600px){.wrap{padding:0 22px}}
-  .eyebrow{font-size:11.5px;font-weight:500;letter-spacing:.16em;text-transform:uppercase;color:var(--teal)} .sec-eye{display:block;margin-bottom:26px}.wordmark{font-family:var(--f-disp);font-weight:500;letter-spacing:-.02em;text-transform:lowercase;color:var(--ink)}.wordmark .dot{color:var(--teal)}
-  .nav{position:sticky;top:0;z-index:60;display:flex;justify-content:center;padding:18px 16px;pointer-events:none}.pill{pointer-events:auto;display:inline-flex;align-items:center;gap:6px;background:rgba(246,241,230,.82);border:1px solid var(--rule);border-radius:999px;padding:7px 8px 7px 20px;box-shadow:0 18px 44px -30px rgba(33,29,23,.5);backdrop-filter:saturate(140%) blur(12px)}.pill .wordmark{font-size:21px;padding-right:12px}.pill .links{display:flex;gap:2px}.pill .links a{font-size:13px;color:var(--mut);padding:8px 13px;border-radius:999px;transition:background .15s,color .15s}.pill .links a:hover{color:var(--ink);background:rgba(33,29,23,.05)}.pill .cta{background:var(--ink);color:var(--paper);font-size:13px;font-weight:500;padding:9px 16px;border-radius:999px}@media(max-width:660px){.pill .links a.opt{display:none}}
-  .sec{padding:100px 0}.ruled{border-top:1px solid var(--rule)}h2{font-family:var(--f-disp);font-size:clamp(1.9rem,4vw,2.3rem);letter-spacing:-.02em;font-weight:500;line-height:1.08;color:var(--ink);max-width:21ch}.lead{font-size:16.5px;line-height:1.62;color:var(--mut);max-width:54ch}.btn{display:inline-flex;align-items:center;gap:9px;font-size:14.5px;font-weight:500;padding:13px 22px;border-radius:8px;border:1px solid transparent;transition:background .15s,border-color .15s,transform .15s;white-space:nowrap}.btn-primary{background:var(--ink);color:var(--paper)}.btn-primary:hover{background:#342d23;transform:translateY(-1px)}.btn-ghost{color:var(--ink);border-color:var(--rule)}.btn-ghost:hover{border-color:var(--ink)}
-  .hero{padding:120px 0 108px}.hero h1{font-family:var(--f-disp);font-size:clamp(2.9rem,6.6vw,4.6rem);letter-spacing:-.025em;line-height:1.02;font-weight:500;color:var(--ink);margin-top:22px;max-width:16ch}.hero .lead{margin-top:30px}.hero .cta-row{display:flex;flex-wrap:wrap;gap:14px;margin-top:42px}
-  .fig{margin:48px 0 0;max-width:680px}.fig svg{width:100%;height:auto;display:block}.scene{font-family:var(--f-disp);font-size:clamp(1.25rem,2.6vw,1.5rem);font-weight:400;line-height:1.42;letter-spacing:-.01em;color:var(--ink);max-width:34ch;margin-bottom:40px}.scene .q{font-style:italic;color:var(--teal)}.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}@media(max-width:760px){.steps{grid-template-columns:1fr}}.step{border:1px solid var(--rule);border-radius:10px;padding:24px 24px 28px;background:var(--paper-2)}.step .sn{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--faint)}.step h4{font-family:var(--f-disp);font-size:18px;font-weight:500;letter-spacing:-.01em;margin-top:12px;color:var(--ink)}.step p{font-size:13.5px;color:var(--mut);margin-top:9px;line-height:1.55}
-  .climax{margin-top:16px;background:var(--dark);color:var(--dark-tx);border-radius:18px;padding:52px 48px;box-shadow:0 44px 90px -54px rgba(33,29,23,.6)}@media(max-width:600px){.climax{padding:36px 24px;border-radius:14px}}.climax .ce{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--teal);margin-bottom:18px}.climax h3{font-family:var(--f-disp);font-size:clamp(1.55rem,3.4vw,2.1rem);letter-spacing:-.018em;font-weight:500;line-height:1.12;max-width:20ch}.receipt{margin-top:30px;border:1px solid var(--dark-line);border-radius:10px;font-size:13px;line-height:1.5;overflow:hidden}.receipt .r-head{display:flex;justify-content:space-between;gap:12px;padding:13px 18px;border-bottom:1px solid var(--dark-line);color:var(--dark-tx);letter-spacing:.08em;font-size:11.5px}.receipt .tag{color:var(--teal)}.receipt .r-row{display:grid;grid-template-columns:140px 1fr;gap:14px;padding:12px 18px;border-bottom:1px solid var(--dark-line)}.receipt .r-row:last-child{border-bottom:none}.receipt .r-k{color:var(--dark-mut);text-transform:uppercase;font-size:10.5px;letter-spacing:.1em}.receipt .r-v{color:var(--dark-tx)}@media(max-width:560px){.receipt .r-row{grid-template-columns:1fr;gap:3px}}
-  .doors{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--rule);border:1px solid var(--rule);border-radius:10px;overflow:hidden;margin-top:8px}@media(max-width:600px){.doors{grid-template-columns:1fr}}.door{background:var(--paper-2);padding:30px 32px}.door .dk{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--faint)}.door h4{font-family:var(--f-disp);font-size:20px;font-weight:500;letter-spacing:-.012em;margin-top:12px;color:var(--ink)}.door p{font-size:14px;color:var(--mut);margin-top:9px;line-height:1.55}.canon-line{font-family:var(--f-disp);font-style:italic;margin-top:34px;font-size:clamp(1.2rem,2.4vw,1.4rem);letter-spacing:-.012em;color:var(--ink)}
-  .paths{display:grid;grid-template-columns:1fr;gap:34px;margin-top:8px;max-width:760px}.path .pt{display:flex;align-items:baseline;gap:12px;margin-bottom:14px}.path .pn{font-size:12px;letter-spacing:.1em;color:var(--faint)}.path .ph{font-family:var(--f-disp);font-size:19px;font-weight:500;letter-spacing:-.012em;color:var(--ink)}.path .pnote{font-size:14px;color:var(--mut);margin:0 0 14px;max-width:62ch;line-height:1.55}pre.code{font-family:var(--f-mono);font-size:13px;line-height:1.7;background:var(--dark);color:var(--dark-tx);border-radius:10px;padding:20px 22px;margin:0;overflow-x:auto}pre.code .c{color:var(--dark-mut)}pre.code .u{color:#8fb6b6;word-break:break-all}.dep{font-size:13px;color:var(--mut);margin-top:18px;border-left:1px solid var(--teal);padding-left:16px;max-width:62ch;line-height:1.6}.dep b{color:var(--ink);font-weight:500}
-  .pillrow{display:flex;gap:10px;flex-wrap:wrap;margin-top:30px}.spill{font-size:11.5px;font-weight:500;padding:6px 13px;border-radius:999px;display:inline-flex;align-items:center;gap:8px;letter-spacing:.02em;border:1px solid var(--rule)}.spill .d{width:6px;height:6px;border-radius:50%;background:currentColor}.spill.ok{color:var(--teal);background:rgba(28,93,93,.08);border-color:rgba(28,93,93,.28)}.spill.warn{color:#9a6b1f;background:rgba(154,107,31,.08);border-color:rgba(154,107,31,.26)}.spill.next{color:var(--mut);background:rgba(33,29,23,.04)}
-  footer{border-top:1px solid var(--rule);padding:72px 0 60px}footer .owl-mascot{width:92px;height:92px;display:block;margin-bottom:26px;border-radius:16px;border:1px solid var(--rule)}footer .wordmark{font-size:28px;display:inline-block}footer .meta{display:flex;flex-wrap:wrap;gap:12px 18px;align-items:center;margin-top:38px;font-size:12px;letter-spacing:.04em;color:var(--faint)}footer .meta a{color:var(--mut)}footer .meta a:hover{color:var(--ink)}footer .meta .sep{opacity:.5}.rise{opacity:0;transform:translateY(7px);transition:opacity .24s ease-out,transform .24s ease-out}.rise.in{opacity:1;transform:none}@media(prefers-reduced-motion:reduce){*{scroll-behavior:auto}.rise{opacity:1;transform:none;transition:none}.btn:hover{transform:none}}
-</style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>otto — agent behavior that compounds</title>
+  <meta name="description" content="otto makes agent behavior compound: corrections become ratified checks, receipts, and standards so agents stop repeating the same mistakes." />
+  <link rel="canonical" href="https://otto.haus/" />
+  <meta property="og:title" content="otto — agent behavior that compounds" />
+  <meta property="og:description" content="Your agents can do the work. They still repeat corrected mistakes. otto makes agent behavior compound." />
+  <meta property="og:image" content="https://otto.haus/og.png" />
+  <meta property="og:url" content="https://otto.haus/" />
+  <meta property="og:type" content="website" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:image" content="https://otto.haus/og.png" />
+  <meta name="theme-color" content="#f8f7f2" />
+  <link rel="icon" type="image/png" href="brand/otto-avatar.png" />
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-<nav class="nav">
-  <div class="pill">
-    <span class="wordmark">otto<span class="dot">.</span></span>
-    <span class="links">
-      <a class="opt" href="#looks">How it works</a>
-      <a href="#install">Install</a>
-      <a href="https://docs.otto.haus">Docs</a>
-    </span>
-    <a class="cta" href="https://github.com/otto-haus/otto">GitHub</a>
-  </div>
-</nav>
-
-<section class="hero">
-  <div class="wrap">
-    <p class="eyebrow">CI for agent behavior</p>
-    <h1>Your agents can do the work. They still repeat corrected mistakes.</h1>
-    <p class="lead">otto turns corrections into ratified checks, so future work must pass before the agent can call it done.</p>
-    <div class="cta-row">
-      <a class="btn btn-primary" href="#install">Install with an agent</a>
-      <a class="btn btn-ghost" href="https://docs.otto.haus">Read the docs</a>
-      <a class="btn btn-ghost" href="https://github.com/otto-haus/otto">View on GitHub</a>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <a class="brand" href="index.html">
+        <span class="brand__mark"><img src="brand/otto-avatar.png" alt="" width="34" height="34" /></span>
+        <span class="wordmark">otto</span>
+      </a>
+      <nav class="nav-links" aria-label="Primary">
+        <a href="#compound">How it works</a>
+        <a href="#install">Install</a>
+        <a href="pricing.html">Pricing</a>
+        <a href="https://docs.otto.haus">Docs</a>
+        <a class="btn" href="https://github.com/otto-haus/otto" target="_blank" rel="noopener noreferrer">GitHub</a>
+      </nav>
     </div>
-    <figure class="fig">
-      <svg viewBox="0 0 760 140" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Without otto, a correction is forgotten and repeats. With otto, the same correction becomes a ratified check, the outcome is blocked, and a receipt records it.">
-        <style>.d-t{font-family:'Geist Mono',ui-monospace,monospace;font-size:15px}.d-l{font-family:'Geist Mono',ui-monospace,monospace;font-size:9px;letter-spacing:1.4px;fill:#a89f8d}</style>
-        <defs><marker id="hw" markerWidth="7" markerHeight="7" refX="5.4" refY="2.6" orient="auto"><path d="M0,0 L5,2.6 L0,5.2" fill="none" stroke="#cdc4b2" stroke-width="1"/></marker><marker id="hi" markerWidth="7" markerHeight="7" refX="5.4" refY="2.6" orient="auto"><path d="M0,0 L5,2.6 L0,5.2" fill="none" stroke="#211d17" stroke-width="1.1"/></marker></defs>
-        <text class="d-l" x="110" y="54" text-anchor="end">without otto</text><text class="d-t" x="190" y="54" fill="#a89f8d" text-anchor="middle">correction</text><line x1="243" y1="49" x2="358" y2="49" stroke="#cdc4b2" stroke-width="1" marker-end="url(#hw)"/><text class="d-t" x="405" y="54" fill="#a89f8d" text-anchor="middle">forgotten</text><line x1="454" y1="49" x2="529" y2="49" stroke="#cdc4b2" stroke-width="1" marker-end="url(#hw)"/><text class="d-t" x="568" y="54" fill="#a89f8d" text-anchor="middle">repeats</text>
-        <text class="d-l" x="110" y="106" text-anchor="end">with otto</text><text class="d-t" x="190" y="106" fill="#211d17" text-anchor="middle">correction</text><line x1="243" y1="101" x2="334" y2="101" stroke="#211d17" stroke-width="1.1" marker-end="url(#hi)"/><text class="d-t" x="405" y="106" fill="#211d17" text-anchor="middle">ratified check</text><line x1="476" y1="101" x2="529" y2="101" stroke="#211d17" stroke-width="1.1" marker-end="url(#hi)"/><text class="d-t" x="568" y="106" fill="#1c5d5d" font-weight="500" text-anchor="middle">blocked</text><line x1="607" y1="101" x2="653" y2="101" stroke="#211d17" stroke-width="1.1" marker-end="url(#hi)"/><text class="d-t" x="692" y="106" fill="#211d17" text-anchor="middle">receipt</text>
-      </svg>
-    </figure>
-  </div>
-</section>
+  </header>
 
-<section id="looks" class="sec ruled">
-  <div class="wrap">
-    <span class="eyebrow sec-eye">What it looks like</span>
-    <h2 style="margin-bottom:40px">Teach it once. Make it hold.</h2>
-    <p class="scene">Your agent claims a task is done without proof. You correct it. <span class="q">“Stop calling it done without the test output.”</span></p>
-    <div class="steps">
-      <div class="step rise"><div class="sn">Step 01</div><h4>A correction arrives</h4><p>It enters Curation before the behavior compounds.</p></div>
-      <div class="step rise"><div class="sn">Step 02</div><h4>otto proposes a check</h4><p>“Done” now requires proof.</p></div>
-      <div class="step rise"><div class="sn">Step 03</div><h4>You ratify it</h4><p>The check becomes a Standard the agent runs against itself. A suggestion is never canon.</p></div>
-    </div>
-    <div class="climax rise">
-      <div class="ce">Ratification</div>
-      <h3>The human ratifies. otto writes the receipt.</h3>
-      <div class="receipt">
-        <div class="r-head"><span>RECEIPT</span><span class="tag">STD-04</span></div>
-        <div class="r-row"><div class="r-k">Change</div><div class="r-v">“done” now requires proof mapped to acceptance criteria</div></div>
-        <div class="r-row"><div class="r-k">Effect</div><div class="r-v">completion claims blocked until a test, log, or artifact exists</div></div>
-        <div class="r-row"><div class="r-k">Ratified by</div><div class="r-v">you · reversible, revocable</div></div>
+  <main>
+    <section class="hero">
+      <div class="wrap hero-grid">
+        <div>
+          <p class="eyebrow">CI for agent behavior</p>
+          <h1>Your agents can do the work. They still repeat corrected mistakes.</h1>
+          <p class="lead">otto makes agent behavior compound</p>
+          <div class="boundary" role="note">
+            <span class="boundary__dot" aria-hidden="true"></span>
+            <span class="boundary__text">The human ratifies. otto records the proof.</span>
+          </div>
+          <div class="hero-cta">
+            <a class="btn" href="#install">Install with an agent</a>
+            <a class="btn btn--ghost" href="https://docs.otto.haus">Read the docs</a>
+          </div>
+        </div>
+        <div class="hero-visual">
+          <img class="hero-avatar" src="brand/otto-avatar.png" alt="otto owl avatar" width="88" height="88" />
+          <div class="compound-diagram" aria-hidden="true">
+            <svg viewBox="0 0 420 420" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Compound loop: correction, proposal, ratification, standard, receipt, better next action">
+  <defs>
+    <marker id="arr" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+      <path d="M0,0 L6,3 L0,6" fill="none" stroke="#5b6472" stroke-width="1"/>
+    </marker>
+  </defs>
+  <circle cx="210" cy="210" r="148" fill="none" stroke="#e2dfd6" stroke-width="1"/>
+  <path d="M210 62 A148 148 0 0 1 338 150" fill="none" stroke="#14161a" stroke-width="1.2" marker-end="url(#arr)"/>
+  <path d="M338 270 A148 148 0 0 1 82 270" fill="none" stroke="#14161a" stroke-width="1.2" marker-end="url(#arr)"/>
+  <path d="M82 150 A148 148 0 0 1 210 62" fill="none" stroke="#14161a" stroke-width="1.2" marker-end="url(#arr)"/>
+  <g font-family="IBM Plex Mono, ui-monospace, monospace" font-size="11" fill="#14161a">
+    <text x="210" y="44" text-anchor="middle">correction</text>
+    <text x="358" y="118" text-anchor="start">proposal</text>
+    <text x="358" y="218" text-anchor="start">ratification</text>
+    <text x="210" y="382" text-anchor="middle">receipt</text>
+    <text x="52" y="218" text-anchor="end">standard</text>
+    <text x="52" y="118" text-anchor="end">next action</text>
+  </g>
+  <text x="210" y="214" text-anchor="middle" font-family="Inter, sans-serif" font-size="13" fill="#5b6472">compounds</text>
+</svg>
+          </div>
+        </div>
       </div>
-    </div>
-  </div>
-</section>
+    </section>
 
-<section class="sec ruled">
-  <div class="wrap">
-    <span class="eyebrow sec-eye">The boundary</span>
-    <h2>The agent owns the steps. The human owns the doors.</h2>
-    <p class="lead" style="margin-top:22px">Like a protected branch: build and test all day, but the merge is yours. otto runs reversible work and stops only at what you can't take back.</p>
-    <div class="doors">
-      <div class="door"><div class="dk">Two-way doors</div><h4>The agent acts.</h4><p>Reversible work runs without interruption. The reversible surface widens as the agent earns trust.</p></div>
-      <div class="door"><div class="dk">One-way doors</div><h4>The human ratifies.</h4><p>Irreversible work stops for a person. That door never relaxes.</p></div>
-    </div>
-    <p class="canon-line">A value that cannot refuse you is decoration.</p>
-  </div>
-</section>
+    <section id="compound" class="block">
+      <div class="wrap">
+        <div class="sec-head">
+          <p class="eyebrow">Compound loop</p>
+          <h2>Every correction should make the next run smarter.</h2>
+          <p>Correction becomes proposal, ratification, standard, receipt — then a better next action. That is the loop otto runs on your behalf.</p>
+        </div>
+        <div class="loop loop--six" aria-label="Compound behavior loop">
+          <div class="loop-step"><div class="num">01</div><div class="name">Correction</div></div>
+          <div class="loop-arrow" aria-hidden="true">→</div>
+          <div class="loop-step"><div class="num">02</div><div class="name">Proposal</div></div>
+          <div class="loop-arrow" aria-hidden="true">→</div>
+          <div class="loop-step"><div class="num">03</div><div class="name">Ratification</div></div>
+          <div class="loop-arrow" aria-hidden="true">→</div>
+          <div class="loop-step"><div class="num">04</div><div class="name">Standard</div></div>
+          <div class="loop-arrow" aria-hidden="true">→</div>
+          <div class="loop-step"><div class="num">05</div><div class="name">Receipt</div></div>
+          <div class="loop-arrow" aria-hidden="true">→</div>
+          <div class="loop-step"><div class="num">06</div><div class="name">Better next action</div></div>
+        </div>
+      </div>
+    </section>
 
-<section id="install" class="sec ruled">
-  <div class="wrap">
-    <span class="eyebrow sec-eye">Install</span>
-    <h2>Built to be installed by an agent.</h2>
-    <div class="paths">
-      <div class="path">
-        <div class="pt"><span class="pn">01</span><span class="ph">Have your agent install it</span></div>
-        <p class="pnote">Paste this into Claude Code, Codex, Cursor, or any coding agent. It wires otto over your Letta runtime and verifies the install.</p>
-        <pre class="code"><span class="c"># paste into your coding agent</span>
+    <section class="block">
+      <div class="wrap">
+        <div class="sec-head">
+          <p class="eyebrow">Teach once</p>
+          <h2>Teach it once. Make it hold.</h2>
+        </div>
+        <p class="scene">Your agent claims a task is done without proof. You correct it. <span class="q">“Stop calling it done without the test output.”</span></p>
+        <div class="steps">
+          <div class="step"><div class="sn">Step 01</div><h4>A correction arrives</h4><p>It enters curation before the behavior compounds.</p></div>
+          <div class="step"><div class="sn">Step 02</div><h4>otto proposes a check</h4><p>“Done” now requires proof.</p></div>
+          <div class="step"><div class="sn">Step 03</div><h4>You ratify it</h4><p>The check becomes a Standard the agent runs against itself. A suggestion is never canon.</p></div>
+        </div>
+        <div class="climax">
+          <div class="ce">Ratification</div>
+          <h3>The human ratifies. otto writes the receipt.</h3>
+          <p class="receipt__label">Illustrative example — not live data</p>
+          <div class="receipt">
+            <div class="r-head"><span>RECEIPT</span><span class="tag">STD-04</span></div>
+            <div class="r-row"><div class="r-k">Change</div><div class="r-v">“done” now requires proof mapped to acceptance criteria</div></div>
+            <div class="r-row"><div class="r-k">Effect</div><div class="r-v">completion claims blocked until a test, log, or artifact exists</div></div>
+            <div class="r-row"><div class="r-k">Ratified by</div><div class="r-v">you · reversible, revocable</div></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="block">
+      <div class="wrap">
+        <div class="sec-head">
+          <p class="eyebrow">The boundary</p>
+          <h2>The agent owns the steps. The human owns the doors.</h2>
+          <p>Like a protected branch: build and test all day, but the merge is yours. otto runs reversible work and stops only at what you cannot take back.</p>
+        </div>
+        <div class="doors">
+          <div class="door"><div class="dk">Two-way doors</div><h4>The agent acts.</h4><p>Reversible work runs without interruption. The reversible surface widens as the agent earns trust.</p></div>
+          <div class="door"><div class="dk">One-way doors</div><h4>The human ratifies.</h4><p>Irreversible work stops for a person. That door never relaxes.</p></div>
+        </div>
+        <p class="canon-line">A value that cannot refuse you is decoration.</p>
+      </div>
+    </section>
+
+    <section id="install" class="block">
+      <div class="wrap">
+        <div class="sec-head">
+          <p class="eyebrow">Install</p>
+          <h2>Built to be installed by an agent.</h2>
+        </div>
+        <div class="paths">
+          <div class="path">
+            <div class="pt"><span class="pn">01</span><span class="ph">Have your agent install it</span></div>
+            <p class="pnote">Paste this into Claude Code, Codex, Cursor, or any coding agent. It wires otto over your Letta runtime and verifies the install.</p>
+            <pre class="code"><span class="c"># paste into your coding agent</span>
 Retrieve and follow the instructions at:
 <span class="u">https://raw.githubusercontent.com/otto-haus/otto/main/INSTALL_FOR_AGENTS.md</span></pre>
-      </div>
-      <div class="path">
-        <div class="pt"><span class="pn">02</span><span class="ph">Set it up yourself</span></div>
-        <pre class="code">brew install go-task
+          </div>
+          <div class="path">
+            <div class="pt"><span class="pn">02</span><span class="ph">Set it up yourself</span></div>
+            <pre class="code">brew install go-task
 git clone https://github.com/otto-haus/otto.git
 cd otto
 bun install
 bun run install-extension   <span class="c"># then run /reload in Letta Code</span></pre>
-        <p class="dep">otto runs as a behavior layer over Letta in local mode. The <b>only hard dependency is Letta Code</b>: no Docker, no database, no server. Humans need Bun and go-task for the task shortcuts.</p>
+            <p class="dep">otto runs as a behavior layer over Letta in local mode. The <b>only hard dependency is Letta Code</b>: no Docker, no database, no server. Humans need Bun and go-task for the task shortcuts.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="block">
+      <div class="wrap">
+        <div class="sec-head">
+          <p class="eyebrow">Status</p>
+          <h2>What runs today.</h2>
+          <p>v0.1 is local-first and file-backed. Practices and the desktop app are live; Standards and the curation loop that turns a rejection into the next run&apos;s gate are landing next.</p>
+        </div>
+        <div class="pillrow">
+          <span class="spill ok"><span class="d"></span>Practices · shipped</span>
+          <span class="spill ok"><span class="d"></span>Desktop · shipped</span>
+          <span class="spill warn"><span class="d"></span>Standards · proposed</span>
+          <span class="spill next"><span class="d"></span>Curation · next</span>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="wrap">
+      <div class="footer-inner">
+        <div class="footer-brand">
+          <img src="brand/otto-avatar.png" alt="otto owl avatar" width="56" height="56" />
+          <p class="note">otto makes agent behavior compound. MIT · local-first · Letta runtime.</p>
+        </div>
+        <div class="footer-links">
+          <a href="pricing.html">Pricing</a>
+          <a href="https://docs.otto.haus">Docs</a>
+          <a href="https://github.com/otto-haus/otto">GitHub</a>
+        </div>
+      </div>
+      <div class="footer-meta">
+        <span>© 2026 otto</span><span class="sep">·</span>
+        <a href="https://github.com/otto-haus/otto">github.com/otto-haus/otto</a><span class="sep">·</span>
+        <a href="https://otto.haus">otto.haus</a>
       </div>
     </div>
-  </div>
-</section>
-
-<section class="sec ruled status">
-  <div class="wrap">
-    <span class="eyebrow sec-eye">Status</span>
-    <h2>What runs today.</h2>
-    <p class="lead" style="margin-top:22px">v0.1 is local-first and file-backed. Practices and the desktop app are live; Standards and the <span style="color:var(--ink);font-weight:500">curation loop that turns a rejection into the next run's gate</span> are landing next.</p>
-    <div class="pillrow">
-      <span class="spill ok"><span class="d"></span>Practices · shipped</span>
-      <span class="spill ok"><span class="d"></span>Desktop · shipped</span>
-      <span class="spill warn"><span class="d"></span>Standards · proposed</span>
-      <span class="spill next"><span class="d"></span>Curation · next</span>
-    </div>
-  </div>
-</section>
-
-<footer>
-  <div class="wrap">
-    <img class="owl-mascot" src="owl.png" alt="otto, the owl" />
-    <span class="wordmark">otto<span class="dot">.</span></span>
-    <div class="meta">
-      <span>MIT</span><span class="sep">·</span>
-      <span>© 2026</span><span class="sep">·</span>
-      <a href="https://github.com/otto-haus/otto">github.com/otto-haus/otto</a><span class="sep">·</span>
-      <a href="https://docs.otto.haus">docs.otto.haus</a><span class="sep">·</span>
-      <a href="https://otto.haus">otto.haus</a>
-    </div>
-  </div>
-</footer>
-
-<script>
-  (function(){
-    var els = document.querySelectorAll('.rise');
-    if(!('IntersectionObserver' in window) || window.matchMedia('(prefers-reduced-motion: reduce)').matches){
-      els.forEach(function(e){e.classList.add('in')}); return;
-    }
-    var io = new IntersectionObserver(function(es){
-      es.forEach(function(en){ if(en.isIntersecting){ en.target.classList.add('in'); io.unobserve(en.target);} });
-    },{threshold:.14, rootMargin:'0px 0px -6% 0px'});
-    els.forEach(function(e){io.observe(e)});
-  })();
-</script>
+  </footer>
 </body>
 </html>
