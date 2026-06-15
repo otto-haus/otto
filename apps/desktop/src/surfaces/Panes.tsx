@@ -548,7 +548,17 @@ const CharterDetailView: React.FC<{
             </p>
           )}
           <input className="charterInput" value={statusSummary} onChange={(e) => setStatusSummary(e.target.value)} placeholder={chartersCopy.statusSummaryPlaceholder} aria-label="Status change summary" />
-          <button className="btn" onClick={onUpdateStatus} disabled={busy || statusDraft === detail.status}>{chartersCopy.updateButton}</button>
+          <button
+            className="btn"
+            onClick={onUpdateStatus}
+            disabled={
+              busy
+              || statusDraft === detail.status
+              || (statusDraft === 'complete' && detail.acceptance_criteria.some((ac) => !ac.receipts.length))
+            }
+          >
+            {chartersCopy.updateButton}
+          </button>
         </div>
       </div>
 
