@@ -4,14 +4,16 @@
 it is Built, Tested (or failure documented), Demoed, Tried by Sebastian, and **explicitly
 approved by Sebastian**. Claude is execution lead; Sebastian is the only release approver.
 
-**NOT PUSHED to main / live app** — integration branch `ship/functional-labs` (integration codename — **not** product semver).
+**NOT PUSHED to main / live app** — target tag **`v0.1.3`** on `main` @ `38171e8` (issue **#84** gate refresh).
 **Product line:** **`v0.1.x`** — **`v0.1.3`** tags the integration/demo line (GitHub pre-release). Mistaken tags `v0.2.0`, `v0.2.1`, `v0.3.0` removed locally; do not treat integration branch names as public semver.
 Mirror: `docs/v1/SHIP_STATUS.md`. Tier matrix: [`docs/v1/ship-tier-matrix.md`](docs/v1/ship-tier-matrix.md).
 Gate packet: [`docs/receipts/staging/063-sebastian-gate-packet-v03-20260614.md`](docs/receipts/staging/063-sebastian-gate-packet-v03-20260614.md).
+Gate receipt: [`docs/receipts/staging/084-release-gate-verify-20260615.json`](docs/receipts/staging/084-release-gate-verify-20260615.json).
 Sign-off ceremony: [`docs/v1/runbooks/sebastian-release-sign-off.md`](docs/v1/runbooks/sebastian-release-sign-off.md) (**142**).
 
 ```txt
-NOT PUSHED — v0.1.3 gate open. No merge to main. No tag. No live /Applications/otto.app.
+NOT PUSHED — v0.1.3 gate open. No tag. No live /Applications/otto.app.
+Staging deploy + checklist rows 3–10 pending Sebastian walk.
 Target tag v0.1.3 is prepared only until Sebastian explicit approval (receipt required).
 ```
 
@@ -108,13 +110,17 @@ bun run verify:v0                        # 5/5 — typecheck, bun test, practice
 bash scripts/release-gate.sh           # verify:v0 + apps/desktop electron:typecheck
 ```
 
-Latest unit suite (2026-06-14, ticket **140** refresh):
+Latest unit suite (2026-06-15, issue **#84** on `main` @ `38171e8`):
 
 ```
 bun run verify:v0                      → 5/5 pass
 bash scripts/release-gate.sh         → pass (verify:v0 + electron:typecheck)
-bun test                               → 208 pass / 0 fail (1 skip)
+bun test                               → 392 pass / 0 fail (2 skip)
 ```
+
+Labs default off (**137**): `apps/desktop/electron/config-store.test.ts` — `labs defaults false on fresh profile` **pass**.
+
+Staging deploy + checklist rows 3–10: **pending** Sebastian walk (see [`084-release-gate-verify-20260615.json`](docs/receipts/staging/084-release-gate-verify-20260615.json)).
 
 Per-feature receipts: [`receipts/otto-v01/`](receipts/otto-v01/). Demos: [`demo/README.md`](demo/README.md).
 Staging smoke: `docs/receipts/staging/`. PR stack: `docs/v1/runbooks/pr-stack-ship-v03.md`.
@@ -153,7 +159,7 @@ Ceremony: [`docs/v1/runbooks/sebastian-release-sign-off.md`](docs/v1/runbooks/se
 | Ship table matches experience | ☐ |
 | README public story (Ship tier only) | ☐ |
 | Demo videos / walkthrough | ☐ |
-| Test receipts (`verify:v0` + `release-gate.sh` green) | ☐ |
+| Test receipts (`verify:v0` + `release-gate.sh` green) | ☑ (2026-06-15) |
 | Rollback path documented + `OTTO_RELEASE_TAG` smoke exercised on staging tag | ☐ |
 | Namespace `otto-haus` / `@otto-haus` | ☐ |
 | **Push + tag `v0.1.3`** (explicit — Red until signed) | ☐ |
