@@ -312,6 +312,12 @@ export type ChatMsg = StoredChatMsg & {
   };
 };
 
+export type TodoItem = {
+  id: string;
+  content: string;
+  status: 'pending' | 'in_progress' | 'completed';
+};
+
 // Best-effort text extraction from a loosely-typed SDK assistant message.
 function assistantText(m: Record<string, unknown>): string | null {
   if (typeof m.text === 'string') return m.text;
@@ -344,6 +350,7 @@ export function useRuntime() {
   const [status, setStatus] = useState<RuntimeStatus | null>(null);
   const [activeThreadId, setActiveThreadId] = useState<string | null>(null);
   const [messages, setMessages] = useState<ChatMsg[]>([]);
+  const [activeTodos, setActiveTodos] = useState<TodoItem[]>([]);
   const [busy, setBusy] = useState(false);
   const activeAssistantStream = useRef<string | null>(null);
   const sendError = useRef<string | null>(null);
@@ -365,6 +372,7 @@ export function useRuntime() {
     messagesRef.current = loaded;
     setActiveThreadId(threadId);
     setMessages(loaded);
+    setActiveTodos([]);
   };
 
   useEffect(() => {
@@ -472,6 +480,27 @@ export function useRuntime() {
             return [...x, { id: streamId, who: 'otto', text: t, streamId }];
           });
         }
+      } else if (m.type === 'todo_update' && Array.isArray(m.todos)) {
+        const ownedTurn = inflightThreadRef.current ?? activeThreadRef.current;
+        if (!ownedTurn || activeThreadRef.current === ownedTurn) {
+          setActiveTodos(
+            m.todos
+              .filter((item): item is Record<string, unknown> => !!item && typeof item === 'object')
+              .map((item, index) => ({
+                id: typeof item.id === 'string' && item.id ? item.id : `todo-${index}`,
+                content: typeof item.content === 'string'
+                  ? item.content
+                  : typeof item.description === 'string'
+                    ? item.description
+                    : `Task ${index + 1}`,
+                status: item.status === 'completed'
+                  ? 'completed'
+                  : item.status === 'in_progress'
+                    ? 'in_progress'
+                    : 'pending',
+              })),
+          );
+        }
       } else if (m.type === 'error') {
         const ownedTurn = inflightThreadRef.current;
         sendError.current = String((m as { message?: unknown }).message ?? 'error');
@@ -510,6 +539,7 @@ export function useRuntime() {
     if (!sendThreadId) throw new Error('No active conversation thread yet.');
     sendError.current = null;
     activeAssistantStream.current = null;
+    setActiveTodos([]);
     inflightThreadRef.current = sendThreadId;
     const snippet = text.trim().replace(/\s+/g, ' ');
     if (snippet) {
@@ -614,6 +644,7 @@ export function useRuntime() {
     electron: !!api,
     status,
     messages,
+    activeTodos,
     busy,
     activeThreadId,
     send,
