@@ -40,6 +40,7 @@ If a change does not gate irreversibility or make behavior compound, question it
 - PRs that need Sebastian's merge attention should carry `status: ready for review` only after CI is green and the implementer has done a real review pass.
 - Implementer cannot self-certify Done for consequential changes. Use an unbiased reviewer/subagent when the risk warrants it, and include proof in the PR body or linked issue.
 - Sebastian is the merge gate. Keep ready-for-review PR count low; prefer fast, small PRs over large batches.
+- Merge/review gates are **per ticket / per PR** — they must not pause the whole lane. After handing off one PR, scout the next file-disjoint Ready issue (`docs/agent-goals/README.md`, `docs/goals/github-ready-loop/`).
 
 ## Verify
 

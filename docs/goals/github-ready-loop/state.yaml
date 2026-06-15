@@ -1,0 +1,119 @@
+# GoalBuddy v2 state.yaml — board truth. goal.md is the charter; notes/ holds long receipts.
+
+version: 2
+
+goal:
+  title: "GitHub Ready implementation loop"
+  slug: "github-ready-loop"
+  kind: existing_plan
+  tranche: "Drain Ready queue with per-ticket review/merge gates; lane never pauses for a single awaiting PR."
+  status: active
+  oracle:
+    signal: "Per issue: PR with Fixes #N + proof + In review + reviewer +1 before Done. Lane keeps one active task on the next disjoint Ready issue unless no_safe_work is recorded."
+    cadence: "after each Worker handoff and PM cycle"
+    final_proof: "Agent docs + PM tasks encode per-ticket gates; handoffs separate awaiting PRs from next work; contract verify passes."
+  intake:
+    original_request: "Fixes #345 — merge/review gates must not stall the whole lane."
+    interpreted_outcome: "Document and enforce per-ticket gates; PM selects next disjoint Ready issue; handoff lists awaiting PRs separately."
+    input_shape: existing_plan
+    audience: "Composer / PM / Scout agents"
+    authority: approved
+    proof_type: review
+    completion_proof: "Issue #345 acceptance criteria satisfied with verify:agent-loop green."
+    likely_misfire: "Null active_task while Ready disjoint work exists; lane idle at merge gate; handoff omits awaiting PRs."
+    existing_plan_facts:
+      - "Hot conveyor: REST Issues/PRs + labels; Project V2 batched only."
+      - "Merge/review gates are per-ticket, not global."
+      - "File-disjoint selection required before starting next Worker."
+
+rules:
+  pm_owns_state: true
+  one_active_task: true
+  max_write_workers: 1
+  no_implementation_without_worker_or_pm_task: true
+  continuous_until_full_outcome: true
+  merge_review_gates_are_per_ticket: true
+  lane_continues_at_merge_gate: true
+  pm_loop:
+    after_worker_handoff:
+      - "Record awaiting PR/issue in receipt and handoff note."
+      - "Scout next highest-priority Ready issue."
+      - "Skip issues whose files collide with open PR branches (gh pr diff --name-only)."
+      - "If no disjoint Ready issue, set no_safe_work with collision map; only then allow active_task unset."
+      - "Queue Scout or Worker; never leave active_task null without no_safe_work."
+    handoff_sections:
+      - "Awaiting review / merge (per-ticket — lane continues)"
+      - "Active next work"
+      - "No safe work (only if true)"
+  slice_policy:
+    prefer_vertical_slices: true
+    worker_completes_whole_slice: true
+
+agents:
+  scout: installed
+  worker: installed
+  judge: installed
+
+visual_board:
+  selected: local
+  local:
+    status: generated
+    url: "http://goalbuddy.localhost:41737/github-ready-loop/"
+    command: "npx goalbuddy board /Users/seb/Code/otto/docs/goals/github-ready-loop"
+
+active_task: T002
+
+tasks:
+  - id: T001
+    type: worker
+    assignee: Worker
+    status: done
+    reasoning_hint: medium
+    objective: "Fixes #345: encode per-ticket merge/review gates in agent goal docs, PM loop rules, handoff shape, and contract verify."
+    allowed_files:
+      - "docs/agent-goals/**"
+      - "docs/agent-prompts/**"
+      - "docs/goals/github-ready-loop/**"
+      - "scripts/verify-agent-loop-contract.mjs"
+      - "AGENTS.md"
+      - "package.json"
+    verify:
+      - "bun run verify:agent-loop"
+      - "bun run verify:v0"
+    receipt:
+      completed_at: "2026-06-14T00:00:00Z"
+      summary: "Per-ticket gate contract docs + github-ready-loop board + verify:agent-loop."
+      issue: "https://github.com/otto-haus/otto/issues/345"
+      handoff_note: "notes/T001-345-per-ticket-gates.md"
+
+  - id: T002
+    type: pm
+    assignee: PM
+    status: active
+    reasoning_hint: medium
+    objective: "After T001 PR is In review: record awaiting PR in handoff, scout next disjoint Ready issue, set active_task to Scout/Worker for that issue. Keep one_active_task unless no_safe_work."
+    allowed_files:
+      - "docs/goals/github-ready-loop/**"
+    expected_output:
+      - "Handoff with Awaiting review/merge section separate from Active next work"
+      - "active_task advanced to next Scout or Worker, or no_safe_work documented"
+    receipt: null
+
+  - id: T003
+    type: scout
+    assignee: Scout
+    status: queued
+    reasoning_hint: default
+    objective: "List open PRs (files touched), list Ready issues p0→p3, pick highest-priority issue with no file collision against open PRs."
+    constraints:
+      - "Read-only. Use gh issue list / gh pr list REST; batch Project sync only."
+    expected_output:
+      - "next_issue + collision_check + recommended branch/worktree"
+    receipt: null
+
+checks:
+  dirty_fingerprint: unknown
+  last_verification:
+    result: unknown
+    task: null
+    commands: []

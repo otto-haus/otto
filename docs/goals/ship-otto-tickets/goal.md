@@ -27,7 +27,8 @@ no `_Done`.
   are satisfied. Implement **only** that ticket — no scope creep.
 - **Review gate:** Claude may implement but may **NOT** certify its own ticket. An **independent
   review agent** must check the Outcome, every Done-when, the spec, actual code behavior, and proof,
-  and return `+1` / `-1` / `blocked`.
+  and return `+1` / `-1` / `blocked`. The gate pauses **only that ticket** — PM immediately re-seeds
+  the next dependency-safe ticket; never idle the lane waiting for merge.
 - **No fake state:** no faked readiness, receipts, memory, adapter, or connected state.
 - **Blocked → leave in root**, write the exact blocker, do not skip ahead unless the next ticket is
   dependency-safe.
