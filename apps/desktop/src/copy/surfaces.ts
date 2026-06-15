@@ -324,6 +324,7 @@ export const threadCopy = {
   pin: 'Pin conversation — keep in Pinned',
   unpin: 'Unpin conversation — move to Recents',
   archive: 'Archive conversation',
+  reorderHint: 'Drag to reorder within Pinned or Recents.',
 } as const;
 
 export const curationCopy = {
@@ -648,6 +649,10 @@ export const settingsCopy = {
   connectionEmbedded: 'Embedded (bundled Letta)',
   connectionExisting: 'Existing local Letta',
   connectionCloud: 'Cloud remote',
+  conversationSortLabel: 'Conversation order',
+  conversationSortHint: 'Default sort for threads you have not dragged. Manual order always wins.',
+  conversationSortRecent: 'Most recent activity',
+  conversationSortCreated: 'Newest first',
   connectionLocalUrlLabel: 'Local Letta URL · advanced override',
   connectionLocalUrlPlaceholder: 'Auto-detect local runtime',
   connectionAgentIdLabel: 'Agent ID · advanced override',

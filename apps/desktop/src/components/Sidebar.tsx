@@ -82,6 +82,7 @@ export const Sidebar: React.FC<{
   onSelectThread?: (thread: ThreadSummary) => void;
   onPinThread?: (thread: ThreadSummary, pinned: boolean) => void;
   onArchiveThread?: (thread: ThreadSummary) => void;
+  onMoveThread?: (thread: ThreadSummary, target: ThreadSummary) => void;
   isComingSoon?: (id: SurfaceId) => boolean;
 }> = ({
   active,
@@ -96,6 +97,7 @@ export const Sidebar: React.FC<{
   onSelectThread,
   onPinThread,
   onArchiveThread,
+  onMoveThread,
   isComingSoon,
 }) => {
   const rt = useRuntimeContext();
@@ -216,6 +218,7 @@ export const Sidebar: React.FC<{
         onSelect={onSelectThread}
         onPin={onPinThread}
         onArchive={onArchiveThread}
+        onMove={onMoveThread}
       />
 
       <div className="sidebar__spacer" />

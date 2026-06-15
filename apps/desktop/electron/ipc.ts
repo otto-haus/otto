@@ -368,6 +368,7 @@ export function registerIpc(win: BrowserWindow) {
     return archived;
   });
   ipcMain.handle('otto:threads:pin', (_e, threadId: string, pinned: boolean) => threads.pin(threadId, pinned));
+  ipcMain.handle('otto:threads:move', (_e, threadId: string, targetId: string) => threads.move(threadId, targetId));
   ipcMain.handle(
     'otto:threads:touch',
     (_e, input: { title?: string; lettaConversationId?: string | null; agentId?: string | null }) =>
