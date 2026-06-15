@@ -770,6 +770,7 @@ export const settingsCopy = {
   connectionSaveIdle: 'Save overrides & reconnect',
   connectionFailedPrefix: 'Connection failed:',
   providerMirrorNote: 'Provider auth is managed by Letta. otto never stores or reads back API keys.',
+  providerMirrorLoading: 'Reading provider mirror…',
   providerApiKeyPresent: 'API key on file (write-only)',
   providerApiKeyMissing: 'No API key on file',
   providerSubmitKey: 'Save API key (write-only)',

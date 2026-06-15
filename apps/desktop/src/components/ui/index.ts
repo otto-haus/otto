@@ -1,5 +1,7 @@
 export { StatusPill, statusPill, statusCodePill, readyStatusPill, STATUS_CODE_LABELS, READY_STATUS_LABELS } from './StatusPill';
 export { EmptyState, InlineEmpty } from './EmptyState';
+export { PaneLoading } from './PaneLoading';
+export type { PaneLoadingVariant } from './PaneLoading';
 export {
   SurfaceHeader,
   SurfaceHero,

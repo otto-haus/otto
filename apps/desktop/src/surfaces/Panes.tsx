@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { PaperclipIntakePanel } from './PaperclipIntakePanel';
 import { Icon } from '../components/icons';
 import { useToast } from '../components/toast-context';
-import { EmptyState, StatusPill, statusPill, statusCodePill, SurfaceProof, SurfacePage, SurfaceHero, InkBlock, SurfaceInk, SurfaceStatStrip, SurfaceMeta, SplitLayout, FilterBar, InlineEmpty, WebPreviewFrame, ReceiptCard, CheckBlockBanner } from '../components/ui';
+import { EmptyState, StatusPill, statusPill, statusCodePill, SurfaceProof, SurfacePage, SurfaceHero, InkBlock, SurfaceInk, SurfaceStatStrip, SurfaceMeta, SplitLayout, FilterBar, InlineEmpty, WebPreviewFrame, ReceiptCard, CheckBlockBanner, PaneLoading } from '../components/ui';
 import {
   toastCopy,
   curationCopy,
@@ -387,9 +387,7 @@ export const Charters: React.FC = () => {
               </button>
             ))}
             {result === null ? (
-              <div className="detailSection charterEmptyList">
-                <p className="muted">{chartersCopy.loadingList}</p>
-              </div>
+              <PaneLoading label={chartersCopy.loadingList} variant="list" className="charterEmptyList" />
             ) : !charters.length ? (
               <InlineEmpty title={listEmpty.charters?.title ?? 'No charters yet'} body={listEmpty.charters?.body ?? ''} />
             ) : null}
@@ -726,9 +724,7 @@ export const Standards: React.FC = () => {
         list={
           <>
             {result === null ? (
-              <div className="listEmpty">
-                <p className="muted">{standardsCopy.loadingTitle}</p>
-              </div>
+              <PaneLoading label={standardsCopy.loadingTitle} variant="list" />
             ) : !standards.length ? (
               <InlineEmpty title={listEmpty.standards?.title ?? 'No Standards loaded'} body={listEmpty.standards?.body ?? ''} />
             ) : !filtered.length ? (
@@ -1661,7 +1657,7 @@ const BehaviorChangelogPanel: React.FC = () => {
       <p className="muted" style={{ marginTop: 6 }}>{curationCopy.changelogLede}</p>
       {error ? <div className="notice" style={{ marginTop: 12 }}><span className="dot dot--warn" /> {error}</div> : null}
       {loading ? (
-        <p className="muted" style={{ marginTop: 12 }}>Loading changelog…</p>
+        <PaneLoading label="Loading changelog…" variant="inline" />
       ) : entries.length === 0 ? (
         <InlineEmpty title={emptyMessage} body="Ratify a proposal or amend the constitution to see culture changes here." />
       ) : (
@@ -2011,6 +2007,9 @@ export const Receipts: React.FC = () => {
         listClassName="receiptList"
         listAriaLabel="Receipts list"
         list={
+          loading ? (
+            <PaneLoading label={receiptsCopy.loadingTitle} variant="list" />
+          ) : (
           <>
             {filtered.map((receipt) => (
               <ReceiptCard
@@ -2031,6 +2030,7 @@ export const Receipts: React.FC = () => {
               <InlineEmpty title={receiptsCopy.noMatchTitle} body={receiptsCopy.noMatchBody} />
             )}
           </>
+          )
         }
         detail={<ReceiptDetailView detail={detail} summary={selectedSummary} />}
       />
@@ -2062,7 +2062,7 @@ const ReceiptDetailView: React.FC<{ detail: ReceiptDetail | null; summary: Recei
     return (
       <div className="detail">
         <div className="detailSection">
-          <div className="h-sec">{receiptsCopy.loadingTitle}</div>
+          <PaneLoading label={receiptsCopy.loadingTitle} variant="detail" />
           <p className="muted" style={{ marginTop: 6 }}>{summary.id}</p>
         </div>
       </div>
@@ -2424,9 +2424,7 @@ export const Skills: React.FC = () => {
       {error && <div className="notice"><span className="dot dot--warn" /> {error}</div>}
       <SkippedLoaderPanel skipped={result?.skipped ?? []} />
       {!result && !error && (
-        <div className="detailSection">
-          <div className="h-sec">{skillsCopy.loadingTitle}</div>
-        </div>
+        <PaneLoading label={skillsCopy.loadingTitle} variant="detail" className="detailSection" />
       )}
       {result && !skills.length && !error && (
         <InlineEmpty title={listEmpty.skills?.title ?? 'No skills loaded'} body={listEmpty.skills?.body ?? ''} />
@@ -2671,9 +2669,7 @@ export const Knowledge: React.FC = () => {
         <InlineEmpty title={knowledgeCopy.registryNotFoundTitle} body={knowledgeCopy.registryNotFoundBody(result.registryPath)} />
       )}
       {!result && !error && (
-        <div className="detailSection">
-          <div className="h-sec">{knowledgeCopy.loadingTitle}</div>
-        </div>
+        <PaneLoading label={knowledgeCopy.loadingTitle} variant="detail" className="detailSection" />
       )}
       {registry && (
         <>
@@ -3101,9 +3097,7 @@ export const Channels: React.FC = () => {
         />
       )}
       {!result && !error && (
-        <div className="detailSection">
-          <div className="h-sec">{channelsCopy.loadingTitle}</div>
-        </div>
+        <PaneLoading label={channelsCopy.loadingTitle} variant="list" className="detailSection" />
       )}
       {result && !channels.length && !error && (
         <InlineEmpty title={listEmpty.channels?.title ?? 'No channels configured'} body={listEmpty.channels?.body ?? ''} />
@@ -3802,7 +3796,7 @@ const SystemHealthPanel: React.FC = () => {
           </div>
         </>
       ) : busy ? (
-        <p className="faint">{settingsCopy.systemHealthLoading}</p>
+        <PaneLoading label={settingsCopy.systemHealthLoading} variant="rows" />
       ) : null}
     </>
   );
@@ -3841,6 +3835,7 @@ const ModelProviders: React.FC = () => {
   const rt = useRuntimeContext();
   const [tab, setTab] = useState<ProviderKind>('local');
   const [mirror, setMirror] = useState<ProviderMirrorSnapshot | null>(null);
+  const [mirrorLoading, setMirrorLoading] = useState(!!api?.provider);
   const [apiKeyDraft, setApiKeyDraft] = useState('');
   const [keyBusy, setKeyBusy] = useState(false);
   const [keyMessage, setKeyMessage] = useState<string | null>(null);
@@ -3872,8 +3867,15 @@ const ModelProviders: React.FC = () => {
   };
 
   const refreshMirror = () => {
-    if (!api?.provider) return;
-    api.provider.mirror().then(setMirror).catch(() => setMirror(null));
+    if (!api?.provider) {
+      setMirrorLoading(false);
+      return;
+    }
+    setMirrorLoading(true);
+    api.provider.mirror()
+      .then(setMirror)
+      .catch(() => setMirror(null))
+      .finally(() => setMirrorLoading(false));
   };
 
   useEffect(() => {
@@ -3907,6 +3909,10 @@ const ModelProviders: React.FC = () => {
       </div>
 
       <div className="providersMirror">
+        {mirrorLoading ? (
+          <PaneLoading label={settingsCopy.providerMirrorLoading} variant="rows" />
+        ) : (
+        <>
         <div className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
           <span className={`pill ${mirror?.lettaConnected ? 'pill--ok' : 'pill--warn'}`}>
             Letta {mirror?.lettaConnected ? 'reachable' : 'not connected'}
@@ -3937,6 +3943,8 @@ const ModelProviders: React.FC = () => {
           {keyMessage && !keyError && <span className="muted" style={{ fontSize: 13 }}>{keyMessage}</span>}
         </div>
         {keyError ? <p className="faint settingsStatusBanner settingsStatusBanner--warn">{keyError}</p> : null}
+        </>
+        )}
       </div>
 
       <div className="segmented" role="tablist" aria-label="Provider type" onKeyDown={handleProviderTabKeyDown}>

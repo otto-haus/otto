@@ -27,7 +27,7 @@ import { LabsProvider } from './labs/LabsContext';
 import { useLabs } from './labs/labs-context';
 import { ComingSoonSurface } from './labs/ComingSoonSurface';
 import { surfaceGate } from './surface-tiers';
-import { EmptyState } from './components/ui';
+import { PaneLoading } from './components/ui';
 import { VALID_SURFACES } from './surface-meta';
 import { labsCopy } from './copy/surfaces';
 import { AppSourceBadge } from './components/AppSourceBadge';
@@ -178,7 +178,8 @@ function AppShell() {
     if (gate === 'loading') {
       return (
         <div className="comingSoonShell" aria-busy="true">
-          <EmptyState eyebrow={labsCopy.eyebrow} title={labsCopy.loadingTitle} body={labsCopy.loadingBody} />
+          <PaneLoading label={labsCopy.loadingTitle} variant="detail" />
+          <p className="muted" style={{ marginTop: 8 }}>{labsCopy.loadingBody}</p>
         </div>
       );
     }
