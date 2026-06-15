@@ -5,7 +5,8 @@ import { SdkSubprocessTransport } from './sdk-subprocess-transport';
 import { WsRuntimeTransport } from './ws-runtime-transport';
 import { resolveTransportMode } from './transport-mode';
 import { WS_PROMOTION_GATE_REASON, wsPromotionApproved } from './ws-promotion-gate';
-import type { OttoRuntimeTransport, RuntimeTransportMode } from './types';
+import type { OttoRuntimeTransport, RuntimeTransportMode, SdkTransportDiagnosticsSnapshot, WsTransportDiagnosticsSnapshot } from './types';
+import type { TransportDiagnosticsSnapshot } from '../diagnostics-export';
 
 /** Owns transport selection, fallback, and delegation to the active implementation. */
 export class RuntimeSupervisor implements OttoRuntimeTransport {
@@ -23,6 +24,14 @@ export class RuntimeSupervisor implements OttoRuntimeTransport {
 
   getStatus(): RuntimeStatus {
     return this.withModeMeta(this.active.getStatus());
+  }
+
+  getDiagnosticsSnapshot(): TransportDiagnosticsSnapshot {
+    return {
+      activeTransport: this.active === this.ws ? 'ws' : 'sdk',
+      sdk: this.sdk.getDiagnosticsSnapshot(),
+      ws: this.ws.getDiagnosticsSnapshot(),
+    };
   }
 
   resolvePermission(requestId: string, response: PermissionResponse) {

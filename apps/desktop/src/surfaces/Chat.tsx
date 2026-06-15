@@ -945,7 +945,21 @@ const LiveChat: React.FC<{
               <div className="inkblock__actions">
                 <button type="button" className="btn btn--solid-d" onClick={() => { void rt.retry(); }}>Retry</button>
                 {onOpenSettings && <button type="button" className="btn btn--ghost-d" onClick={onOpenSettings}>Open Settings</button>}
+                {ottoApi()?.diagnostics ? (
+                  <button
+                    type="button"
+                    className="btn btn--ghost-d"
+                    onClick={() => {
+                      void ottoApi()?.diagnostics?.export().then((result) => {
+                        void ottoApi()?.diagnostics?.reveal(result.bundlePath);
+                      });
+                    }}
+                  >
+                    {chatCopy.exportDiagnostics}
+                  </button>
+                ) : null}
               </div>
+              <p className="faint" style={{ marginTop: 8, fontSize: 13 }}>{chatCopy.diagnosticsHint}</p>
             </div>
           )}
           {streamMessages.length === 0 && (

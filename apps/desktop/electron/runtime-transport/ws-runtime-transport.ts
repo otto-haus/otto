@@ -24,7 +24,7 @@ import {
 import { TodoStreamAccumulator } from './todo-parser';
 import { isDeviceOnline, isLoopIdle, normalizeWsEvent, type WsRuntimeEvent } from './ws-protocol';
 import { permissionSessionStore } from '../permission-session-store';
-import type { OttoRuntimeTransport } from './types';
+import type { OttoRuntimeTransport, WsTransportDiagnosticsSnapshot } from './types';
 
 const CONNECT_TIMEOUT_MS = 45_000;
 const REMOTE_ENV = process.env.OTTO_WS_REMOTE_ENV ?? 'otto-byor';
@@ -60,6 +60,19 @@ export class WsRuntimeTransport implements OttoRuntimeTransport {
 
   getStatus(): RuntimeStatus {
     return this.status;
+  }
+
+  getDiagnosticsSnapshot(): WsTransportDiagnosticsSnapshot {
+    return {
+      pendingPermissionCount: this.pendingControls.size,
+      wsConnected: this.runtimeSocket ? this.runtimeSocket.readyState === WebSocket.OPEN : null,
+      wsReadyState: this.runtimeSocket?.readyState ?? null,
+      listenerPort: this.listenerPort,
+      activeRunId: this.activeRunId,
+      turnIdle: this.turnIdle,
+      lastReconnectAt: this.lastReconnectAt,
+      aborted: this.aborted,
+    };
   }
 
   resolvePermission(requestId: string, response: PermissionResponse) {

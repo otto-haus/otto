@@ -6,6 +6,7 @@ import type { BrowserWindow } from 'electron';
 import type { PermissionResponse, RuntimePreferences, RuntimeStatus } from './shared/types';
 import type { ConfigStore } from './config-store';
 import { RuntimeSupervisor } from './runtime-transport/runtime-supervisor';
+import type { TransportDiagnosticsSnapshot } from './diagnostics-export';
 
 /** Electron main runtime facade — delegates to RuntimeSupervisor (SDK or WS transport). */
 export class LettaRunner {
@@ -17,6 +18,10 @@ export class LettaRunner {
 
   getStatus(): RuntimeStatus {
     return this.supervisor.getStatus();
+  }
+
+  getDiagnosticsSnapshot(): TransportDiagnosticsSnapshot {
+    return this.supervisor.getDiagnosticsSnapshot();
   }
 
   resolvePermission(requestId: string, response: PermissionResponse) {

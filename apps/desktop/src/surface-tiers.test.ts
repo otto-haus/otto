@@ -74,7 +74,7 @@ describe('surface-tiers', () => {
     } as Storage;
 
     try {
-      expect(surfaceGate('receipts', labs, true)).toBe('coming-soon');
+      expect(surfaceGate('receipts', labs, true)).toBe('open');
       store.set('otto.onboarding.sampleReceipt.v1', '1');
       expect(surfaceGate('receipts', labs, true)).toBe('open');
       expect(surfaceGate('charters', labs, true)).toBe('coming-soon');
