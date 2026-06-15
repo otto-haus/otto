@@ -776,7 +776,10 @@ const LiveChat: React.FC<{
     }
   };
 
-  const streamMessages = [...rt.messages, ...cmdMessages];
+  const streamMessages = useMemo(
+    () => [...rt.messages, ...cmdMessages],
+    [rt.messages, cmdMessages],
+  );
   const turnAnchors = useMemo(() => turnAnchorIndices(streamMessages), [streamMessages]);
   const activeQueue = queueDisplayItemsForThread(queue, rt.activeThreadId);
   const lastStreamMessage = streamMessages[streamMessages.length - 1];
@@ -816,7 +819,7 @@ const LiveChat: React.FC<{
 
   useEffect(() => {
     if (turnAnchors.length) turnFocusRef.current = turnAnchors[turnAnchors.length - 1] ?? 0;
-  }, [rt.activeThreadId, turnAnchors]);
+  }, [rt.activeThreadId]);
 
   useEffect(() => {
     setCmdMessages([]);
