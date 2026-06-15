@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { flushMessages, migrateLegacyMessagesToThread, readStoredMessages, type StoredChatMsg } from './chat/message-storage';
+import { flushMessages, readStoredMessages, type StoredChatMsg } from './chat/message-storage';
 import type {
   Charter,
   CharterRef,
@@ -340,12 +340,12 @@ function assistantText(m: Record<string, unknown>): string | null {
 function loadThreadMessages(
   threadId: string | null,
   cache: Map<string, ChatMsg[]>,
+  opts: { allowLegacyFallback?: boolean } = {},
 ): ChatMsg[] {
   if (!threadId) return [];
   const cached = cache.get(threadId);
   if (cached) return cached;
-  migrateLegacyMessagesToThread(threadId);
-  const loaded = readStoredMessages(threadId);
+  const loaded = readStoredMessages(threadId, { allowLegacyFallback: opts.allowLegacyFallback });
   cache.set(threadId, loaded);
   return loaded;
 }
@@ -378,13 +378,13 @@ export function useRuntime() {
   /** Thread that owns the in-flight Letta turn — events route here, not to the active view. */
   const inflightThreadRef = useRef<string | null>(null);
 
-  const applyThreadView = (threadId: string, opts?: { persistLeaving?: boolean }) => {
+  const applyThreadView = (threadId: string, opts?: { persistLeaving?: boolean; allowLegacyFallback?: boolean }) => {
     const leaving = activeThreadRef.current;
     if (opts?.persistLeaving !== false && leaving && leaving !== threadId) {
       threadMessagesCache.current.set(leaving, messagesRef.current);
       flushMessages(leaving, messagesRef.current);
     }
-    const loaded = loadThreadMessages(threadId, threadMessagesCache.current);
+    const loaded = loadThreadMessages(threadId, threadMessagesCache.current, { allowLegacyFallback: opts?.allowLegacyFallback });
     activeThreadRef.current = threadId;
     messagesRef.current = loaded;
     setActiveThreadId(threadId);
@@ -411,7 +411,7 @@ export function useRuntime() {
       threadHydrated.current = true;
       const threadId = result.activeThreadId;
       activeThreadRef.current = threadId;
-      const loaded = loadThreadMessages(threadId, threadMessagesCache.current);
+      const loaded = loadThreadMessages(threadId, threadMessagesCache.current, { allowLegacyFallback: true });
       messagesRef.current = loaded;
       setActiveThreadId(threadId);
       setMessages(loaded);
@@ -424,15 +424,16 @@ export function useRuntime() {
   useEffect(() => {
     if (!api?.onActiveThread) return;
     return api.onActiveThread(({ threadId, status }) => {
+      const allowLegacyFallback = !threadHydrated.current;
       threadHydrated.current = true;
       if (status) setStatus(status);
       if (activeThreadRef.current === threadId) {
-        const loaded = loadThreadMessages(threadId, threadMessagesCache.current);
+        const loaded = loadThreadMessages(threadId, threadMessagesCache.current, { allowLegacyFallback });
         messagesRef.current = loaded;
         setMessages(loaded);
         return;
       }
-      applyThreadView(threadId);
+      applyThreadView(threadId, { allowLegacyFallback });
     });
   }, [api]);
 
@@ -456,7 +457,7 @@ export function useRuntime() {
           const threadId = result.activeThreadId;
           if (!threadId) return;
           activeThreadRef.current = threadId;
-          const loaded = loadThreadMessages(threadId, threadMessagesCache.current);
+          const loaded = loadThreadMessages(threadId, threadMessagesCache.current, { allowLegacyFallback: true });
           messagesRef.current = loaded;
           setActiveThreadId(threadId);
           setMessages(loaded);

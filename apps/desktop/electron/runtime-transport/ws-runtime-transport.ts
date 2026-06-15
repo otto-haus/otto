@@ -126,22 +126,30 @@ export class WsRuntimeTransport implements OttoRuntimeTransport {
       if (!opts?.freshConversation && !smokeMode() && savedConversationId === 'default') {
         this.config.update({ conversationId: null });
       }
-      const modelHandle = opts?.strictModelHandle !== undefined
-        ? opts.strictModelHandle
-        : await confirmedModelHandle(this.config).catch(() => this.config.modelHandle());
-      if (modelHandle && modelHandle !== this.config.modelHandle() && !smokeMode()) {
-        this.config.update({ modelHandle });
+      const resolved = opts?.strictModelHandle !== undefined
+        ? {
+            requested: opts.strictModelHandle,
+            active: opts.strictModelHandle,
+            fallbackReason: null,
+          }
+        : await confirmedModelHandle(this.config).catch(() => ({
+            requested: this.config.modelHandle(),
+            active: this.config.modelHandle(),
+            fallbackReason: null,
+          }));
+      if (resolved.active && resolved.active !== this.config.modelHandle() && !smokeMode()) {
+        this.config.update({ modelHandle: resolved.active });
       }
-      let activeModelHandle = modelHandle;
+      let activeModelHandle = resolved.active;
       try {
-        activeModelHandle = await this.syncRuntimeWithFallback(agentId, conversationId ?? null, modelHandle, {
+        activeModelHandle = await this.syncRuntimeWithFallback(agentId, conversationId ?? null, resolved.active, {
           allowFallback: opts?.strictModelHandle === undefined,
         });
       } catch (e) {
         if (!conversationId || !this.isStaleConversationError(e)) throw e;
         if (!smokeMode()) this.config.update({ conversationId: null });
         const replacementConversationId = await this.createBackendConversation(agentId, context.baseUrl);
-        activeModelHandle = await this.syncRuntimeWithFallback(agentId, replacementConversationId, modelHandle, {
+        activeModelHandle = await this.syncRuntimeWithFallback(agentId, replacementConversationId, resolved.active, {
           allowFallback: opts?.strictModelHandle === undefined,
         });
       }
@@ -160,12 +168,13 @@ export class WsRuntimeTransport implements OttoRuntimeTransport {
         baseUrl: context.baseUrl,
         discoverySource: context.source,
         conversationId: this.status.conversationId ?? conversationId,
-        modelHandle: activeModelHandle,
+        modelHandle: resolved.requested,
+        model: activeModelHandle ?? undefined,
         effort: this.config.effort(),
         sessionMode: smokeMode() ? 'smoke' : 'default',
         transportMode: 'ws',
         effectiveTransport: 'websocket local',
-        transportFallbackReason: null,
+        transportFallbackReason: resolved.fallbackReason,
         wsListenerPort: this.listenerPort,
         lastReconnectAt: this.lastReconnectAt,
         ...cli,
