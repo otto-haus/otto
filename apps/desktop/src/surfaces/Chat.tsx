@@ -63,6 +63,7 @@ import { TurnTrailLive } from '../chat/TurnTrailLive';
 import { TurnTrailSummary } from '../chat/TurnTrailSummary';
 import { useLabs } from '../labs/labs-context';
 import { useOttoDebugContextMenu } from '../debug/useOttoDebugContextMenu';
+import { TruncatedMessageRestore } from '../chat/TruncatedMessageRestore';
 import { isTypingTarget, jumpTurnAnchor, turnAnchorIndices } from '../chat/turn-navigation';
 import {
   curateModelOptions,
@@ -583,6 +584,7 @@ const LiveChat: React.FC<{
   const [proposeContext, setProposeContext] = useState<ProposeCorrectionContext | null>(null);
   const [proposeBusy, setProposeBusy] = useState(false);
   const [cmdMessages, setCmdMessages] = useState<ChatMsg[]>([]);
+  const [expandedMessageTexts, setExpandedMessageTexts] = useState<Record<string, string>>({});
   const draining = useRef(false);
   const pickerRef = useRef<HTMLDivElement | null>(null);
   const streamRef = useRef<HTMLDivElement | null>(null);
@@ -806,6 +808,7 @@ const LiveChat: React.FC<{
   useEffect(() => {
     setCmdMessages([]);
     setRecalledQueueId(null);
+    setExpandedMessageTexts({});
     setDraft(readStoredDraft(rt.activeThreadId));
     setAttachments(attachmentDraftsFromStored(readStoredAttachments(rt.activeThreadId)));
   }, [rt.activeThreadId]);
@@ -991,7 +994,7 @@ const LiveChat: React.FC<{
           </button>
         )}
         <div className="chat__column chat__headInner">
-          <span className="chat__avatar"><OttoMark size={30} className="ottoMark" /></span>
+          <span className="chat__avatar"><OttoMark size={30} className="ottoMark" dimmed={!ready} /></span>
           <div className="chat__titleBlock">
             <div className="chat__title">{headTitle}</div>
             <div className="chat__id" title={chatDebugTitle} onContextMenu={runtimeStatusDebugMenu.onContextMenu}>
@@ -1100,8 +1103,8 @@ const LiveChat: React.FC<{
                 </>
               )}
               <div className="inkblock__actions">
-                <button type="button" className="btn btn--solid-d" onClick={() => { void rt.retry(); }}>Retry</button>
-                {onOpenSettings && <button type="button" className="btn btn--ghost-d" onClick={onOpenSettings}>Open Settings</button>}
+                <button type="button" className="btn btn--solid-d" onClick={() => { void rt.retry(); }}>{chatCopy.pickerRetry}</button>
+                {onOpenSettings && <button type="button" className="btn btn--ghost-d" onClick={onOpenSettings}>{chatCopy.pickerOpenSettings}</button>}
                 {ottoApi()?.diagnostics ? (
                   <button
                     type="button"
@@ -1123,7 +1126,7 @@ const LiveChat: React.FC<{
             <div className={`chatEmpty${ready ? '' : ' chatEmpty--muted'}`}>
               <h2 className="chatEmpty__title">{chatCopy.sessionTitle}</h2>
               {!ready ? (
-                <p className="chatEmpty__lede">Finish runtime setup above, then send your first message.</p>
+                <p className="chatEmpty__lede">{chatCopy.sessionBodyNotReady}</p>
               ) : null}
               <div className="chatStarters" aria-label="Starter prompts">
                 {chatCopy.starterPrompts.map((prompt) => (
@@ -1149,7 +1152,8 @@ const LiveChat: React.FC<{
             const isUser = m.who === 'user';
             const isError = m.who === 'error';
             const isStreamingMessage = assistantStreaming && i === streamingRuntimeMessageIndex && !isUser && !isError;
-            const whoLabel = isUser ? 'You' : isError ? 'Error' : 'otto';
+            const displayText = expandedMessageTexts[m.id] ?? m.text;
+            const whoLabel = isUser ? 'You' : isError ? chatCopy.errorWhoLabel : 'otto';
             return (
               <div
                 key={m.id}
@@ -1185,12 +1189,12 @@ const LiveChat: React.FC<{
                   ) : null}
                   {isError ? (
                     <div className="msg__body" style={{ color: 'var(--stop)' }}>
-                      {m.text ? (
-                        <StreamMarkdown text={m.text} streaming={isStreamingMessage} />
+                      {displayText ? (
+                        <StreamMarkdown text={displayText} streaming={isStreamingMessage} />
                       ) : null}
                       {m.details ? (
                         <details className="msg__details">
-                          <summary>Copy details</summary>
+                          <summary>{chatCopy.errorDetailsSummary}</summary>
                           <pre className="mono faint">{m.details}</pre>
                         </details>
                       ) : null}
@@ -1201,18 +1205,26 @@ const LiveChat: React.FC<{
                         <TurnTrailSummary trail={m.trail} showPhases={showTurnPhases} />
                       ) : null}
                       <div className="msg__body">
-                        {m.text ? (
-                          <StreamMarkdown text={m.text} streaming={isStreamingMessage} />
+                        {displayText ? (
+                          <StreamMarkdown text={displayText} streaming={isStreamingMessage} />
                         ) : null}
                       </div>
                     </>
                   )}
-                  {!isUser && !isError && m.text ? (
+                  <TruncatedMessageRestore
+                    message={m}
+                    threadId={rt.activeThreadId}
+                    expandedText={expandedMessageTexts[m.id]}
+                    onExpand={(messageId, fullText) => {
+                      setExpandedMessageTexts((prev) => ({ ...prev, [messageId]: fullText }));
+                    }}
+                  />
+                  {!isUser && !isError && displayText ? (
                     <MessageActions
                       disabled={proposeBusy}
                       onCorrectThis={() => setProposeContext({
                         messageId: m.id,
-                        messageText: m.text,
+                        messageText: displayText,
                         who: 'otto',
                       })}
                     />

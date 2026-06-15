@@ -1,7 +1,10 @@
 import { afterEach, describe, expect, test } from 'bun:test';
 import {
   LEGACY_MESSAGES_KEY,
+  MAX_RESTORED_TEXT_CHARS,
+  flushMessages,
   messagesKey,
+  readStoredMessageFullText,
   readStoredMessages,
   type StoredChatMsg,
 } from '../src/chat/message-storage';
@@ -112,7 +115,45 @@ describe('chat message storage keys (046)', () => {
     const restored = readStoredMessages('thread_huge');
 
     expect(restored).toHaveLength(1);
-    expect(restored[0]?.text).toContain('too large to restore safely at startup');
+    expect(restored[0]?.text).toContain('too large to open safely');
+  });
+
+  test('long restored messages expose truncation metadata instead of inline suffix', () => {
+    const longText = `summary ${'x'.repeat(MAX_RESTORED_TEXT_CHARS + 250)}`;
+    const storage = fakeStorage({
+      [messagesKey('thread_long')]: JSON.stringify([{ id: 'long-1', who: 'otto', text: longText }]),
+    });
+
+    const restored = readStoredMessages('thread_long', { storage });
+
+    expect(restored).toHaveLength(1);
+    expect(restored[0]?.truncated).toBe(true);
+    expect(restored[0]?.truncatedFromLength).toBe(longText.length);
+    expect(restored[0]?.text.length).toBe(MAX_RESTORED_TEXT_CHARS);
+    expect(restored[0]?.text).not.toContain('renderer safety');
+  });
+
+  test('readStoredMessageFullText returns the unparsed local message body', () => {
+    const longText = `full body ${'y'.repeat(1800)}`;
+    const storage = fakeStorage({
+      [messagesKey('thread_full')]: JSON.stringify([{ id: 'full-1', who: 'user', text: longText }]),
+    });
+
+    expect(readStoredMessageFullText('thread_full', 'full-1', { storage })).toBe(longText);
+  });
+
+  test('flushMessages preserves full text when persisting truncated restore views', () => {
+    installStorage();
+    const longText = `persist me ${'z'.repeat(1500)}`;
+    localStorage.setItem(messagesKey('thread_persist'), JSON.stringify([{ id: 'persist-1', who: 'otto', text: longText }]));
+    const truncated = readStoredMessages('thread_persist')[0];
+    expect(truncated?.truncated).toBe(true);
+
+    flushMessages('thread_persist', [truncated!]);
+
+    const raw = JSON.parse(localStorage.getItem(messagesKey('thread_persist')) ?? '[]') as StoredChatMsg[];
+    expect(raw[0]?.text).toBe(longText);
+    expect(raw[0]?.truncated).toBeUndefined();
   });
 });
 
