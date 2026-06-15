@@ -267,7 +267,7 @@ export type {
   CogneeCaptureReceipt,
 } from '@otto-haus/core';
 
-export type { OttoConfig, LabsConfig, LabFeatureId, TicketReviewRecord, ProviderMirrorSnapshot } from '../electron/shared/types';
+export type { OttoConfig, LabsConfig, LabFeatureId, TicketReviewRecord, ProviderMirrorSnapshot, DreamSettings, DreamTrigger } from '../electron/shared/types';
 export type {
   StandardConflictResult,
   MemoryListResult,

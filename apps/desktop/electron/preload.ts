@@ -10,6 +10,7 @@ import type {
   CharterStatus,
   LabsConfig,
   OttoConfig,
+  DreamSettings,
   OttoEvent,
   PermissionRequest,
   PermissionResponse,
@@ -142,6 +143,11 @@ const api = {
      * `{ enabled: true, features: { knowledge_cognee: true } }` without opening Settings.
      */
     set: (patch: Partial<LabsConfig>): Promise<LabsConfig> => ipcRenderer.invoke('otto:labs:set', patch),
+  },
+  /** Sleep-time reflection ("dreaming") — mirrors Letta /sleeptime; persisted to ~/.otto/config.json + Letta settings. */
+  dreaming: {
+    get: (): Promise<DreamSettings> => ipcRenderer.invoke('otto:dreaming:get'),
+    set: (patch: Partial<DreamSettings>): Promise<DreamSettings> => ipcRenderer.invoke('otto:dreaming:set', patch),
   },
   attachments: {
     save: (input: AttachmentInput): Promise<SavedAttachment> => ipcRenderer.invoke('otto:attachment:save', input),
