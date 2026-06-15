@@ -1924,7 +1924,17 @@ export const Receipts: React.FC = () => {
       ].some((value) => value.toLowerCase().includes(needle));
     });
   }, [authorityFilter, filter, query, receipts]);
-  const selectedSummary = receipts.find((receipt) => receipt.id === selectedId) ?? null;
+  const selected = filtered.find((receipt) => receipt.id === selectedId)
+    ?? filtered[0]
+    ?? null;
+
+  useEffect(() => {
+    if (!selectedId && filtered[0]) setSelectedId(filtered[0].id);
+    if (selectedId && filtered.length && !filtered.some((receipt) => receipt.id === selectedId)) {
+      setSelectedId(filtered[0]?.id ?? null);
+    }
+  }, [filtered, selectedId]);
+
   const statusCounts = useMemo(() => ({
     success: receipts.filter((r) => r.status === 'success').length,
     blocked: receipts.filter((r) => r.status === 'blocked').length,
@@ -2092,7 +2102,7 @@ export const Receipts: React.FC = () => {
                   metaLine: `${formatReceiptTime(receipt.timestamp)} · ${receipt.subjectType}${receipt.subjectId ? `:${receipt.subjectId}` : ''}`,
                   blockerCode: receipt.blockerCode,
                 }}
-                selected={receipt.id === selectedId}
+                selected={receipt.id === selected?.id}
                 onSelect={() => setSelectedId(receipt.id)}
               />
             ))}
@@ -2102,7 +2112,7 @@ export const Receipts: React.FC = () => {
           </>
           )
         }
-        detail={<ReceiptDetailView detail={detail} summary={selectedSummary} />}
+        detail={<ReceiptDetailView detail={detail} summary={selected} />}
       />
 
       <SurfaceMeta label={receiptsCopy.recordMeta}>
@@ -4871,6 +4881,8 @@ const CultureSettingsPanel: React.FC<{
   api: NonNullable<ReturnType<typeof ottoApi>>;
   pushToast: ReturnType<typeof useToast>['push'];
 }> = ({ api, pushToast }) => {
+  const { hydrated, isFeatureEnabled } = useLabs();
+  const cultureExportEnabled = hydrated && isFeatureEnabled('culture_export');
   const [yamlDraft, setYamlDraft] = useState('');
   const [bundlePath, setBundlePath] = useState('');
   const [importPath, setImportPath] = useState('');
@@ -4926,6 +4938,7 @@ const CultureSettingsPanel: React.FC<{
   };
 
   const exportCulture = async () => {
+    if (!cultureExportEnabled) return;
     setBusy(true);
     setError(null);
     try {
@@ -4944,7 +4957,7 @@ const CultureSettingsPanel: React.FC<{
   };
 
   const previewImport = async () => {
-    if (!importPath.trim()) return;
+    if (!cultureExportEnabled || !importPath.trim()) return;
     setBusy(true);
     setError(null);
     try {
@@ -4969,11 +4982,18 @@ const CultureSettingsPanel: React.FC<{
         <button type="button" className="btn" disabled={busy} onClick={() => void api.constitution.open()}>
           {cultureSettingsCopy.openConstitution}
         </button>
-        <button type="button" className="btn" disabled={busy} onClick={() => void exportCulture()}>
-          {cultureSettingsCopy.exportCulture}
-        </button>
+        {cultureExportEnabled ? (
+          <button type="button" className="btn" disabled={busy} onClick={() => void exportCulture()}>
+            {cultureSettingsCopy.exportCulture}
+          </button>
+        ) : null}
       </div>
-      {bundlePath ? <p className="mono faint" style={{ fontSize: 11.5 }}>{bundlePath}</p> : null}
+      {cultureExportEnabled && bundlePath ? (
+        <p className="mono faint" style={{ fontSize: 11.5 }}>{bundlePath}</p>
+      ) : null}
+      {!cultureExportEnabled ? (
+        <p className="faint" style={{ fontSize: 12, marginTop: 8 }}>{cultureSettingsCopy.exportLabsGate}</p>
+      ) : null}
       <div className="settingsField" style={{ marginTop: 8 }}>
         <span>{cultureSettingsCopy.amendTitle}</span>
         <textarea
@@ -4988,22 +5008,24 @@ const CultureSettingsPanel: React.FC<{
           {cultureSettingsCopy.amendSave}
         </button>
       </div>
-      <div className="settingsField">
-        <span>{cultureSettingsCopy.importPreview}</span>
-        <input
-          type="text"
-          className="mono"
-          placeholder="Path to otto-culture-export-….zip"
-          value={importPath}
-          onChange={(e) => setImportPath(e.target.value)}
-          disabled={busy}
-          style={{ width: '100%' }}
-        />
-        <button type="button" className="btn" style={{ marginTop: 12 }} disabled={busy || !importPath.trim()} onClick={() => void previewImport()}>
-          Preview import (dry-run)
-        </button>
-        {importPreview ? <pre className="receiptJson mono" style={{ marginTop: 12 }}>{importPreview}</pre> : null}
-      </div>
+      {cultureExportEnabled ? (
+        <div className="settingsField">
+          <span>{cultureSettingsCopy.importPreview}</span>
+          <input
+            type="text"
+            className="mono"
+            placeholder="Path to otto-culture-export-….zip"
+            value={importPath}
+            onChange={(e) => setImportPath(e.target.value)}
+            disabled={busy}
+            style={{ width: '100%' }}
+          />
+          <button type="button" className="btn" style={{ marginTop: 12 }} disabled={busy || !importPath.trim()} onClick={() => void previewImport()}>
+            Preview import (dry-run)
+          </button>
+          {importPreview ? <pre className="receiptJson mono" style={{ marginTop: 12 }}>{importPreview}</pre> : null}
+        </div>
+      ) : null}
       {error ? <div className="settingsStatusBanner settingsStatusBanner--warn">{error}</div> : null}
     </>
   );
