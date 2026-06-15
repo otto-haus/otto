@@ -540,7 +540,7 @@ const QueueStrip: React.FC<{
             );
           })}
         </div>
-      )}
+      </div>
     </div>
   );
 };
