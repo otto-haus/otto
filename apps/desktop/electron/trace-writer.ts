@@ -8,6 +8,7 @@ export const runsDir = () => join(defaultOttoDir(), 'runs');
 export class TraceWriter {
   readonly path: string;
   private stream: WriteStream;
+  private closed = false;
 
   constructor(conversation: string) {
     const RUNS_DIR = runsDir();
@@ -19,10 +20,15 @@ export class TraceWriter {
   }
 
   write(kind: string, data: unknown) {
+    // A lingering turn handler may emit a late frame after the turn's trace is
+    // closed; drop those writes instead of throwing ERR_STREAM_WRITE_AFTER_END.
+    if (this.closed) return;
     this.stream.write(`${JSON.stringify({ t: Date.now(), kind, data })}\n`);
   }
 
   close() {
+    if (this.closed) return;
+    this.closed = true;
     this.stream.end();
   }
 }
