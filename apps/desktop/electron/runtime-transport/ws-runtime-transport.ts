@@ -11,7 +11,7 @@ import { StandardStore } from '../standard-store';
 import { PracticeStore } from '../practice-store';
 import { TraceWriter } from '../trace-writer';
 import { applyEmbeddedLettaSettingsEnv } from '../dream-settings';
-import { confirmedModelHandle, discoverLocalLettaContext } from './letta-discovery';
+import { confirmedModelHandle, discoverLocalLettaContext, resolveLiveLocalLettaContext } from './letta-discovery';
 import {
   smokeMode,
   classify,
@@ -130,7 +130,7 @@ export class WsRuntimeTransport implements OttoRuntimeTransport {
     await this.close();
     applyEmbeddedLettaSettingsEnv(this.config);
     const cli = resolveCli(this.config.connectionMode());
-    const context = discoverLocalLettaContext(this.config);
+    const context = await resolveLiveLocalLettaContext(this.config);
     const agentId = context.agentCandidates[0] ?? context.agentId;
     if (!agentId) {
       return this.fail(

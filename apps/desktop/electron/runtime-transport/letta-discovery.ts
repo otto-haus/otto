@@ -27,13 +27,61 @@ export function discoverLocalLettaContext(config: ConfigStore): LocalLettaContex
   const settings = readLettaSettings(config);
   const configuredBase = config.baseUrl();
   const discoveredUrl = normalizeBaseUrl(configuredBase) ?? discoverLocalLettaUrl() ?? discoverSettingsHttpBaseUrl(settings);
+  return buildLocalLettaContext(config, settings, configuredBase, discoveredUrl);
+}
+
+/**
+ * Liveness-aware variant of {@link discoverLocalLettaContext} used on the connection path.
+ *
+ * The sync resolver trusts a persisted `baseUrl` first, so a stale/dead port (e.g. a Letta
+ * Desktop server that has since restarted on a new port) short-circuits live discovery and otto
+ * never reconnects. Here we probe each candidate `/v1/health/` and prefer the first reachable HTTP
+ * endpoint, falling back to a live `lsof`/settings-discovered server when the persisted one is dead.
+ * Embedded (`local:`) targets and the no-candidate case behave exactly like the sync resolver.
+ */
+export async function resolveLiveLocalLettaContext(config: ConfigStore): Promise<LocalLettaContext> {
+  applyEmbeddedLettaSettingsEnv(config);
+  const settings = readLettaSettings(config);
+  const configuredBase = config.baseUrl();
+  const normalizedConfigured = normalizeBaseUrl(configuredBase);
+
+  const candidates = unique([
+    normalizedConfigured,
+    ...discoverLocalLettaUrls(),
+    discoverSettingsHttpBaseUrl(settings),
+  ]);
+  const httpCandidates = candidates.filter((url) => /^https?:\/\//i.test(url));
+
+  // Nothing to probe (embedded `local:` target or no HTTP candidate) — keep sync behavior.
+  if (httpCandidates.length === 0) {
+    const discoveredUrl = candidates[0] ?? null;
+    return buildLocalLettaContext(config, settings, configuredBase, discoveredUrl);
+  }
+
+  const liveUrl = await firstReachableBaseUrl(httpCandidates);
+  // If none are reachable, keep the first candidate so error messaging still has context.
+  const discoveredUrl = liveUrl ?? candidates[0] ?? null;
+  const staleRecovered =
+    !!liveUrl && !!normalizedConfigured && /^https?:\/\//i.test(normalizedConfigured) && liveUrl !== normalizedConfigured;
+  return buildLocalLettaContext(config, settings, configuredBase, discoveredUrl, { staleRecovered });
+}
+
+function buildLocalLettaContext(
+  config: ConfigStore,
+  settings: LettaSettings | null,
+  configuredBase: string | null,
+  discoveredUrl: string | null,
+  opts?: { staleRecovered?: boolean },
+): LocalLettaContext {
   const settingsAgent = discoverSettingsAgentId(settings, discoveredUrl);
   const agentCandidates = unique([...config.agentCandidates(), settingsAgent]);
-  const source = configuredBase || process.env.OTTO_AGENT_ID || config.get().agentId
-    ? 'otto config/env'
-    : agentCandidates.length || discoveredUrl
-      ? 'Letta local settings/discovery'
-      : 'none';
+  const source = opts?.staleRecovered
+    ? 'live Letta discovery (recovered from stale base URL)'
+    : configuredBase || process.env.OTTO_AGENT_ID || config.get().agentId
+      ? 'otto config/env'
+      : agentCandidates.length || discoveredUrl
+        ? 'Letta local settings/discovery'
+        : 'none';
   return {
     baseUrl: discoveredUrl,
     agentId: agentCandidates[0] ?? null,
@@ -43,6 +91,28 @@ export function discoverLocalLettaContext(config: ConfigStore): LocalLettaContex
       ? 'No last local agent or session was found in Letta settings.'
       : undefined,
   };
+}
+
+/** Probe a Letta HTTP endpoint's health route with a short timeout. */
+export async function probeLettaHealth(baseUrl: string, timeoutMs = 1500): Promise<boolean> {
+  if (!/^https?:\/\//i.test(baseUrl)) return false;
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    const res = await fetch(`${baseUrl}/v1/health/`, { signal: controller.signal });
+    return res.ok;
+  } catch {
+    return false;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+async function firstReachableBaseUrl(urls: string[], timeoutMs = 1500): Promise<string | null> {
+  for (const url of urls) {
+    if (await probeLettaHealth(url, timeoutMs)) return url;
+  }
+  return null;
 }
 
 function readLettaSettingsFromEnv(): LettaSettings | null {
@@ -278,8 +348,14 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 }
 
 export function discoverLocalLettaUrl(): string | null {
-  if (process.env.OTTO_SKIP_LETTA_LSOF === '1') return null;
-  if (process.platform !== 'darwin') return null;
+  return discoverLocalLettaUrls()[0] ?? null;
+}
+
+/** All loopback ports currently held by a listening Letta process (macOS `lsof`). */
+function discoverLocalLettaUrls(): string[] {
+  if (process.env.OTTO_SKIP_LETTA_LSOF === '1') return [];
+  if (process.platform !== 'darwin') return [];
+  const urls: string[] = [];
   try {
     const out = execFileSync('lsof', ['-nP', '-iTCP', '-sTCP:LISTEN'], {
       timeout: 3000,
@@ -288,12 +364,15 @@ export function discoverLocalLettaUrl(): string | null {
     for (const line of out.split('\n')) {
       if (!/letta/i.test(line)) continue;
       const m = line.match(/(?:127\.0\.0\.1|localhost):(\d+)/i);
-      if (m) return `http://127.0.0.1:${m[1]}`;
+      if (m) {
+        const url = `http://127.0.0.1:${m[1]}`;
+        if (!urls.includes(url)) urls.push(url);
+      }
     }
   } catch {
     // lsof unavailable
   }
-  return null;
+  return urls;
 }
 
 function unique(values: Array<string | null | undefined>): string[] {

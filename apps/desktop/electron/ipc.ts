@@ -13,7 +13,8 @@ import type { AttachmentInput } from './shared/types';
 import { saveAttachment } from './attachments';
 import { CharterStore } from './charter-store';
 import { ConfigStore } from './config-store';
-import { discoverLocalLettaContext, LettaRunner } from './letta-runner';
+import { LettaRunner } from './letta-runner';
+import { resolveLiveLocalLettaContext } from './runtime-transport/letta-discovery';
 import { listLocalLettaModels } from './runtime-transport/letta-discovery';
 import { ReceiptStore } from './receipt-store';
 import { StandardStore } from './standard-store';
@@ -205,8 +206,8 @@ export function registerIpc() {
   // Connection setup. v1 is local-only: provider auth lives in Letta, not Otto.
   ipcMain.handle(
     'otto:connection:get',
-    (): ConnectionInfo => {
-      const context = discoverLocalLettaContext(config);
+    async (): Promise<ConnectionInfo> => {
+      const context = await resolveLiveLocalLettaContext(config);
       return {
         baseUrl: context.baseUrl,
         agentId: context.agentId,
