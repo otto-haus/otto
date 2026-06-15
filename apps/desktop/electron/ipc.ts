@@ -1,4 +1,5 @@
 import { type BrowserWindow, app, clipboard, ipcMain, shell } from 'electron';
+import { join } from 'node:path';
 import type { ConnectionInfo, ConnectionInput, CreateProposalFromCorrectionInput, DecideProposalInput, DreamSettings, LabsConfig, OttoConfig, PermissionRequest, PermissionResponse, ProposalClassification, ProposalTarget, RuntimePreferences, RuntimeStatus } from './shared/types';
 import { applyLabsConfigPatch, getLabsConfig, labsConfigToOttoPatch } from './labs-config';
 import {
@@ -37,7 +38,7 @@ import { permissionSessionStore } from './permission-session-store';
 import { BehaviorChangelog } from './behavior-changelog';
 import { ConstitutionStore, CONSTITUTION_MD, CONSTITUTION_YAML } from './constitution-store';
 import { CultureExporter } from './culture-export';
-import { DiagnosticsExporter } from './diagnostics-export';
+import { DiagnosticsExporter, buildRuntimeLogsSummary, resolveLogsFolder } from './diagnostics-export';
 import { OTTO_DIR } from './config-store';
 import { buildProviderMirror } from './provider-mirror';
 import { setSecret, hasSecret } from './secret-store';
@@ -270,6 +271,19 @@ export function registerIpc(win: BrowserWindow) {
   ipcMain.handle('otto:diagnostics:reveal', (_e, bundlePath: string) => {
     shell.showItemInFolder(bundlePath);
     return { ok: true };
+  });
+  ipcMain.handle('otto:diagnostics:logs-summary', () =>
+    buildRuntimeLogsSummary(app.getPath('userData')),
+  );
+  ipcMain.handle('otto:diagnostics:open-logs-folder', () => {
+    const folder = resolveLogsFolder(app.getPath('userData'));
+    shell.openPath(folder);
+    return { ok: true as const, folder };
+  });
+  ipcMain.handle('otto:diagnostics:reveal-runs-folder', () => {
+    const folder = join(OTTO_DIR, 'runs');
+    shell.openPath(folder);
+    return { ok: true as const, folder };
   });
 
   const debugDeps = () => ({

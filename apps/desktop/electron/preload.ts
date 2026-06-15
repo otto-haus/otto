@@ -84,6 +84,7 @@ import type {
   DiagnosticsExportResult,
 } from '@otto-haus/core';
 import type { CheckListResult, CheckRunResult } from '@otto-haus/core';
+import type { RuntimeLogsSummary } from './diagnostics-export';
 
 const emptyChangelog = (windowDays: number): BehaviorChangelogResult => ({
   dir: '',
@@ -339,6 +340,12 @@ const api = {
   diagnostics: {
     export: (): Promise<DiagnosticsExportResult> => ipcRenderer.invoke('otto:diagnostics:export'),
     reveal: (bundlePath: string): Promise<{ ok: boolean }> => ipcRenderer.invoke('otto:diagnostics:reveal', bundlePath),
+    logsSummary: (): Promise<RuntimeLogsSummary> =>
+      ipcRenderer.invoke('otto:diagnostics:logs-summary'),
+    openLogsFolder: (): Promise<{ ok: boolean; folder: string }> =>
+      ipcRenderer.invoke('otto:diagnostics:open-logs-folder'),
+    revealRunsFolder: (): Promise<{ ok: boolean; folder: string }> =>
+      ipcRenderer.invoke('otto:diagnostics:reveal-runs-folder'),
   },
   debug: {
     showContextMenu: (surface?: string): Promise<{ ok: boolean }> =>

@@ -31,6 +31,11 @@ const PRIMARY_WORKSPACE_ITEMS: NavDef[] = [
   { id: 'routines', label: 'Routines', icon: Icon.routines, shortcut: '⌘5' },
 ];
 
+/** Ship-tier utilities — always visible (not buried in the Workspace group). */
+const UTILITY_NAV_ITEMS: NavDef[] = [
+  { id: 'terminal', label: 'Terminal', icon: Icon.terminal },
+];
+
 /** Remaining workspace surfaces — behind the collapsible Workspace group. */
 const COLLAPSIBLE_WORKSPACE_ITEMS: NavDef[] = [
   { id: 'curation', label: 'Curation', icon: Icon.curation, shortcut: '⌘6' },
@@ -41,10 +46,9 @@ const COLLAPSIBLE_WORKSPACE_ITEMS: NavDef[] = [
   { id: 'knowledge', label: 'Knowledge', icon: Icon.theme },
   { id: 'tickets', label: 'Tickets', icon: Icon.plus },
   { id: 'channels', label: 'Channels', icon: Icon.send },
-  { id: 'terminal', label: 'Terminal', icon: Icon.terminal },
 ];
 
-const WORKSPACE_ITEMS: NavDef[] = [...PRIMARY_WORKSPACE_ITEMS, ...COLLAPSIBLE_WORKSPACE_ITEMS];
+const WORKSPACE_ITEMS: NavDef[] = [...PRIMARY_WORKSPACE_ITEMS, ...UTILITY_NAV_ITEMS, ...COLLAPSIBLE_WORKSPACE_ITEMS];
 
 const COLLAPSIBLE_WORKSPACE_IDS = new Set<SurfaceId>(
   COLLAPSIBLE_WORKSPACE_ITEMS.map((item) => item.id),
@@ -198,6 +202,7 @@ export const Sidebar: React.FC<{
           <>
             {navItem({ id: 'chat', label: 'Chat', icon: Icon.chat, shortcut: '⌘1' })}
             {PRIMARY_WORKSPACE_ITEMS.map((item) => navItem(item))}
+            {UTILITY_NAV_ITEMS.map((item) => navItem(item))}
             <div className={`navGroup${workspaceOpen ? ' is-open' : ''}${workspaceActive ? ' is-activeGroup' : ''}`}>
               <button
                 type="button"

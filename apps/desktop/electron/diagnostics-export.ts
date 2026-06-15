@@ -89,18 +89,64 @@ function latestRunTraceTail(maxLines = 80): { path: string | null; tail: string 
   return { path, tail: tailFile(path, maxLines) };
 }
 
-function collectLogTails(userDataPath: string): Array<{ label: string; path: string; tail: string }> {
-  const candidates = [
-    join(userDataPath, 'logs', 'main.log'),
-    join(userDataPath, 'Logs', 'main.log'),
-    join(userDataPath, 'logs', 'renderer.log'),
-  ];
-  const out: Array<{ label: string; path: string; tail: string }> = [];
+export type RuntimeLogEntry = {
+  id: string;
+  label: string;
+  path: string;
+  tail: string | null;
+};
+
+export type RuntimeLogsSummary = {
+  logsFolder: string;
+  runsFolder: string;
+  entries: RuntimeLogEntry[];
+};
+
+const ELECTRON_LOG_CANDIDATES = (userDataPath: string) => [
+  { id: 'main', label: 'Electron main', path: join(userDataPath, 'logs', 'main.log') },
+  { id: 'main-alt', label: 'Electron main (alt)', path: join(userDataPath, 'Logs', 'main.log') },
+  { id: 'renderer', label: 'Electron renderer', path: join(userDataPath, 'logs', 'renderer.log') },
+];
+
+export function resolveLogsFolder(userDataPath: string): string {
+  const candidates = [join(userDataPath, 'logs'), join(userDataPath, 'Logs'), userDataPath];
   for (const path of candidates) {
-    const tail = tailFile(path);
-    if (tail) out.push({ label: basename(path), path, tail });
+    if (existsSync(path)) return path;
+  }
+  return userDataPath;
+}
+
+function collectLogTails(userDataPath: string): Array<{ label: string; path: string; tail: string }> {
+  const out: Array<{ label: string; path: string; tail: string }> = [];
+  for (const candidate of ELECTRON_LOG_CANDIDATES(userDataPath)) {
+    const tail = tailFile(candidate.path);
+    if (tail) out.push({ label: basename(candidate.path), path: candidate.path, tail });
   }
   return out;
+}
+
+export function buildRuntimeLogsSummary(userDataPath: string, maxLines = 80): RuntimeLogsSummary {
+  const entries: RuntimeLogEntry[] = [];
+  for (const candidate of ELECTRON_LOG_CANDIDATES(userDataPath)) {
+    entries.push({
+      id: candidate.id,
+      label: candidate.label,
+      path: candidate.path,
+      tail: tailFile(candidate.path, maxLines),
+    });
+  }
+  const trace = latestRunTraceTail(maxLines);
+  entries.push({
+    id: 'latest-trace',
+    label: 'Latest SDK/runtime trace',
+    path: trace.path ?? join(runsDir(), '(none yet)'),
+    tail: trace.tail,
+  });
+  return {
+    logsFolder: resolveLogsFolder(userDataPath),
+    runsFolder: runsDir(),
+    entries,
+  };
 }
 
 export class DiagnosticsExporter {

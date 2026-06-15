@@ -1,8 +1,8 @@
-import { existsSync, mkdtempSync, readFileSync, rmSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { afterEach, describe, expect, test } from 'bun:test';
-import { DiagnosticsExporter, redactDiagnosticsText, type DiagnosticsExportInput } from './diagnostics-export';
+import { DiagnosticsExporter, buildRuntimeLogsSummary, redactDiagnosticsText, type DiagnosticsExportInput } from './diagnostics-export';
 
 describe('DiagnosticsExporter', () => {
   let ottoDir = '';
@@ -35,6 +35,21 @@ describe('DiagnosticsExporter', () => {
     const redacted = redactDiagnosticsText('Authorization: Bearer abcdefghijklmnopqrstuvwxyz');
     expect(redacted).not.toContain('abcdefghijklmnopqrstuvwxyz');
     expect(redacted).toContain('[REDACTED]');
+  });
+
+  test('buildRuntimeLogsSummary includes redacted electron main tail', () => {
+    ottoDir = mkdtempSync(join(tmpdir(), 'otto-diagnostics-logs-'));
+    const userData = join(ottoDir, 'user-data');
+    const logsDir = join(userData, 'logs');
+    mkdirSync(logsDir, { recursive: true });
+    writeFileSync(join(logsDir, 'main.log'), 'boot ok\nAuthorization: Bearer super-secret-token-value-1234567890\n');
+
+    const summary = buildRuntimeLogsSummary(userData);
+    expect(summary.logsFolder).toContain('logs');
+    const main = summary.entries.find((entry) => entry.id === 'main');
+    expect(main?.tail).toContain('boot ok');
+    expect(main?.tail).not.toContain('super-secret-token-value-1234567890');
+    expect(summary.entries.some((entry) => entry.id === 'latest-trace')).toBe(true);
   });
 });
 

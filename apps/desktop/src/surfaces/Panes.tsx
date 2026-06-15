@@ -4389,6 +4389,30 @@ const DiagnosticsSettingsPanel: React.FC<{
   const [bundlePath, setBundlePath] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [logsBusy, setLogsBusy] = useState(false);
+  const [logsError, setLogsError] = useState<string | null>(null);
+  const [logsSummary, setLogsSummary] = useState<Awaited<ReturnType<typeof api.diagnostics.logsSummary>> | null>(null);
+  const [activeLogId, setActiveLogId] = useState('latest-trace');
+
+  const refreshLogs = async () => {
+    setLogsBusy(true);
+    setLogsError(null);
+    try {
+      const summary = await api.diagnostics.logsSummary();
+      setLogsSummary(summary);
+      if (!summary.entries.some((entry) => entry.id === activeLogId)) {
+        setActiveLogId(summary.entries[summary.entries.length - 1]?.id ?? 'latest-trace');
+      }
+    } catch (e) {
+      setLogsError(String(e));
+    } finally {
+      setLogsBusy(false);
+    }
+  };
+
+  useEffect(() => {
+    void refreshLogs();
+  }, [api]);
 
   const exportDiagnostics = async () => {
     setBusy(true);
@@ -4409,6 +4433,10 @@ const DiagnosticsSettingsPanel: React.FC<{
     }
   };
 
+  const activeLog = logsSummary?.entries.find((entry) => entry.id === activeLogId)
+    ?? logsSummary?.entries.find((entry) => entry.tail)
+    ?? logsSummary?.entries[0];
+
   return (
     <>
       <SettingsSectionHeader title={settingsCopy.diagnosticsTitle} lede={settingsCopy.diagnosticsLede} />
@@ -4416,10 +4444,49 @@ const DiagnosticsSettingsPanel: React.FC<{
         <button type="button" className="btn btn--solid-d" disabled={busy} onClick={() => void exportDiagnostics()}>
           {settingsCopy.diagnosticsExport}
         </button>
+        <button type="button" className="btn btn--ghost" disabled={logsBusy} onClick={() => void api.diagnostics.openLogsFolder()}>
+          {settingsCopy.diagnosticsOpenLogs}
+        </button>
+        <button type="button" className="btn btn--ghost" disabled={logsBusy} onClick={() => void api.diagnostics.revealRunsFolder()}>
+          {settingsCopy.diagnosticsOpenRuns}
+        </button>
+        <button type="button" className="btn btn--ghost" disabled={logsBusy} onClick={() => void refreshLogs()}>
+          {settingsCopy.diagnosticsRefreshLogs}
+        </button>
       </div>
       {bundlePath ? <p className="mono faint" style={{ fontSize: 11.5 }}>{bundlePath}</p> : null}
+      {logsSummary ? (
+        <div style={{ marginTop: 12 }}>
+          <p className="faint" style={{ fontSize: 12, marginBottom: 8 }}>
+            {settingsCopy.diagnosticsLogsFolder}: <span className="mono">{logsSummary.logsFolder}</span>
+            {' · '}
+            {settingsCopy.diagnosticsRunsFolder}: <span className="mono">{logsSummary.runsFolder}</span>
+          </p>
+          <p className="faint" style={{ fontSize: 12, marginBottom: 6 }}>{settingsCopy.diagnosticsLogsTitle}</p>
+          <div className="row" style={{ flexWrap: 'wrap', gap: 6, marginBottom: 8 }}>
+            {logsSummary.entries.map((entry) => (
+              <button
+                key={entry.id}
+                type="button"
+                className={`btn btn--ghost${activeLogId === entry.id ? ' is-active' : ''}`}
+                onClick={() => setActiveLogId(entry.id)}
+              >
+                {entry.label}
+              </button>
+            ))}
+          </div>
+          {activeLog?.tail ? (
+            <pre className="mono settingsMemoryBlock__value" style={{ maxHeight: 220, overflow: 'auto', whiteSpace: 'pre-wrap' }}>
+              {activeLog.tail}
+            </pre>
+          ) : (
+            <p className="faint" style={{ fontSize: 12 }}>{settingsCopy.diagnosticsLogsEmpty}</p>
+          )}
+        </div>
+      ) : null}
       <p className="faint" style={{ fontSize: 12, marginTop: 8 }}>{settingsCopy.diagnosticsCommand}</p>
       {error ? <p className="faint" style={{ color: 'var(--warn)' }}>{error}</p> : null}
+      {logsError ? <p className="faint" style={{ color: 'var(--warn)' }}>{logsError}</p> : null}
     </>
   );
 };
