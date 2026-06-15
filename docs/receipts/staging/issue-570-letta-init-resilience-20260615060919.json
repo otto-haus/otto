@@ -1,0 +1,55 @@
+{
+  "ok": true,
+  "issue": 570,
+  "runId": "20260615060919",
+  "gitHead": "eba20567887f18a9f9d75ecdf6c2b7219f983c98",
+  "stagingApp": "/Applications/otto-staging.app",
+  "cdpPort": 9445,
+  "initBudgetMs": 50000,
+  "scenario": "letta-open",
+  "checks": {
+    "initReturnedWithinBudget": true,
+    "notInfiniteBooting": true,
+    "lettaOpenConnected": true,
+    "embeddedModeAutoStart": true
+  },
+  "runtimeStatus": {
+    "ready": true,
+    "code": "ready",
+    "agentId": "agent-local-d8e35a2a-a89f-45dd-b117-5eae5df8c8f2",
+    "baseUrl": "http://127.0.0.1:54824",
+    "discoverySource": "otto config/env",
+    "conversationId": "local-conv-667",
+    "model": "chatgpt-plus-pro/gpt-5.5",
+    "modelHandle": "chatgpt-plus-pro/gpt-5.5",
+    "effort": "max",
+    "sessionMode": "smoke",
+    "memfsEnabled": true,
+    "tools": [
+      "CreateWorktree",
+      "memory_apply_patch",
+      "Agent",
+      "TaskOutput",
+      "TaskStop",
+      "Skill",
+      "exec_command",
+      "write_stdin",
+      "ViewImage",
+      "ApplyPatch",
+      "UpdatePlan"
+    ],
+    "transportMode": "auto",
+    "effectiveTransport": "sdk subprocess",
+    "transportFallbackReason": "WS promotion scorecard not passed — auto uses SDK until reviewer-approved traces land (039).",
+    "cliPath": "/Applications/Letta.app/Contents/Resources/app.asar.unpacked/node_modules/@letta-ai/letta-code/letta.js",
+    "cliResolved": true
+  },
+  "existingModeStatus": null,
+  "initElapsedMs": 1915,
+  "lettaListening": true,
+  "unitTestCoverage": [
+    "apps/desktop/electron/runtime-transport/letta-discovery.test.ts#resolveInitBaseUrl",
+    "apps/desktop/electron/runtime-transport/sdk-subprocess-transport.test.ts#init resilience",
+    "apps/desktop/electron/runtime-transport/runtime-common.test.ts#withTimeout"
+  ]
+}

@@ -3,7 +3,7 @@ import { mkdtempSync, mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { ConfigStore } from '../config-store';
-import { discoverLocalLettaContext, resolveModelHandle } from './letta-discovery';
+import { discoverLocalLettaContext, isLocalLettaBackendListening, resolveInitBaseUrl, resolveModelHandle } from './letta-discovery';
 import type { LettaModelOption } from '../shared/types';
 
 const envKeys = ['OTTO_HOME', 'OTTO_LETTA_SETTINGS_PATH', 'OTTO_SKIP_LETTA_LSOF'] as const;
@@ -43,6 +43,32 @@ const MODELS: LettaModelOption[] = [
   { handle: 'openai/gpt-5.5', label: 'GPT 5.5' },
   { handle: 'anthropic/claude-opus-4-8', label: 'Claude Opus 4.8' },
 ];
+
+describe('resolveInitBaseUrl', () => {
+  test('blocks existing mode when local: backend is down', () => {
+    process.env.OTTO_SKIP_LETTA_LSOF = '1';
+    const result = resolveInitBaseUrl('local:/Users/seb/.letta/lc-local-backend', 'existing');
+    expect(result.blockReason).toMatch(/Local Letta backend is not running/i);
+    expect(result.baseUrl).toBe('local:/Users/seb/.letta/lc-local-backend');
+  });
+
+  test('omits base URL in embedded mode so bundled CLI can spawn standalone backend', () => {
+    process.env.OTTO_SKIP_LETTA_LSOF = '1';
+    const result = resolveInitBaseUrl('local:/Users/seb/.letta/lc-local-backend', 'embedded');
+    expect(result.blockReason).toBeUndefined();
+    expect(result.baseUrl).toBeNull();
+  });
+
+  test('passes through http URL for cloud mode when listener check is skipped', () => {
+    process.env.OTTO_SKIP_LETTA_LSOF = '1';
+    expect(resolveInitBaseUrl('http://127.0.0.1:8283', 'cloud').baseUrl).toBe('http://127.0.0.1:8283');
+  });
+
+  test('isLocalLettaBackendListening respects OTTO_SKIP_LETTA_LSOF', () => {
+    process.env.OTTO_SKIP_LETTA_LSOF = '1';
+    expect(isLocalLettaBackendListening()).toBe(false);
+  });
+});
 
 describe('resolveModelHandle', () => {
   test('keeps requested handle when present in discovered models', () => {

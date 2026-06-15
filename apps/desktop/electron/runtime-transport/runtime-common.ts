@@ -11,6 +11,32 @@ export function smokeMode(): boolean {
 export const SMOKE_MODE = smokeMode();
 export const WANT_MEMFS = process.env.OTTO_MEMFS === '1' || process.env.OTTO_MEMFS === 'true';
 
+/** Matches WS connect timeout — bounds SDK session.initialize() so IPC cannot hang forever. */
+export const DEFAULT_SESSION_INIT_TIMEOUT_MS = 45_000;
+
+export function sessionInitTimeoutMs(): number {
+  const raw = process.env.OTTO_SESSION_INIT_TIMEOUT_MS;
+  const parsed = raw ? Number.parseInt(raw, 10) : NaN;
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : DEFAULT_SESSION_INIT_TIMEOUT_MS;
+}
+
+export async function withTimeout<T>(promise: Promise<T>, timeoutMs: number, label: string): Promise<T> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  try {
+    return await Promise.race([
+      promise,
+      new Promise<T>((_, reject) => {
+        timer = setTimeout(
+          () => reject(new Error(`${label} timed out after ${timeoutMs}ms`)),
+          timeoutMs,
+        );
+      }),
+    ]);
+  } finally {
+    if (timer) clearTimeout(timer);
+  }
+}
+
 const LETTA_DESKTOP_CLI = '/Applications/Letta.app/Contents/Resources/app.asar.unpacked/node_modules/@letta-ai/letta-code/letta.js';
 
 export type ConnectionMode = NonNullable<OttoConfig['connectionMode']>;
@@ -260,6 +286,10 @@ export function friendly(code: StatusCode, reason: string): string {
     case 'no-api-key':
       return `Letta auth failed. For local v1, configure provider auth inside Letta; otto does not need its own API key. (${reason})`;
     case 'unreachable':
+      if (reason.includes('Local Letta backend is not running')) return reason;
+      if (reason.includes('timed out after')) {
+        return `Letta did not connect in time. Open Letta Desktop or switch to Embedded mode in Settings, then retry. (${reason})`;
+      }
       return `Can't reach the Letta backend — check the base URL in Settings. (${reason})`;
     case 'no-agent':
       return `Can't find a default local Letta agent — open Letta once or choose an Agent ID override in Settings. (${reason})`;

@@ -8,7 +8,7 @@ import { getSecret, hasSecret } from '../secret-store';
 import { StandardStore } from '../standard-store';
 import { PracticeStore } from '../practice-store';
 import { TraceWriter } from '../trace-writer';
-import { discoverLocalLettaContext } from './letta-discovery';
+import { discoverLocalLettaContext, resolveInitBaseUrl } from './letta-discovery';
 import {
   SMOKE_MODE,
   WANT_MEMFS,
@@ -24,6 +24,8 @@ import {
   promptWithRuntimeContext,
   resolveCli,
   safeWebContentsSend,
+  sessionInitTimeoutMs,
+  withTimeout,
   type ModelInitAttempt,
 } from './runtime-common';
 import { permissionSessionStore } from '../permission-session-store';
@@ -159,9 +161,24 @@ export class SdkSubprocessTransport implements OttoRuntimeTransport {
   /** Connect; recover from stale agents/conversations; never throw to the renderer. */
   async init(opts?: { freshConversation?: boolean }): Promise<RuntimeStatus> {
     const cli = resolveCli(this.config.connectionMode());
-    this.applyConnectionEnv(this.config.baseUrl());
     const context = discoverLocalLettaContext(this.config);
-    this.applyConnectionEnv(context.baseUrl);
+    const baseResolution = resolveInitBaseUrl(context.baseUrl, this.config.connectionMode());
+    if (baseResolution.blockReason) {
+      this.status = {
+        ready: false,
+        code: 'unreachable',
+        reason: friendly('unreachable', baseResolution.blockReason),
+        agentId: context.agentCandidates[0] ?? null,
+        baseUrl: context.baseUrl,
+        discoverySource: context.source,
+        modelHandle: this.config.modelHandle(),
+        effort: this.config.effort(),
+        sessionMode: SMOKE_MODE ? 'smoke' : 'default',
+        ...cli,
+      };
+      return this.status;
+    }
+    this.applyConnectionEnv(baseResolution.baseUrl);
     const agentCandidates = context.agentCandidates;
     const primaryAgentId = agentCandidates[0] ?? null;
 
@@ -207,7 +224,17 @@ export class SdkSubprocessTransport implements OttoRuntimeTransport {
       const session = resumeId
         ? (fresh || SMOKE_MODE ? sdk.createSession(resumeId, sessionOpts) : sdk.resumeSession(resumeId, sessionOpts))
         : sdk.createSession(undefined, sessionOpts);
-      const init = await session.initialize();
+      let init: Awaited<ReturnType<Session['initialize']>>;
+      try {
+        init = await withTimeout(
+          session.initialize(),
+          sessionInitTimeoutMs(),
+          'Letta session.initialize()',
+        );
+      } catch (e) {
+        session.close();
+        throw e;
+      }
       if (SMOKE_MODE && init.conversationId === 'default') {
         session.close();
         throw new Error('Smoke test refused to use conversation=default');
