@@ -4,14 +4,15 @@ import { ShutdownCoordinator } from './shutdown-coordinator';
 describe('ShutdownCoordinator', () => {
   test('safeReset aborts, closes runtime, clears permissions, and re-inits', async () => {
     const calls: string[] = [];
-    const coordinator = new ShutdownCoordinator({
-      win: {
+    const mockWin = {
+      isDestroyed: () => false,
+      webContents: {
         isDestroyed: () => false,
-        webContents: {
-          isDestroyed: () => false,
-          executeJavaScript: async () => ({ cleared: ['otto.chat.queue.v3'] }),
-        },
-      } as never,
+        executeJavaScript: async () => ({ cleared: ['otto.chat.queue.v3'] }),
+      },
+    } as never;
+    const coordinator = new ShutdownCoordinator({
+      getWin: () => mockWin,
       runner: {
         abort: async () => { calls.push('abort'); },
         close: async () => { calls.push('close'); },
@@ -34,14 +35,15 @@ describe('ShutdownCoordinator', () => {
 
   test('gracefulShutdown runs shutdown steps once', async () => {
     let closeCount = 0;
-    const coordinator = new ShutdownCoordinator({
-      win: {
+    const mockWin = {
+      isDestroyed: () => false,
+      webContents: {
         isDestroyed: () => false,
-        webContents: {
-          isDestroyed: () => false,
-          executeJavaScript: async () => ({ cleared: [] }),
-        },
-      } as never,
+        executeJavaScript: async () => ({ cleared: [] }),
+      },
+    } as never;
+    const coordinator = new ShutdownCoordinator({
+      getWin: () => mockWin,
       runner: {
         abort: async () => {},
         close: async () => { closeCount += 1; },
