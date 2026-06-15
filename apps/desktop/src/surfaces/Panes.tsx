@@ -31,6 +31,12 @@ import {
   type StandardDomain,
   type StandardStatusFilter,
 } from '../standards-filter';
+import {
+  persistDisplayTheme,
+  readStoredDisplayTheme,
+  watchSystemDisplayTheme,
+  type DisplayTheme,
+} from '../display-preferences';
 import { LabsBlockedShell } from '../labs/LabsBlockedShell';
 import {
   getSampleReceiptDetail,
@@ -3924,6 +3930,55 @@ const DreamSettingsPanel: React.FC<{
   );
 };
 
+const DisplaySettingsPanel: React.FC = () => {
+  const api = ottoApi();
+  const [theme, setTheme] = useState<DisplayTheme>(() => readStoredDisplayTheme());
+
+  useEffect(() => {
+    if (!api) return;
+    void api.config.get().then((cfg) => {
+      if (!cfg.theme) return;
+      setTheme(cfg.theme);
+      persistDisplayTheme(cfg.theme);
+    }).catch(() => {});
+  }, [api]);
+
+  useEffect(() => watchSystemDisplayTheme(theme), [theme]);
+
+  const updateTheme = async (next: DisplayTheme) => {
+    setTheme(next);
+    persistDisplayTheme(next);
+    if (api) {
+      try {
+        await api.config.set({ theme: next });
+      } catch {
+        /* best effort */
+      }
+    }
+  };
+
+  return (
+    <div className="settingsBlock">
+      <div className="settingsField">
+        <label>
+          <span>{settingsCopy.displayThemeLabel}</span>
+          <select
+            style={inputStyle}
+            value={theme}
+            onChange={(e) => void updateTheme(e.target.value as DisplayTheme)}
+            aria-label={settingsCopy.displayThemeLabel}
+          >
+            <option value="light">{settingsCopy.displayThemeLight}</option>
+            <option value="dark">{settingsCopy.displayThemeDark}</option>
+            <option value="system">{settingsCopy.displayThemeSystem}</option>
+          </select>
+        </label>
+        <p className="settingsFieldHint">{settingsCopy.displayThemeHint}</p>
+      </div>
+    </div>
+  );
+};
+
 const LabsSettingsPanel: React.FC = () => {
   const { labs, setMasterEnabled, setFeatureEnabled, hydrated } = useLabs();
 
@@ -4017,7 +4072,7 @@ const ConversationSortSetting: React.FC = () => {
   );
 };
 
-type SettingsSectionId = 'general' | 'providers' | 'memory' | 'culture' | 'labs';
+type SettingsSectionId = 'general' | 'display' | 'providers' | 'memory' | 'culture' | 'labs';
 
 export const Settings: React.FC = () => {
   const rt = useRuntimeContext();
@@ -4036,6 +4091,7 @@ export const Settings: React.FC = () => {
       const pending = sessionStorage.getItem('otto.settings.section');
       if (
         pending === 'general'
+        || pending === 'display'
         || pending === 'providers'
         || pending === 'memory'
         || pending === 'culture'
@@ -4051,6 +4107,7 @@ export const Settings: React.FC = () => {
 
   const settingsTabs: Array<{ id: SettingsSectionId; label: string; icon: React.ReactNode }> = [
     { id: 'general', label: settingsCopy.tabGeneral, icon: Icon.settings },
+    { id: 'display', label: settingsCopy.tabDisplay, icon: Icon.theme },
     { id: 'providers', label: settingsCopy.tabProviders, icon: Icon.lock },
     { id: 'memory', label: settingsCopy.tabMemory, icon: Icon.curation },
     { id: 'culture', label: settingsCopy.tabCulture, icon: Icon.file },
@@ -4083,6 +4140,13 @@ export const Settings: React.FC = () => {
 
       {section === 'providers' ? (
         <ModelProviders />
+      ) : section === 'display' ? (
+        <div className="settingsPage__content">
+          <SettingsSectionHeader title={settingsCopy.displayTitle} lede={settingsCopy.displayLede} />
+          <DisplaySettingsPanel />
+          <p className="faint mono settingsLocalFootnote">{settingsCopy.localOnlyFootnote}</p>
+          <AppSourceDetails info={buildInfo} />
+        </div>
       ) : section === 'memory' ? (
         <div className="settingsPage__content">
           <section id="settings-memory">

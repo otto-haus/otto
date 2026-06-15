@@ -3,6 +3,7 @@ import { homedir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { resolveLettaSettingsPath } from './dream-settings';
 import type { EffortLevel, OttoConfig, ConversationSortMode } from './shared/types';
+import { normalizeDisplayTheme } from './shared/display-theme';
 
 export const defaultOttoDir = () => {
   const homeOverride = process.env.OTTO_HOME?.trim();
@@ -154,6 +155,9 @@ function normalizeConfig(config: OttoConfig): OttoConfig {
     next.conversationSortMode = conversationSortMode;
   } else if ('conversationSortMode' in config) {
     next.conversationSortMode = 'recent';
+  }
+  if ('theme' in config) {
+    next.theme = normalizeDisplayTheme((config as { theme?: unknown }).theme);
   }
   return next;
 }

@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <!-- otto is a light-only warm-paper design; keep native controls (selects, scrollbars, autofill) light on Dark Mode systems. -->
+    <!-- Theme follows Settings → Display; boot script applies stored preference before paint. -->
     <meta name="color-scheme" content="light" />
     <link rel="icon" type="image/png" href="/favicon.png" />
     <title>otto Desktop</title>
@@ -30,6 +30,25 @@
     </style>
   </head>
   <body>
+    <script>
+      (function () {
+        var key = 'otto.display.theme.v1';
+        var pref = localStorage.getItem(key);
+        var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        var effective = pref === 'dark' || (pref === 'system' && prefersDark) ? 'dark' : 'light';
+        document.documentElement.dataset.theme = effective;
+        document.documentElement.style.colorScheme = effective;
+        var meta = document.querySelector('meta[name="color-scheme"]');
+        if (meta) meta.setAttribute('content', effective);
+        var boot = document.getElementById('otto-boot-shell');
+        if (boot && effective === 'dark') {
+          boot.style.background = 'oklch(0.16 0.008 270)';
+          boot.style.color = 'oklch(0.94 0.005 270)';
+          var small = boot.querySelector('small');
+          if (small) small.style.color = 'oklch(0.62 0.006 270)';
+        }
+      })();
+    </script>
     <div id="root">
       <div id="otto-boot-shell" aria-live="polite">
         <strong>otto</strong>
