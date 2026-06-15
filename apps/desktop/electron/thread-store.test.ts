@@ -82,6 +82,25 @@ describe('ThreadStore', () => {
     }
   });
 
+  test('list(false) falls back to first visible thread if active id is archived', () => {
+    const tmp = mkdtempSync(join(tmpdir(), 'otto-thread-test-'));
+    try {
+      const config = mockConfig(tmp);
+      const store = new ThreadStore(config);
+      const first = store.create({ title: 'Visible' });
+      const archived = store.create({ title: 'Archived' });
+      store.archive(archived.id);
+      config.update({ activeThreadId: archived.id, conversationId: 'archived-conv' });
+
+      const list = store.list(false);
+      expect(list.activeThreadId).toBe(first.id);
+      expect(list.threads.map((thread) => thread.id)).toEqual([first.id]);
+    } finally {
+      rmSync(tmp, { recursive: true, force: true });
+      delete process.env.OTTO_HOME;
+    }
+  });
+
   test('archiving the active thread moves config to the next visible thread', () => {
     const tmp = mkdtempSync(join(tmpdir(), 'otto-thread-test-'));
     try {
