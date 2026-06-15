@@ -908,19 +908,6 @@ export const memoryWritebackCopy = {
   deny: 'Deny',
 } as const;
 
-export const commandStationCopy = {
-  eyebrow: 'command station',
-  title: 'What needs you',
-  curation: { label: 'Curation', hint: 'Pending proposals' },
-  receipts: { label: 'Recent proof', hint: 'Latest receipts' },
-  tickets: { label: 'Tickets', hint: 'Open worker slices' },
-  autonomy: { label: 'Doors', hint: 'Awaiting approval' },
-  constitution: { label: 'Constitution', hint: 'Source of culture' },
-  changelog: { label: 'Changelog', hint: 'What changed' },
-  latestProof: { label: 'Latest proof', hint: 'Authority + status' },
-  needsRatification: { label: 'Needs ratification', hint: 'Pending Curation' },
-} as const;
-
 export const cultureSettingsCopy = {
   eyebrow: 'culture',
   title: 'Constitution & export',

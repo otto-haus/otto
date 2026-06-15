@@ -9,7 +9,7 @@ import { isElectron, ottoApi, type EffortLevel, type LettaModelOption, type Save
 import { useRuntimeContext } from '../RuntimeContext';
 import type { SurfaceId } from '../components/Sidebar';
 import { OttoMark } from '../components/OttoMark';
-import { CheckBlockBanner, CommandStationStrip, ContextDrawer, MessageActions, ReceiptInlineCard, type PermissionDecision, type PermissionRequestView } from '../components/ui';
+import { CheckBlockBanner, MessageActions, Modal, PermissionCard, ReceiptInlineCard, type PermissionDecision, type PermissionRequestView } from '../components/ui';
 import { TodoPanel } from '../components/TodoPanel';
 import { displayThreadTitle } from '../components/ui/ThreadList';
 import { chatCopy, permissionCopy, projectCopy, toastCopy } from '../copy/surfaces';
@@ -1106,11 +1106,6 @@ const LiveChat: React.FC<{
               <p className="faint" style={{ marginTop: 8, fontSize: 13 }}>{chatCopy.diagnosticsHint}</p>
             </div>
           )}
-          {ready && streamMessages.length === 0 && onNavigate ? (
-            <div className="chat__commandStation">
-              <CommandStationStrip onNavigate={onNavigate} />
-            </div>
-          ) : null}
           {streamMessages.length === 0 && (
             <div className={`chatEmpty${ready ? '' : ' chatEmpty--muted'}`}>
               <div className="eyebrow">{chatCopy.sessionEyebrow}</div>
