@@ -572,7 +572,6 @@ const LiveChat: React.FC<{
   const [proposeBusy, setProposeBusy] = useState(false);
   const [cmdMessages, setCmdMessages] = useState<ChatMsg[]>([]);
   const draining = useRef(false);
-  const fileInput = useRef<HTMLInputElement | null>(null);
   const pickerRef = useRef<HTMLDivElement | null>(null);
   const streamRef = useRef<HTMLDivElement | null>(null);
   const tailRef = useRef<HTMLDivElement | null>(null);
@@ -1108,25 +1107,26 @@ const LiveChat: React.FC<{
           )}
           {streamMessages.length === 0 && (
             <div className={`chatEmpty${ready ? '' : ' chatEmpty--muted'}`}>
-              <div className="eyebrow">{chatCopy.sessionEyebrow}</div>
               <h2 className="chatEmpty__title">{chatCopy.sessionTitle}</h2>
-              <p className="chatEmpty__lede">
-                {ready ? chatCopy.sessionBody : 'Finish runtime setup above, then send your first message.'}
-              </p>
-              <div className="chatStarters" aria-label="Starter prompts">
-                {chatCopy.starterPrompts.map((prompt) => (
-                  <button
-                    key={prompt}
-                    type="button"
-                    className="chatStarter"
-                    onClick={() => setDraft(prompt)}
-                  >
-                    {prompt}
-                  </button>
-                ))}
-              </div>
+              {!ready ? (
+                <p className="chatEmpty__lede">Finish runtime setup above, then send your first message.</p>
+              ) : null}
               {ready ? (
-                <p className="faint chatEmpty__lede">{chatCopy.ticketCommandHint}</p>
+                <>
+                  <div className="chatStarters" aria-label="Starter prompts">
+                    {chatCopy.starterPrompts.map((prompt) => (
+                      <button
+                        key={prompt}
+                        type="button"
+                        className="chatStarter"
+                        onClick={() => setDraft(prompt)}
+                      >
+                        {prompt}
+                      </button>
+                    ))}
+                  </div>
+                  <p className="faint chatEmpty__lede">{chatCopy.ticketCommandHint}</p>
+                </>
               ) : null}
             </div>
           )}
@@ -1300,20 +1300,6 @@ const LiveChat: React.FC<{
         ) : null}
         <div className="promptCompose">
           <div className={`promptbox${ready ? '' : ' promptbox--send-blocked'}`}>
-            <input
-              ref={fileInput}
-              type="file"
-              accept="image/*"
-              multiple
-              className="srOnly"
-              onChange={(e) => {
-                void attachImages(imageFiles(e.currentTarget.files ?? []));
-                e.currentTarget.value = '';
-              }}
-            />
-            <button type="button" className="btn btn--icon promptbox__attach" aria-label="Attach image" disabled={!api} onClick={() => fileInput.current?.click()}>
-              {Icon.image}
-            </button>
             <textarea
               ref={textareaRef}
               placeholder={

@@ -177,13 +177,11 @@ export const toastCopy = {
 } as const;
 
 export const chatCopy = {
-  sessionEyebrow: 'Chat',
   sessionTitle: 'What should we work on?',
-  sessionBody: 'Pick a model, send a message, or choose a starter below.',
   starterPrompts: [
     'Help me think through the next step.',
-    'Summarize what matters from our last thread.',
     'Draft a short plan I can react to.',
+    'Turn a rough idea into a ratifiable Standard.',
   ] as const,
   composerNotReadyHint: 'Finish setup above to send · your draft is saved locally',
   composerSendBlockedTitle: 'Send is unavailable until the runtime is ready',
