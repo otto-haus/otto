@@ -964,8 +964,8 @@ export const Practices: React.FC = () => {
   }, [api]);
 
   useEffect(() => {
+    setMetrics(null);
     if (!api || !selectedSlug) {
-      setMetrics(null);
       return;
     }
     let cancelled = false;
@@ -1217,6 +1217,7 @@ export const Routines: React.FC = () => {
   }, [api]);
 
   useEffect(() => {
+    setGate(null);
     if (!api || !selectedSlug) return;
     let cancelled = false;
     api.routines.activationGate(selectedSlug)
@@ -2608,7 +2609,22 @@ const PgvectorKnowledgePanel: React.FC = () => {
     return () => { cancelled = true; };
   }, [api]);
 
-  if (!api?.pgvector || !status) return null;
+  if (!api?.pgvector) return null;
+
+  if (!status) {
+    return (
+      <div className="detailSection knowledgePanel">
+        <div className="between">
+          <div>
+            <div className="eyebrow">{knowledgeCopy.pgvectorEyebrow}</div>
+            <div className="h-sec">{knowledgeCopy.pgvectorTitle}</div>
+          </div>
+          {statusPill('loading')}
+        </div>
+        <PaneLoading label={knowledgeCopy.pgvectorTitle} variant="rows" />
+      </div>
+    );
+  }
 
   return (
     <div className="detailSection knowledgePanel">
@@ -4192,7 +4208,7 @@ const DreamSettingsPanel: React.FC<{
     }).catch(() => setHydrated(true));
   }, []);
 
-  const persist = async (next: DreamSettings) => {
+  const persist = async (next: DreamSettings, previous: DreamSettings) => {
     const api = ottoApi();
     if (!api?.dreaming || !memfsEnabled) return;
     setBusy(true);
@@ -4201,15 +4217,25 @@ const DreamSettingsPanel: React.FC<{
       setSettings(saved);
       setStepDraft(String(saved.stepCount));
       pushToast({ title: settingsCopy.dreamingSaved, body: `${saved.trigger}${saved.trigger === 'step-count' ? ` · ${saved.stepCount}` : ''}`, tone: 'ok' });
+    } catch (e) {
+      // Failed save must not look successful (#700): revert optimistic UI and surface the error.
+      setSettings(previous);
+      setStepDraft(String(previous.stepCount));
+      pushToast({
+        title: 'dream settings not saved',
+        body: e instanceof Error ? e.message : 'Could not update dream settings in Letta. Reverted to last saved values.',
+        tone: 'warn',
+      });
     } finally {
       setBusy(false);
     }
   };
 
   const onTriggerChange = (trigger: DreamTrigger) => {
+    const previous = settings;
     const next = { ...settings, trigger };
     setSettings(next);
-    void persist(next);
+    void persist(next, previous);
   };
 
   const commitStepCount = () => {
@@ -4218,9 +4244,10 @@ const DreamSettingsPanel: React.FC<{
       setStepDraft(String(settings.stepCount));
       return;
     }
+    const previous = settings;
     const next = { ...settings, stepCount: parsed };
     setSettings(next);
-    void persist(next);
+    void persist(next, previous);
   };
 
   return (
@@ -4275,6 +4302,7 @@ const DreamSettingsPanel: React.FC<{
 
 const DisplaySettingsPanel: React.FC = () => {
   const api = ottoApi();
+  const { push: pushToast } = useToast();
   const [theme, setTheme] = useState<DisplayTheme>(() => readStoredDisplayTheme());
 
   useEffect(() => {
@@ -4289,15 +4317,23 @@ const DisplaySettingsPanel: React.FC = () => {
   useEffect(() => watchSystemDisplayTheme(theme), [theme]);
 
   const updateTheme = async (next: DisplayTheme) => {
-    setTheme(next);
-    persistDisplayTheme(next);
+    // Keep renderer, localStorage, and main-process window chrome atomic (#687):
+    // persist first; only apply the renderer theme when config.set (which also runs
+    // syncWindowBackground in main) succeeds. On failure, leave the prior theme intact.
     if (api) {
       try {
         await api.config.set({ theme: next });
-      } catch {
-        /* best effort */
+      } catch (e) {
+        pushToast({
+          title: 'theme not saved',
+          body: e instanceof Error ? e.message : 'Could not persist display theme. Window kept previous theme.',
+          tone: 'warn',
+        });
+        return;
       }
     }
+    setTheme(next);
+    persistDisplayTheme(next);
   };
 
   return (
