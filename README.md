@@ -15,7 +15,11 @@
     <img src=".github/assets/otto-desktop.png" alt="otto desktop — connected chat workspace with pinned threads, model selector, and live Letta runtime" width="920" />
   </a>
   <br />
-  <sub><em><a href="https://github.com/otto-haus/otto/releases/latest/download/otto-v01-desktop.mp4">▶&nbsp; Watch the 45-second desktop demo</a></em></sub>
+  <a href="https://github.com/otto-haus/otto/releases/latest/download/otto-v01-desktop.mp4">
+    <img src="docs/assets/desktop-demo.gif" alt="otto v0.1 desktop walkthrough — chat-first shell, behavior surfaces, activity proof, and honest runtime state" width="820" />
+  </a>
+  <br />
+  <sub><em><a href="https://github.com/otto-haus/otto/releases/latest/download/otto-v01-desktop.mp4">▶&nbsp; Watch the 45-second desktop demo</a> · static screenshot above</em></sub>
 </p>
 
 Letta remembers. otto improves.
@@ -59,16 +63,6 @@ Once ratified, the correction becomes a Standard, Practice, or receipt requireme
 The next run changes.
 
 Search finds pages. Memory remembers facts. otto changes behavior.
-
----
-
-## Demo
-
-<p align="center">
-  <img alt="otto v0.1 desktop walkthrough — chat with Letta, truthful setup, file-backed behavior surfaces" src="docs/assets/desktop-demo.gif" width="820" />
-</p>
-
-<p align="center"><sub>v0.1 desktop walkthrough · <a href="https://github.com/otto-haus/otto/releases/latest/download/otto-v01-desktop.mp4">full-resolution video</a></sub></p>
 
 ---
 
