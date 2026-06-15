@@ -1,11 +1,13 @@
 import { randomUUID } from 'node:crypto';
 import type { TodoItem } from './todo-parser';
 import { activityFromWsDelta } from '../../src/chat/turn-activity';
+import type { TurnTrailAccumulator } from '../../src/chat/turn-trail';
 
 export type WsRuntimeEvent = Record<string, unknown> & { type?: string };
 
 export type WsNormalizeContext = {
   todoAccumulator?: { ingestStreamDelta(delta: Record<string, unknown>): TodoItem[] | null };
+  trailAccumulator?: TurnTrailAccumulator;
 };
 
 /** Map Letta BYOR stream_delta into Otto chat event shape. */
@@ -18,6 +20,9 @@ export function normalizeWsEvent(
       const delta = event.delta as Record<string, unknown> | undefined;
       if (!delta) return null;
       const messageType = String(delta.message_type ?? '');
+      if (ctx.trailAccumulator) {
+        ctx.trailAccumulator.ingestWsDelta(delta);
+      }
       if (messageType === 'tool_call_message' && ctx.todoAccumulator) {
         const todos = ctx.todoAccumulator.ingestStreamDelta(delta);
         if (todos) {

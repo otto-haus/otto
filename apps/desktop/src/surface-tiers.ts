@@ -96,6 +96,10 @@ export const LAB_FEATURE_META: Record<LabFeatureId, LabFeatureMeta> = {
     label: 'Command Station dashboard',
     blurb: 'Dedicated culture home dashboard — strip in Chat stays Ship.',
   },
+  turn_phase_timeline: {
+    label: 'Turn phase timeline',
+    blurb: 'Orient → locate → edit → verify chips on collapsed turn trail (Labs). See docs/v1/agent-turn-trail.md.',
+  },
 };
 
 export function surfaceTier(id: SurfaceId): SurfaceTier {

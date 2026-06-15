@@ -24,6 +24,7 @@ import {
   safeWebContentsSend,
 } from './runtime-common';
 import { TodoStreamAccumulator } from './todo-parser';
+import { TurnTrailAccumulator, trailTraceSummary } from '../../src/chat/turn-trail';
 import {
   DEFAULT_CONNECT_TIMEOUT_MS,
   isDeviceOnline,
@@ -223,9 +224,20 @@ export class WsRuntimeTransport implements OttoRuntimeTransport {
     this.turnInterruptReason = null;
     this.activeRunId = null;
     const todoAccumulator = new TodoStreamAccumulator();
+    const trailAccumulator = new TurnTrailAccumulator();
     trace.write('prompt', { text, transport: 'ws', agentId: this.status.agentId, conversationId: this.status.conversationId });
 
     let detachRuntimeHandler: (() => void) | null = null;
+    let lastTrailFingerprint = '';
+    const emitTurnTrail = () => {
+      const trail = trailAccumulator.snapshot();
+      const fingerprint = JSON.stringify(trail.spans.map((s) => [s.id, s.status, s.label]));
+      if (fingerprint === lastTrailFingerprint) return;
+      lastTrailFingerprint = fingerprint;
+      safeWebContentsSend(this.win, 'otto:event', {
+        message: { type: 'turn_trail', trail, uuid: randomUUID() },
+      });
+    };
     try {
       let sawAssistant = false;
       let turnErrorRaw: string | null = null;
@@ -253,8 +265,9 @@ export class WsRuntimeTransport implements OttoRuntimeTransport {
           return;
         }
         this.trackActiveRun(event);
-        const normalized = normalizeWsEvent(event, { todoAccumulator });
+        const normalized = normalizeWsEvent(event, { todoAccumulator, trailAccumulator });
         if (normalized) {
+          emitTurnTrail();
           if (normalized.type === 'error') {
             const raw = String(normalized.message ?? 'error');
             const normalizedError = normalizeRuntimeError(raw, this.hasApiKey());
@@ -278,6 +291,11 @@ export class WsRuntimeTransport implements OttoRuntimeTransport {
           }
         }
         if (isLoopIdle(event)) {
+          const trail = trailAccumulator.finalize();
+          trace.write('turn_trail', trailTraceSummary(trail));
+          safeWebContentsSend(this.win, 'otto:event', {
+            message: { type: 'turn_trail', trail, final: true, uuid: randomUUID() },
+          });
           this.turnIdle = true;
           emitResult(!turnErrorMessage);
           writeReceipt(turnErrorMessage ? 'failed' : 'success', turnErrorMessage ? 'Chat turn failed.' : 'Chat turn completed.', turnErrorRaw ? (() => {
@@ -357,6 +375,11 @@ export class WsRuntimeTransport implements OttoRuntimeTransport {
           next_action: nextActionFor('error'),
         });
       } else if (!receiptWritten) {
+        const trail = trailAccumulator.finalize();
+        trace.write('turn_trail', trailTraceSummary(trail));
+        safeWebContentsSend(this.win, 'otto:event', {
+          message: { type: 'turn_trail', trail, final: true, uuid: randomUUID() },
+        });
         writeReceipt(this.aborted ? 'blocked' : sawAssistant ? 'success' : 'failed', this.aborted ? 'Chat turn was aborted.' : sawAssistant ? 'Chat turn completed.' : 'Chat turn ended without idle signal.', this.aborted ? {
           code: 'aborted',
           message: 'The chat turn was aborted before completion.',

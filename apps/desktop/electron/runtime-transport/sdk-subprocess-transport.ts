@@ -8,6 +8,7 @@ import { getSecret, hasSecret } from '../secret-store';
 import { StandardStore } from '../standard-store';
 import { PracticeStore } from '../practice-store';
 import { TraceWriter } from '../trace-writer';
+import { TurnTrailAccumulator, trailTraceSummary } from '../../src/chat/turn-trail';
 import { discoverLocalLettaContext, resolveInitBaseUrl } from './letta-discovery';
 import {
   SMOKE_MODE,
@@ -411,12 +412,23 @@ export class SdkSubprocessTransport implements OttoRuntimeTransport {
     const trace = new TraceWriter(this.status.conversationId || 'new');
     const startedStatus = { ...this.status };
     this.aborted = false;
+    const trailAccumulator = new TurnTrailAccumulator();
     trace.write('prompt', { text, agentId: this.status.agentId, conversationId: this.status.conversationId });
     try {
       let turnError: string | null = null;
       let sawResult = false;
       let markedNotReady = false;
       let receiptWritten = false;
+      let lastTrailFingerprint = '';
+      const emitTurnTrail = (final = false) => {
+        const trail = final ? trailAccumulator.finalize() : trailAccumulator.snapshot();
+        const fingerprint = JSON.stringify(trail.spans.map((s) => [s.id, s.status, s.label, final]));
+        if (!final && fingerprint === lastTrailFingerprint) return;
+        lastTrailFingerprint = fingerprint;
+        safeWebContentsSend(this.win, 'otto:event', {
+          message: { type: 'turn_trail', trail, ...(final ? { final: true } : {}), uuid: randomUUID() },
+        });
+      };
       const writeReceipt = (status: 'success' | 'blocked' | 'failed', summary: string, blocker: Parameters<typeof this.writeChatReceipt>[0]['blocker']) => {
         if (receiptWritten) return;
         receiptWritten = true;
@@ -440,6 +452,8 @@ export class SdkSubprocessTransport implements OttoRuntimeTransport {
       await this.session.send(promptWithRuntimeContext(text, startedStatus));
       for await (const message of this.session.stream()) {
         trace.write('event', message);
+        trailAccumulator.ingestRuntimeMessage(message as unknown as Record<string, unknown>);
+        emitTurnTrail();
         const m = message as {
           type: string;
           conversationId?: string;
@@ -469,6 +483,9 @@ export class SdkSubprocessTransport implements OttoRuntimeTransport {
         }
         if (m.type === 'result') {
           sawResult = true;
+          const trail = trailAccumulator.finalize();
+          trace.write('turn_trail', trailTraceSummary(trail));
+          emitTurnTrail(true);
           if (!SMOKE_MODE && !markedNotReady && m.conversationId && m.conversationId !== this.status.conversationId) {
             this.status.conversationId = m.conversationId;
             this.config.update({ conversationId: m.conversationId });

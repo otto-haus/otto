@@ -58,6 +58,9 @@ import {
 } from '../chat/queue-storage';
 import type { ProposalTarget } from '@otto-haus/core';
 import type { ChatMsg } from '../runtime';
+import { TurnTrailLive } from '../chat/TurnTrailLive';
+import { TurnTrailSummary } from '../chat/TurnTrailSummary';
+import { useLabs } from '../labs/LabsContext';
 import { useOttoDebugContextMenu } from '../debug/useOttoDebugContextMenu';
 import { isTypingTarget, jumpTurnAnchor, turnAnchorIndices } from '../chat/turn-navigation';
 import {
@@ -555,6 +558,8 @@ const LiveChat: React.FC<{
 }) => {
   const api = ottoApi();
   const rt = useRuntimeContext();
+  const { isFeatureEnabled } = useLabs();
+  const showTurnPhases = isFeatureEnabled('turn_phase_timeline');
   const chatDebugMenu = useOttoDebugContextMenu('chat');
   const runtimeStatusDebugMenu = useOttoDebugContextMenu('runtime-status');
   const runtimeSetupDebugMenu = useOttoDebugContextMenu('runtime-setup');
@@ -753,9 +758,12 @@ const LiveChat: React.FC<{
   const assistantStreaming = rt.busy && lastRuntimeMessage?.who === 'otto' && !!lastRuntimeMessage.text;
   const streamingRuntimeMessageIndex = assistantStreaming ? rt.messages.length - 1 : -1;
   const activityLabel = rt.turnActivity?.label ?? chatCopy.workingPulse;
+  const liveTrailSteps = rt.turnTrail?.spans.length ?? 0;
   const headerSubtitle = st
     ? (rt.busy
-      ? activityLabel
+      ? (liveTrailSteps > 0
+        ? rt.turnTrail!.spans[rt.turnTrail!.spans.length - 1]?.label ?? activityLabel
+        : activityLabel)
       : ready
         ? chatSessionSubtitle
         : formatRuntimeSubtitle(ready, st, labelForModel(selectedModel, modelOptions)))
@@ -1190,11 +1198,16 @@ const LiveChat: React.FC<{
                       ) : null}
                     </div>
                   ) : (
-                    <div className="msg__body">
-                      {m.text ? (
-                        <StreamMarkdown text={m.text} streaming={isStreamingMessage} />
+                    <>
+                      {!isUser && m.trail && m.trail.spans.length > 0 ? (
+                        <TurnTrailSummary trail={m.trail} showPhases={showTurnPhases} />
                       ) : null}
-                    </div>
+                      <div className="msg__body">
+                        {m.text ? (
+                          <StreamMarkdown text={m.text} streaming={isStreamingMessage} />
+                        ) : null}
+                      </div>
+                    </>
                   )}
                   {!isUser && !isError && m.text ? (
                     <MessageActions
@@ -1210,7 +1223,14 @@ const LiveChat: React.FC<{
               </div>
             );
           })}
-          {rt.busy && !assistantStreaming && (
+          {rt.busy && liveTrailSteps > 0 ? (
+            <div className="msgRow">
+              <span className="msgRow__avatar" aria-hidden="true"><OttoMark size={26} className="ottoMark" /></span>
+              <div className="chat__thinking chat__thinking--trail" aria-live="polite">
+                <TurnTrailLive trail={rt.turnTrail} fallbackLabel={chatCopy.workingPulse} />
+              </div>
+            </div>
+          ) : rt.busy && !assistantStreaming ? (
             <div className="msgRow">
               <span className="msgRow__avatar" aria-hidden="true"><OttoMark size={32} className="ottoMark" /></span>
               <div
@@ -1224,7 +1244,7 @@ const LiveChat: React.FC<{
                 {activityLabel}
               </div>
             </div>
-          )}
+          ) : null}
           <div ref={tailRef} className="chat__tail" aria-hidden="true" />
         </div>
       </div>

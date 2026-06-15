@@ -7,6 +7,7 @@ import {
   persistLeavingThread,
 } from './chat/thread-messages';
 import { activityFromRuntimeMessage, type TurnActivity } from './chat/turn-activity';
+import type { TurnTrail } from './chat/turn-trail';
 import type {
   Charter,
   CharterRef,
@@ -320,6 +321,7 @@ export const ottoApi = (): OttoApi | null =>
 export const isElectron = (): boolean => ottoApi() !== null;
 
 export type { TurnActivity } from './chat/turn-activity';
+export type { TurnTrail, TurnSpan } from './chat/turn-trail';
 
 export type ChatMsg = StoredChatMsg & {
   checkBlock?: {
@@ -365,6 +367,8 @@ export function useRuntime() {
   const [activeTodos, setActiveTodos] = useState<TodoItem[]>([]);
   const [busy, setBusy] = useState(false);
   const [turnActivity, setTurnActivity] = useState<TurnActivity | null>(null);
+  const [turnTrail, setTurnTrail] = useState<TurnTrail | null>(null);
+  const pendingTurnTrail = useRef<TurnTrail | null>(null);
   const activeAssistantStream = useRef<string | null>(null);
   const sendError = useRef<string | null>(null);
   const activeThreadRef = useRef<string | null>(null);
@@ -456,6 +460,27 @@ export function useRuntime() {
       }
     };
 
+    const attachTrailToLastAssistant = (trail: TurnTrail) => {
+      if (!trail.spans.length) return;
+      patchInflightMessages((msgs) => {
+        const idx = [...msgs].reverse().findIndex((m) => m.who === 'otto');
+        if (idx < 0) return msgs;
+        const realIdx = msgs.length - 1 - idx;
+        const target = msgs[realIdx];
+        if (!target) return msgs;
+        const next = [...msgs];
+        next[realIdx] = { ...target, trail };
+        return next;
+      });
+    };
+
+    const finalizeTurnTrail = (trail: TurnTrail | null) => {
+      const resolved = trail ?? pendingTurnTrail.current;
+      if (resolved?.spans.length) attachTrailToLastAssistant(resolved);
+      pendingTurnTrail.current = null;
+      setTurnTrail(null);
+    };
+
     api.runtime
       .init()
       .then(async (nextStatus) => {
@@ -502,6 +527,11 @@ export function useRuntime() {
             return [...x, { id: streamId, who: 'otto', text: t, streamId }];
           });
         }
+      } else if (m.type === 'turn_trail' && m.trail && typeof m.trail === 'object') {
+        const trail = m.trail as TurnTrail;
+        pendingTurnTrail.current = trail;
+        setTurnTrail(trail);
+        if (m.final === true) finalizeTurnTrail(trail);
       } else if (m.type === 'todo_update' && Array.isArray(m.todos)) {
         const ownedTurn = inflightThreadRef.current ?? activeThreadRef.current;
         if (!ownedTurn || activeThreadRef.current === ownedTurn) {
@@ -546,11 +576,13 @@ export function useRuntime() {
         ]);
         inflightThreadRef.current = null;
         setTurnActivity(null);
+        finalizeTurnTrail(null);
         if (!ownedTurn) setBusy(false);
       } else if (m.type === 'result') {
         activeAssistantStream.current = null;
-        inflightThreadRef.current = null;
         setTurnActivity(null);
+        finalizeTurnTrail(null);
+        inflightThreadRef.current = null;
         setBusy(false);
         const conversationId = typeof m.conversationId === 'string' ? m.conversationId : null;
         if (conversationId) {
@@ -584,6 +616,8 @@ export function useRuntime() {
     setActiveTodos([]);
     inflightThreadRef.current = sendThreadId;
     setTurnActivity(null);
+    setTurnTrail(null);
+    pendingTurnTrail.current = null;
     const snippet = text.trim().replace(/\s+/g, ' ');
     if (snippet) {
       void api.threads.touch({ title: snippet.length > 56 ? `${snippet.slice(0, 53)}…` : snippet });
@@ -631,6 +665,8 @@ export function useRuntime() {
     activeAssistantStream.current = null;
     inflightThreadRef.current = null;
     setTurnActivity(null);
+    setTurnTrail(null);
+    pendingTurnTrail.current = null;
     setBusy(false);
   };
 
@@ -649,6 +685,8 @@ export function useRuntime() {
     activeAssistantStream.current = null;
     inflightThreadRef.current = null;
     setTurnActivity(null);
+    setTurnTrail(null);
+    pendingTurnTrail.current = null;
     setBusy(false);
     if (activeThreadRef.current) {
       persistActiveThread(threadMessagesCache.current, activeThreadRef.current, messagesRef.current);
@@ -670,6 +708,8 @@ export function useRuntime() {
     activeAssistantStream.current = null;
     inflightThreadRef.current = null;
     setTurnActivity(null);
+    setTurnTrail(null);
+    pendingTurnTrail.current = null;
     setBusy(false);
     applyThreadView(threadId);
     try {
@@ -710,6 +750,7 @@ export function useRuntime() {
     activeTodos,
     busy,
     turnActivity,
+    turnTrail,
     activeThreadId,
     send,
     abort,

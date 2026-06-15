@@ -10,6 +10,7 @@ export const LAB_FEATURE_IDS: LabFeatureId[] = [
   'culture_export',
   'remote_letta_cloud',
   'command_station_full',
+  'turn_phase_timeline',
 ];
 
 const LEGACY_SURFACE_KEYS = new Set([
