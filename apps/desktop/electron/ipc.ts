@@ -292,6 +292,10 @@ export function registerIpc(): IpcRegistration {
   ipcMain.handle('otto:terminal:workspace-root', () => resolveWorkspaceRoot());
   ipcMain.handle('otto:terminal:open', () => openSystemTerminal());
 
+  ipcMain.on('otto:boot:display-theme', (event) => {
+    event.returnValue = config.get().theme ?? 'light';
+  });
+
   ipcMain.handle('otto:config:get', () => config.get());
   ipcMain.handle('otto:config:set', (_e, patch: Partial<OttoConfig>) => {
     assertConnectionModePatchAllowed(config.get(), patch);

@@ -33,8 +33,9 @@ import {
   type StandardStatusFilter,
 } from '../standards-filter';
 import {
-  persistDisplayTheme,
-  readStoredDisplayTheme,
+  applyDisplayTheme,
+  ensureDisplayThemeAuthority,
+  readBootDisplayTheme,
   watchSystemDisplayTheme,
   type DisplayTheme,
 } from '../display-preferences';
@@ -4383,15 +4384,16 @@ const DreamSettingsPanel: React.FC<{
 const DisplaySettingsPanel: React.FC = () => {
   const api = ottoApi();
   const { push: pushToast } = useToast();
-  const [theme, setTheme] = useState<DisplayTheme>(() => readStoredDisplayTheme());
+  const [theme, setTheme] = useState<DisplayTheme>(() => readBootDisplayTheme());
 
   useEffect(() => {
     if (!api) return;
-    void api.config.get().then((cfg) => {
-      if (!cfg.theme) return;
-      setTheme(cfg.theme);
-      persistDisplayTheme(cfg.theme);
-    }).catch(() => {});
+    void ensureDisplayThemeAuthority(api)
+      .then((resolved) => {
+        setTheme(resolved);
+        applyDisplayTheme(resolved);
+      })
+      .catch(() => {});
   }, [api]);
 
   useEffect(() => watchSystemDisplayTheme(theme), [theme]);
@@ -4413,7 +4415,7 @@ const DisplaySettingsPanel: React.FC = () => {
       }
     }
     setTheme(next);
-    persistDisplayTheme(next);
+    applyDisplayTheme(next);
   };
 
   return (

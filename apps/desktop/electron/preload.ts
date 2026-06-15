@@ -164,6 +164,11 @@ const api = {
     get: (): Promise<OttoConfig> => ipcRenderer.invoke('otto:config:get'),
     set: (patch: Partial<OttoConfig>): Promise<OttoConfig> => ipcRenderer.invoke('otto:config:set', patch),
   },
+  /** Sync boot reads — config.json is the display-theme authority (#732). */
+  boot: {
+    displayTheme: (): OttoConfig['theme'] =>
+      ipcRenderer.sendSync('otto:boot:display-theme') as OttoConfig['theme'],
+  },
   /** Labs config — `{ enabled, features }` persisted in otto config. See `docs/v1/labs.md`. */
   labs: {
     /** Read master + per-feature toggles from `~/.otto/config.json`. */

@@ -1,4 +1,5 @@
 import type { DisplayTheme } from '../electron/shared/display-theme';
+import type { OttoApi } from '../electron/preload';
 import {
   DISPLAY_THEME_STORAGE_KEY,
   normalizeDisplayTheme,
@@ -14,15 +15,46 @@ export {
   windowBackgroundForTheme,
 } from '../electron/shared/display-theme';
 
-export function readStoredDisplayTheme(): DisplayTheme {
+function bootDisplayTheme(): DisplayTheme | undefined {
+  if (typeof window === 'undefined') return undefined;
+  const boot = (window as Window & { otto?: OttoApi }).otto?.boot;
+  return boot?.displayTheme();
+}
+
+/** Legacy renderer localStorage — read once for migration only (#732). */
+export function readLegacyDisplayThemeFromLocalStorage(): DisplayTheme | null {
   try {
-    return normalizeDisplayTheme(localStorage.getItem(DISPLAY_THEME_STORAGE_KEY));
+    const raw = localStorage.getItem(DISPLAY_THEME_STORAGE_KEY);
+    if (raw === null) return null;
+    return normalizeDisplayTheme(raw);
   } catch {
-    return 'light';
+    return null;
   }
 }
 
-export function applyDisplayTheme(pref: DisplayTheme = readStoredDisplayTheme()): 'light' | 'dark' {
+export function clearLegacyDisplayThemeLocalStorage(): void {
+  try {
+    localStorage.removeItem(DISPLAY_THEME_STORAGE_KEY);
+  } catch {
+    /* best effort */
+  }
+}
+
+/** Boot theme from main-process config; web preview falls back to legacy localStorage. */
+export function readBootDisplayTheme(): DisplayTheme {
+  try {
+    const fromMain = bootDisplayTheme();
+    if (fromMain === 'light' || fromMain === 'dark' || fromMain === 'system') return fromMain;
+  } catch {
+    /* preload unavailable */
+  }
+  return readLegacyDisplayThemeFromLocalStorage() ?? 'light';
+}
+
+/** @deprecated Use readBootDisplayTheme — config.json is authoritative. */
+export const readStoredDisplayTheme = readBootDisplayTheme;
+
+export function applyDisplayTheme(pref: DisplayTheme): 'light' | 'dark' {
   const prefersDark = typeof window !== 'undefined' && window.matchMedia('(prefers-color-scheme: dark)').matches;
   const effective = resolveEffectiveTheme(pref, prefersDark);
   document.documentElement.dataset.theme = effective;
@@ -32,13 +64,29 @@ export function applyDisplayTheme(pref: DisplayTheme = readStoredDisplayTheme())
   return effective;
 }
 
+/** Apply renderer chrome only — persistence goes through config.set (#732). */
 export function persistDisplayTheme(theme: DisplayTheme): 'light' | 'dark' {
-  try {
-    localStorage.setItem(DISPLAY_THEME_STORAGE_KEY, theme);
-  } catch {
-    /* best effort */
-  }
   return applyDisplayTheme(theme);
+}
+
+export async function ensureDisplayThemeAuthority(api: {
+  config: {
+    get: () => Promise<{ theme?: DisplayTheme }>;
+    set: (patch: { theme: DisplayTheme }) => Promise<{ theme?: DisplayTheme }>;
+  };
+}): Promise<DisplayTheme> {
+  const cfg = await api.config.get();
+  if (cfg.theme) {
+    clearLegacyDisplayThemeLocalStorage();
+    return cfg.theme;
+  }
+  const legacy = readLegacyDisplayThemeFromLocalStorage();
+  if (legacy !== null) {
+    const next = await api.config.set({ theme: legacy });
+    clearLegacyDisplayThemeLocalStorage();
+    return next.theme ?? legacy;
+  }
+  return 'light';
 }
 
 let systemThemeListener: (() => void) | null = null;
