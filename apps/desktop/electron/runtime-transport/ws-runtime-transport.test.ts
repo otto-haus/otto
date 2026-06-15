@@ -199,6 +199,19 @@ describe('WsRuntimeTransport', () => {
     expect(sent.length).toBe(0);
   });
 
+  test('send rejects when WebSocket transport disconnected', async () => {
+    const { win, sent } = mockWindow();
+    const transport = new WsRuntimeTransport(win, mockConfig());
+    (transport as unknown as { status: { ready: boolean } }).status = {
+      ...transport.getStatus(),
+      ready: true,
+    };
+    (transport as unknown as { runtimeSocket: WebSocket | null }).runtimeSocket = null;
+
+    await expect(transport.send('hello while disconnected')).rejects.toThrow(/not ready/i);
+    expect(sent.some((e) => (e.payload as { message?: { type?: string } }).message?.type === 'error')).toBe(false);
+  });
+
   test('smokeMode() reads OTTO_SMOKE at call time', () => {
     process.env.OTTO_SMOKE = '1';
     expect(smokeMode()).toBe(true);

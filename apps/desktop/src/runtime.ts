@@ -588,6 +588,25 @@ export function useRuntime() {
     try {
       await api.runtime.send(text);
       if (sendError.current) throw new Error(sendError.current);
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : String(err);
+      if (!sendError.current) {
+        sendError.current = errorMessage;
+        activeAssistantStream.current = null;
+        const prevMsgs = loadThreadMessages(sendThreadId, threadMessagesCache.current);
+        const withError: ChatMsg[] = [
+          ...prevMsgs,
+          { id: `error-${Date.now()}`, who: 'error', text: errorMessage },
+        ];
+        threadMessagesCache.current.set(sendThreadId, withError);
+        flushMessages(sendThreadId, withError);
+        if (activeThreadRef.current === sendThreadId) {
+          messagesRef.current = withError;
+          setMessages(withError);
+        }
+        setTurnActivity(null);
+      }
+      throw err;
     } finally {
       inflightThreadRef.current = null;
       setBusy(false);

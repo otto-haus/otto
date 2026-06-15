@@ -361,8 +361,7 @@ export class SdkSubprocessTransport implements OttoRuntimeTransport {
         },
         evidence: [{ kind: 'status', ref: 'runtime.status', data: this.status }],
       });
-      this.emitError(reason);
-      return;
+      throw new Error(reason);
     }
     const trace = new TraceWriter(this.status.conversationId || 'new');
     const startedStatus = { ...this.status };
