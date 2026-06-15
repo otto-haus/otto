@@ -263,6 +263,25 @@ export const chatCopy = {
   memoryLinkTitle: 'Open Memory observatory in Settings',
 } as const;
 
+export const previewCopy = {
+  eyebrow: 'preview',
+  panelLabel: 'Artifact preview',
+  toggleLabel: 'Preview',
+  toggleHint: 'Toggle artifact preview pane (⌘⇧P)',
+  openMessage: 'Open preview',
+  openMessageHint: 'Render this message in the preview pane',
+  close: 'Close preview pane',
+  resizeHandle: 'Resize preview pane',
+  htmlFrameTitle: 'HTML artifact preview',
+  emptyEyebrow: 'preview',
+  emptyTitle: 'Nothing selected yet',
+  emptyBody: 'Open preview on a message, or click an HTML code block, to render agent output here.',
+  emptyNext: 'Use Preview on a reply, or ⌘⇧P to show this pane.',
+  userMessageTitle: 'Your message',
+  assistantMessageTitle: 'otto reply',
+  codeBlockTitle: 'Code block',
+} as const;
+
 export const onboardingCopy = {
   badge: 'Local-first · desktop',
   eyebrow: 'OTTO',

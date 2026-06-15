@@ -513,6 +513,113 @@ h1, h2, h3, h4, p { margin: 0; }
 .content > * { min-width: 0; max-width: 100%; }
 .content--chat { padding: 0; display: flex; flex-direction: column; min-height: 0; flex: 1; overflow: hidden; }
 
+.chatWithPreview {
+  display: flex;
+  min-height: 0;
+  flex: 1;
+  overflow: hidden;
+}
+.chatWithPreview > .chat {
+  flex: 1;
+  min-width: 0;
+}
+.chatWithPreview--open > .chat {
+  border-right: 1px solid var(--line);
+}
+
+.previewPane {
+  position: relative;
+  flex: none;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  background: var(--panel);
+  border-left: 1px solid var(--line);
+}
+.previewPane__handle {
+  position: absolute;
+  top: 0;
+  left: -4px;
+  width: 8px;
+  height: 100%;
+  cursor: col-resize;
+  touch-action: none;
+}
+.previewPane__handle:hover,
+.previewPane__handle:active {
+  background: color-mix(in srgb, var(--accent) 18%, transparent);
+}
+.previewPane__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 16px 12px;
+  border-bottom: 1px solid var(--line);
+}
+.previewPane__titleBlock { min-width: 0; }
+.previewPane__title {
+  font-weight: 650;
+  font-size: 14px;
+  letter-spacing: -0.02em;
+  line-height: 1.25;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.previewPane__actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: none;
+}
+.previewPane__close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--bg);
+  color: var(--mut);
+}
+.previewPane__body {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding: 16px;
+}
+.previewPane__markdown {
+  max-width: 72ch;
+}
+.previewPane__frame {
+  width: 100%;
+  min-height: 100%;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: #fff;
+}
+.previewPane__imageWrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100%;
+}
+.previewPane__image {
+  max-width: 100%;
+  height: auto;
+  border-radius: var(--radius);
+  border: 1px solid var(--line);
+}
+.chat__stream .md__pre {
+  cursor: pointer;
+}
+.chat__stream .md__pre:hover {
+  outline: 1px solid color-mix(in srgb, var(--accent) 35%, var(--line));
+  outline-offset: 2px;
+}
+
 /* ---------- generic primitives ---------- */
 .panel { min-width: 0; background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 20px; }
 .panel + .panel { margin-top: 16px; }

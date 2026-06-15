@@ -13,7 +13,7 @@ import { OttoMark } from '../components/OttoMark';
 import { CheckBlockBanner, ContextDrawer, MessageActions, Modal, PermissionCard, ReceiptInlineCard, type PermissionDecision, type PermissionRequestView } from '../components/ui';
 import { TodoPanel } from '../components/TodoPanel';
 import { displayThreadTitle } from '../components/ui/ThreadList';
-import { chatCopy, permissionCopy, projectCopy, toastCopy } from '../copy/surfaces';
+import { chatCopy, permissionCopy, previewCopy, projectCopy, toastCopy } from '../copy/surfaces';
 import { ProjectWindow } from './ProjectWindow';
 import { PermissionWindow } from './PermissionWindow';
 import {
@@ -65,6 +65,9 @@ import { TurnTrailSummary } from '../chat/TurnTrailSummary';
 import { useLabs } from '../labs/labs-context';
 import { useOttoDebugContextMenu } from '../debug/useOttoDebugContextMenu';
 import { TruncatedMessageRestore } from '../chat/TruncatedMessageRestore';
+import { PreviewPane } from '../components/PreviewPane';
+import { previewFromCodeBlock, previewFromText } from '../preview/preview-content';
+import { usePreviewPane } from '../preview/usePreviewPane';
 import { isTypingTarget, jumpTurnAnchor, turnAnchorIndices } from '../chat/turn-navigation';
 import {
   curateModelOptions,
@@ -586,6 +589,9 @@ const LiveChat: React.FC<{
   const [proposeBusy, setProposeBusy] = useState(false);
   const [cmdMessages, setCmdMessages] = useState<ChatMsg[]>([]);
   const [expandedMessageTexts, setExpandedMessageTexts] = useState<Record<string, string>>({});
+  const preview = usePreviewPane();
+  const previewShellRef = useRef<HTMLDivElement | null>(null);
+  const resizeRef = useRef<{ startX: number; startWidth: number; containerWidth: number } | null>(null);
   const draining = useRef(false);
   const pickerRef = useRef<HTMLDivElement | null>(null);
   const streamRef = useRef<HTMLDivElement | null>(null);
@@ -841,6 +847,12 @@ const LiveChat: React.FC<{
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
+      if ((event.metaKey || event.ctrlKey) && event.shiftKey && event.key.toLowerCase() === 'p') {
+        if (isTypingTarget(document.activeElement)) return;
+        event.preventDefault();
+        preview.toggle();
+        return;
+      }
       if (!event.altKey || event.metaKey || event.ctrlKey) return;
       if (event.key !== 'ArrowUp' && event.key !== 'ArrowDown') return;
       if (isTypingTarget(document.activeElement)) return;
@@ -854,7 +866,7 @@ const LiveChat: React.FC<{
     };
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
-  }, [streamMessages, turnAnchors]);
+  }, [streamMessages, turnAnchors, preview.toggle]);
 
   const attachImages = async (files: File[]) => {
     if (!api || !files.length) return;
@@ -971,7 +983,57 @@ const LiveChat: React.FC<{
 
   // Failed sends remain durable in the queue; the user can retry or remove them.
 
+  const openMessagePreview = (message: ChatMsg) => {
+    if (!message.text?.trim()) return;
+    const next = previewFromText(message.text, {
+      title: message.who === 'user' ? previewCopy.userMessageTitle : previewCopy.assistantMessageTitle,
+      sourceId: message.id,
+    });
+    if (next) preview.show(next);
+  };
+
+  const onPreviewResizeStart = (event: React.PointerEvent<HTMLDivElement>) => {
+    const shell = previewShellRef.current;
+    if (!shell) return;
+    event.preventDefault();
+    resizeRef.current = {
+      startX: event.clientX,
+      startWidth: preview.width,
+      containerWidth: shell.getBoundingClientRect().width,
+    };
+    event.currentTarget.setPointerCapture(event.pointerId);
+  };
+
+  useEffect(() => {
+    const onPointerMove = (event: PointerEvent) => {
+      const state = resizeRef.current;
+      if (!state) return;
+      preview.setClampedWidth(state.startWidth - (event.clientX - state.startX), state.containerWidth);
+    };
+    const onPointerUp = () => {
+      resizeRef.current = null;
+    };
+    window.addEventListener('pointermove', onPointerMove);
+    window.addEventListener('pointerup', onPointerUp);
+    return () => {
+      window.removeEventListener('pointermove', onPointerMove);
+      window.removeEventListener('pointerup', onPointerUp);
+    };
+  }, [preview.setClampedWidth]);
+
+  const onStreamClick = (event: React.MouseEvent<HTMLDivElement>) => {
+    const target = event.target;
+    if (!(target instanceof HTMLElement)) return;
+    const pre = target.closest('pre.md__pre');
+    if (!pre || !streamRef.current?.contains(pre)) return;
+    const code = pre.querySelector('code')?.textContent ?? '';
+    const lang = pre.getAttribute('data-preview-lang') ?? undefined;
+    const next = previewFromCodeBlock(code, lang, { title: previewCopy.codeBlockTitle });
+    if (next) preview.show(next);
+  };
+
   return (
+    <div className={`chatWithPreview${preview.open ? ' chatWithPreview--open' : ''}`} ref={previewShellRef}>
     <div
       className={`chat${draggingImage ? ' is-dragging-image' : ''}`}
       onContextMenu={chatDebugMenu.onContextMenu}
@@ -1054,6 +1116,15 @@ const LiveChat: React.FC<{
               <>
                 <button
                   type="button"
+                  className={`btn btn--ghost-d${preview.open ? ' btn--primary' : ''}`}
+                  title={previewCopy.toggleHint}
+                  aria-pressed={preview.open}
+                  onClick={preview.toggle}
+                >
+                  {previewCopy.toggleLabel}
+                </button>
+                <button
+                  type="button"
                   className="btn btn--ghost-d"
                   disabled={streamMessages.length === 0}
                   title={chatCopy.copyMarkdownHint}
@@ -1079,7 +1150,7 @@ const LiveChat: React.FC<{
       </div>
 
       <div className="chat__bodyRow">
-      <div className="chat__stream" ref={streamRef}>
+      <div className="chat__stream" ref={streamRef} onClick={onStreamClick}>
         <div className="chat__streamInner">
           {rt.activeTodos.length > 0 && <TodoPanel todos={rt.activeTodos} />}
           {!ready && (
@@ -1224,11 +1295,18 @@ const LiveChat: React.FC<{
                   {!isUser && !isError && displayText ? (
                     <MessageActions
                       disabled={proposeBusy}
+                      onPreview={() => openMessagePreview(m)}
                       onCorrectThis={() => setProposeContext({
                         messageId: m.id,
                         messageText: displayText,
                         who: 'otto',
                       })}
+                    />
+                  ) : null}
+                  {isUser && m.text ? (
+                    <MessageActions
+                      disabled={proposeBusy}
+                      onPreview={() => openMessagePreview(m)}
                     />
                   ) : null}
                 </div>
@@ -1398,6 +1476,14 @@ const LiveChat: React.FC<{
         classify={api ? (input) => api.curation.proposals.classify(input) : undefined}
         constitutionGet={api ? () => api.constitution.get() : undefined}
       />
+    </div>
+    <PreviewPane
+      open={preview.open}
+      width={preview.width}
+      content={preview.content}
+      onClose={preview.close}
+      onResizeStart={onPreviewResizeStart}
+    />
     </div>
   );
 };
