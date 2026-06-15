@@ -2966,7 +2966,7 @@ const ConnectLetta: React.FC = () => {
   const [baseUrl, setBaseUrl] = useState('');
   const [agentId, setAgentId] = useState('');
   const [primaryAgentId, setPrimaryAgentId] = useState('');
-  const [connectionMode, setConnectionMode] = useState<'embedded' | 'existing' | 'cloud'>('embedded');
+  const [connectionMode, setConnectionMode] = useState<'embedded' | 'existing' | 'cloud'>('existing');
   const [busy, setBusy] = useState(false);
   const [connectError, setConnectError] = useState<string | null>(null);
 
@@ -2978,7 +2978,7 @@ const ConnectLetta: React.FC = () => {
     });
     api.config.get().then((cfg) => {
       setPrimaryAgentId(cfg.primaryAgentId ?? cfg.agentId ?? '');
-      setConnectionMode(cfg.connectionMode ?? 'embedded');
+      setConnectionMode(cfg.connectionMode ?? 'existing');
     });
     api.runtime.status().then(setStatus).catch(() => {});
   }, [api]);
