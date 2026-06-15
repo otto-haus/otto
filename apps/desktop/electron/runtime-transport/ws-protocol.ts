@@ -1,5 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import type { TodoItem } from './todo-parser';
+import { activityFromWsDelta } from '../../src/chat/turn-activity';
 
 export type WsRuntimeEvent = Record<string, unknown> & { type?: string };
 
@@ -22,12 +23,17 @@ export function normalizeWsEvent(
         if (todos) {
           return { type: 'todo_update', todos, uuid: randomUUID() };
         }
-        return null;
       }
-      if (messageType !== 'assistant_message') return null;
-      const text = extractDeltaText(delta.content);
-      if (!text) return null;
-      return { type: 'assistant', text, content: delta.content, uuid: randomUUID() };
+      if (messageType === 'assistant_message') {
+        const text = extractDeltaText(delta.content);
+        if (!text) return null;
+        return { type: 'assistant', text, content: delta.content, uuid: randomUUID() };
+      }
+      const activity = activityFromWsDelta(delta);
+      if (activity) {
+        return { type: 'activity', kind: activity.kind, label: activity.label, uuid: randomUUID() };
+      }
+      return null;
     }
     case 'error':
       return {
