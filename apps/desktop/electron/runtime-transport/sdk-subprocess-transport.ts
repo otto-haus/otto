@@ -181,6 +181,9 @@ export class SdkSubprocessTransport implements OttoRuntimeTransport {
 
   /** Connect; recover from stale agents/conversations; never throw to the renderer. */
   async init(opts?: { freshConversation?: boolean }): Promise<RuntimeStatus> {
+    // Re-init (reconnect, newChat, configure, transport switch) tears down the old session;
+    // deny any pending permission requests from it so they don't outlive their session (#695).
+    this.rejectPendingPermissions('Letta session re-initializing.');
     const cli = resolveCli(this.config.connectionMode());
     const context = await resolveLiveLocalLettaContext(this.config);
     const baseResolution = await resolveInitBaseUrl(context.baseUrl, this.config.connectionMode());
@@ -590,6 +593,9 @@ export class SdkSubprocessTransport implements OttoRuntimeTransport {
   }
 
   async close(): Promise<void> {
+    // Deny any in-flight permission requests so closing mid-approval doesn't leave hung
+    // promises, stale timers, or a stuck turn (matches abort semantics) (#695).
+    this.rejectPendingPermissions('Runtime transport closed.');
     this.session?.close();
     this.session = null;
     this.status = { ...this.status, ready: false, reason: 'transport closed' };
