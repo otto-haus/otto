@@ -46,6 +46,7 @@ import { MemoryStore } from './memory-store';
 import { PgvectorStore } from './pgvector-store';
 import { safeWebContentsSend, smokeMode } from './runtime-transport/runtime-common';
 import { readAppBuildInfo } from './build-info';
+import { openSystemTerminal, resolveWorkspaceRoot } from './open-terminal';
 import { getWorkspaceInfo, resolveWorkspaceRepoRoot } from './workspace-root';
 
 export function registerIpc(win: BrowserWindow) {
@@ -128,6 +129,8 @@ export function registerIpc(win: BrowserWindow) {
     permissionSessionStore.clear();
     return { ok: true as const };
   });
+  ipcMain.handle('otto:terminal:workspace-root', () => resolveWorkspaceRoot());
+  ipcMain.handle('otto:terminal:open', () => openSystemTerminal());
 
   ipcMain.handle('otto:config:get', () => config.get());
   ipcMain.handle('otto:config:set', (_e, patch: Partial<OttoConfig>) => config.update(patch));

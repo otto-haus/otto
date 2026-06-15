@@ -46,4 +46,5 @@ export const Icon = {
   chevronDown: <S w={1.65}><path d="M6.5 9 12 13 17.5 9" /></S>,
   lock: <S><rect x="5" y="11" width="14" height="9" rx="2" /><path d="M8 11V8a4 4 0 0 1 8 0v3" /></S>,
   file: <S><path d="M7 3h7l4 4v14H7z" /><path d="M13 3v5h5" /></S>,
+  terminal: <S><rect x="3" y="4" width="18" height="16" rx="2" /><path d="M7 9.5 9.5 12 7 14.5" /><path d="M11 14.5h6" /></S>,
 } as const;

@@ -14,10 +14,11 @@ export const META: Record<SurfaceId, { title: string; sub: string }> = {
   knowledge: { title: 'Knowledge', sub: 'AI Frontier model registry — routing Autonomy and ticket workers.' },
   tickets: { title: 'Tickets', sub: 'Bounded worker slices — compile, orchestrate in worktrees, track workers.' },
   channels: { title: 'Channels', sub: 'Reachability surfaces; outbound sends are approval-gated.' },
+  terminal: { title: 'Terminal', sub: 'Open a local shell at the workspace root for agent workflows.' },
   settings: { title: 'Settings', sub: 'Connection, providers, and workspace defaults.' },
 };
 
 export const VALID_SURFACES: SurfaceId[] = [
   'chat', 'charters', 'standards', 'practices', 'routines', 'curation', 'receipts',
-  'checks', 'autonomy', 'skills', 'knowledge', 'tickets', 'channels', 'settings',
+  'checks', 'autonomy', 'skills', 'knowledge', 'tickets', 'channels', 'terminal', 'settings',
 ];

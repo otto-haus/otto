@@ -20,6 +20,7 @@ import {
   Settings,
 } from './surfaces/Panes';
 import { ChecksSurfaceShell } from './surfaces/ChecksSurfaceShell';
+import { Terminal } from './surfaces/Terminal';
 import { Onboarding } from './Onboarding';
 import { LabsProvider, useLabs } from './labs/LabsContext';
 import { ComingSoonSurface } from './labs/ComingSoonSurface';
@@ -44,6 +45,7 @@ function renderSurface(id: SurfaceId) {
     case 'knowledge': return <Knowledge />;
     case 'tickets': return <Tickets />;
     case 'channels': return <Channels />;
+    case 'terminal': return <Terminal />;
     case 'settings': return <Settings />;
     default: return null;
   }
@@ -71,6 +73,7 @@ const DATA_SOURCE: Partial<Record<SurfaceId, 'live' | 'coming-soon' | 'file'>> =
   knowledge: 'file',
   tickets: 'file',
   channels: 'file',
+  terminal: 'live',
 };
 
 export function App() {

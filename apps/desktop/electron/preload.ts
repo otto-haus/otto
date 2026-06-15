@@ -125,6 +125,10 @@ const api = {
     configure: (input: RuntimePreferences): Promise<RuntimeStatus> => ipcRenderer.invoke('otto:configure', input),
     openLetta: (): Promise<string> => ipcRenderer.invoke('otto:open-letta'),
   },
+  terminal: {
+    workspaceRoot: (): Promise<string> => ipcRenderer.invoke('otto:terminal:workspace-root'),
+    open: (): Promise<{ ok: boolean; cwd: string; error?: string }> => ipcRenderer.invoke('otto:terminal:open'),
+  },
   app: {
     buildInfo: (): Promise<AppBuildInfo> => ipcRenderer.invoke('otto:app:build-info'),
   },
