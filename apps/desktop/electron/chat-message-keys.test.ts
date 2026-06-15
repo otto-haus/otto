@@ -72,6 +72,48 @@ describe('chat message storage keys (046)', () => {
 
     expect(readStoredMessages('thread_existing', { storage, allowLegacyFallback: true })).toEqual([thread]);
   });
+
+  test('valid 73k thread history restores the bounded recent tail', () => {
+    installStorage();
+    const older = Array.from({ length: 75 }, (_, i) => ({
+      id: `older-${i}`,
+      who: 'otto' as const,
+      text: `older ${i} ${'x'.repeat(1000)}`,
+    }));
+    const recent = [
+      { id: 'tail-user', who: 'user' as const, text: 'recent user turn' },
+      { id: 'tail-otto', who: 'otto' as const, text: 'recent otto reply' },
+    ];
+    const raw = JSON.stringify([...older, ...recent]);
+    expect(raw.length).toBeGreaterThan(73_000);
+    expect(raw.length).toBeLessThan(1_000_000);
+    localStorage.setItem(messagesKey('thread_large'), raw);
+
+    const restored = readStoredMessages('thread_large');
+
+    expect(restored.map((m) => m.id)).toContain('tail-user');
+    expect(restored.map((m) => m.id)).toContain('tail-otto');
+    expect(restored.some((m) => m.id.startsWith('history-suppressed-'))).toBe(false);
+    expect(restored.length).toBeLessThanOrEqual(12);
+    expect(restored.reduce((sum, m) => sum + m.text.length, 0)).toBeLessThanOrEqual(7_000);
+  });
+
+  test('corrupt thread history fails closed to empty history', () => {
+    installStorage();
+    localStorage.setItem(messagesKey('thread_corrupt'), '[{"id":"1","who":"user","text":"unterminated"');
+
+    expect(readStoredMessages('thread_corrupt')).toEqual([]);
+  });
+
+  test('pathological thread history still uses the startup safety gate', () => {
+    installStorage();
+    localStorage.setItem(messagesKey('thread_huge'), `[${' '.repeat(1_000_001)}]`);
+
+    const restored = readStoredMessages('thread_huge');
+
+    expect(restored).toHaveLength(1);
+    expect(restored[0]?.text).toContain('too large to restore safely at startup');
+  });
 });
 
 function fakeStorage(entries: Record<string, string>): Pick<Storage, 'getItem'> {
