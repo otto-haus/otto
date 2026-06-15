@@ -235,6 +235,20 @@ h1, h2, h3, h4, p { margin: 0; }
 .sidebarSection__chev svg { width: 14px; height: 14px; }
 .sidebarSection__body { display: grid; gap: 1px; padding-bottom: 2px; }
 .sidebarSection__empty { padding: 6px 12px 2px; color: var(--faint); font-size: 13px; }
+.sidebarThreads__toggle {
+  margin: 4px 8px 0;
+  padding: 6px 10px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--faint);
+  font: inherit;
+  font-size: 12px;
+  text-align: left;
+  cursor: pointer;
+}
+.sidebarThreads__toggle:hover { color: var(--ink-soft); background: rgba(20,22,26,0.03); }
+.sidebarConvWrap.is-archived .sidebarConv { opacity: 0.82; }
 
 .sidebarConvWrap {
   display: flex;

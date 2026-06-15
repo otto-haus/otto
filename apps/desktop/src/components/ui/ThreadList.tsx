@@ -9,6 +9,7 @@ export type ThreadSummary = {
   updatedAt: number;
   sortOrder?: number | null;
   pinned?: boolean;
+  archived?: boolean;
 };
 
 /** Keep sidebar labels human — hide smoke IDs and raw local keys. */
@@ -21,11 +22,13 @@ export function displayThreadTitle(title: string): string {
   return t;
 }
 
-/** Split threads into pinned and recent buckets for sidebar rendering. */
+/** Split threads into pinned, recent, and archived buckets for sidebar rendering. */
 export function splitThreadSections(threads: ThreadSummary[]) {
-  const pinned = threads.filter((thread) => !!thread.pinned);
-  const recents = threads.filter((thread) => !thread.pinned);
-  return { pinned, recents };
+  const active = threads.filter((thread) => !thread.archived);
+  const archived = threads.filter((thread) => !!thread.archived);
+  const pinned = active.filter((thread) => !!thread.pinned);
+  const recents = active.filter((thread) => !thread.pinned);
+  return { pinned, recents, archived };
 }
 
 function readSectionOpen(key: string, fallback: boolean): boolean {
@@ -50,10 +53,11 @@ function writeSectionOpen(key: string, open: boolean) {
 const ConversationRow: React.FC<{
   thread: ThreadSummary;
   active: boolean;
-  variant: 'pinned' | 'recent';
+  variant: 'pinned' | 'recent' | 'archived';
   onSelect?: (thread: ThreadSummary) => void;
   onPin?: (thread: ThreadSummary, pinned: boolean) => void;
   onArchive?: (thread: ThreadSummary) => void;
+  onRestore?: (thread: ThreadSummary) => void;
   onMove?: (thread: ThreadSummary, target: ThreadSummary) => void;
   draggingId: string | null;
   onDragThreadStart: (threadId: string) => void;
@@ -65,13 +69,14 @@ const ConversationRow: React.FC<{
   onSelect,
   onPin,
   onArchive,
+  onRestore,
   onMove,
   draggingId,
   onDragThreadStart,
   onDragThreadEnd,
 }) => (
   <div
-    className={`sidebarConvWrap${active ? ' is-active' : ''}${thread.pinned ? ' is-pinned' : ''}${draggingId === thread.id ? ' is-dragging' : ''}`}
+    className={`sidebarConvWrap${active ? ' is-active' : ''}${thread.pinned ? ' is-pinned' : ''}${thread.archived ? ' is-archived' : ''}${draggingId === thread.id ? ' is-dragging' : ''}`}
     data-thread-variant={variant}
     draggable={!!onMove}
     onDragStart={(event) => {
@@ -118,6 +123,20 @@ const ConversationRow: React.FC<{
       {variant === 'recent' ? <span className="sidebarConv__icon">{Icon.clock}</span> : null}
       <span className="sidebarConv__label">{displayThreadTitle(thread.title)}</span>
     </button>
+    {onRestore ? (
+      <button
+        type="button"
+        className="sidebarConv__archive"
+        aria-label={threadCopy.restore}
+        title={threadCopy.restore}
+        onClick={(event) => {
+          event.stopPropagation();
+          onRestore(thread);
+        }}
+      >
+        {Icon.archive}
+      </button>
+    ) : null}
     {onArchive ? (
       <button
         type="button"
@@ -164,18 +183,44 @@ export const ThreadList: React.FC<{
   threads: ThreadSummary[];
   activeThreadId?: string | null;
   activeConversationId?: string | null;
+  showArchived?: boolean;
+  hasArchived?: boolean;
+  onToggleShowArchived?: (show: boolean) => void;
   onSelect?: (thread: ThreadSummary) => void;
   onPin?: (thread: ThreadSummary, pinned: boolean) => void;
   onArchive?: (thread: ThreadSummary) => void;
+  onRestore?: (thread: ThreadSummary) => void;
   onMove?: (thread: ThreadSummary, target: ThreadSummary) => void;
-}> = ({ threads, activeThreadId, activeConversationId, onSelect, onPin, onArchive, onMove }) => {
+}> = ({
+  threads,
+  activeThreadId,
+  activeConversationId,
+  showArchived = false,
+  hasArchived = false,
+  onToggleShowArchived,
+  onSelect,
+  onPin,
+  onArchive,
+  onRestore,
+  onMove,
+}) => {
   const [draggingId, setDraggingId] = useState<string | null>(null);
-  const { pinned, recents } = splitThreadSections(threads);
+  const { pinned, recents, archived } = splitThreadSections(threads);
+  const activeCount = pinned.length + recents.length;
 
-  if (!threads.length) {
+  if (!activeCount && !showArchived) {
     return (
       <div className="sidebar__conversations sidebar__threads">
         <p className="sidebarSection__empty threadGroup__empty">{threadCopy.empty}</p>
+        {hasArchived && onToggleShowArchived ? (
+          <button
+            type="button"
+            className="sidebarThreads__toggle"
+            onClick={() => onToggleShowArchived(true)}
+          >
+            {threadCopy.showArchived}
+          </button>
+        ) : null}
       </div>
     );
   }
@@ -234,6 +279,37 @@ export const ThreadList: React.FC<{
           <p className="sidebarSection__empty">{threadCopy.recentsEmpty}</p>
         )}
       </Section>
+      {showArchived ? (
+        <Section label={threadCopy.archivedLabel} storageKey="otto.sidebar.archived" defaultOpen>
+          {archived.length > 0 ? (
+            archived.map((thread) => (
+              <ConversationRow
+                key={thread.id}
+                thread={thread}
+                active={isActive(thread)}
+                variant="archived"
+                onSelect={onSelect}
+                onRestore={onRestore}
+                draggingId={draggingId}
+                onDragThreadStart={setDraggingId}
+                onDragThreadEnd={() => setDraggingId(null)}
+              />
+            ))
+          ) : (
+            <p className="sidebarSection__empty">{threadCopy.archivedEmpty}</p>
+          )}
+        </Section>
+      ) : null}
+      {hasArchived && onToggleShowArchived ? (
+        <button
+          type="button"
+          className="sidebarThreads__toggle"
+          aria-pressed={showArchived}
+          onClick={() => onToggleShowArchived(!showArchived)}
+        >
+          {showArchived ? threadCopy.hideArchived : threadCopy.showArchived}
+        </button>
+      ) : null}
     </div>
   );
 };

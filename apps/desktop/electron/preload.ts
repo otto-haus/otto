@@ -338,6 +338,8 @@ const api = {
       ipcRenderer.invoke('otto:threads:switch', threadId),
     archive: (threadId: string): Promise<ChatThreadRecord> =>
       ipcRenderer.invoke('otto:threads:archive', threadId),
+    unarchive: (threadId: string): Promise<ChatThreadRecord> =>
+      ipcRenderer.invoke('otto:threads:unarchive', threadId),
     pin: (threadId: string, pinned: boolean): Promise<ChatThreadRecord> =>
       ipcRenderer.invoke('otto:threads:pin', threadId, pinned),
     move: (threadId: string, targetId: string): Promise<ThreadListResult> =>

@@ -324,6 +324,11 @@ export const threadCopy = {
   pin: 'Pin conversation — keep in Pinned',
   unpin: 'Unpin conversation — move to Recents',
   archive: 'Archive conversation',
+  restore: 'Restore to recents',
+  archivedLabel: 'Archived',
+  archivedEmpty: 'Archived conversations appear here.',
+  showArchived: 'Show archived',
+  hideArchived: 'Hide archived',
   reorderHint: 'Drag to reorder within Pinned or Recents.',
 } as const;
 

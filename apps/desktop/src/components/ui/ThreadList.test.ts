@@ -37,4 +37,16 @@ describe('splitThreadSections', () => {
     expect(pinned.map((thread) => thread.id)).toEqual(['pinned']);
     expect(recents.map((thread) => thread.id)).toEqual(['recent']);
   });
+
+  test('keeps archived threads out of pinned and recents', () => {
+    const archivedRow = { ...row('archived'), archived: true };
+    const { pinned, recents, archived } = splitThreadSections([
+      row('pinned', true),
+      row('recent'),
+      archivedRow,
+    ]);
+    expect(pinned.map((thread) => thread.id)).toEqual(['pinned']);
+    expect(recents.map((thread) => thread.id)).toEqual(['recent']);
+    expect(archived.map((thread) => thread.id)).toEqual(['archived']);
+  });
 });

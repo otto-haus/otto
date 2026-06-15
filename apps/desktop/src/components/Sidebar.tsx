@@ -82,7 +82,11 @@ export const Sidebar: React.FC<{
   onSelectThread?: (thread: ThreadSummary) => void;
   onPinThread?: (thread: ThreadSummary, pinned: boolean) => void;
   onArchiveThread?: (thread: ThreadSummary) => void;
+  onRestoreThread?: (thread: ThreadSummary) => void;
   onMoveThread?: (thread: ThreadSummary, target: ThreadSummary) => void;
+  showArchived?: boolean;
+  hasArchived?: boolean;
+  onToggleShowArchived?: (show: boolean) => void;
   isComingSoon?: (id: SurfaceId) => boolean;
 }> = ({
   active,
@@ -97,7 +101,11 @@ export const Sidebar: React.FC<{
   onSelectThread,
   onPinThread,
   onArchiveThread,
+  onRestoreThread,
   onMoveThread,
+  showArchived,
+  hasArchived,
+  onToggleShowArchived,
   isComingSoon,
 }) => {
   const rt = useRuntimeContext();
@@ -215,9 +223,13 @@ export const Sidebar: React.FC<{
         threads={threads}
         activeThreadId={activeThreadId}
         activeConversationId={activeConversationId}
+        showArchived={showArchived}
+        hasArchived={hasArchived}
+        onToggleShowArchived={onToggleShowArchived}
         onSelect={onSelectThread}
         onPin={onPinThread}
         onArchive={onArchiveThread}
+        onRestore={onRestoreThread}
         onMove={onMoveThread}
       />
 
