@@ -3804,11 +3804,13 @@ const ConversationSortSetting: React.FC = () => {
   );
 };
 
+type SettingsSectionId = 'general' | 'providers' | 'memory' | 'culture' | 'labs';
+
 export const Settings: React.FC = () => {
   const rt = useRuntimeContext();
   const api = ottoApi();
   const { push: pushToast } = useToast();
-  const [section, setSection] = useState<'general' | 'providers'>('general');
+  const [section, setSection] = useState<SettingsSectionId>('general');
   const [buildInfo, setBuildInfo] = useState<AppBuildInfo | null>(null);
 
   useEffect(() => {
@@ -3819,21 +3821,27 @@ export const Settings: React.FC = () => {
   useEffect(() => {
     try {
       const pending = sessionStorage.getItem('otto.settings.section');
-      if (pending === 'memory' || pending === 'culture' || pending === 'labs') {
-        setSection('general');
+      if (
+        pending === 'general'
+        || pending === 'providers'
+        || pending === 'memory'
+        || pending === 'culture'
+        || pending === 'labs'
+      ) {
+        setSection(pending);
         sessionStorage.removeItem('otto.settings.section');
-        requestAnimationFrame(() => {
-          document.getElementById(`settings-${pending}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        });
       }
     } catch { /* best effort */ }
   }, []);
 
   const liveConnected = rt.electron && !!rt.status?.ready;
 
-  const settingsTabs: Array<{ id: typeof section; label: string; icon: React.ReactNode }> = [
+  const settingsTabs: Array<{ id: SettingsSectionId; label: string; icon: React.ReactNode }> = [
     { id: 'general', label: settingsCopy.tabGeneral, icon: Icon.settings },
     { id: 'providers', label: settingsCopy.tabProviders, icon: Icon.lock },
+    { id: 'memory', label: settingsCopy.tabMemory, icon: Icon.curation },
+    { id: 'culture', label: settingsCopy.tabCulture, icon: Icon.file },
+    { id: 'labs', label: settingsCopy.tabLabs, icon: Icon.theme },
   ];
 
   return (
@@ -3862,6 +3870,36 @@ export const Settings: React.FC = () => {
 
       {section === 'providers' ? (
         <ModelProviders />
+      ) : section === 'memory' ? (
+        <div className="settingsPage__content">
+          <section id="settings-memory">
+            <SettingsSectionHeader title={settingsCopy.memoryTitle} lede={settingsCopy.memoryLede} />
+            <MemoryObservatory connected={liveConnected} onOpenLetta={() => void ottoApi()?.runtime.openLetta()} />
+          </section>
+          <p className="faint mono settingsLocalFootnote">{settingsCopy.localOnlyFootnote}</p>
+          <AppSourceDetails info={buildInfo} />
+        </div>
+      ) : section === 'culture' ? (
+        <div className="settingsPage__content">
+          <section id="settings-culture">
+            {api ? (
+              <CultureSettingsPanel api={api} pushToast={pushToast} />
+            ) : (
+              <InlineEmpty title={cultureSettingsCopy.title} body={cultureSettingsCopy.lede} />
+            )}
+          </section>
+          <p className="faint mono settingsLocalFootnote">{settingsCopy.localOnlyFootnote}</p>
+          <AppSourceDetails info={buildInfo} />
+        </div>
+      ) : section === 'labs' ? (
+        <div className="settingsPage__content">
+          <section className="settingsLabs" id="settings-labs">
+            <SettingsSectionHeader title={settingsCopy.sectionLabs} lede={labsCopy.lede} />
+            <LabsSettingsPanel />
+          </section>
+          <p className="faint mono settingsLocalFootnote">{settingsCopy.localOnlyFootnote}</p>
+          <AppSourceDetails info={buildInfo} />
+        </div>
       ) : (
         <div className="settingsPage__content">
           <SettingsSectionHeader title={settingsCopy.generalTitle} lede={settingsCopy.generalLede} />
@@ -3918,11 +3956,6 @@ export const Settings: React.FC = () => {
             <ReadinessPanel />
           </section>
 
-          <section className="settingsGeneralSection" id="settings-memory">
-            <SettingsSectionHeader title={settingsCopy.memoryTitle} lede={settingsCopy.memoryLede} />
-            <MemoryObservatory connected={liveConnected} onOpenLetta={() => void ottoApi()?.runtime.openLetta()} />
-          </section>
-
           <section className="settingsGeneralSection" id="settings-dreaming">
             <SettingsSectionHeader title={settingsCopy.dreamingTitle} lede={settingsCopy.dreamingLede} />
             <DreamSettingsPanel memfsEnabled={!!rt.status?.memfsEnabled} pushToast={pushToast} />
@@ -3933,17 +3966,6 @@ export const Settings: React.FC = () => {
               <DiagnosticsSettingsPanel api={api} pushToast={pushToast} />
             </section>
           ) : null}
-
-          {api ? (
-            <section className="settingsGeneralSection" id="settings-culture">
-              <CultureSettingsPanel api={api} pushToast={pushToast} />
-            </section>
-          ) : null}
-
-          <section className="settingsGeneralSection settingsLabs" id="settings-labs">
-            <SettingsSectionHeader title={settingsCopy.sectionLabs} lede={labsCopy.lede} />
-            <LabsSettingsPanel />
-          </section>
 
           <p className="faint mono settingsLocalFootnote">{settingsCopy.localOnlyFootnote}</p>
           <AppSourceDetails info={buildInfo} />

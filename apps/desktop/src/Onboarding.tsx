@@ -267,7 +267,7 @@ export const Onboarding: React.FC<{ onNavigate: (id: SurfaceId) => void; activeS
       );
     }
 
-    if (step === 'run') {
+    if (step === 'run' && activeSurface === 'chat') {
       return (
         <OnboardingStepLayout
           step="run"
@@ -326,6 +326,9 @@ export const Onboarding: React.FC<{ onNavigate: (id: SurfaceId) => void; activeS
   if (stepChrome) {
     return <div className="onboardStepAnchor">{stepChrome}</div>;
   }
+
+  // Run-step chrome stays on Chat; suppress dock on Settings so Save stays reachable.
+  if (step === 'run' && activeSurface === 'settings') return null;
 
   return null;
 };
