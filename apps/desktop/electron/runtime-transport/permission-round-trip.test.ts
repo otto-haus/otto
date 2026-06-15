@@ -203,7 +203,7 @@ describe('permission tool-call round-trip (#298)', () => {
   test('concurrent gates: transport keeps both pending until each is resolved (#709)', async () => {
     process.env.OTTO_PERMISSION_TIMEOUT_MS = '5000';
     const { win, sent } = mockWindow();
-    const transport = new SdkSubprocessTransport(win, mockConfig());
+    const transport = new SdkSubprocessTransport(() => win, mockConfig());
 
     wireTransport(transport, async (canUseTool) => {
       const first = canUseTool('run_shell', { cmd: 'echo one' });
