@@ -1,3 +1,4 @@
+import { existsSync } from 'node:fs';
 import { type BrowserWindow, app, ipcMain, shell } from 'electron';
 import type { ConnectionInfo, ConnectionInput, CreateProposalFromCorrectionInput, DecideProposalInput, DreamSettings, LabsConfig, OttoConfig, PermissionRequest, PermissionResponse, ProposalClassification, ProposalTarget, RuntimePreferences, RuntimeStatus } from './shared/types';
 import { applyLabsConfigPatch, getLabsConfig, labsConfigToOttoPatch } from './labs-config';
@@ -13,8 +14,8 @@ import type { AttachmentInput } from './shared/types';
 import { saveAttachment } from './attachments';
 import { CharterStore } from './charter-store';
 import { ConfigStore } from './config-store';
-import { discoverLocalLettaContext, LettaRunner } from './letta-runner';
-import { listLocalLettaModels } from './runtime-transport/letta-discovery';
+import { LettaRunner } from './letta-runner';
+import { discoverLocalLettaContext, listLocalLettaModels, resolveHttpBaseUrl } from './runtime-transport/letta-discovery';
 import { ReceiptStore } from './receipt-store';
 import { StandardStore } from './standard-store';
 import { PracticeStore } from './practice-store';
@@ -130,7 +131,35 @@ export function registerIpc(win: BrowserWindow) {
     return status;
   });
   ipcMain.handle('otto:models:list', () => listLocalLettaModels(config));
-  ipcMain.handle('otto:open-letta', () => shell.openPath('/Applications/Letta.app'));
+  ipcMain.handle('otto:open-letta', async () => {
+    const mode = config.connectionMode();
+    const context = discoverLocalLettaContext(config);
+    const webUrl = resolveHttpBaseUrl(context.baseUrl ?? config.baseUrl());
+    const lettaApp = '/Applications/Letta.app';
+
+    if (mode === 'embedded') {
+      if (webUrl) {
+        await shell.openExternal(webUrl);
+        return webUrl;
+      }
+      throw new Error('Embedded Letta has no local web URL yet — connect in Settings first.');
+    }
+
+    if (mode === 'existing' && existsSync(lettaApp)) {
+      return shell.openPath(lettaApp);
+    }
+
+    if (webUrl) {
+      await shell.openExternal(webUrl);
+      return webUrl;
+    }
+
+    if (existsSync(lettaApp)) {
+      return shell.openPath(lettaApp);
+    }
+
+    throw new Error('Letta Desktop is not installed and no local web URL was discovered.');
+  });
   ipcMain.handle('otto:workspace:get', () => getWorkspaceInfo());
   ipcMain.handle('otto:workspace:reveal', () => {
     const path = resolveWorkspaceRepoRoot();

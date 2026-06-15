@@ -21,7 +21,7 @@ import {
   labsCopy,
   loaderCopy,
 } from '../copy/surfaces';
-import { resetOnboardingForReplay } from '../onboarding-storage';
+import { requestOnboardingReplay } from '../onboarding-storage';
 import { LabsBlockedShell } from '../labs/LabsBlockedShell';
 import {
   getSampleReceiptDetail,
@@ -30,9 +30,9 @@ import {
   sampleReceiptCard,
   SAMPLE_RECEIPT_LABEL,
 } from '../onboarding-sample-receipt';
-import { useLabs, LAB_FEATURE_IDS, LAB_FEATURE_META } from '../labs/LabsContext';
+import { resolveLettaOpenAction } from '../letta-open-action';
 import { AppSourceDetails } from '../components/AppSourceBadge';
-import type { AppBuildInfo, LabFeatureId, WorkspaceInfo, SystemHealthReport, HealthCheck } from '../../electron/shared/types';
+import type { AppBuildInfo, WorkspaceInfo, SystemHealthReport, HealthCheck } from '../../electron/shared/types';
 import {
   ottoApi,
   type CharterDetail,
@@ -2967,6 +2967,7 @@ const ConnectLetta: React.FC = () => {
   const [agentId, setAgentId] = useState('');
   const [primaryAgentId, setPrimaryAgentId] = useState('');
   const [connectionMode, setConnectionMode] = useState<'embedded' | 'existing' | 'cloud'>('existing');
+  const [configHydrated, setConfigHydrated] = useState(false);
   const [busy, setBusy] = useState(false);
   const [connectError, setConnectError] = useState<string | null>(null);
 
@@ -2979,6 +2980,7 @@ const ConnectLetta: React.FC = () => {
     api.config.get().then((cfg) => {
       setPrimaryAgentId(cfg.primaryAgentId ?? cfg.agentId ?? '');
       setConnectionMode(cfg.connectionMode ?? 'existing');
+      setConfigHydrated(true);
     });
     api.runtime.status().then(setStatus).catch(() => {});
   }, [api]);
@@ -3041,9 +3043,11 @@ const ConnectLetta: React.FC = () => {
         </label>
       </div>
       <div className="row settingsGeneralSection__actions">
-        <button type="button" className="btn" onClick={() => void api.runtime.openLetta()}>
-          {settingsCopy.primaryAgentOpenLetta}
-        </button>
+        <LettaOpenControl
+          connectionMode={connectionMode}
+          baseUrl={displayStatus?.baseUrl ?? baseUrl}
+          onOpen={() => void api.runtime.openLetta()}
+        />
       </div>
       <div className="settingsField">
         <label>
@@ -3093,7 +3097,7 @@ const ConnectLetta: React.FC = () => {
         </label>
       </div>
       <div className="row" style={{ gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
-        <button type="button" className="btn btn--primary" onClick={connect} disabled={busy}>
+        <button type="button" className="btn btn--primary" onClick={connect} disabled={busy || !configHydrated}>
           {busy ? settingsCopy.connectionSaveBusy : settingsCopy.connectionSaveIdle}
         </button>
         {displayStatus?.ready && (
@@ -3368,6 +3372,24 @@ const SettingsSectionHeader: React.FC<{ title: string; lede: string }> = ({ titl
   </header>
 );
 
+const LettaOpenControl: React.FC<{
+  connectionMode: 'embedded' | 'existing' | 'cloud';
+  baseUrl?: string | null;
+  variant?: 'primary' | 'default';
+  onOpen: () => void;
+}> = ({ connectionMode, baseUrl, variant = 'default', onOpen }) => {
+  const action = resolveLettaOpenAction(connectionMode, baseUrl);
+  if (action.kind === 'none') {
+    return <p className="settingsFieldHint" style={{ margin: 0 }}>{action.hint}</p>;
+  }
+  const className = variant === 'primary' ? 'btn btn--primary' : 'btn';
+  return (
+    <button type="button" className={className} onClick={onOpen}>
+      {action.label}
+    </button>
+  );
+};
+
 const healthStatusTone = (status: HealthCheck['status']): string => {
   if (status === 'ok') return 'connected';
   if (status === 'warn' || status === 'unknown') return 'pending';
@@ -3477,12 +3499,14 @@ const ModelProviders: React.FC = () => {
   const api = ottoApi();
   const rt = useRuntimeContext();
   const [tab, setTab] = useState<ProviderKind>('local');
+  const [connectionMode, setConnectionMode] = useState<'embedded' | 'existing' | 'cloud'>('existing');
   const [mirror, setMirror] = useState<ProviderMirrorSnapshot | null>(null);
   const [apiKeyDraft, setApiKeyDraft] = useState('');
   const [keyBusy, setKeyBusy] = useState(false);
   const [keyMessage, setKeyMessage] = useState<string | null>(null);
   const activeModel = `${rt.status?.modelHandle ?? ''} ${rt.status?.model ?? ''}`.toLowerCase();
   const openLetta = () => void api?.runtime.openLetta();
+  const lettaAction = resolveLettaOpenAction(connectionMode, rt.status?.baseUrl);
   const rows = MODEL_PROVIDERS.filter((p) => p.kind === tab);
   const activeProviderTab = PROVIDER_TABS.find((providerTab) => providerTab.kind === tab) ?? PROVIDER_TABS[0];
 
@@ -3516,6 +3540,13 @@ const ModelProviders: React.FC = () => {
     refreshMirror();
   }, [api, rt.status?.ready]);
 
+  useEffect(() => {
+    if (!api?.config?.get) return;
+    void api.config.get().then((cfg) => {
+      setConnectionMode(cfg.connectionMode ?? 'existing');
+    });
+  }, [api]);
+
   const submitApiKey = async () => {
     if (!api?.provider || !apiKeyDraft.trim()) return;
     setKeyBusy(true);
@@ -3536,7 +3567,12 @@ const ModelProviders: React.FC = () => {
     <div className="settingsPage__content providersScreen">
       <SettingsSectionHeader title={settingsCopy.providersTitle} lede={settingsCopy.providersLede} />
       <div className="row" style={{ justifyContent: 'flex-end' }}>
-        <button type="button" className="btn btn--primary" onClick={openLetta}>Open Letta</button>
+        <LettaOpenControl
+          connectionMode={connectionMode}
+          baseUrl={rt.status?.baseUrl}
+          variant="primary"
+          onOpen={openLetta}
+        />
       </div>
 
       <div className="providersMirror">
@@ -3608,7 +3644,9 @@ const ModelProviders: React.FC = () => {
                 </div>
                 <p className="muted" style={{ marginTop: 4 }}>{provider.detail}</p>
               </div>
-              <button type="button" className="btn" onClick={openLetta}>{active ? 'Manage' : 'Connect'}</button>
+              <button type="button" className="btn" onClick={openLetta}>
+                {active ? 'Manage in Letta' : (lettaAction.kind === 'open' ? lettaAction.label : 'Connect in Letta')}
+              </button>
             </div>
           );
         })}
@@ -3622,7 +3660,12 @@ const ModelProviders: React.FC = () => {
 };
 
 /* ---------- Settings (Setup + Readiness) ---------- */
-const MemoryObservatory: React.FC<{ connected: boolean; onOpenLetta: () => void }> = ({ connected, onOpenLetta }) => {
+const MemoryObservatory: React.FC<{
+  connected: boolean;
+  connectionMode: 'embedded' | 'existing' | 'cloud';
+  baseUrl?: string | null;
+  onOpenLetta: () => void;
+}> = ({ connected, connectionMode, baseUrl, onOpenLetta }) => {
   const api = ottoApi();
   const [result, setResult] = useState<MemoryListResult | null>(null);
   const [query, setQuery] = useState('');
@@ -3649,7 +3692,7 @@ const MemoryObservatory: React.FC<{ connected: boolean; onOpenLetta: () => void 
   return (
     <>
       <div className="row settingsGeneralSection__actions">
-        <button type="button" className="btn" onClick={onOpenLetta}>Open in Letta</button>
+        <LettaOpenControl connectionMode={connectionMode} baseUrl={baseUrl} onOpen={onOpenLetta} />
       </div>
       <p className="settingsFieldHint">
         Inspects Letta core-memory blocks via `{result?.apiPath ?? '/v1/agents/{id}/core-memory/blocks'}`. Otto does not write memory here — use Curation proposals for writeback.
@@ -3793,56 +3836,6 @@ const DreamSettingsPanel: React.FC<{
   );
 };
 
-const LabsSettingsPanel: React.FC = () => {
-  const { labs, setMasterEnabled, setFeatureEnabled, hydrated } = useLabs();
-
-  return (
-    <>
-      <div className="settingsLabsWarn">{settingsCopy.labsWarn}</div>
-      <div className="settingsFieldRow">
-        <div className="settingsFieldRow__main">
-          <div className="settingsFieldRow__title">{labsCopy.masterLabel}</div>
-          <p className="settingsFieldRow__hint">{labsCopy.masterWarning}</p>
-        </div>
-        <label className="labsRow__toggle">
-          <input
-            type="checkbox"
-            checked={labs.enabled === true}
-            disabled={!hydrated}
-            onChange={(e) => void setMasterEnabled(e.target.checked)}
-          />
-        </label>
-      </div>
-      <div className="labsList" style={{ marginTop: 0 }}>
-        {LAB_FEATURE_IDS.map((id: LabFeatureId) => {
-          const meta = LAB_FEATURE_META[id];
-          const enabled = labs.features?.[id] === true;
-          return (
-            <div key={id} className="settingsFieldRow">
-              <div className="settingsFieldRow__main">
-                <div className="settingsFieldRow__title">
-                  {meta.label}
-                  <span className="pill">{labsCopy.previewBadge}</span>
-                </div>
-                <p className="settingsFieldRow__hint">{meta.blurb}</p>
-              </div>
-              <label className="labsRow__toggle">
-                <input
-                  type="checkbox"
-                  checked={enabled}
-                  disabled={!hydrated || labs.enabled !== true}
-                  onChange={(e) => void setFeatureEnabled(id, e.target.checked)}
-                />
-              </label>
-            </div>
-          );
-        })}
-      </div>
-      <p className="faint mono settingsLabsFootnote">{labsCopy.matrixLink}</p>
-    </>
-  );
-};
-
 const ConversationSortSetting: React.FC = () => {
   const api = ottoApi();
   const [mode, setMode] = useState<ConversationSortMode>('recent');
@@ -3886,7 +3879,7 @@ const ConversationSortSetting: React.FC = () => {
   );
 };
 
-type SettingsSectionId = 'general' | 'providers' | 'memory' | 'culture' | 'labs';
+type SettingsSectionId = 'general' | 'providers' | 'memory' | 'culture';
 
 export const Settings: React.FC = () => {
   const rt = useRuntimeContext();
@@ -3894,6 +3887,14 @@ export const Settings: React.FC = () => {
   const { push: pushToast } = useToast();
   const [section, setSection] = useState<SettingsSectionId>('general');
   const [buildInfo, setBuildInfo] = useState<AppBuildInfo | null>(null);
+  const [connectionMode, setConnectionMode] = useState<'embedded' | 'existing' | 'cloud'>('existing');
+
+  useEffect(() => {
+    if (!api?.config?.get) return;
+    void api.config.get().then((cfg) => {
+      setConnectionMode(cfg.connectionMode ?? 'existing');
+    });
+  }, [api]);
 
   useEffect(() => {
     if (!api?.app?.buildInfo) return;
@@ -3908,7 +3909,6 @@ export const Settings: React.FC = () => {
         || pending === 'providers'
         || pending === 'memory'
         || pending === 'culture'
-        || pending === 'labs'
       ) {
         setSection(pending);
         sessionStorage.removeItem('otto.settings.section');
@@ -3923,7 +3923,6 @@ export const Settings: React.FC = () => {
     { id: 'providers', label: settingsCopy.tabProviders, icon: Icon.lock },
     { id: 'memory', label: settingsCopy.tabMemory, icon: Icon.curation },
     { id: 'culture', label: settingsCopy.tabCulture, icon: Icon.file },
-    { id: 'labs', label: settingsCopy.tabLabs, icon: Icon.theme },
   ];
 
   return (
@@ -3956,7 +3955,12 @@ export const Settings: React.FC = () => {
         <div className="settingsPage__content">
           <section id="settings-memory">
             <SettingsSectionHeader title={settingsCopy.memoryTitle} lede={settingsCopy.memoryLede} />
-            <MemoryObservatory connected={liveConnected} onOpenLetta={() => void ottoApi()?.runtime.openLetta()} />
+            <MemoryObservatory
+              connected={liveConnected}
+              connectionMode={connectionMode}
+              baseUrl={rt.status?.baseUrl}
+              onOpenLetta={() => void ottoApi()?.runtime.openLetta()}
+            />
           </section>
           <p className="faint mono settingsLocalFootnote">{settingsCopy.localOnlyFootnote}</p>
           <AppSourceDetails info={buildInfo} />
@@ -3973,15 +3977,6 @@ export const Settings: React.FC = () => {
           <p className="faint mono settingsLocalFootnote">{settingsCopy.localOnlyFootnote}</p>
           <AppSourceDetails info={buildInfo} />
         </div>
-      ) : section === 'labs' ? (
-        <div className="settingsPage__content">
-          <section className="settingsLabs" id="settings-labs">
-            <SettingsSectionHeader title={settingsCopy.sectionLabs} lede={labsCopy.lede} />
-            <LabsSettingsPanel />
-          </section>
-          <p className="faint mono settingsLocalFootnote">{settingsCopy.localOnlyFootnote}</p>
-          <AppSourceDetails info={buildInfo} />
-        </div>
       ) : (
         <div className="settingsPage__content">
           <SettingsSectionHeader title={settingsCopy.generalTitle} lede={settingsCopy.generalLede} />
@@ -3989,11 +3984,6 @@ export const Settings: React.FC = () => {
           <section>
             <SettingsSectionHeader title={settingsCopy.connectionTitle} lede={settingsCopy.connectionLede} />
             <ConnectLetta />
-          </section>
-
-          <section>
-            <SettingsSectionHeader title={settingsCopy.advancedAgentsTitle} lede={settingsCopy.advancedAgentsLede} />
-            <p className="settingsFieldHint">{settingsCopy.isolatedSecondAgentComingSoon}</p>
           </section>
 
           <section>
@@ -4014,6 +4004,11 @@ export const Settings: React.FC = () => {
             </section>
           ) : null}
 
+          <section className="settingsGeneralSection" id="settings-dreaming">
+            <SettingsSectionHeader title={settingsCopy.dreamingTitle} lede={settingsCopy.dreamingLede} />
+            <DreamSettingsPanel memfsEnabled={!!rt.status?.memfsEnabled} pushToast={pushToast} />
+          </section>
+
           <section>
             <SettingsSectionHeader title={settingsCopy.onboardingTitle} lede={settingsCopy.onboardingLede} />
             <div className="settingsFieldRow">
@@ -4023,41 +4018,34 @@ export const Settings: React.FC = () => {
               </div>
               <button
                 type="button"
-                className="btn"
+                className="btn btn--primary"
                 onClick={() => {
-                  resetOnboardingForReplay();
+                  requestOnboardingReplay();
                   pushToast({
-                    title: settingsCopy.onboardingResetToastTitle,
-                    body: settingsCopy.onboardingResetToastBody,
+                    title: settingsCopy.onboardingStartToastTitle,
+                    body: settingsCopy.onboardingStartToastBody,
                     tone: 'ok',
                   });
                 }}
               >
-                {settingsCopy.onboardingReset}
+                {settingsCopy.onboardingStart}
               </button>
             </div>
           </section>
 
           <section>
-            <SettingsSectionHeader title={settingsCopy.systemHealthTitle} lede={settingsCopy.systemHealthLede} />
+            <SettingsSectionHeader title={settingsCopy.diagnosticsGroupTitle} lede={settingsCopy.diagnosticsGroupLede} />
             <SystemHealthPanel />
+            <div style={{ marginTop: 20 }}>
+              <SettingsSectionHeader title={settingsCopy.readinessTitle} lede={settingsCopy.readinessLede} />
+              <ReadinessPanel />
+            </div>
+            {api ? (
+              <div className="settingsGeneralSection" id="settings-diagnostics" style={{ marginTop: 20 }}>
+                <DiagnosticsSettingsPanel api={api} pushToast={pushToast} />
+              </div>
+            ) : null}
           </section>
-
-          <section>
-            <SettingsSectionHeader title={settingsCopy.readinessTitle} lede={settingsCopy.readinessLede} />
-            <ReadinessPanel />
-          </section>
-
-          <section className="settingsGeneralSection" id="settings-dreaming">
-            <SettingsSectionHeader title={settingsCopy.dreamingTitle} lede={settingsCopy.dreamingLede} />
-            <DreamSettingsPanel memfsEnabled={!!rt.status?.memfsEnabled} pushToast={pushToast} />
-          </section>
-
-          {api ? (
-            <section className="settingsGeneralSection" id="settings-diagnostics">
-              <DiagnosticsSettingsPanel api={api} pushToast={pushToast} />
-            </section>
-          ) : null}
 
           <p className="faint mono settingsLocalFootnote">{settingsCopy.localOnlyFootnote}</p>
           <AppSourceDetails info={buildInfo} />

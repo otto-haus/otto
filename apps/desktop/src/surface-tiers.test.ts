@@ -48,23 +48,19 @@ describe('surface-tiers', () => {
     expect(surfaceGate('settings', labs, true)).toBe('open');
   });
 
+  test('knowledge and channels are ship-tier and open without Labs', () => {
+    const labs = defaultLabsConfig();
+    expect(surfaceTier('knowledge')).toBe('ship');
+    expect(surfaceTier('channels')).toBe('ship');
+    expect(isSurfaceComingSoon('knowledge', labs)).toBe(false);
+    expect(surfaceGate('knowledge', labs, true)).toBe('open');
+    expect(surfaceGate('channels', labs, true)).toBe('open');
+  });
+
   test('receipts surface is open for onboarding payoff (#139)', () => {
     const labs = defaultLabsConfig();
     expect(isSurfaceComingSoon('receipts', labs)).toBe(false);
     expect(surfaceGate('receipts', labs, true)).toBe('open');
-  });
-
-  test('labs surfaces blocked until master and feature enabled', () => {
-    const off = defaultLabsConfig();
-    expect(isSurfaceComingSoon('knowledge', off)).toBe(true);
-    expect(isSurfaceAccessible('knowledge', off)).toBe(false);
-
-    const masterOnly = { enabled: true, features: {} };
-    expect(isSurfaceComingSoon('knowledge', masterOnly)).toBe(true);
-
-    const on = { enabled: true, features: { knowledge_cognee: true } };
-    expect(isSurfaceAccessible('knowledge', on)).toBe(true);
-    expect(isSurfaceComingSoon('knowledge', on)).toBe(false);
   });
 
   test('receipts stays open during onboarding sample education (#139)', () => {
@@ -87,11 +83,8 @@ describe('surface-tiers', () => {
     }
   });
 
-  test('labsSurfaceGate waits for hydration before coming soon', () => {
-    const enabled = { enabled: true, features: { knowledge_cognee: true } };
-    expect(labsSurfaceGate('charters', enabled, false)).toBe('open');
-    expect(labsSurfaceGate('knowledge', enabled, false)).toBe('loading');
-    expect(labsSurfaceGate('knowledge', enabled, true)).toBe('open');
-    expect(labsSurfaceGate('knowledge', defaultLabsConfig(), true)).toBe('coming-soon');
+  test('labsSurfaceGate delegates to surfaceGate', () => {
+    expect(labsSurfaceGate('knowledge', defaultLabsConfig(), true)).toBe('open');
+    expect(labsSurfaceGate('charters', defaultLabsConfig(), false)).toBe('coming-soon');
   });
 });

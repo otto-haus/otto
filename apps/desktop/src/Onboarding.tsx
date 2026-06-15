@@ -10,6 +10,7 @@ import {
   getOnboardingModeDraft,
   onOnboardingDismiss,
   onOnboardingFirstMessage,
+  onOnboardingReplay,
   requestOnboardingStarter,
   setOnboardingModeDraft,
   type OnboardingConnectionMode,
@@ -64,6 +65,15 @@ export const Onboarding: React.FC<{ onNavigate: (id: SurfaceId) => void; activeS
 
   useEffect(() => onOnboardingFirstMessage(() => setSessionFirstMessage(true)), []);
   useEffect(() => onOnboardingDismiss(() => setDismissed(true)), []);
+  useEffect(() => onOnboardingReplay(() => {
+    setDismissed(false);
+    setStarted(false);
+    setSessionFirstMessage(false);
+    setIntent('connect');
+    setModePick(null);
+    setModeDraft(null);
+    clearOnboardingModeDraft();
+  }), []);
   useEffect(() => {
     if (!rt.electron) return;
     if (rt.status === null) return;

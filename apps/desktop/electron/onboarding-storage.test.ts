@@ -7,6 +7,8 @@ import {
   dismissOnboarding,
   getOnboardingModeDraft,
   notifyOnboardingFirstMessage,
+  onOnboardingReplay,
+  requestOnboardingReplay,
   resetOnboardingForReplay,
   setOnboardingModeDraft,
   wasFirstMessageDuringOnboarding,
@@ -49,6 +51,18 @@ describe('onboarding storage', () => {
     dismissOnboarding();
     expect(wasOnboarded()).toBe(true);
     expect(localStorage.getItem(ONBOARDED_KEY)).toBe('1');
+  });
+
+  it('requestOnboardingReplay clears flags and notifies listeners', () => {
+    dismissOnboarding();
+    expect(wasOnboarded()).toBe(true);
+    let replayed = 0;
+    const off = onOnboardingReplay(() => { replayed += 1; });
+    requestOnboardingReplay();
+    expect(wasOnboarded()).toBe(false);
+    expect(wasFirstMessageDuringOnboarding()).toBe(false);
+    expect(replayed).toBe(1);
+    off();
   });
 
   it('persists connection mode draft for onboarding advance (#136)', () => {
