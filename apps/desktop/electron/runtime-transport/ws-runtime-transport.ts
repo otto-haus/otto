@@ -10,6 +10,7 @@ import { getSecret, hasSecret } from '../secret-store';
 import { StandardStore } from '../standard-store';
 import { PracticeStore } from '../practice-store';
 import { TraceWriter } from '../trace-writer';
+import { applyEmbeddedLettaSettingsEnv } from '../dream-settings';
 import { confirmedModelHandle, discoverLocalLettaContext } from './letta-discovery';
 import {
   smokeMode,
@@ -99,6 +100,7 @@ export class WsRuntimeTransport implements OttoRuntimeTransport {
 
   async init(opts?: { freshConversation?: boolean }): Promise<RuntimeStatus> {
     await this.close();
+    applyEmbeddedLettaSettingsEnv(this.config);
     const cli = resolveCli(this.config.connectionMode());
     const context = discoverLocalLettaContext(this.config);
     const agentId = context.agentCandidates[0] ?? context.agentId;
@@ -401,6 +403,7 @@ export class WsRuntimeTransport implements OttoRuntimeTransport {
 
   private async spawnRemote(cliPath: string, backendBaseUrl: string | null): Promise<void> {
     if (!this.listenerPort) throw new Error('WebSocket listener not started');
+    applyEmbeddedLettaSettingsEnv(this.config);
     const key = getSecret('LETTA_API_KEY');
     const listenerUrl = `http://127.0.0.1:${this.listenerPort}`;
     const env = {

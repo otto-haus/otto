@@ -81,6 +81,17 @@ export function resolveLettaSettingsPath(config: Pick<ConfigStore, 'lettaStateDi
   return join(homedir(), '.letta', 'settings.json');
 }
 
+/** Ensure embedded Letta state lives under OTTO_HOME/letta and expose settings path to subprocesses. */
+export function applyEmbeddedLettaSettingsEnv(config: ConfigStore): string {
+  const mode = config.connectionMode();
+  const path = resolveLettaSettingsPath(config, mode);
+  if (mode === 'embedded' && !process.env.OTTO_LETTA_SETTINGS_PATH?.trim()) {
+    config.ensureLettaStateDir();
+    process.env.OTTO_LETTA_SETTINGS_PATH = path;
+  }
+  return process.env.OTTO_LETTA_SETTINGS_PATH?.trim() || path;
+}
+
 function readLettaSettings(path: string): LettaSettingsCarrier {
   if (!existsSync(path)) return {};
   try {

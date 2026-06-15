@@ -74,7 +74,7 @@ export class MemoryStore {
     const discovered = discoverLocalLettaContext(this.config);
     const agentCandidates = resolveAgentCandidates(this.config);
     const agentId = agentCandidates[0] ?? null;
-    const baseUrl = resolveHttpBaseUrl(this.config.baseUrl() ?? discovered.baseUrl);
+    const baseUrl = resolveHttpBaseUrl(this.config.baseUrl() ?? discovered.baseUrl, this.config);
     const apiPath = agentId ? BLOCK_PATHS(agentId)[0]! : '/v1/agents/{agent_id}/core-memory/blocks';
 
     if (!agentCandidates.length) {
@@ -141,7 +141,7 @@ export class MemoryStore {
     const trimmedLabel = label.trim();
     const agentCandidates = resolveAgentCandidates(this.config);
     const agentId = agentCandidates[0] ?? null;
-    const baseUrl = resolveHttpBaseUrl(this.config.baseUrl() ?? discoverLocalLettaContext(this.config).baseUrl);
+    const baseUrl = resolveHttpBaseUrl(this.config.baseUrl() ?? discoverLocalLettaContext(this.config).baseUrl, this.config);
     const apiPath = agentId && trimmedLabel
       ? `/v1/agents/${encodeURIComponent(agentId)}/core-memory/blocks/${encodeURIComponent(trimmedLabel)}`
       : '/v1/agents/{agent_id}/core-memory/blocks/{block_label}';

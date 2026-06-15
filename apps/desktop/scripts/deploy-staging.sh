@@ -150,8 +150,8 @@ NODE
   echo "build_time=$build_time"
   echo "build_channel=$APP_CHANNEL"
   echo "origin_main=$MAIN_SHORT"
-  # Letta discovery reads ~/.letta under isolated HOME — point at real settings for staging proof.
-  if [[ -f "${HOME}/.letta/settings.json" ]]; then
+  # Embedded mode uses OTTO_HOME/letta — opt in to host settings for legacy staging only.
+  if [[ "${OTTO_STAGING_USE_HOST_LETTA:-}" == "1" ]] && [[ -f "${HOME}/.letta/settings.json" ]]; then
     plist_env_set "$plist" OTTO_LETTA_SETTINGS_PATH "${HOME}/.letta/settings.json"
   fi
   if [[ -d "${ROOT}/checks" ]]; then
