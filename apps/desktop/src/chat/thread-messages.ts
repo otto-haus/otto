@@ -2,15 +2,15 @@ import { flushMessages, readStoredMessages, type StoredChatMsg } from './message
 
 export type ThreadChatMsg = StoredChatMsg;
 
-/** Never flush a stale empty in-memory view over non-empty disk history (046 rev10). */
+/** Prefer per-thread cache, then live view, then disk — never clobber history with stale empty view (046). */
 function resolveThreadMessagesForPersist(
   threadId: string,
   messages: ThreadChatMsg[],
   cache: Map<string, ThreadChatMsg[]>,
 ): ThreadChatMsg[] {
-  if (messages.length > 0) return messages;
   const cached = cache.get(threadId);
   if (cached && cached.length > 0) return cached;
+  if (messages.length > 0) return messages;
   return readStoredMessages(threadId);
 }
 
