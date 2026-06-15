@@ -6,7 +6,7 @@ export const META: Record<SurfaceId, { title: string; sub: string }> = {
   standards: { title: 'Standards', sub: 'Explicit canon — what we reward, refuse, and do under pressure.' },
   practices: { title: 'Practices', sub: 'Executable culture with guardrails and receipt requirements.' },
   routines: { title: 'Routines', sub: 'Repeated bundles of Practices; recurring activation is approval-gated.' },
-  curation: { title: 'Curation', sub: 'Proposal-and-ratification queue; Approvals are decision receipts emitted here.' },
+  curation: { title: 'Curation', sub: 'Proposal-and-ratification queue; Curation decisions are records emitted here.' },
   receipts: { title: 'Receipts', sub: 'Proof of work — receipts and run summaries from ~/.otto.' },
   checks: { title: 'Checks', sub: 'Culture CI — compiled regressions from Standards; blocks surface in Chat.' },
   autonomy: { title: 'Autonomy', sub: 'Policy zones, doors, and Knowledge-informed model routing.' },
