@@ -1,0 +1,35 @@
+name: Dependency Review
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  dependency-review:
+    name: dependency-review
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Explain disabled Dependency Review
+        if: ${{ vars.OTTO_DEPENDENCY_REVIEW_ENABLED != 'true' }}
+        run: |
+          echo "::notice title=Dependency Review not armed::Enable Dependency graph for this repository, then set the OTTO_DEPENDENCY_REVIEW_ENABLED repository variable to true."
+
+      - name: Checkout repository
+        if: ${{ vars.OTTO_DEPENDENCY_REVIEW_ENABLED == 'true' }}
+        uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
+        with:
+          persist-credentials: false
+
+      - name: Dependency Review
+        if: ${{ vars.OTTO_DEPENDENCY_REVIEW_ENABLED == 'true' }}
+        uses: actions/dependency-review-action@a1d282b36b6f3519aa1f3fc636f609c47dddb294 # v5.0.0
+        with:
+          fail-on-severity: moderate
