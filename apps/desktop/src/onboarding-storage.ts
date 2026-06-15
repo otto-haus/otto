@@ -65,7 +65,22 @@ export function resetOnboardingForReplay(): void {
   try {
     localStorage.removeItem(ONBOARDED_KEY);
     localStorage.removeItem(FIRST_MESSAGE_KEY);
+    clearOnboardingModeDraft();
   } catch { /* ignore */ }
+}
+
+type OnboardingReplayListener = () => void;
+const replayListeners = new Set<OnboardingReplayListener>();
+
+export function onOnboardingReplay(listener: OnboardingReplayListener): () => void {
+  replayListeners.add(listener);
+  return () => replayListeners.delete(listener);
+}
+
+/** Reset first-run flags and open Welcome immediately (Settings → Start onboarding). */
+export function requestOnboardingReplay(): void {
+  resetOnboardingForReplay();
+  replayListeners.forEach((listener) => listener());
 }
 
 type FirstMessageListener = () => void;

@@ -81,19 +81,6 @@ describe('surface-tiers', () => {
     expect(surfaceGate('practices', labs, true)).toBe('open');
   });
 
-  test('labs surfaces blocked until master and feature enabled', () => {
-    const off = defaultLabsConfig();
-    expect(isSurfaceComingSoon('knowledge', off)).toBe(true);
-    expect(isSurfaceAccessible('knowledge', off)).toBe(false);
-
-    const masterOnly = { enabled: true, features: {} };
-    expect(isSurfaceComingSoon('knowledge', masterOnly)).toBe(true);
-
-    const on = { enabled: true, features: { knowledge_cognee: true } };
-    expect(isSurfaceAccessible('knowledge', on)).toBe(true);
-    expect(isSurfaceComingSoon('knowledge', on)).toBe(false);
-  });
-
   test('receipts stays open during onboarding sample education (#139)', () => {
     const labs = defaultLabsConfig();
     const store = new Map<string, string>();
@@ -114,12 +101,19 @@ describe('surface-tiers', () => {
     }
   });
 
-  test('labsSurfaceGate waits for hydration before coming soon', () => {
-    const enabled = { enabled: true, features: { knowledge_cognee: true } };
-    expect(labsSurfaceGate('charters', enabled, false)).toBe('open');
-    expect(labsSurfaceGate('knowledge', enabled, false)).toBe('loading');
-    expect(labsSurfaceGate('knowledge', enabled, true)).toBe('open');
-    expect(labsSurfaceGate('knowledge', defaultLabsConfig(), true)).toBe('coming-soon');
+  test('knowledge and channels surfaces are open (Labs tab removed)', () => {
+    const labs = defaultLabsConfig();
+    expect(surfaceTier('knowledge')).toBe('ship');
+    expect(surfaceTier('channels')).toBe('ship');
+    expect(isSurfaceComingSoon('knowledge', labs)).toBe(false);
+    expect(isSurfaceAccessible('knowledge', labs)).toBe(true);
+    expect(surfaceGate('knowledge', labs, true)).toBe('open');
+    expect(surfaceGate('channels', labs, true)).toBe('open');
+  });
+
+  test('labsSurfaceGate no longer blocks on hydration', () => {
+    expect(labsSurfaceGate('knowledge', defaultLabsConfig(), false)).toBe('open');
+    expect(labsSurfaceGate('routines', defaultLabsConfig(), false)).toBe('coming-soon');
   });
 
   test('remote_letta_cloud gate hides cloud connection mode for Ship users (#627)', () => {

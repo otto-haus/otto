@@ -23,7 +23,6 @@ import {
   labsCopy,
   loaderCopy,
 } from '../copy/surfaces';
-import { resetOnboardingForReplay } from '../onboarding-storage';
 import { saveConnectionAndReconnect } from '../connection-reconnect';
 import {
   STANDARD_DOMAINS,
@@ -39,6 +38,7 @@ import {
   watchSystemDisplayTheme,
   type DisplayTheme,
 } from '../display-preferences';
+import { requestOnboardingReplay } from '../onboarding-storage';
 import { LabsBlockedShell } from '../labs/LabsBlockedShell';
 import {
   getSampleReceiptDetail,
@@ -47,11 +47,11 @@ import {
   sampleReceiptCard,
   SAMPLE_RECEIPT_LABEL,
 } from '../onboarding-sample-receipt';
-import { LAB_FEATURE_IDS } from '../../electron/labs-config';
 import { useLabs } from '../labs/labs-context';
-import { LAB_FEATURE_META, gatedConnectionMode } from '../surface-tiers';
+import { gatedConnectionMode } from '../surface-tiers';
+import { resolveLettaOpenAction } from '../letta-open-action';
 import { AppSourceDetails } from '../components/AppSourceBadge';
-import type { AppBuildInfo, IsolatedAgentRecord, LabFeatureId, WorkspaceInfo, SystemHealthReport, HealthCheck } from '../../electron/shared/types';
+import type { AppBuildInfo, IsolatedAgentRecord, WorkspaceInfo, SystemHealthReport, HealthCheck } from '../../electron/shared/types';
 import {
   ottoApi,
   type CharterDetail,
@@ -3269,6 +3269,7 @@ const ConnectLetta: React.FC = () => {
   const displayStatus = rt.status ?? status;
   const code: StatusCode = displayStatus?.ready ? 'ready' : displayStatus?.code ?? 'error';
   const displayedConnectionMode = gatedConnectionMode(connectionMode, labs, hydrated);
+  const lettaOpen = resolveLettaOpenAction(connectionMode, baseUrl || displayStatus?.baseUrl);
 
   return (
     <div className="settingsBlock">
@@ -3277,24 +3278,6 @@ const ConnectLetta: React.FC = () => {
           {settingsCopy.primaryAgentHint}
         </p>
         {statusCodePill(code)}
-      </div>
-      <div className="settingsField">
-        <label>
-          <span>{settingsCopy.primaryAgentLabel}</span>
-          <input
-            className="mono"
-            style={inputStyle}
-            value={primaryAgentId}
-            onChange={(e) => setPrimaryAgentId(e.target.value)}
-            placeholder="Default agent for this workspace"
-            spellCheck={false}
-          />
-        </label>
-      </div>
-      <div className="row settingsGeneralSection__actions">
-        <button type="button" className="btn" onClick={() => void api.runtime.openLetta()}>
-          {settingsCopy.primaryAgentOpenLetta}
-        </button>
       </div>
       <div className="settingsField">
         <label>
@@ -3311,12 +3294,6 @@ const ConnectLetta: React.FC = () => {
             ) : null}
           </select>
         </label>
-        {hydrated && !cloudConnectionAllowed ? (
-          <p className="settingsFieldHint" style={{ marginTop: 8 }}>
-            <span className="pill">{labsCopy.previewBadge}</span>{' '}
-            {settingsCopy.connectionCloudLabsHint}
-          </p>
-        ) : null}
       </div>
       {displayStatus && !displayStatus.ready && displayStatus.reason && (
         <p className="faint" style={{ margin: 0 }}>↳ {displayStatus.reason}</p>
@@ -3326,7 +3303,39 @@ const ConnectLetta: React.FC = () => {
           ↳ {settingsCopy.connectionFailedPrefix} {connectError}
         </p>
       )}
-      {displayedConnectionMode !== 'embedded' ? (
+      <div className="row" style={{ gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
+        <button type="button" className="btn btn--primary" onClick={connect} disabled={busy || !hydrated}>
+          {busy ? settingsCopy.connectionSaveBusy : settingsCopy.connectionSaveIdle}
+        </button>
+        {lettaOpen.kind === 'open' ? (
+          <button type="button" className="btn" onClick={() => void api.runtime.openLetta()}>
+            {lettaOpen.label}
+          </button>
+        ) : (
+          <span className="muted" style={{ fontSize: 13 }}>{lettaOpen.hint}</span>
+        )}
+        {displayStatus?.ready && (
+          <span className="muted" style={{ fontSize: 13 }}>
+            {`${settingsCopy.readinessConnected}${displayStatus.model ? ` · ${displayStatus.model}` : ''}${displayStatus.effectiveTransport ? ` · ${displayStatus.effectiveTransport}` : ''}`}
+          </span>
+        )}
+      </div>
+      <details className="settingsAdvanced">
+        <summary>{settingsCopy.connectionAdvancedSummary}</summary>
+        <p className="settingsFieldHint">{settingsCopy.connectionAdvancedHint}</p>
+        <div className="settingsField">
+          <label>
+            <span>{settingsCopy.primaryAgentLabel}</span>
+            <input
+              className="mono"
+              style={inputStyle}
+              value={primaryAgentId}
+              onChange={(e) => setPrimaryAgentId(e.target.value)}
+              placeholder="Default agent for this workspace"
+              spellCheck={false}
+            />
+          </label>
+        </div>
         <div className="settingsField">
           <label>
             <span>{settingsCopy.connectionLocalUrlLabel}</span>
@@ -3339,36 +3348,20 @@ const ConnectLetta: React.FC = () => {
             />
           </label>
         </div>
-      ) : null}
-      <div className="settingsField">
-        <label>
-          <span>{settingsCopy.connectionAgentIdLabel}</span>
-          <input
-            className="mono"
-            style={inputStyle}
-            value={agentId}
-            onChange={(e) => setAgentId(e.target.value)}
-            placeholder={settingsCopy.connectionAgentIdPlaceholder}
-            spellCheck={false}
-          />
-        </label>
-      </div>
-      <div className="row" style={{ gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
-        <button type="button" className="btn btn--primary" onClick={connect} disabled={busy || !hydrated}>
-          {busy ? settingsCopy.connectionSaveBusy : settingsCopy.connectionSaveIdle}
-        </button>
-        {displayStatus?.ready && (
-          <span className="muted" style={{ fontSize: 13 }}>
-            {`${settingsCopy.readinessConnected}${displayStatus.model ? ` · ${displayStatus.model}` : ''}${displayStatus.effectiveTransport ? ` · ${displayStatus.effectiveTransport}` : ''}`}
-          </span>
-        )}
-      </div>
-      {displayStatus && (
-        <p className="faint" style={{ margin: 0, fontSize: 12 }}>
-          Transport: {displayStatus.transportMode ?? 'sdk'} → {displayStatus.effectiveTransport ?? 'sdk subprocess'}
-          {displayStatus.transportFallbackReason ? ` (fallback: ${displayStatus.transportFallbackReason})` : ''}
-        </p>
-      )}
+        <div className="settingsField">
+          <label>
+            <span>{settingsCopy.connectionAgentIdLabel}</span>
+            <input
+              className="mono"
+              style={inputStyle}
+              value={agentId}
+              onChange={(e) => setAgentId(e.target.value)}
+              placeholder={settingsCopy.connectionAgentIdPlaceholder}
+              spellCheck={false}
+            />
+          </label>
+        </div>
+      </details>
     </div>
   );
 };
@@ -3626,7 +3619,7 @@ const ConnectPgvector: React.FC = () => {
         <StatusPill status={healthCode} />
       </div>
       <p className="settingsOptionalBlock__lede">
-        {labsCopy.pgvectorBlockedBody} Advanced env toggles live in docs/pgvector.md.
+        {settingsCopy.pgvectorSettingsLede}
       </p>
       {status && (
         <p className="faint" style={{ marginTop: 8, fontSize: 12 }}>
@@ -3705,7 +3698,7 @@ const ConnectCognee: React.FC = () => {
             checked={enabled}
             onChange={(e) => setEnabled(e.target.checked)}
           />
-          <span style={{ fontSize: 13.5 }}>{labsCopy.featureEnableLabel}: Knowledge (Cognee)</span>
+          <span style={{ fontSize: 13.5 }}>{settingsCopy.cogneeEnableLabel}</span>
         </label>
         <label>
           <span className="faint" style={{ fontSize: 12 }}>Base URL (loopback only)</span>
@@ -4326,60 +4319,6 @@ const DisplaySettingsPanel: React.FC = () => {
   );
 };
 
-const LabsSettingsPanel: React.FC = () => {
-  const { labs, setMasterEnabled, setFeatureEnabled, hydrated } = useLabs();
-
-  if (!hydrated) {
-    return <PaneLoading label={labsCopy.loadingTitle} variant="rows" />;
-  }
-
-  return (
-    <>
-      <div className="settingsLabsWarn">{settingsCopy.labsWarn}</div>
-      <div className="settingsFieldRow">
-        <div className="settingsFieldRow__main">
-          <div className="settingsFieldRow__title">{labsCopy.masterLabel}</div>
-          <p className="settingsFieldRow__hint">{labsCopy.masterWarning}</p>
-        </div>
-        <label className="labsRow__toggle">
-          <input
-            type="checkbox"
-            checked={labs.enabled === true}
-            disabled={!hydrated}
-            onChange={(e) => void setMasterEnabled(e.target.checked)}
-          />
-        </label>
-      </div>
-      <div className="labsList" style={{ marginTop: 0 }}>
-        {LAB_FEATURE_IDS.map((id: LabFeatureId) => {
-          const meta = LAB_FEATURE_META[id];
-          const enabled = labs.features?.[id] === true;
-          return (
-            <div key={id} className="settingsFieldRow">
-              <div className="settingsFieldRow__main">
-                <div className="settingsFieldRow__title">
-                  {meta.label}
-                  <span className="pill">{labsCopy.previewBadge}</span>
-                </div>
-                <p className="settingsFieldRow__hint">{meta.blurb}</p>
-              </div>
-              <label className="labsRow__toggle">
-                <input
-                  type="checkbox"
-                  checked={enabled}
-                  disabled={!hydrated || labs.enabled !== true}
-                  onChange={(e) => void setFeatureEnabled(id, e.target.checked)}
-                />
-              </label>
-            </div>
-          );
-        })}
-      </div>
-      <p className="faint mono settingsLabsFootnote">{labsCopy.matrixLink}</p>
-    </>
-  );
-};
-
 const ConversationSortSetting: React.FC = () => {
   const api = ottoApi();
   const [mode, setMode] = useState<ConversationSortMode>('recent');
@@ -4423,7 +4362,7 @@ const ConversationSortSetting: React.FC = () => {
   );
 };
 
-type SettingsSectionId = 'general' | 'display' | 'providers' | 'memory' | 'culture' | 'labs';
+type SettingsSectionId = 'general' | 'display' | 'providers' | 'memory' | 'culture' | 'diagnostics';
 
 export const Settings: React.FC = () => {
   const rt = useRuntimeContext();
@@ -4440,15 +4379,16 @@ export const Settings: React.FC = () => {
   useEffect(() => {
     try {
       const pending = sessionStorage.getItem('otto.settings.section');
+      const legacyLabs = pending === 'labs' ? 'diagnostics' : pending;
       if (
-        pending === 'general'
-        || pending === 'display'
-        || pending === 'providers'
-        || pending === 'memory'
-        || pending === 'culture'
-        || pending === 'labs'
+        legacyLabs === 'general'
+        || legacyLabs === 'display'
+        || legacyLabs === 'providers'
+        || legacyLabs === 'memory'
+        || legacyLabs === 'culture'
+        || legacyLabs === 'diagnostics'
       ) {
-        setSection(pending);
+        setSection(legacyLabs);
         sessionStorage.removeItem('otto.settings.section');
       }
     } catch { /* best effort */ }
@@ -4462,7 +4402,7 @@ export const Settings: React.FC = () => {
     { id: 'providers', label: settingsCopy.tabProviders, icon: Icon.lock },
     { id: 'memory', label: settingsCopy.tabMemory, icon: Icon.curation },
     { id: 'culture', label: settingsCopy.tabCulture, icon: Icon.file },
-    { id: 'labs', label: settingsCopy.tabLabs, icon: Icon.theme },
+    { id: 'diagnostics', label: settingsCopy.tabDiagnostics, icon: Icon.terminal },
   ];
 
   return (
@@ -4519,12 +4459,31 @@ export const Settings: React.FC = () => {
           <p className="faint mono settingsLocalFootnote">{settingsCopy.localOnlyFootnote}</p>
           <AppSourceDetails info={buildInfo} />
         </div>
-      ) : section === 'labs' ? (
+      ) : section === 'diagnostics' ? (
         <div className="settingsPage__content">
-          <section className="settingsLabs" id="settings-labs">
-            <SettingsSectionHeader title={settingsCopy.sectionLabs} lede={labsCopy.lede} />
-            <LabsSettingsPanel />
+          <SettingsSectionHeader title={settingsCopy.diagnosticsGroupTitle} lede={settingsCopy.diagnosticsGroupLede} />
+
+          <section>
+            <SettingsSectionHeader title={settingsCopy.systemHealthTitle} lede={settingsCopy.systemHealthLede} />
+            <SystemHealthPanel />
           </section>
+
+          <section>
+            <SettingsSectionHeader title={settingsCopy.readinessTitle} lede={settingsCopy.readinessLede} />
+            <ReadinessPanel />
+          </section>
+
+          <section id="settings-dreaming">
+            <SettingsSectionHeader title={settingsCopy.dreamingTitle} lede={settingsCopy.dreamingLede} />
+            <DreamSettingsPanel memfsEnabled={!!rt.status?.memfsEnabled} pushToast={pushToast} />
+          </section>
+
+          {api ? (
+            <section id="settings-diagnostics">
+              <DiagnosticsSettingsPanel api={api} pushToast={pushToast} />
+            </section>
+          ) : null}
+
           <p className="faint mono settingsLocalFootnote">{settingsCopy.localOnlyFootnote}</p>
           <AppSourceDetails info={buildInfo} />
         </div>
@@ -4571,39 +4530,18 @@ export const Settings: React.FC = () => {
                 type="button"
                 className="btn"
                 onClick={() => {
-                  resetOnboardingForReplay();
+                  requestOnboardingReplay();
                   pushToast({
-                    title: settingsCopy.onboardingResetToastTitle,
-                    body: settingsCopy.onboardingResetToastBody,
+                    title: settingsCopy.onboardingStartToastTitle,
+                    body: settingsCopy.onboardingStartToastBody,
                     tone: 'ok',
                   });
                 }}
               >
-                {settingsCopy.onboardingReset}
+                {settingsCopy.onboardingStart}
               </button>
             </div>
           </section>
-
-          <section>
-            <SettingsSectionHeader title={settingsCopy.systemHealthTitle} lede={settingsCopy.systemHealthLede} />
-            <SystemHealthPanel />
-          </section>
-
-          <section>
-            <SettingsSectionHeader title={settingsCopy.readinessTitle} lede={settingsCopy.readinessLede} />
-            <ReadinessPanel />
-          </section>
-
-          <section className="settingsGeneralSection" id="settings-dreaming">
-            <SettingsSectionHeader title={settingsCopy.dreamingTitle} lede={settingsCopy.dreamingLede} />
-            <DreamSettingsPanel memfsEnabled={!!rt.status?.memfsEnabled} pushToast={pushToast} />
-          </section>
-
-          {api ? (
-            <section className="settingsGeneralSection" id="settings-diagnostics">
-              <DiagnosticsSettingsPanel api={api} pushToast={pushToast} />
-            </section>
-          ) : null}
 
           <p className="faint mono settingsLocalFootnote">{settingsCopy.localOnlyFootnote}</p>
           <AppSourceDetails info={buildInfo} />
@@ -4622,6 +4560,30 @@ const DiagnosticsSettingsPanel: React.FC<{
   const [bundlePath, setBundlePath] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [logsBusy, setLogsBusy] = useState(false);
+  const [logsError, setLogsError] = useState<string | null>(null);
+  const [logsSummary, setLogsSummary] = useState<Awaited<ReturnType<typeof api.diagnostics.logsSummary>> | null>(null);
+  const [activeLogId, setActiveLogId] = useState('latest-trace');
+
+  const refreshLogs = async () => {
+    setLogsBusy(true);
+    setLogsError(null);
+    try {
+      const summary = await api.diagnostics.logsSummary();
+      setLogsSummary(summary);
+      if (!summary.entries.some((entry) => entry.id === activeLogId)) {
+        setActiveLogId(summary.entries[summary.entries.length - 1]?.id ?? 'latest-trace');
+      }
+    } catch (e) {
+      setLogsError(String(e));
+    } finally {
+      setLogsBusy(false);
+    }
+  };
+
+  useEffect(() => {
+    void refreshLogs();
+  }, [api]);
 
   const exportDiagnostics = async () => {
     setBusy(true);
@@ -4642,6 +4604,10 @@ const DiagnosticsSettingsPanel: React.FC<{
     }
   };
 
+  const activeLog = logsSummary?.entries.find((entry) => entry.id === activeLogId)
+    ?? logsSummary?.entries.find((entry) => entry.tail)
+    ?? logsSummary?.entries[0];
+
   return (
     <>
       <SettingsSectionHeader title={settingsCopy.diagnosticsTitle} lede={settingsCopy.diagnosticsLede} />
@@ -4649,10 +4615,49 @@ const DiagnosticsSettingsPanel: React.FC<{
         <button type="button" className="btn btn--solid-d" disabled={busy} onClick={() => void exportDiagnostics()}>
           {settingsCopy.diagnosticsExport}
         </button>
+        <button type="button" className="btn btn--ghost" disabled={logsBusy} onClick={() => void api.diagnostics.openLogsFolder()}>
+          {settingsCopy.diagnosticsOpenLogs}
+        </button>
+        <button type="button" className="btn btn--ghost" disabled={logsBusy} onClick={() => void api.diagnostics.revealRunsFolder()}>
+          {settingsCopy.diagnosticsOpenRuns}
+        </button>
+        <button type="button" className="btn btn--ghost" disabled={logsBusy} onClick={() => void refreshLogs()}>
+          {settingsCopy.diagnosticsRefreshLogs}
+        </button>
       </div>
       {bundlePath ? <p className="mono faint" style={{ fontSize: 11.5 }}>{bundlePath}</p> : null}
+      {logsSummary ? (
+        <div style={{ marginTop: 12 }}>
+          <p className="faint" style={{ fontSize: 12, marginBottom: 8 }}>
+            {settingsCopy.diagnosticsLogsFolder}: <span className="mono">{logsSummary.logsFolder}</span>
+            {' · '}
+            {settingsCopy.diagnosticsRunsFolder}: <span className="mono">{logsSummary.runsFolder}</span>
+          </p>
+          <p className="faint" style={{ fontSize: 12, marginBottom: 6 }}>{settingsCopy.diagnosticsLogsTitle}</p>
+          <div className="row" style={{ flexWrap: 'wrap', gap: 6, marginBottom: 8 }}>
+            {logsSummary.entries.map((entry) => (
+              <button
+                key={entry.id}
+                type="button"
+                className={`btn btn--ghost${activeLogId === entry.id ? ' is-active' : ''}`}
+                onClick={() => setActiveLogId(entry.id)}
+              >
+                {entry.label}
+              </button>
+            ))}
+          </div>
+          {activeLog?.tail ? (
+            <pre className="mono settingsMemoryBlock__value" style={{ maxHeight: 220, overflow: 'auto', whiteSpace: 'pre-wrap' }}>
+              {activeLog.tail}
+            </pre>
+          ) : (
+            <p className="faint" style={{ fontSize: 12 }}>{settingsCopy.diagnosticsLogsEmpty}</p>
+          )}
+        </div>
+      ) : null}
       <p className="faint" style={{ fontSize: 12, marginTop: 8 }}>{settingsCopy.diagnosticsCommand}</p>
       {error ? <p className="faint" style={{ color: 'var(--warn)' }}>{error}</p> : null}
+      {logsError ? <p className="faint" style={{ color: 'var(--warn)' }}>{logsError}</p> : null}
     </>
   );
 };

@@ -41,15 +41,12 @@ export const SURFACE_TIER: Record<SurfaceId, SurfaceTier> = {
   skills: 'ship',
   tickets: 'ship',
   terminal: 'ship',
-  knowledge: 'labs',
-  channels: 'labs',
+  knowledge: 'ship',
+  channels: 'ship',
 };
 
-/** Labs-tier sidebar surfaces and the feature flag that unlocks them. */
-export const SURFACE_LAB_FEATURE: Partial<Record<SurfaceId, LabFeatureId>> = {
-  knowledge: 'knowledge_cognee',
-  channels: 'channels_outbound',
-};
+/** Legacy lab-feature map — no sidebar surfaces remain Labs-gated (Settings Labs tab removed). */
+export const SURFACE_LAB_FEATURE: Partial<Record<SurfaceId, LabFeatureId>> = {};
 
 export type LabFeatureMeta = {
   label: string;
@@ -110,14 +107,8 @@ export function isLabsTierSurface(id: SurfaceId): boolean {
   return surfaceTier(id) === 'labs';
 }
 
-export function isSurfaceAccessible(id: SurfaceId, labs: LabsConfig): boolean {
-  const tier = surfaceTier(id);
-  if (tier === 'ship') return true;
-  if (tier === 'cut') return false;
-  if (!labs.enabled) return false;
-  const feature = SURFACE_LAB_FEATURE[id];
-  if (!feature) return true;
-  return labs.features?.[feature] === true;
+export function isSurfaceAccessible(_id: SurfaceId, _labs?: LabsConfig): boolean {
+  return surfaceTier(_id) === 'ship';
 }
 
 /** Ship-tier workspace panes — file-backed canon exists, but the shell is not product-ready yet. */
@@ -129,30 +120,24 @@ export const WORKSPACE_PREVIEW_SURFACES: ReadonlySet<SurfaceId> = new Set([
   'skills',
 ]);
 
-export function isSurfaceComingSoon(id: SurfaceId, labs: LabsConfig): boolean {
+export function isSurfaceComingSoon(id: SurfaceId, _labs?: LabsConfig): boolean {
   if (WORKSPACE_PREVIEW_SURFACES.has(id)) return true;
-  return isLabsTierSurface(id) && !isSurfaceAccessible(id, labs);
+  return surfaceTier(id) === 'cut';
 }
 
 export type LabsSurfaceGate = 'loading' | 'coming-soon' | 'open';
 
-/** Gate Labs-tier surfaces until config hydrates — avoids false "coming soon" on first paint. */
-export function labsSurfaceGate(id: SurfaceId, labs: LabsConfig, hydrated: boolean): LabsSurfaceGate {
-  if (!isLabsTierSurface(id)) return 'open';
-  if (!hydrated) return 'loading';
-  if (!isSurfaceAccessible(id, labs)) return 'coming-soon';
-  return 'open';
+/** @deprecated Labs nav gating removed — kept for callers migrating off LabsContext. */
+export function labsSurfaceGate(id: SurfaceId, _labs?: LabsConfig, _hydrated?: boolean): LabsSurfaceGate {
+  return surfaceGate(id);
 }
 
 /** Product gate for sidebar badges and main-pane content (Chat + Settings stay live). */
-export function surfaceGate(id: SurfaceId, labs: LabsConfig, hydrated: boolean): LabsSurfaceGate {
+export function surfaceGate(id: SurfaceId, _labs?: LabsConfig, _hydrated?: boolean): LabsSurfaceGate {
   if (id === 'chat' || id === 'settings') return 'open';
-  const labsGate = labsSurfaceGate(id, labs, hydrated);
-  if (labsGate !== 'open') return labsGate;
-  if (WORKSPACE_PREVIEW_SURFACES.has(id)) {
-    if (id === 'receipts' && isSampleReceiptPreview()) return 'open';
-    return 'coming-soon';
-  }
+  if (id === 'receipts' && isSampleReceiptPreview()) return 'open';
+  if (WORKSPACE_PREVIEW_SURFACES.has(id)) return 'coming-soon';
+  if (surfaceTier(id) === 'cut') return 'coming-soon';
   return 'open';
 }
 

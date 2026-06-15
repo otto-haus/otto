@@ -23,13 +23,10 @@ import {
 import { ChecksSurfaceShell } from './surfaces/ChecksSurfaceShell';
 import { Terminal } from './surfaces/Terminal';
 import { Onboarding } from './Onboarding';
-import { LabsProvider } from './labs/LabsContext';
-import { useLabs } from './labs/labs-context';
 import { ComingSoonSurface } from './labs/ComingSoonSurface';
-import { surfaceGate } from './surface-tiers';
-import { PaneLoading } from './components/ui';
+import { isSurfaceComingSoon, surfaceGate } from './surface-tiers';
+import { LabsProvider } from './labs/LabsContext';
 import { VALID_SURFACES } from './surface-meta';
-import { labsCopy } from './copy/surfaces';
 import { AppSourceBadge } from './components/AppSourceBadge';
 import { isSampleReceiptPreview, SAMPLE_RECEIPT_LABEL } from './onboarding-sample-receipt';
 import { useOttoDebugContextMenu } from './debug/useOttoDebugContextMenu';
@@ -82,11 +79,11 @@ const DATA_SOURCE: Partial<Record<SurfaceId, 'live' | 'coming-soon' | 'file'>> =
 export function App() {
   return (
     <RuntimeProvider>
-      <ToastProvider>
-        <LabsProvider>
+      <LabsProvider>
+        <ToastProvider>
           <AppShell />
-        </LabsProvider>
-      </ToastProvider>
+        </ToastProvider>
+      </LabsProvider>
     </RuntimeProvider>
   );
 }
@@ -94,7 +91,6 @@ export function App() {
 function AppShell() {
   const rt = useRuntimeContext();
   const shellDebugMenu = useOttoDebugContextMenu('shell');
-  const labs = useLabs();
   const {
     threads,
     hasArchived,
@@ -147,18 +143,11 @@ function AppShell() {
   };
   const counts: Partial<Record<SurfaceId, number>> = {};
 
-  const openLabsSettings = () => {
-    try {
-      sessionStorage.setItem('otto.settings.section', 'labs');
-    } catch { /* best effort */ }
-    setActive('settings');
-  };
-
   const sampleReceiptPreview = active === 'receipts' && isSampleReceiptPreview();
 
   const sourcePill = () => {
     if (sampleReceiptPreview) return <span className="pill">{SAMPLE_RECEIPT_LABEL}</span>;
-    if (labs.isComingSoon(active)) return <span className="pill">coming soon</span>;
+    if (isSurfaceComingSoon(active)) return <span className="pill">coming soon</span>;
     if (active === 'settings' && rt.electron) {
       if (rt.status?.ready) return <span className="pill pill--ok">live runtime</span>;
       if (rt.status) return <span className="pill pill--warn">runtime setup</span>;
@@ -174,20 +163,12 @@ function AppShell() {
   };
 
   const surfaceContent = () => {
-    const gate = surfaceGate(active, labs.labs, labs.hydrated);
-    if (gate === 'loading') {
-      return (
-        <div className="comingSoonShell" aria-busy="true">
-          <PaneLoading label={labsCopy.loadingTitle} variant="detail" />
-          <p className="muted" style={{ marginTop: 8 }}>{labsCopy.loadingBody}</p>
-        </div>
-      );
-    }
+    const gate = surfaceGate(active);
     if (gate === 'coming-soon') {
       if (active === 'receipts' && isSampleReceiptPreview()) {
         return renderSurface(active);
       }
-      return <ComingSoonSurface id={active} onOpenLabs={openLabsSettings} />;
+      return <ComingSoonSurface id={active} />;
     }
     return renderSurface(active);
   };
@@ -235,7 +216,7 @@ function AppShell() {
             showArchived={showArchived}
             hasArchived={hasArchived}
             onToggleShowArchived={setShowArchived}
-            isComingSoon={labs.isComingSoon}
+            isComingSoon={isSurfaceComingSoon}
           />
         )}
         <main className="main">

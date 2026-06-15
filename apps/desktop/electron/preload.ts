@@ -79,12 +79,14 @@ import type {
 } from './shared/types';
 import type {
   BehaviorChangelogResult,
+  CheckListResult,
+  CheckRunResult,
   ConstitutionResult,
   CultureExportResult,
   CultureImportPreview,
   DiagnosticsExportResult,
 } from '@otto-haus/core';
-import type { CheckListResult, CheckRunResult } from '@otto-haus/core';
+import type { RuntimeLogsSummary } from './diagnostics-export';
 
 const emptyChangelog = (windowDays: number): BehaviorChangelogResult => ({
   dir: '',
@@ -150,7 +152,7 @@ const api = {
     get: (): Promise<OttoConfig> => ipcRenderer.invoke('otto:config:get'),
     set: (patch: Partial<OttoConfig>): Promise<OttoConfig> => ipcRenderer.invoke('otto:config:set', patch),
   },
-  /** Labs gate — same shape as Settings → Labs (`{ enabled, features }`). See `docs/v1/labs.md`. */
+  /** Labs config — `{ enabled, features }` persisted in otto config. See `docs/v1/labs.md`. */
   labs: {
     /** Read master + per-feature toggles from `~/.otto/config.json`. */
     get: (): Promise<LabsConfig> => ipcRenderer.invoke('otto:labs:get'),
@@ -342,6 +344,12 @@ const api = {
   diagnostics: {
     export: (): Promise<DiagnosticsExportResult> => ipcRenderer.invoke('otto:diagnostics:export'),
     reveal: (bundlePath: string): Promise<{ ok: boolean }> => ipcRenderer.invoke('otto:diagnostics:reveal', bundlePath),
+    logsSummary: (): Promise<RuntimeLogsSummary> =>
+      ipcRenderer.invoke('otto:diagnostics:logs-summary'),
+    openLogsFolder: (): Promise<{ ok: boolean; folder: string }> =>
+      ipcRenderer.invoke('otto:diagnostics:open-logs-folder'),
+    revealRunsFolder: (): Promise<{ ok: boolean; folder: string }> =>
+      ipcRenderer.invoke('otto:diagnostics:reveal-runs-folder'),
   },
   debug: {
     showContextMenu: (surface?: string): Promise<{ ok: boolean }> =>

@@ -2465,6 +2465,20 @@ h1, h2, h3, h4, p { margin: 0; }
   color: var(--ink-soft);
 }
 .settingsFieldHint { margin: 0; font-size: 13px; color: var(--mut); line-height: 1.45; max-width: 58ch; }
+.settingsAdvanced {
+  margin-top: 8px;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--panel);
+}
+.settingsAdvanced summary {
+  cursor: pointer;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--ink-soft);
+}
+.settingsAdvanced .settingsField { margin-top: 12px; }
 .settingsFieldRow {
   display: flex;
   align-items: center;
