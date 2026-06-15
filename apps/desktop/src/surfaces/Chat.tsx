@@ -116,7 +116,7 @@ const formatRuntimeSubtitle = (
 ): string => {
   if (ready) return modelLabel;
   if (st?.code === 'no-agent') return chatCopy.runtimeNoAgentSubtitle;
-  const text = st?.reason?.trim() ?? 'connecting…';
+  const text = st?.reason?.trim() ?? chatCopy.connectingLabel;
   if (text.length <= 96) return text;
   return `${text.slice(0, 93)}…`;
 };
@@ -485,7 +485,7 @@ const LiveChat: React.FC<{
   const modelStatusLabel = resolvedModelLabel
     ? `${labelForModel(requestedModel, modelOptions)} → ${resolvedModelLabel}`
     : labelForModel(selectedModel, modelOptions);
-  const chatSessionSubtitle = st ? formatChatSessionSubtitle(st, modelStatusLabel) : 'connecting…';
+  const chatSessionSubtitle = st ? formatChatSessionSubtitle(st, modelStatusLabel) : chatCopy.connectingLabel;
   const chatDebugTitle = st ? formatChatDebugTitle(st, modelStatusLabel) : undefined;
   const memoryLabel = st && isCoreMemoryReachable(st) ? chatCopy.memoryOn : chatCopy.memoryOff;
 
@@ -651,7 +651,7 @@ const LiveChat: React.FC<{
       await navigator.clipboard.writeText(text);
       toast.push({ title: chatCopy.copiedToast, tone: 'ok' });
     } catch {
-      toast.push({ title: 'Could not copy', tone: 'warn' });
+      toast.push({ title: chatCopy.copyFailedToast, tone: 'warn' });
     }
   };
   const activeQueue = outbox.items;
@@ -668,7 +668,7 @@ const LiveChat: React.FC<{
       : ready
         ? chatSessionSubtitle
         : formatRuntimeSubtitle(ready, st, labelForModel(selectedModel, modelOptions)))
-    : 'connecting…';
+    : chatCopy.connectingLabel;
 
   const copyConversationMarkdown = async () => {
     if (streamMessages.length === 0) {
@@ -976,7 +976,7 @@ const LiveChat: React.FC<{
                     </>
                   )}
                 </>
-              ) : 'connecting…'}
+              ) : chatCopy.connectingLabel}
             </div>
           </div>
           <div className="chat__headActions">
@@ -1021,7 +1021,7 @@ const LiveChat: React.FC<{
                   {chatCopy.copyMarkdown}
                 </button>
                 {!ready ? (
-                  <span className="pill pill--warn">setup</span>
+                  <span className="pill pill--warn">{chatCopy.setupPill}</span>
                 ) : null}
               </>
             ) : null}
@@ -1058,7 +1058,7 @@ const LiveChat: React.FC<{
                   <div className="inkblock__meta">
                     <span>{runtimeSetupBannerBody(st)}</span>
                     {st.code === 'usage-limit' ? (
-                      <span className="faint"> Switch model or provider in Settings, or wait for the limit to reset.</span>
+                      <span className="faint">{chatCopy.usageLimitSetupSuffix}</span>
                     ) : null}
                   </div>
                 </>
@@ -1321,14 +1321,14 @@ const LiveChat: React.FC<{
               ref={textareaRef}
               placeholder={
                 ready
-                  ? (rt.busy ? 'Steer this reply…' : 'Message otto…')
+                  ? (rt.busy ? chatCopy.composerPlaceholderBusy : chatCopy.composerPlaceholderReady)
                   : st?.code === 'usage-limit'
-                    ? 'Usage limit reached — switch model/provider in Settings or wait for reset'
+                    ? chatCopy.composerPlaceholderUsageLimit
                     : st
-                      ? 'Draft while setup finishes…'
-                      : 'Connecting to Letta…'
+                      ? chatCopy.composerPlaceholderDraftWhileSetup
+                      : chatCopy.runtimeConnectingTitle
               }
-              aria-label="Message otto"
+              aria-label={chatCopy.composerAriaLabel}
               value={draft}
               onChange={(e) => setDraft(e.target.value)}
               onPaste={(e) => {
