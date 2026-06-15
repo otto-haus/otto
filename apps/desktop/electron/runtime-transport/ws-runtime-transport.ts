@@ -201,6 +201,7 @@ export class WsRuntimeTransport implements OttoRuntimeTransport {
     const todoAccumulator = new TodoStreamAccumulator();
     trace.write('prompt', { text, transport: 'ws', agentId: this.status.agentId, conversationId: this.status.conversationId });
 
+    let detachRuntimeHandler: (() => void) | null = null;
     try {
       let sawAssistant = false;
       let turnErrorRaw: string | null = null;
@@ -268,7 +269,7 @@ export class WsRuntimeTransport implements OttoRuntimeTransport {
         }
       };
 
-      this.attachRuntimeHandler(onRuntimeEvent);
+      detachRuntimeHandler = this.attachRuntimeHandler(onRuntimeEvent);
 
       this.sendCommand({
         type: 'input',
@@ -353,6 +354,7 @@ export class WsRuntimeTransport implements OttoRuntimeTransport {
         this.emitError(normalizedError.message, normalizedError.details);
       }
     } finally {
+      detachRuntimeHandler?.();
       trace.close();
     }
   }
@@ -552,8 +554,8 @@ export class WsRuntimeTransport implements OttoRuntimeTransport {
     return text.includes('conversation') && (text.includes('not found') || text.includes('not-found') || text.includes('404') || text.includes('500'));
   }
 
-  private attachRuntimeHandler(onEvent: (event: WsRuntimeEvent) => void) {
-    if (!this.runtimeSocket) return;
+  private attachRuntimeHandler(onEvent: (event: WsRuntimeEvent) => void): (() => void) | null {
+    if (!this.runtimeSocket) return null;
     const handler = (raw: Buffer | ArrayBuffer | Buffer[]) => {
       try {
         onEvent(JSON.parse(String(raw)) as WsRuntimeEvent);
@@ -562,6 +564,9 @@ export class WsRuntimeTransport implements OttoRuntimeTransport {
       }
     };
     this.runtimeSocket.on('message', handler);
+    return () => {
+      this.runtimeSocket?.off('message', handler);
+    };
   }
 
   private waitForTurnComplete(timeoutMs: number, aborted: () => boolean): Promise<void> {
