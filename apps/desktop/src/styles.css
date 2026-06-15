@@ -1553,6 +1553,10 @@ h1, h2, h3, h4, p { margin: 0; }
   display: grid; gap: 6px; justify-items: end; font-size: 12px; white-space: nowrap;
 }
 .labsRow__toggle input { width: 18px; height: 18px; accent-color: var(--accent); }
+/* disabled controls should read as gated, not inviting */
+.labsRow__toggle input:disabled { opacity: 0.4; cursor: not-allowed; }
+.labsRow__toggle input:not(:disabled) { cursor: pointer; }
+.charterInput:disabled { opacity: 0.55; cursor: not-allowed; background: var(--bg-2); }
 
 /* ---------- onboarding (first-run) ---------- */
 .onboardOverlay {
