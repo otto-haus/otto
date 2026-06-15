@@ -2,6 +2,8 @@ import { describe, expect, test } from 'bun:test';
 import { defaultLabsConfig } from '../electron/labs-config';
 import type { SurfaceId } from './components/Sidebar';
 import {
+  effectiveConnectionMode,
+  isRemoteLettaCloudEnabled,
   isSurfaceAccessible,
   isSurfaceComingSoon,
   labsSurfaceGate,
@@ -106,5 +108,21 @@ describe('surface-tiers', () => {
     expect(labsSurfaceGate('knowledge', enabled, false)).toBe('loading');
     expect(labsSurfaceGate('knowledge', enabled, true)).toBe('open');
     expect(labsSurfaceGate('knowledge', defaultLabsConfig(), true)).toBe('coming-soon');
+  });
+
+  test('remote_letta_cloud gate hides cloud connection mode for Ship users (#627)', () => {
+    const off = defaultLabsConfig();
+    expect(isRemoteLettaCloudEnabled(off)).toBe(false);
+    expect(effectiveConnectionMode('cloud', off)).toBe('existing');
+    expect(effectiveConnectionMode('embedded', off)).toBe('embedded');
+    expect(effectiveConnectionMode('existing', off)).toBe('existing');
+
+    const masterOnly = { enabled: true, features: {} };
+    expect(isRemoteLettaCloudEnabled(masterOnly)).toBe(false);
+    expect(effectiveConnectionMode('cloud', masterOnly)).toBe('existing');
+
+    const on = { enabled: true, features: { remote_letta_cloud: true } };
+    expect(isRemoteLettaCloudEnabled(on)).toBe(true);
+    expect(effectiveConnectionMode('cloud', on)).toBe('cloud');
   });
 });

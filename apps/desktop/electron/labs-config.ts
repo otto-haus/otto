@@ -84,6 +84,18 @@ export function applyLabsConfigPatch(cfg: OttoConfig, patch: Partial<LabsConfig>
   return patchLabsConfig(cfg, patch);
 }
 
+/** Ship-tier gate for Settings / IPC cloud connection mode (#139 / #628). */
+export function isRemoteLettaCloudEnabled(labs: LabsConfig): boolean {
+  return labs.enabled === true && labs.features?.remote_letta_cloud === true;
+}
+
+/** Same rejection contract as `otto:config:set` — agents cannot bypass Labs via IPC. */
+export function assertConnectionModePatchAllowed(cfg: OttoConfig, patch: Partial<OttoConfig>): void {
+  if (patch.connectionMode !== 'cloud') return;
+  if (isRemoteLettaCloudEnabled(getLabsConfig(cfg))) return;
+  throw new Error('connectionMode cloud requires Labs master on and remote_letta_cloud enabled');
+}
+
 function normalizeFeatureFlags(raw: LabsConfig['features'] | undefined): Partial<Record<LabFeatureId, boolean>> {
   const features: Partial<Record<LabFeatureId, boolean>> = {};
   if (!raw || typeof raw !== 'object') return features;
