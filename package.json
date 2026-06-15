@@ -53,6 +53,7 @@
     "typecheck": "tsc -p packages/core/tsconfig.json && tsc -p packages/practices/tsconfig.json",
     "test": "bun test",
     "check:shell": "bash scripts/check-shell-syntax.sh",
+    "doctor": "bash scripts/dev-doctor.sh",
     "verify:v0": "bun scripts/verify-v0.mjs",
     "verify:agent-loop": "bun scripts/verify-agent-loop-contract.mjs",
     "docs:dev": "cd devex && bunx --bun mint@4.2.616 dev",
