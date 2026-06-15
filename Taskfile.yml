@@ -16,6 +16,11 @@ tasks:
     desc: List available tasks
     cmds: [task --list]
 
+  install:
+    aliases: [deps, bootstrap]
+    desc: Install dependencies from bun.lock without rewriting it
+    cmds: [bun install --frozen-lockfile]
+
   dev:
     desc: Desktop — web preview (Vite, http://localhost:5173)
     dir: '{{.DESKTOP}}'
