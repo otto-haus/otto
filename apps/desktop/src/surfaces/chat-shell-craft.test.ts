@@ -28,7 +28,8 @@ describe('chat shell craft polish (#081 / #98)', () => {
     expect(chatSource).not.toMatch(/ready \? 'connected'/);
   });
 
-  it('renders command station on empty connected chat', () => {
-    expect(chatSource).toContain('<CommandStationStrip onNavigate={onNavigate} />');
+  it('renders command station when runtime is ready', () => {
+    expect(chatSource).toContain('ready && onNavigate');
+    expect(chatSource).toContain('<CommandStationStrip onNavigate={onNavigate} counts={stationCounts} culture={cultureHome} />');
   });
 });
