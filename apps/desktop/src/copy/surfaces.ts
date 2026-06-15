@@ -179,6 +179,8 @@ export const chatCopy = {
     'Draft a short plan I can react to.',
   ] as const,
   composerHint: 'Enter to send · Shift+Enter for a new line',
+  composerNotReadyHint: 'Finish setup above to send · your draft is saved locally',
+  composerSendBlockedTitle: 'Send is unavailable until the runtime is ready',
   queuePending: (count: number) => `${count} waiting to send`,
   queueFailed: (count: number) => `${count} couldn't send`,
   queueMixed: (pending: number, failed: number) =>

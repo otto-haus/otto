@@ -845,7 +845,6 @@ const LiveChat: React.FC<{
                     key={prompt}
                     type="button"
                     className="chatStarter"
-                    disabled={!ready}
                     onClick={() => setDraft(prompt)}
                   >
                     {prompt}
@@ -968,7 +967,7 @@ const LiveChat: React.FC<{
           </div>
         ) : null}
         <div className="promptCompose">
-          <div className={`promptbox${ready ? '' : ' promptbox--disabled'}`}>
+          <div className={`promptbox${ready ? '' : ' promptbox--send-blocked'}`}>
             <input
               ref={fileInput}
               type="file"
@@ -980,7 +979,7 @@ const LiveChat: React.FC<{
                 e.currentTarget.value = '';
               }}
             />
-            <button type="button" className="btn btn--icon promptbox__attach" aria-label="Attach image" disabled={!ready} onClick={() => fileInput.current?.click()}>
+            <button type="button" className="btn btn--icon promptbox__attach" aria-label="Attach image" disabled={!api} onClick={() => fileInput.current?.click()}>
               {Icon.image}
             </button>
             <textarea
@@ -989,7 +988,7 @@ const LiveChat: React.FC<{
                 ready
                   ? (rt.busy ? 'Steer this reply…' : 'Message otto…')
                   : st
-                    ? 'Runtime not ready — finish setup above'
+                    ? 'Draft while setup finishes…'
                     : 'Connecting to Letta…'
               }
               aria-label="Message Otto"
@@ -1004,11 +1003,10 @@ const LiveChat: React.FC<{
               onKeyDown={(e) => {
                 if (e.key === 'Enter' && !e.shiftKey) {
                   e.preventDefault();
-                  submit();
+                  if (ready) submit();
                 }
                 else if (e.key === 'Escape') { setDraft(''); e.currentTarget.blur(); }
               }}
-              disabled={!ready}
               rows={1}
             />
             {rt.busy && (
@@ -1018,13 +1016,14 @@ const LiveChat: React.FC<{
               type="button"
               className="btn btn--primary btn--icon promptbox__send"
               aria-label={rt.busy ? 'Queue message' : 'Send message'}
+              title={ready ? undefined : chatCopy.composerSendBlockedTitle}
               disabled={!ready || (!draft.trim() && attachments.length === 0)}
               onClick={submit}
             >
               {Icon.send}
             </button>
           </div>
-          {ready ? <div className="promptbar__hint">{chatCopy.composerHint}</div> : null}
+          <div className="promptbar__hint">{ready ? chatCopy.composerHint : chatCopy.composerNotReadyHint}</div>
         </div>
       </div>
 
