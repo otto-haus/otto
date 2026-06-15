@@ -9,13 +9,13 @@ Verify: `bun run verify:v0` — **5/5 pass** (195 unit tests)
 
 ### Global shell
 
-- **Slim topbar** — eyebrow + source pill only; page titles live in `SurfaceHero` ([`App.tsx`](../../../apps/desktop/src/App.tsx), [`styles.css`](../../../apps/desktop/src/styles.css)).
+- **Slim topbar** — eyebrow + source pill only; page titles live in `SurfaceHero` ([`App.tsx`](../../../../apps/desktop/src/App.tsx), [`styles.css`](../../../../apps/desktop/src/styles.css)).
 - **Single “The test:”** — removed duplicate `SurfaceProof` from all `SurfaceHero` instances; one footer proof per surface.
 - **Token sync** — `:root` ink/status and warm paper grounds aligned to brand guide oklch values.
 
 ### Chat
 
-- **Command Station** — `CommandStationStrip` wired when runtime is ready ([`Chat.tsx`](../../../apps/desktop/src/surfaces/Chat.tsx)).
+- **Command Station** — `CommandStationStrip` wired when runtime is ready ([`Chat.tsx`](../../../../apps/desktop/src/surfaces/Chat.tsx)).
 - **CSS** — `.chat__commandStation` spacing for strip above stream.
 
 ### Charters
@@ -24,7 +24,7 @@ Verify: `bun run verify:v0` — **5/5 pass** (195 unit tests)
 
 ### Settings (081 / 150)
 
-- **SurfacePage + SurfaceHero** with `pageTitle` / `pageLede` in [`surfaces.ts`](../../../apps/desktop/src/copy/surfaces.ts).
+- **SurfacePage + SurfaceHero** with `pageTitle` / `pageLede` in [`surfaces.ts`](../../../../apps/desktop/src/copy/surfaces.ts).
 - **No agent id** in readiness banner or live agent row copy.
 - **Single** `<SurfaceProof surface="settings" />` at page footer (removed from General tab, Memory observatory, Culture panel).
 - Onboarding reset toast strings moved to copy bundle.
