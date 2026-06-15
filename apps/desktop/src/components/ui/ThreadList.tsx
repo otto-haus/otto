@@ -20,6 +20,13 @@ export function displayThreadTitle(title: string): string {
   return t;
 }
 
+/** Split threads into pinned and recent buckets for sidebar rendering. */
+export function splitThreadSections(threads: ThreadSummary[]) {
+  const pinned = threads.filter((thread) => !!thread.pinned);
+  const recents = threads.filter((thread) => !thread.pinned);
+  return { pinned, recents };
+}
+
 function readSectionOpen(key: string, fallback: boolean): boolean {
   try {
     const v = sessionStorage.getItem(key);
@@ -47,22 +54,16 @@ const ConversationRow: React.FC<{
   onPin?: (thread: ThreadSummary, pinned: boolean) => void;
   onArchive?: (thread: ThreadSummary) => void;
 }> = ({ thread, active, variant, onSelect, onPin, onArchive }) => (
-  <div className={`sidebarConvWrap${active ? ' is-active' : ''}${thread.pinned ? ' is-pinned' : ''}`}>
-    <button
-      type="button"
-      className={`sidebarConv thread${active ? ' is-active' : ''}`}
-      onClick={() => onSelect?.(thread)}
-      disabled={!onSelect}
-      aria-current={active ? 'true' : undefined}
-    >
-      <span className="sidebarConv__icon">{variant === 'pinned' ? Icon.pin : Icon.clock}</span>
-      <span className="sidebarConv__label">{displayThreadTitle(thread.title)}</span>
-    </button>
+  <div
+    className={`sidebarConvWrap${active ? ' is-active' : ''}${thread.pinned ? ' is-pinned' : ''}`}
+    data-thread-variant={variant}
+  >
     {onPin ? (
       <button
         type="button"
         className={`sidebarConv__pin${thread.pinned ? ' is-on' : ''}`}
         aria-label={thread.pinned ? threadCopy.unpin : threadCopy.pin}
+        aria-pressed={!!thread.pinned}
         title={thread.pinned ? threadCopy.unpin : threadCopy.pin}
         onClick={(event) => {
           event.stopPropagation();
@@ -72,6 +73,16 @@ const ConversationRow: React.FC<{
         {Icon.pin}
       </button>
     ) : null}
+    <button
+      type="button"
+      className={`sidebarConv thread${active ? ' is-active' : ''}`}
+      onClick={() => onSelect?.(thread)}
+      disabled={!onSelect}
+      aria-current={active ? 'true' : undefined}
+    >
+      {variant === 'recent' ? <span className="sidebarConv__icon">{Icon.clock}</span> : null}
+      <span className="sidebarConv__label">{displayThreadTitle(thread.title)}</span>
+    </button>
     {onArchive ? (
       <button
         type="button"
@@ -122,8 +133,7 @@ export const ThreadList: React.FC<{
   onPin?: (thread: ThreadSummary, pinned: boolean) => void;
   onArchive?: (thread: ThreadSummary) => void;
 }> = ({ threads, activeThreadId, activeConversationId, onSelect, onPin, onArchive }) => {
-  const pinned = threads.filter((t) => t.pinned);
-  const recents = threads.filter((t) => !t.pinned);
+  const { pinned, recents } = splitThreadSections(threads);
 
   if (!threads.length) {
     return (
@@ -157,9 +167,9 @@ export const ThreadList: React.FC<{
           <p className="sidebarSection__empty">{threadCopy.pinnedEmpty}</p>
         )}
       </Section>
-      {recents.length > 0 ? (
-        <Section label={threadCopy.recentsLabel} storageKey="otto.sidebar.recents" defaultOpen>
-          {recents.map((thread) => (
+      <Section label={threadCopy.recentsLabel} storageKey="otto.sidebar.recents" defaultOpen>
+        {recents.length > 0 ? (
+          recents.map((thread) => (
             <ConversationRow
               key={thread.id}
               thread={thread}
@@ -169,9 +179,11 @@ export const ThreadList: React.FC<{
               onPin={onPin}
               onArchive={onArchive}
             />
-          ))}
-        </Section>
-      ) : null}
+          ))
+        ) : (
+          <p className="sidebarSection__empty">{threadCopy.recentsEmpty}</p>
+        )}
+      </Section>
     </div>
   );
 };

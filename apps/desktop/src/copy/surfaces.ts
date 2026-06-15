@@ -288,11 +288,12 @@ export const threadCopy = {
   pinnedLabel: 'Pinned',
   recentsLabel: 'Recents',
   empty: 'No conversations yet.',
-    pinnedEmpty: 'Pin a thread to keep it here.',
-    pin: 'Pin conversation',
-    unpin: 'Unpin conversation',
-    archive: 'Archive conversation',
-  } as const;
+  pinnedEmpty: 'Nothing pinned yet. Pin any conversation in Recents to keep it here.',
+  recentsEmpty: 'Recent conversations appear here.',
+  pin: 'Pin conversation — keep in Pinned',
+  unpin: 'Unpin conversation — move to Recents',
+  archive: 'Archive conversation',
+} as const;
 
 export const curationCopy = {
   eyebrow: 'curation',

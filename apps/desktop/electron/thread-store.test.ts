@@ -236,6 +236,63 @@ describe('ThreadStore', () => {
     }
   });
 
+  test('pin persists across store reload', () => {
+    const tmp = mkdtempSync(join(tmpdir(), 'otto-thread-test-'));
+    try {
+      const config = mockConfig(tmp);
+      const store = new ThreadStore(config);
+      const thread = store.create({ title: 'Keep pinned' });
+      store.pin(thread.id, true);
+
+      const reloaded = new ThreadStore(new ConfigStore());
+      const pinned = reloaded.list().threads.filter((item) => item.pinned);
+
+      expect(pinned).toHaveLength(1);
+      expect(pinned[0]?.id).toBe(thread.id);
+    } finally {
+      rmSync(tmp, { recursive: true, force: true });
+      delete process.env.OTTO_HOME;
+    }
+  });
+
+  test('unpin moves thread back to recents ordering', () => {
+    const tmp = mkdtempSync(join(tmpdir(), 'otto-thread-test-'));
+    try {
+      const config = mockConfig(tmp);
+      const store = new ThreadStore(config);
+      const pinned = store.create({ title: 'Pinned row' });
+      const recent = store.create({ title: 'Recent row' });
+      store.pin(pinned.id, true);
+
+      store.pin(pinned.id, false);
+      const list = store.list();
+
+      expect(list.threads.filter((thread) => thread.pinned).map((thread) => thread.id)).toEqual([]);
+      expect(list.threads.filter((thread) => !thread.pinned).map((thread) => thread.id)).toEqual([pinned.id, recent.id]);
+    } finally {
+      rmSync(tmp, { recursive: true, force: true });
+      delete process.env.OTTO_HOME;
+    }
+  });
+
+  test('archiving a pinned thread clears pinned flag', () => {
+    const tmp = mkdtempSync(join(tmpdir(), 'otto-thread-test-'));
+    try {
+      const config = mockConfig(tmp);
+      const store = new ThreadStore(config);
+      const thread = store.create({ title: 'Pinned archive' });
+      store.pin(thread.id, true);
+
+      const archived = store.archive(thread.id);
+
+      expect(archived.pinned).toBe(false);
+      expect(archived.archived).toBe(true);
+    } finally {
+      rmSync(tmp, { recursive: true, force: true });
+      delete process.env.OTTO_HOME;
+    }
+  });
+
   test('normalizes duplicate thread ids before mutating the index', () => {
     const tmp = mkdtempSync(join(tmpdir(), 'otto-thread-test-'));
     try {
