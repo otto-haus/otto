@@ -1,4 +1,4 @@
-import { type BrowserWindow, app, clipboard, ipcMain, shell } from 'electron';
+import { app, clipboard, ipcMain, shell } from 'electron';
 import type { ConnectionInfo, ConnectionInput, CreateProposalFromCorrectionInput, DecideProposalInput, DreamSettings, LabsConfig, OttoConfig, PermissionRequest, PermissionResponse, ProposalClassification, ProposalTarget, RuntimePreferences, RuntimeStatus } from './shared/types';
 import { applyLabsConfigPatch, assertConnectionModePatchAllowed, getLabsConfig, labsConfigToOttoPatch } from './labs-config';
 import {
@@ -48,6 +48,7 @@ import { PaperclipIntakeStore } from './paperclip-intake-store';
 import { MemoryStore } from './memory-store';
 import { PgvectorStore } from './pgvector-store';
 import { safeWebContentsSend, smokeMode } from './runtime-transport/runtime-common';
+import { getMainWindow } from './main-window';
 import { readAppBuildInfo } from './build-info';
 import { showOttoDebugMenu } from './debug-menu';
 import { buildDebugPacket, formatDebugPacketText, formatRuntimeStatusText } from './debug-packet';
@@ -60,9 +61,14 @@ import { collectSystemHealth } from './system-health';
 import { IsolatedAgentStore } from './isolated-agent-store';
 import type { IsolationBoundaryReason } from './isolated-agent';
 
-export function registerIpc(win: BrowserWindow) {
+let ipcRegistered = false;
+
+export function registerIpc() {
+  if (ipcRegistered) return;
+  ipcRegistered = true;
+
   const config = new ConfigStore();
-  const runner = new LettaRunner(win, config);
+  const runner = new LettaRunner(getMainWindow, config);
   const receipts = new ReceiptStore();
   const charters = new CharterStore();
   const standards = new StandardStore();
@@ -125,7 +131,7 @@ export function registerIpc(win: BrowserWindow) {
   ipcMain.handle('otto:app:build-info', () => readAppBuildInfo());
   ipcMain.handle('otto:system:health', () =>
     collectSystemHealth({
-      win,
+      win: getMainWindow(),
       runner,
       config,
       memory,
@@ -172,7 +178,8 @@ export function registerIpc(win: BrowserWindow) {
   ipcMain.handle('otto:config:set', (_e, patch: Partial<OttoConfig>) => {
     assertConnectionModePatchAllowed(config.get(), patch);
     const next = config.update(patch);
-    if ('theme' in patch) syncWindowBackground(win, next.theme);
+    const win = getMainWindow();
+    if ('theme' in patch && win) syncWindowBackground(win, next.theme);
     return next;
   });
   ipcMain.handle('otto:labs:get', () => getLabsConfig(config.get()));
@@ -287,13 +294,16 @@ export function registerIpc(win: BrowserWindow) {
   });
 
   const debugDeps = () => ({
-    win,
+    win: getMainWindow(),
     runtimeStatus: runner.getStatus(),
     config: config.get(),
   });
 
   ipcMain.handle('otto:debug:show-menu', (_e, surface?: string) => {
-    showOttoDebugMenu(debugDeps(), typeof surface === 'string' ? surface : undefined);
+    const deps = debugDeps();
+    const win = deps.win;
+    if (!win) return { ok: false as const, reason: 'no-window' };
+    showOttoDebugMenu({ ...deps, win }, typeof surface === 'string' ? surface : undefined);
     return { ok: true as const };
   });
   ipcMain.handle('otto:debug:packet', () => buildDebugPacket({
@@ -326,7 +336,7 @@ export function registerIpc(win: BrowserWindow) {
     return { ok: true as const, path };
   });
   ipcMain.handle('otto:debug:open-devtools', () => {
-    win.webContents.openDevTools({ mode: 'detach' });
+    getMainWindow()?.webContents.openDevTools({ mode: 'detach' });
     return { ok: true as const };
   });
 
@@ -444,7 +454,8 @@ export function registerIpc(win: BrowserWindow) {
       agentId: status.agentId ?? thread.agentId,
       lettaConversationId: status.conversationId ?? null,
     }) ?? thread;
-    safeWebContentsSend(win, 'otto:threads:active', { threadId: thread.id, status });
+    const win = getMainWindow();
+    if (win) safeWebContentsSend(win, 'otto:threads:active', { threadId: thread.id, status });
     return { thread: updatedThread, status };
   });
   ipcMain.handle('otto:threads:switch', async (_e, threadId: string) => {
@@ -455,7 +466,8 @@ export function registerIpc(win: BrowserWindow) {
       agentId: status.agentId ?? thread.agentId,
       lettaConversationId: status.conversationId ?? thread.lettaConversationId,
     }) ?? thread;
-    safeWebContentsSend(win, 'otto:threads:active', { threadId: thread.id, status });
+    const win = getMainWindow();
+    if (win) safeWebContentsSend(win, 'otto:threads:active', { threadId: thread.id, status });
     return { thread: updatedThread, status };
   });
   ipcMain.handle('otto:threads:archive', async (_e, threadId: string) => {
@@ -464,7 +476,8 @@ export function registerIpc(win: BrowserWindow) {
     const activeThreadId = config.get().activeThreadId ?? null;
     if (activeThreadId && activeThreadId !== threadId) {
       const status = await initWithStaleRecovery();
-      safeWebContentsSend(win, 'otto:threads:active', { threadId: activeThreadId, status });
+      const win = getMainWindow();
+      if (win) safeWebContentsSend(win, 'otto:threads:active', { threadId: activeThreadId, status });
     }
     return archived;
   });
@@ -526,7 +539,8 @@ export function registerIpc(win: BrowserWindow) {
         interactive: input?.interactive ?? false,
       };
       permissionLogStore.recordPending(req);
-      safeWebContentsSend(win, 'otto:permission', req);
+      const win = getMainWindow();
+      if (win) safeWebContentsSend(win, 'otto:permission', req);
       return { ok: true, requestId, toolName: req.toolName };
     },
   );

@@ -133,7 +133,7 @@ describe('WsRuntimeTransport', () => {
 
   test('init reaches ready; smoke session; reconnect marks not ready on socket close', async () => {
     const { win, sent } = mockWindow();
-    const transport = new WsRuntimeTransport(win, mockConfig());
+    const transport = new WsRuntimeTransport(() => win, mockConfig());
     (transport as unknown as { spawnRemote: () => Promise<void> }).spawnRemote = async () => {};
 
     const initPromise = transport.init({ freshConversation: true });
@@ -156,7 +156,7 @@ describe('WsRuntimeTransport', () => {
 
   test('abort sends abort_message for active run and completes turn', async () => {
     const { win } = mockWindow();
-    const transport = new WsRuntimeTransport(win, mockConfig());
+    const transport = new WsRuntimeTransport(() => win, mockConfig());
     const sent: string[] = [];
     (transport as unknown as { runtimeSocket: WebSocket | null }).runtimeSocket = {
       readyState: WebSocket.OPEN,
@@ -176,7 +176,7 @@ describe('WsRuntimeTransport', () => {
 
   test('abort rejects pending permission and sends denied control_response', async () => {
     const { win } = mockWindow();
-    const transport = new WsRuntimeTransport(win, mockConfig());
+    const transport = new WsRuntimeTransport(() => win, mockConfig());
     const sent: string[] = [];
     (transport as unknown as { runtimeSocket: WebSocket | null }).runtimeSocket = {
       readyState: WebSocket.OPEN,
@@ -213,7 +213,7 @@ describe('WsRuntimeTransport', () => {
 
   test('resolvePermission emits control_response on runtime socket', async () => {
     const { win, sent } = mockWindow();
-    const transport = new WsRuntimeTransport(win, mockConfig());
+    const transport = new WsRuntimeTransport(() => win, mockConfig());
     let outbound: string | null = null;
     (transport as unknown as { runtimeSocket: WebSocket | null }).runtimeSocket = {
       readyState: WebSocket.OPEN,
@@ -238,7 +238,7 @@ describe('WsRuntimeTransport', () => {
 
   test('send rejects when WebSocket transport disconnected', async () => {
     const { win, sent } = mockWindow();
-    const transport = new WsRuntimeTransport(win, mockConfig());
+    const transport = new WsRuntimeTransport(() => win, mockConfig());
     (transport as unknown as { status: { ready: boolean } }).status = {
       ...transport.getStatus(),
       ready: true,
@@ -251,7 +251,7 @@ describe('WsRuntimeTransport', () => {
 
   test('resolvePermission fails turn when runtime socket is closed', () => {
     const { win, sent } = mockWindow();
-    const transport = new WsRuntimeTransport(win, mockConfig());
+    const transport = new WsRuntimeTransport(() => win, mockConfig());
     (transport as unknown as { runtimeSocket: WebSocket | null }).runtimeSocket = {
       readyState: WebSocket.CLOSED,
     } as WebSocket;
@@ -271,7 +271,7 @@ describe('WsRuntimeTransport', () => {
 
   test('runtime disconnect clears pending controls and interrupts active turn', async () => {
     const { win, sent } = mockWindow();
-    const transport = new WsRuntimeTransport(win, mockConfig());
+    const transport = new WsRuntimeTransport(() => win, mockConfig());
     (transport as unknown as { spawnRemote: () => Promise<void> }).spawnRemote = async () => {};
 
     const initPromise = transport.init({ freshConversation: true });
@@ -299,7 +299,7 @@ describe('WsRuntimeTransport', () => {
 
   test('send rejects when WebSocket transport disconnected', async () => {
     const { win, sent } = mockWindow();
-    const transport = new WsRuntimeTransport(win, mockConfig());
+    const transport = new WsRuntimeTransport(() => win, mockConfig());
     (transport as unknown as { status: { ready: boolean } }).status = {
       ...transport.getStatus(),
       ready: true,
@@ -319,7 +319,7 @@ describe('WsRuntimeTransport', () => {
 
   test('attachRuntimeHandler detaches per-turn listener', () => {
     const { win } = mockWindow();
-    const transport = new WsRuntimeTransport(win, mockConfig());
+    const transport = new WsRuntimeTransport(() => win, mockConfig());
     const listeners = new Map<string, Set<(...args: unknown[]) => void>>();
     const socket = {
       on(event: string, handler: (...args: unknown[]) => void) {
@@ -347,7 +347,7 @@ describe('WsRuntimeTransport', () => {
 
   test('turn idle timeout keeps transport ready and emits recoverable error', async () => {
     const { win, sent } = mockWindow();
-    const transport = new WsRuntimeTransport(win, mockConfig('conv-ws-idle'));
+    const transport = new WsRuntimeTransport(() => win, mockConfig('conv-ws-idle'));
     (transport as unknown as {
       runtimeSocket: WebSocket | null;
       status: { ready: boolean };

@@ -65,7 +65,7 @@ export class WsRuntimeTransport implements OttoRuntimeTransport {
   private lastReconnectAt: string | null = null;
 
   constructor(
-    private win: BrowserWindow,
+    private getMainWindow: () => BrowserWindow | null,
     private config: ConfigStore,
   ) {}
 
@@ -236,7 +236,7 @@ export class WsRuntimeTransport implements OttoRuntimeTransport {
         this.writeChatReceipt({ text, status, summary, blocker, startedStatus, tracePath: trace.path });
       };
       const emitResult = (success: boolean) => {
-        safeWebContentsSend(this.win, 'otto:event', {
+        safeWebContentsSend(this.getMainWindow(), 'otto:event', {
           message: { type: 'result', success, conversationId: this.status.conversationId, uuid: randomUUID() },
         });
       };
@@ -258,7 +258,7 @@ export class WsRuntimeTransport implements OttoRuntimeTransport {
             if (normalizedError.code === 'usage-limit') {
               this.markNotReady(raw, normalizedError.code);
             }
-            safeWebContentsSend(this.win, 'otto:event', {
+            safeWebContentsSend(this.getMainWindow(), 'otto:event', {
               message: {
                 type: 'error',
                 message: normalizedError.message,
@@ -267,7 +267,7 @@ export class WsRuntimeTransport implements OttoRuntimeTransport {
               },
             });
           } else {
-            safeWebContentsSend(this.win, 'otto:event', { message: normalized });
+            safeWebContentsSend(this.getMainWindow(), 'otto:event', { message: normalized });
             if (normalized.type === 'assistant') sawAssistant = true;
             if (normalized.type === 'todo_update') sawAssistant = true;
           }
@@ -667,7 +667,7 @@ export class WsRuntimeTransport implements OttoRuntimeTransport {
     const interactive = toolName === 'AskUserQuestion' || toolName === 'ExitPlanMode';
     const req: PermissionRequest = { requestId, toolName, toolInput, interactive };
     permissionLogStore.recordPending(req);
-    safeWebContentsSend(this.win, 'otto:permission', req);
+    safeWebContentsSend(this.getMainWindow(), 'otto:permission', req);
     this.pendingControls.set(requestId, {
       requestId,
       toolName,
@@ -699,11 +699,11 @@ export class WsRuntimeTransport implements OttoRuntimeTransport {
       code,
       reason: friendly(code, reason),
     };
-    safeWebContentsSend(this.win, 'otto:event', { status: this.status });
+    safeWebContentsSend(this.getMainWindow(), 'otto:event', { status: this.status });
   }
 
   private emitError(message: string, details?: string) {
-    safeWebContentsSend(this.win, 'otto:event', {
+    safeWebContentsSend(this.getMainWindow(), 'otto:event', {
       message: { type: 'error', message, ...(details ? { details } : {}), uuid: randomUUID() },
     });
   }

@@ -8,12 +8,14 @@ import type { ConfigStore } from './config-store';
 import { RuntimeSupervisor } from './runtime-transport/runtime-supervisor';
 import type { TransportDiagnosticsSnapshot } from './diagnostics-export';
 
+type MainWindowResolver = () => BrowserWindow | null;
+
 /** Electron main runtime facade — delegates to RuntimeSupervisor (SDK or WS transport). */
 export class LettaRunner {
   private supervisor: RuntimeSupervisor;
 
-  constructor(win: BrowserWindow, config: ConfigStore) {
-    this.supervisor = new RuntimeSupervisor(win, config);
+  constructor(getMainWindow: MainWindowResolver, config: ConfigStore) {
+    this.supervisor = new RuntimeSupervisor(getMainWindow, config);
   }
 
   getStatus(): RuntimeStatus {

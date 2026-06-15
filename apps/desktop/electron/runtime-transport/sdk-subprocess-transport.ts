@@ -62,7 +62,7 @@ export class SdkSubprocessTransport implements OttoRuntimeTransport {
   private aborted = false;
 
   constructor(
-    private win: BrowserWindow,
+    private getMainWindow: () => BrowserWindow | null,
     private config: ConfigStore,
   ) {}
 
@@ -116,7 +116,7 @@ export class SdkSubprocessTransport implements OttoRuntimeTransport {
       const interactive = toolName === 'AskUserQuestion' || toolName === 'ExitPlanMode';
       const req: PermissionRequest = { requestId, toolName, toolInput, interactive };
       permissionLogStore.recordPending(req);
-      safeWebContentsSend(this.win, 'otto:permission', req);
+      safeWebContentsSend(this.getMainWindow(), 'otto:permission', req);
       return new Promise<PermissionResponse>((resolve) => {
         const timer = setTimeout(() => {
           if (!this.pending.has(requestId)) return;
@@ -370,7 +370,7 @@ export class SdkSubprocessTransport implements OttoRuntimeTransport {
   }
 
   private publishStatus(): void {
-    safeWebContentsSend(this.win, 'otto:event', { status: this.status });
+    safeWebContentsSend(this.getMainWindow(), 'otto:event', { status: this.status });
   }
 
   private markNotReady(reason: string, code: StatusCode = 'error'): void {
@@ -453,7 +453,7 @@ export class SdkSubprocessTransport implements OttoRuntimeTransport {
             this.markNotReady(raw, normalizedError.code);
             markedNotReady = true;
           }
-          safeWebContentsSend(this.win, 'otto:event', {
+          safeWebContentsSend(this.getMainWindow(), 'otto:event', {
             message: {
               type: 'error',
               message: normalizedError.message,
@@ -462,7 +462,7 @@ export class SdkSubprocessTransport implements OttoRuntimeTransport {
             },
           });
         } else {
-          safeWebContentsSend(this.win, 'otto:event', { message });
+          safeWebContentsSend(this.getMainWindow(), 'otto:event', { message });
         }
         if (m.type === 'result') {
           sawResult = true;
@@ -565,14 +565,14 @@ export class SdkSubprocessTransport implements OttoRuntimeTransport {
   }
 
   private emitError(message: string, details?: string) {
-    safeWebContentsSend(this.win, 'otto:event', {
+    safeWebContentsSend(this.getMainWindow(), 'otto:event', {
       message: { type: 'error', message, ...(details ? { details } : {}), uuid: randomUUID() },
     });
   }
 
   /** Emit a terminal result when the SDK stream ends without one (timeout/abort/missing result). */
   private emitTurnTerminal(success: boolean, reason?: string) {
-    safeWebContentsSend(this.win, 'otto:event', {
+    safeWebContentsSend(this.getMainWindow(), 'otto:event', {
       message: {
         type: 'result',
         success,
