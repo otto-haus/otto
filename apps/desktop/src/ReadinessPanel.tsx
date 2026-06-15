@@ -1,6 +1,6 @@
 import type React from 'react';
 import { Icon } from './components/icons';
-import { readyStatusPill } from './components/ui';
+import { PaneLoading, readyStatusPill } from './components/ui';
 import { settingsCopy } from './copy/surfaces';
 import { useRuntimeContext } from './runtime-context';
 import { readiness, requiredMissing, type ReadyItem } from './readiness';
@@ -103,7 +103,7 @@ export const ReadinessPanel: React.FC<ReadinessPanelProps> = ({ variant = 'setti
   if (loading) {
     return (
       <div className="onboardReadiness onboardReadiness--loading" aria-live="polite">
-        <p className="onboardReadiness__checking">{settingsCopy.readinessChecking}</p>
+        <PaneLoading label={settingsCopy.readinessChecking} variant="rows" />
       </div>
     );
   }
