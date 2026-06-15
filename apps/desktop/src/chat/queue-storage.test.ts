@@ -91,6 +91,23 @@ describe('queue-storage', () => {
     expect(JSON.parse(localStorage.getItem(QUEUE_KEY) ?? '[]')).toEqual(queue);
   });
 
+  test('readQueue merges both legacy v2 and v1 storage keys', () => {
+    installStorage();
+    localStorage.setItem(LEGACY_QUEUE_V2_KEY, JSON.stringify([
+      { id: 'legacy-v2', text: 'Older v2 queued item.', createdAt: Date.now(), state: 'queued' },
+    ]));
+    localStorage.setItem(LEGACY_QUEUE_KEY, JSON.stringify([
+      { id: 'legacy-v1', text: 'Older v1 queued item.', createdAt: Date.now(), state: 'queued' },
+    ]));
+
+    const queue = readQueue();
+
+    expect(queue.map((item) => item.id)).toEqual(['legacy-v2', 'legacy-v1']);
+    expect(localStorage.getItem(LEGACY_QUEUE_V2_KEY)).toBeNull();
+    expect(localStorage.getItem(LEGACY_QUEUE_KEY)).toBeNull();
+    expect(JSON.parse(localStorage.getItem(QUEUE_KEY) ?? '[]')).toEqual(queue);
+  });
+
   test('readQueue preserves legacy messages when current storage already exists', () => {
     installStorage();
     localStorage.setItem(QUEUE_KEY, JSON.stringify([
