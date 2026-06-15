@@ -18,9 +18,31 @@
  *   OTTO_CLEAN_MACHINE_PACKAGING_ONLY=1 node scripts/otto-clean-machine-e2e-smoke.cjs
  */
 const { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } = require('node:fs');
-const { tmpdir } = require('node:os');
+const { homedir, tmpdir } = require('node:os');
 const { join } = require('node:path');
 const { execFileSync, spawn } = require('node:child_process');
+
+/**
+ * Embedded Letta needs a provider credential to reach a real session — provider keys live in
+ * Letta, never otto (docs/v1/embedded-letta-bundle.md). The clean profile deliberately has no
+ * host ~/.letta config, so hydrate LETTA_API_KEY from the canonical real-home secret location
+ * (same pattern as scripts/ws-disposable-smoke.ts) before HOME is isolated. We never copy
+ * ~/.letta — only the provider credential flows through, exactly how keys reach Letta.
+ */
+function hydrateLettaApiKey() {
+  if (process.env.LETTA_API_KEY?.trim()) return;
+  const secretsPath = join(homedir(), '.otto', 'secrets.env');
+  if (!existsSync(secretsPath)) return;
+  for (const line of readFileSync(secretsPath, 'utf8').split('\n')) {
+    const trimmed = line.trim();
+    if (!trimmed || trimmed.startsWith('#')) continue;
+    const eq = trimmed.indexOf('=');
+    if (eq > 0 && trimmed.slice(0, eq) === 'LETTA_API_KEY') {
+      process.env.LETTA_API_KEY = trimmed.slice(eq + 1);
+      break;
+    }
+  }
+}
 
 const ROOT = join(__dirname, '..');
 const RUN_ID = process.env.OTTO_CLEAN_MACHINE_RUN_ID ?? new Date().toISOString().replace(/[-:.TZ]/g, '').slice(0, 14);
@@ -70,6 +92,9 @@ function nextActionForFailure(category, proof) {
     case 'setup':
       return 'Review onboarding/connect UI — welcome heading and Get started → connect dock must be reachable on a fresh profile.';
     case 'runtime':
+      if (proof.checks.providerCredentialPresent !== true) {
+        return 'Embedded runtime needs a provider credential to reach a real session (keys live in Letta, never otto). Export LETTA_API_KEY or add it to ~/.otto/secrets.env, then re-run.';
+      }
       return proof.runtimeStatus?.reason
         ? `Fix runtime init: ${proof.runtimeStatus.reason}`
         : 'Embedded runtime did not reach ready — configure provider auth inside Letta for local v1.';
@@ -84,6 +109,7 @@ function nextActionForFailure(category, proof) {
 
 async function main() {
   assertSafeAppPath(APP_TEMPLATE);
+  hydrateLettaApiKey();
 
   mkdirSync(RECEIPT_DIR, { recursive: true });
 
@@ -123,6 +149,7 @@ async function main() {
       appBundleExists: existsSync(APP_TEMPLATE),
       bundledCliExists: existsSync(bundledCliTemplate),
       noHostLettaSettings: true,
+      providerCredentialPresent: Boolean(process.env.LETTA_API_KEY?.trim()),
       notDefaultConversation: false,
       sessionModeSmoke: false,
       bundledCliUsed: false,
@@ -180,11 +207,19 @@ async function main() {
       await welcome.waitFor({ timeout: 15000 });
       proof.checks.onboardingWelcomeVisible = (await welcome.count()) > 0 && (await welcome.isVisible());
 
+      // Welcome → Get started opens the connection-mode picker on a fresh profile
+      // (onboarding redesign #772: "How should otto connect?" with This Mac / Existing cards).
       await page.getByRole('button', { name: 'Get started →' }).click();
-      await page.getByText('Finish connecting otto').waitFor({ timeout: 8000 });
-      proof.checks.connectDockReachable = true;
+      const modePicker = page.getByRole('heading', { name: 'How should otto connect?' });
+      await modePicker.waitFor({ timeout: 8000 });
+      proof.checks.connectDockReachable = (await modePicker.count()) > 0 && (await modePicker.isVisible());
       proof.screenshots.setup = join(RECEIPT_DIR, `291-clean-machine-setup-${RUN_ID}.png`);
       await page.screenshot({ path: proof.screenshots.setup, fullPage: false });
+
+      // Pick the embedded "This Mac" path and continue into the connect step.
+      await page.getByRole('button', { name: /^This Mac/ }).click();
+      await page.getByRole('button', { name: 'Continue →' }).click();
+      await page.getByRole('heading', { name: 'Connect your runtime' }).waitFor({ timeout: 8000 }).catch(() => {});
 
       await page.evaluate(async () => {
         localStorage.setItem('otto.onboarded.v1', '1');

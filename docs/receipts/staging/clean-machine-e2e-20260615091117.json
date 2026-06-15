@@ -1,0 +1,61 @@
+{
+  "schema": "otto.clean-machine-e2e-smoke.v1",
+  "issue": 291,
+  "ok": false,
+  "runId": "20260615091117",
+  "gitHead": "0752ea45",
+  "appTemplate": "/private/tmp/otto-cleanmachine-fix/apps/desktop/dist-app/mac-arm64/otto.app",
+  "smokeRoot": "/var/folders/22/fzs3nrw505z_m71cghqjc7j80000gn/T/otto-clean-machine-20260615091117",
+  "isolatedHome": "/var/folders/22/fzs3nrw505z_m71cghqjc7j80000gn/T/otto-clean-machine-20260615091117/home",
+  "isolatedOttoHome": "/var/folders/22/fzs3nrw505z_m71cghqjc7j80000gn/T/otto-clean-machine-20260615091117/home/otto-home",
+  "receiptDir": "/private/tmp/otto-cleanmachine-fix/docs/receipts/staging",
+  "path": [
+    "resolve packaged otto.app from dist-app (never live or staging installs)",
+    "copy to disposable temp bundle + isolated HOME/OTTO_HOME (no host .letta)",
+    "verify onboarding welcome + connect dock on fresh profile",
+    "embedded connectionMode + runtime.init() on disposable smoke conversation",
+    "one chat turn via runtime.send"
+  ],
+  "checks": {
+    "appBundleExists": true,
+    "bundledCliExists": true,
+    "noHostLettaSettings": true,
+    "providerCredentialPresent": false,
+    "notDefaultConversation": false,
+    "sessionModeSmoke": true,
+    "bundledCliUsed": true,
+    "onboardingWelcomeVisible": true,
+    "connectDockReachable": true,
+    "runtimeReady": false,
+    "cliResolved": true,
+    "lettaStateUnderIsolatedHome": true,
+    "chatTurnCompleted": false
+  },
+  "failureCategory": "runtime",
+  "nextAction": "Embedded runtime needs a provider credential to reach a real session (keys live in Letta, never otto). Export LETTA_API_KEY or add it to ~/.otto/secrets.env, then re-run.",
+  "runtimeStatus": {
+    "ready": false,
+    "code": "no-api-key",
+    "reason": "Letta auth failed. For local v1, configure provider auth inside Letta; otto does not need its own API key. (Failed to initialize session - no init message received\nCLI stderr:\nMissing LETTA_API_KEY\nRun 'letta' in interactive mode to authenticate or export the missing environment variable)",
+    "agentId": null,
+    "baseUrl": null,
+    "discoverySource": "none",
+    "modelHandle": null,
+    "effort": "high",
+    "sessionMode": "smoke",
+    "cliPath": "/private/var/folders/22/fzs3nrw505z_m71cghqjc7j80000gn/T/otto-clean-machine-20260615091117/otto-clean-machine-smoke.app/Contents/Resources/app/node_modules/@letta-ai/letta-code/letta.js",
+    "cliResolved": true,
+    "transportMode": "auto",
+    "effectiveTransport": "sdk subprocess",
+    "transportFallbackReason": null
+  },
+  "chat": {
+    "ok": false,
+    "reason": "Letta auth failed. For local v1, configure provider auth inside Letta; otto does not need its own API key. (Failed to initialize session - no init message received\nCLI stderr:\nMissing LETTA_API_KEY\nRun 'letta' in interactive mode to authenticate or export the missing environment variable)"
+  },
+  "screenshots": {
+    "setup": "/private/tmp/otto-cleanmachine-fix/docs/receipts/staging/291-clean-machine-setup-20260615091117.png",
+    "final": "/private/tmp/otto-cleanmachine-fix/docs/receipts/staging/291-clean-machine-final-20260615091117.png"
+  },
+  "consoleMessages": []
+}
