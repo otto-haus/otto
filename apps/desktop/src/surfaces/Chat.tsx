@@ -1016,6 +1016,9 @@ const LiveChat: React.FC<{
                   <div className="inkblock__title">{chatCopy.runtimeNotReadyTitle}</div>
                   <div className="inkblock__meta">
                     <span>{st.reason ?? chatCopy.runtimeNotReadyBody}</span>
+                    {st.code === 'usage-limit' ? (
+                      <span className="faint"> Switch model or provider in Settings, or wait for the limit to reset.</span>
+                    ) : null}
                   </div>
                 </>
               )}
@@ -1101,6 +1104,12 @@ const LiveChat: React.FC<{
                   {isError ? (
                     <div className="msg__body" style={{ color: 'var(--stop)' }}>
                       {m.text ? <MarkdownText text={m.text} /> : null}
+                      {m.details ? (
+                        <details className="msg__details">
+                          <summary>Copy details</summary>
+                          <pre className="mono faint">{m.details}</pre>
+                        </details>
+                      ) : null}
                     </div>
                   ) : (
                     <CollapsibleMessageBody collapsible={!isUser && !!m.text}>
@@ -1214,9 +1223,11 @@ const LiveChat: React.FC<{
               placeholder={
                 ready
                   ? (rt.busy ? 'Steer this reply…' : 'Message otto…')
-                  : st
-                    ? 'Draft while setup finishes…'
-                    : 'Connecting to Letta…'
+                  : st?.code === 'usage-limit'
+                    ? 'Usage limit reached — switch model/provider in Settings or wait for reset'
+                    : st
+                      ? 'Draft while setup finishes…'
+                      : 'Connecting to Letta…'
               }
               aria-label="Message Otto"
               value={draft}

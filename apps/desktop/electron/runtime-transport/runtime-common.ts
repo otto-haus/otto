@@ -122,6 +122,78 @@ export const isNotFound = (e: unknown) => {
   return m.includes('not found') || m.includes('not-found') || m.includes('agent-not-found');
 };
 
+export function isUsageLimitReason(reason: string): boolean {
+  const r = reason.toLowerCase();
+  return (
+    r.includes('429') ||
+    r.includes('usage_limit') ||
+    r.includes('usage limit') ||
+    r.includes('rate_limit') ||
+    r.includes('rate limit') ||
+    r.includes('quota') ||
+    r.includes('too many requests') ||
+    r.includes('overloaded') ||
+    r.includes('insufficient_quota')
+  );
+}
+
+function usageLimitProviderLabel(reason: string): string {
+  const r = reason.toLowerCase();
+  if (r.includes('codex')) return 'Codex';
+  return 'Provider';
+}
+
+/** Best-effort reset hint from provider JSON or retry metadata (seconds → minutes). */
+export function parseUsageLimitResetHint(reason: string): string | null {
+  const secondsFromValue = (value: unknown): number | null => {
+    if (typeof value === 'number' && Number.isFinite(value) && value > 0) return value;
+    if (typeof value === 'string' && /^\d+$/.test(value.trim())) return Number(value.trim());
+    return null;
+  };
+
+  const scanObject = (obj: unknown, depth = 0): number | null => {
+    if (!obj || depth > 6) return null;
+    if (typeof obj !== 'object') return null;
+    for (const [key, value] of Object.entries(obj as Record<string, unknown>)) {
+      const k = key.toLowerCase();
+      if (
+        k.includes('resets_in') ||
+        k.includes('reset_in') ||
+        k.includes('retry_after') ||
+        k.includes('retry_in') ||
+        k.includes('cooldown')
+      ) {
+        const parsed = secondsFromValue(value);
+        if (parsed != null) return parsed;
+      }
+      if (value && typeof value === 'object') {
+        const nested = scanObject(value, depth + 1);
+        if (nested != null) return nested;
+      }
+    }
+    return null;
+  };
+
+  let seconds: number | null = scanObject(reason);
+  if (seconds == null) {
+    const jsonMatch = reason.match(/\{[\s\S]+\}/);
+    if (jsonMatch) {
+      try {
+        seconds = scanObject(JSON.parse(jsonMatch[0]));
+      } catch {
+        // ignore malformed JSON fragments
+      }
+    }
+  }
+  if (seconds == null) {
+    const inline = reason.match(/(?:resets?_in|retry_after|retry_in)[^0-9]{0,24}(\d+)/i);
+    if (inline) seconds = Number(inline[1]);
+  }
+  if (seconds == null || !Number.isFinite(seconds) || seconds <= 0) return null;
+  const minutes = Math.max(1, Math.round(seconds / 60));
+  return `Resets in about ${minutes} minute${minutes === 1 ? '' : 's'}.`;
+}
+
 export function classify(reason: string, hasKey: boolean): StatusCode {
   const r = reason.toLowerCase();
   void hasKey;
@@ -136,6 +208,7 @@ export function classify(reason: string, hasKey: boolean): StatusCode {
   )
     return 'no-agent';
   if (r.includes('not found') || r.includes('not-found')) return 'stale';
+  if (isUsageLimitReason(reason)) return 'usage-limit';
   if (
     r.includes('econnrefused') ||
     r.includes('enotfound') ||
@@ -166,9 +239,33 @@ export function friendly(code: StatusCode, reason: string): string {
       return `Can't find a default local Letta agent — open Letta once or choose an Agent ID override in Settings. (${reason})`;
     case 'stale':
       return `Saved Letta agent or conversation was stale — choose a valid Agent ID override in Settings or clear the override. (${reason})`;
+    case 'usage-limit': {
+      const provider = usageLimitProviderLabel(reason);
+      const reset = parseUsageLimitResetHint(reason);
+      const parts = [
+        `${provider} usage limit reached.`,
+        reset,
+        'Try Auto/Fast, switch provider/model in Settings, or wait until reset.',
+      ].filter(Boolean);
+      return parts.join(' ');
+    }
     default:
       return reason;
   }
+}
+
+export type NormalizedRuntimeError = {
+  code: StatusCode;
+  message: string;
+  details?: string;
+};
+
+/** Map raw provider/runtime errors to user-facing copy; preserve raw payload for diagnostics. */
+export function normalizeRuntimeError(raw: string, hasKey: boolean): NormalizedRuntimeError {
+  const code = classify(raw, hasKey);
+  const message = friendly(code, raw);
+  const details = message !== raw.trim() ? raw : undefined;
+  return { code, message, details };
 }
 
 export function nextActionFor(code: StatusCode): string {
@@ -183,6 +280,8 @@ export function nextActionFor(code: StatusCode): string {
       return 'Clear the stale override or choose a valid Agent ID in Settings.';
     case 'sdk-missing':
       return 'Install or repair the Letta Code SDK dependency.';
+    case 'usage-limit':
+      return 'Switch to Auto/Fast, pick another provider/model in Settings, or wait for the limit to reset.';
     default:
       return 'Review the trace and retry after fixing the runtime error.';
   }

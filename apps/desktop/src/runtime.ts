@@ -49,6 +49,7 @@ export type StatusCode =
   | 'unreachable'
   | 'sdk-missing'
   | 'stale'
+  | 'usage-limit'
   | 'error';
 
 export type RuntimeStatus = {
@@ -527,11 +528,20 @@ export function useRuntime() {
       }
       if (m.type === 'error') {
         const ownedTurn = inflightThreadRef.current;
-        sendError.current = String((m as { message?: unknown }).message ?? 'error');
+        const errorMessage = String((m as { message?: unknown }).message ?? 'error');
+        const errorDetails = typeof (m as { details?: unknown }).details === 'string'
+          ? String((m as { details?: unknown }).details)
+          : undefined;
+        sendError.current = errorMessage;
         activeAssistantStream.current = null;
         patchInflightMessages((x) => [
           ...x,
-          { id: `error-${Date.now()}`, who: 'error', text: String((m as { message?: unknown }).message ?? 'error') },
+          {
+            id: `error-${Date.now()}`,
+            who: 'error',
+            text: errorMessage,
+            ...(errorDetails ? { details: errorDetails } : {}),
+          },
         ]);
         inflightThreadRef.current = null;
         setTurnActivity(null);
