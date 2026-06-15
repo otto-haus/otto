@@ -32,8 +32,16 @@
   <body>
     <script>
       (function () {
-        var key = 'otto.display.theme.v1';
-        var pref = localStorage.getItem(key);
+        var pref = 'light';
+        try {
+          if (window.otto && window.otto.boot && typeof window.otto.boot.displayTheme === 'function') {
+            pref = window.otto.boot.displayTheme() || 'light';
+          } else {
+            var key = 'otto.display.theme.v1';
+            var legacy = localStorage.getItem(key);
+            if (legacy === 'light' || legacy === 'dark' || legacy === 'system') pref = legacy;
+          }
+        } catch (_) {}
         var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
         var effective = pref === 'dark' || (pref === 'system' && prefersDark) ? 'dark' : 'light';
         document.documentElement.dataset.theme = effective;

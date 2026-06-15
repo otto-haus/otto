@@ -2,11 +2,26 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { App } from './App.js';
 import { AppErrorBoundary } from './AppErrorBoundary.js';
-import { applyDisplayTheme, readStoredDisplayTheme, watchSystemDisplayTheme } from './display-preferences.js';
+import {
+  applyDisplayTheme,
+  ensureDisplayThemeAuthority,
+  readBootDisplayTheme,
+  watchSystemDisplayTheme,
+} from './display-preferences.js';
+import { ottoApi } from './runtime.js';
 import './styles.css';
 
-applyDisplayTheme(readStoredDisplayTheme());
-watchSystemDisplayTheme(readStoredDisplayTheme());
+const bootTheme = readBootDisplayTheme();
+applyDisplayTheme(bootTheme);
+watchSystemDisplayTheme(bootTheme);
+
+const api = ottoApi();
+if (api) {
+  void ensureDisplayThemeAuthority(api).then((theme) => {
+    applyDisplayTheme(theme);
+    watchSystemDisplayTheme(theme);
+  });
+}
 
 const container = document.getElementById('root') as HTMLElement;
 
