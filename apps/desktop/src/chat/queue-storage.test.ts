@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, test } from 'bun:test';
 import {
+  composerDraftFromQueueText,
   createQueueItem,
   hasDuplicateQueueText,
   INFLIGHT_KEY,
@@ -7,6 +8,7 @@ import {
   LEGACY_QUEUE_KEY,
   LEGACY_QUEUE_V2_KEY,
   nextQueueItemForThread,
+  parseQueueAttachmentLine,
   previewQueueText,
   promoteQueueItemForThread,
   QUEUE_KEY,
@@ -253,5 +255,21 @@ describe('queue-storage', () => {
     });
     expect(queueHasAttachments(text)).toBe(true);
     expect(previewQueueText(text)).toBe('Please inspect this screenshot. · 1 attachment');
+  });
+
+  test('composerDraftFromQueueText splits body and attachment refs for recall', () => {
+    const text = 'Steer the plan.\n\nAttached local image:\n1. wire.png — /Users/seb/.otto/attachments/wire.png';
+    expect(parseQueueAttachmentLine('1. wire.png — /Users/seb/.otto/attachments/wire.png')).toEqual({
+      name: 'wire.png',
+      path: '/Users/seb/.otto/attachments/wire.png',
+    });
+    expect(composerDraftFromQueueText(text)).toEqual({
+      body: 'Steer the plan.',
+      attachments: [{ name: 'wire.png', path: '/Users/seb/.otto/attachments/wire.png' }],
+    });
+    expect(composerDraftFromQueueText('Plain follow-up only.')).toEqual({
+      body: 'Plain follow-up only.',
+      attachments: [],
+    });
   });
 });

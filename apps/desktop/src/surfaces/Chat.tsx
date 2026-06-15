@@ -21,6 +21,7 @@ import { serializeConversationMarkdown } from '../chat/conversation-markdown';
 import { runTicketCommand } from '../chat/ticket-commands';
 import {
   clearInFlight,
+  composerDraftFromQueueText,
   createQueueItem,
   hasDuplicateQueueText,
   nextQueueItemForThread,
@@ -34,6 +35,7 @@ import {
   removeQueueItem,
   retryFailedQueueItemsForThread,
   splitQueueText,
+  type QueueAttachmentRef,
   type QueueDisplayItem,
   type QueueItem,
 } from '../chat/queue-storage';
@@ -307,6 +309,37 @@ const formatBytes = (n: number): string => {
   return `${(n / 1024 / 1024).toFixed(1)}MB`;
 };
 
+const MIME_BY_EXT: Record<string, string> = {
+  png: 'image/png',
+  jpg: 'image/jpeg',
+  jpeg: 'image/jpeg',
+  gif: 'image/gif',
+  webp: 'image/webp',
+  tiff: 'image/tiff',
+};
+
+const mimeFromAttachmentName = (name: string): string => {
+  const ext = name.split('.').pop()?.toLowerCase() ?? '';
+  return MIME_BY_EXT[ext] ?? 'image/png';
+};
+
+const pathToPreviewUrl = (path: string): string => {
+  if (path.startsWith('file://')) return path;
+  const normalized = path.replace(/\\/g, '/');
+  return normalized.startsWith('/') ? `file://${normalized}` : `file:///${normalized}`;
+};
+
+const attachmentDraftsFromQueueRefs = (refs: QueueAttachmentRef[]): AttachmentDraft[] =>
+  refs.map((ref, index) => ({
+    id: `recalled-${index}-${ref.path}`,
+    name: ref.name,
+    mime: mimeFromAttachmentName(ref.name),
+    path: ref.path,
+    url: pathToPreviewUrl(ref.path),
+    size: 0,
+    previewUrl: pathToPreviewUrl(ref.path),
+  }));
+
 const readDraft = (): string => {
   try { return localStorage.getItem(DRAFT_KEY) ?? ''; } catch { return ''; }
 };
@@ -342,13 +375,14 @@ const appendQueueItem = (items: QueueItem[], text: string, threadId: string | nu
 
 const QueueStrip: React.FC<{
   queue: QueueDisplayItem[];
+  recalledQueueId: string | null;
   onClear: () => void;
   onRetryAll: () => void;
   onRetryOne: (id: string) => void;
   onRemove: (id: string) => void;
-  onEdit: (id: string) => void;
+  onRecall: (id: string) => void;
   onSendNow: (id: string) => void;
-}> = ({ queue, onClear, onRetryAll, onRetryOne, onRemove, onEdit, onSendNow }) => {
+}> = ({ queue, recalledQueueId, onClear, onRetryAll, onRetryOne, onRemove, onRecall, onSendNow }) => {
   const failedCount = queue.filter((item) => item.state === 'failed').length;
   const pendingCount = queue.length - failedCount;
   const summary = failedCount && pendingCount
@@ -386,9 +420,10 @@ const QueueStrip: React.FC<{
         <div className="queuebar__items">
           {queue.map((item) => {
             const inspected = inspectedId === item.id;
+            const recalled = recalledQueueId === item.id;
             const { body, attachmentLines } = splitQueueText(item.text);
             return (
-              <div className={`queueitem${inspected ? ' queueitem--inspected' : ''}`} key={item.id}>
+              <div className={`queueitem${inspected ? ' queueitem--inspected' : ''}${recalled ? ' queueitem--recalled' : ''}`} key={item.id}>
                 <div className="queueitem__row">
                   <span className={`queueitem__pill queueitem__pill--${item.isNext ? 'next' : item.state}`}>
                     {item.state === 'failed'
@@ -399,7 +434,14 @@ const QueueStrip: React.FC<{
                           ? chatCopy.queuePillPosition(item.sendPosition)
                           : chatCopy.queuePillWaiting}
                   </span>
-                  <span className="queueitem__text" title={item.text}>{previewQueueText(item.text)}</span>
+                  <button
+                    type="button"
+                    className="queueitem__text queueitem__text--recall"
+                    title={item.text}
+                    onClick={() => onRecall(item.id)}
+                  >
+                    {previewQueueText(item.text)}
+                  </button>
                   <div className="queueitem__controls">
                     <button
                       type="button"
@@ -409,7 +451,7 @@ const QueueStrip: React.FC<{
                     >
                       {inspected ? chatCopy.queueHideFull : chatCopy.queueViewFull}
                     </button>
-                    <button type="button" className="queueitem__action" onClick={() => onEdit(item.id)}>
+                    <button type="button" className="queueitem__action" onClick={() => onRecall(item.id)}>
                       {chatCopy.queueEdit}
                     </button>
                     {item.state === 'failed' ? (
@@ -615,6 +657,7 @@ const LiveChat: React.FC<{
   const [attachmentError, setAttachmentError] = useState<string | null>(null);
   const [draggingImage, setDraggingImage] = useState(false);
   const [queue, setQueue] = useState<QueueItem[]>(readQueue);
+  const [recalledQueueId, setRecalledQueueId] = useState<string | null>(null);
   const [modelOptions, setModelOptions] = useState<LettaModelOption[]>(FALLBACK_MODEL_OPTIONS);
   const [modelOpen, setModelOpen] = useState(false);
   const [effortOpen, setEffortOpen] = useState(false);
@@ -820,6 +863,7 @@ const LiveChat: React.FC<{
 
   useEffect(() => {
     setCmdMessages([]);
+    setRecalledQueueId(null);
   }, [rt.activeThreadId]);
 
   useEffect(() => {
@@ -877,10 +921,25 @@ const LiveChat: React.FC<{
     }
   };
 
+  const recallQueueItem = (id: string) => {
+    const item = queue.find((entry) => entry.id === id);
+    if (!item) return;
+    const { body, attachments: attachmentRefs } = composerDraftFromQueueText(item.text);
+    setDraft(body);
+    setAttachments(attachmentDraftsFromQueueRefs(attachmentRefs));
+    setRecalledQueueId(id);
+    toast.push({ title: chatCopy.queueRecalledToast, tone: 'ok' });
+    requestAnimationFrame(() => {
+      textareaRef.current?.focus();
+      textareaRef.current?.setSelectionRange(body.length, body.length);
+    });
+  };
+
   const submit = () => {
     const t = draft.trim();
     if ((!t && attachments.length === 0) || !ready || !api) return;
     const text = buildRuntimeMessageWithAttachments(t, attachments);
+    const recalledId = recalledQueueId;
     void (async () => {
       const cmd = await runTicketCommand(api, text);
       if (cmd?.handled) {
@@ -892,9 +951,14 @@ const LiveChat: React.FC<{
         }]);
         setDraft('');
         setAttachments([]);
+        if (recalledId) setRecalledQueueId(null);
         return;
       }
-      setQueue((items) => appendQueueItem(items, text, rt.activeThreadId));
+      setQueue((items) => {
+        const withoutRecalled = recalledId ? removeQueueItem(items, recalledId) : items;
+        return appendQueueItem(withoutRecalled, text, rt.activeThreadId);
+      });
+      if (recalledId) setRecalledQueueId(null);
       if (rt.busy) void rt.abort();
       setDraft('');
       setAttachments([]);
@@ -1147,17 +1211,18 @@ const LiveChat: React.FC<{
         {ready && activeQueue.length > 0 && (
           <QueueStrip
             queue={activeQueue}
-            onClear={() => setQueue((items) => items.filter((item) => !queueMatchesThread(item, rt.activeThreadId)))}
+            recalledQueueId={recalledQueueId}
+            onClear={() => {
+              setRecalledQueueId(null);
+              setQueue((items) => items.filter((item) => !queueMatchesThread(item, rt.activeThreadId)));
+            }}
             onRetryAll={() => setQueue((items) => retryFailedQueueItemsForThread(items, rt.activeThreadId))}
             onRetryOne={(id) => setQueue((items) => retryFailedQueueItemsForThread(items, rt.activeThreadId, id))}
-            onRemove={(id) => setQueue((items) => removeQueueItem(items, id))}
-            onEdit={(id) => {
-              const item = queue.find((entry) => entry.id === id);
-              if (!item) return;
-              const { body } = splitQueueText(item.text);
-              setDraft(body);
+            onRemove={(id) => {
+              if (recalledQueueId === id) setRecalledQueueId(null);
               setQueue((items) => removeQueueItem(items, id));
             }}
+            onRecall={recallQueueItem}
             onSendNow={(id) => setQueue((items) => promoteQueueItemForThread(items, rt.activeThreadId, id))}
           />
         )}

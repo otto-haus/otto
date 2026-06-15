@@ -1309,6 +1309,18 @@ h1, h2, h3, h4, p { margin: 0; }
   color: var(--ink-soft);
   font-size: 13px;
 }
+.queueitem__text--recall {
+  border: 0;
+  background: transparent;
+  padding: 0;
+  text-align: left;
+  cursor: pointer;
+}
+.queueitem__text--recall:hover { color: var(--ink); }
+.queueitem--recalled {
+  background: rgba(61, 111, 245, 0.05);
+  box-shadow: inset 2px 0 0 var(--accent);
+}
 .queueitem__controls {
   display: flex;
   align-items: center;

@@ -8,6 +8,14 @@
  * Terminal states outside the queue store:
  * - cancelled: user removed the row (`removeQueueItem`).
  * - sent: runtime accepted the message; row is dropped and INFLIGHT_KEY cleared.
+ *
+ * Recall (composer edit path):
+ * - Recall copies queue text into the composer without removing the row.
+ * - The row stays queued until the operator sends (Tab/queue) or removes it.
+ * - Attachment footer lines round-trip through `composerDraftFromQueueText`.
+ *
+ * Operator actions per row: Recall, View, Retry (failed), Send now (waiting, not next), Remove.
+ * See `docs/chat-queue-states.md`.
  */
 export type QueueState = 'queued' | 'sending' | 'failed';
 export type QueueItem = { id: string; text: string; createdAt: number; state: QueueState; threadId?: string | null };
@@ -33,6 +41,26 @@ export const splitQueueText = (text: string): { body: string; attachmentLines: s
   const footer = text.slice(markerMatch.index + markerMatch[0].length);
   const attachmentLines = footer.split('\n').map((line) => line.trim()).filter(Boolean);
   return { body, attachmentLines };
+};
+
+export type QueueAttachmentRef = { name: string; path: string };
+
+export const parseQueueAttachmentLine = (line: string): QueueAttachmentRef | null => {
+  const match = line.trim().match(/^\d+\.\s+(.+?)\s+—\s+(.+)$/);
+  if (!match) return null;
+  const name = match[1].trim();
+  const path = match[2].trim();
+  if (!name || !path) return null;
+  return { name, path };
+};
+
+/** Split queued message text into composer body plus attachment refs for recall. */
+export const composerDraftFromQueueText = (text: string): { body: string; attachments: QueueAttachmentRef[] } => {
+  const { body, attachmentLines } = splitQueueText(text);
+  const attachments = attachmentLines
+    .map(parseQueueAttachmentLine)
+    .filter((item): item is QueueAttachmentRef => item != null);
+  return { body, attachments };
 };
 
 export const queueHasAttachments = (text: string): boolean => splitQueueText(text).attachmentLines.length > 0;
