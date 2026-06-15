@@ -26,6 +26,26 @@ describe('buildProviderMirror', () => {
     }
   });
 
+  test('lettaConnected reflects live readiness, not a configured-but-offline URL (#650)', () => {
+    const tmp = mkdtempSync(join(tmpdir(), 'otto-provider-probe-'));
+    try {
+      process.env.OTTO_HOME = tmp;
+      const config = new ConfigStore();
+      config.update({ agentId: 'agent-1', baseUrl: 'http://127.0.0.1:8283' });
+
+      const offline = buildProviderMirror(config, false);
+      expect(offline.lettaConnected).toBe(false);
+      expect(offline.lettaConfigured).toBe(true);
+
+      const live = buildProviderMirror(config, true);
+      expect(live.lettaConnected).toBe(true);
+      expect(live.lettaConfigured).toBe(true);
+    } finally {
+      rmSync(tmp, { recursive: true, force: true });
+      delete process.env.OTTO_HOME;
+    }
+  });
+
   test('audits provider traces without leaking an isolated submitted key', () => {
     const tmp = mkdtempSync(join(tmpdir(), 'otto-provider-audit-'));
     const submittedKey = 'providerMirrorAuditFakeSecret0123456789';

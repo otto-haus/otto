@@ -8,7 +8,8 @@ export function buildProviderMirror(config: ConfigStore, runtimeReady = false): 
   const hasApiKey = !!(getSecret('LETTA_API_KEY') || process.env.LETTA_API_KEY);
   const ctx = discoverLocalLettaContext(config);
   return {
-    lettaConnected: runtimeReady || !!ctx.baseUrl,
+    lettaConnected: runtimeReady,
+    lettaConfigured: !!ctx.baseUrl,
     hasApiKey,
     modelHandle: config.modelHandle(),
     agentId: config.agentId(),
