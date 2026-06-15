@@ -12,6 +12,7 @@ import type {
 import { AiFrontierReviewExecutor } from './ai-frontier-review-executor';
 import { KnowledgeStore } from './knowledge-store';
 import { PracticeMiningLoop } from './practice-mining';
+import { PracticeRunner, RUNTIME_PRACTICE_SLUGS } from './practice-runner';
 import { RECEIPTS_DIR, ReceiptWriter, type WrittenReceipt } from './receipt-writer';
 
 export interface RoutineListResult {
@@ -29,12 +30,23 @@ export interface RoutineActivationGate {
   reason: string;
 }
 
+export type RoutineStepStatus = 'success' | 'blocked' | 'skipped';
+
+export interface RoutineStepOutcome {
+  practice: string;
+  invocation: string;
+  status: RoutineStepStatus;
+  receiptId?: string;
+  detail: string;
+}
+
 export interface RoutineManualRunResult {
   routine: RoutineRecord;
   receipt: WrittenReceipt;
   knowledgeReceiptId?: string;
   observeReceiptId?: string;
   proposalIds?: string[];
+  stepResults?: RoutineStepOutcome[];
 }
 
 export class RoutineStore {
@@ -42,6 +54,7 @@ export class RoutineStore {
     private dir = resolveRoutinesDir(),
     private receipts = new ReceiptWriter(),
     private knowledge = new KnowledgeStore(),
+    private practiceRunner = new PracticeRunner(),
   ) {}
 
   listResult(): RoutineListResult {
@@ -116,6 +129,7 @@ export class RoutineStore {
     let proposalIds: string[] | undefined;
     const evidence: WrittenReceipt['evidence'] = [{ kind: 'file', ref: routine.file, note: 'Canonical routine.yaml' }];
 
+    // Delegated executors that perform real domain work for their whole routine.
     if (slug === 'ai-frontier-review') {
       const frontier = new AiFrontierReviewExecutor(this.knowledge, this.receipts);
       const run = frontier.run();
@@ -124,6 +138,27 @@ export class RoutineStore {
       for (const ref of run.touched) {
         evidence.push({ kind: 'file', ref, note: 'knowledge update' });
       }
+      const receipt = this.receipts.write({
+        status: 'success',
+        subject: { type: 'routine', id: routine.id },
+        action: 'routine.run.manual',
+        input: {
+          slug: routine.slug,
+          mode: 'manual',
+          steps: routine.steps,
+          schedule: routine.schedule ?? null,
+          knowledgeReceiptId: knowledgeReceiptId ?? null,
+        },
+        result: {
+          summary: `Manual routine run recorded: ${routine.name}`,
+          data: { stepCount: routine.steps.length, knowledgeReceiptId: knowledgeReceiptId ?? null },
+        },
+        evidence,
+        routine: referenceFor(routine, 'manual'),
+        practice: null,
+        blocker: null,
+      });
+      return { routine, receipt, knowledgeReceiptId };
     }
 
     if (slug === 'practice-mining') {
@@ -133,10 +168,55 @@ export class RoutineStore {
       proposalIds = observed.proposals.map((p) => p.id);
       evidence.push({ kind: 'log', ref: observed.receipt_id, note: 'practice.mining.observe' });
       evidence.push({ kind: 'file', ref: RECEIPTS_DIR, note: 'observed receipts dir' });
+      const receipt = this.receipts.write({
+        status: 'success',
+        subject: { type: 'routine', id: routine.id },
+        action: 'routine.run.manual',
+        input: {
+          slug: routine.slug,
+          mode: 'manual',
+          steps: routine.steps,
+          schedule: routine.schedule ?? null,
+          observeReceiptId: observeReceiptId ?? null,
+          proposalIds: proposalIds ?? [],
+        },
+        result: {
+          summary: `Manual routine run recorded: ${routine.name}`,
+          data: {
+            stepCount: routine.steps.length,
+            observeReceiptId: observeReceiptId ?? null,
+            proposalCount: proposalIds?.length ?? 0,
+          },
+        },
+        evidence,
+        routine: referenceFor(routine, 'manual'),
+        practice: null,
+        blocker: null,
+      });
+      return { routine, receipt, observeReceiptId, proposalIds };
     }
 
+    // General routines: actually execute each declared practice step (#640).
+    // Success is earned only if every step ran; un-runnable or failed steps are
+    // surfaced honestly instead of being papered over with a generic success.
+    const stepResults = this.executeSteps(routine);
+    for (const step of stepResults) {
+      if (step.receiptId) evidence.push({ kind: 'log', ref: step.receiptId, note: `${step.practice} ${step.invocation}` });
+    }
+
+    const ran = stepResults.filter((s) => s.status === 'success');
+    const blocked = stepResults.filter((s) => s.status === 'blocked');
+    const skipped = stepResults.filter((s) => s.status === 'skipped');
+    const incomplete = blocked.length + skipped.length;
+    const allRan = stepResults.length > 0 && incomplete === 0;
+    const status: WrittenReceipt['status'] = allRan ? 'success' : 'blocked';
+
+    const summary = allRan
+      ? `Manual routine run executed: ${routine.name} (${ran.length}/${stepResults.length} steps)`
+      : `Manual routine run incomplete: ${routine.name} — ${ran.length}/${stepResults.length} steps ran, ${incomplete} could not`;
+
     const receipt = this.receipts.write({
-      status: 'success',
+      status,
       subject: { type: 'routine', id: routine.id },
       action: 'routine.run.manual',
       input: {
@@ -144,26 +224,69 @@ export class RoutineStore {
         mode: 'manual',
         steps: routine.steps,
         schedule: routine.schedule ?? null,
-        knowledgeReceiptId: knowledgeReceiptId ?? null,
-        observeReceiptId: observeReceiptId ?? null,
-        proposalIds: proposalIds ?? [],
       },
       result: {
-        summary: `Manual routine run recorded: ${routine.name}`,
+        summary,
         data: {
           stepCount: routine.steps.length,
-          knowledgeReceiptId: knowledgeReceiptId ?? null,
-          observeReceiptId: observeReceiptId ?? null,
-          proposalCount: proposalIds?.length ?? 0,
+          stepsRun: ran.length,
+          stepsBlocked: blocked.length,
+          stepsSkipped: skipped.length,
+          stepResults,
         },
       },
       evidence,
       routine: referenceFor(routine, 'manual'),
       practice: null,
-      blocker: null,
+      blocker: allRan
+        ? null
+        : {
+            code: 'routine_steps_incomplete',
+            message: incompleteMessage(blocked, skipped),
+            recoverable: true,
+            next_action: 'Wire the missing practices for runtime, supply step inputs, or resolve the failing checks, then re-run.',
+          },
     });
 
-    return { routine, receipt, knowledgeReceiptId, observeReceiptId, proposalIds };
+    return { routine, receipt, stepResults };
+  }
+
+  private executeSteps(routine: RoutineRecord): RoutineStepOutcome[] {
+    return routine.steps.map((step) => this.executeStep(step));
+  }
+
+  private executeStep(step: RoutineStep): RoutineStepOutcome {
+    if (!(RUNTIME_PRACTICE_SLUGS as readonly string[]).includes(step.practice)) {
+      return {
+        practice: step.practice,
+        invocation: step.invocation,
+        status: 'skipped',
+        detail: `Practice "${step.practice}" is not wired for runtime execution; step not run.`,
+      };
+    }
+
+    try {
+      const payload = step.inputs && typeof step.inputs === 'object' ? { intent: JSON.stringify(step.inputs) } : undefined;
+      const result = this.practiceRunner.run({
+        slug: step.practice,
+        invocation: step.invocation,
+        payload,
+      });
+      return {
+        practice: step.practice,
+        invocation: result.invocation,
+        status: result.blocked ? 'blocked' : 'success',
+        receiptId: result.receipt.id,
+        detail: result.receipt.result.summary,
+      };
+    } catch (error) {
+      return {
+        practice: step.practice,
+        invocation: step.invocation,
+        status: 'blocked',
+        detail: error instanceof Error ? error.message : String(error),
+      };
+    }
   }
 }
 
@@ -224,6 +347,13 @@ function normalizeSchedule(value: unknown): Schedule | undefined {
   if (typeof value.rrule === 'string' && value.rrule.trim()) schedule.rrule = value.rrule.trim();
   if (typeof value.timezone === 'string' && value.timezone.trim()) schedule.timezone = value.timezone.trim();
   return Object.keys(schedule).length ? schedule : undefined;
+}
+
+function incompleteMessage(blocked: RoutineStepOutcome[], skipped: RoutineStepOutcome[]): string {
+  const parts: string[] = [];
+  if (blocked.length) parts.push(`blocked: ${blocked.map((s) => `${s.practice} ${s.invocation}`).join(', ')}`);
+  if (skipped.length) parts.push(`not wired: ${skipped.map((s) => s.practice).join(', ')}`);
+  return `Routine did not fully execute — ${parts.join('; ')}.`;
 }
 
 function referenceFor(routine: RoutineRecord, mode: RoutineReference['mode']): RoutineReference {

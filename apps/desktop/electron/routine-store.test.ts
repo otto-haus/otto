@@ -4,11 +4,26 @@ import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { KnowledgeStore } from './knowledge-store';
+import { PracticeMetricsStore } from './practice-metrics-store';
+import { PracticeRunner } from './practice-runner';
+import { PracticeStore } from './practice-store';
 import { ReceiptWriter } from './receipt-writer';
+import { RunStore } from './run-store';
 import { RoutineStore } from './routine-store';
 
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), '../../..');
 const routinesDir = join(repoRoot, 'routines');
+const practicesDir = join(repoRoot, 'practices');
+
+/** PracticeRunner whose stores all write under `tmp` so routine runs never touch ~/.otto. */
+function hermeticRunner(tmp: string): PracticeRunner {
+  return new PracticeRunner(
+    new PracticeStore(practicesDir),
+    new RunStore(join(tmp, 'runs')),
+    new ReceiptWriter(join(tmp, 'receipts')),
+    new PracticeMetricsStore(join(tmp, 'metrics')),
+  );
+}
 
 function seedKnowledge(dir: string): void {
   const frontierDir = join(dir, 'ai-frontier');
@@ -59,13 +74,99 @@ describe('RoutineStore', () => {
   test('manual run writes a receipt with routine reference', () => {
     const tmp = mkdtempSync(join(tmpdir(), 'otto-routine-test-'));
     try {
-      const store = new RoutineStore(routinesDir, new ReceiptWriter(tmp));
+      const store = new RoutineStore(routinesDir, new ReceiptWriter(tmp), undefined, hermeticRunner(tmp));
       const result = store.runManual('morning');
 
       expect(result.receipt.action).toBe('routine.run.manual');
       expect(result.receipt.routine?.slug).toBe('morning');
       expect(result.receipt.routine?.mode).toBe('manual');
       expect(result.receipt.subject.type).toBe('routine');
+    } finally {
+      rmSync(tmp, { recursive: true, force: true });
+    }
+  });
+
+  test('manual run actually executes wired practice steps and records per-step receipts (#640)', () => {
+    const tmp = mkdtempSync(join(tmpdir(), 'otto-routine-exec-'));
+    const routines = join(tmp, 'routines');
+    const slugDir = join(routines, 'charter-only');
+    mkdirSync(slugDir, { recursive: true });
+    writeFileSync(
+      join(slugDir, 'routine.yaml'),
+      `id: routine_charter_only_v0
+slug: charter-only
+name: Charter Only
+status: proposed
+summary: A routine whose only step is a runtime-wired charter practice.
+steps:
+  - practice: charter
+    invocation: /charter status
+attention_cost: low
+requires_approval_to_activate: true
+created_at: "2026-06-13T00:00:00Z"
+`,
+    );
+    try {
+      const store = new RoutineStore(routines, new ReceiptWriter(join(tmp, 'rec')), undefined, hermeticRunner(tmp));
+      const result = store.runManual('charter-only');
+
+      expect(result.receipt.status).toBe('success');
+      expect(result.receipt.result.data.stepsRun).toBe(1);
+      expect(result.stepResults?.[0].status).toBe('success');
+      // The step was really executed: it carries a practice-run receipt id.
+      expect(result.stepResults?.[0].receiptId).toBeTruthy();
+      expect(result.receipt.evidence.some((e) => e.ref === result.stepResults?.[0].receiptId)).toBe(true);
+    } finally {
+      rmSync(tmp, { recursive: true, force: true });
+    }
+  });
+
+  test('NEGATIVE: routine with un-runnable steps does NOT record success (#640)', () => {
+    const tmp = mkdtempSync(join(tmpdir(), 'otto-routine-neg-'));
+    const routines = join(tmp, 'routines');
+    const slugDir = join(routines, 'decision-only');
+    mkdirSync(slugDir, { recursive: true });
+    writeFileSync(
+      join(slugDir, 'routine.yaml'),
+      `id: routine_decision_only_v0
+slug: decision-only
+name: Decision Only
+status: proposed
+summary: A routine whose only step is a practice not wired for runtime.
+steps:
+  - practice: decision
+    invocation: /decision frame
+attention_cost: low
+requires_approval_to_activate: true
+created_at: "2026-06-13T00:00:00Z"
+`,
+    );
+    try {
+      const store = new RoutineStore(routines, new ReceiptWriter(join(tmp, 'rec')), undefined, hermeticRunner(tmp));
+      const result = store.runManual('decision-only');
+
+      // Un-run steps must never be reported as success.
+      expect(result.receipt.status).toBe('blocked');
+      expect(result.receipt.result.data.stepsRun).toBe(0);
+      expect(result.receipt.result.data.stepsSkipped).toBe(1);
+      expect(result.receipt.blocker?.code).toBe('routine_steps_incomplete');
+      expect(result.receipt.blocker?.recoverable).toBe(true);
+      expect(result.stepResults?.[0].status).toBe('skipped');
+    } finally {
+      rmSync(tmp, { recursive: true, force: true });
+    }
+  });
+
+  test('morning routine reports honest partial execution (charter runs, decision/follow-up cannot)', () => {
+    const tmp = mkdtempSync(join(tmpdir(), 'otto-routine-morning-'));
+    try {
+      const store = new RoutineStore(routinesDir, new ReceiptWriter(join(tmp, 'rec')), undefined, hermeticRunner(tmp));
+      const result = store.runManual('morning');
+
+      // morning declares charter + review + decision + follow-up; not all are runnable.
+      expect(result.receipt.status).toBe('blocked');
+      expect(result.receipt.result.data.stepsSkipped).toBeGreaterThanOrEqual(1);
+      expect(result.stepResults?.some((s) => s.practice === 'decision' && s.status === 'skipped')).toBe(true);
     } finally {
       rmSync(tmp, { recursive: true, force: true });
     }

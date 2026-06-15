@@ -77,7 +77,6 @@ export function registerIpc() {
   const charters = new CharterStore();
   const standards = new StandardStore();
   const practices = new PracticeStore();
-  const routines = new RoutineStore();
   const proposals = new ProposalStore(undefined, undefined, receipts);
   const knowledge = new KnowledgeStore();
   const autonomy = new AutonomyStore(undefined, undefined, knowledge);
@@ -87,6 +86,7 @@ export function registerIpc() {
   const workers = new WorkerStore();
   const runs = new RunStore();
   const practiceRunner = new PracticeRunner(practices, runs, new ReceiptWriter(), undefined, autonomy);
+  const routines = new RoutineStore(undefined, undefined, undefined, practiceRunner);
   const orchestrator = new TicketOrchestrator(tickets, workers, runs, knowledge, autonomy);
   const checkRunner = new CheckRunner();
   const threads = new ThreadStore(config);
