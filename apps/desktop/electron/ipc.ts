@@ -46,6 +46,7 @@ import { setSecret, hasSecret } from './secret-store';
 import { CogneeStore } from './cognee-store';
 import { PaperclipIntakeStore } from './paperclip-intake-store';
 import { MemoryStore } from './memory-store';
+import { RatificationApplier } from './ratification-apply';
 import { PgvectorStore } from './pgvector-store';
 import { safeWebContentsSend, smokeMode } from './runtime-transport/runtime-common';
 import { getMainWindow } from './main-window';
@@ -95,6 +96,12 @@ export function registerIpc() {
   const memory = new MemoryStore(config);
   const pgvector = new PgvectorStore();
   const isolatedAgents = new IsolatedAgentStore(config);
+
+  // Curation/Labs gate for the ratification → Letta write path (#639 + #637).
+  const memoryWriteEnabled = (): boolean => {
+    const labs = getLabsConfig(config.get());
+    return labs.enabled === true && labs.features?.memory_observatory === true;
+  };
 
   const bindStatusToActiveThread = (status: RuntimeStatus) => {
     if (!status.ready) return;
@@ -361,9 +368,21 @@ export function registerIpc() {
     (_e, input: { target: ProposalTarget; correction: string }): ProposalClassification =>
       classifyProposal(input.target, input.correction),
   );
-  ipcMain.handle('otto:curation:proposals:decide', (_e, id: string, input: DecideProposalInput) =>
-    proposals.decide(id, input),
-  );
+  ipcMain.handle('otto:curation:proposals:decide', async (_e, id: string, input: DecideProposalInput) => {
+    const decided = proposals.decide(id, input);
+    // Ratification → Letta: when a proposal is actually ratified (accepted+applied),
+    // apply the memory writeback and inject the behavior changelog into the agent's
+    // runtime context (#639 + #637). Labs-gated; honest receipts on success or block.
+    if (decided.proposal.status === 'applied' && memoryWriteEnabled()) {
+      try {
+        const applier = new RatificationApplier(memory, changelog, new ReceiptWriter());
+        decided.lettaApply = await applier.applyAfterRatification(decided.proposal);
+      } catch (error) {
+        decided.lettaApply = { error: error instanceof Error ? error.message : String(error) };
+      }
+    }
+    return decided;
+  });
   ipcMain.handle('otto:curation:approvals:list', () => proposals.listApprovals());
 
   ipcMain.handle('otto:knowledge:list', () => knowledge.listResult());
