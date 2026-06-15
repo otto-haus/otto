@@ -841,7 +841,7 @@ h1, h2, h3, h4, p { margin: 0; }
   width: min(420px, 92vw);
   flex: none;
   border-left: 1px solid var(--line);
-  background: rgba(248,247,242,0.96);
+  background: color-mix(in oklab, var(--bg) 96%, transparent);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
   display: flex;
@@ -916,7 +916,7 @@ h1, h2, h3, h4, p { margin: 0; }
   position: absolute; inset: 14px; z-index: 6;
   display: grid; place-items: center;
   border: 1px dashed var(--accent); border-radius: 16px;
-  background: rgba(248,247,242,0.72); color: var(--accent);
+  background: color-mix(in oklab, var(--bg) 72%, transparent); color: var(--accent);
   font-family: var(--mono); font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase;
   pointer-events: none;
 }
@@ -932,7 +932,7 @@ h1, h2, h3, h4, p { margin: 0; }
   align-items: flex-start;
   padding: 14px 28px;
   border-bottom: 1px solid var(--line);
-  background: rgba(248,247,242,0.88);
+  background: color-mix(in oklab, var(--bg) 88%, transparent);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   position: sticky; top: 0; z-index: 8;
@@ -1383,7 +1383,7 @@ h1, h2, h3, h4, p { margin: 0; }
   pointer-events: none;
   position: absolute;
   left: 0; right: 0; top: -56px; height: 56px;
-  background: linear-gradient(to bottom, rgba(248,247,242,0), var(--bg));
+  background: linear-gradient(to bottom, transparent, var(--bg));
 }
 .promptCompose { display: grid; gap: 8px; width: 100%; position: relative; z-index: 2; }
 .promptbox {
