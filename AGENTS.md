@@ -2,6 +2,34 @@
 
 Start here if you are an AI coding agent working on otto.
 
+## Direction (read first): otto → Paperclip plugin
+
+otto is pivoting from a standalone Electron shell into an extension of
+[Paperclip](https://github.com/paperclipai/paperclip) (the open-source agent-orchestration app).
+Mental model: **Paperclip is the office, otto is the culture layer, Letta is the memory/runtime.**
+
+- **v1 (in progress): "use Letta from Paperclip."** Ship a `letta_local` external **adapter**
+  at `packages/paperclip-letta-adapter` that drives an existing local Letta agent from a Paperclip
+  issue (memory continuity via the Letta `agentId`). It targets Paperclip's external-adapter
+  contract: a package exporting `createServerAdapter(): ServerAdapterModule`, installed via
+  `POST /api/adapters` (`isLocalPath: true`). Provider keys live in Letta; the adapter only observes
+  a `providerConfigured` boolean, never the keys.
+  - **Network boundary:** the adapter runs where the Paperclip server runs. v1 proof target is a
+    **local** Paperclip host + an existing **local** Letta runtime on the **same Mac**. Cloud
+    Paperclip → remote Letta or an explicit tunnel is a later step. This is the assumption most
+    likely to be wrong; resolve it first.
+- **v2: culture loop** ships as a Paperclip **plugin** (receipts to issues; correction → proposal →
+  ratification → Standard). Adapters and Plugins are two different Paperclip surfaces — v1 is an
+  adapter, not a plugin. v1 carries only a tiny `receiptRef` placeholder, no real culture.
+- **Do NOT archive the Electron shell in v1.** Keep `apps/desktop/` as the internal lab / Letta
+  cockpit; build the adapter in its own package. Archive shell surfaces only **after** the Paperclip
+  adapter completes one real issue round-trip. The governance layer (`standards/`, `practices/`,
+  `routines/`, `receipts/`, `skill/`, `autonomy/`) is kept for v2.
+
+The legacy product rules below still describe the active desktop shell (kept as the lab). They remain
+in force for `apps/desktop/` (e.g. provider keys belong in Letta; do not show mock data; only
+Sebastian accepts done).
+
 ## North star
 
 otto makes agent behavior compound.

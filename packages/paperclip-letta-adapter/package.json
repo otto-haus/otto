@@ -1,0 +1,36 @@
+{
+  "name": "paperclip-adapter-letta",
+  "version": "0.1.0",
+  "description": "Run a persistent, memory-backed Letta agent (otto) from inside Paperclip. External adapter plugin for paperclipai/paperclip.",
+  "license": "MIT",
+  "type": "module",
+  "homepage": "https://otto.haus",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/otto-haus/otto.git",
+    "directory": "packages/paperclip-letta-adapter"
+  },
+  "keywords": [
+    "paperclip",
+    "paperclip-adapter",
+    "letta",
+    "otto",
+    "ai-agents"
+  ],
+  "exports": {
+    ".": "./dist/index.js",
+    "./server": "./dist/server/index.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "clean": "rm -rf dist",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@types/node": "^24.6.0",
+    "typescript": "^5.7.3"
+  }
+}
