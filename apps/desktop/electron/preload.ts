@@ -323,6 +323,16 @@ const api = {
     export: (): Promise<DiagnosticsExportResult> => ipcRenderer.invoke('otto:diagnostics:export'),
     reveal: (bundlePath: string): Promise<{ ok: boolean }> => ipcRenderer.invoke('otto:diagnostics:reveal', bundlePath),
   },
+  debug: {
+    showContextMenu: (surface?: string): Promise<{ ok: boolean }> =>
+      ipcRenderer.invoke('otto:debug:show-menu', surface),
+    packet: (): Promise<Record<string, unknown>> => ipcRenderer.invoke('otto:debug:packet'),
+    copyRuntimeStatus: (): Promise<{ ok: boolean }> => ipcRenderer.invoke('otto:debug:copy-runtime-status'),
+    copyPacket: (): Promise<{ ok: boolean }> => ipcRenderer.invoke('otto:debug:copy-packet'),
+    showLogs: (): Promise<{ ok: boolean; path?: string }> => ipcRenderer.invoke('otto:debug:show-logs'),
+    openProfileFolder: (): Promise<{ ok: boolean; path?: string }> => ipcRenderer.invoke('otto:debug:open-profile'),
+    openDevTools: (): Promise<{ ok: boolean }> => ipcRenderer.invoke('otto:debug:open-devtools'),
+  },
   permission: {
     respond: (requestId: string, response: PermissionResponse): void =>
       ipcRenderer.send('otto:permission:respond', requestId, response),

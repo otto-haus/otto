@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Icon } from '../icons';
 import { threadCopy } from '../../copy/surfaces';
+import { useOttoDebugContextMenu } from '../../debug/useOttoDebugContextMenu';
 
 export type ThreadSummary = {
   id: string;
@@ -74,10 +75,13 @@ const ConversationRow: React.FC<{
   draggingId,
   onDragThreadStart,
   onDragThreadEnd,
-}) => (
+}) => {
+  const threadDebugMenu = useOttoDebugContextMenu('thread');
+  return (
   <div
     className={`sidebarConvWrap${active ? ' is-active' : ''}${thread.pinned ? ' is-pinned' : ''}${thread.archived ? ' is-archived' : ''}${draggingId === thread.id ? ' is-dragging' : ''}`}
     data-thread-variant={variant}
+    onContextMenu={threadDebugMenu.onContextMenu}
     draggable={!!onMove}
     onDragStart={(event) => {
       if (!onMove) return;
@@ -152,7 +156,8 @@ const ConversationRow: React.FC<{
       </button>
     ) : null}
   </div>
-);
+  );
+};
 
 const Section: React.FC<{
   label: string;
