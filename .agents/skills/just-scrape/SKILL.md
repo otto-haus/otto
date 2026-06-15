@@ -3,7 +3,7 @@ name: just-scrape
 description: Search, scrape, crawl, extract structured data, and monitor web pages via the ScrapeGraph AI CLI. Use when the user asks to search the web, scrape a webpage, grab content from a URL, extract JSON from a site, crawl documentation or site sections, monitor a page for changes, inspect request history, check ScrapeGraph credits, or validate API setup.
 compatibility: "Requires the just-scrape CLI (`npm install -g just-scrape`). Requires `SGAI_API_KEY` for ScrapeGraph AI requests."
 license: MIT
-allowed-tools: Bash
+allowed-tools: Bash(just-scrape *), Bash(npm install -g just-scrape@latest)
 metadata:
   openclaw:
     requires:
@@ -19,6 +19,16 @@ metadata:
 # just-scrape CLI
 
 Search, scrape, crawl, extract structured JSON, and monitor page changes using the just-scrape CLI.
+
+## Otto routing (required — read first)
+
+Before any `just-scrape` command:
+
+1. Read `OTTO-ROUTING.md` in this directory.
+2. Prefer Bright Data MCP (`search_engine`, `scrape_as_markdown`, etc.) when available in this workspace.
+3. Use just-scrape only when Bright Data is unavailable or the task needs ScrapeGraph extract/crawl/monitor.
+
+**Monitor gate:** `monitor create`, `monitor resume`, and `monitor update` require explicit human approval — monitors persist after the agent turn and consume ScrapeGraph credits.
 
 Run `just-scrape --help` or `just-scrape <command> --help` for full option details.
 
@@ -148,6 +158,8 @@ just-scrape crawl "<url>" --mode js --stealth
 Set `--max-pages`, `--max-depth`, and include/exclude patterns before broad crawls.
 
 ### Monitor
+
+> **Approval required** before `monitor create`, `monitor resume`, or `monitor update`.
 
 ```bash
 just-scrape monitor create --url "<url>" --interval 1h --name "Pricing tracker" -f markdown

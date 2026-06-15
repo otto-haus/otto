@@ -14,8 +14,20 @@ npx skills add <owner/repo> --skill <name> -y --copy
 ```
 
 - `--copy` copies skill files into `.agents/skills/<name>/` (committed to git; no symlinks).
-- Reinstall or update: `npx skills update` or re-run `npx skills add` with the same source.
+- Refresh upstream: re-run `npx skills add <owner/repo> --skill <name> -y --copy` (see **Updating** below).
 - Discover more: load the `find-skills` skill or run `npx skills find <query>`.
+
+## Updating upstream skills
+
+Do **not** run `npx skills update` — it replaces skill directories and deletes local overlay files (`OTTO-GATES.md`, `OTTO-ROUTING.md`).
+
+To refresh an upstream skill:
+
+```sh
+npx skills add <owner/repo> --skill <name> -y --copy
+git checkout -- .agents/skills/<name>/OTTO-GATES.md .agents/skills/<name>/OTTO-ROUTING.md 2>/dev/null || true
+# Re-apply inline Otto gate sections in SKILL.md if upstream overwrote them
+```
 
 ## Installed skills (2026-06-14)
 
@@ -60,11 +72,11 @@ When you need capability you do not have installed:
 
 ## Video skills vs demo-video (Discord tiger team)
 
-Existing local skill: `.agents/skills/demo-video/` (otto-native; playwright + ffmpeg + edge-tts MCP orchestration).
+**demo-video is not committed** to this repo (local-only skill under `.agents/skills/demo-video/` when present). For product walkthroughs in a clean checkout:
 
 | Use case | Prefer |
 |----------|--------|
-| Product walkthrough from HTML scenes / screenshots, otto staging proof | **demo-video** |
+| Product walkthrough from HTML scenes / screenshots, otto staging proof | **remotion-render** or staging CDP smokes (`task staging:build`) until demo-video is tracked |
 | AI-generated B-roll, Veo/Seedance clips, generic social video | **ai-video-generation** |
 | Programmatic motion from React/Remotion TSX | **remotion-render** |
 | Talking-head / lipsync presenter | **ai-avatar-video** |

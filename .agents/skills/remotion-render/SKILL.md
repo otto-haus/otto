@@ -12,6 +12,10 @@ Render videos from React/Remotion component code via [inference.sh](https://infe
 
 ![Remotion Render](https://cloud.inference.sh/app/files/u/4mg21r6ta37mpaz6ktzwtt8krr/01kg2c0egyg243mnyth4y6g51q.jpeg)
 
+## Otto gates (required)
+
+**Before `belt login` or any `belt app run`:** get explicit human approval — inference.sh calls consume credits (spend gate). Do not run Quick Start or examples until approved.
+
 ## Quick Start
 
 > Requires inference.sh CLI (`belt`). [Install instructions](https://raw.githubusercontent.com/inference-sh/skills/refs/heads/main/cli-install.md)

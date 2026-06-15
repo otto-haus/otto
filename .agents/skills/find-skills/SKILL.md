@@ -95,13 +95,16 @@ Learn more: https://skills.sh/vercel-labs/agent-skills/react-best-practices
 
 ### Step 6: Offer to Install
 
-If the user wants to proceed, you can install the skill for them:
+If the user wants to proceed in **otto**, install project-scoped only:
 
 ```bash
-npx skills add <owner/repo@skill> -g -y
+cd /path/to/otto
+npx skills add <owner/repo@skill> -y --copy
 ```
 
-The `-g` flag installs globally (user-level) and `-y` skips confirmation prompts.
+Then vet before committing: `python3 ~/Code/omnara/codex/skills/skill-vetter/scripts/vet_skill.py .agents/skills/<name>`, update `skills-lock.json` and `docs/skills-installed.md`.
+
+Do **not** use `-g` (global install) in otto — it bypasses the repo lockfile and review path. Require explicit human approval for global installs outside this repo.
 
 ## Common Skill Categories
 

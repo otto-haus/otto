@@ -12,6 +12,10 @@ Generate images with 50+ AI models via [inference.sh](https://inference.sh) CLI.
 
 ![AI Image Generation](https://cloud.inference.sh/app/files/u/4mg21r6ta37mpaz6ktzwtt8krr/01kg0v0nz7wv0qwqjtq1cam52z.jpeg)
 
+## Otto gates (required)
+
+**Before `belt login` or any `belt app run`:** get explicit human approval — inference.sh calls consume credits (spend gate). Do not run Quick Start or examples until approved.
+
 ## Quick Start
 
 > Requires inference.sh CLI (`belt`). [Install instructions](https://raw.githubusercontent.com/inference-sh/skills/refs/heads/main/cli-install.md)

@@ -12,15 +12,23 @@ Automate Twitter/X via [inference.sh](https://inference.sh) CLI.
 
 ![Twitter/X Automation](https://cloud.inference.sh/app/files/u/4mg21r6ta37mpaz6ktzwtt8krr/01kgad3pxsh3z3hnfpjyjpx4x4.jpeg)
 
+## Otto gates (required — read first)
+
+Before any live X action or inference.sh spend:
+
+1. Read `OTTO-GATES.md` in this directory.
+2. **Red gate (human approval + receipt):** post, like, retweet, DM, follow, delete, and any `belt login` / `belt app run` that spends credits or changes X state.
+3. **Green without approval:** read-only apps (`x/post-get`, `x/user-get`) and local draft copy only.
+
+Do not run outbound examples below until Sebastian approves that specific action.
+
 ## Quick Start
 
 > Requires inference.sh CLI (`belt`). [Install instructions](https://raw.githubusercontent.com/inference-sh/skills/refs/heads/main/cli-install.md)
 
 ```bash
-belt login
-
-# Post a tweet
-belt app run x/post-tweet --input '{"text": "Hello from inference.sh!"}'
+# Read-only example (green gate — no approval needed)
+belt app run x/user-get --input '{"username": "OpenAI"}'
 ```
 
 
