@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
-# 076 — verify bundled Letta CLI resolves from app Resources (embedded mode).
-# Does not launch Electron or mutate live /Applications/otto.app.
+# 076 / #672 / #678 — embedded Letta release-gate smoke.
+# Verifies a packaged otto.app ships a resolvable bundled letta.js (embedded "This Mac" mode),
+# carries the Letta Code LICENSE (Apache-2.0 §4 attribution), and contains no blocking copyleft
+# license in its shipped dependency tree (#671 guard). Does not launch Electron or mutate live
+# /Applications/otto.app.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
@@ -22,7 +25,9 @@ if [[ -z "$APP" ]]; then
 fi
 
 RESOURCES="$APP/Contents/Resources"
-BUNDLED="$RESOURCES/app/node_modules/@letta-ai/letta-code/letta.js"
+APP_NM="$RESOURCES/app/node_modules"
+BUNDLED="$APP_NM/@letta-ai/letta-code/letta.js"
+LICENSE="$APP_NM/@letta-ai/letta-code/LICENSE"
 DESKTOP_CLI="/Applications/Letta.app/Contents/Resources/app.asar.unpacked/node_modules/@letta-ai/letta-code/letta.js"
 
 echo "embedded-letta-smoke"
@@ -32,11 +37,23 @@ echo "  resources=$RESOURCES"
 if [[ ! -f "$BUNDLED" ]]; then
   echo "FAIL: bundled letta.js missing at expected path:" >&2
   echo "  $BUNDLED" >&2
-  echo "Rebuild with: bun run --cwd apps/desktop app:dir (asar: false → app/node_modules)" >&2
+  echo "Add @letta-ai/letta-code to apps/desktop dependencies and rebuild (asar:false → app/node_modules)." >&2
   exit 1
 fi
 
 echo "  bundled_letta=$BUNDLED (exists)"
+
+# Apache-2.0 §4 attribution: the engine LICENSE must ship alongside letta.js (#671).
+if [[ ! -f "$LICENSE" ]]; then
+  echo "FAIL: Letta Code LICENSE missing from bundle (Apache-2.0 attribution required):" >&2
+  echo "  $LICENSE" >&2
+  exit 1
+fi
+echo "  bundled_license=$LICENSE (exists)"
+
+# License gate guard (#671): no GPL/AGPL/SSPL in the shipped tree.
+echo "  running license guard against shipped tree (#671)..."
+node "$ROOT/scripts/gen-third-party-notices.mjs" --check --root "$APP_NM"
 
 # resolveCli('embedded') must pick Resources path, never Letta.app first.
 RESULT="$(cd "$ROOT" && bun -e "
