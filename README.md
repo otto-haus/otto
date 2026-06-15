@@ -12,7 +12,7 @@
 
 <p align="center">
   <a href="https://github.com/otto-haus/otto/releases/latest/download/otto-v01-desktop.mp4">
-    <img src=".github/assets/otto-desktop.png" alt="Otto Desktop — chat, behavior surfaces in the sidebar, and honest runtime state" width="920" />
+    <img src=".github/assets/otto-desktop.png" alt="otto desktop — connected chat workspace with pinned threads, model selector, and live Letta runtime" width="920" />
   </a>
   <br />
   <sub><em><a href="https://github.com/otto-haus/otto/releases/latest/download/otto-v01-desktop.mp4">▶&nbsp; Watch the 45-second desktop demo</a></em></sub>
