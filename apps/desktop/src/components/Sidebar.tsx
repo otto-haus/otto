@@ -83,6 +83,7 @@ export const Sidebar: React.FC<{
   onPinThread?: (thread: ThreadSummary, pinned: boolean) => void;
   onArchiveThread?: (thread: ThreadSummary) => void;
   onRestoreThread?: (thread: ThreadSummary) => void;
+  onRenameThread?: (thread: ThreadSummary, title: string) => void;
   onMoveThread?: (thread: ThreadSummary, target: ThreadSummary) => void;
   showArchived?: boolean;
   hasArchived?: boolean;
@@ -102,6 +103,7 @@ export const Sidebar: React.FC<{
   onPinThread,
   onArchiveThread,
   onRestoreThread,
+  onRenameThread,
   onMoveThread,
   showArchived,
   hasArchived,
@@ -230,6 +232,7 @@ export const Sidebar: React.FC<{
         onPin={onPinThread}
         onArchive={onArchiveThread}
         onRestore={onRestoreThread}
+        onRename={onRenameThread}
         onMove={onMoveThread}
       />
 

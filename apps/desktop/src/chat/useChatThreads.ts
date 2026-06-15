@@ -91,6 +91,22 @@ export function useChatThreads(activeThreadId?: string | null) {
     await refresh();
   }, [refresh]);
 
+  const renameThread = useCallback(async (threadId: string, title: string) => {
+    const api = ottoApi();
+    if (!api || !isElectron()) return;
+    const trimmed = title.trim();
+    if (!trimmed) return;
+    setAllThreads((current) => current.map((thread) => (
+      thread.id === threadId ? { ...thread, title: trimmed } : thread
+    )));
+    try {
+      await api.threads.rename(threadId, trimmed);
+      await refresh();
+    } catch {
+      await refresh();
+    }
+  }, [refresh]);
+
   return {
     threads,
     hasArchived,
@@ -101,5 +117,6 @@ export function useChatThreads(activeThreadId?: string | null) {
     archiveThread,
     restoreThread,
     moveThread,
+    renameThread,
   };
 }

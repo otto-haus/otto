@@ -104,6 +104,7 @@ function AppShell() {
     pinThread,
     restoreThread,
     moveThread,
+    renameThread,
   } = useChatThreads(rt.activeThreadId);
   const [active, setActiveState] = useState<SurfaceId>(initialSurface());
   const [sidebarHidden, setSidebarHidden] = useState(false);
@@ -223,6 +224,9 @@ function AppShell() {
             }}
             onArchiveThread={(thread) => {
               void rt.archiveThread(thread.id).then(() => refreshThreads());
+            }}
+            onRenameThread={(thread, title) => {
+              void renameThread(thread.id, title);
             }}
             onRestoreThread={(thread) => {
               void restoreThread(thread.id).then(() => refreshThreads());
