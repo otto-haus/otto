@@ -1,6 +1,6 @@
 import { buildRuntimeMessageWithAttachments } from '../attachment-message';
 import type React from 'react';
-import { Fragment, memo, useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Icon } from '../components/icons';
 import { AppSourceBadge } from '../components/AppSourceBadge';
 import { useToast } from '../components/Toast';
@@ -16,11 +16,7 @@ import { chatCopy, permissionCopy, projectCopy, toastCopy } from '../copy/surfac
 import { ProjectWindow } from './ProjectWindow';
 import { PermissionWindow } from './PermissionWindow';
 import { useChatThreads } from '../chat/useChatThreads';
-import {
-  findStableMarkdownBoundary,
-  shouldPlainRenderTail,
-} from '../chat/markdown-streaming';
-import { isTableStart, parseTableBlock, type MarkdownTable } from '../chat/markdown-tables';
+import { StreamMarkdown } from '../chat/markdown/MarkdownBlock';
 import { notifyOnboardingFirstMessage, resolveOnboardingStarterAction } from '../onboarding-storage';
 import { ProposeCorrectionModal, type ProposeCorrectionContext } from '../chat/ProposeCorrectionModal';
 import {
@@ -532,221 +528,6 @@ const QueueStrip: React.FC<{
     </div>
   );
 };
-
-const renderInline = (text: string): React.ReactNode[] => {
-  const nodes: React.ReactNode[] = [];
-  const pattern = /(\*\*[^*]+\*\*|`[^`]+`|\[[^\]]+\]\([^)]+\))/g;
-  let last = 0;
-  for (const match of text.matchAll(pattern)) {
-    const raw = match[0];
-    const index = match.index ?? 0;
-    if (index > last) nodes.push(text.slice(last, index));
-    if (raw.startsWith('**')) {
-      nodes.push(<strong key={`${index}-b`}>{raw.slice(2, -2)}</strong>);
-    } else if (raw.startsWith('`')) {
-      nodes.push(<code key={`${index}-c`}>{raw.slice(1, -1)}</code>);
-    } else {
-      const link = raw.match(/^\[([^\]]+)\]\(([^)]+)\)$/);
-      nodes.push(link ? <a key={`${index}-a`} href={link[2]}>{link[1]}</a> : raw);
-    }
-    last = index + raw.length;
-  }
-  if (last < text.length) nodes.push(text.slice(last));
-  return nodes;
-};
-
-const MarkdownTableView: React.FC<{ table: MarkdownTable }> = ({ table }) => (
-  <div className="md__tableWrap">
-    <table className="md__table">
-      <thead>
-        <tr>
-          {table.headers.map((header) => (
-            <th key={header}>{renderInline(header)}</th>
-          ))}
-        </tr>
-      </thead>
-      <tbody>
-        {table.rows.map((row, rowIndex) => (
-          <tr key={`row-${rowIndex}-${row.join('|')}`}>
-            {row.map((cell, cellIndex) => (
-              <td key={`cell-${rowIndex}-${cellIndex}-${cell}`}>{renderInline(cell)}</td>
-            ))}
-          </tr>
-        ))}
-      </tbody>
-    </table>
-  </div>
-);
-
-const parseMarkdownBlocks = (text: string): React.ReactNode[] => {
-  const blocks: React.ReactNode[] = [];
-  const parts = text.split(/(```[\s\S]*?```)/g).filter(Boolean);
-
-  for (const part of parts) {
-    if (part.startsWith('```')) {
-      const code = part.replace(/^```[^\n]*\n?/, '').replace(/```$/, '').trimEnd();
-      blocks.push(<pre className="md__pre" key={`code-${blocks.length}-${code.slice(0, 48)}`}><code>{code}</code></pre>);
-      continue;
-    }
-
-    const lines = part.split('\n');
-    let i = 0;
-    while (i < lines.length) {
-      const line = lines[i];
-      if (!line.trim()) { i += 1; continue; }
-
-      const heading = line.match(/^(#{1,3})\s+(.+)$/);
-      if (heading) {
-        const children = renderInline(heading[2]);
-        blocks.push(heading[1].length === 1
-          ? <h3 className="md__heading" key={`h-${blocks.length}-${line}`}>{children}</h3>
-          : heading[1].length === 2
-            ? <h4 className="md__heading" key={`h-${blocks.length}-${line}`}>{children}</h4>
-            : <h5 className="md__heading" key={`h-${blocks.length}-${line}`}>{children}</h5>);
-        i += 1;
-        continue;
-      }
-
-      const quote = line.match(/^>\s+(.+)$/);
-      if (quote) {
-        const quoted: string[] = [];
-        while (i < lines.length) {
-          const q = lines[i].match(/^>\s?(.+)$/);
-          if (!q) break;
-          quoted.push(q[1]);
-          i += 1;
-        }
-        const quoteText = quoted.join('\n');
-        blocks.push(<blockquote className="md__quote" key={`q-${blocks.length}-${quoteText.slice(0, 48)}`}>{quoted.map((q) => <p key={q}>{renderInline(q)}</p>)}</blockquote>);
-        continue;
-      }
-
-      const bullet = line.match(/^\s*[-*]\s+(.+)$/);
-      if (bullet) {
-        const items: string[] = [];
-        while (i < lines.length) {
-          const b = lines[i].match(/^\s*[-*]\s+(.+)$/);
-          if (!b) break;
-          items.push(b[1]);
-          i += 1;
-        }
-        const listText = items.join('\n');
-        blocks.push(<ul className="md__list" key={`ul-${blocks.length}-${listText.slice(0, 48)}`}>{items.map((item) => <li key={item}>{renderInline(item)}</li>)}</ul>);
-        continue;
-      }
-
-      const numbered = line.match(/^\s*\d+[.)]\s+(.+)$/);
-      if (numbered) {
-        const items: string[] = [];
-        while (i < lines.length) {
-          const n = lines[i].match(/^\s*\d+[.)]\s+(.+)$/);
-          if (!n) break;
-          items.push(n[1]);
-          i += 1;
-        }
-        const listText = items.join('\n');
-        blocks.push(<ol className="md__list" key={`ol-${blocks.length}-${listText.slice(0, 48)}`}>{items.map((item) => <li key={item}>{renderInline(item)}</li>)}</ol>);
-        continue;
-      }
-
-      if (isTableStart(lines, i)) {
-        const parsed = parseTableBlock(lines, i);
-        if (parsed) {
-          blocks.push(
-            <MarkdownTableView
-              key={`table-${blocks.length}-${parsed.table.headers.join('|')}`}
-              table={parsed.table}
-            />,
-          );
-          i = parsed.endIndex;
-          continue;
-        }
-        // isTableStart matched but the block did not fully parse (common while a
-        // table is still streaming in). Render this line as a paragraph and advance:
-        // falling through would re-hit the `!isTableStart` paragraph guard below
-        // without moving `i`, spinning the outer loop forever and OOMing the renderer.
-        blocks.push(<p className="md__p" key={`p-${blocks.length}-${line.slice(0, 48)}`}>{renderInline(line.trim())}</p>);
-        i += 1;
-        continue;
-      }
-
-      const para: string[] = [];
-      while (i < lines.length && lines[i].trim() && !/^(#{1,3})\s+/.test(lines[i]) && !/^\s*[-*]\s+/.test(lines[i]) && !/^\s*\d+[.)]\s+/.test(lines[i]) && !/^>\s+/.test(lines[i]) && !isTableStart(lines, i)) {
-        para.push(lines[i].trim());
-        i += 1;
-      }
-      const paraText = para.join(' ');
-      blocks.push(<p className="md__p" key={`p-${blocks.length}-${paraText.slice(0, 48)}`}>{renderInline(paraText)}</p>);
-    }
-  }
-
-  return blocks;
-};
-
-type MarkdownTextProps = { text: string; streaming?: boolean };
-
-// Incrementally-parsed finalized blocks. Each segment is parsed ONCE when the stream
-// moves past it and cached behind a stable key, so it never re-parses on later tokens.
-type FinalizedCache = { parsedUpTo: number; segments: React.ReactNode[] };
-
-const EMPTY_CACHE: FinalizedCache = { parsedUpTo: 0, segments: [] };
-
-// PRIMARY mechanism: block-level incremental parse. While `text` streams in, only the
-// live tail (the still-open block) re-parses per token — per-token cost is O(current
-// block), not O(message). BACKSTOP: an oversized live tail renders as cheap plain
-// preformatted text until its block closes (the hard ceiling against a single huge
-// block). Completed (non-streaming) messages parse the whole string once for correct
-// markdown. The component stays memoized per message so unrelated renders are no-ops.
-const MarkdownText: React.FC<MarkdownTextProps> = memo(({ text, streaming = false }) => {
-  const cacheRef = useRef<FinalizedCache>(EMPTY_CACHE);
-
-  // Non-streaming: authoritative full parse, and drop any streaming cache.
-  if (!streaming) {
-    if (cacheRef.current !== EMPTY_CACHE) cacheRef.current = EMPTY_CACHE;
-    return <div className="md">{parseMarkdownBlocks(text)}</div>;
-  }
-
-  const boundary = findStableMarkdownBoundary(text);
-  const cache = cacheRef.current;
-
-  // Text only appends while streaming; if the boundary ever regressed (new message
-  // reused this instance, edit, etc.) reset so we never serve stale finalized blocks.
-  if (boundary < cache.parsedUpTo) {
-    cacheRef.current = EMPTY_CACHE;
-  }
-  const live = cacheRef.current;
-
-  // PRIMARY: parse only the newly-finalized slice once, append to the immutable cache.
-  if (boundary > live.parsedUpTo) {
-    const newlyFinal = text.slice(live.parsedUpTo, boundary);
-    const startKey = live.parsedUpTo;
-    const parsed = parseMarkdownBlocks(newlyFinal);
-    cacheRef.current = {
-      parsedUpTo: boundary,
-      segments: [...live.segments, <Fragment key={`seg-${startKey}`}>{parsed}</Fragment>],
-    };
-  }
-
-  const finalizedSegments = cacheRef.current.segments;
-  const tailText = text.slice(boundary);
-  const tailLength = tailText.length;
-
-  // BACKSTOP: oversized live tail → plain pre; full markdown parse deferred until the
-  // block closes (boundary advances) or the stream completes (non-streaming branch).
-  const plainTail = shouldPlainRenderTail(boundary, text.length, tailLength);
-
-  return (
-    <div className="md">
-      {finalizedSegments}
-      {tailLength === 0 ? null : plainTail ? (
-        <pre className="md__pre md__streamingPlain" key="tail-plain">{tailText}</pre>
-      ) : (
-        <Fragment key="tail">{parseMarkdownBlocks(tailText)}</Fragment>
-      )}
-    </div>
-  );
-});
-MarkdownText.displayName = 'MarkdownText';
 
 const LiveChat: React.FC<{
   onOpenSettings?: () => void;
@@ -1381,7 +1162,9 @@ const LiveChat: React.FC<{
                   ) : null}
                   {isError ? (
                     <div className="msg__body" style={{ color: 'var(--stop)' }}>
-                      {m.text ? <MarkdownText text={m.text} streaming={isStreamingMessage} /> : null}
+                      {m.text ? (
+                        <StreamMarkdown text={m.text} streaming={isStreamingMessage} />
+                      ) : null}
                       {m.details ? (
                         <details className="msg__details">
                           <summary>Copy details</summary>
@@ -1391,7 +1174,9 @@ const LiveChat: React.FC<{
                     </div>
                   ) : (
                     <div className="msg__body">
-                      {m.text ? <MarkdownText text={m.text} streaming={isStreamingMessage} /> : null}
+                      {m.text ? (
+                        <StreamMarkdown text={m.text} streaming={isStreamingMessage} />
+                      ) : null}
                     </div>
                   )}
                   {!isUser && !isError && m.text ? (
