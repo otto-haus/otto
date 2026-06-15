@@ -429,6 +429,17 @@ export const standardsCopy = {
   conflictEyebrow: 'conflict · case law',
   conflictTieBreaker: 'Tie-breaker:',
   conflictProposeCuration: 'Propose a Curation Standards change instead of improvising in chat.',
+  filterAll: 'All',
+  filterActive: 'Active',
+  filterDraft: 'Draft',
+  filterDeprecated: 'Superseded',
+  filterDomainAll: 'All domains',
+  searchPlaceholder: 'Search standards, rationale, examples…',
+  searchNoMatch: 'No standards match this search.',
+  domainLabel: 'Domain',
+  canonBodyEyebrow: 'canon · rationale',
+  curationPathEyebrow: 'curation path',
+  curationPathBody: 'Propose changes through Curation; Sebastian ratifies registry updates — never auto-apply.',
 } as const;
 
 export const practicesCopy = {
