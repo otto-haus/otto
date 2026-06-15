@@ -107,7 +107,11 @@ export const Onboarding: React.FC<{ onNavigate: (id: SurfaceId) => void; activeS
     try {
       setOnboardingModeDraft(mode);
       setModeDraft(mode);
-      if (api) await api.config.set({ connectionMode: mode });
+      if (api) {
+        await api.config.set({ connectionMode: mode });
+        const next = await api.connection.save({});
+        rt.updateStatus(next);
+      }
       onNavigate('settings');
     } finally {
       setModeBusy(false);
