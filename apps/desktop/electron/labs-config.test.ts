@@ -5,8 +5,10 @@ import { join } from 'node:path';
 import { ConfigStore } from './config-store';
 import {
   applyLabsConfigPatch,
+  assertConnectionModePatchAllowed,
   defaultLabsConfig,
   getLabsConfig,
+  isRemoteLettaCloudEnabled,
   labsConfigToOttoPatch,
   normalizeLabsConfig,
   patchLabsConfig,
@@ -140,6 +142,55 @@ describe('labs-config', () => {
 
       const onDisk = JSON.parse(readFileSync(join(tmp, 'config.json'), 'utf8'));
       expect(getLabsConfig(onDisk)).toEqual(settingsShape);
+    } finally {
+      rmSync(tmp, { recursive: true, force: true });
+      if (prevHome === undefined) delete process.env.OTTO_HOME;
+      else process.env.OTTO_HOME = prevHome;
+    }
+  });
+
+  test('isRemoteLettaCloudEnabled requires master and feature (#628)', () => {
+    expect(isRemoteLettaCloudEnabled(defaultLabsConfig())).toBe(false);
+    expect(isRemoteLettaCloudEnabled({ enabled: true, features: {} })).toBe(false);
+    expect(
+      isRemoteLettaCloudEnabled({ enabled: true, features: { remote_letta_cloud: true } }),
+    ).toBe(true);
+  });
+
+  test('assertConnectionModePatchAllowed rejects cloud when Labs gate is off (#628)', () => {
+    const cfg = { connectionMode: 'existing' as const, labs: defaultLabsConfig() };
+    expect(() => assertConnectionModePatchAllowed(cfg, { connectionMode: 'existing' })).not.toThrow();
+    expect(() => assertConnectionModePatchAllowed(cfg, { theme: 'dark' })).not.toThrow();
+    expect(() => assertConnectionModePatchAllowed(cfg, { connectionMode: 'cloud' })).toThrow(
+      'connectionMode cloud requires Labs master on and remote_letta_cloud enabled',
+    );
+
+    const allowed = {
+      connectionMode: 'existing' as const,
+      labs: { enabled: true, features: { remote_letta_cloud: true } },
+    };
+    expect(() => assertConnectionModePatchAllowed(allowed, { connectionMode: 'cloud' })).not.toThrow();
+  });
+
+  test('IPC config:set path blocks cloud without Labs before persisting (#628)', () => {
+    const prevHome = process.env.OTTO_HOME;
+    const tmp = mkdtempSync(join(tmpdir(), 'otto-config-ipc-cloud-gate-'));
+    try {
+      process.env.OTTO_HOME = tmp;
+      const store = new ConfigStore();
+      const patch = { connectionMode: 'cloud' as const };
+
+      expect(() => assertConnectionModePatchAllowed(store.get(), patch)).toThrow();
+      expect(store.connectionMode()).toBe('embedded');
+
+      const labsNext = applyLabsConfigPatch(store.get(), {
+        enabled: true,
+        features: { remote_letta_cloud: true },
+      });
+      store.update(labsConfigToOttoPatch(labsNext));
+      assertConnectionModePatchAllowed(store.get(), patch);
+      store.update(patch);
+      expect(new ConfigStore().connectionMode()).toBe('cloud');
     } finally {
       rmSync(tmp, { recursive: true, force: true });
       if (prevHome === undefined) delete process.env.OTTO_HOME;
