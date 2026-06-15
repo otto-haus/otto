@@ -3,7 +3,8 @@ import { mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { ConfigStore } from './config-store';
-import { MemoryStore } from './memory-store';
+import { isLocalLettaAgentId, lettaMemoryUserMessage, MemoryStore } from './memory-store';
+import { APIError } from '@letta-ai/letta-client';
 
 const DISPOSABLE_AGENT_ID = 'agent-disposable-memory-290';
 const DISPOSABLE_CONVERSATION_ID = 'conv-disposable-memory-290';
@@ -33,6 +34,24 @@ function disposableFixtureDir(prefix: string): string {
 }
 
 describe('MemoryStore', () => {
+  test('isLocalLettaAgentId recognizes agent-local prefix', () => {
+    expect(isLocalLettaAgentId('agent-local-d8e35a2a-a89f-45dd-b117-5eae5df8c8f2')).toBe(true);
+    expect(isLocalLettaAgentId('agent-12345678-1234-4123-8123-123456789abc')).toBe(false);
+  });
+
+  test('lettaMemoryUserMessage hides raw 422 JSON', () => {
+    const raw = new APIError(
+      422,
+      undefined,
+      '422 {"trace_id":"abc","detail":"[{\"type\":\"string_pattern_mismatch\"}]"}',
+      undefined,
+    );
+    const message = lettaMemoryUserMessage(raw);
+    expect(message).toBe('Core memory blocks are not available for this agent in the current runtime state.');
+    expect(message).not.toContain('trace_id');
+    expect(message).not.toContain('string_pattern_mismatch');
+  });
+
   test('returns honest error when agent is missing', async () => {
     const dir = mkdtempSync(join(tmpdir(), 'otto-mem-empty-'));
     process.env.OTTO_CONFIG_DIR = join(dir, 'otto');
@@ -95,7 +114,7 @@ describe('MemoryStore', () => {
     }
   });
 
-  test('uses letta-client core-memory blocks path for local agent ids', async () => {
+  test('uses blocks query path for local agent ids', async () => {
     const config = new ConfigStore();
     config.update({ agentId: 'agent-local-test', baseUrl: 'local:/tmp/letta-backend' });
     const store = new MemoryStore(config);
@@ -109,13 +128,14 @@ describe('MemoryStore', () => {
       const result = await store.listBlocks();
       expect(result.error).toBeUndefined();
       expect(result.blocks).toHaveLength(1);
-      expect(calledPath).toContain('/v1/agents/agent-local-test/core-memory/blocks');
+      expect(calledPath).toContain('/v1/blocks/?agent_id=agent-local-test');
+      expect(calledPath).not.toContain('/core-memory/blocks');
     } finally {
       globalThis.fetch = originalFetch;
     }
   });
 
-  test('encodes agent ids in core-memory blocks path', async () => {
+  test('encodes agent ids in blocks query path', async () => {
     const config = new ConfigStore();
     config.update({ agentId: 'agent/with space', baseUrl: 'http://127.0.0.1:8283' });
     const store = new MemoryStore(config);
@@ -129,7 +149,7 @@ describe('MemoryStore', () => {
       const result = await store.listBlocks();
       expect(result.error).toBeUndefined();
       expect(result.blocks).toHaveLength(1);
-      expect(calledPath).toContain('/v1/agents/agent%2Fwith%20space/core-memory/blocks');
+      expect(calledPath).toContain('/v1/blocks/?agent_id=agent%2Fwith%20space');
     } finally {
       globalThis.fetch = originalFetch;
     }

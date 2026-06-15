@@ -7,11 +7,22 @@ import type { MemoryBlockRecord, MemoryListResult, MemoryUpdateResult } from './
 
 export type { MemoryBlockRecord, MemoryListResult, MemoryUpdateResult };
 
+const BLOCKS_QUERY_PATH = (agentId: string) =>
+  `/v1/blocks/?agent_id=${encodeURIComponent(agentId)}`;
+
 const CORE_MEMORY_BLOCKS_PATH = (agentId: string) =>
   `/v1/agents/${encodeURIComponent(agentId)}/core-memory/blocks`;
 
 const CORE_MEMORY_BLOCK_PATH = (agentId: string, label: string) =>
   `/v1/agents/${encodeURIComponent(agentId)}/core-memory/blocks/${encodeURIComponent(label)}`;
+
+const BLOCK_BY_ID_PATH = (blockId: string) =>
+  `/v1/blocks/${encodeURIComponent(blockId)}`;
+
+/** Local Letta agents use `agent-local-{uuid}` ids; core-memory path only accepts `agent-{uuid4}`. */
+export function isLocalLettaAgentId(agentId: string): boolean {
+  return agentId.startsWith('agent-local-');
+}
 
 function createLettaClient(baseUrl: string): Letta {
   const apiKey = getSecret('LETTA_API_KEY') || process.env.LETTA_API_KEY || null;
@@ -46,12 +57,90 @@ function resolveAgentCandidates(config: ConfigStore): string[] {
   return out;
 }
 
-function lettaErrorMessage(error: unknown): string {
+/** User-facing memory errors — no trace_id or raw JSON in the observatory. */
+export function lettaMemoryUserMessage(error: unknown): string {
   if (error instanceof APIError) {
-    const detail = typeof error.message === 'string' ? error.message : '';
-    return `Letta memory API ${error.status}${detail ? `: ${detail.slice(0, 160)}` : ''}`;
+    if (error.status === 422) {
+      return 'Core memory blocks are not available for this agent in the current runtime state.';
+    }
+    if (error.status === 404) {
+      return 'No core memory blocks were found for this agent.';
+    }
+    return `Letta memory API returned ${error.status}. Check runtime connection in Settings.`;
   }
   return error instanceof Error ? error.message : String(error);
+}
+
+async function listBlocksForAgent(client: Letta, candidateId: string): Promise<{
+  blocks: MemoryBlockRecord[];
+  apiPath: string;
+}> {
+  // Letta local REST accepts agent_id on /v1/blocks/; OpenAPI typings omit it.
+  const listByAgent = () =>
+    client.blocks.list({ agent_id: candidateId } as never);
+
+  const attempts: Array<{
+    apiPath: string;
+    run: () => Promise<BlockResponse[]>;
+  }> = [
+    {
+      apiPath: BLOCKS_QUERY_PATH(candidateId),
+      run: async () => listByAgent().then((page) => page.getPaginatedItems()),
+    },
+  ];
+  if (!isLocalLettaAgentId(candidateId)) {
+    attempts.push({
+      apiPath: CORE_MEMORY_BLOCKS_PATH(candidateId),
+      run: async () => client.agents.blocks.list(candidateId).then((page) => page.getPaginatedItems()),
+    });
+  }
+
+  let lastError: unknown;
+  for (const attempt of attempts) {
+    try {
+      const rows = await attempt.run();
+      const blocks = rows
+        .map((row) => normalizeBlock(row))
+        .filter((b): b is MemoryBlockRecord => !!b);
+      return { blocks, apiPath: attempt.apiPath };
+    } catch (error) {
+      if (error instanceof APIError && error.status === 404) {
+        lastError = error;
+        continue;
+      }
+      throw error;
+    }
+  }
+  throw lastError ?? new Error('Letta memory blocks not found.');
+}
+
+async function updateBlockForAgent(
+  client: Letta,
+  candidateId: string,
+  label: string,
+  value: string,
+): Promise<{ block: MemoryBlockRecord; apiPath: string }> {
+  if (isLocalLettaAgentId(candidateId)) {
+    const listResult = await listBlocksForAgent(client, candidateId);
+    const existing = listResult.blocks.find((b) => b.label === label);
+    if (!existing?.id) {
+      throw new APIError(404, undefined, `Block ${label} not found`, undefined);
+    }
+    const apiPath = BLOCK_BY_ID_PATH(existing.id);
+    const updated = await client.blocks.update(existing.id, { value });
+    const block = normalizeBlock(updated);
+    if (!block) throw new Error('Letta memory update returned an unparseable block payload.');
+    return { block, apiPath };
+  }
+
+  const apiPath = CORE_MEMORY_BLOCK_PATH(candidateId, label);
+  const updated = await client.agents.blocks.update(label, {
+    agent_id: candidateId,
+    value,
+  });
+  const block = normalizeBlock(updated);
+  if (!block) throw new Error('Letta memory update returned an unparseable block payload.');
+  return { block, apiPath };
 }
 
 export class MemoryStore {
@@ -61,7 +150,9 @@ export class MemoryStore {
     const discovered = discoverLocalLettaContext(this.config);
     const agentCandidates = resolveAgentCandidates(this.config);
     const agentId = agentCandidates[0] ?? null;
-    const apiPath = agentId ? CORE_MEMORY_BLOCKS_PATH(agentId) : '/v1/agents/{agent_id}/core-memory/blocks';
+    const apiPath = agentId
+      ? (isLocalLettaAgentId(agentId) ? BLOCKS_QUERY_PATH(agentId) : CORE_MEMORY_BLOCKS_PATH(agentId))
+      : '/v1/agents/{agent_id}/core-memory/blocks';
     const baseUrl = resolveHttpBaseUrl(this.config.baseUrl() ?? discovered.baseUrl, this.config);
 
     if (!agentCandidates.length) {
@@ -86,19 +177,15 @@ export class MemoryStore {
     const client = createLettaClient(baseUrl);
     let lastError: string | undefined;
     for (const candidateId of agentCandidates) {
-      const path = CORE_MEMORY_BLOCKS_PATH(candidateId);
       try {
-        const page = await client.agents.blocks.list(candidateId);
-        const blocks = page.getPaginatedItems()
-          .map((row) => normalizeBlock(row))
-          .filter((b): b is MemoryBlockRecord => !!b);
+        const { blocks, apiPath: path } = await listBlocksForAgent(client, candidateId);
         return { agentId: candidateId, baseUrl, blocks, apiPath: path };
       } catch (error) {
         if (error instanceof APIError && error.status === 404) {
-          lastError = `Letta memory API 404 at ${path}`;
+          lastError = lettaMemoryUserMessage(error);
           continue;
         }
-        lastError = lettaErrorMessage(error);
+        lastError = lettaMemoryUserMessage(error);
       }
     }
 
@@ -127,7 +214,9 @@ export class MemoryStore {
     const agentId = agentCandidates[0] ?? null;
     const baseUrl = resolveHttpBaseUrl(this.config.baseUrl() ?? discoverLocalLettaContext(this.config).baseUrl, this.config);
     const apiPath = agentId && trimmedLabel
-      ? CORE_MEMORY_BLOCK_PATH(agentId, trimmedLabel)
+      ? (isLocalLettaAgentId(agentId)
+        ? `/v1/blocks/{block_id}`
+        : CORE_MEMORY_BLOCK_PATH(agentId, trimmedLabel))
       : '/v1/agents/{agent_id}/core-memory/blocks/{block_label}';
 
     if (!trimmedLabel) {
@@ -163,22 +252,11 @@ export class MemoryStore {
     const client = createLettaClient(baseUrl);
     let lastError: string | undefined;
     for (const candidateId of agentCandidates) {
-      const path = CORE_MEMORY_BLOCK_PATH(candidateId, trimmedLabel);
       try {
-        const updated = await client.agents.blocks.update(trimmedLabel, {
-          agent_id: candidateId,
-          value,
-        });
-        const block = normalizeBlock(updated);
-        if (!block) {
-          lastError = 'Letta memory update returned an unparseable block payload.';
-          continue;
-        }
+        const { block, apiPath: path } = await updateBlockForAgent(client, candidateId, trimmedLabel, value);
         return { agentId: candidateId, baseUrl, block, apiPath: path };
       } catch (error) {
-        lastError = error instanceof APIError && error.status === 404
-          ? `Letta memory update 404 at ${path}`
-          : lettaErrorMessage(error);
+        lastError = lettaMemoryUserMessage(error);
       }
     }
 
