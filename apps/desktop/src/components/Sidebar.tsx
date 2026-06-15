@@ -44,7 +44,20 @@ const COLLAPSIBLE_WORKSPACE_ITEMS: NavDef[] = [
   { id: 'terminal', label: 'Terminal', icon: Icon.terminal },
 ];
 
+const CHAT_ITEM: NavDef = { id: 'chat', label: 'Chat', icon: Icon.chat, shortcut: '⌘1' };
+
 const WORKSPACE_ITEMS: NavDef[] = [...PRIMARY_WORKSPACE_ITEMS, ...COLLAPSIBLE_WORKSPACE_ITEMS];
+
+/**
+ * Single source of truth mapping the bare ⌘<digit> shortcuts shown as nav `data-kbd`
+ * hints to their surfaces, so App.tsx can wire the keyboard handler without the hints
+ * promising navigation that does not exist (#612). Excludes modified shortcuts (e.g. ⌘⌥0).
+ */
+export const NUMERIC_SURFACE_SHORTCUTS: Record<string, SurfaceId> = Object.fromEntries(
+  [CHAT_ITEM, ...WORKSPACE_ITEMS]
+    .filter((n): n is NavDef & { shortcut: string } => !!n.shortcut && /^⌘[0-9]$/.test(n.shortcut))
+    .map((n) => [n.shortcut.slice(1), n.id]),
+);
 
 const COLLAPSIBLE_WORKSPACE_IDS = new Set<SurfaceId>(
   COLLAPSIBLE_WORKSPACE_ITEMS.map((item) => item.id),
@@ -195,12 +208,12 @@ export const Sidebar: React.FC<{
       <nav className="nav">
         {compact ? (
           <>
-            {navItem({ id: 'chat', label: 'Chat', icon: Icon.chat, shortcut: '⌘1' })}
+            {navItem(CHAT_ITEM)}
             {WORKSPACE_ITEMS.map((item) => navItem(item))}
           </>
         ) : (
           <>
-            {navItem({ id: 'chat', label: 'Chat', icon: Icon.chat, shortcut: '⌘1' })}
+            {navItem(CHAT_ITEM)}
             {PRIMARY_WORKSPACE_ITEMS.map((item) => navItem(item))}
             <div className={`navGroup${workspaceOpen ? ' is-open' : ''}${workspaceActive ? ' is-activeGroup' : ''}`}>
               <button
