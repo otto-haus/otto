@@ -1362,7 +1362,7 @@ const LiveChat: React.FC<{
               {Icon.send}
             </button>
           </div>
-          <div className="promptbar__hint">{ready ? chatCopy.composerHint : chatCopy.composerNotReadyHint}</div>
+          {!ready && <div className="promptbar__hint">{chatCopy.composerNotReadyHint}</div>}
         </div>
         </div>
       </div>
