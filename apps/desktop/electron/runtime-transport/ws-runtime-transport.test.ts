@@ -345,6 +345,44 @@ describe('WsRuntimeTransport', () => {
     expect(socket.listenerCount('message')).toBe(0);
   });
 
+  test('send removes turn message handler after each turn (no handler stacking)', async () => {
+    const { win } = mockWindow();
+    const transport = new WsRuntimeTransport(() => win, mockConfig('conv-ws-stack'));
+    const listeners = new Map<string, Set<(...args: unknown[]) => void>>();
+    const socket = {
+      readyState: WebSocket.OPEN,
+      send: () => {},
+      on(event: string, handler: (...args: unknown[]) => void) {
+        const set = listeners.get(event) ?? new Set();
+        set.add(handler);
+        listeners.set(event, set);
+      },
+      off(event: string, handler: (...args: unknown[]) => void) {
+        listeners.get(event)?.delete(handler);
+      },
+      listenerCount(event: string) {
+        return listeners.get(event)?.size ?? 0;
+      },
+    };
+    (transport as unknown as { runtimeSocket: typeof socket | null }).runtimeSocket = socket;
+    (transport as unknown as { status: Record<string, unknown> }).status = {
+      ...transport.getStatus(),
+      ready: true,
+      conversationId: 'conv-ws-stack',
+      agentId: 'agent-ws-test',
+    };
+    (transport as unknown as { waitForTurnComplete: () => Promise<void> }).waitForTurnComplete = async () => {};
+    (transport as unknown as { writeChatReceipt: () => void }).writeChatReceipt = () => {};
+
+    expect(socket.listenerCount('message')).toBe(0);
+
+    await transport.send('first turn');
+    expect(socket.listenerCount('message')).toBe(0);
+
+    await transport.send('second turn');
+    expect(socket.listenerCount('message')).toBe(0);
+  });
+
   test('turn idle timeout keeps transport ready and emits recoverable error', async () => {
     const { win, sent } = mockWindow();
     const transport = new WsRuntimeTransport(() => win, mockConfig('conv-ws-idle'));
