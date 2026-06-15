@@ -764,44 +764,46 @@ const LiveChat: React.FC<{
             {Icon.panel}
           </button>
         )}
-        <span className="chat__avatar"><OttoMark size={30} className="ottoMark" /></span>
-        <div className="chat__titleBlock">
-          <div className="chat__title">{headTitle}</div>
-          <div className="chat__id" title={st ? chatStatusLine : undefined}>
+        <div className="chat__column chat__headInner">
+          <span className="chat__avatar"><OttoMark size={30} className="ottoMark" /></span>
+          <div className="chat__titleBlock">
+            <div className="chat__title">{headTitle}</div>
+            <div className="chat__id" title={st ? chatStatusLine : undefined}>
+              {st ? (
+                <>
+                  <span className={`dot ${ready ? 'dot--ok' : 'dot--warn'}`} aria-hidden="true" />
+                  <span>{ready ? chatStatusLine : formatRuntimeSubtitle(ready, st.reason, labelForModel(selectedModel, modelOptions))}</span>
+                </>
+              ) : 'connecting…'}
+            </div>
+          </div>
+          <div className="chat__headActions">
+            <AppSourceBadge compact />
             {st ? (
               <>
-                <span className={`dot ${ready ? 'dot--ok' : 'dot--warn'}`} aria-hidden="true" />
-                <span>{ready ? chatStatusLine : formatRuntimeSubtitle(ready, st.reason, labelForModel(selectedModel, modelOptions))}</span>
+                <button
+                  type="button"
+                  className="btn btn--ghost-d"
+                  disabled={streamMessages.length === 0}
+                  title={chatCopy.copyMarkdownHint}
+                  onClick={() => { void copyConversationMarkdown(); }}
+                >
+                  {chatCopy.copyMarkdown}
+                </button>
+                <span className={`pill ${ready ? 'pill--ok' : 'pill--warn'}`}>
+                  {ready ? 'connected' : 'setup'}
+                </span>
               </>
-            ) : 'connecting…'}
+            ) : null}
+            {!st ? (
+              <>
+                <button type="button" className="btn btn--ghost-d" onClick={() => { void rt.retry(); }}>{chatCopy.pickerRetry}</button>
+                {onOpenSettings && (
+                  <button type="button" className="btn btn--solid-d" onClick={onOpenSettings}>{chatCopy.pickerOpenSettings}</button>
+                )}
+              </>
+            ) : null}
           </div>
-        </div>
-        <div className="chat__headActions">
-          <AppSourceBadge compact />
-          {st ? (
-            <>
-              <button
-                type="button"
-                className="btn btn--ghost-d"
-                disabled={streamMessages.length === 0}
-                title={chatCopy.copyMarkdownHint}
-                onClick={() => { void copyConversationMarkdown(); }}
-              >
-                {chatCopy.copyMarkdown}
-              </button>
-              <span className={`pill ${ready ? 'pill--ok' : 'pill--warn'}`}>
-                {ready ? 'connected' : 'setup'}
-              </span>
-            </>
-          ) : null}
-          {!st ? (
-            <>
-              <button type="button" className="btn btn--ghost-d" onClick={() => { void rt.retry(); }}>{chatCopy.pickerRetry}</button>
-              {onOpenSettings && (
-                <button type="button" className="btn btn--solid-d" onClick={onOpenSettings}>{chatCopy.pickerOpenSettings}</button>
-              )}
-            </>
-          ) : null}
         </div>
       </div>
 
@@ -923,6 +925,7 @@ const LiveChat: React.FC<{
       </div>
 
       <div className="promptbar">
+        <div className="chat__column">
         {ready && activeQueue.length > 0 && (
           <QueueStrip
             queue={activeQueue}
@@ -1025,6 +1028,7 @@ const LiveChat: React.FC<{
           </div>
           <div className="promptbar__hint">{ready ? chatCopy.composerHint : chatCopy.composerNotReadyHint}</div>
         </div>
+        </div>
       </div>
 
       <Modal
@@ -1079,6 +1083,7 @@ const PreviewChat: React.FC = () => (
     </div>
 
     <div className="promptbar">
+      <div className="chat__column">
       {!isReady && (
         <div
           style={{
@@ -1111,6 +1116,7 @@ const PreviewChat: React.FC = () => (
       <div className="promptbar__meta">
         <span>desktop bridge unavailable</span>
         <span className="faint">runtime: not connected</span>
+      </div>
       </div>
     </div>
   </div>

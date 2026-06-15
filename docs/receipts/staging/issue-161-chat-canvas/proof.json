@@ -1,0 +1,14 @@
+{
+  "issue": 161,
+  "viewport": { "width": 1600, "height": 900 },
+  "url": "http://127.0.0.1:5199/",
+  "metrics": {
+    "mainWidth": 1328,
+    "promptColumnLeft": 546,
+    "promptColumnWidth": 780,
+    "leftMargin": 274,
+    "rightMargin": 274
+  },
+  "screenshot": "wide-window.png",
+  "verifiedAt": "2026-06-14T00:00:00Z"
+}
