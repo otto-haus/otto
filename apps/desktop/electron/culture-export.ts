@@ -57,6 +57,12 @@ export class CultureExporter {
     copyIfExists(practiceDir, 'canon/practices');
     copyIfExists(routineDir, 'canon/routines');
 
+    // Compiled Culture CI checks and the in-flight ratification queue are part of
+    // ratified behavior state — a culture bundle without them loses enforcement
+    // gates (#720) and pending proposals (#721).
+    copyIfExists(join(this.ottoDir, 'checks'), 'checks');
+    copyIfExists(join(this.ottoDir, 'curation', 'proposals'), 'curation/proposals');
+
     const receiptIndex = this.receipts.list().receipts.map((r) => ({
       id: r.id,
       timestamp: r.timestamp,
