@@ -25,7 +25,7 @@ import { ChecksSurfaceShell } from './surfaces/ChecksSurfaceShell';
 import { Terminal } from './surfaces/Terminal';
 import { Onboarding } from './Onboarding';
 import { ComingSoonSurface } from './labs/ComingSoonSurface';
-import { isSurfaceComingSoon, surfaceGate } from './surface-tiers';
+import { isSurfaceComingSoon, surfaceDataKind, surfaceGate } from './surface-tiers';
 import { LabsProvider } from './labs/LabsContext';
 import { VALID_SURFACES } from './surface-meta';
 import { AppSourceBadge } from './components/AppSourceBadge';
@@ -56,25 +56,6 @@ const VALID = VALID_SURFACES;
 const initialSurface = (): SurfaceId => {
   const h = typeof location !== 'undefined' ? (location.hash.slice(1) as SurfaceId) : 'chat';
   return VALID.includes(h) ? h : 'chat';
-};
-
-// Per-surface data source for topbar pills (file-backed canon vs live runtime).
-const DATA_SOURCE: Partial<Record<SurfaceId, 'live' | 'coming-soon' | 'file'>> = {
-  settings: 'live',
-  chat: 'live',
-  charters: 'file',
-  standards: 'file',
-  practices: 'file',
-  routines: 'file',
-  curation: 'file',
-  receipts: 'file',
-  checks: 'file',
-  autonomy: 'file',
-  skills: 'file',
-  knowledge: 'file',
-  tickets: 'file',
-  channels: 'file',
-  terminal: 'live',
 };
 
 export function App() {
@@ -189,12 +170,12 @@ function AppShell() {
       if (rt.status) return <span className="pill pill--warn">runtime setup</span>;
       return <span className="pill">connecting runtime</span>;
     }
-    if (DATA_SOURCE[active] === 'live') {
+    const dataKind = surfaceDataKind(active);
+    if (dataKind === 'live') {
       if (rt.electron && rt.status?.ready) return <span className="pill pill--ok">live runtime</span>;
       return <span className="pill pill--warn">runtime setup</span>;
     }
-    if (DATA_SOURCE[active] === 'file') return <span className="pill">file-backed</span>;
-    if (DATA_SOURCE[active] === 'coming-soon') return <span className="pill">coming soon</span>;
+    if (dataKind === 'file') return <span className="pill">file-backed</span>;
     return null;
   };
 
