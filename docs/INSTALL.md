@@ -5,18 +5,24 @@
 ```sh
 git clone https://github.com/otto-haus/otto.git
 cd otto
-bun install
+bun install --frozen-lockfile
 ```
 
-Verify:
+Run the same local gate GitHub Actions runs:
 
 ```sh
-bun run typecheck
-bun test
-bun run verify:v0
+task ci
 ```
 
-The install and verify package scripts are cross-platform and do not require Bash or WSL.
+If Task is not installed yet, run the gate script directly:
+
+```sh
+bash scripts/ci-local-gate.sh
+```
+
+The gate includes core and desktop typechecks, tests, `verify:v0`, the Electron
+build, `bun audit`, whitespace checks, and a clean-worktree check. The install
+and verify package scripts are cross-platform and do not require Bash or WSL.
 
 ## Letta Code extension + skills
 
