@@ -34,6 +34,7 @@ function mockConfig(): ConfigStore {
     agentCandidates: () => ['agent-test'],
     get: () => ({}),
     update: () => ({}),
+    ensurePrimaryAgentId: () => {},
   } as unknown as ConfigStore;
 }
 
