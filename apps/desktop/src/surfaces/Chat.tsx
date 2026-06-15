@@ -467,8 +467,7 @@ const QueueStrip: React.FC<{
           </button>
         </div>
       </div>
-      {expanded && (
-        <div className="queuebar__items">
+      <div className="queuebar__items" aria-hidden={!expanded}>
           {queue.map((item) => {
             const inspected = inspectedId === item.id;
             const recalled = recalledQueueId === item.id;
@@ -539,8 +538,7 @@ const QueueStrip: React.FC<{
               </div>
             );
           })}
-        </div>
-      )}
+      </div>
     </div>
   );
 };

@@ -1512,8 +1512,17 @@ h1, h2, h3, h4, p { margin: 0; }
 .queueitem__remove:hover { color: var(--ink); background: rgba(20,22,26,0.05); }
 .queuebar__items {
   display: grid;
+  max-height: 0;
+  opacity: 0;
+  overflow: hidden;
+  pointer-events: none;
+  transition: max-height 180ms var(--ease), opacity 180ms var(--ease);
+}
+.queuebar--expanded .queuebar__items {
   max-height: min(280px, 40vh);
+  opacity: 1;
   overflow-y: auto;
+  pointer-events: auto;
 }
 .queueitem {
   display: grid;
