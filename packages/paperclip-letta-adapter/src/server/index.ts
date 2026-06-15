@@ -39,6 +39,13 @@ export function createServerAdapter(): ServerAdapterModule {
     listModels: listLettaModels,
     getConfigSchema,
     agentConfigurationDoc,
+    // Mirror the remote cursor_cloud adapter: marking the adapter as
+    // instructions-bundle-capable flips Paperclip's `isLocal` gate so the
+    // agent config form actually renders the getConfigSchema fields
+    // (agentId/baseUrl/token). We do NOT mint a local agent JWT.
+    supportsInstructionsBundle: true,
+    supportsLocalAgentJwt: false,
+    instructionsPathKey: "instructionsFilePath",
   };
 }
 

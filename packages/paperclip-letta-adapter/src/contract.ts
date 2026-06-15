@@ -130,4 +130,15 @@ export interface ServerAdapterModule {
   listModels?: () => Promise<AdapterModel[]>;
   getConfigSchema?: () => Promise<AdapterConfigSchema> | AdapterConfigSchema;
   agentConfigurationDoc?: string;
+  /**
+   * Capability flags read by Paperclip's server + UI. Setting
+   * supportsInstructionsBundle marks the adapter "local-ish" so the agent
+   * config form renders the getConfigSchema fields (this is how the remote
+   * cursor_cloud adapter surfaces its config). We keep supportsLocalAgentJwt
+   * false: there is no local agent process to mint a JWT for.
+   */
+  supportsInstructionsBundle?: boolean;
+  supportsLocalAgentJwt?: boolean;
+  instructionsPathKey?: string;
+  requiresMaterializedRuntimeSkills?: boolean;
 }

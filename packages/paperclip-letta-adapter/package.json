@@ -1,6 +1,6 @@
 {
   "name": "@otto-haus/paperclip-adapter-letta",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Run a persistent, memory-backed Letta agent (otto) from inside Paperclip. External adapter plugin for paperclipai/paperclip.",
   "license": "MIT",
   "type": "module",
