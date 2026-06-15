@@ -9,10 +9,11 @@ describe('primary agent default UX (#119 / ADR 093)', () => {
     expect(onboardingCopy.connectLede.toLowerCase()).toContain('one primary agent');
   });
 
-  test('settings copy has advanced second-agent placeholder', async () => {
+  test('settings copy has Letta open labels and second-agent placeholder', async () => {
     const { settingsCopy } = await import('../src/copy/surfaces');
     expect(settingsCopy.isolatedSecondAgentComingSoon.toLowerCase()).toContain('coming soon');
-    expect(settingsCopy.primaryAgentOpenLetta).toBe('Open in Letta');
+    expect(settingsCopy.primaryAgentOpenLettaWeb).toBe('Open Letta web UI');
+    expect(settingsCopy.primaryAgentOpenLettaDesktop).toBe('Open Letta Desktop');
   });
 
   test('main shell copy avoids v1 fleet patterns', () => {
