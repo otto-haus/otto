@@ -30,22 +30,38 @@ gates:
     build_queue:
       - 627
       - 628
+      - 630
+      - 631
+      - 632
+      - 633
     awaiting_ratification:
       - 627
       - 628
+      - 630
+      - 631
+      - 632
+      - 633
     ratified_in_progress: []
   ship:
-    in_flight_babysit:
-      - 582
-    reviewed_prs: []
-    ready_for_sebastian: []
+    in_flight_babysit: []
+    reviewed_prs:
+      - 618
+      - 624
+      - 626
+    ready_for_sebastian:
+      - 618
+      - 624
+      - 626
     close_candidates:
       - pr: 588
         winner: 618
+        commented: true
       - pr: 596
         winner: 626
+        commented: true
       - pr: 587
         winner: 624
+        commented: true
 
 ticks:
   - id: 1
@@ -73,3 +89,38 @@ ticks:
     ship:
       spawned: 0
       completed: 0
+
+  - id: 3
+    at: "2026-06-15T03:38:25Z"
+    spawn_mechanism: task_subagents
+    spawn_verification_passed: true
+    global_agents: 8
+    defer_mode: false
+    notes: "First compliant tick. 4 Task subagents spawned (3 BUILD completed, merge_prep blocked readonly). Orchestrator triaged SHIP + filed 4 issues."
+    build:
+      spawned: 3
+      completed: 3
+      issues_filed:
+        - 630
+        - 631
+        - 632
+        - 633
+      awaiting_ratification:
+        - 627
+        - 628
+        - 630
+        - 631
+        - 632
+        - 633
+    ship:
+      intake: no_safe_work
+      spawned: 1
+      completed: 0
+      ship_candidates:
+        - 618
+        - 624
+        - 626
+      close_candidates_commented:
+        - 587
+        - 588
+        - 596
