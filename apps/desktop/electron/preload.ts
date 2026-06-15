@@ -69,6 +69,9 @@ import type {
   ThreadSwitchResult,
   ProviderMirrorSnapshot,
   WorkspaceInfo,
+  PaperclipIntakeSnapshot,
+  PaperclipConnectResult,
+  PaperclipSyncResult,
 } from './shared/types';
 import type { CheckListResult, CheckRunResult } from '@otto-haus/core';
 import type {
@@ -265,6 +268,12 @@ const api = {
       ticketId: string,
       patch: Partial<Pick<TicketRecord, 'status' | 'owner' | 'model'>> & { review?: TicketReviewRecord },
     ) => ipcRenderer.invoke('otto:tickets:update-status', ticketId, patch),
+  },
+  paperclip: {
+    snapshot: (): Promise<PaperclipIntakeSnapshot> => ipcRenderer.invoke('otto:adapters:paperclip:snapshot'),
+    connect: (input?: { approved?: boolean; baseUrl?: string | null }): Promise<PaperclipConnectResult> =>
+      ipcRenderer.invoke('otto:adapters:paperclip:connect', input),
+    sync: (): Promise<PaperclipSyncResult> => ipcRenderer.invoke('otto:adapters:paperclip:sync'),
   },
   checks: {
     list: (): Promise<CheckListResult> => ipcRenderer.invoke('otto:checks:list'),

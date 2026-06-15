@@ -103,7 +103,6 @@ export const WORKSPACE_PREVIEW_SURFACES: ReadonlySet<SurfaceId> = new Set([
   'checks',
   'autonomy',
   'skills',
-  'tickets',
 ]);
 
 export function isSurfaceComingSoon(id: SurfaceId, labs: LabsConfig): boolean {

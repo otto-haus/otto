@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { PaperclipIntakePanel } from './PaperclipIntakePanel';
 import { Icon } from '../components/icons';
 import { useToast } from '../components/Toast';
 import { EmptyState, StatusPill, statusPill, statusCodePill, SurfaceProof, SurfacePage, SurfaceHero, InkBlock, SurfaceInk, SurfaceStatStrip, SurfaceMeta, SplitLayout, FilterBar, InlineEmpty, WebPreviewFrame, ReceiptCard, CheckBlockBanner } from '../components/ui';
@@ -2640,6 +2641,7 @@ export const Tickets: React.FC = () => {
           { label: ticketsCopy.statReview, value: reviewCount, tone: reviewCount ? 'warn' : 'neutral' },
         ]}
       />
+      <PaperclipIntakePanel />
       {error && <div className="notice"><span className="dot dot--warn" /> {error}</div>}
       {checkBlock && (
         <CheckBlockBanner
