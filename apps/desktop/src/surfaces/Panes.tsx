@@ -47,6 +47,7 @@ import {
   SAMPLE_RECEIPT_LABEL,
 } from '../onboarding-sample-receipt';
 import { useLabs, LAB_FEATURE_IDS, LAB_FEATURE_META } from '../labs/LabsContext';
+import { effectiveConnectionMode } from '../surface-tiers';
 import { AppSourceDetails } from '../components/AppSourceBadge';
 import type { AppBuildInfo, IsolatedAgentRecord, LabFeatureId, WorkspaceInfo, SystemHealthReport, HealthCheck } from '../../electron/shared/types';
 import {
@@ -3100,6 +3101,8 @@ const inputStyle: React.CSSProperties = {
 const ConnectLetta: React.FC = () => {
   const api = ottoApi();
   const rt = useRuntimeContext();
+  const { labs, isFeatureEnabled } = useLabs();
+  const cloudConnectionAllowed = isFeatureEnabled('remote_letta_cloud');
   const [status, setStatus] = useState<RuntimeStatus | null>(null);
   const [baseUrl, setBaseUrl] = useState('');
   const [agentId, setAgentId] = useState('');
@@ -3142,7 +3145,7 @@ const ConnectLetta: React.FC = () => {
       });
       await api.config.set({
         primaryAgentId: primaryAgentId.trim() || agentId.trim() || null,
-        connectionMode,
+        connectionMode: effectiveConnectionMode(connectionMode, labs),
       });
       setStatus(next);
       rt.updateStatus(next);
@@ -3156,6 +3159,7 @@ const ConnectLetta: React.FC = () => {
 
   const displayStatus = rt.status ?? status;
   const code: StatusCode = displayStatus?.ready ? 'ready' : displayStatus?.code ?? 'error';
+  const displayedConnectionMode = effectiveConnectionMode(connectionMode, labs);
 
   return (
     <div className="settingsBlock">
@@ -3188,14 +3192,22 @@ const ConnectLetta: React.FC = () => {
           <span>{settingsCopy.connectionModeLabel}</span>
           <select
             style={inputStyle}
-            value={connectionMode}
+            value={displayedConnectionMode}
             onChange={(e) => setConnectionMode(e.target.value as 'embedded' | 'existing' | 'cloud')}
           >
             <option value="embedded">{settingsCopy.connectionEmbedded}</option>
             <option value="existing">{settingsCopy.connectionExisting}</option>
-            <option value="cloud">{settingsCopy.connectionCloud}</option>
+            {cloudConnectionAllowed ? (
+              <option value="cloud">{settingsCopy.connectionCloud}</option>
+            ) : null}
           </select>
         </label>
+        {!cloudConnectionAllowed ? (
+          <p className="settingsFieldHint" style={{ marginTop: 8 }}>
+            <span className="pill">{labsCopy.previewBadge}</span>{' '}
+            {settingsCopy.connectionCloudLabsHint}
+          </p>
+        ) : null}
       </div>
       {displayStatus && !displayStatus.ready && displayStatus.reason && (
         <p className="faint" style={{ margin: 0 }}>↳ {displayStatus.reason}</p>

@@ -84,6 +84,11 @@ export function applyLabsConfigPatch(cfg: OttoConfig, patch: Partial<LabsConfig>
   return patchLabsConfig(cfg, patch);
 }
 
+/** Ship-tier gate for Settings cloud connection mode (#627 / #139). */
+export function isRemoteLettaCloudEnabled(labs: LabsConfig): boolean {
+  return labs.enabled === true && labs.features?.remote_letta_cloud === true;
+}
+
 function normalizeFeatureFlags(raw: LabsConfig['features'] | undefined): Partial<Record<LabFeatureId, boolean>> {
   const features: Partial<Record<LabFeatureId, boolean>> = {};
   if (!raw || typeof raw !== 'object') return features;

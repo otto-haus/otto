@@ -710,6 +710,8 @@ export const settingsCopy = {
   connectionEmbedded: 'Embedded (bundled Letta)',
   connectionExisting: 'Existing local Letta',
   connectionCloud: 'Cloud remote',
+  connectionCloudLabsHint:
+    'Remote Letta Cloud is a Labs feature. Enable Labs and Remote Letta Cloud in Settings → Labs when you are ready.',
   conversationSortLabel: 'Conversation order',
   conversationSortHint: 'Default sort for threads you have not dragged. Manual order always wins.',
   conversationSortRecent: 'Most recent activity',
