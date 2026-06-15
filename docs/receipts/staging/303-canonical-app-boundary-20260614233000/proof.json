@@ -1,0 +1,35 @@
+{
+  "ok": true,
+  "issue": 303,
+  "runId": "20260614233000",
+  "repo": "otto-haus/otto",
+  "related": {
+    "coreShippedIn": "https://github.com/otto-haus/otto/pull/334",
+    "duplicateOf": "https://github.com/otto-haus/otto/issues/305",
+    "iconFollowUp": "https://github.com/otto-haus/otto/issues/292"
+  },
+  "acceptance": {
+    "documentBoundary": true,
+    "stagingTargetsOttoStaging": true,
+    "refreshGuardBlocked": true,
+    "releaseMetadataSmoke": true,
+    "stagingDistinctMetadata": true,
+    "stagingDistinctIcon": "deferred #292"
+  },
+  "checks": {
+    "taskRefreshBlocked": true,
+    "taskRefreshPointsToInstallRelease": true,
+    "taskRefreshPointsToStaging": true,
+    "installForAgentsNoRefreshPath": true,
+    "liveVsStagingTriageUpdated": true
+  },
+  "verify": {
+    "bunTest": "287 pass / 0 fail",
+    "verifyV0": "5/5 pass"
+  },
+  "bundleBoundary": {
+    "ottoAppMutated": false,
+    "ottoStagingMutated": false
+  },
+  "receiptDir": "docs/receipts/staging/303-canonical-app-boundary-20260614233000"
+}

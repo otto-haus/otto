@@ -2,6 +2,8 @@
 
 Canonical operator contract for where Otto runs, how proof is deployed, and when the live app may be refreshed.
 
+GitHub: [#303 release-only canonical app](https://github.com/otto-haus/otto/issues/303) (core guards shipped in [#334 / #305](https://github.com/otto-haus/otto/pull/334); distinct staging icon tracked in [#292](https://github.com/otto-haus/otto/issues/292)).
+
 Related workflow: [`planning/hq-tickets/_workflow-run-ticket.md`](../../../planning/hq-tickets/_workflow-run-ticket.md)
 Staging rules (source of truth): [`planning/hq-tickets/AGENTS.md`](../../../planning/hq-tickets/AGENTS.md)
 
@@ -213,8 +215,8 @@ stat -f '%Sm' -t '%Y-%m-%dT%H:%M:%S' /Applications/otto-staging.app
 
 Checklist:
 
-1. Is the change only in source (not packaged)? → need `task staging` or `task refresh`.
-2. Is live bundle mtime older than the merge commit? → stale live; Sebastian runs `task refresh`.
+1. Is the change only in source (not packaged)? → need `task staging` (never `task refresh`).
+2. Is live bundle mtime older than the merge commit? → stale live; Sebastian runs `OTTO_ALLOW_RELEASE_INSTALL=1 task install:release`.
 3. Is Letta connected in staging but not live? → likely profile/config drift, not deploy — compare runtime settings, not just bundle age.
 4. Did proof use dev (`task electron`) instead of staging? → re-run proof on staging bundle.
 
