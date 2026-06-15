@@ -1149,7 +1149,9 @@ const LiveChat: React.FC<{
             </div>
           )}
           {ready && streamMessages.length === 0 && onNavigate ? (
-            <CommandStationStrip onNavigate={onNavigate} />
+            <div className="chat__commandStation">
+              <CommandStationStrip onNavigate={onNavigate} />
+            </div>
           ) : null}
           {streamMessages.length === 0 && (
             <div className={`chatEmpty${ready ? '' : ' chatEmpty--muted'}`}>
