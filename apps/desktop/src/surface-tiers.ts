@@ -110,11 +110,6 @@ export function isSurfaceAccessible(_id: SurfaceId, _labs?: LabsConfig): boolean
 /** Ship-tier workspace panes — file-backed canon exists, but the shell is not product-ready yet. */
 export const WORKSPACE_PREVIEW_SURFACES: ReadonlySet<SurfaceId> = new Set([
   'curation',
-  'checks',
-  'autonomy',
-  'skills',
-  'curation',
-  'checks',
   'autonomy',
   'skills',
 ]);

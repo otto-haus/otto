@@ -89,6 +89,12 @@ describe('surface-tiers', () => {
     expect(surfaceGate('practices', labs, true)).toBe('open');
   });
 
+  test('checks surface is open for ship (#641)', () => {
+    const labs = defaultLabsConfig();
+    expect(isSurfaceComingSoon('checks', labs)).toBe(false);
+    expect(surfaceGate('checks', labs, true)).toBe('open');
+  });
+
   test('receipts stays open during onboarding sample education (#139)', () => {
     const labs = defaultLabsConfig();
     const store = new Map<string, string>();
@@ -166,7 +172,7 @@ describe('surface-tiers', () => {
     expect(isSurfaceInSidebar('charters', labs, true)).toBe(true);
     expect(isSurfaceInSidebar('knowledge', labs, true)).toBe(true);
     expect(isSurfaceInSidebar('curation', labs, true)).toBe(false);
-    expect(isSurfaceInSidebar('checks', labs, true)).toBe(false);
+    expect(isSurfaceInSidebar('checks', labs, true)).toBe(true);
     expect(isSurfaceInSidebar('autonomy', labs, true)).toBe(false);
     expect(isSurfaceInSidebar('skills', labs, true)).toBe(false);
   });
