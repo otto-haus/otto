@@ -28,10 +28,11 @@ const RecentRow: React.FC<{ entry: PermissionLogEntry }> = ({ entry }) => (
 
 export const PermissionWindow: React.FC<{
   pending: PermissionRequestView | null;
+  pendingCount?: number;
   busy?: boolean;
   onDecide: (decision: PermissionDecision, denyMessage?: string) => void;
   onCorrectThis?: () => void;
-}> = ({ pending, busy = false, onDecide, onCorrectThis }) => {
+}> = ({ pending, pendingCount = pending ? 1 : 0, busy = false, onDecide, onCorrectThis }) => {
   const api = ottoApi();
   const [state, setState] = useState<PermissionState | null>(null);
 
@@ -77,7 +78,12 @@ export const PermissionWindow: React.FC<{
 
       {pending ? (
         <div className="contextPanel__section">
-          <div className="eyebrow">{permissionCopy.pendingTitle}</div>
+          <div className="eyebrow">
+            {permissionCopy.pendingTitle}
+            {pendingCount > 1 ? (
+              <span className="faint">{` · ${pendingCount} queued`}</span>
+            ) : null}
+          </div>
           <PermissionCard
             request={pending}
             busy={busy}

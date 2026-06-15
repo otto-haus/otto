@@ -11,7 +11,8 @@ const permissionCardSource = readFileSync(join(import.meta.dir, '../components/u
 describe('chat permission modal contract (#71 / 045 / #316)', () => {
   it('subscribes to runtime permission requests and opens Permission drawer', () => {
     expect(chatSource).toContain('api.onPermission((req) => {');
-    expect(chatSource).toContain('setPermission(req as PermissionRequestView)');
+    expect(chatSource).toContain('enqueuePermissionRequest(queue, req as PermissionRequestView)');
+    expect(chatSource).toContain('headPermissionRequest(permissionQueue)');
     expect(chatSource).toContain("setContextPanel('permission')");
     expect(chatSource).toContain('<ContextDrawer');
     expect(chatSource).toContain("contextPanel === 'permission'");
@@ -25,7 +26,7 @@ describe('chat permission modal contract (#71 / 045 / #316)', () => {
     expect(chatSource).toContain("api.permission.respond(active.requestId, { behavior: 'deny', message: msg })");
     expect(chatSource).toContain("api.permission.respond(active.requestId, { behavior: 'allow', scope: 'session' })");
     expect(chatSource).toContain("api.permission.respond(active.requestId, { behavior: 'allow', scope: 'once' })");
-    expect(chatSource).toContain('setPermission(null)');
+    expect(chatSource).toContain('dequeuePermissionRequest(queue)');
   });
 
   it('deny path writes a blocked receipt inline in chat', () => {
