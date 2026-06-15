@@ -71,6 +71,10 @@ tasks:
     desc: v0 release gate (scripts/verify-v0.mjs)
     cmds: [bun run verify:v0]
 
+  audit:
+    desc: Dependency vulnerability audit (same check used by CI)
+    cmds: [bun audit]
+
   docs:dev:
     desc: DevEx docs preview (Mintlify)
     cmds: [bun run docs:dev]
