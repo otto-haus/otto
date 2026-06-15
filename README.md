@@ -19,6 +19,27 @@ For the product story, visit [otto.haus](https://otto.haus). This README is the 
 
 ---
 
+## Direction: otto is becoming a Paperclip plugin
+
+otto is pivoting from a standalone Electron app into an extension of
+[Paperclip](https://github.com/paperclipai/paperclip) — the open-source app for running teams of
+AI agents. Paperclip is the office; otto is the behavior/culture layer; Letta is the memory/runtime.
+
+- **v1 (in progress): use Letta from Paperclip.** A `letta_local` external **adapter**
+  (`packages/paperclip-letta-adapter`) drives an existing local Letta agent from a Paperclip issue,
+  preserving memory continuity. Provider keys stay in Letta. Proof target: a **local** Paperclip host
+  + an existing **local** Letta runtime on the same Mac.
+- **v2: culture updates.** The otto governance loop (corrections → proposals → ratification →
+  Standards/Practices → receipts) ships as a Paperclip **plugin** that posts receipts back to issues.
+- **v3: the rest, only if it earns its keep.**
+
+The Electron desktop shell (`apps/desktop/`) is **kept as the internal lab / Letta console** — it
+validated the local Letta + chat + receipt loop. The adapter is built in a separate package
+(`packages/paperclip-letta-adapter`). Archive shell surfaces only **after** the Paperclip adapter has
+completed one real issue round-trip — not before.
+
+---
+
 <a id="see-it"></a>
 
 ## See it
