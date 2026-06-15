@@ -9,7 +9,7 @@ import { isElectron, ottoApi, type EffortLevel, type LettaModelOption, type Save
 import { useRuntimeContext } from '../RuntimeContext';
 import type { SurfaceId } from '../components/Sidebar';
 import { OttoMark } from '../components/OttoMark';
-import { CheckBlockBanner, MessageActions, Modal, PermissionCard, ReceiptInlineCard, type PermissionDecision, type PermissionRequestView } from '../components/ui';
+import { CheckBlockBanner, CommandStationStrip, MessageActions, Modal, PermissionCard, ReceiptInlineCard, type PermissionDecision, type PermissionRequestView } from '../components/ui';
 import { TodoPanel } from '../components/TodoPanel';
 import { displayThreadTitle } from '../components/ui/ThreadList';
 import { chatCopy, permissionCopy, toastCopy } from '../copy/surfaces';
@@ -94,6 +94,29 @@ const formatRuntimeSubtitle = (ready: boolean, reason: string | undefined, model
   if (text.length <= 96) return text;
   return `${text.slice(0, 93)}…`;
 };
+
+type ChatRuntimeStatus = NonNullable<ReturnType<typeof useRuntimeContext>['status']>;
+
+/** Product subtitle — model + memory state; no raw agent/conversation ids (#081). */
+const formatChatSessionSubtitle = (
+  st: ChatRuntimeStatus,
+  modelLabel: string,
+): string =>
+  [
+    modelLabel,
+    st.memfsEnabled ? 'Letta memory on' : 'Letta memory off',
+    st.transportFallbackReason ?? null,
+  ].filter(Boolean).join(' · ');
+
+/** Debug/support tooltip only — not shown in default connected chrome. */
+const formatChatDebugTitle = (st: ChatRuntimeStatus, modelLabel: string): string =>
+  [
+    st.agentId ?? 'no agent',
+    modelLabel,
+    st.transportFallbackReason ?? null,
+    st.conversationId ?? 'no conversation',
+    st.memfsEnabled ? 'Letta memory on' : 'Letta memory off',
+  ].filter(Boolean).join(' · ');
 
 const ModelEffortPickers: React.FC<{
   busy: boolean;
@@ -641,15 +664,8 @@ const LiveChat: React.FC<{
   const modelStatusLabel = requestedModel && activeModel && requestedModel !== activeModel
     ? `${labelForModel(requestedModel, modelOptions)} → ${labelForModel(activeModel, modelOptions)}`
     : labelForModel(selectedModel, modelOptions);
-  const chatStatusLine = st
-    ? [
-      st.agentId ?? 'no agent',
-      modelStatusLabel,
-      st.transportFallbackReason ?? null,
-      st.conversationId ?? 'no conversation',
-      st.memfsEnabled ? 'Letta memory' : null,
-    ].filter(Boolean).join(' · ')
-    : 'connecting…';
+  const chatSessionSubtitle = st ? formatChatSessionSubtitle(st, modelStatusLabel) : 'connecting…';
+  const chatDebugTitle = st ? formatChatDebugTitle(st, modelStatusLabel) : undefined;
 
   useEffect(() => {
     if (!api) return;
@@ -782,6 +798,13 @@ const LiveChat: React.FC<{
   const lastStreamMessage = streamMessages[streamMessages.length - 1];
   const assistantStreaming = rt.busy && lastStreamMessage?.who === 'otto' && !!lastStreamMessage.text;
   const activityLabel = rt.turnActivity?.label ?? chatCopy.workingPulse;
+  const headerSubtitle = st
+    ? (rt.busy
+      ? activityLabel
+      : ready
+        ? chatSessionSubtitle
+        : formatRuntimeSubtitle(ready, st.reason, labelForModel(selectedModel, modelOptions)))
+    : 'connecting…';
 
   const copyConversationMarkdown = async () => {
     if (streamMessages.length === 0) {
@@ -951,11 +974,11 @@ const LiveChat: React.FC<{
           <span className="chat__avatar"><OttoMark size={30} className="ottoMark" /></span>
           <div className="chat__titleBlock">
             <div className="chat__title">{headTitle}</div>
-            <div className="chat__id" title={st ? chatStatusLine : undefined}>
+            <div className="chat__id" title={chatDebugTitle}>
               {st ? (
                 <>
-                  <span className={`dot ${ready ? 'dot--ok' : 'dot--warn'}`} aria-hidden="true" />
-                  <span>{ready ? chatStatusLine : formatRuntimeSubtitle(ready, st.reason, labelForModel(selectedModel, modelOptions))}</span>
+                  <span className={`dot ${rt.busy ? 'dot--idle' : ready ? 'dot--ok' : 'dot--warn'}`} aria-hidden="true" />
+                  <span>{headerSubtitle}</span>
                 </>
               ) : 'connecting…'}
             </div>
@@ -973,9 +996,9 @@ const LiveChat: React.FC<{
                 >
                   {chatCopy.copyMarkdown}
                 </button>
-                <span className={`pill ${ready ? 'pill--ok' : 'pill--warn'}`}>
-                  {ready ? 'connected' : 'setup'}
-                </span>
+                {!ready ? (
+                  <span className="pill pill--warn">setup</span>
+                ) : null}
               </>
             ) : null}
             {!st ? (
@@ -1035,6 +1058,9 @@ const LiveChat: React.FC<{
               <p className="faint" style={{ marginTop: 8, fontSize: 13 }}>{chatCopy.diagnosticsHint}</p>
             </div>
           )}
+          {ready && streamMessages.length === 0 && onNavigate ? (
+            <CommandStationStrip onNavigate={onNavigate} />
+          ) : null}
           {streamMessages.length === 0 && (
             <div className={`chatEmpty${ready ? '' : ' chatEmpty--muted'}`}>
               <div className="eyebrow">{chatCopy.sessionEyebrow}</div>

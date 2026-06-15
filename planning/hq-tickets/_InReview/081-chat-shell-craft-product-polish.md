@@ -349,3 +349,33 @@ No rev10 execution delta required; rev9 +1 stands. +1.
 **Reason:** Chat craft staging before/after proof open
 
 **Rule:** No premie-dones. Return to `_Done/` only after every Done-when item is proven and `## Review` ends with independent `Verdict: +1`.
+
+## Execution receipt (rev11 — issue #98)
+
+Status: pass (source + unit)
+Date: 2026-06-14
+Owner lane: Cursor
+GitHub: otto-haus/otto#98
+
+### What changed
+
+- Chat header subtitle: human `GPT-5.x · Letta memory on/off` via `formatChatSessionSubtitle`; raw agent/conversation ids moved to tooltip only.
+- Removed fake `connected` pill when runtime is ready; `setup` pill remains when not ready.
+- Header shows `workingPulse` / turn activity label while `rt.busy`.
+- Restored `CommandStationStrip` on empty connected chat when navigation is available.
+- Ticket moved `_Backlog` → `_InReview`.
+
+### Verification
+
+```sh
+bun install
+bun run typecheck
+bun test apps/desktop/src/surfaces/chat-shell-craft.test.ts apps/desktop/src/surfaces/chat-composer-readiness.test.ts
+```
+
+### Proof on disk (existing rev9)
+
+- `docs/receipts/staging/081-chat-shell-before-reference.png`
+- `docs/receipts/staging/081-chat-shell-craft-product-polish.png`
+- `docs/receipts/staging/staging-rev8-proof-20260614070035.json`
+
