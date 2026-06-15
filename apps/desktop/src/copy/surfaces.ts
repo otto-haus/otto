@@ -220,6 +220,12 @@ export const chatCopy = {
   onboardingReceiptHint: 'First turn recorded — open Receipts to inspect the proof record.',
   onboardingSkip: 'Skip setup',
   onboardingViewReceipts: 'View Receipts',
+  copyMarkdown: 'Copy Markdown',
+  copyMarkdownHint: 'Copy this conversation as Markdown for handoff or docs',
+  copyMarkdownEmpty: 'Nothing to copy yet.',
+  copyMarkdownDone: 'Conversation copied',
+  copyMarkdownDoneBody: 'Markdown is on your clipboard. Local paths and likely secrets were redacted.',
+  copyMarkdownFailed: 'Could not copy conversation',
 } as const;
 
 export const onboardingCopy = {
