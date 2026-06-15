@@ -3830,7 +3830,77 @@ const MODEL_PROVIDERS: Array<{
   { kind: 'cloud', name: 'Fireworks', detail: 'Fireworks API key lives in Letta.', matches: ['fireworks'] },
 ];
 
-const ModelProviders: React.FC = () => {
+const AgentConnections: React.FC<{
+  lettaReady: boolean;
+  onOpenLetta: () => void;
+  onOpenGeneral: () => void;
+}> = ({ lettaReady, onOpenLetta, onOpenGeneral }) => {
+  const rows = [
+    {
+      id: 'letta',
+      name: settingsCopy.agentsLettaName,
+      detail: settingsCopy.agentsLettaDetail,
+      status: lettaReady ? 'connected' : 'setup',
+      action: lettaReady ? settingsCopy.agentsActionOpenLetta : settingsCopy.agentsActionGeneral,
+      onAction: lettaReady ? onOpenLetta : onOpenGeneral,
+    },
+    {
+      id: 'cursor',
+      name: settingsCopy.agentsCursorName,
+      detail: settingsCopy.agentsCursorDetail,
+      status: 'external',
+      action: settingsCopy.agentsActionDocs,
+      onAction: () => window.open('https://docs.cursor.com/cli/overview', '_blank', 'noopener,noreferrer'),
+    },
+    {
+      id: 'codex',
+      name: settingsCopy.agentsCodexName,
+      detail: settingsCopy.agentsCodexDetail,
+      status: lettaReady ? 'via-letta' : 'setup',
+      action: settingsCopy.agentsActionOpenLetta,
+      onAction: onOpenLetta,
+    },
+    {
+      id: 'claude',
+      name: settingsCopy.agentsClaudeName,
+      detail: settingsCopy.agentsClaudeDetail,
+      status: lettaReady ? 'via-letta' : 'setup',
+      action: settingsCopy.agentsActionOpenLetta,
+      onAction: onOpenLetta,
+    },
+  ] as const;
+
+  const statusLabel = (status: typeof rows[number]['status']) => {
+    switch (status) {
+      case 'connected': return 'connected';
+      case 'via-letta': return 'via Letta';
+      case 'external': return 'external CLI';
+      default: return 'setup required';
+    }
+  };
+
+  return (
+    <section className="agentConnections">
+      <SettingsSectionHeader title={settingsCopy.agentsTitle} lede={settingsCopy.agentsLede} />
+      <ul className="agentConnections__list">
+        {rows.map((row) => (
+          <li key={row.id} className="agentConnections__row">
+            <div className="agentConnections__main">
+              <div className="agentConnections__name">{row.name}</div>
+              <p className="agentConnections__detail">{row.detail}</p>
+            </div>
+            <span className={`pill ${row.status === 'connected' ? 'pill--ok' : row.status === 'setup' ? 'pill--warn' : ''}`}>
+              {statusLabel(row.status)}
+            </span>
+            <button type="button" className="btn" onClick={row.onAction}>{row.action}</button>
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
+};
+
+const ModelProviders: React.FC<{ onShowGeneral?: () => void }> = ({ onShowGeneral }) => {
   const api = ottoApi();
   const rt = useRuntimeContext();
   const [tab, setTab] = useState<ProviderKind>('local');
@@ -3904,6 +3974,11 @@ const ModelProviders: React.FC = () => {
   return (
     <div className="settingsPage__content providersScreen">
       <SettingsSectionHeader title={settingsCopy.providersTitle} lede={settingsCopy.providersLede} />
+      <AgentConnections
+        lettaReady={!!rt.status?.ready}
+        onOpenLetta={openLetta}
+        onOpenGeneral={() => onShowGeneral?.()}
+      />
       <div className="row" style={{ justifyContent: 'flex-end' }}>
         <button type="button" className="btn btn--primary" onClick={openLetta}>Open Letta</button>
       </div>
@@ -4386,7 +4461,7 @@ export const Settings: React.FC = () => {
       </nav>
 
       {section === 'providers' ? (
-        <ModelProviders />
+        <ModelProviders onShowGeneral={() => setSection('general')} />
       ) : section === 'display' ? (
         <div className="settingsPage__content">
           <SettingsSectionHeader title={settingsCopy.displayTitle} lede={settingsCopy.displayLede} />

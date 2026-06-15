@@ -1443,6 +1443,24 @@ h1, h2, h3, h4, p { margin: 0; }
 .attachment__remove svg { width: 14px; height: 14px; }
 .attachmentError { color: var(--stop); font-size: 12.5px; }
 
+.agentConnections { margin-bottom: 28px; }
+.agentConnections__list { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.agentConnections__row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  gap: 12px;
+  align-items: center;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--panel);
+}
+.agentConnections__name { font-weight: 600; font-size: 14px; }
+.agentConnections__detail { margin: 4px 0 0; font-size: 13px; color: var(--mut); line-height: 1.45; }
+@media (max-width: 720px) {
+  .agentConnections__row { grid-template-columns: 1fr; justify-items: start; }
+}
+
 .queuebar {
   border: 1px solid var(--line);
   border-radius: 12px;
