@@ -1,4 +1,4 @@
-# paperclip-adapter-letta
+# @otto-haus/paperclip-adapter-letta
 
 Run a persistent, memory-backed **Letta** agent (otto) from inside [Paperclip](https://github.com/paperclipai/paperclip).
 
@@ -87,7 +87,7 @@ curl -X POST http://localhost:3102/api/adapters/install \
   -d '{"packageName": "/ABS/PATH/packages/paperclip-letta-adapter", "isLocalPath": true}'
 ```
 
-Once installed, `letta_local` appears as a selectable adapter when creating an agent. Publish to npm (`paperclip-adapter-letta`) only once the local round-trip works.
+Once installed, `letta_local` appears as a selectable adapter when creating an agent. Publish to npm (`@otto-haus/paperclip-adapter-letta`) only once the local round-trip works.
 
 ## Design notes
 
