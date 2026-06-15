@@ -36,6 +36,26 @@ describe('discoverLocalLettaContext embedded state', () => {
       rmSync(tmp, { recursive: true, force: true });
     }
   });
+
+  test('no-agent reason is human copy without settings path (#583)', () => {
+    const tmp = mkdtempSync(join(tmpdir(), 'otto-letta-discovery-'));
+    try {
+      process.env.OTTO_HOME = tmp;
+      process.env.OTTO_SKIP_LETTA_LSOF = '1';
+      Reflect.deleteProperty(process.env, 'OTTO_LETTA_SETTINGS_PATH');
+      mkdirSync(join(tmp, 'letta'), { recursive: true });
+      writeFileSync(join(tmp, 'letta', 'settings.json'), `${JSON.stringify({}, null, 2)}\n`, 'utf8');
+      const config = new ConfigStore();
+      config.update({ connectionMode: 'embedded' });
+      const context = discoverLocalLettaContext(config);
+      expect(context.agentCandidates).toHaveLength(0);
+      expect(context.reason).toBe('No last local agent or session was found in Letta settings.');
+      expect(context.reason).not.toContain('settings.json');
+      expect(context.reason).not.toMatch(/\/Users\//);
+    } finally {
+      rmSync(tmp, { recursive: true, force: true });
+    }
+  });
 });
 
 const MODELS: LettaModelOption[] = [

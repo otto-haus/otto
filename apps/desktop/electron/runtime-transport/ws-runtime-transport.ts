@@ -132,7 +132,12 @@ export class WsRuntimeTransport implements OttoRuntimeTransport {
     const context = discoverLocalLettaContext(this.config);
     const agentId = context.agentCandidates[0] ?? context.agentId;
     if (!agentId) {
-      return this.fail(context, 'no-agent', context.reason ?? 'No local Letta agent candidate was available.', cli);
+      return this.fail(
+        context,
+        'no-agent',
+        friendly('no-agent', context.reason ?? 'No local Letta agent candidate was available.'),
+        cli,
+      );
     }
     if (!cli.cliResolved) {
       return this.fail(context, 'error', 'Letta CLI not found — install Letta Desktop or set LETTA_CLI_PATH for WS transport.', cli);

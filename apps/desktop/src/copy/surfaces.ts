@@ -214,6 +214,8 @@ export const chatCopy = {
   runtimeNotReadyEyebrow: 'runtime not ready',
   runtimeNotReadyTitle: "otto can't connect yet",
   runtimeNotReadyBody: 'Check Settings for Letta connection and required setup. Export diagnostics from Settings to attach evidence to an issue.',
+  runtimeNoAgentBody: 'Open Letta Desktop once to create a default agent, or set an Agent ID override in Settings.',
+  runtimeNoAgentSubtitle: 'Set up a local Letta agent',
   exportDiagnostics: 'Export diagnostics',
   diagnosticsHint: 'Attach the bundle path to GitHub issues/PRs. Secrets and chat content are redacted.',
   workingPulse: 'thinking…',

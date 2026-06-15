@@ -31,4 +31,11 @@ describe('chat composer readiness contract (#289, #300)', () => {
     expect(copySource).toContain('ticketCommandHint');
     expect(chatSource).toContain('{chatCopy.ticketCommandHint}');
   });
+
+  it('uses human no-agent copy instead of raw st.reason in runtime banner (#583)', () => {
+    expect(copySource).toContain('runtimeNoAgentBody');
+    expect(chatSource).toContain('runtimeSetupBannerBody(st)');
+    expect(chatSource).toContain('chatCopy.runtimeNoAgentBody');
+    expect(chatSource).not.toMatch(/\{st\.reason \?\? chatCopy\.runtimeNotReadyBody\}/);
+  });
 });
