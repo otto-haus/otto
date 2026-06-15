@@ -61,6 +61,7 @@
     "docs:dev": "cd devex && bunx --bun mint@4.2.616 dev",
     "docs:validate": "cd devex && bunx --bun mint@4.2.616 validate",
     "docs:links": "cd devex && bunx --bun mint@4.2.616 broken-links",
+    "docs:check": "bun run docs:validate && bun run docs:links",
     "release:gate": "bash scripts/release-gate.sh",
     "desktop:refresh": "bash scripts/refresh-otto-app.sh",
     "site:dev": "bash site/dev.sh"

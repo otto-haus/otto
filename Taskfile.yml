@@ -91,6 +91,10 @@ tasks:
     desc: Check DevEx docs links (Mintlify)
     cmds: [bun run docs:links]
 
+  docs:check:
+    desc: DevEx docs gate — validate Mintlify config and check links
+    cmds: [bun run docs:check]
+
   build:
     desc: Build the desktop app with committed readiness baseline (main + preload + renderer)
     dir: '{{.DESKTOP}}'
