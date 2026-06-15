@@ -23,6 +23,7 @@ Cut   = not in product UI (spec / parked only)
 
 | Date | Change |
 |------|--------|
+| 2026-06-15 | **556** Settings IA: Knowledge + Channels Ship-tier; Labs sidebar gate removed |
 | 2026-06-15 | **084** gate refresh: unit/release gates green; staging rows 3–10 pending Sebastian walk |
 | 2026-06-14 | **129** Mechanical matrix audit script + Ship proof-status column |
 | 2026-06-14 | **137** Labs gate: master + feature toggles; Knowledge/Channels Labs-tier only |
@@ -46,10 +47,10 @@ Cut   = not in product UI (spec / parked only)
 | Checks | Ship | Culture CI pane + Chat block | preview | **partial** — unit pass; **135** demo pending | `docs/v1/demo-culture-ci.md` + **135** demo | staging pending | 131–135 |
 | Autonomy | Ship | Policy read/evaluate | shipped | **pass** — unit + prior smoke | `autonomy/policy.yaml` + evaluate receipt | unit pass | 017 |
 | Skills | Ship | SkillStore | shipped | **partial** — file tests pass; live staging **066** open | `skill/**/SKILL.md` browse | staging pending | 066 |
-| Knowledge | Labs | Registry file-backed; Cognee optional | **coming soon** (Labs off) | **pass** — unit default off (**137**) | Registry read; enable `knowledge_cognee` in Settings → Labs | n/a (Labs) | 040–044, 055, **137** |
+| Knowledge | Ship | Registry file-backed; Cognee optional | **open** | **pass** — Settings IA (**556**) | Registry read; optional `knowledge_cognee` in Settings → Advanced | unit pass | 040–044, 055, **556** |
 | Tickets | Ship | Compile/orchestrate | shipped | **pass** — hygiene 049 | `node scripts/otto-staging-ticket-proof-capture.cjs` | staging pending | 049 |
 | Terminal | Ship | Opens system shell at workspace root | shipped | **pass** — unit | `bun test apps/desktop/electron/open-terminal.test.ts` | unit pass | 283 |
-| Channels | Labs | Contract + config; no live bot | **coming soon** (Labs off) | **pass** — unit default off (**137**) | Enable `channels_outbound` in Settings → Labs | n/a (Labs) | 056, **137** |
+| Channels | Ship | Contract + config; no live bot | **open** | **pass** — Settings IA (**556**) | `channels/channels.yaml` + pane; optional `channels_outbound` | unit pass | 056, **556** |
 
 ---
 

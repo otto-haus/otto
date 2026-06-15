@@ -81,19 +81,6 @@ describe('surface-tiers', () => {
     expect(surfaceGate('practices', labs, true)).toBe('open');
   });
 
-  test('labs surfaces blocked until master and feature enabled', () => {
-    const off = defaultLabsConfig();
-    expect(isSurfaceComingSoon('knowledge', off)).toBe(true);
-    expect(isSurfaceAccessible('knowledge', off)).toBe(false);
-
-    const masterOnly = { enabled: true, features: {} };
-    expect(isSurfaceComingSoon('knowledge', masterOnly)).toBe(true);
-
-    const on = { enabled: true, features: { knowledge_cognee: true } };
-    expect(isSurfaceAccessible('knowledge', on)).toBe(true);
-    expect(isSurfaceComingSoon('knowledge', on)).toBe(false);
-  });
-
   test('receipts stays open during onboarding sample education (#139)', () => {
     const labs = defaultLabsConfig();
     const store = new Map<string, string>();
