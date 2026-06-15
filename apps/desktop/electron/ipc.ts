@@ -37,6 +37,7 @@ import { MemoryStore } from './memory-store';
 import { PgvectorStore } from './pgvector-store';
 import { safeWebContentsSend, smokeMode } from './runtime-transport/runtime-common';
 import { readAppBuildInfo } from './build-info';
+import { getWorkspaceInfo, resolveWorkspaceRepoRoot } from './workspace-root';
 
 export function registerIpc(win: BrowserWindow) {
   const config = new ConfigStore();
@@ -106,6 +107,17 @@ export function registerIpc(win: BrowserWindow) {
   });
   ipcMain.handle('otto:models:list', () => listLocalLettaModels(config));
   ipcMain.handle('otto:open-letta', () => shell.openPath('/Applications/Letta.app'));
+  ipcMain.handle('otto:workspace:get', () => getWorkspaceInfo());
+  ipcMain.handle('otto:workspace:reveal', () => {
+    const path = resolveWorkspaceRepoRoot();
+    shell.showItemInFolder(path);
+    return path;
+  });
+  ipcMain.handle('otto:permission-session:list', () => permissionSessionStore.list());
+  ipcMain.handle('otto:permission-session:clear', () => {
+    permissionSessionStore.clear();
+    return { ok: true as const };
+  });
 
   ipcMain.handle('otto:config:get', () => config.get());
   ipcMain.handle('otto:config:set', (_e, patch: Partial<OttoConfig>) => config.update(patch));

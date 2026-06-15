@@ -66,6 +66,7 @@ import type {
   ThreadListResult,
   ThreadSwitchResult,
   ProviderMirrorSnapshot,
+  WorkspaceInfo,
 } from './shared/types';
 import type { CheckListResult, CheckRunResult } from '@otto-haus/core';
 import type {
@@ -148,6 +149,14 @@ const api = {
   connection: {
     get: (): Promise<ConnectionInfo> => ipcRenderer.invoke('otto:connection:get'),
     save: (input: ConnectionInput): Promise<RuntimeStatus> => ipcRenderer.invoke('otto:connection:save', input),
+  },
+  workspace: {
+    get: (): Promise<WorkspaceInfo> => ipcRenderer.invoke('otto:workspace:get'),
+    reveal: (): Promise<string> => ipcRenderer.invoke('otto:workspace:reveal'),
+  },
+  permissionSession: {
+    list: (): Promise<string[]> => ipcRenderer.invoke('otto:permission-session:list'),
+    clear: (): Promise<{ ok: true }> => ipcRenderer.invoke('otto:permission-session:clear'),
   },
   receipts: {
     list: (): Promise<ReceiptListResult> => ipcRenderer.invoke('otto:receipts:list'),

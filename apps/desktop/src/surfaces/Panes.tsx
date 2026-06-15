@@ -38,7 +38,7 @@ import {
 } from '../onboarding-sample-receipt';
 import { useLabs, LAB_FEATURE_IDS, LAB_FEATURE_META } from '../labs/LabsContext';
 import { AppSourceDetails } from '../components/AppSourceBadge';
-import type { AppBuildInfo, LabFeatureId } from '../../electron/shared/types';
+import type { AppBuildInfo, LabFeatureId, WorkspaceInfo } from '../../electron/shared/types';
 import {
   ottoApi,
   type CharterDetail,
@@ -3109,6 +3109,104 @@ const ConnectLetta: React.FC = () => {
   );
 };
 
+const WorkspaceAndPermissionRoute: React.FC = () => {
+  const api = ottoApi();
+  const { push: pushToast } = useToast();
+  const [workspace, setWorkspace] = useState<WorkspaceInfo | null>(null);
+  const [allowedTools, setAllowedTools] = useState<string[]>([]);
+
+  useEffect(() => {
+    if (!api?.workspace) return;
+    api.workspace.get().then(setWorkspace).catch(() => {});
+    api.permissionSession?.list().then(setAllowedTools).catch(() => setAllowedTools([]));
+  }, [api]);
+
+  if (!api?.workspace) {
+    return (
+      <p className="settingsFieldHint">
+        Workspace and permission controls are available in the desktop app.
+      </p>
+    );
+  }
+
+  const copyRepoPath = async () => {
+    if (!workspace?.repoRoot) return;
+    try {
+      await navigator.clipboard.writeText(workspace.repoRoot);
+      pushToast({
+        title: settingsCopy.workspaceCopyToastTitle,
+        body: settingsCopy.workspaceCopyToastBody,
+        tone: 'ok',
+      });
+    } catch {
+      pushToast({ title: 'Copy failed', body: 'Could not copy workspace path.', tone: 'warn' });
+    }
+  };
+
+  const clearSession = async () => {
+    await api.permissionSession!.clear();
+    setAllowedTools([]);
+    pushToast({
+      title: settingsCopy.permissionRouteClearToastTitle,
+      body: settingsCopy.permissionRouteClearToastBody,
+      tone: 'ok',
+    });
+  };
+
+  return (
+    <div className="settingsBlock">
+      <div className="settingsFieldRow">
+        <div className="settingsFieldRow__main">
+          <div className="settingsFieldRow__title">{settingsCopy.workspaceRepoTitle}</div>
+          <p className="settingsFieldRow__hint">{settingsCopy.workspaceRepoHint}</p>
+          {workspace && (
+            <p className="mono faint" style={{ marginTop: 6, fontSize: 12, wordBreak: 'break-all' }}>
+              {workspace.repoRoot}
+            </p>
+          )}
+        </div>
+        <div className="row" style={{ gap: 8, flexShrink: 0 }}>
+          <button type="button" className="btn" onClick={() => api.workspace!.reveal()}>
+            {settingsCopy.workspaceReveal}
+          </button>
+          <button type="button" className="btn" onClick={copyRepoPath}>
+            {settingsCopy.workspaceCopyPath}
+          </button>
+        </div>
+      </div>
+      {workspace && (
+        <div className="settingsFieldRow">
+          <div className="settingsFieldRow__main">
+            <div className="settingsFieldRow__title">{settingsCopy.workspaceHomeTitle}</div>
+            <p className="settingsFieldRow__hint">{settingsCopy.workspaceHomeHint}</p>
+            <p className="mono faint" style={{ marginTop: 6, fontSize: 12, wordBreak: 'break-all' }}>
+              {workspace.ottoHome}
+            </p>
+          </div>
+        </div>
+      )}
+      <div className="settingsFieldRow">
+        <div className="settingsFieldRow__main">
+          <div className="settingsFieldRow__title">{settingsCopy.permissionRouteTitle}</div>
+          <p className="settingsFieldRow__hint">{settingsCopy.permissionRouteHint}</p>
+          {allowedTools.length ? (
+            <ul style={{ marginTop: 8, paddingLeft: 18, fontSize: 13 }}>
+              {allowedTools.map((tool) => (
+                <li key={tool}>{tool}</li>
+              ))}
+            </ul>
+          ) : (
+            <p className="muted" style={{ marginTop: 8, fontSize: 13 }}>{settingsCopy.permissionRouteEmpty}</p>
+          )}
+        </div>
+        <button type="button" className="btn" onClick={clearSession} disabled={!allowedTools.length}>
+          {settingsCopy.permissionRouteClear}
+        </button>
+      </div>
+    </div>
+  );
+};
+
 const ConnectPgvector: React.FC = () => {
   const api = ottoApi();
   const [status, setStatus] = useState<PgvectorStatus | null>(null);
@@ -3694,6 +3792,11 @@ export const Settings: React.FC = () => {
           <section>
             <SettingsSectionHeader title={settingsCopy.connectionTitle} lede={settingsCopy.connectionLede} />
             <ConnectLetta />
+          </section>
+
+          <section>
+            <SettingsSectionHeader title={settingsCopy.workspaceTitle} lede={settingsCopy.workspaceLede} />
+            <WorkspaceAndPermissionRoute />
           </section>
 
           {(api?.cognee || api?.pgvector) ? (
