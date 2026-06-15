@@ -216,6 +216,63 @@ describe('WsRuntimeTransport', () => {
     expect(abortPayload).toBeTruthy();
   });
 
+  test('abort without an active run id still unblocks the turn (#692)', async () => {
+    const { win } = mockWindow();
+    const transport = new WsRuntimeTransport(() => win, mockConfig());
+    const sent: string[] = [];
+    (transport as unknown as { runtimeSocket: WebSocket | null }).runtimeSocket = {
+      readyState: WebSocket.OPEN,
+      send(payload: string) {
+        sent.push(payload);
+      },
+    } as unknown as WebSocket;
+    (transport as unknown as { activeRunId: string | null }).activeRunId = null;
+    (transport as unknown as { turnIdle: boolean }).turnIdle = false;
+
+    await transport.abort();
+
+    expect((transport as unknown as { aborted: boolean }).aborted).toBe(true);
+    expect((transport as unknown as { turnIdle: boolean }).turnIdle).toBe(true);
+    // No run id → no abort_message on the wire, but the local turn is no longer blocked.
+    expect(sent.some((payload) => JSON.parse(payload).type === 'abort_message')).toBe(false);
+  });
+
+  test('pending WS permission auto-denies after timeout (#691)', async () => {
+    const prevTimeout = process.env.OTTO_PERMISSION_TIMEOUT_MS;
+    process.env.OTTO_PERMISSION_TIMEOUT_MS = '20';
+    try {
+      const { win } = mockWindow();
+      const transport = new WsRuntimeTransport(() => win, mockConfig());
+      const sent: string[] = [];
+      (transport as unknown as { runtimeSocket: WebSocket | null }).runtimeSocket = {
+        readyState: WebSocket.OPEN,
+        send(payload: string) {
+          sent.push(payload);
+        },
+      } as unknown as WebSocket;
+
+      (transport as unknown as { handleControlRequest: (e: unknown) => void }).handleControlRequest({
+        type: 'control_request',
+        request_id: 'upstream-timeout-1',
+        tool_name: 'TimedOutTool',
+        tool_input: {},
+      });
+      expect(transport.getDiagnosticsSnapshot().pendingPermissionCount).toBe(1);
+
+      await new Promise((r) => setTimeout(r, 80));
+
+      expect(transport.getDiagnosticsSnapshot().pendingPermissionCount).toBe(0);
+      const denied = sent
+        .map((payload) => JSON.parse(payload))
+        .find((frame) => frame.type === 'control_response' && frame.approved === false);
+      expect(denied).toBeTruthy();
+      expect(String(denied.message)).toContain('timed out');
+    } finally {
+      if (prevTimeout === undefined) Reflect.deleteProperty(process.env, 'OTTO_PERMISSION_TIMEOUT_MS');
+      else process.env.OTTO_PERMISSION_TIMEOUT_MS = prevTimeout;
+    }
+  });
+
   test('resolvePermission emits control_response on runtime socket', async () => {
     const { win, sent } = mockWindow();
     const transport = new WsRuntimeTransport(() => win, mockConfig());
