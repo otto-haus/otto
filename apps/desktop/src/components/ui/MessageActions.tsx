@@ -1,14 +1,26 @@
 import React from 'react';
-import { chatCopy } from '../../copy/surfaces';
+import { chatCopy, previewCopy } from '../../copy/surfaces';
 
 export const MessageActions: React.FC<{
   disabled?: boolean;
   onPropose?: () => void;
   onCorrectThis?: () => void;
-}> = ({ disabled = false, onPropose, onCorrectThis }) => {
-  if (!onPropose && !onCorrectThis) return null;
+  onPreview?: () => void;
+}> = ({ disabled = false, onPropose, onCorrectThis, onPreview }) => {
+  if (!onPropose && !onCorrectThis && !onPreview) return null;
   return (
     <div className="msgActions">
+      {onPreview ? (
+        <button
+          type="button"
+          className="msgActions__btn"
+          disabled={disabled}
+          title={previewCopy.openMessageHint}
+          onClick={onPreview}
+        >
+          {previewCopy.openMessage}
+        </button>
+      ) : null}
       {onCorrectThis ? (
         <button
           type="button"
