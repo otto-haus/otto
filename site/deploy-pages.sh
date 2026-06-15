@@ -13,7 +13,7 @@ PRODUCTION_BRANCH="${OTTO_PAGES_PRODUCTION_BRANCH:-main}"
 [[ -n "$BRANCH" ]] || { echo "OTTO_PAGES_BRANCH cannot be empty" >&2; exit 1; }
 [[ -n "$PRODUCTION_BRANCH" ]] || { echo "OTTO_PAGES_PRODUCTION_BRANCH cannot be empty" >&2; exit 1; }
 
-for f in index.html pricing.html style.css; do
+for f in index.html pricing.html manifesto/index.html style.css; do
   [[ -f "$SITE/$f" ]] || { echo "missing $SITE/$f" >&2; exit 1; }
 done
 
