@@ -2,7 +2,7 @@ import { createRequire } from 'node:module';
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 import type { BrowserWindow } from 'electron';
-import type { EffortLevel, OttoConfig, StatusCode } from '../shared/types';
+import type { EffortLevel, OttoConfig, RuntimeStatus, StatusCode } from '../shared/types';
 
 export function smokeMode(): boolean {
   return process.env.OTTO_SMOKE === '1' || process.env.OTTO_SMOKE === 'true';
@@ -275,4 +275,31 @@ export function modelSelectionForCli(modelHandle: string, effort: string): strin
   const table = presets[modelHandle];
   if (!table) return modelHandle;
   return table[effortKey] ?? table.high ?? table.medium ?? table.off ?? modelHandle;
+}
+
+type PromptRuntimeContext = Partial<Pick<
+  RuntimeStatus,
+  'model' | 'modelHandle' | 'effort' | 'transportMode' | 'effectiveTransport' | 'sessionMode'
+>>;
+
+export function runtimeContextForPrompt(status: PromptRuntimeContext): string {
+  const selectedModel = status.modelHandle ?? status.model ?? 'agent-default';
+  const effort = status.effort ?? 'unknown';
+  const mode = status.transportMode ?? status.effectiveTransport ?? status.sessionMode ?? 'unknown';
+  return [
+    '<otto_runtime_context>',
+    'Use this context only when it is relevant or when the user asks about model, effort, provider path, or runtime setup.',
+    `selected_model_handle: ${selectedModel}`,
+    `reasoning_effort: ${effort}`,
+    `transport_mode: ${mode}`,
+    'provider_path: local Letta runtime owns provider auth/subscription; otto does not call OpenAI or Anthropic provider APIs directly.',
+    '</otto_runtime_context>',
+  ].join('\n');
+}
+
+export function promptWithRuntimeContext(
+  text: string,
+  status: PromptRuntimeContext,
+): string {
+  return `${runtimeContextForPrompt(status)}\n\n${text}`;
 }

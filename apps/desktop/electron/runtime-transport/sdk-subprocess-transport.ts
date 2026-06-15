@@ -20,6 +20,7 @@ import {
   modelSelectionForCli,
   msg,
   nextActionFor,
+  promptWithRuntimeContext,
   resolveCli,
   safeWebContentsSend,
   type ModelInitAttempt,
@@ -374,7 +375,7 @@ export class SdkSubprocessTransport implements OttoRuntimeTransport {
           evidence: [{ kind: 'log', ref: trace.path, note: 'Raw chat trace JSONL' }],
         });
       };
-      await this.session.send(text);
+      await this.session.send(promptWithRuntimeContext(text, startedStatus));
       for await (const message of this.session.stream()) {
         trace.write('event', message);
         safeWebContentsSend(this.win, 'otto:event', { message });

@@ -3,7 +3,7 @@ import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import type { BrowserWindow } from 'electron';
-import { classify, friendly, isInvalidModelError, modelInitAttempts, modelSelectionForCli, nextActionFor, resolveCli, safeWebContentsSend } from './runtime-common';
+import { classify, friendly, isInvalidModelError, modelInitAttempts, modelSelectionForCli, nextActionFor, promptWithRuntimeContext, resolveCli, runtimeContextForPrompt, safeWebContentsSend } from './runtime-common';
 
 describe('resolveCli connectionMode', () => {
   test('embedded prefers bundled resources path', () => {
@@ -67,6 +67,26 @@ describe('isInvalidModelError', () => {
   test('detects invalid model failures', () => {
     expect(isInvalidModelError(new Error("Invalid model 'gpt-5.5-plus-pro-high'"))).toBe(true);
     expect(isInvalidModelError(new Error('ECONNREFUSED'))).toBe(false);
+  });
+});
+
+describe('runtime prompt context', () => {
+  test('names selected model, effort, and provider boundary', () => {
+    const context = runtimeContextForPrompt({
+      modelHandle: 'anthropic/claude-opus-4-8',
+      effort: 'max',
+      transportMode: 'ws',
+    });
+    expect(context).toContain('selected_model_handle: anthropic/claude-opus-4-8');
+    expect(context).toContain('reasoning_effort: max');
+    expect(context).toContain('transport_mode: ws');
+    expect(context).toContain('otto does not call OpenAI or Anthropic provider APIs directly');
+  });
+
+  test('wraps the user text without replacing it', () => {
+    const prompt = promptWithRuntimeContext('What model are you?', { modelHandle: 'openai/gpt-5.5', effort: 'high' });
+    expect(prompt).toContain('selected_model_handle: openai/gpt-5.5');
+    expect(prompt.endsWith('What model are you?')).toBe(true);
   });
 });
 
