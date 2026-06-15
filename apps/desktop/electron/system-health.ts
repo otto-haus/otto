@@ -106,19 +106,24 @@ function runtimeChecks(status: ReturnType<LettaRunner['getStatus']>): HealthChec
           transport: status.effectiveTransport ?? null,
         },
       }),
-      check('session', 'WebSocket / session', 'ok', status.conversationId ? 'Conversation bound' : 'Session ready (no conversation yet)', {
-        summary: status.conversationId
+      check(
+        'session',
+        'WebSocket / session',
+        'ok',
+        status.conversationId
           ? `Conversation ${status.conversationId}`
           : 'Session ready — start or switch a thread',
-        data: {
-          conversationId: status.conversationId ?? null,
-          transportMode: status.transportMode ?? null,
-          effectiveTransport: status.effectiveTransport ?? null,
-          wsListenerPort: status.wsListenerPort ?? null,
-          lastReconnectAt: status.lastReconnectAt ?? null,
+        {
+          data: {
+            conversationId: status.conversationId ?? null,
+            transportMode: status.transportMode ?? null,
+            effectiveTransport: status.effectiveTransport ?? null,
+            wsListenerPort: status.wsListenerPort ?? null,
+            lastReconnectAt: status.lastReconnectAt ?? null,
+          },
+          nextAction: status.conversationId ? undefined : 'Send a message or create a thread to bind a conversation.',
         },
-        nextAction: status.conversationId ? undefined : 'Send a message or create a thread to bind a conversation.',
-      }),
+      ),
     ];
   }
 
