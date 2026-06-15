@@ -1,8 +1,11 @@
 name: Review
 slug: review
 version: 0.1
-status: draft            # draft — spec only, not yet implemented as an extension
+status: active           # active — Letta Code extension + desktop PracticeRunner
 summary: Prevent fake done and premature completion by mapping claims to evidence.
+implementation:
+  extension: extension/review.ts
+  skill: skill/SKILL.md
 invocations:
   - /review done
   - /review risk
