@@ -25,7 +25,7 @@ describe('letta-cli capability smoke helpers', () => {
 });
 
 describe('runLettaCliCapabilitySmoke discovery', () => {
-  test('embedded mode fails clearly when bundled CLI is absent', async () => {
+  test('embedded mode resolves bundled CLI from workspace node_modules', async () => {
     const prevResources = (process as NodeJS.Process & { resourcesPath?: string }).resourcesPath;
     const prevCli = process.env.LETTA_CLI_PATH;
     const dir = join(tmpdir(), `otto-cap-${Date.now()}`);
@@ -36,10 +36,10 @@ describe('runLettaCliCapabilitySmoke discovery', () => {
         connectionMode: 'embedded',
         includeDisposableTurn: false,
       });
-      expect(result.ok).toBe(false);
-      if (!result.ok) {
-        expect(result.check).toBe('discovery');
-        expect(result.nextAction).toMatch(/LETTA_CLI_PATH|Rebuild/);
+      expect(result.ok).toBe(true);
+      if (result.ok) {
+        expect(result.cliPath).toMatch(/letta\.js$/);
+        expect(result.versionOutput).toMatch(/Letta Code/);
       }
     } finally {
       (process as NodeJS.Process & { resourcesPath?: string }).resourcesPath = prevResources;
