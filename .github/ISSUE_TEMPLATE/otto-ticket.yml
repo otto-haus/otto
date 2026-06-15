@@ -1,0 +1,65 @@
+name: otto ticket
+description: Track implementation work with the same proof-first shape as the local ticket conveyor.
+title: "[otto-ticket] "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this form for work that should move through the otto proof loop:
+        work -> proof -> review -> ratification -> canon.
+
+  - type: input
+    id: source
+    attributes:
+      label: Local ticket source
+      description: Optional local ticket path when this issue was migrated from the file conveyor.
+      placeholder: planning/hq-tickets/123-short-slug.md
+
+  - type: dropdown
+    id: lane
+    attributes:
+      label: Work state
+      description: Match the old folder state when migrating a local ticket.
+      options:
+        - active
+        - in review
+        - backlog
+        - parked
+        - new
+    validations:
+      required: true
+
+  - type: textarea
+    id: outcome
+    attributes:
+      label: Outcome
+      description: What should be true after this ticket is complete?
+      placeholder: The user can...
+    validations:
+      required: true
+
+  - type: textarea
+    id: done_when
+    attributes:
+      label: Done when
+      description: Concrete acceptance criteria reviewers can verify.
+      placeholder: |
+        - ...
+        - ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: proof
+    attributes:
+      label: Required proof
+      description: Commands, receipts, screenshots, or runtime checks needed before review.
+      placeholder: |
+        - bun run typecheck
+        - bun test
+
+  - type: textarea
+    id: notes
+    attributes:
+      label: Notes
+      description: Scope limits, dependencies, open questions, or migration context.

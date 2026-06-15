@@ -1,0 +1,915 @@
+{
+  "repo": "otto-haus/otto",
+  "source": "planning/hq-tickets",
+  "includeDone": false,
+  "includeZero": false,
+  "wroteIssues": true,
+  "syncedExisting": true,
+  "generatedAt": "2026-06-14",
+  "summary": {
+    "total": 90,
+    "updated": 90
+  },
+  "issues": [
+    {
+      "id": "019",
+      "status": "parked",
+      "source": "planning/hq-tickets/_Parked/019-intake-manual-import.md",
+      "title": "[otto-ticket:019] Intake: Manual Import",
+      "action": "updated",
+      "reason": "matching title already existed",
+      "issueNumber": 59,
+      "issueUrl": "https://github.com/otto-haus/otto/issues/59"
+    },
+    {
+      "id": "020",
+      "status": "parked",
+      "source": "planning/hq-tickets/_Parked/020-discord-approval-bridge.md",
+      "title": "[otto-ticket:020] Discord Approval Bridge",
+      "action": "updated",
+      "reason": "matching title already existed",
+      "issueNumber": 60,
+      "issueUrl": "https://github.com/otto-haus/otto/issues/60"
+    },
+    {
+      "id": "021",
+      "status": "parked",
+      "source": "planning/hq-tickets/_Parked/021-paperclip-readonly-import.md",
+      "title": "[otto-ticket:021] Paperclip: Read-Only Import + Curation Bridge",
+      "action": "updated",
+      "reason": "matching title already existed",
+      "issueNumber": 61,
+      "issueUrl": "https://github.com/otto-haus/otto/issues/61"
+    },
+    {
+      "id": "022",
+      "status": "parked",
+      "source": "planning/hq-tickets/_Parked/022-paperclip-task-creation.md",
+      "title": "[otto-ticket:022] Paperclip: Task Creation (Approval Door)",
+      "action": "updated",
+      "reason": "matching title already existed",
+      "issueNumber": 62,
+      "issueUrl": "https://github.com/otto-haus/otto/issues/62"
+    },
+    {
+      "id": "023",
+      "status": "parked",
+      "source": "planning/hq-tickets/_Parked/023-stacks-source-packets.md",
+      "title": "[otto-ticket:023] Stacks Source Packets",
+      "action": "updated",
+      "reason": "matching title already existed",
+      "issueNumber": 63,
+      "issueUrl": "https://github.com/otto-haus/otto/issues/63"
+    },
+    {
+      "id": "024",
+      "status": "parked",
+      "source": "planning/hq-tickets/_Parked/024-people-context-packs.md",
+      "title": "[otto-ticket:024] People Context Packs",
+      "action": "updated",
+      "reason": "matching title already existed",
+      "issueNumber": 64,
+      "issueUrl": "https://github.com/otto-haus/otto/issues/64"
+    },
+    {
+      "id": "025",
+      "status": "parked",
+      "source": "planning/hq-tickets/_Parked/025-pinned-chat-list.md",
+      "title": "[otto-ticket:025] Pinned Chat List",
+      "action": "updated",
+      "reason": "matching title already existed",
+      "issueNumber": 65,
+      "issueUrl": "https://github.com/otto-haus/otto/issues/65"
+    },
+    {
+      "id": "039",
+      "status": "active",
+      "source": "planning/hq-tickets/039-cathedral-ws-runtime-transport.md",
+      "title": "[otto-ticket:039] Cathedral: WebSocket Runtime Transport",
+      "action": "updated",
+      "reason": "matching title already existed",
+      "issueNumber": 66,
+      "issueUrl": "https://github.com/otto-haus/otto/issues/66"
+    },
+    {
+      "id": "041",
+      "status": "active",
+      "source": "planning/hq-tickets/041-cognee-local-home.md",
+      "title": "[otto-ticket:041] Cognee Local Home (Self-Host)",
+      "action": "updated",
+      "reason": "matching title already existed",
+      "issueNumber": 67,
+      "issueUrl": "https://github.com/otto-haus/otto/issues/67"
+    },
+    {
+      "id": "042",
+      "status": "active",
+      "source": "planning/hq-tickets/042-cognee-mcp-recall-bridge.md",
+      "title": "[otto-ticket:042] Cognee MCP Recall Bridge",
+      "action": "updated",
+      "reason": "matching title already existed",
+      "issueNumber": 68,
+      "issueUrl": "https://github.com/otto-haus/otto/issues/68"
+    },
+    {
+      "id": "043",
+      "status": "active",
+      "source": "planning/hq-tickets/043-cognee-capture-otto-canon.md",
+      "title": "[otto-ticket:043] Cognee Capture: Otto Canon with Provenance",
+      "action": "updated",
+      "reason": "matching title already existed",
+      "issueNumber": 69,
+      "issueUrl": "https://github.com/otto-haus/otto/issues/69"
+    },
+    {
+      "id": "044",
+      "status": "active",
+      "source": "planning/hq-tickets/044-cognee-knowledge-graph-surface.md",
+      "title": "[otto-ticket:044] Knowledge Surface: Cognee Graph (Thin)",
+      "action": "updated",
+      "reason": "matching title already existed",
+      "issueNumber": 70,
+      "issueUrl": "https://github.com/otto-haus/otto/issues/70"
+    },
+    {
+      "id": "045",
+      "status": "active",
+      "source": "planning/hq-tickets/045-chat-permission-modal-abort-fix.md",
+      "title": "[otto-ticket:045] Chat: Permission Modal + Abort Terminal Fix",
+      "action": "updated",
+      "reason": "matching title already existed",
+      "issueNumber": 71,
+      "issueUrl": "https://github.com/otto-haus/otto/issues/71"
+    },
+    {
+      "id": "046",
+      "status": "active",
+      "source": "planning/hq-tickets/046-conversation-list-thread-switcher.md",
+      "title": "[otto-ticket:046] Chat: Multi-Thread Conversations (List + Switcher)",
+      "action": "updated",
+      "reason": "matching title already existed",
+      "issueNumber": 72,
+      "issueUrl": "https://github.com/otto-haus/otto/issues/72"
+    },
+    {
+      "id": "047",
+      "status": "backlog",
+      "source": "planning/hq-tickets/_Backlog/047-letta-memory-read-surface.md",
+      "title": "[otto-ticket:047] Letta Memory Observatory (Read-Only)",
+      "action": "updated",
+      "reason": "matching title already existed",
+      "issueNumber": 73,
+      "issueUrl": "https://github.com/otto-haus/otto/issues/73"
+    },
+    {
+      "id": "049",
+      "status": "active",
+      "source": "planning/hq-tickets/049-chat-ticket-orchestration-commands.md",
+      "title": "[otto-ticket:049] Chat: Ticket Orchestration Commands",
+      "action": "updated",
+      "reason": "matching title already existed",
+      "issueNumber": 74,
+      "issueUrl": "https://github.com/otto-haus/otto/issues/74"
+    },
+    {
+      "id": "053",
+      "status": "active",
+      "source": "planning/hq-tickets/053-practice-runtime-charter-review-field-note.md",
+      "title": "[otto-ticket:053] Practice Runtime (Charter / Review / Field Note)",
+      "action": "updated",
+      "reason": "matching title already existed",
+      "issueNumber": 75,
+      "issueUrl": "https://github.com/otto-haus/otto/issues/75"
+    },
+    {
+      "id": "054",
+      "status": "active",
+      "source": "planning/hq-tickets/054-repo-hygiene-commit-split-prs.md",
+      "title": "[otto-ticket:054] Repo Hygiene: Desktop v1 Wave Commit & Split PRs",
+      "action": "updated",
+      "reason": "matching title already existed",
+      "issueNumber": 76,
+      "issueUrl": "https://github.com/otto-haus/otto/issues/76"
+    },
+    {
+      "id": "055",
+      "status": "active",
+      "source": "planning/hq-tickets/055-knowledge-baseline-ship.md",
+      "title": "[otto-ticket:055] Knowledge Baseline Ship (Contract + Surface)",
+      "action": "updated",
+      "reason": "matching title already existed",
+      "issueNumber": 77,
+      "issueUrl": "https://github.com/otto-haus/otto/issues/77"
+    },
+    {
+      "id": "056",
+      "status": "active",
+      "source": "planning/hq-tickets/056-system-surfaces-ship-skills-tickets-channels.md",
+      "title": "[otto-ticket:056] System Surfaces Ship (Skills · Tickets · Channels · Workers)",
+      "action": "updated",
+      "reason": "matching title already existed",
+      "issueNumber": 78,
+      "issueUrl": "https://github.com/otto-haus/otto/issues/78"
+    },
+    {
+      "id": "058",
+      "status": "active",
+      "source": "planning/hq-tickets/058-craft-runtime-robustness-pack.md",
+      "title": "[otto-ticket:058] Craft P1: Runtime Robustness Pack",
+      "action": "updated",
+      "reason": "matching title already existed",
+      "issueNumber": 79,
+      "issueUrl": "https://github.com/otto-haus/otto/issues/79"
+    },
+    {
+      "id": "059",
+      "status": "backlog",
+      "source": "planning/hq-tickets/_Backlog/059-command-station-dashboard-thin.md",
+      "title": "[otto-ticket:059] Command Station Dashboard (Thin)",
+      "action": "updated",
+      "reason": "matching title already existed",
+      "issueNumber": 80,
+      "issueUrl": "https://github.com/otto-haus/otto/issues/80"
+    },
+    {
+      "id": "060",
+      "status": "active",
+      "source": "planning/hq-tickets/060-worker-autonomous-runtime-loop.md",
+      "title": "[otto-ticket:060] Worker Autonomous Runtime Loop",
+      "action": "updated",
+      "reason": "matching title already existed",
+      "issueNumber": 81,
+      "issueUrl": "https://github.com/otto-haus/otto/issues/81"
+    },
+    {
+      "id": "061",
+      "status": "active",
+      "source": "planning/hq-tickets/061-practice-mining-observe-loop.md",
+      "title": "[otto-ticket:061] Practice Mining Observe Loop",
+      "action": "updated",
+      "reason": "matching title already existed",
+      "issueNumber": 82,
+      "issueUrl": "https://github.com/otto-haus/otto/issues/82"
+    },
+    {
+      "id": "062",
+      "status": "active",
+      "source": "planning/hq-tickets/062-ai-frontier-review-routine-executor.md",
+      "title": "[otto-ticket:062] AI Frontier Review Routine Executor",
+      "action": "updated",
+      "reason": "matching title already existed",
+      "issueNumber": 83,
+      "issueUrl": "https://github.com/otto-haus/otto/issues/83"
+    },
+    {
+      "id": "063",
+      "status": "backlog",
+      "source": "planning/hq-tickets/_Backlog/063-release-lane-v01-sebastian-gate.md",
+      "title": "[otto-ticket:063] Release Lane v0.1.3 (Sebastian Gate)",
+      "action": "updated",
+      "reason": "matching title already existed",
+      "issueNumber": 84,
+      "issueUrl": "https://github.com/otto-haus/otto/issues/84"
+    },
+    {
+      "id": "065",
+      "status": "backlog",
+      "source": "planning/hq-tickets/_Backlog/065-marketing-site-otto-haus.md",
+      "title": "[otto-ticket:065] Marketing Site: otto.haus (Basic)",
+      "action": "updated",
+      "reason": "matching title already existed",
+      "issueNumber": 85,
+      "issueUrl": "https://github.com/otto-haus/otto/issues/85"
+    },
+    {
+      "id": "066",
+      "status": "active",
+      "source": "planning/hq-tickets/066-skills-capability-library-seed.md",
+      "title": "[otto-ticket:066] Skills Capability Library Seed",
+      "action": "updated",
+      "reason": "matching title already existed",
+      "issueNumber": 86,
+      "issueUrl": "https://github.com/otto-haus/otto/issues/86"
+    },
+    {
+      "id": "068",
+      "status": "backlog",
+      "source": "planning/hq-tickets/_Backlog/068-pgvector-local-recall-store.md",
+      "title": "[otto-ticket:068] pgvector: Local Recall Store (Optional)",
+      "action": "updated",
+      "reason": "matching title already existed",
+      "issueNumber": 87,
+      "issueUrl": "https://github.com/otto-haus/otto/issues/87"
+    },
+    {
+      "id": "069",
+      "status": "backlog",
+      "source": "planning/hq-tickets/_Backlog/069-bug-onboarding-welcome-skipped-when-connected.md",
+      "title": "[otto-ticket:069] Bug: Onboarding Welcome Skipped When Already Connected",
+      "action": "updated",
+      "reason": "matching title already existed",
+      "issueNumber": 88,
+      "issueUrl": "https://github.com/otto-haus/otto/issues/88"
+    },
+    {
+      "id": "071",
+      "status": "backlog",
+      "source": "planning/hq-tickets/_Backlog/071-bug-onboarding-missing-receipt-step-sample.md",
+      "title": "[otto-ticket:071] Bug: Onboarding Missing Step 4 + Sample Receipt (Design Drift)",
+      "action": "updated",
+      "reason": "matching title already existed",
+      "issueNumber": 89,
+      "issueUrl": "https://github.com/otto-haus/otto/issues/89"
+    },
+    {
+      "id": "072",
+      "status": "backlog",
+      "source": "planning/hq-tickets/_Backlog/072-bug-onboarding-receipts-cta-wrong-dock.md",
+      "title": "[otto-ticket:072] Bug: Onboarding Secondary CTA Shows Wrong Connect Dock",
+      "action": "updated",
+      "reason": "matching title already existed",
+      "issueNumber": 90,
+      "issueUrl": "https://github.com/otto-haus/otto/issues/90"
+    },
+    {
+      "id": "073",
+      "status": "backlog",
+      "source": "planning/hq-tickets/_Backlog/073-bug-onboarding-dock-ux-gaps.md",
+      "title": "[otto-ticket:073] Bug: Onboarding Connect Dock UX Gaps",
+      "action": "updated",
+      "reason": "matching title already existed",
+      "issueNumber": 91,
+      "issueUrl": "https://github.com/otto-haus/otto/issues/91"
+    },
+    {
+      "id": "074",
+      "status": "parked",
+      "source": "planning/hq-tickets/_Parked/074-paperclip-intake-surface.md",
+      "title": "[otto-ticket:074] Paperclip: Intake Surface (Thin)",
+      "action": "updated",
+      "reason": "matching title already existed",
+      "issueNumber": 92,
+      "issueUrl": "https://github.com/otto-haus/otto/issues/92"
+    },
+    {
+      "id": "075",
+      "status": "parked",
+      "source": "planning/hq-tickets/_Parked/075-paperclip-status-feedback.md",
+      "title": "[otto-ticket:075] Paperclip: Status Feedback (Review Requested, Not Done)",
+      "action": "updated",
+      "reason": "matching title already existed",
+      "issueNumber": 93,
+      "issueUrl": "https://github.com/otto-haus/otto/issues/93"
+    },
+    {
+      "id": "076",
+      "status": "active",
+      "source": "planning/hq-tickets/076-embedded-letta-one-app-distribution.md",
+      "title": "[otto-ticket:076] Embedded Letta Runtime (One-App Distribution)",
+      "action": "updated",
+      "reason": "matching title already existed",
+      "issueNumber": 94,
+      "issueUrl": "https://github.com/otto-haus/otto/issues/94"
+    },
+    {
+      "id": "077",
+      "status": "parked",
+      "source": "planning/hq-tickets/_Parked/077-letta-cloud-remote-mode.md",
+      "title": "[otto-ticket:077] Letta Cloud / Remote Mode (Advanced)",
+      "action": "updated",
+      "reason": "matching title already existed",
+      "issueNumber": 95,
+      "issueUrl": "https://github.com/otto-haus/otto/issues/95"
+    },
+    {
+      "id": "078",
+      "status": "backlog",
+      "source": "planning/hq-tickets/_Backlog/078-provider-capability-mirror-settings.md",
+      "title": "[otto-ticket:078] Settings: Provider Capability Mirror (Write-Only BYOK)",
+      "action": "updated",
+      "reason": "matching title already existed",
+      "issueNumber": 96,
+      "issueUrl": "https://github.com/otto-haus/otto/issues/96"
+    },
+    {
+      "id": "080",
+      "status": "backlog",
+      "source": "planning/hq-tickets/_Backlog/080-onboarding-one-app-zero-setup.md",
+      "title": "[otto-ticket:080] Onboarding: One-App Zero-Setup Path",
+      "action": "updated",
+      "reason": "matching title already existed",
+      "issueNumber": 97,
+      "issueUrl": "https://github.com/otto-haus/otto/issues/97"
+    },
+    {
+      "id": "081",
+      "status": "backlog",
+      "source": "planning/hq-tickets/_Backlog/081-chat-shell-craft-product-polish.md",
+      "title": "[otto-ticket:081] Chat Shell: Product Craft Polish",
+      "action": "updated",
+      "reason": "matching title already existed",
+      "issueNumber": 98,
+      "issueUrl": "https://github.com/otto-haus/otto/issues/98"
+    },
+    {
+      "id": "083",
+      "status": "parked",
+      "source": "planning/hq-tickets/_Parked/083-otto-cloud-pages-shell.md",
+      "title": "[otto-ticket:083] Otto Cloud Phase 1: Pages Shell + Health",
+      "action": "updated",
+      "reason": "matching title already existed",
+      "issueNumber": 99,
+      "issueUrl": "https://github.com/otto-haus/otto/issues/99"
+    },
+    {
+      "id": "084",
+      "status": "parked",
+      "source": "planning/hq-tickets/_Parked/084-otto-cloud-d1-records-api.md",
+      "title": "[otto-ticket:084] Otto Cloud Phase 2: D1 Records API",
+      "action": "updated",
+      "reason": "matching title already existed",
+      "issueNumber": 100,
+      "issueUrl": "https://github.com/otto-haus/otto/issues/100"
+    },
+    {
+      "id": "085",
+      "status": "parked",
+      "source": "planning/hq-tickets/_Parked/085-otto-cloud-letta-read-proxy.md",
+      "title": "[otto-ticket:085] Otto Cloud Phase 3: Letta Cloud Read (Envs + Schedules)",
+      "action": "updated",
+      "reason": "matching title already existed",
+      "issueNumber": 101,
+      "issueUrl": "https://github.com/otto-haus/otto/issues/101"
+    },
+    {
+      "id": "086",
+      "status": "parked",
+      "source": "planning/hq-tickets/_Parked/086-otto-cloud-remote-env-template.md",
+      "title": "[otto-ticket:086] Otto Cloud Phase 4: Remote Env VM Template",
+      "action": "updated",
+      "reason": "matching title already existed",
+      "issueNumber": 102,
+      "issueUrl": "https://github.com/otto-haus/otto/issues/102"
+    },
+    {
+      "id": "087",
+      "status": "parked",
+      "source": "planning/hq-tickets/_Parked/087-otto-cloud-discord-webhooks.md",
+      "title": "[otto-ticket:087] Otto Cloud Phase 5: Discord Approval Webhooks",
+      "action": "updated",
+      "reason": "matching title already existed",
+      "issueNumber": 103,
+      "issueUrl": "https://github.com/otto-haus/otto/issues/103"
+    },
+    {
+      "id": "088",
+      "status": "parked",
+      "source": "planning/hq-tickets/_Parked/088-otto-cloud-workos-orgs.md",
+      "title": "[otto-ticket:088] Otto Cloud Phase 6: WorkOS Orgs (Parked)",
+      "action": "updated",
+      "reason": "matching title already existed",
+      "issueNumber": 104,
+      "issueUrl": "https://github.com/otto-haus/otto/issues/104"
+    },
+    {
+      "id": "089",
+      "status": "parked",
+      "source": "planning/hq-tickets/_Parked/089-desktop-cloud-sync-contract.md",
+      "title": "[otto-ticket:089] Desktop ↔ Cloud Sync Contract",
+      "action": "updated",
+      "reason": "matching title already existed",
+      "issueNumber": 105,
+      "issueUrl": "https://github.com/otto-haus/otto/issues/105"
+    },
+    {
+      "id": "090",
+      "status": "parked",
+      "source": "planning/hq-tickets/_Parked/090-otto-cloud-monorepo-layout-adr.md",
+      "title": "[otto-ticket:090] Otto Cloud: Monorepo Layout ADR (`apps/cloud/`)",
+      "action": "updated",
+      "reason": "matching title already existed",
+      "issueNumber": 106,
+      "issueUrl": "https://github.com/otto-haus/otto/issues/106"
+    },
+    {
+      "id": "093",
+      "status": "parked",
+      "source": "planning/hq-tickets/_Parked/093-multi-agent-workspace-policy-adr.md",
+      "title": "[otto-ticket:093] Multi-Agent Workspace Policy (ADR)",
+      "action": "updated",
+      "reason": "matching title already existed",
+      "issueNumber": 107,
+      "issueUrl": "https://github.com/otto-haus/otto/issues/107"
+    },
+    {
+      "id": "094",
+      "status": "parked",
+      "source": "planning/hq-tickets/_Parked/094-control-plane-command-queue.md",
+      "title": "[otto-ticket:094] Control Plane: Command Queue Contract",
+      "action": "updated",
+      "reason": "matching title already existed",
+      "issueNumber": 108,
+      "issueUrl": "https://github.com/otto-haus/otto/issues/108"
+    },
+    {
+      "id": "095",
+      "status": "parked",
+      "source": "planning/hq-tickets/_Parked/095-control-plane-execution-leases.md",
+      "title": "[otto-ticket:095] Control Plane: Execution Leases",
+      "action": "updated",
+      "reason": "matching title already existed",
+      "issueNumber": 109,
+      "issueUrl": "https://github.com/otto-haus/otto/issues/109"
+    },
+    {
+      "id": "096",
+      "status": "parked",
+      "source": "planning/hq-tickets/_Parked/096-control-plane-audit-export.md",
+      "title": "[otto-ticket:096] Control Plane: Audit Export Bundle",
+      "action": "updated",
+      "reason": "matching title already existed",
+      "issueNumber": 110,
+      "issueUrl": "https://github.com/otto-haus/otto/issues/110"
+    },
+    {
+      "id": "097",
+      "status": "parked",
+      "source": "planning/hq-tickets/_Parked/097-control-plane-runner-heartbeat.md",
+      "title": "[otto-ticket:097] Control Plane: Runner Heartbeat",
+      "action": "updated",
+      "reason": "matching title already existed",
+      "issueNumber": 111,
+      "issueUrl": "https://github.com/otto-haus/otto/issues/111"
+    },
+    {
+      "id": "098",
+      "status": "parked",
+      "source": "planning/hq-tickets/_Parked/098-control-plane-replay-recovery.md",
+      "title": "[otto-ticket:098] Control Plane: Replay & Recovery",
+      "action": "updated",
+      "reason": "matching title already existed",
+      "issueNumber": 112,
+      "issueUrl": "https://github.com/otto-haus/otto/issues/112"
+    },
+    {
+      "id": "099",
+      "status": "parked",
+      "source": "planning/hq-tickets/_Parked/099-control-plane-notification-policy.md",
+      "title": "[otto-ticket:099] Control Plane: Notification Policy",
+      "action": "updated",
+      "reason": "matching title already existed",
+      "issueNumber": 113,
+      "issueUrl": "https://github.com/otto-haus/otto/issues/113"
+    },
+    {
+      "id": "115",
+      "status": "backlog",
+      "source": "planning/hq-tickets/_Backlog/115-marketing-pricing-pilot-page.md",
+      "title": "[otto-ticket:115] Marketing: `/pricing` Managed Private Pilot Page",
+      "action": "updated",
+      "reason": "matching title already existed",
+      "issueNumber": 114,
+      "issueUrl": "https://github.com/otto-haus/otto/issues/114"
+    },
+    {
+      "id": "116",
+      "status": "backlog",
+      "source": "planning/hq-tickets/_Backlog/116-pilot-offer-claim-boundary.md",
+      "title": "[otto-ticket:116] Pilot Offer: Claim Boundary & Scope Doc",
+      "action": "updated",
+      "reason": "matching title already existed",
+      "issueNumber": 116,
+      "issueUrl": "https://github.com/otto-haus/otto/issues/116"
+    },
+    {
+      "id": "117",
+      "status": "parked",
+      "source": "planning/hq-tickets/_Parked/117-pilot-intake-request-flow.md",
+      "title": "[otto-ticket:117] Pilot Intake: Request Flow (No Fake Checkout)",
+      "action": "updated",
+      "reason": "matching title already existed",
+      "issueNumber": 117,
+      "issueUrl": "https://github.com/otto-haus/otto/issues/117"
+    },
+    {
+      "id": "118",
+      "status": "parked",
+      "source": "planning/hq-tickets/_Parked/118-marketing-culture-vs-memory-page.md",
+      "title": "[otto-ticket:118] Marketing: Culture vs Memory Category Page (optional)",
+      "action": "updated",
+      "reason": "matching title already existed",
+      "issueNumber": 118,
+      "issueUrl": "https://github.com/otto-haus/otto/issues/118"
+    },
+    {
+      "id": "119",
+      "status": "backlog",
+      "source": "planning/hq-tickets/_Backlog/119-primary-agent-default-ux.md",
+      "title": "[otto-ticket:119] Product: Primary Agent Default UX",
+      "action": "updated",
+      "reason": "matching title already existed",
+      "issueNumber": 119,
+      "issueUrl": "https://github.com/otto-haus/otto/issues/119"
+    },
+    {
+      "id": "120",
+      "status": "parked",
+      "source": "planning/hq-tickets/_Parked/120-advanced-isolated-second-agent.md",
+      "title": "[otto-ticket:120] Advanced: Isolated Second Agent Flow",
+      "action": "updated",
+      "reason": "matching title already existed",
+      "issueNumber": 120,
+      "issueUrl": "https://github.com/otto-haus/otto/issues/120"
+    },
+    {
+      "id": "121",
+      "status": "active",
+      "source": "planning/hq-tickets/121-behavior-changelog-weekly-digest.md",
+      "title": "[otto-ticket:121] Behavior Changelog (Weekly Culture Digest)",
+      "action": "updated",
+      "reason": "matching title already existed",
+      "issueNumber": 121,
+      "issueUrl": "https://github.com/otto-haus/otto/issues/121"
+    },
+    {
+      "id": "127",
+      "status": "backlog",
+      "source": "planning/hq-tickets/_Backlog/127-command-station-culture-home.md",
+      "title": "[otto-ticket:127] Command Station: Culture Home",
+      "action": "updated",
+      "reason": "matching title already existed",
+      "issueNumber": 122,
+      "issueUrl": "https://github.com/otto-haus/otto/issues/122"
+    },
+    {
+      "id": "129",
+      "status": "backlog",
+      "source": "planning/hq-tickets/_Backlog/129-ci-verify-main-gate.md",
+      "title": "[otto-ticket:129] CI: Verify Gate on Main",
+      "action": "updated",
+      "reason": "matching title already existed",
+      "issueNumber": 123,
+      "issueUrl": "https://github.com/otto-haus/otto/issues/123"
+    },
+    {
+      "id": "130",
+      "status": "parked",
+      "source": "planning/hq-tickets/_Parked/130-extension-cli-parity.md",
+      "title": "[otto-ticket:130] Extension CLI Parity (Letta Code Commands)",
+      "action": "updated",
+      "reason": "matching title already existed",
+      "issueNumber": 124,
+      "issueUrl": "https://github.com/otto-haus/otto/issues/124"
+    },
+    {
+      "id": "131",
+      "status": "backlog",
+      "source": "planning/hq-tickets/_Backlog/131-check-contract-culture-ci.md",
+      "title": "[otto-ticket:131] Check Contract (Culture CI wedge)",
+      "action": "updated",
+      "reason": "matching title already existed",
+      "issueNumber": 125,
+      "issueUrl": "https://github.com/otto-haus/otto/issues/125"
+    },
+    {
+      "id": "132",
+      "status": "active",
+      "source": "planning/hq-tickets/132-compile-standard-to-check.md",
+      "title": "[otto-ticket:132] Compile Ratified Standard → Check",
+      "action": "updated",
+      "reason": "matching title already existed",
+      "issueNumber": 126,
+      "issueUrl": "https://github.com/otto-haus/otto/issues/126"
+    },
+    {
+      "id": "134",
+      "status": "backlog",
+      "source": "planning/hq-tickets/_Backlog/134-culture-ci-ui-checks-surface.md",
+      "title": "[otto-ticket:134] Culture CI UI: Checks Surface + Block UX",
+      "action": "updated",
+      "reason": "matching title already existed",
+      "issueNumber": 127,
+      "issueUrl": "https://github.com/otto-haus/otto/issues/127"
+    },
+    {
+      "id": "135",
+      "status": "backlog",
+      "source": "planning/hq-tickets/_Backlog/135-culture-ci-demo-vertical-slice.md",
+      "title": "[otto-ticket:135] Culture CI Demo: 30-Second Vertical Slice",
+      "action": "updated",
+      "reason": "matching title already existed",
+      "issueNumber": 128,
+      "issueUrl": "https://github.com/otto-haus/otto/issues/128"
+    },
+    {
+      "id": "136",
+      "status": "active",
+      "source": "planning/hq-tickets/136-ship-tier-matrix-audit.md",
+      "title": "[otto-ticket:136] Ship Tier Matrix Audit (Functional Ship)",
+      "action": "updated",
+      "reason": "matching title already existed",
+      "issueNumber": 129,
+      "issueUrl": "https://github.com/otto-haus/otto/issues/129"
+    },
+    {
+      "id": "137",
+      "status": "active",
+      "source": "planning/hq-tickets/137-labs-gate-settings-infrastructure.md",
+      "title": "[otto-ticket:137] Labs Gate: Settings + Config + Surface Tiers",
+      "action": "updated",
+      "reason": "matching title already existed",
+      "issueNumber": 130,
+      "issueUrl": "https://github.com/otto-haus/otto/issues/130"
+    },
+    {
+      "id": "138",
+      "status": "active",
+      "source": "planning/hq-tickets/138-ship-tier-core-path-proof.md",
+      "title": "[otto-ticket:138] Ship Tier: Core Path Proof (Embedded + Chat + Culture CI)",
+      "action": "updated",
+      "reason": "matching title already existed",
+      "issueNumber": 131,
+      "issueUrl": "https://github.com/otto-haus/otto/issues/131"
+    },
+    {
+      "id": "140",
+      "status": "active",
+      "source": "planning/hq-tickets/140-release-packaging-ship-vs-labs.md",
+      "title": "[otto-ticket:140] Release Packaging: Ship vs Labs (Sebastian Gate)",
+      "action": "updated",
+      "reason": "matching title already existed",
+      "issueNumber": 132,
+      "issueUrl": "https://github.com/otto-haus/otto/issues/132"
+    },
+    {
+      "id": "142",
+      "status": "active",
+      "source": "planning/hq-tickets/142-sebastian-release-sign-off-ceremony.md",
+      "title": "[otto-ticket:142] Sebastian release sign-off ceremony",
+      "action": "updated",
+      "reason": "matching title already existed",
+      "issueNumber": 133,
+      "issueUrl": "https://github.com/otto-haus/otto/issues/133"
+    },
+    {
+      "id": "143",
+      "status": "in review",
+      "source": "planning/hq-tickets/_InReview/143-onboarding-full-screen-step-shell.md",
+      "title": "[otto-ticket:143] Onboarding: full-screen step shell",
+      "action": "updated",
+      "reason": "matching title already existed",
+      "issueNumber": 134,
+      "issueUrl": "https://github.com/otto-haus/otto/issues/134"
+    },
+    {
+      "id": "144",
+      "status": "in review",
+      "source": "planning/hq-tickets/_InReview/144-onboarding-welcome-hero-step.md",
+      "title": "[otto-ticket:144] Onboarding: welcome hero step",
+      "action": "updated",
+      "reason": "matching title already existed",
+      "issueNumber": 135,
+      "issueUrl": "https://github.com/otto-haus/otto/issues/135"
+    },
+    {
+      "id": "145",
+      "status": "in review",
+      "source": "planning/hq-tickets/_InReview/145-onboarding-connection-mode-cards.md",
+      "title": "[otto-ticket:145] Onboarding: connection mode selection cards",
+      "action": "updated",
+      "reason": "matching title already existed",
+      "issueNumber": 136,
+      "issueUrl": "https://github.com/otto-haus/otto/issues/136"
+    },
+    {
+      "id": "146",
+      "status": "in review",
+      "source": "planning/hq-tickets/_InReview/146-onboarding-inline-readiness-gate.md",
+      "title": "[otto-ticket:146] Onboarding: inline readiness gate",
+      "action": "updated",
+      "reason": "matching title already existed",
+      "issueNumber": 137,
+      "issueUrl": "https://github.com/otto-haus/otto/issues/137"
+    },
+    {
+      "id": "147",
+      "status": "in review",
+      "source": "planning/hq-tickets/_InReview/147-onboarding-first-behavior-run.md",
+      "title": "[otto-ticket:147] Onboarding: first behavior run step",
+      "action": "updated",
+      "reason": "matching title already existed",
+      "issueNumber": 138,
+      "issueUrl": "https://github.com/otto-haus/otto/issues/138"
+    },
+    {
+      "id": "148",
+      "status": "in review",
+      "source": "planning/hq-tickets/_InReview/148-onboarding-first-receipt-payoff.md",
+      "title": "[otto-ticket:148] Onboarding: first Receipt payoff step",
+      "action": "updated",
+      "reason": "matching title already existed",
+      "issueNumber": 139,
+      "issueUrl": "https://github.com/otto-haus/otto/issues/139"
+    },
+    {
+      "id": "149",
+      "status": "in review",
+      "source": "planning/hq-tickets/_InReview/149-onboarding-craft-motion-microcopy-pass.md",
+      "title": "[otto-ticket:149] Onboarding: craft, motion, and microcopy pass",
+      "action": "updated",
+      "reason": "matching title already existed",
+      "issueNumber": 140,
+      "issueUrl": "https://github.com/otto-haus/otto/issues/140"
+    },
+    {
+      "id": "150",
+      "status": "in review",
+      "source": "planning/hq-tickets/_InReview/150-settings-craft-veto-style-shell.md",
+      "title": "[otto-ticket:150] Settings craft: Veto-style shell",
+      "action": "updated",
+      "reason": "matching title already existed",
+      "issueNumber": 141,
+      "issueUrl": "https://github.com/otto-haus/otto/issues/141"
+    },
+    {
+      "id": "151",
+      "status": "in review",
+      "source": "planning/hq-tickets/_InReview/151-chat-unsent-queue-hardening.md",
+      "title": "[otto-ticket:151] Chat Unsent Queue Hardening",
+      "action": "updated",
+      "reason": "matching title already existed",
+      "issueNumber": 142,
+      "issueUrl": "https://github.com/otto-haus/otto/issues/142"
+    },
+    {
+      "id": "152",
+      "status": "in review",
+      "source": "planning/hq-tickets/_InReview/152-ai-frontier-review-idempotent-note.md",
+      "title": "[otto-ticket:152] AI Frontier Review Daily Note Idempotency",
+      "action": "updated",
+      "reason": "matching title already existed",
+      "issueNumber": 143,
+      "issueUrl": "https://github.com/otto-haus/otto/issues/143"
+    },
+    {
+      "id": "153",
+      "status": "in review",
+      "source": "planning/hq-tickets/_InReview/153-readiness-generator-local-config-opt-in.md",
+      "title": "[otto-ticket:153] Readiness Generator Local Config Opt-In",
+      "action": "updated",
+      "reason": "matching title already existed",
+      "issueNumber": 144,
+      "issueUrl": "https://github.com/otto-haus/otto/issues/144"
+    },
+    {
+      "id": "154",
+      "status": "in review",
+      "source": "planning/hq-tickets/_InReview/154-channel-store-malformed-row-guard.md",
+      "title": "[otto-ticket:154] Channel Store Malformed Row Guard",
+      "action": "updated",
+      "reason": "matching title already existed",
+      "issueNumber": 145,
+      "issueUrl": "https://github.com/otto-haus/otto/issues/145"
+    },
+    {
+      "id": "155",
+      "status": "in review",
+      "source": "planning/hq-tickets/_InReview/155-proposal-canon-ratification-idempotency.md",
+      "title": "[otto-ticket:155] Proposal Canon Ratification Idempotency",
+      "action": "updated",
+      "reason": "matching title already existed",
+      "issueNumber": 146,
+      "issueUrl": "https://github.com/otto-haus/otto/issues/146"
+    },
+    {
+      "id": "156",
+      "status": "in review",
+      "source": "planning/hq-tickets/_InReview/156-curation-decision-record-language.md",
+      "title": "[otto-ticket:156] Curation Decision Record Language",
+      "action": "updated",
+      "reason": "matching title already existed",
+      "issueNumber": 147,
+      "issueUrl": "https://github.com/otto-haus/otto/issues/147"
+    },
+    {
+      "id": "157",
+      "status": "in review",
+      "source": "planning/hq-tickets/_InReview/157-runtime-model-fallback-effort-floor.md",
+      "title": "[otto-ticket:157] Runtime Model Fallback Effort Floor",
+      "action": "updated",
+      "reason": "matching title already existed",
+      "issueNumber": 148,
+      "issueUrl": "https://github.com/otto-haus/otto/issues/148"
+    },
+    {
+      "id": "159",
+      "status": "active",
+      "source": "planning/hq-tickets/159-chat-core-working-loop-ws.md",
+      "title": "[otto-ticket:159] Chat Core Working Loop: WS Letta + Conversations",
+      "action": "updated",
+      "reason": "matching title already existed",
+      "issueNumber": 149,
+      "issueUrl": "https://github.com/otto-haus/otto/issues/149"
+    }
+  ]
+}

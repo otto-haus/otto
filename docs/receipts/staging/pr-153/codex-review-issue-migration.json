@@ -1,0 +1,128 @@
+{
+  "pr": 153,
+  "reviewer": "codex",
+  "reviewedAt": "2026-06-14T21:58:26.153180Z",
+  "changeType": "backend-workflow",
+  "fixApplied": {
+    "summary": "Dry-run migrations write to an OS temp file by default; Codex review added source-path issue matching, title sync for existing source matches, and duplicate local ticket-id blocking before write/dry-run output for unsafe selected sets.",
+    "files": [
+      "scripts/migrate-hq-tickets-to-github-issues.mjs",
+      "planning/hq-tickets/github-issue-migration.md"
+    ]
+  },
+  "dryRunProof": {
+    "safeLimitCommand": "node scripts/migrate-hq-tickets-to-github-issues.mjs --source planning/hq-tickets --repo otto-haus/otto --limit 1 --out /tmp/otto-pr-153-limit1-dry-run-v2.json",
+    "safeLimitExitCode": 0,
+    "safeLimitStdout": [
+      "summary {\"total\":1,\"skipped\":1}",
+      "wrote /tmp/otto-pr-153-limit1-dry-run-v2.json"
+    ],
+    "fullDryRunCommand": "node scripts/migrate-hq-tickets-to-github-issues.mjs --source planning/hq-tickets --repo no-such-owner/no-such-repo --out /tmp/otto-pr-153-full-dry-run-after-local-guard.json",
+    "fullDryRunExitCode": 1,
+    "fullDryRunErrorContains": "Duplicate local ticket ids in migration set",
+    "trackedMigrationMapStatus": "clean",
+    "safeLimitFirstResult": {
+      "id": "019",
+      "action": "skipped",
+      "reason": "matching source already exists",
+      "issueNumber": 59,
+      "issueUrl": "https://github.com/otto-haus/otto/issues/59"
+    },
+    "fullDryRunLocalGuardBeforeGitHubRead": true
+  },
+  "migrationMapProof": {
+    "path": "planning/hq-tickets/github-issue-migration.json",
+    "summary": {
+      "total": 90,
+      "updated": 90
+    },
+    "firstIssue": {
+      "ticketId": "019",
+      "issueNumber": 59,
+      "source": "planning/hq-tickets/_Parked/019-intake-manual-import.md",
+      "action": "updated"
+    },
+    "lastIssue": {
+      "ticketId": "159",
+      "issueNumber": 149,
+      "source": "planning/hq-tickets/159-chat-core-working-loop-ws.md",
+      "action": "updated"
+    }
+  },
+  "liveIssueSpotChecks": [
+    {
+      "issue": 59,
+      "state": "OPEN",
+      "title": "[otto-ticket:019] Intake: Manual Import",
+      "bodyContains": "planning/hq-tickets/_Parked/019-intake-manual-import.md"
+    },
+    {
+      "issue": 149,
+      "state": "OPEN",
+      "title": "[otto-ticket:159] Chat Core Working Loop: WS Letta + Conversations",
+      "bodyContains": "planning/hq-tickets/159-chat-core-working-loop-ws.md"
+    }
+  ],
+  "verification": {
+    "passed": [
+      "node --check scripts/migrate-hq-tickets-to-github-issues.mjs",
+      "ruby -e 'require \"yaml\"; YAML.load_file(\".github/ISSUE_TEMPLATE/config.yml\"); YAML.load_file(\".github/ISSUE_TEMPLATE/otto-ticket.yml\")'",
+      "node scripts/migrate-hq-tickets-to-github-issues.mjs --source planning/hq-tickets --repo otto-haus/otto --limit 1 --out /tmp/otto-pr-153-limit1-dry-run-v2.json",
+      "node scripts/migrate-hq-tickets-to-github-issues.mjs --source planning/hq-tickets --repo no-such-owner/no-such-repo --out /tmp/otto-pr-153-full-dry-run-after-local-guard.json exited 1 with Duplicate local ticket ids before remote repo read",
+      "gh issue view 59 --repo otto-haus/otto --json number,title,state,body,url",
+      "gh issue view 149 --repo otto-haus/otto --json number,title,state,body,url"
+    ],
+    "knownNonBlocking": [
+      "bun audit exits 1 on pre-existing electron <35.7.5 and esbuild <=0.24.2 advisories; this PR does not touch dependency manifests or lockfiles."
+    ],
+    "notRun": [
+      "No --write migration was run by Codex review because creating or editing GitHub issues is a remote mutation requiring explicit approval.",
+      "task staging: not run because this PR does not implement apps/desktop runtime behavior."
+    ],
+    "expectedBlocking": [
+      "Full dry run exits 1 on duplicate current local ticket IDs before any write-mode migration can run safely."
+    ]
+  },
+  "currentRebaseFindings": {
+    "currentNonDoneTickets": 98,
+    "committedMigrationMapIssues": 90,
+    "fullDryRunDisposition": "blocked_before_output_due_duplicate_local_ticket_ids",
+    "missingPostMigrationTickets": [
+      "planning/hq-tickets/150-craft-workspace-content-fill-center-empty.md",
+      "planning/hq-tickets/152-craft-empty-state-heading-balance.md",
+      "planning/hq-tickets/_InReview/155-craft-readme-repomap-autonomy.md",
+      "planning/hq-tickets/_InReview/156-ci-audit-gate.md",
+      "planning/hq-tickets/_InReview/157-ci-dependabot-maintenance.md",
+      "planning/hq-tickets/_InReview/164-craft-onepager-html-lang.md",
+      "planning/hq-tickets/_InReview/165-craft-runtime-transport-broken-links.md",
+      "planning/hq-tickets/_InReview/166-craft-live-vs-staging-broken-links.md"
+    ],
+    "duplicateLocalTicketIds": {
+      "150": [
+        "planning/hq-tickets/150-craft-workspace-content-fill-center-empty.md",
+        "planning/hq-tickets/_InReview/150-settings-craft-veto-style-shell.md"
+      ],
+      "152": [
+        "planning/hq-tickets/152-craft-empty-state-heading-balance.md",
+        "planning/hq-tickets/_InReview/152-ai-frontier-review-idempotent-note.md"
+      ],
+      "155": [
+        "planning/hq-tickets/_InReview/155-craft-readme-repomap-autonomy.md",
+        "planning/hq-tickets/_InReview/155-proposal-canon-ratification-idempotency.md"
+      ],
+      "156": [
+        "planning/hq-tickets/_InReview/156-ci-audit-gate.md",
+        "planning/hq-tickets/_InReview/156-curation-decision-record-language.md"
+      ],
+      "157": [
+        "planning/hq-tickets/_InReview/157-ci-dependabot-maintenance.md",
+        "planning/hq-tickets/_InReview/157-runtime-model-fallback-effort-floor.md"
+      ]
+    },
+    "remoteWritesPerformedByCodexReview": 0
+  },
+  "shipRecommendation": {
+    "recommendation": "hold",
+    "reason": "The helper is safer after Codex repair, but the current ticket conveyor has duplicate local IDs and 8 post-migration tickets not represented by the committed migration map. Shipping the transition as complete would overstate current issue-tracking state unless Sebastian explicitly accepts snapshot semantics or approves creating/reconciling the remaining issues."
+  }
+}
