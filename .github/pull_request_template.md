@@ -6,10 +6,10 @@
 
 ## Proof
 
-- [ ] `bun run typecheck`
-- [ ] `bun test`
-- [ ] `bun run verify:v0`
-- [ ] desktop/UI proof attached, if UI changed
+- [ ] `bun install --frozen-lockfile`
+- [ ] `task ci` (or `bash scripts/ci-local-gate.sh` if Task is unavailable)
+- [ ] PR CI `CI / checks` run link:
+- [ ] screenshot/data proof attached, or N/A with reason:
 
 ## Risk check
 
