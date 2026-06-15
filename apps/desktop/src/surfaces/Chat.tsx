@@ -14,6 +14,7 @@ import { chatCopy, permissionCopy, toastCopy } from '../copy/surfaces';
 import { useChatThreads } from '../chat/useChatThreads';
 import { notifyOnboardingFirstMessage } from '../onboarding-storage';
 import { ProposeCorrectionModal, type ProposeCorrectionContext } from '../chat/ProposeCorrectionModal';
+import { serializeConversationMarkdown } from '../chat/conversation-markdown';
 import { runTicketCommand } from '../chat/ticket-commands';
 import {
   clearInFlight,
@@ -620,6 +621,37 @@ const LiveChat: React.FC<{
   const streamMessages = [...rt.messages, ...cmdMessages];
   const activeQueue = queueDisplayItemsForThread(queue, rt.activeThreadId);
 
+  const copyConversationMarkdown = async () => {
+    if (streamMessages.length === 0) {
+      toast.push({
+        title: chatCopy.copyMarkdownFailed,
+        body: chatCopy.copyMarkdownEmpty,
+        tone: 'warn',
+      });
+      return;
+    }
+    const markdown = serializeConversationMarkdown({
+      title: headTitle,
+      threadId: rt.activeThreadId,
+      conversationId: st?.conversationId ?? null,
+      messages: streamMessages,
+    });
+    try {
+      await navigator.clipboard.writeText(markdown);
+      toast.push({
+        title: chatCopy.copyMarkdownDone,
+        body: chatCopy.copyMarkdownDoneBody,
+        tone: 'ok',
+      });
+    } catch (e) {
+      toast.push({
+        title: chatCopy.copyMarkdownFailed,
+        body: e instanceof Error ? e.message : String(e),
+        tone: 'warn',
+      });
+    }
+  };
+
   useEffect(() => {
     setCmdMessages([]);
   }, [rt.activeThreadId]);
@@ -747,9 +779,20 @@ const LiveChat: React.FC<{
         <div className="chat__headActions">
           <AppSourceBadge compact />
           {st ? (
-            <span className={`pill ${ready ? 'pill--ok' : 'pill--warn'}`}>
-              {ready ? 'connected' : 'setup'}
-            </span>
+            <>
+              <button
+                type="button"
+                className="btn btn--ghost-d"
+                disabled={streamMessages.length === 0}
+                title={chatCopy.copyMarkdownHint}
+                onClick={() => { void copyConversationMarkdown(); }}
+              >
+                {chatCopy.copyMarkdown}
+              </button>
+              <span className={`pill ${ready ? 'pill--ok' : 'pill--warn'}`}>
+                {ready ? 'connected' : 'setup'}
+              </span>
+            </>
           ) : null}
           {!st ? (
             <>
