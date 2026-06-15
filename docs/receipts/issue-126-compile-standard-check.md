@@ -1,7 +1,7 @@
 # Issue #126 — Compile Ratified Standard → Check
 
 **Date:** 2026-06-14  
-**PR:** (filled at merge handoff)
+**PR:** https://github.com/otto-haus/otto/pull/476
 
 ## Acceptance
 
