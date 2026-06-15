@@ -31,6 +31,8 @@ describe('PracticeMiningLoop', () => {
       expect(result.candidates).toHaveLength(0);
       expect(result.receipt.action).toBe('practice.mining.observe');
       expect(result.receipt.input.receiptsDir).toBe(receiptsDir);
+      expect(JSON.stringify(result.receipt.input)).not.toMatch(/secret|password|api[_-]?key/i);
+      expect(result.receipt.evidence.every((e) => typeof e.ref === 'string')).toBe(true);
     } finally {
       delete process.env.OTTO_HOME;
       rmSync(dir, { recursive: true, force: true });

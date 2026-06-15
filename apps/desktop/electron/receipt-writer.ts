@@ -16,6 +16,10 @@ export type WrittenReceipt = Receipt & { path: string };
 export class ReceiptWriter {
   constructor(private dir = RECEIPTS_DIR) {}
 
+  get directory(): string {
+    return this.dir;
+  }
+
   write(input: ReceiptWriteInput): WrittenReceipt {
     mkdirSync(this.dir, { recursive: true });
     const timestamp = input.timestamp ?? new Date().toISOString();
