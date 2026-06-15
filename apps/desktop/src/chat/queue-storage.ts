@@ -176,7 +176,13 @@ export const readInFlight = (): QueueItem | null => {
     const createdAt = typeof item.createdAt === 'number' ? item.createdAt : Date.now();
     if (Date.now() - createdAt > INFLIGHT_STALE_MS) {
       localStorage.removeItem(INFLIGHT_KEY);
-      return null;
+      return {
+        id: item.id,
+        text: item.text,
+        createdAt,
+        state: 'failed',
+        threadId: typeof item.threadId === 'string' ? item.threadId : null,
+      };
     }
     return {
       id: item.id,

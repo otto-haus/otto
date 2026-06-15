@@ -3,6 +3,7 @@ import {
   createQueueItem,
   hasDuplicateQueueText,
   INFLIGHT_KEY,
+  INFLIGHT_STALE_MS,
   isSmokeQueueText,
   LEGACY_QUEUE_KEY,
   LEGACY_QUEUE_V2_KEY,
@@ -131,6 +132,30 @@ describe('queue-storage', () => {
     expect(queue.find((item) => item.id === 'same-id')?.text).toBe('Current wins this duplicate.');
     expect(localStorage.getItem(LEGACY_QUEUE_KEY)).toBeNull();
     expect(JSON.parse(localStorage.getItem(QUEUE_KEY) ?? '[]')).toEqual(queue);
+  });
+
+  test('readQueue marks stale in-flight messages as failed instead of dropping them', () => {
+    installStorage();
+    const staleCreatedAt = Date.now() - INFLIGHT_STALE_MS - 1000;
+    localStorage.setItem(INFLIGHT_KEY, JSON.stringify({
+      id: 'stale-inflight',
+      text: 'Message stuck in flight',
+      createdAt: staleCreatedAt,
+      state: 'sending',
+      threadId: 'thread_a',
+    }));
+
+    const queue = readQueue();
+
+    expect(queue).toEqual([
+      expect.objectContaining({
+        id: 'stale-inflight',
+        state: 'failed',
+        text: 'Message stuck in flight',
+        threadId: 'thread_a',
+      }),
+    ]);
+    expect(localStorage.getItem(INFLIGHT_KEY)).toBeNull();
   });
 
   test('readQueue rehydrates in-flight messages after queued work with thread scope', () => {
