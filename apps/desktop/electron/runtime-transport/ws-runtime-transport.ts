@@ -229,6 +229,16 @@ export class WsRuntimeTransport implements OttoRuntimeTransport {
 
     let detachRuntimeHandler: (() => void) | null = null;
     let lastTrailFingerprint = '';
+    let trailFinalized = false;
+    const finalizeTurnTrailEmit = () => {
+      if (trailFinalized) return;
+      trailFinalized = true;
+      const trail = trailAccumulator.finalize();
+      trace.write('turn_trail', trailTraceSummary(trail));
+      safeWebContentsSend(this.win, 'otto:event', {
+        message: { type: 'turn_trail', trail, final: true, uuid: randomUUID() },
+      });
+    };
     const emitTurnTrail = () => {
       const trail = trailAccumulator.snapshot();
       const fingerprint = JSON.stringify(trail.spans.map((s) => [s.id, s.status, s.label]));
@@ -291,11 +301,7 @@ export class WsRuntimeTransport implements OttoRuntimeTransport {
           }
         }
         if (isLoopIdle(event)) {
-          const trail = trailAccumulator.finalize();
-          trace.write('turn_trail', trailTraceSummary(trail));
-          safeWebContentsSend(this.win, 'otto:event', {
-            message: { type: 'turn_trail', trail, final: true, uuid: randomUUID() },
-          });
+          finalizeTurnTrailEmit();
           this.turnIdle = true;
           emitResult(!turnErrorMessage);
           writeReceipt(turnErrorMessage ? 'failed' : 'success', turnErrorMessage ? 'Chat turn failed.' : 'Chat turn completed.', turnErrorRaw ? (() => {
@@ -334,6 +340,7 @@ export class WsRuntimeTransport implements OttoRuntimeTransport {
       } catch (e) {
         const idleTimeout = msg(e).includes('Timed out waiting for runtime idle');
         if (idleTimeout && turnErrorMessage) {
+          finalizeTurnTrailEmit();
           emitResult(false);
           writeReceipt('failed', 'Chat turn failed before idle confirmation.', turnErrorRaw ? (() => {
             const normalizedError = normalizeRuntimeError(turnErrorRaw, this.hasApiKey());
@@ -352,9 +359,11 @@ export class WsRuntimeTransport implements OttoRuntimeTransport {
           });
           this.emitError(turnErrorMessage);
         } else if (idleTimeout && sawAssistant && !this.activeRunId) {
+          finalizeTurnTrailEmit();
           emitResult(true);
           writeReceipt('success', 'Chat turn completed without idle confirmation.', null);
         } else if (idleTimeout) {
+          finalizeTurnTrailEmit();
           writeReceipt('failed', 'Chat turn timed out before the runtime became idle.', {
             code: 'idle_timeout',
             message: 'The runtime did not confirm idle in time. You can wait, send a follow-up, or reconnect.',
@@ -367,6 +376,7 @@ export class WsRuntimeTransport implements OttoRuntimeTransport {
         }
       }
       if (this.turnInterruptReason && !receiptWritten) {
+        finalizeTurnTrailEmit();
         emitResult(false);
         writeReceipt('failed', 'Chat turn failed.', {
           code: 'error',
@@ -375,11 +385,7 @@ export class WsRuntimeTransport implements OttoRuntimeTransport {
           next_action: nextActionFor('error'),
         });
       } else if (!receiptWritten) {
-        const trail = trailAccumulator.finalize();
-        trace.write('turn_trail', trailTraceSummary(trail));
-        safeWebContentsSend(this.win, 'otto:event', {
-          message: { type: 'turn_trail', trail, final: true, uuid: randomUUID() },
-        });
+        finalizeTurnTrailEmit();
         writeReceipt(this.aborted ? 'blocked' : sawAssistant ? 'success' : 'failed', this.aborted ? 'Chat turn was aborted.' : sawAssistant ? 'Chat turn completed.' : 'Chat turn ended without idle signal.', this.aborted ? {
           code: 'aborted',
           message: 'The chat turn was aborted before completion.',
@@ -393,6 +399,7 @@ export class WsRuntimeTransport implements OttoRuntimeTransport {
       if (!idleTimeout) {
         const normalizedError = normalizeRuntimeError(reason, this.hasApiKey());
         this.markNotReady(reason, normalizedError.code);
+        finalizeTurnTrailEmit();
         this.writeChatReceipt({
           text,
           status: 'failed',

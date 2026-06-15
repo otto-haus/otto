@@ -36,6 +36,14 @@ export function redactTrailText(raw: string): string {
   let text = raw;
   text = text.replace(SECRET_VALUE, '…');
   text = text.replace(ENV_ASSIGN, (m) => `${m.split('=')[0]}=…`);
+  text = text.replace(
+    /([\w-]*(?:api[_-]?key|token|password|secret|bearer)[\w-]*)\s*=\s*\S+/gi,
+    '$1=…',
+  );
+  text = text.replace(
+    /(--?(?:api[_-]?key|token|password|secret|bearer)(?:=\S+|\s+)\S+)/gi,
+    '…',
+  );
   if (SECRET_KEY.test(text)) return text.replace(/:\s*\S+/g, ': …');
   return text;
 }
@@ -77,6 +85,11 @@ function hostFromUrl(raw: unknown): string | null {
   }
 }
 
+function fullShellCommand(command: unknown): string | null {
+  if (typeof command !== 'string' || !command.trim()) return null;
+  return truncateTarget(command.trim(), 80);
+}
+
 function firstCommandToken(command: unknown): string | null {
   if (typeof command !== 'string' || !command.trim()) return null;
   const token = command.trim().split(/\s+/)[0] ?? '';
@@ -109,6 +122,7 @@ export function spanLabelFromTool(
   const query = typeof args.query === 'string' ? truncateTarget(args.query, 40) : null;
   const host = hostFromUrl(args.url);
   const argv0 = firstCommandToken(args.command ?? args.cmd);
+  const shellDetail = fullShellCommand(args.command ?? args.cmd);
 
   if (key === 'read' || key === 'read_file') {
     const target = path ?? 'file';
@@ -143,8 +157,8 @@ export function spanLabelFromTool(
   if (key === 'bash' || key === 'run_shell' || key === 'shell') {
     const target = argv0 ?? 'command';
     return phase === 'call'
-      ? { label: `Running ${target}…`, detail: argv0 ?? undefined }
-      : { label: `Ran ${target}`, detail: argv0 ?? undefined };
+      ? { label: `Running ${target}…`, detail: shellDetail ?? argv0 ?? undefined }
+      : { label: `Ran ${target}`, detail: shellDetail ?? argv0 ?? undefined };
   }
   if (key === 'web_search') {
     const target = query ?? pattern ?? 'query';
@@ -328,7 +342,10 @@ export class TurnTrailAccumulator {
       case 'tool_call': {
         const toolName = String(message.toolName ?? message.name ?? 'tool');
         const input = message.toolInput ?? message.input ?? message.arguments;
-        return this.openToolSpan(`sdk-${++this.seq}`, toolName, input);
+        const callId = String(
+          message.toolCallId ?? message.tool_call_id ?? message.id ?? `sdk-${++this.seq}`,
+        );
+        return this.openToolSpan(callId, toolName, input);
       }
       case 'tool_result': {
         const id = String(message.toolCallId ?? message.tool_call_id ?? message.id ?? `sdk-${this.seq}`);
@@ -366,8 +383,28 @@ export class TurnTrailAccumulator {
   }
 
   private ingestToolCallDelta(delta: Record<string, unknown>): TurnTrail | null {
+    const calls = delta.tool_calls;
+    if (Array.isArray(calls) && calls.length > 0) {
+      let trail: TurnTrail | null = null;
+      for (const call of calls) {
+        if (call && typeof call === 'object') {
+          trail = this.ingestSingleToolCall(call as ToolCallShape, delta);
+        }
+      }
+      return trail;
+    }
     const toolCall = readToolCall(delta);
-    const callId = toolCall?.tool_call_id || `ws-${++this.seq}`;
+    if (!toolCall) return null;
+    return this.ingestSingleToolCall(toolCall, delta);
+  }
+
+  private ingestSingleToolCall(toolCall: ToolCallShape, delta: Record<string, unknown>): TurnTrail | null {
+    const callId = String(
+      toolCall.tool_call_id
+      ?? delta.tool_call_id
+      ?? delta.toolCallId
+      ?? `ws-${++this.seq}`,
+    );
     if (toolCall?.name) this.nameByCallId.set(callId, toolCall.name);
     if (typeof toolCall?.arguments === 'string' && toolCall.arguments.length > 0) {
       this.argsByCallId.set(callId, `${this.argsByCallId.get(callId) ?? ''}${toolCall.arguments}`);
@@ -447,9 +484,19 @@ export class TurnTrailAccumulator {
       span.endedAt = now;
       span.durationMs = Math.max(0, now - span.startedAt);
       const resolvedTool = toolName ?? span.toolName;
+      const resolvedInput = input ?? (() => {
+        const raw = this.argsByCallId.get(callId);
+        if (!raw) return null;
+        try {
+          return JSON.parse(raw);
+        } catch {
+          return raw;
+        }
+      })();
       if (span.kind === 'tool' && resolvedTool) {
-        const { label } = spanLabelFromTool(resolvedTool, input ?? span.detail, 'result');
+        const { label, detail } = spanLabelFromTool(resolvedTool, resolvedInput, 'result');
         span.label = label;
+        if (detail) span.detail = detail;
       }
     }
     return this.snapshot();

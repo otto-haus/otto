@@ -24,8 +24,22 @@ describe('turn-trail span labels', () => {
     expect(spanLabelFromTool('grep', { pattern: 'turnTrail' }, 'call').label).toBe('Searching for turnTrail…');
   });
 
-  test('bash uses first command token', () => {
-    expect(spanLabelFromTool('bash', { command: 'bun test apps/desktop' }, 'call').label).toBe('Running bun…');
+  test('bash keeps full command in detail for verify phase', () => {
+    const labeled = spanLabelFromTool('bash', { command: 'bun test apps/desktop' }, 'call');
+    expect(labeled.detail).toContain('bun test');
+    const trail = {
+      spans: [{
+        id: '1',
+        kind: 'tool' as const,
+        toolName: 'bash',
+        label: labeled.label,
+        detail: labeled.detail,
+        status: 'done' as const,
+        startedAt: 0,
+      }],
+      totalDurationMs: 1,
+    };
+    expect(deriveTurnPhases(trail)).toContain('verify');
   });
 
   test('web_fetch uses host', () => {
@@ -36,6 +50,11 @@ describe('turn-trail span labels', () => {
     const redacted = redactTrailText('LETTA_API_KEY=sk-secretvalue123456');
     expect(redacted).not.toContain('sk-secret');
     expect(redacted).toContain('…');
+  });
+
+  test('redacts equals and flag-style secrets', () => {
+    expect(redactTrailText('api_key=abcd1234')).toBe('api_key=…');
+    expect(redactTrailText('--token abcd1234')).toBe('…');
   });
 });
 

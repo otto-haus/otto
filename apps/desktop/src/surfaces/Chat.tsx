@@ -60,7 +60,7 @@ import type { ProposalTarget } from '@otto-haus/core';
 import type { ChatMsg } from '../runtime';
 import { TurnTrailLive } from '../chat/TurnTrailLive';
 import { TurnTrailSummary } from '../chat/TurnTrailSummary';
-import { useLabs } from '../labs/LabsContext';
+import { useLabs } from '../labs/labs-context';
 import { useOttoDebugContextMenu } from '../debug/useOttoDebugContextMenu';
 import { isTypingTarget, jumpTurnAnchor, turnAnchorIndices } from '../chat/turn-navigation';
 import {

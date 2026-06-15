@@ -463,9 +463,18 @@ export function useRuntime() {
     const attachTrailToLastAssistant = (trail: TurnTrail) => {
       if (!trail.spans.length) return;
       patchInflightMessages((msgs) => {
-        const idx = [...msgs].reverse().findIndex((m) => m.who === 'otto');
+        let lastUserIdx = -1;
+        for (let i = msgs.length - 1; i >= 0; i--) {
+          if (msgs[i]?.who === 'user') {
+            lastUserIdx = i;
+            break;
+          }
+        }
+        const searchFrom = lastUserIdx + 1;
+        const slice = msgs.slice(searchFrom);
+        const idx = [...slice].reverse().findIndex((m) => m.who === 'otto');
         if (idx < 0) return msgs;
-        const realIdx = msgs.length - 1 - idx;
+        const realIdx = searchFrom + slice.length - 1 - idx;
         const target = msgs[realIdx];
         if (!target) return msgs;
         const next = [...msgs];

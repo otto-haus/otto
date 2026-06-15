@@ -420,6 +420,14 @@ export class SdkSubprocessTransport implements OttoRuntimeTransport {
       let markedNotReady = false;
       let receiptWritten = false;
       let lastTrailFingerprint = '';
+      let trailFinalized = false;
+      const finalizeTurnTrailEmit = () => {
+        if (trailFinalized) return;
+        trailFinalized = true;
+        const trail = trailAccumulator.finalize();
+        trace.write('turn_trail', trailTraceSummary(trail));
+        emitTurnTrail(true);
+      };
       const emitTurnTrail = (final = false) => {
         const trail = final ? trailAccumulator.finalize() : trailAccumulator.snapshot();
         const fingerprint = JSON.stringify(trail.spans.map((s) => [s.id, s.status, s.label, final]));
@@ -478,14 +486,13 @@ export class SdkSubprocessTransport implements OttoRuntimeTransport {
               uuid: randomUUID(),
             },
           });
-        } else {
+        } else if (m.type !== 'result') {
           safeWebContentsSend(this.getMainWindow(), 'otto:event', { message });
         }
         if (m.type === 'result') {
           sawResult = true;
-          const trail = trailAccumulator.finalize();
-          trace.write('turn_trail', trailTraceSummary(trail));
-          emitTurnTrail(true);
+          finalizeTurnTrailEmit();
+          safeWebContentsSend(this.getMainWindow(), 'otto:event', { message });
           if (!SMOKE_MODE && !markedNotReady && m.conversationId && m.conversationId !== this.status.conversationId) {
             this.status.conversationId = m.conversationId;
             this.config.update({ conversationId: m.conversationId });
@@ -510,6 +517,7 @@ export class SdkSubprocessTransport implements OttoRuntimeTransport {
       if (turnError && !sawResult) {
         const normalizedError = normalizeRuntimeError(turnError, this.hasApiKey());
         if (!markedNotReady) this.markNotReady(turnError, normalizedError.code);
+        finalizeTurnTrailEmit();
         writeReceipt(normalizedError.code === 'error' ? 'failed' : 'blocked', 'Chat turn ended without a result.', {
           code: normalizedError.code,
           message: normalizedError.message,
@@ -519,6 +527,7 @@ export class SdkSubprocessTransport implements OttoRuntimeTransport {
       }
       if (!sawResult) {
         if (!receiptWritten) {
+          finalizeTurnTrailEmit();
           writeReceipt(this.aborted ? 'blocked' : 'failed', this.aborted ? 'Chat turn was aborted.' : 'Chat turn ended without a terminal result.', {
             code: this.aborted ? 'aborted' : 'missing-result',
             message: this.aborted ? 'The chat turn was aborted before completion.' : 'The runtime stream ended without a result or error event.',
@@ -536,6 +545,7 @@ export class SdkSubprocessTransport implements OttoRuntimeTransport {
         this.markNotReady(reason, 'stale');
       }
       const normalizedError = normalizeRuntimeError(reason, this.hasApiKey());
+      finalizeTurnTrailEmit();
       this.writeChatReceipt({
         text,
         status: normalizedError.code === 'error' ? 'failed' : 'blocked',
