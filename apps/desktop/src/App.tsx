@@ -63,11 +63,11 @@ const initialSurface = (): SurfaceId => {
 export function App() {
   return (
     <RuntimeProvider>
-      <LabsProvider>
-        <ToastProvider>
+      <ToastProvider>
+        <LabsProvider>
           <AppShell />
-        </ToastProvider>
-      </LabsProvider>
+        </LabsProvider>
+      </ToastProvider>
     </RuntimeProvider>
   );
 }
