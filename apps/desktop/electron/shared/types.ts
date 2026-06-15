@@ -348,6 +348,15 @@ export interface MemoryListResult {
   error?: string;
 }
 
+/** Result of PATCHing a Letta core-memory block via MemoryStore.updateBlock. */
+export interface MemoryUpdateResult {
+  agentId: string | null;
+  baseUrl: string | null;
+  block: MemoryBlockRecord | null;
+  apiPath: string;
+  error?: string;
+}
+
 export type {
   AutonomyPolicy,
   AutonomyPolicyResult,

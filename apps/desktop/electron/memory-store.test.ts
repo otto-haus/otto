@@ -1,9 +1,29 @@
 import { describe, expect, test } from 'bun:test';
-import { mkdtempSync, writeFileSync } from 'node:fs';
+import { mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { ConfigStore } from './config-store';
 import { MemoryStore } from './memory-store';
+
+const DISPOSABLE_AGENT_ID = 'agent-disposable-memory-290';
+const DISPOSABLE_CONVERSATION_ID = 'conv-disposable-memory-290';
+
+function disposableFixtureDir(prefix: string): string {
+  const dir = mkdtempSync(join(tmpdir(), prefix));
+  process.env.OTTO_CONFIG_DIR = join(dir, 'otto');
+  process.env.OTTO_LETTA_SETTINGS_PATH = join(dir, 'letta-settings.json');
+  process.env.OTTO_AGENT_ID = '';
+  process.env.LETTA_BASE_URL = '';
+  writeFileSync(process.env.OTTO_LETTA_SETTINGS_PATH, JSON.stringify({
+    sessionsByServer: {
+      '127.0.0.1:8283': {
+        agentId: DISPOSABLE_AGENT_ID,
+        conversationId: DISPOSABLE_CONVERSATION_ID,
+      },
+    },
+  }));
+  return dir;
+}
 
 describe('MemoryStore', () => {
   test('returns honest error when agent is missing', async () => {
@@ -123,3 +143,138 @@ describe('MemoryStore', () => {
     expect(store.searchBlocks('', blocks)).toHaveLength(2);
   });
 });
+
+describe('MemoryStore load/update round-trip (#290)', () => {
+  test('loads memory for disposable agent fixture', async () => {
+    disposableFixtureDir('otto-mem-load-290-');
+    const config = new ConfigStore();
+    const store = new MemoryStore(config);
+    const originalFetch = globalThis.fetch;
+    globalThis.fetch = async (input) => {
+      const url = String(input);
+      expect(url).toContain(DISPOSABLE_AGENT_ID);
+      expect(url).not.toContain('conversation=default');
+      return new Response(JSON.stringify([
+        { id: 'b1', label: 'persona', value: 'seed-290', limit: 2000 },
+      ]), { status: 200 });
+    };
+    try {
+      const result = await store.listBlocks();
+      if (result.error) throw new Error(`LOAD failed: ${result.error}`);
+      expect(result.agentId).toBe(DISPOSABLE_AGENT_ID);
+      expect(result.blocks).toHaveLength(1);
+      expect(result.blocks[0].value).toBe('seed-290');
+    } finally {
+      globalThis.fetch = originalFetch;
+    }
+  });
+
+  test('updates memory and observes persisted value after reload', async () => {
+    disposableFixtureDir('otto-mem-roundtrip-290-');
+    const config = new ConfigStore();
+    const store = new MemoryStore(config);
+    const state = { persona: 'seed-290-before' };
+    const originalFetch = globalThis.fetch;
+    globalThis.fetch = async (input, init) => {
+      const url = String(input);
+      if (init?.method === 'PATCH') {
+        const body = JSON.parse(String(init.body)) as { value?: string };
+        if (!body.value) throw new Error('UPDATE failed: PATCH body missing value');
+        state.persona = body.value;
+        return new Response(JSON.stringify({
+          id: 'b1',
+          label: 'persona',
+          value: body.value,
+          limit: 2000,
+        }), { status: 200 });
+      }
+      if (url.includes('/v1/blocks')) {
+        return new Response(JSON.stringify([
+          { id: 'b1', label: 'persona', value: state.persona, limit: 2000 },
+        ]), { status: 200 });
+      }
+      return new Response('', { status: 404 });
+    };
+    try {
+      const loadBefore = await store.listBlocks();
+      if (loadBefore.error) throw new Error(`LOAD failed: ${loadBefore.error}`);
+      expect(loadBefore.blocks[0]?.value).toBe('seed-290-before');
+
+      const updatedValue = 'seed-290-after-reload';
+      const update = await store.updateBlock('persona', updatedValue);
+      if (update.error) throw new Error(`UPDATE failed: ${update.error}`);
+      expect(update.block?.value).toBe(updatedValue);
+
+      const loadAfter = await store.listBlocks();
+      if (loadAfter.error) throw new Error(`PERSISTENCE reload failed: ${loadAfter.error}`);
+      expect(loadAfter.blocks.find((b) => b.label === 'persona')?.value).toBe(updatedValue);
+    } finally {
+      globalThis.fetch = originalFetch;
+    }
+  });
+
+  test('isolation: disposable fixture never uses default conversation', () => {
+    const dir = disposableFixtureDir('otto-mem-isolation-290-');
+    const settings = JSON.parse(readFileSync(join(dir, 'letta-settings.json'), 'utf8')) as {
+      sessionsByServer: Record<string, { agentId: string; conversationId: string }>;
+    };
+    const session = settings.sessionsByServer['127.0.0.1:8283'];
+    if (!session) throw new Error('ISOLATION failed: missing disposable session fixture');
+    expect(session.conversationId).toBe(DISPOSABLE_CONVERSATION_ID);
+    expect(session.conversationId).not.toBe('default');
+    expect(session.agentId).toBe(DISPOSABLE_AGENT_ID);
+    expect(session.agentId).not.toBe('default');
+  });
+});
+
+const memoryIntegrationEnabled = process.env.OTTO_MEMORY_INTEGRATION === '1';
+
+(memoryIntegrationEnabled ? describe : describe.skip)(
+  'MemoryStore live Letta integration (OTTO_MEMORY_INTEGRATION=1)',
+  () => {
+    test('load/update round-trip against local runtime disposable agent', async () => {
+      const agentId = process.env.OTTO_MEMORY_TEST_AGENT_ID?.trim();
+      const baseUrl = process.env.OTTO_MEMORY_TEST_BASE_URL?.trim() ?? 'http://127.0.0.1:8283';
+      if (!agentId || agentId === 'default') {
+        throw new Error('ISOLATION failed: set OTTO_MEMORY_TEST_AGENT_ID to a disposable agent id');
+      }
+
+      const dir = mkdtempSync(join(tmpdir(), 'otto-mem-live-290-'));
+      process.env.OTTO_CONFIG_DIR = join(dir, 'otto');
+      process.env.OTTO_LETTA_SETTINGS_PATH = join(dir, 'letta-settings.json');
+      process.env.OTTO_AGENT_ID = agentId;
+      process.env.LETTA_BASE_URL = baseUrl;
+      writeFileSync(process.env.OTTO_LETTA_SETTINGS_PATH, JSON.stringify({
+        sessionsByServer: {
+          '127.0.0.1:8283': {
+            agentId,
+            conversationId: process.env.OTTO_MEMORY_TEST_CONVERSATION_ID ?? 'conv-memory-integration-290',
+          },
+        },
+      }));
+
+      const config = new ConfigStore();
+      config.update({ agentId, baseUrl });
+      const store = new MemoryStore(config);
+      const label = process.env.OTTO_MEMORY_TEST_BLOCK_LABEL?.trim() ?? 'persona';
+      const marker = `otto-290-${Date.now()}`;
+
+      const loadBefore = await store.listBlocks();
+      if (loadBefore.error) throw new Error(`LOAD failed: ${loadBefore.error}`);
+      const before = loadBefore.blocks.find((b) => b.label === label);
+      if (!before) throw new Error(`LOAD failed: block label "${label}" not found`);
+
+      const update = await store.updateBlock(label, marker);
+      if (update.error) throw new Error(`UPDATE failed: ${update.error}`);
+
+      const loadAfter = await store.listBlocks();
+      if (loadAfter.error) throw new Error(`PERSISTENCE reload failed: ${loadAfter.error}`);
+      const after = loadAfter.blocks.find((b) => b.label === label);
+      if (!after || after.value !== marker) {
+        throw new Error(`PERSISTENCE failed: expected "${marker}", got "${after?.value ?? ''}"`);
+      }
+
+      await store.updateBlock(label, before.value);
+    });
+  },
+);
