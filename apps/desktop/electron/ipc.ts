@@ -63,6 +63,7 @@ import { resolveDebugEnvelope } from './debug-envelope';
 import { openOttoLogs } from './logs';
 import { syncWindowBackground } from './display-theme';
 import { openSystemTerminal, resolveWorkspaceRoot } from './open-terminal';
+import { planOpenLettaTarget } from './open-letta';
 import { getWorkspaceInfo, resolveWorkspaceRepoRoot } from './workspace-root';
 import { collectSystemHealth } from './system-health';
 import { IsolatedAgentStore } from './isolated-agent-store';
@@ -172,7 +173,20 @@ export function registerIpc() {
     return status;
   });
   ipcMain.handle('otto:models:list', () => listLocalLettaModels(config));
-  ipcMain.handle('otto:open-letta', () => shell.openPath('/Applications/Letta.app'));
+  ipcMain.handle('otto:open-letta', async () => {
+    const plan = planOpenLettaTarget({
+      connectionMode: config.connectionMode(),
+      lettaStateDir: config.ensureLettaStateDir(),
+    });
+    if (plan.kind === 'open-external') {
+      await shell.openExternal(plan.target);
+    } else if (plan.kind === 'reveal') {
+      shell.showItemInFolder(plan.target);
+    } else {
+      await shell.openPath(plan.target);
+    }
+    return plan.target;
+  });
   ipcMain.handle('otto:workspace:get', () => getWorkspaceInfo());
   ipcMain.handle('otto:workspace:reveal', () => {
     const path = resolveWorkspaceRepoRoot();
