@@ -709,9 +709,27 @@ const LiveChat: React.FC<{
     setCmdMessages([]);
     setRecalledQueueId(null);
     setExpandedMessageTexts({});
+    setPermissionQueue([]);
+    setPermissionBusy(false);
+    setProposeContext(null);
+    setProposeBusy(false);
+    setContextPanel((panel) => (panel === 'permission' ? null : panel));
     setDraft(readStoredDraft(rt.activeThreadId));
     setAttachments(attachmentDraftsFromStored(readStoredAttachments(rt.activeThreadId)));
   }, [rt.activeThreadId]);
+
+  const wasBusyRef = useRef(rt.busy);
+  useEffect(() => {
+    const wasBusy = wasBusyRef.current;
+    wasBusyRef.current = rt.busy;
+    if (wasBusy && !rt.busy && permissionQueue.length > 0) {
+      setPermissionQueue([]);
+      setPermissionBusy(false);
+      setProposeContext(null);
+      setProposeBusy(false);
+      setContextPanel((panel) => (panel === 'permission' ? null : panel));
+    }
+  }, [rt.busy, permissionQueue.length]);
 
   useEffect(() => {
     writeStoredDraft(activeThreadIdRef.current, draft);
