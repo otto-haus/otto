@@ -59,6 +59,14 @@ Full contract: [`docs/cognee.md`](../../cognee.md).
 
 ---
 
+## Desktop ↔ Cloud sync
+
+Optional receipt-backed sync between desktop and Otto Cloud — never silent canon merge, never Letta memory replication.
+
+Full contract: [`docs/v1/contracts/desktop-cloud-sync.md`](../contracts/desktop-cloud-sync.md) (#329).
+
+---
+
 ## Done test for new adapters
 
 > Can this system import context and emit proposals without bypassing curation, autonomy, or receipts?

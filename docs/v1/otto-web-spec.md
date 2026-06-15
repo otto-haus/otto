@@ -237,7 +237,7 @@ Sync is **optional**, receipt-backed, never silent canon merge:
 - Desktop may push receipts/proposals to D1 (operator-initiated or cron).
 - Cloud decisions write back via same `ProposalStore.decide` rules — not a second ratification path.
 
-Conflict rule: **folder/ticket state on disk remains truth** until explicit cloud sync contract (**future ticket**).
+Conflict rule: **folder/ticket state on disk remains truth**; see [`contracts/desktop-cloud-sync.md`](contracts/desktop-cloud-sync.md) for per-class conflict and offline behavior.
 
 ---
 
@@ -290,7 +290,7 @@ Conflict rule: **folder/ticket state on disk remains truth** until explicit clou
 
 1. **Subdomain:** `app.otto.haus` vs `cloud.otto.haus` (coordinate **065**).
 2. **Single-tenant v1:** one D1 tenant row vs multi-tenant schema day one.
-3. **Bi-directional sync:** **089** — contract doc; implementation after **084**.
+3. **Bi-directional sync:** **Resolved** — [`contracts/desktop-cloud-sync.md`](contracts/desktop-cloud-sync.md) (#329); v1a implementation after **084**.
 4. **Monorepo layout:** **090** — ADR before **083** scaffold.
 5. **Letta schedule API:** official REST vs CLI wrapper in VM — spike in **085**.
 
@@ -301,6 +301,7 @@ Conflict rule: **folder/ticket state on disk remains truth** until explicit clou
 - [Letta — Remote environments](https://docs.letta.com/letta-code/remote/)
 - [Letta — Scheduling](https://docs.letta.com/letta-code/scheduling/)
 - `docs/v1/contracts/adapter-seam.md`
+- `docs/v1/contracts/desktop-cloud-sync.md` (#329)
 - `docs/v1/agent-control-plane-spec.md` (**092** umbrella)
 - `docs/channels.md`
 - `planning/hq-tickets/076-embedded-letta-one-app-distribution.md`
