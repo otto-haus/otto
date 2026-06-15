@@ -9,6 +9,7 @@ Cross-links:
 - Primary agent policy: [`docs/v1/adr/093-multi-agent-workspace-policy.md`](v1/adr/093-multi-agent-workspace-policy.md) (**119**)
 - Cloud remote (parked): [`planning/hq-tickets/_Parked/077-letta-cloud-remote-mode.md`](../planning/hq-tickets/_Parked/077-letta-cloud-remote-mode.md)
 - Adapter seam: [`docs/v1/contracts/adapter-seam.md`](v1/contracts/adapter-seam.md)
+- BYOK provider contract: [`docs/v1/contracts/byok-provider-contract.md`](v1/contracts/byok-provider-contract.md) ([#344](https://github.com/otto-haus/otto/issues/344))
 
 ## `~/.otto/config.json` fields (119)
 
