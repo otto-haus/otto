@@ -72,8 +72,10 @@ import type {
   PaperclipIntakeSnapshot,
   PaperclipConnectResult,
   PaperclipSyncResult,
+  IsolatedAgentCreateResult,
+  IsolatedAgentListResult,
+  IsolationBoundaryReason,
 } from './shared/types';
-import type { CheckListResult, CheckRunResult } from '@otto-haus/core';
 import type {
   BehaviorChangelogResult,
   ConstitutionResult,
@@ -81,6 +83,7 @@ import type {
   CultureImportPreview,
   DiagnosticsExportResult,
 } from '@otto-haus/core';
+import type { CheckListResult, CheckRunResult } from '@otto-haus/core';
 
 const emptyChangelog = (windowDays: number): BehaviorChangelogResult => ({
   dir: '',
@@ -167,6 +170,11 @@ const api = {
   connection: {
     get: (): Promise<ConnectionInfo> => ipcRenderer.invoke('otto:connection:get'),
     save: (input: ConnectionInput): Promise<RuntimeStatus> => ipcRenderer.invoke('otto:connection:save', input),
+  },
+  isolatedAgents: {
+    list: (): Promise<IsolatedAgentListResult> => ipcRenderer.invoke('otto:isolated-agents:list'),
+    create: (input: { boundaryReason: IsolationBoundaryReason; label?: string | null }): Promise<IsolatedAgentCreateResult> =>
+      ipcRenderer.invoke('otto:isolated-agents:create', input),
   },
   workspace: {
     get: (): Promise<WorkspaceInfo> => ipcRenderer.invoke('otto:workspace:get'),

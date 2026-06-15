@@ -17,6 +17,7 @@ import {
   ticketsCopy,
   channelsCopy,
   settingsCopy,
+  isolatedAgentBoundaryOptions,
   listEmpty,
   cultureSettingsCopy,
   labsCopy,
@@ -47,7 +48,7 @@ import {
 } from '../onboarding-sample-receipt';
 import { useLabs, LAB_FEATURE_IDS, LAB_FEATURE_META } from '../labs/LabsContext';
 import { AppSourceDetails } from '../components/AppSourceBadge';
-import type { AppBuildInfo, LabFeatureId, WorkspaceInfo, SystemHealthReport, HealthCheck } from '../../electron/shared/types';
+import type { AppBuildInfo, IsolatedAgentRecord, LabFeatureId, WorkspaceInfo, SystemHealthReport, HealthCheck } from '../../electron/shared/types';
 import {
   ottoApi,
   type CharterDetail,
@@ -3249,6 +3250,123 @@ const ConnectLetta: React.FC = () => {
   );
 };
 
+const IsolatedAgentPanel: React.FC = () => {
+  const api = ottoApi();
+  const { push: pushToast } = useToast();
+  const [agents, setAgents] = useState<IsolatedAgentRecord[]>([]);
+  const [boundaryReason, setBoundaryReason] = useState('');
+  const [label, setLabel] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const refresh = () => {
+    if (!api?.isolatedAgents) return;
+    void api.isolatedAgents.list().then((result) => setAgents(result.agents)).catch(() => setAgents([]));
+  };
+
+  useEffect(() => {
+    refresh();
+  }, [api]);
+
+  if (!api?.isolatedAgents) {
+    return (
+      <p className="settingsFieldHint">
+        Isolated agent creation is available in the desktop app after Letta is connected.
+      </p>
+    );
+  }
+
+  const create = async () => {
+    if (!boundaryReason) {
+      setError(settingsCopy.isolatedAgentBoundaryPlaceholder);
+      return;
+    }
+    setBusy(true);
+    setError(null);
+    try {
+      const result = await api.isolatedAgents.create({
+        boundaryReason: boundaryReason as IsolatedAgentRecord['boundaryReason'],
+        label: label.trim() || null,
+      });
+      setBoundaryReason('');
+      setLabel('');
+      refresh();
+      pushToast({
+        title: settingsCopy.isolatedAgentCreateSuccess,
+        body: settingsCopy.isolatedAgentCreateSuccessBody,
+        tone: 'ok',
+      });
+      if (result.receipt?.path) {
+        pushToast({
+          title: settingsCopy.isolatedAgentReceiptNote,
+          body: result.receipt.id,
+          tone: 'info',
+        });
+      }
+    } catch (e) {
+      const message = e instanceof Error ? e.message : String(e);
+      setError(message);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const boundaryLabel = (id: IsolatedAgentRecord['boundaryReason']) =>
+    isolatedAgentBoundaryOptions.find((row) => row.id === id)?.label ?? id;
+
+  return (
+    <div className="settingsBlock">
+      <p className="settingsFieldHint">{settingsCopy.isolatedAgentStandardsNote}</p>
+      <div className="settingsField">
+        <label>
+          <span>{settingsCopy.isolatedAgentBoundaryLabel}</span>
+          <select
+            style={inputStyle}
+            value={boundaryReason}
+            onChange={(e) => setBoundaryReason(e.target.value)}
+          >
+            <option value="">{settingsCopy.isolatedAgentBoundaryPlaceholder}</option>
+            {isolatedAgentBoundaryOptions.map((row) => (
+              <option key={row.id} value={row.id}>{row.label}</option>
+            ))}
+          </select>
+        </label>
+      </div>
+      <div className="settingsField">
+        <label>
+          <span>{settingsCopy.isolatedAgentLabelField}</span>
+          <input
+            style={inputStyle}
+            value={label}
+            onChange={(e) => setLabel(e.target.value)}
+            placeholder={settingsCopy.isolatedAgentLabelPlaceholder}
+            spellCheck={false}
+          />
+        </label>
+      </div>
+      {error ? <p className="faint" style={{ margin: 0, color: 'var(--warn)' }}>{error}</p> : null}
+      <button type="button" className="btn btn--primary" onClick={() => void create()} disabled={busy}>
+        {busy ? settingsCopy.isolatedAgentCreateBusy : settingsCopy.isolatedAgentCreate}
+      </button>
+      <div style={{ marginTop: 16 }}>
+        <div className="settingsFieldRow__title">{settingsCopy.isolatedAgentListTitle}</div>
+        {agents.length === 0 ? (
+          <p className="settingsFieldHint">{settingsCopy.isolatedAgentListEmpty}</p>
+        ) : (
+          <ul className="settingsList">
+            {agents.map((agent) => (
+              <li key={agent.agentId} className="mono" style={{ fontSize: 12, marginBottom: 8 }}>
+                {agent.label || agent.agentId}
+                <span className="muted"> · {boundaryLabel(agent.boundaryReason)} · {agent.agentId}</span>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+    </div>
+  );
+};
+
 const WorkspaceAndPermissionRoute: React.FC = () => {
   const api = ottoApi();
   const { push: pushToast } = useToast();
@@ -4188,7 +4306,7 @@ export const Settings: React.FC = () => {
 
           <section>
             <SettingsSectionHeader title={settingsCopy.advancedAgentsTitle} lede={settingsCopy.advancedAgentsLede} />
-            <p className="settingsFieldHint">{settingsCopy.isolatedSecondAgentComingSoon}</p>
+            <IsolatedAgentPanel />
           </section>
 
           <section>

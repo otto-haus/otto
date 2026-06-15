@@ -55,6 +55,8 @@ import { syncWindowBackground } from './display-theme';
 import { openSystemTerminal, resolveWorkspaceRoot } from './open-terminal';
 import { getWorkspaceInfo, resolveWorkspaceRepoRoot } from './workspace-root';
 import { collectSystemHealth } from './system-health';
+import { IsolatedAgentStore } from './isolated-agent-store';
+import type { IsolationBoundaryReason } from './isolated-agent';
 
 export function registerIpc(win: BrowserWindow) {
   const config = new ConfigStore();
@@ -84,6 +86,7 @@ export function registerIpc(win: BrowserWindow) {
   const paperclipIntake = new PaperclipIntakeStore(autonomy);
   const memory = new MemoryStore(config);
   const pgvector = new PgvectorStore();
+  const isolatedAgents = new IsolatedAgentStore(config);
 
   const bindStatusToActiveThread = (status: RuntimeStatus) => {
     if (!status.ready) return;
@@ -197,6 +200,13 @@ export function registerIpc(win: BrowserWindow) {
     if (input.agentId !== undefined) config.ensurePrimaryAgentId(input.agentId);
     return initWithStaleRecovery(); // reconnect and return fresh status
   });
+
+  ipcMain.handle('otto:isolated-agents:list', () => isolatedAgents.list());
+  ipcMain.handle(
+    'otto:isolated-agents:create',
+    async (_e, input: { boundaryReason: IsolationBoundaryReason; label?: string | null }) =>
+      isolatedAgents.create(input),
+  );
 
   ipcMain.handle('otto:receipts:list', () => receipts.list());
   ipcMain.handle('otto:receipts:get', (_e, id: string) => receipts.get(id));

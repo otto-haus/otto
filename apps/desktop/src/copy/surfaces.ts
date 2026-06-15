@@ -694,7 +694,18 @@ export const settingsCopy = {
   primaryAgentOpenLetta: 'Open in Letta',
   advancedAgentsTitle: 'Advanced',
   advancedAgentsLede: 'Second agents need a real isolation boundary (ADR 093).',
-  isolatedSecondAgentComingSoon: 'Isolated second agent — coming soon (#120).',
+  isolatedAgentBoundaryLabel: 'Isolation boundary',
+  isolatedAgentBoundaryPlaceholder: 'Select why this agent must be isolated',
+  isolatedAgentLabelField: 'Agent label (optional)',
+  isolatedAgentLabelPlaceholder: 'e.g. finance-ops',
+  isolatedAgentCreate: 'Create isolated agent',
+  isolatedAgentCreateBusy: 'Creating…',
+  isolatedAgentCreateSuccess: 'Isolated agent created',
+  isolatedAgentCreateSuccessBody: 'Receipt recorded. Chat still uses your primary agent.',
+  isolatedAgentListTitle: 'Isolated agents',
+  isolatedAgentListEmpty: 'No isolated secondary agents yet.',
+  isolatedAgentReceiptNote: 'Receipt',
+  isolatedAgentStandardsNote: 'Shared Standards canon ratify is blocked for isolated agents in v1.',
   connectionModeLabel: 'Connection mode',
   connectionEmbedded: 'Embedded (bundled Letta)',
   connectionExisting: 'Existing local Letta',
@@ -774,6 +785,16 @@ export const settingsCopy = {
   displayThemeDark: 'Dark',
   displayThemeSystem: 'System',
 } as const;
+
+/** ADR 093 boundary enum — keep aligned with `electron/isolated-agent.ts`. */
+export const isolatedAgentBoundaryOptions = [
+  { id: 'different_owner', label: 'Different human owner' },
+  { id: 'different_authority', label: 'Different authority level' },
+  { id: 'different_secrets_tools', label: 'Different secrets or tools' },
+  { id: 'different_schedule_channel', label: 'Different schedule or channel' },
+  { id: 'different_mission', label: 'Different long-running mission' },
+  { id: 'strong_isolation', label: 'Strong isolation need' },
+] as const;
 
 export const receiptsCopy = {
   eyebrow: 'proof trail',
