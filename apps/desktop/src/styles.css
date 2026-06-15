@@ -1775,6 +1775,15 @@ h1, h2, h3, h4, p { margin: 0; }
   color: var(--ok);
   font-weight: 500;
 }
+.onboardReadiness { margin-top: 4px; }
+.onboardReadiness--loading { padding: 8px 0; }
+.onboardReadiness__checking {
+  margin: 0;
+  font-size: 14px;
+  color: var(--mut);
+}
+.onboardReadiness__banner { margin-bottom: 8px; }
+.onboardReadiness__rows { margin-top: 0; }
 .onboardSampleNote {
   font-size: 13px;
   color: var(--mut);
