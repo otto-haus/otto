@@ -451,6 +451,16 @@ export interface OttoConfig {
   };
   /** Labs gate — master off by default; per-feature opt-in (137). */
   labs?: LabsConfig;
+  /** Sleep-time reflection ("dreaming") trigger — synced to Letta settings for the active agent. */
+  dreaming?: DreamSettings;
+}
+
+/** Letta sleep-time reflection trigger (mirrors letta-code SleeptimeSelector). */
+export type DreamTrigger = 'off' | 'step-count' | 'compaction-event';
+
+export interface DreamSettings {
+  trigger: DreamTrigger;
+  stepCount: number;
 }
 
 /** Lab feature ids — must match docs/v1/ship-tier-matrix.md */

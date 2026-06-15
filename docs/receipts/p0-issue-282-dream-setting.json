@@ -1,0 +1,12 @@
+{
+  "issue": 282,
+  "title": "P0: Restore or replace the dream setting",
+  "before": "No dreaming/sleep-time control in otto desktop Settings; no dream string in apps/desktop.",
+  "after": "Settings → General exposes Dreaming / sleep-time trigger (Off / Step count / Compaction event) with memfs gate; persists to ~/.otto/config.json and syncs Letta settings.json for active agent.",
+  "verified": [
+    "bun test apps/desktop/electron/dream-settings.test.ts",
+    "bun run --cwd apps/desktop typecheck",
+    "bun run --cwd apps/desktop electron:typecheck"
+  ],
+  "notes": "Replaces missing Letta /sleeptime surface in otto desktop; does not touch staging or canonical app bundles."
+}

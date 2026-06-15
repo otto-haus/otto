@@ -83,6 +83,8 @@ import {
   type MemoryListResult,
   type MemoryBlockRecord,
   type ProviderMirrorSnapshot,
+  type DreamSettings,
+  type DreamTrigger,
 } from '../runtime';
 import { useRuntimeContext } from '../RuntimeContext';
 import type { SurfaceId } from '../components/Sidebar';
@@ -3527,6 +3529,109 @@ const MemoryObservatory: React.FC<{ connected: boolean; onOpenLetta: () => void 
   );
 };
 
+const DreamSettingsPanel: React.FC<{
+  memfsEnabled: boolean;
+  pushToast: ReturnType<typeof useToast>['push'];
+}> = ({ memfsEnabled, pushToast }) => {
+  const [settings, setSettings] = useState<DreamSettings>({ trigger: 'compaction-event', stepCount: 25 });
+  const [hydrated, setHydrated] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [stepDraft, setStepDraft] = useState('25');
+
+  useEffect(() => {
+    const api = ottoApi();
+    if (!api?.dreaming) {
+      setHydrated(true);
+      return;
+    }
+    void api.dreaming.get().then((cfg) => {
+      setSettings(cfg);
+      setStepDraft(String(cfg.stepCount));
+      setHydrated(true);
+    }).catch(() => setHydrated(true));
+  }, []);
+
+  const persist = async (next: DreamSettings) => {
+    const api = ottoApi();
+    if (!api?.dreaming || !memfsEnabled) return;
+    setBusy(true);
+    try {
+      const saved = await api.dreaming.set(next);
+      setSettings(saved);
+      setStepDraft(String(saved.stepCount));
+      pushToast({ title: settingsCopy.dreamingSaved, body: `${saved.trigger}${saved.trigger === 'step-count' ? ` · ${saved.stepCount}` : ''}`, tone: 'ok' });
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const onTriggerChange = (trigger: DreamTrigger) => {
+    const next = { ...settings, trigger };
+    setSettings(next);
+    void persist(next);
+  };
+
+  const commitStepCount = () => {
+    const parsed = Number.parseInt(stepDraft.trim(), 10);
+    if (!Number.isInteger(parsed) || parsed <= 0) {
+      setStepDraft(String(settings.stepCount));
+      return;
+    }
+    const next = { ...settings, stepCount: parsed };
+    setSettings(next);
+    void persist(next);
+  };
+
+  return (
+    <>
+      {!memfsEnabled && (
+        <div className="settingsStatusBanner settingsStatusBanner--warn">
+          {settingsCopy.dreamingMemfsWarn}
+        </div>
+      )}
+      <div className="settingsFieldRow">
+        <div className="settingsFieldRow__main">
+          <div className="settingsFieldRow__title">{settingsCopy.dreamingTriggerLabel}</div>
+          <p className="settingsFieldRow__hint">{settingsCopy.dreamingLede}</p>
+        </div>
+        <select
+          className="charterInput"
+          value={settings.trigger}
+          disabled={!hydrated || busy || !memfsEnabled}
+          aria-label={settingsCopy.dreamingTriggerLabel}
+          onChange={(e) => onTriggerChange(e.target.value as DreamTrigger)}
+        >
+          <option value="off">{settingsCopy.dreamingTriggerOff}</option>
+          <option value="step-count">{settingsCopy.dreamingTriggerStepCount}</option>
+          <option value="compaction-event">{settingsCopy.dreamingTriggerCompaction}</option>
+        </select>
+      </div>
+      {settings.trigger === 'step-count' && (
+        <div className="settingsFieldRow">
+          <div className="settingsFieldRow__main">
+            <div className="settingsFieldRow__title">{settingsCopy.dreamingStepCountLabel}</div>
+            <p className="settingsFieldRow__hint">{settingsCopy.dreamingStepCountHint}</p>
+          </div>
+          <input
+            className="charterInput mono"
+            type="number"
+            min={1}
+            step={1}
+            value={stepDraft}
+            disabled={!hydrated || busy || !memfsEnabled}
+            aria-label={settingsCopy.dreamingStepCountLabel}
+            onChange={(e) => setStepDraft(e.target.value)}
+            onBlur={() => commitStepCount()}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') commitStepCount();
+            }}
+          />
+        </div>
+      )}
+    </>
+  );
+};
+
 const LabsSettingsPanel: React.FC = () => {
   const { labs, setMasterEnabled, setFeatureEnabled, hydrated } = useLabs();
 
@@ -3759,6 +3864,11 @@ export const Settings: React.FC = () => {
           <section className="settingsGeneralSection" id="settings-memory">
             <SettingsSectionHeader title={settingsCopy.memoryTitle} lede={settingsCopy.memoryLede} />
             <MemoryObservatory connected={liveConnected} onOpenLetta={() => void ottoApi()?.runtime.openLetta()} />
+          </section>
+
+          <section className="settingsGeneralSection" id="settings-dreaming">
+            <SettingsSectionHeader title={settingsCopy.dreamingTitle} lede={settingsCopy.dreamingLede} />
+            <DreamSettingsPanel memfsEnabled={!!rt.status?.memfsEnabled} pushToast={pushToast} />
           </section>
 
           {api ? (

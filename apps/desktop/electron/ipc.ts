@@ -1,6 +1,13 @@
 import { type BrowserWindow, ipcMain, shell } from 'electron';
-import type { ConnectionInfo, ConnectionInput, CreateProposalFromCorrectionInput, DecideProposalInput, LabsConfig, OttoConfig, PermissionRequest, PermissionResponse, ProposalClassification, ProposalTarget, RuntimePreferences, RuntimeStatus } from './shared/types';
+import type { ConnectionInfo, ConnectionInput, CreateProposalFromCorrectionInput, DecideProposalInput, DreamSettings, LabsConfig, OttoConfig, PermissionRequest, PermissionResponse, ProposalClassification, ProposalTarget, RuntimePreferences, RuntimeStatus } from './shared/types';
 import { applyLabsConfigPatch, getLabsConfig, labsConfigToOttoPatch } from './labs-config';
+import {
+  applyDreamSettingsPatch,
+  dreamSettingsToOttoPatch,
+  resolveEffectiveDreamSettings,
+  resolveLettaSettingsPath,
+  syncDreamSettingsToLetta,
+} from './dream-settings';
 import type { CharterCreateInput, CharterStatus } from './shared/types';
 import type { AttachmentInput } from './shared/types';
 import { saveAttachment } from './attachments';
@@ -113,6 +120,18 @@ export function registerIpc(win: BrowserWindow) {
   ipcMain.handle('otto:labs:set', (_e, patch: Partial<LabsConfig>) => {
     const next = applyLabsConfigPatch(config.get(), patch);
     config.update(labsConfigToOttoPatch(next));
+    return next;
+  });
+  ipcMain.handle('otto:dreaming:get', () => {
+    const settingsPath = resolveLettaSettingsPath(config, config.connectionMode());
+    const agentId = config.agentId();
+    return resolveEffectiveDreamSettings(config.get(), agentId, settingsPath);
+  });
+  ipcMain.handle('otto:dreaming:set', (_e, patch: Partial<DreamSettings>) => {
+    const next = applyDreamSettingsPatch(config.get(), patch);
+    config.update(dreamSettingsToOttoPatch(next));
+    const settingsPath = resolveLettaSettingsPath(config, config.connectionMode());
+    syncDreamSettingsToLetta(config.agentId(), next, settingsPath);
     return next;
   });
   ipcMain.handle('otto:attachment:save', (_e, input: AttachmentInput) => saveAttachment(input));
