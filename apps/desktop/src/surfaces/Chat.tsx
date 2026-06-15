@@ -23,6 +23,8 @@ import {
 } from './chat-permission-queue';
 import { useChatThreads } from '../chat/useChatThreads';
 import { StreamMarkdown } from '../chat/markdown/MarkdownBlock';
+import { MessageAttachmentStrip } from '../chat/MessageAttachmentStrip';
+import { parseSentMessageDisplay, pathToAttachmentPreviewUrl } from '../chat/message-attachment-display';
 import { notifyOnboardingFirstMessage, resolveOnboardingStarterAction } from '../onboarding-storage';
 import { ProposeCorrectionModal, type ProposeCorrectionContext } from '../chat/ProposeCorrectionModal';
 import {
@@ -407,11 +409,7 @@ const mimeFromAttachmentName = (name: string): string => {
   return MIME_BY_EXT[ext] ?? 'image/png';
 };
 
-const pathToPreviewUrl = (path: string): string => {
-  if (path.startsWith('file://')) return path;
-  const normalized = path.replace(/\\/g, '/');
-  return normalized.startsWith('/') ? `file://${normalized}` : `file:///${normalized}`;
-};
+const pathToPreviewUrl = pathToAttachmentPreviewUrl;
 
 const attachmentDraftsFromQueueRefs = (refs: QueueAttachmentRef[]): AttachmentDraft[] =>
   refs.map((ref, index) => ({
@@ -1206,13 +1204,27 @@ const LiveChat: React.FC<{
                       ) : null}
                     </div>
                   ) : (
-                    <>
+<>
                       {!isUser && m.trail && m.trail.spans.length > 0 ? (
                         <TurnTrailSummary trail={m.trail} showPhases={showTurnPhases} />
                       ) : null}
                       <div className="msg__body">
                         {displayText ? (
-                          <StreamMarkdown text={displayText} streaming={isStreamingMessage} />
+                          isUser ? (() => {
+                            const { displayBody, attachments } = parseSentMessageDisplay(displayText);
+                            return (
+                              <>
+                                {displayBody ? (
+                                  <StreamMarkdown text={displayBody} streaming={false} />
+                                ) : null}
+                                {attachments.length > 0 ? (
+                                  <MessageAttachmentStrip attachments={attachments} />
+                                ) : null}
+                              </>
+                            );
+                          })() : (
+                            <StreamMarkdown text={displayText} streaming={isStreamingMessage} />
+                          )
                         ) : null}
                       </div>
                     </>
