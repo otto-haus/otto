@@ -29,6 +29,18 @@ If a change does not gate irreversibility or make behavior compound, question it
 - Do not claim done without receipts.
 - Do not add private/product-specific control systems to the OSS core unless behind a clear boundary.
 
+## Agent launch contracts
+
+Keep slash-command launches tiny; the markdown file is the contract:
+
+```txt
+/goal Read docs/agent-goals/codex-goal.md and follow it.
+/goal Read docs/agent-goals/claude-goal.md and follow it.
+/goalbuddy Read docs/agent-goals/composer-goal.md and prepare the board.
+```
+
+See `docs/agent-goals/README.md` for parallelism, collision rules, and trunk workflow. Default throughput: one independent ticket = one agent = one branch/worktree. Sebastian is the merge/release/one-way-door gate.
+
 ## Current issue/review workflow
 
 - Use GitHub Issues for new nits, bugs, polish requests, and follow-up work. Do not create new local ticket files for ordinary intake.
@@ -100,6 +112,7 @@ Do not call Electron “connected” unless `session.initialize()` succeeds agai
 packages/core/        shared v0 contract types
 packages/practices/   PracticeSpec loader, validator, CLI
 apps/desktop/         Vite + Electron workspace shell
+docs/agent-goals/     file-native Codex/Claude/Composer launch contracts
 docs/design/          brand guide, onboarding, motion, reference icons (public canon)
 extension/            Letta Code commands and permission gates
 skill/                Charter and Routine skills
