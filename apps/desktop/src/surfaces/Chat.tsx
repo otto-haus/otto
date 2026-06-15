@@ -1127,22 +1127,22 @@ const LiveChat: React.FC<{
               {!ready ? (
                 <p className="chatEmpty__lede">Finish runtime setup above, then send your first message.</p>
               ) : null}
+              <div className="chatStarters" aria-label="Starter prompts">
+                {chatCopy.starterPrompts.map((prompt) => (
+                  <button
+                    key={prompt}
+                    type="button"
+                    className="chatStarter"
+                    disabled={!ready}
+                    title={ready ? undefined : chatCopy.starterBlockedTitle}
+                    onClick={() => setDraft(prompt)}
+                  >
+                    {prompt}
+                  </button>
+                ))}
+              </div>
               {ready ? (
-                <>
-                  <div className="chatStarters" aria-label="Starter prompts">
-                    {chatCopy.starterPrompts.map((prompt) => (
-                      <button
-                        key={prompt}
-                        type="button"
-                        className="chatStarter"
-                        onClick={() => setDraft(prompt)}
-                      >
-                        {prompt}
-                      </button>
-                    ))}
-                  </div>
-                  <p className="faint chatEmpty__lede">{chatCopy.ticketCommandHint}</p>
-                </>
+                <p className="faint chatEmpty__lede">{chatCopy.ticketCommandHint}</p>
               ) : null}
             </div>
           )}
