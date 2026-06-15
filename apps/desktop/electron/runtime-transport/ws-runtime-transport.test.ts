@@ -199,6 +199,54 @@ describe('WsRuntimeTransport', () => {
     expect(sent.length).toBe(0);
   });
 
+  test('resolvePermission fails turn when runtime socket is closed', () => {
+    const { win, sent } = mockWindow();
+    const transport = new WsRuntimeTransport(win, mockConfig());
+    (transport as unknown as { runtimeSocket: WebSocket | null }).runtimeSocket = {
+      readyState: WebSocket.CLOSED,
+    } as WebSocket;
+    (transport as unknown as { turnIdle: boolean }).turnIdle = false;
+    (transport as unknown as { controlByUpstream: Map<string, string> }).controlByUpstream.set('upstream-1', 'otto-req-1');
+    (transport as unknown as { pendingControls: Map<string, unknown> }).pendingControls.set('otto-req-1', {
+      requestId: 'otto-req-1',
+      toolName: 'AskUserQuestion',
+      resolve: () => {},
+    });
+
+    transport.resolvePermission('otto-req-1', { behavior: 'allow' });
+    expect((transport as unknown as { turnIdle: boolean }).turnIdle).toBe(true);
+    expect((transport as unknown as { turnInterruptReason: string | null }).turnInterruptReason).toContain('disconnected');
+    expect(sent.some((e) => e.channel === 'otto:event' && (e.payload as { message?: { type?: string } }).message?.type === 'error')).toBe(true);
+  });
+
+  test('runtime disconnect clears pending controls and interrupts active turn', async () => {
+    const { win, sent } = mockWindow();
+    const transport = new WsRuntimeTransport(win, mockConfig());
+    (transport as unknown as { spawnRemote: () => Promise<void> }).spawnRemote = async () => {};
+
+    const initPromise = transport.init({ freshConversation: true });
+    const socket = await connectMockRuntime(transport, 'conv-ws-perm-disconnect');
+    await initPromise;
+
+    (transport as unknown as { turnIdle: boolean }).turnIdle = false;
+    (transport as unknown as { activeRunId: string | null }).activeRunId = 'run-pending';
+    (transport as unknown as { pendingControls: Map<string, unknown> }).pendingControls.set('otto-req-1', {
+      requestId: 'otto-req-1',
+      toolName: 'AskUserQuestion',
+      resolve: () => {},
+    });
+    (transport as unknown as { controlByUpstream: Map<string, string> }).controlByUpstream.set('upstream-1', 'otto-req-1');
+
+    await closeMockSocket(socket);
+    await new Promise((r) => setTimeout(r, 30));
+
+    expect((transport as unknown as { pendingControls: Map<string, unknown> }).pendingControls.size).toBe(0);
+    expect((transport as unknown as { turnIdle: boolean }).turnIdle).toBe(true);
+    expect((transport as unknown as { turnInterruptReason: string | null }).turnInterruptReason).toContain('tool approval');
+    expect(sent.some((e) => e.channel === 'otto:event' && (e.payload as { message?: { type?: string } }).message?.type === 'error')).toBe(true);
+    await transport.close();
+  });
+
   test('smokeMode() reads OTTO_SMOKE at call time', () => {
     process.env.OTTO_SMOKE = '1';
     expect(smokeMode()).toBe(true);
