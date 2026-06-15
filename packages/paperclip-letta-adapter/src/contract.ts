@@ -99,6 +99,28 @@ export interface AdapterSessionCodec {
   getDisplayId?: (params: Record<string, unknown> | null) => string | null;
 }
 
+export interface ConfigFieldOption {
+  label: string;
+  value: string;
+  group?: string;
+}
+
+export interface ConfigFieldSchema {
+  key: string;
+  label: string;
+  type: "text" | "select" | "toggle" | "number" | "textarea" | "combobox";
+  options?: ConfigFieldOption[];
+  default?: unknown;
+  hint?: string;
+  required?: boolean;
+  group?: string;
+  meta?: Record<string, unknown>;
+}
+
+export interface AdapterConfigSchema {
+  fields: ConfigFieldSchema[];
+}
+
 export interface ServerAdapterModule {
   type: string;
   execute(ctx: AdapterExecutionContext): Promise<AdapterExecutionResult>;
@@ -106,5 +128,6 @@ export interface ServerAdapterModule {
   sessionCodec?: AdapterSessionCodec;
   models?: AdapterModel[];
   listModels?: () => Promise<AdapterModel[]>;
+  getConfigSchema?: () => Promise<AdapterConfigSchema> | AdapterConfigSchema;
   agentConfigurationDoc?: string;
 }

@@ -3,6 +3,7 @@ import { type as adapterType, models, agentConfigurationDoc } from "../index.js"
 import { execute } from "./execute.js";
 import { testEnvironment } from "./test.js";
 import { listLettaModels } from "./letta-client.js";
+import { getConfigSchema } from "./config-schema.js";
 
 function readAgentId(raw: unknown): string | null {
   if (typeof raw !== "object" || raw === null) return null;
@@ -36,6 +37,7 @@ export function createServerAdapter(): ServerAdapterModule {
     sessionCodec,
     models,
     listModels: listLettaModels,
+    getConfigSchema,
     agentConfigurationDoc,
   };
 }
