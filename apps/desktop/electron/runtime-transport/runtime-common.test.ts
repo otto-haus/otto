@@ -74,6 +74,12 @@ describe('friendly invalid model', () => {
   test('shortens invalid model errors', () => {
     expect(friendly('error', "Invalid model 'gpt-5.5-plus-pro-xhigh'")).toMatch(/isn't available/i);
   });
+
+  test('shortens provider usage limit json errors', () => {
+    const raw = 'Codex error: {"type":"error","error":{"type":"usage_limit_reached","message":"limit"},"status_code":429}';
+    expect(friendly('error', raw)).toMatch(/usage limit reached/i);
+    expect(friendly('error', raw)).not.toContain('status_code');
+  });
 });
 
 describe('runtime-common status mapping', () => {
