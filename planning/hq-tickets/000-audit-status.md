@@ -57,7 +57,7 @@ Script: `scripts/audit-hq-tickets.sh`
 | 051 | _Done | Codex | proven | no | +1 — ready for `_Done` | 051-automated-review-gate-no-fake-done.md |
 | 052 | _Done | Cursor | stub | no | +1 — ready for `_Done` | 052-routine-manual-executor-receipt.md |
 | 053 | root | Cursor | proven | no | +1 | 053-practice-runtime-charter-review-field-note.md |
-| 054 | root | Cursor | proven | no | +1 | 054-repo-hygiene-commit-split-prs.md |
+| 054 | _Done | Cursor | proven | no | +1 | _Done/054-repo-hygiene-commit-split-prs.md |
 | 055 | root | Cursor | proven | no | +1 | 055-knowledge-baseline-ship.md |
 | 056 | root | Cursor | stub | yes | review marker | 056-system-surfaces-ship-skills-tickets-channels.md |
 | 057 | _Done | Claude | proven | no | +1 | 057-system-nav-distinct-icons.md |

@@ -1,7 +1,8 @@
-# PR stack — ship/v0.3-integration
+# PR stack — ship/functional-labs → main
 
-Updated: 2026-06-13  
-Branch: `ship/v0.3-integration` (tracks `origin/ship/v0.3-integration`)  
+Updated: 2026-06-14  
+Branch: `main` (hygiene artifacts merged; integration continues on `ship/functional-labs`)  
+GitHub: [issue #76](https://github.com/otto-haus/otto/issues/76) (ticket **054**)  
 Gate: **no push without Sebastian approval** (063)
 
 ## Branch hygiene
@@ -82,16 +83,23 @@ bun run verify:v0
 
 **Verification:** doc link sanity only; no runtime gate.
 
-## Current dirty-tree snapshot
+## Tree status (054 / issue #76)
 
-Run before each PR split:
+Hygiene handoff artifacts are on **`main`**:
+
+- `docs/v1/runbooks/pr-stack-ship-v03.md` (this file)
+- `planning/hq-tickets/000-index.md` PR A–D table
+- `SHIP_CHECKS/README.md` mirror policy + synced checks
+- Staging proof: `docs/receipts/staging/staging-hygiene-proof-20260614143512.json` (`tickets.054.ok: true`)
+- Dirty-tree snapshot (pre-commit): `docs/receipts/staging/054-dirty-tree-snapshot-20260614143512.txt`
+
+Re-run before future splits:
 
 ```sh
 cd /Users/seb/Code/otto
 git status --short --branch
+bun run verify:v0
 ```
-
-As of 2026-06-13: ~30 modified + ~25 untracked paths on `ship/v0.3-integration`. Split using paths above; do not mix marketing into PR-A.
 
 ## Index cross-ref
 
