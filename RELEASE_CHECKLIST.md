@@ -64,7 +64,7 @@ Works end-to-end without Labs. Source matrix: [`docs/v1/ship-tier-matrix.md`](do
 
 ## Labs tier (Settings → Labs)
 
-Experimental; enable per feature. UX: [`docs/v1/labs.md`](docs/v1/labs.md). **139** receipt: [`docs/receipts/staging/124-126-123-139-ui-wedge-20260614.md`](docs/receipts/staging/124-126-123-139-ui-wedge-20260614.md).
+Experimental; enable per feature. UX: [`docs/v1/labs.md`](docs/v1/labs.md). **139** receipt: [`docs/receipts/staging/124-126-123-139-ui-wedge-20260614.md`](docs/receipts/staging/124-126-123-139-ui-wedge-20260614.md). **132** packaging receipt: [`docs/receipts/staging/issue-132-release-packaging-20260615.md`](docs/receipts/staging/issue-132-release-packaging-20260615.md).
 
 | Feature / surface | Default (Labs off) | Proof | Shipped claim |
 |-------------------|-------------------|-------|---------------|
@@ -157,7 +157,7 @@ Ceremony: [`docs/v1/runbooks/sebastian-release-sign-off.md`](docs/v1/runbooks/se
 | Tried staging with **Labs off** — core loop | ☐ |
 | Tried staging with **Labs on** — one lab feature | ☐ |
 | Ship table matches experience | ☐ |
-| README public story (Ship tier only) | ☐ |
+| README public story (Ship tier only) | ☑ (claims audit +1 — 2026-06-15) |
 | Demo videos / walkthrough | ☐ |
 | Test receipts (`verify:v0` + `release-gate.sh` green) | ☑ (2026-06-15) |
 | Rollback path documented + `OTTO_RELEASE_TAG` smoke exercised on staging tag | ☐ |
