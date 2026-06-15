@@ -521,6 +521,7 @@ export function useRuntime() {
         if (activity) setTurnActivity(activity);
       }
       if (m.type === 'error') {
+        const ownedTurn = inflightThreadRef.current;
         const errorMessage = String((m as { message?: unknown }).message ?? 'error');
         const errorDetails = typeof (m as { details?: unknown }).details === 'string'
           ? String((m as { details?: unknown }).details)
@@ -538,7 +539,7 @@ export function useRuntime() {
         ]);
         inflightThreadRef.current = null;
         setTurnActivity(null);
-        setBusy(false);
+        if (!ownedTurn) setBusy(false);
       } else if (m.type === 'result') {
         activeAssistantStream.current = null;
         inflightThreadRef.current = null;
@@ -610,7 +611,10 @@ export function useRuntime() {
       }
       throw err;
     } finally {
-      if (!inflightThreadRef.current) setBusy(false);
+      if (inflightThreadRef.current === sendThreadId) {
+        inflightThreadRef.current = null;
+        setBusy(false);
+      }
     }
   }, [api, status, busy]);
 
