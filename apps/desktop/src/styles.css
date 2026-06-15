@@ -869,6 +869,20 @@ h1, h2, h3, h4, p { margin: 0; }
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
 }
+.chat__idSep { flex: none; color: var(--faint); }
+.chat__memoryLink {
+  flex: none;
+  border: 0;
+  padding: 0;
+  background: none;
+  font: inherit;
+  color: var(--mut);
+  cursor: pointer;
+  text-decoration: underline;
+  text-decoration-color: color-mix(in srgb, var(--mut) 45%, transparent);
+  text-underline-offset: 2px;
+}
+.chat__memoryLink:hover { color: var(--ink); }
 .chat__stream {
   flex: 1; min-height: 0; overflow-y: auto; overflow-x: hidden;
   scroll-behavior: smooth;

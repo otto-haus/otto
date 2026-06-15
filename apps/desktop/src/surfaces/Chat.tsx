@@ -106,6 +106,9 @@ const formatRuntimeSubtitle = (ready: boolean, reason: string | undefined, model
 
 type ChatRuntimeStatus = NonNullable<ReturnType<typeof useRuntimeContext>['status']>;
 
+const lettaMemoryStatusLabel = (st: ChatRuntimeStatus): string =>
+  (st.agentId?.trim() ? 'Letta memory on' : 'Letta memory off');
+
 /** Product subtitle — model + memory state; no raw agent/conversation ids (#081). */
 const formatChatSessionSubtitle = (
   st: ChatRuntimeStatus,
@@ -113,7 +116,7 @@ const formatChatSessionSubtitle = (
 ): string =>
   [
     modelLabel,
-    st.memfsEnabled ? 'Letta memory on' : 'Letta memory off',
+    lettaMemoryStatusLabel(st),
     st.transportFallbackReason ?? null,
   ].filter(Boolean).join(' · ');
 
@@ -124,7 +127,7 @@ const formatChatDebugTitle = (st: ChatRuntimeStatus, modelLabel: string): string
     modelLabel,
     st.transportFallbackReason ?? null,
     st.conversationId ?? 'no conversation',
-    st.memfsEnabled ? 'Letta memory on' : 'Letta memory off',
+    lettaMemoryStatusLabel(st),
   ].filter(Boolean).join(' · ');
 
 const ModelEffortPickers: React.FC<{
@@ -722,6 +725,15 @@ const LiveChat: React.FC<{
     : labelForModel(selectedModel, modelOptions);
   const chatSessionSubtitle = st ? formatChatSessionSubtitle(st, modelStatusLabel) : 'connecting…';
   const chatDebugTitle = st ? formatChatDebugTitle(st, modelStatusLabel) : undefined;
+  const memoryLabel = st?.agentId?.trim() ? chatCopy.memoryOn : chatCopy.memoryOff;
+
+  const openMemoryObservatory = () => {
+    try {
+      sessionStorage.setItem('otto.settings.section', 'memory');
+    } catch { /* best effort */ }
+    if (onNavigate) onNavigate('settings');
+    else onOpenSettings?.();
+  };
 
   useEffect(() => {
     if (!api) return;
@@ -1065,7 +1077,28 @@ const LiveChat: React.FC<{
               {st ? (
                 <>
                   <span className={`dot ${rt.busy ? 'dot--idle' : ready ? 'dot--ok' : 'dot--warn'}`} aria-hidden="true" />
-                  <span>{headerSubtitle}</span>
+                  {rt.busy || !ready ? (
+                    <span>{headerSubtitle}</span>
+                  ) : (
+                    <>
+                      <span>{modelStatusLabel}</span>
+                      {st.transportFallbackReason ? (
+                        <>
+                          <span className="chat__idSep" aria-hidden="true">·</span>
+                          <span>{st.transportFallbackReason}</span>
+                        </>
+                      ) : null}
+                      <span className="chat__idSep" aria-hidden="true">·</span>
+                      <button
+                        type="button"
+                        className="chat__memoryLink"
+                        onClick={openMemoryObservatory}
+                        title={chatCopy.memoryLinkTitle}
+                      >
+                        {memoryLabel}
+                      </button>
+                    </>
+                  )}
                 </>
               ) : 'connecting…'}
             </div>
