@@ -279,7 +279,7 @@ export const onboardingCopy = {
   modeExistingBody: 'Point otto at a local URL and agent ID.',
   modeContinue: 'Continue →',
   connectTitle: 'Connect your runtime',
-  connectLede: 'otto auto-discovers your local runtime and default agent. Readiness rows below show the exact blocker. Provider keys stay in Letta — otto never stores them.',
+  connectLede: 'otto auto-discovers your local runtime and default agent. One primary agent per workspace — readiness rows below show the exact blocker. Provider keys stay in Letta — otto never stores them.',
   connectOpenSettings: 'Open Settings',
   connectContinue: 'Continue →',
   connectRetry: 'Retry status',
