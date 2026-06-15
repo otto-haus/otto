@@ -476,6 +476,14 @@ const LiveChat: React.FC<{
   const selectedEffort = st?.effort ?? 'high';
   const activeThreadTitle = threads.find((t) => t.id === rt.activeThreadId)?.title;
   const headTitle = displayThreadTitle(activeThreadTitle ?? 'New chat');
+  const chatStatusLine = st
+    ? [
+      st.agentId ?? 'no agent',
+      labelForModel(selectedModel, modelOptions),
+      st.conversationId ?? 'no conversation',
+      st.memfsEnabled ? 'Letta memory' : null,
+    ].filter(Boolean).join(' · ')
+    : 'connecting…';
 
   useEffect(() => {
     if (!api) return;
@@ -727,17 +735,22 @@ const LiveChat: React.FC<{
         <span className="chat__avatar"><OttoMark size={30} className="ottoMark" /></span>
         <div className="chat__titleBlock">
           <div className="chat__title">{headTitle}</div>
-          <div className="chat__id">
+          <div className="chat__id" title={st ? chatStatusLine : undefined}>
             {st ? (
               <>
                 <span className={`dot ${ready ? 'dot--ok' : 'dot--warn'}`} aria-hidden="true" />
-                {ready ? labelForModel(selectedModel, modelOptions) : formatRuntimeSubtitle(ready, st.reason, labelForModel(selectedModel, modelOptions))}
+                <span>{ready ? chatStatusLine : formatRuntimeSubtitle(ready, st.reason, labelForModel(selectedModel, modelOptions))}</span>
               </>
             ) : 'connecting…'}
           </div>
         </div>
         <div className="chat__headActions">
           <AppSourceBadge compact />
+          {st ? (
+            <span className={`pill ${ready ? 'pill--ok' : 'pill--warn'}`}>
+              {ready ? 'connected' : 'setup'}
+            </span>
+          ) : null}
           {!st ? (
             <>
               <button type="button" className="btn btn--ghost-d" onClick={() => { void rt.retry(); }}>{chatCopy.pickerRetry}</button>
