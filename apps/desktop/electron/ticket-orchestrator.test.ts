@@ -4,11 +4,14 @@ import { existsSync, mkdirSync, mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { AutonomyStore } from './autonomy-store';
+import { CheckRunner } from './check-runner';
+import { CheckStore } from './check-store';
 import { KnowledgeStore } from './knowledge-store';
 import { ReceiptWriter } from './receipt-writer';
 import { RunStore } from './run-store';
 import { patchTicketFile, TicketOrchestrator } from './ticket-orchestrator';
 import { TicketStore } from './ticket-store';
+import { WorkerRunner } from './worker-runner';
 import { WorkerStore } from './worker-store';
 
 describe('TicketOrchestrator', () => {
@@ -75,6 +78,44 @@ describe('TicketOrchestrator', () => {
 
       expect(() => orchestrator.orchestrateExisting(compiled.ticket.ticket_id, { repoRoot })).toThrow(/worktree/i);
       expect(existsSync(join(tmp, 'outside-worktree'))).toBe(false);
+    } finally {
+      rmSync(tmp, { recursive: true, force: true });
+    }
+  });
+
+  test('disposable ticket orchestrates worktree then runBounded exits with receipt', () => {
+    const tmp = mkdtempSync(join(tmpdir(), 'otto-orchestrator-bounded-'));
+    try {
+      execFileSync('git', ['init'], { cwd: tmp, stdio: 'ignore' });
+      execFileSync('git', ['config', 'user.email', 'otto@test.local'], { cwd: tmp, stdio: 'ignore' });
+      execFileSync('git', ['config', 'user.name', 'Otto Test'], { cwd: tmp, stdio: 'ignore' });
+      execFileSync('git', ['commit', '--allow-empty', '-m', 'init'], { cwd: tmp, stdio: 'ignore' });
+
+      const receipts = new ReceiptWriter(join(tmp, 'receipts'));
+      const checks = new CheckRunner(new CheckStore(join(tmp, 'checks')), receipts);
+      const tickets = new TicketStore(join(tmp, 'tickets'), receipts, checks);
+      const workers = new WorkerStore(join(tmp, 'workers'));
+      const runs = new RunStore(join(tmp, 'runs'));
+      const knowledge = new KnowledgeStore(join(tmp, 'knowledge'));
+      const autonomy = new AutonomyStore(join(tmp, 'autonomy'), receipts, knowledge, checks);
+      const orchestrator = new TicketOrchestrator(tickets, workers, runs, knowledge, autonomy, receipts);
+      const runner = new WorkerRunner(workers, tickets, runs, autonomy, receipts, checks);
+
+      const orchestrated = orchestrator.orchestrate({
+        slug: 'bounded-disposable',
+        objective: 'Prove disposable ticket → worker → bounded loop receipt (060 stub).',
+        repoRoot: tmp,
+      });
+
+      expect(existsSync(orchestrated.worktreePath)).toBe(true);
+      expect(orchestrated.worker.status).toBe('running');
+      expect(orchestrated.receipt.id).toBeTruthy();
+
+      const bounded = runner.runBounded(orchestrated.worker.id, { maxTurns: 2 });
+      expect(bounded.receipt_id).toBeTruthy();
+      expect(bounded.status).toBe('blocked');
+      expect(bounded.summary.length).toBeGreaterThan(0);
+      expect(workers.list().workers.find((w) => w.id === orchestrated.worker.id)?.status).toBe('blocked');
     } finally {
       rmSync(tmp, { recursive: true, force: true });
     }

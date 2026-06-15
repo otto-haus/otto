@@ -1,0 +1,32 @@
+{
+  "ticket": "060-worker-autonomous-runtime-loop",
+  "github_issue": 81,
+  "proof_class": "staging_unit",
+  "status": "pass",
+  "date": "2026-06-14",
+  "scope": "stub_milestone",
+  "checks": {
+    "worker_runner_tests": 4,
+    "ticket_orchestrator_tests": 3,
+    "integration_disposable_ticket": true,
+    "ipc_run_bounded": true,
+    "letta_transport_wired": false,
+    "worktree_isolation_proven": false
+  },
+  "verification": [
+    "bun test apps/desktop/electron/worker-runner.test.ts",
+    "bun test apps/desktop/electron/ticket-orchestrator.test.ts",
+    "bun run typecheck"
+  ],
+  "ac_mapping": {
+    "disposable_ticket_blocked_with_receipt": "disposable ticket orchestrates worktree then runBounded exits with receipt",
+    "review_gate_blocks_merge": "runBounded attaches 051 review gate blocking merged without reviewer evidence",
+    "failure_writes_blocked_receipt": "runBounded writes autonomy-blocked receipt when action requires approval",
+    "unknown_worker_fails_loudly": "runBounded records receipt for unknown worker as error path"
+  },
+  "known_limitations": [
+    "Letta session execution in worktree deferred to 039 transport follow-up",
+    "Worker stops at blocked door with receipt; never unsupervised merged"
+  ],
+  "ok": true
+}

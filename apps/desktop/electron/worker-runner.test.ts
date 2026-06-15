@@ -28,7 +28,7 @@ describe('WorkerRunner', () => {
     expect(() => new WorkerRunner().runBounded('missing-worker')).toThrow(/not found/i);
   });
 
-  test('runBounded blocks when Letta session transport is not wired', () => {
+  test('runBounded completes stub loop for existing worker', () => {
     const dir = mkdtempSync(join(tmpdir(), 'otto-worker-'));
     try {
       const { workers, tickets, runner } = harness(dir);
