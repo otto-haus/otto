@@ -179,6 +179,7 @@ const api = {
   workspace: {
     get: (): Promise<WorkspaceInfo> => ipcRenderer.invoke('otto:workspace:get'),
     reveal: (): Promise<string> => ipcRenderer.invoke('otto:workspace:reveal'),
+    context: () => ipcRenderer.invoke('otto:workspace:context'),
   },
   permissionSession: {
     list: (): Promise<string[]> => ipcRenderer.invoke('otto:permission-session:list'),
@@ -356,9 +357,6 @@ const api = {
     denyReceipt: (input: { requestId: string; toolName: string; message: string }): Promise<{ id: string; path: string }> =>
       ipcRenderer.invoke('otto:permission:deny-receipt', input),
     state: () => ipcRenderer.invoke('otto:permission:state'),
-  },
-  workspace: {
-    context: () => ipcRenderer.invoke('otto:workspace:context'),
   },
   smoke: {
     triggerPermission: (input?: { toolName?: string; requestId?: string; interactive?: boolean }) =>
