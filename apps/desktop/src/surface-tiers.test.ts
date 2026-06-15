@@ -164,7 +164,11 @@ describe('surface-tiers', () => {
     expect(isSurfaceInSidebar('chat', labs, true)).toBe(false);
     expect(isSurfaceInSidebar('settings', labs, true)).toBe(false);
     expect(isSurfaceInSidebar('charters', labs, true)).toBe(true);
-    expect(isSurfaceInSidebar('knowledge', labs, true)).toBe(false);
+    expect(isSurfaceInSidebar('knowledge', labs, true)).toBe(true);
+    expect(isSurfaceInSidebar('curation', labs, true)).toBe(false);
+    expect(isSurfaceInSidebar('checks', labs, true)).toBe(false);
+    expect(isSurfaceInSidebar('autonomy', labs, true)).toBe(false);
+    expect(isSurfaceInSidebar('skills', labs, true)).toBe(false);
   });
 
 });
