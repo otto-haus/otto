@@ -104,14 +104,22 @@ const labelForModel = (value?: string | null, options: LettaModelOption[] = FALL
   options.find((m) => m.handle === value)?.label ?? value ?? 'Agent default';
 const labelForEffort = (value?: EffortLevel) => EFFORT_OPTIONS.find((e) => e.value === value)?.label ?? 'High';
 
-const formatRuntimeSubtitle = (ready: boolean, reason: string | undefined, modelLabel: string): string => {
+type ChatRuntimeStatus = NonNullable<ReturnType<typeof useRuntimeContext>['status']>;
+
+const runtimeSetupBannerBody = (st: ChatRuntimeStatus): string =>
+  st.code === 'no-agent' ? chatCopy.runtimeNoAgentBody : (st.reason ?? chatCopy.runtimeNotReadyBody);
+
+const formatRuntimeSubtitle = (
+  ready: boolean,
+  st: Pick<ChatRuntimeStatus, 'code' | 'reason'> | undefined,
+  modelLabel: string,
+): string => {
   if (ready) return modelLabel;
-  const text = reason?.trim() ?? 'connecting…';
+  if (st?.code === 'no-agent') return chatCopy.runtimeNoAgentSubtitle;
+  const text = st?.reason?.trim() ?? 'connecting…';
   if (text.length <= 96) return text;
   return `${text.slice(0, 93)}…`;
 };
-
-type ChatRuntimeStatus = NonNullable<ReturnType<typeof useRuntimeContext>['status']>;
 
 const lettaMemoryStatusLabel = (st: ChatRuntimeStatus): string =>
   (st.agentId?.trim() ? 'Letta memory on' : 'Letta memory off');
@@ -751,7 +759,7 @@ const LiveChat: React.FC<{
       ? activityLabel
       : ready
         ? chatSessionSubtitle
-        : formatRuntimeSubtitle(ready, st.reason, labelForModel(selectedModel, modelOptions)))
+        : formatRuntimeSubtitle(ready, st, labelForModel(selectedModel, modelOptions)))
     : 'connecting…';
 
   const copyConversationMarkdown = async () => {
@@ -1079,7 +1087,7 @@ const LiveChat: React.FC<{
                   <div className="inkblock__eyebrow"><span className="dot dot--warn" /> {chatCopy.runtimeNotReadyEyebrow}</div>
                   <div className="inkblock__title">{chatCopy.runtimeNotReadyTitle}</div>
                   <div className="inkblock__meta">
-                    <span>{st.reason ?? chatCopy.runtimeNotReadyBody}</span>
+                    <span>{runtimeSetupBannerBody(st)}</span>
                     {st.code === 'usage-limit' ? (
                       <span className="faint"> Switch model or provider in Settings, or wait for the limit to reset.</span>
                     ) : null}

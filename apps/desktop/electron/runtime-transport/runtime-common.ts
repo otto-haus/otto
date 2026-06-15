@@ -292,7 +292,7 @@ export function friendly(code: StatusCode, reason: string): string {
       }
       return `Can't reach the Letta backend — check the base URL in Settings. (${reason})`;
     case 'no-agent':
-      return `Can't find a default local Letta agent — open Letta once or choose an Agent ID override in Settings. (${reason})`;
+      return "Can't find a default local Letta agent — open Letta once or choose an Agent ID override in Settings.";
     case 'stale':
       return `Saved Letta agent or conversation was stale — choose a valid Agent ID override in Settings or clear the override. (${reason})`;
     case 'usage-limit': {

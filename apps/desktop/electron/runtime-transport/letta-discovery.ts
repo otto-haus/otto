@@ -40,7 +40,7 @@ export function discoverLocalLettaContext(config: ConfigStore): LocalLettaContex
     agentCandidates,
     source,
     reason: agentCandidates.length === 0
-      ? `no last local agent or session was found in ${resolveLettaSettingsPath(config, config.connectionMode())}`
+      ? 'No last local agent or session was found in Letta settings.'
       : undefined,
   };
 }

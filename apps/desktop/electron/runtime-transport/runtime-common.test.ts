@@ -155,6 +155,10 @@ describe('runtime-common status mapping', () => {
   test('friendly and nextActionFor align with StatusCode', () => {
     expect(friendly('unreachable', 'ECONNREFUSED')).toMatch(/Can't reach the Letta backend/i);
     expect(friendly('unreachable', 'Letta session.initialize() timed out after 45000ms')).toMatch(/did not connect in time/i);
+    const noAgentPath = 'no last local agent or session was found in /Users/seb/.letta/settings.json';
+    expect(friendly('no-agent', noAgentPath)).toMatch(/Can't find a default local Letta agent/i);
+    expect(friendly('no-agent', noAgentPath)).not.toContain('settings.json');
+    expect(friendly('no-agent', noAgentPath)).not.toMatch(/\/Users\//);
     expect(nextActionFor('no-agent')).toMatch(/Agent ID/i);
     expect(nextActionFor('stale')).toMatch(/stale override/i);
     expect(nextActionFor('usage-limit')).toMatch(/Switch to Auto\/Fast/i);
