@@ -57,6 +57,8 @@
     "check:docs-tools": "bun scripts/check-mintlify-pins.mjs",
     "check:sensitive-files": "bash scripts/check-sensitive-file-paths.sh",
     "check:provider-mirror-audit": "bash scripts/check-provider-mirror-log-audit.sh",
+    "gen:notices": "node scripts/gen-third-party-notices.mjs",
+    "check:notices": "node scripts/gen-third-party-notices.mjs --check",
     "lint:changed": "bash scripts/lint-changed.sh",
     "check:ship-tier-matrix": "bun scripts/check-ship-tier-matrix.mjs",
     "verify:v0": "bun scripts/verify-v0.mjs",
