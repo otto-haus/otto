@@ -1,0 +1,13 @@
+{
+  "issue": 302,
+  "title": "P0: Rework waiting-to-send queue UX and reliability",
+  "before": "Queue showed truncated text with only Dismiss all; no inspect/edit/send-now per row.",
+  "after": "Expanded queue rows expose View (full body + attachment lines), Edit, Send now, Retry, Remove; position pills; Clear queue label.",
+  "verification": [
+    "bun test apps/desktop/src/chat/queue-storage.test.ts",
+    "bun run --cwd apps/desktop typecheck",
+    "bun run --cwd apps/desktop electron:typecheck",
+    "bun run typecheck"
+  ],
+  "screenshot": "not run: browser proof skipped; UI change covered by queue-storage tests and manual QueueStrip markup"
+}

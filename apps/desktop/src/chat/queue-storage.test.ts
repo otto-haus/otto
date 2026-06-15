@@ -7,12 +7,17 @@ import {
   LEGACY_QUEUE_V2_KEY,
   nextQueueItemForThread,
   previewQueueText,
+  promoteQueueItemForThread,
   QUEUE_KEY,
   queueDisplayItemsForThread,
+  queueHasAttachments,
   queueMatchesThread,
   readQueue,
+  removeQueueItem,
   retryFailedQueueItemsForThread,
   sanitizeQueue,
+  splitQueueText,
+  updateQueueItemText,
   type QueueItem,
 } from './queue-storage';
 
@@ -197,5 +202,38 @@ describe('queue-storage', () => {
       'failed-a:queued',
     ]);
     expect(nextQueueItemForThread(retried, 'thread_a')?.id).toBe('queued-a');
+  });
+
+  test('promoteQueueItemForThread moves a waiting item to the front without reordering other threads', () => {
+    const items: QueueItem[] = [
+      { id: 'queued-a-1', text: 'first for A', createdAt: 1, state: 'queued', threadId: 'thread_a' },
+      { id: 'queued-a-2', text: 'second for A', createdAt: 2, state: 'queued', threadId: 'thread_a' },
+      { id: 'queued-b', text: 'queued for B', createdAt: 3, state: 'queued', threadId: 'thread_b' },
+    ];
+
+    const promoted = promoteQueueItemForThread(items, 'thread_a', 'queued-a-2');
+
+    expect(promoted.map((item) => item.id)).toEqual(['queued-a-2', 'queued-a-1', 'queued-b']);
+    expect(nextQueueItemForThread(promoted, 'thread_a')?.id).toBe('queued-a-2');
+  });
+
+  test('removeQueueItem and updateQueueItemText mutate only the targeted row', () => {
+    const items: QueueItem[] = [
+      { id: 'a', text: 'keep me', createdAt: 1, state: 'queued', threadId: 'thread_a' },
+      { id: 'b', text: 'change me', createdAt: 2, state: 'queued', threadId: 'thread_a' },
+    ];
+
+    expect(updateQueueItemText(items, 'b', 'edited body').find((item) => item.id === 'b')?.text).toBe('edited body');
+    expect(removeQueueItem(items, 'b').map((item) => item.id)).toEqual(['a']);
+  });
+
+  test('splitQueueText preserves attachment footer across reconnect storage', () => {
+    const text = 'Please inspect this screenshot.\n\nAttached local images:\n1. shot.png — ~/.otto/attachments/shot.png';
+    expect(splitQueueText(text)).toEqual({
+      body: 'Please inspect this screenshot.',
+      attachmentLines: ['1. shot.png — ~/.otto/attachments/shot.png'],
+    });
+    expect(queueHasAttachments(text)).toBe(true);
+    expect(previewQueueText(text)).toBe('Please inspect this screenshot. · 1 attachment');
   });
 });
