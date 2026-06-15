@@ -206,6 +206,11 @@ tasks:
     cmds:
       - bun scripts/letta-cli-capability-smoke.ts
 
+  smoke:attachments:
+    desc: Attachment ingestion smoke — fixture save, runtime context, path/secret leak checks (#299)
+    cmds:
+      - bun test apps/desktop/electron/attachment-ingestion.smoke.test.ts
+
   smoke:cli:
     desc: Optional Letta CLI smoke; requires OTTO_AGENT_ID or LETTA_AGENT_ID and uses a disposable conversation
     cmds:
