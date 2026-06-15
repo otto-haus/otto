@@ -1,5 +1,6 @@
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
+import { parse } from 'yaml';
 import type { SkillListResult, SkillRecord } from '@otto-haus/core';
 
 export class SkillStore {
@@ -74,16 +75,16 @@ function parseFrontmatter(raw: string): { name?: string; description?: string } 
   const end = raw.indexOf('---', 3);
   if (end < 0) return {};
   const block = raw.slice(3, end).trim();
+  const parsed = parse(block);
+  if (!isRecord(parsed)) return {};
   const result: { name?: string; description?: string } = {};
-  for (const line of block.split('\n')) {
-    const match = line.match(/^([a-z_]+):\s*(.+)$/i);
-    if (!match) continue;
-    const key = match[1].toLowerCase();
-    const value = match[2].trim();
-    if (key === 'name') result.name = value;
-    if (key === 'description') result.description = value;
-  }
+  if (typeof parsed.name === 'string') result.name = parsed.name;
+  if (typeof parsed.description === 'string') result.description = parsed.description;
   return result;
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return !!value && typeof value === 'object' && !Array.isArray(value);
 }
 
 function extractTriggers(raw: string, description: string): string[] {
