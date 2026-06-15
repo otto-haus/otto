@@ -645,6 +645,22 @@ export const settingsCopy = {
   sectionMemory: 'Memory observatory',
   sectionCulture: 'Culture import',
   sectionLabs: 'Labs',
+  workspaceTitle: 'Workspace & permissions',
+  workspaceLede: 'Where otto resolves repo data and which tools are allowed for this chat session.',
+  workspaceRepoTitle: 'Active folder',
+  workspaceRepoHint: 'Repo root for practices, standards, and recall sidecars. Set OTTO_ROOT to override.',
+  workspaceHomeTitle: 'otto home',
+  workspaceHomeHint: 'Local config and secrets. Override with OTTO_HOME.',
+  workspaceReveal: 'Reveal in Finder',
+  workspaceCopyPath: 'Copy path',
+  workspaceCopyToastTitle: 'Path copied',
+  workspaceCopyToastBody: 'Workspace path copied to clipboard.',
+  permissionRouteTitle: 'Permission route',
+  permissionRouteHint: 'Tools allowed for this session via Chat “Allow for session”. Cleared on new chat or restart.',
+  permissionRouteEmpty: 'No session allowances yet — approvals happen in Chat when a tool runs.',
+  permissionRouteClear: 'Clear session allowances',
+  permissionRouteClearToastTitle: 'Session allowances cleared',
+  permissionRouteClearToastBody: 'Future tool runs will prompt again until you allow them.',
 } as const;
 
 export const receiptsCopy = {

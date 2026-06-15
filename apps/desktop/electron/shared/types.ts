@@ -101,6 +101,17 @@ export interface AppBuildInfo {
   matchesMain: boolean | null;
 }
 
+export type WorkspaceRepoRootSource = 'otto_root' | 'cwd';
+export type OttoHomeSource = 'otto_home' | 'otto_config_dir' | 'default';
+
+/** Resolved workspace paths for Settings (281). */
+export interface WorkspaceInfo {
+  repoRoot: string;
+  ottoHome: string;
+  repoRootSource: WorkspaceRepoRootSource;
+  ottoHomeSource: OttoHomeSource;
+}
+
 /** What the Settings "Connect Letta" card reads. v1 is local-only; provider auth lives in Letta. */
 export interface ConnectionInfo {
   baseUrl: string | null;
