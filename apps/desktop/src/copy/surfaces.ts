@@ -873,6 +873,7 @@ export const settingsCopy = {
   safeResetDirtyTitle: 'Unclean last shutdown',
   safeResetDirtyBody: 'otto did not shut down cleanly last time. Run Safe reset if Chat is blank, frozen, or queue items are stuck.',
   memoryConnectWarn: 'Connect Letta in General before expecting live blocks.',
+  memoryLabsGate: 'Memory observatory is Labs-only. Enable Labs → Memory observatory in Settings.',
   memorySearchPlaceholder: 'Search blocks…',
   memoryNoMatch: 'No memory blocks match. Connect an agent or adjust search.',
   dreamingTitle: 'Dreaming / sleep-time',
