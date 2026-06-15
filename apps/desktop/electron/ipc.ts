@@ -285,6 +285,14 @@ export function registerIpc(win: BrowserWindow) {
     shell.openPath(folder);
     return { ok: true as const, folder };
   });
+  ipcMain.handle('otto:diagnostics:copy-log-path', (_e, logId?: string) => {
+    const summary = buildRuntimeLogsSummary(app.getPath('userData'));
+    const entry = summary.entries.find((item) => item.id === logId)
+      ?? summary.entries.find((item) => item.tail)
+      ?? summary.entries[0];
+    const path = entry?.path ?? summary.logsFolder;
+    return { ok: true as const, path };
+  });
 
   const debugDeps = () => ({
     win,

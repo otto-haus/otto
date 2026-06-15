@@ -106,6 +106,8 @@ const ELECTRON_LOG_CANDIDATES = (userDataPath: string) => [
   { id: 'main', label: 'Electron main', path: join(userDataPath, 'logs', 'main.log') },
   { id: 'main-alt', label: 'Electron main (alt)', path: join(userDataPath, 'Logs', 'main.log') },
   { id: 'renderer', label: 'Electron renderer', path: join(userDataPath, 'logs', 'renderer.log') },
+  { id: 'runtime', label: 'Runtime / transport', path: join(userDataPath, 'logs', 'runtime.log') },
+  { id: 'letta-remote', label: 'Letta remote subprocess', path: join(userDataPath, 'logs', 'letta-remote.log') },
 ];
 
 export function resolveLogsFolder(userDataPath: string): string {

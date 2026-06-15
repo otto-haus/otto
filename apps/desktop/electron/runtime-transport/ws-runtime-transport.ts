@@ -33,6 +33,7 @@ import {
   type WsRuntimeEvent,
 } from './ws-protocol';
 import { permissionSessionStore } from '../permission-session-store';
+import { appendRawLog, writeLog } from '../otto-file-logger';
 import type { OttoRuntimeTransport, WsTransportDiagnosticsSnapshot } from './types';
 
 const CONNECT_TIMEOUT_MS = DEFAULT_CONNECT_TIMEOUT_MS;
@@ -471,9 +472,14 @@ export class WsRuntimeTransport implements OttoRuntimeTransport {
       env,
       stdio: ['ignore', 'pipe', 'pipe'],
     });
+    writeLog('letta-remote', 'info', `spawn ${nodeBin} ${cliPath} remote --env-name ${REMOTE_ENV} --backend local`);
+    this.remoteProc.stdout?.on('data', (chunk: Buffer) => {
+      appendRawLog('letta-remote', `[stdout] ${String(chunk)}`);
+    });
     this.remoteProc.stderr?.on('data', (chunk: Buffer) => {
       const line = String(chunk).trim();
       if (line) stderrChunks.push(line);
+      appendRawLog('letta-remote', `[stderr] ${String(chunk)}`);
     });
     this.remoteProc.on('exit', (code) => {
       if (code !== 0 && !this.runtimeSocket) {

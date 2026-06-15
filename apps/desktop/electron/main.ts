@@ -5,6 +5,7 @@ import { BrowserWindow, app } from 'electron';
 import { ConfigStore } from './config-store';
 import { windowBackgroundForPref } from './display-theme';
 import { registerIpc } from './ipc';
+import { initOttoFileLogger, writeLog } from './otto-file-logger';
 import { resolveDevRendererUrl } from './main-security';
 import {
   applyWindowLaunchMode,
@@ -57,6 +58,11 @@ function createWindow() {
   applyWindowLaunchMode(win, launchMode);
   registerIpc(win);
 
+  win.webContents.on('console-message', (_event, level, message, line, sourceId) => {
+    const src = sourceId ? `${sourceId}:${line}` : `L${line}`;
+    writeLog('renderer', String(level), `${src} ${message}`);
+  });
+
   // Dev: load the running Vite renderer; Prod: load the built renderer.
   const devRendererUrl = resolveDevRendererUrl(process.env.ELECTRON_RENDERER_URL, app.isPackaged);
   if (devRendererUrl) {
@@ -99,6 +105,7 @@ applyUserDataDirOverride();
 
 app.whenReady().then(() => {
   ensurePath();
+  initOttoFileLogger(app.getPath('userData'));
   createWindow();
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow();

@@ -7,6 +7,7 @@ import { resolveTransportMode } from './transport-mode';
 import { WS_PROMOTION_GATE_REASON, wsPromotionApproved } from './ws-promotion-gate';
 import type { OttoRuntimeTransport, RuntimeTransportMode, SdkTransportDiagnosticsSnapshot, WsTransportDiagnosticsSnapshot } from './types';
 import type { TransportDiagnosticsSnapshot } from '../diagnostics-export';
+import { writeLog } from '../otto-file-logger';
 
 /** Owns transport selection, fallback, and delegation to the active implementation. */
 export class RuntimeSupervisor implements OttoRuntimeTransport {
@@ -40,6 +41,7 @@ export class RuntimeSupervisor implements OttoRuntimeTransport {
   }
 
   async init(opts?: { freshConversation?: boolean }): Promise<RuntimeStatus> {
+    writeLog('runtime', 'info', `init transportMode=${this.mode}`);
     if (this.mode === 'sdk') {
       this.active = this.sdk;
       await this.ws.close().catch(() => {});
@@ -64,9 +66,11 @@ export class RuntimeSupervisor implements OttoRuntimeTransport {
     const wsStatus = await this.ws.init(opts);
     if (wsStatus.ready) {
       this.active = this.ws;
+      writeLog('runtime', 'info', 'auto transport selected ws');
       return this.withModeMeta(wsStatus, 'auto', 'websocket local', null);
     }
     const fallbackReason = wsStatus.reason ?? 'WebSocket transport unavailable';
+    writeLog('runtime', 'warn', `ws init failed; falling back to sdk: ${fallbackReason}`);
     await this.ws.close().catch(() => {});
     this.active = this.sdk;
     const sdkStatus = await this.sdk.init(opts);

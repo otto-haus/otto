@@ -346,6 +346,8 @@ const api = {
       ipcRenderer.invoke('otto:diagnostics:open-logs-folder'),
     revealRunsFolder: (): Promise<{ ok: boolean; folder: string }> =>
       ipcRenderer.invoke('otto:diagnostics:reveal-runs-folder'),
+    copyLogPath: (logId?: string): Promise<{ ok: boolean; path: string }> =>
+      ipcRenderer.invoke('otto:diagnostics:copy-log-path', logId),
   },
   debug: {
     showContextMenu: (surface?: string): Promise<{ ok: boolean }> =>

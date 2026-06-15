@@ -4453,6 +4453,19 @@ const DiagnosticsSettingsPanel: React.FC<{
         <button type="button" className="btn btn--ghost" disabled={logsBusy} onClick={() => void refreshLogs()}>
           {settingsCopy.diagnosticsRefreshLogs}
         </button>
+        <button
+          type="button"
+          className="btn btn--ghost"
+          disabled={logsBusy || !activeLog?.path}
+          onClick={() => {
+            void api.diagnostics.copyLogPath(activeLogId).then(({ path }) => {
+              void navigator.clipboard.writeText(path);
+              pushToast({ title: settingsCopy.diagnosticsCopyLogPathDone, body: path, tone: 'ok' });
+            });
+          }}
+        >
+          {settingsCopy.diagnosticsCopyLogPath}
+        </button>
       </div>
       {bundlePath ? <p className="mono faint" style={{ fontSize: 11.5 }}>{bundlePath}</p> : null}
       {logsSummary ? (
@@ -4484,7 +4497,7 @@ const DiagnosticsSettingsPanel: React.FC<{
           )}
         </div>
       ) : null}
-      <p className="faint" style={{ fontSize: 12, marginTop: 8 }}>{settingsCopy.diagnosticsCommand}</p>
+      <p className="faint" style={{ fontSize: 12, marginTop: 8 }}>{settingsCopy.diagnosticsDevToolsHint}</p>
       {error ? <p className="faint" style={{ color: 'var(--warn)' }}>{error}</p> : null}
       {logsError ? <p className="faint" style={{ color: 'var(--warn)' }}>{logsError}</p> : null}
     </>
