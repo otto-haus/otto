@@ -57,6 +57,7 @@ fi
 set_plist_env HOME "$HOME_DIR"
 set_plist_env OTTO_HOME "$OTTO_HOME_DIR"
 set_plist_env OTTO_SMOKE "1"
+set_plist_env OTTO_WINDOW_MODE "${OTTO_WINDOW_MODE:-background}"
 set_plist_env ELECTRON_ENABLE_LOGGING "1"
 for key in OTTO_AGENT_ID LETTA_BASE_URL LETTA_CLI_PATH OTTO_MODEL OTTO_EFFORT; do
   if [[ -n "${!key:-}" ]]; then
@@ -65,7 +66,7 @@ for key in OTTO_AGENT_ID LETTA_BASE_URL LETTA_CLI_PATH OTTO_MODEL OTTO_EFFORT; d
 done
 codesign --force --deep --sign - "$BUNDLE" >/dev/null
 
-env -u ELECTRON_RUN_AS_NODE /usr/bin/open -n -o "$LOG" --stderr "$LOG" "$BUNDLE" --args \
+env -u ELECTRON_RUN_AS_NODE /usr/bin/open -n -g -o "$LOG" --stderr "$LOG" "$BUNDLE" --args \
   "--user-data-dir=$PROFILE_DIR" \
   "--remote-debugging-port=$PORT"
 

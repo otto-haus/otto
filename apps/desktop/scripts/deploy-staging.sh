@@ -12,6 +12,7 @@ OTTO_HOME_DIR="$STAGING_ROOT/otto-home"
 PROFILE_DIR="$STAGING_ROOT/profile"
 PORT="${OTTO_STAGING_PORT:-9445}"
 BUNDLE_ID="${OTTO_STAGING_BUNDLE_ID:-haus.otto.desktop.staging}"
+STAGING_LAUNCH="${OTTO_STAGING_LAUNCH:-background}"
 APP_VERSION="$(node -p "require('$ROOT/package.json').version" 2>/dev/null || echo unknown)"
 
 if [[ "$TARGET_APP_RESOLVED" == "/Applications/otto.app" || "$TARGET_APP_RESOLVED" == "/Applications/otto.app/"* ]]; then
@@ -93,6 +94,18 @@ stamp_bundle() {
   plist_env_set "$plist" OTTO_MAIN_SHA "$MAIN_SHA"
   plist_env_set "$plist" OTTO_MAIN_SHORT_SHA "$MAIN_SHORT"
   plist_env_set "$plist" OTTO_SMOKE "1"
+  case "$STAGING_LAUNCH" in
+    open)
+      plist_env_set "$plist" OTTO_WINDOW_MODE "visible"
+      ;;
+    build-only|background)
+      plist_env_set "$plist" OTTO_WINDOW_MODE "${OTTO_WINDOW_MODE:-background}"
+      ;;
+    *)
+      echo "Unknown OTTO_STAGING_LAUNCH=$STAGING_LAUNCH (use build-only, background, or open)" >&2
+      exit 1
+      ;;
+  esac
   plist_env_set "$plist" ELECTRON_ENABLE_LOGGING "1"
   plist_env_set "$plist" OTTO_BUILD_SHA "$build_sha"
   plist_env_set "$plist" OTTO_BUILD_SHORT_SHA "$build_short"
@@ -195,8 +208,27 @@ stamp_bundle "$TARGET_APP"
 echo "==> Ad-hoc signing staging app"
 codesign --force --deep --sign - "$TARGET_APP" >/dev/null
 
-echo "==> Opening staging app"
-/usr/bin/open -n "$TARGET_APP" --args \
+case "$STAGING_LAUNCH" in
+  build-only)
+    echo "staging_launch=build-only"
+    echo "staging_app=$TARGET_APP"
+    echo "home=$HOME_DIR"
+    echo "otto_home=$OTTO_HOME_DIR"
+    echo "profile=$PROFILE_DIR"
+    echo "port=$PORT"
+    exit 0
+    ;;
+  open)
+    echo "==> Opening staging app (visible — may take focus)"
+    OPEN_FLAGS=()
+    ;;
+  background)
+    echo "==> Launching staging app in background (no focus steal)"
+    OPEN_FLAGS=(-g)
+    ;;
+esac
+
+/usr/bin/open -n "${OPEN_FLAGS[@]}" "$TARGET_APP" --args \
   "--user-data-dir=$PROFILE_DIR" \
   "--remote-debugging-port=$PORT"
 

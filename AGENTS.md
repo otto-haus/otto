@@ -57,7 +57,9 @@ Desktop:
 
 ```sh
 task electron                 # live Electron app in dev
-task staging                  # build/package/install/open isolated /Applications/otto-staging.app
+task staging                  # build/package/isolated staging app; background launch (no focus steal)
+task staging:build            # build/package only — no launch (preferred for agent verify loops)
+task staging:open             # explicit visible launch when debugging UI
 task install:release          # canonical otto.app — GitHub Release only; requires OTTO_ALLOW_RELEASE_INSTALL=1
 task smoke:release:metadata   # read-only — compare installed otto.app to latest or OTTO_RELEASE_TAG
 task smoke:letta-cli          # resolveCli + version/help; opt-in turn with LETTA_AGENT_ID (#295)
@@ -65,10 +67,13 @@ task smoke:cli                # isolated disposable conversation; never default
 task smoke:cron               # opt-in Letta cron create/list/delete smoke; never default
 ```
 
+**Nonintrusive desktop smoke (default for agents):** prefer `task staging:build` plus CDP/Playwright smokes, or `task staging` (background launch). Staging bundles set `OTTO_SMOKE=1` and default `OTTO_WINDOW_MODE=background` so windows do not steal focus. Use `task staging:open` or `OTTO_WINDOW_MODE=visible` only when a human needs a visible window. Never mutate `/Applications/otto.app`.
+
 After any `apps/desktop/` implementation turn, refresh **staging** (not live):
 
 ```sh
-task staging        # → /Applications/otto-staging.app; refuses unless HEAD=origin/main (#314)
+task staging:build  # preferred — no window focus steal (#326)
+# or task staging    # → /Applications/otto-staging.app; background launch; refuses unless HEAD=origin/main (#314)
 task staging:main   # fetch origin/main then staging (same gate when on main)
 ```
 

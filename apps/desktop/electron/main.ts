@@ -4,6 +4,11 @@ import { homedir } from 'node:os';
 import { BrowserWindow, app } from 'electron';
 import { registerIpc } from './ipc';
 import { resolveDevRendererUrl } from './main-security';
+import {
+  applyWindowLaunchMode,
+  browserWindowShowsOnCreate,
+  resolveWindowLaunchMode,
+} from './window-launch';
 
 let mainWindow: BrowserWindow | null = null;
 
@@ -27,11 +32,13 @@ function ensurePath() {
 }
 
 function createWindow() {
+  const launchMode = resolveWindowLaunchMode();
   const win = new BrowserWindow({
     width: 1040,
     height: 720,
     minWidth: 680,
     minHeight: 480,
+    show: browserWindowShowsOnCreate(launchMode),
     // Match CSS --bg (warm paper field) so there's no flash/seam before the renderer paints.
     backgroundColor: '#f8f7f2',
     titleBarStyle: 'hiddenInset',
@@ -44,6 +51,7 @@ function createWindow() {
     },
   });
 
+  applyWindowLaunchMode(win, launchMode);
   registerIpc(win);
 
   // Dev: load the running Vite renderer; Prod: load the built renderer.
