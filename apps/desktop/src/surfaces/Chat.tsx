@@ -1149,7 +1149,7 @@ const LiveChat: React.FC<{
               >
                 {!isUser && showWho ? (
                   <span className="msgRow__avatar" aria-hidden="true">
-                    <OttoMark size={26} className="ottoMark" />
+                    <OttoMark size={32} className="ottoMark" />
                   </span>
                 ) : !isUser ? <span className="msgRow__avatar msgRow__avatar--spacer" aria-hidden="true" /> : null}
                 <div className={`msg${isUser ? ' msg--user' : ''}${showWho ? '' : ' msg--cont'}`}>
@@ -1209,7 +1209,7 @@ const LiveChat: React.FC<{
           })}
           {rt.busy && !assistantStreaming && (
             <div className="msgRow">
-              <span className="msgRow__avatar" aria-hidden="true"><OttoMark size={26} className="ottoMark" /></span>
+              <span className="msgRow__avatar" aria-hidden="true"><OttoMark size={32} className="ottoMark" /></span>
               <div
                 className={`chat__thinking${rt.turnActivity ? ` chat__thinking--${rt.turnActivity.kind}` : ''}`}
                 aria-live="polite"

@@ -1031,7 +1031,7 @@ h1, h2, h3, h4, p { margin: 0; }
 }
 .msgRow {
   display: grid;
-  grid-template-columns: 34px minmax(0, 1fr);
+  grid-template-columns: 40px minmax(0, 1fr);
   gap: 12px;
   align-items: start;
   max-width: 100%;
@@ -1044,15 +1044,15 @@ h1, h2, h3, h4, p { margin: 0; }
 .msgRow--cont { margin-top: -10px; }
 .msgRow--cont .msgRow__avatar--spacer { visibility: hidden; }
 .msgRow__avatar {
-  width: 34px; height: 34px;
-  border-radius: 11px;
+  width: 40px; height: 40px;
+  border-radius: 12px;
   border: 1px solid var(--line);
   background: var(--panel);
   overflow: hidden;
   display: grid; place-items: center;
   flex: none;
 }
-.msgRow__avatar img { padding: 4px; }
+.msgRow__avatar img { padding: 3px; }
 .msgRow__avatar--spacer { pointer-events: none; }
 .chat__thinking {
   display: inline-flex; align-items: center; gap: 10px;
