@@ -128,6 +128,10 @@ function readyTransportState(transport: WsRuntimeTransport, conversationId: stri
   };
 }
 
+function deviceOnline() {
+  return { type: 'update_device_status', device_status: { is_online: true } };
+}
+
 describe('WsRuntimeTransport', () => {
   beforeEach(() => {
     process.env.OTTO_SMOKE = '1';
@@ -135,6 +139,29 @@ describe('WsRuntimeTransport', () => {
     process.env.OTTO_SKIP_LETTA_LSOF = '1';
     process.env.LETTA_CLI_PATH =
       '/Applications/Letta.app/Contents/Resources/app.asar.unpacked/node_modules/@letta-ai/letta-code/letta.js';
+  });
+
+  test('init sync completes when status frames arrive before syncRuntime handler (#694)', async () => {
+    const { win } = mockWindow();
+    const transport = new WsRuntimeTransport(() => win, mockConfig());
+    const socket = createFakeRuntimeSocket();
+
+    (transport as unknown as { spawnRemote: () => Promise<void> }).spawnRemote = async () => {};
+    (transport as unknown as { startListener: () => Promise<void> }).startListener = async () => {
+      (transport as unknown as { listenerPort: number }).listenerPort = 59999;
+      (transport as unknown as { sessionToken: string }).sessionToken = 'test-token';
+    };
+    (transport as unknown as { waitForRuntimeSocket: () => Promise<void> }).waitForRuntimeSocket = async () => {
+      (transport as unknown as { runtimeSocket: FakeRuntimeSocket | null }).runtimeSocket = socket;
+      (transport as unknown as { attachPreSyncStatusBuffer: (s: FakeRuntimeSocket) => void }).attachPreSyncStatusBuffer(socket);
+      socket.emitMessage(JSON.stringify(deviceOnline()));
+      socket.emitMessage(JSON.stringify(loopIdle()));
+    };
+
+    const initPromise = transport.init({ freshConversation: true });
+    await initPromise;
+
+    expect(transport.getStatus().ready).toBe(true);
   });
 
   test('init reaches ready; smoke session; reconnect marks not ready on socket close', async () => {
