@@ -5,7 +5,8 @@
  *
  *   OTTO_SMOKE=1 OTTO_AGENT_ID=<agent> bun scripts/ws-disposable-smoke.ts
  */
-import { mkdirSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { homedir } from 'node:os';
 import { join } from 'node:path';
 import type { BrowserWindow } from 'electron';
 import { ConfigStore } from '../apps/desktop/electron/config-store';
@@ -21,6 +22,39 @@ if (!process.env.LETTA_CLI_PATH) {
 
 const RECEIPT_DIR = join(process.cwd(), 'docs/receipts/staging');
 const RUN_ID = new Date().toISOString().replace(/[-:.TZ]/g, '').slice(0, 14);
+const USER_OTTO_HOME = join(homedir(), '.otto');
+
+/** Read secrets from the real otto home before disposable OTTO_HOME overrides secret-store paths. */
+function hydrateFromUserHome(): void {
+  const secretsPath = join(USER_OTTO_HOME, 'secrets.env');
+  if (!process.env.LETTA_API_KEY && existsSync(secretsPath)) {
+    for (const line of readFileSync(secretsPath, 'utf8').split('\n')) {
+      const trimmed = line.trim();
+      if (!trimmed || trimmed.startsWith('#')) continue;
+      const eq = trimmed.indexOf('=');
+      if (eq <= 0) continue;
+      if (trimmed.slice(0, eq) === 'LETTA_API_KEY') {
+        process.env.LETTA_API_KEY = trimmed.slice(eq + 1);
+        break;
+      }
+    }
+  }
+  if (!process.env.OTTO_AGENT_ID && !process.env.LETTA_AGENT_ID) {
+    const configPath = join(USER_OTTO_HOME, 'config.json');
+    if (existsSync(configPath)) {
+      try {
+        const cfg = JSON.parse(readFileSync(configPath, 'utf8')) as { agentId?: string };
+        if (cfg.agentId) process.env.OTTO_AGENT_ID = cfg.agentId;
+      } catch {
+        // ignore malformed config
+      }
+    }
+  }
+}
+
+function hasApiKey(): boolean {
+  return Boolean(process.env.LETTA_API_KEY?.trim());
+}
 
 function mockWindow() {
   const events: unknown[] = [];
@@ -39,9 +73,29 @@ function mockWindow() {
 }
 
 async function main() {
+  hydrateFromUserHome();
+
   const agentId = process.env.OTTO_AGENT_ID ?? process.env.LETTA_AGENT_ID;
   if (!agentId) {
     console.error('Set OTTO_AGENT_ID or LETTA_AGENT_ID');
+    process.exit(1);
+  }
+
+  if (!hasApiKey()) {
+    const blocker = {
+      schema: 'otto.ws-disposable-smoke-blocker.v1',
+      runId: RUN_ID,
+      blocker: 'LETTA_API_KEY absent',
+      hasApiKey: false,
+      agentId,
+      userOttoHome: USER_OTTO_HOME,
+      notes: [
+        'Set LETTA_API_KEY in env or ~/.otto/secrets.env before live WS smoke.',
+        'Default transport remains sdk until promotion scorecard passes.',
+      ],
+    };
+    writeProof(blocker);
+    console.error(JSON.stringify(blocker, null, 2));
     process.exit(1);
   }
 

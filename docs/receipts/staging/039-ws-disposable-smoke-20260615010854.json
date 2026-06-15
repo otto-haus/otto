@@ -1,0 +1,12 @@
+{
+  "schema": "otto.ws-disposable-smoke-blocker.v1",
+  "runId": "20260615010854",
+  "blocker": "LETTA_API_KEY absent",
+  "hasApiKey": false,
+  "agentId": "agent-local-d8e35a2a-a89f-45dd-b117-5eae5df8c8f2",
+  "userOttoHome": "/Users/seb/.otto",
+  "notes": [
+    "Set LETTA_API_KEY in env or ~/.otto/secrets.env before live WS smoke.",
+    "Default transport remains sdk until promotion scorecard passes."
+  ]
+}

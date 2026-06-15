@@ -1,0 +1,22 @@
+{
+  "schema": "otto.ws-disposable-smoke-blocker.v1",
+  "runId": "20260615010854",
+  "issue": 66,
+  "ticket": "039-cathedral-ws-runtime-transport",
+  "blocker": "LETTA_API_KEY absent",
+  "hasApiKey": false,
+  "agentId": "agent-local-d8e35a2a-a89f-45dd-b117-5eae5df8c8f2",
+  "userOttoHome": "/Users/seb/.otto",
+  "defaultTransport": "sdk",
+  "verification": {
+    "typecheck": "pass",
+    "transportUnitTests": "49 pass",
+    "scorecard": "pass=4 fail=0 skip=4",
+    "verifyV0": "pass"
+  },
+  "notes": [
+    "ws-disposable-smoke.ts now hydrates LETTA_API_KEY from ~/.otto/secrets.env before disposable OTTO_HOME.",
+    "Live BYOR init still blocked until LETTA_API_KEY is set in env or secrets.env.",
+    "Unit-proven scorecard dimensions: abort, reconnect, safety, fallback (partial approval)."
+  ]
+}

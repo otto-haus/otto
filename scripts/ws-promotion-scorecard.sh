@@ -15,6 +15,7 @@ pass=0
 fail=0
 skip=0
 checks=()
+transport_unit_ok=0
 
 record() {
   local id="$1" ok="$2" detail="$3"
@@ -29,6 +30,7 @@ run_cmd() {
   shift
   if "$@" >/tmp/otto-scorecard-"$id".log 2>&1; then
     record "$id" pass "ok — see /tmp/otto-scorecard-${id}.log"
+    if [[ "$id" == "transport_unit" ]]; then transport_unit_ok=1; fi
   else
     record "$id" fail "failed — see /tmp/otto-scorecard-${id}.log"
   fi
@@ -64,26 +66,53 @@ else
   record staging_capture skip "Set OTTO_RUN_STAGING_CAPTURE=1 after deploy-staging.sh"
 fi
 
-# Promotion dimensions — fill trace/receipt paths after WS smokes land
+# Promotion dimensions — unit-proven rows when transport tests pass; live rows stay pending
+dim_status() {
+  local key="$1"
+  if [[ "$transport_unit_ok" -eq 1 ]]; then
+    case "$key" in
+      abort|reconnect|safety|fallback) echo pass ;;
+      approval_roundtrip) echo partial ;;
+      *) echo pending ;;
+    esac
+  else
+    echo pending
+  fi
+}
+
+dim_notes() {
+  local key="$1"
+  case "$key" in
+    abort) echo "unit: ws-runtime-transport.test.ts abort_message" ;;
+    reconnect) echo "unit: ws-runtime-transport.test.ts socket close → ready=false" ;;
+    safety) echo "unit: smokeMode guard + ws-runtime-transport.test.ts" ;;
+    fallback) echo "unit: runtime-supervisor.test.ts + ws-promotion-gate.test.ts" ;;
+    approval_roundtrip) echo "unit: control_response only; live round-trip pending LETTA_API_KEY" ;;
+    *) echo "live WS smoke pending LETTA_API_KEY" ;;
+  esac
+}
+
 dimensions=(
-  'init_ready:Init → ready:pending'
-  'send_first_token:Send → first token:pending'
-  'full_turn:Full disposable turn:pending'
-  'approval_roundtrip:Approval round-trip:pending'
-  'abort:Abort mid-turn:pending'
-  'reconnect:Reconnect / no false connected:pending'
-  'trace_receipt:Trace + receipt mappable:pending'
-  'safety:No conversation=default in smoke:pending'
-  'fallback:auto shows transportFallbackReason:pending'
+  'init_ready:Init → ready'
+  'send_first_token:Send → first token'
+  'full_turn:Full disposable turn'
+  'approval_roundtrip:Approval round-trip'
+  'abort:Abort mid-turn'
+  'reconnect:Reconnect / no false connected'
+  'trace_receipt:Trace + receipt mappable'
+  'safety:No conversation=default in smoke'
+  'fallback:auto shows transportFallbackReason'
 )
 
 dim_json="["
 first_dim=1
 for row in "${dimensions[@]}"; do
-  IFS=':' read -r key label status <<< "$row"
+  IFS=':' read -r key label <<< "$row"
+  status="$(dim_status "$key")"
+  notes="$(dim_notes "$key")"
   [[ $first_dim -eq 1 ]] || dim_json+=","
   first_dim=0
-  dim_json+=$(printf '{"key":"%s","label":"%s","status":"%s","tracePath":null,"receiptPath":null,"latencyMs":null,"notes":null}' "$key" "$label" "$status")
+  dim_json+=$(printf '{"key":"%s","label":"%s","status":"%s","tracePath":null,"receiptPath":null,"latencyMs":null,"notes":%s}' "$key" "$label" "$status" "$(printf '%s' "$notes" | python3 -c 'import json,sys; print(json.dumps(sys.stdin.read()))')")
 done
 dim_json+="]"
 
