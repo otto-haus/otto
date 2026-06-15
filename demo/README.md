@@ -4,6 +4,19 @@ Ten short (~40–55s) Remotion videos — eight core features plus dedicated cur
 command names, specs, file paths, and — for Practices and Desktop — actual captured output,
 then ends on an honest **Built / Tested / Tried / Approved** status card.
 
+## Product demo (OpenAI-inspired cut)
+
+**Composition:** `OttoProductDemo` (~54s hero product story for X/website — distinct from per-feature clips and launch trailer).
+
+Storyboard: [`docs/product-demo-storyboard.md`](docs/product-demo-storyboard.md)
+
+```sh
+cd demo
+bun install
+bun run studio                     # select OttoProductDemo
+bunx remotion render src/index.ts OttoProductDemo out/otto-product-demo.mp4
+```
+
 ## Render locally
 
 ```sh
