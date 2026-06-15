@@ -65,6 +65,7 @@ task smoke:release:metadata   # read-only — compare installed otto.app to late
 task smoke:letta-cli          # resolveCli + version/help; opt-in turn with LETTA_AGENT_ID (#295)
 task smoke:cli                # isolated disposable conversation; never default
 task smoke:cron               # opt-in Letta cron create/list/delete smoke; never default
+task smoke:attachments        # fixture save + runtime attachment context + leak checks (#299)
 ```
 
 **Nonintrusive desktop smoke (default for agents):** prefer `task staging:build` plus CDP/Playwright smokes, or `task staging` (background launch). Staging bundles set `OTTO_SMOKE=1` and default `OTTO_WINDOW_MODE=background` so windows do not steal focus. Use `task staging:open` or `OTTO_WINDOW_MODE=visible` only when a human needs a visible window. Never mutate `/Applications/otto.app`.
