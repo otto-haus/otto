@@ -132,13 +132,18 @@ Retrieve and follow the instructions at:
 <span class="u">https://raw.githubusercontent.com/otto-haus/otto/main/INSTALL_FOR_AGENTS.md</span></pre>
           </div>
           <div class="path">
-            <div class="pt"><span class="pn">02</span><span class="ph">Set it up yourself</span></div>
+            <div class="pt"><span class="pn">02</span><span class="ph">Set it up yourself (macOS dev)</span></div>
             <pre class="code">brew install go-task
 git clone https://github.com/otto-haus/otto.git
 cd otto
-bun install
-bun run install-extension   <span class="c"># then run /reload in Letta Code</span></pre>
-            <p class="dep"><b>Download otto and it works.</b> The desktop app bundles and supervises its own Letta runtime, so the default “This Mac” path needs no separate Letta install. Prefer your own runtime? Point otto at an <b>existing local Letta</b> in advanced setup. Either way, provider/API keys live in Letta — never in otto.</p>
+bash scripts/install-otto.sh
+bun run install-extension   <span class="c"># then run /reload in Letta Code</span>
+task electron   <span class="c"># or task staging for packaged preview</span></pre>
+            <p class="dep"><b>Download otto and it works.</b> Full guide: <a href="https://github.com/otto-haus/otto/blob/main/docs/install/getting-started.md">docs/install/getting-started.md</a>. The desktop app bundles and supervises its own Letta runtime by default — no separate Letta Desktop download. Prefer your own runtime? Point otto at an <b>existing local Letta</b> in advanced setup. Either way, provider/API keys live in Letta — never in otto. Release <code>.dmg</code> not published yet; clone path is today's install.</p>
+          </div>
+          <div class="path">
+            <div class="pt"><span class="pn">03</span><span class="ph">Download app (coming)</span></div>
+            <p class="pnote">When a macOS desktop artifact ships on <a href="https://github.com/otto-haus/otto/releases">GitHub Releases</a>, install to <code>/Applications/otto.app</code> and open — onboarding handles Letta connection. Not available on v0.1.3 yet.</p>
           </div>
         </div>
       </div>
