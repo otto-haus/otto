@@ -711,6 +711,42 @@ export interface TicketRecord {
   ticketPath: string;
   packetPath?: string;
   updated_at: ISO8601;
+  /** Non-authoritative Paperclip adapter metadata (075). Never implies merged/done. */
+  paperclip?: TicketPaperclipMeta;
+}
+
+/** Stored otto ↔ Paperclip task link (022 idempotency seam; read by 075). */
+export interface PaperclipTaskMapping {
+  otto_ticket_id: string;
+  paperclip_task_id: string;
+  paperclip_url?: string;
+  created_at: ISO8601;
+}
+
+/** Read-only completion event from Paperclip poll/webhook adapter. */
+export interface PaperclipCompletionEvent {
+  paperclip_task_id: string;
+  completed_at: ISO8601;
+  paperclip_url?: string;
+  run_id?: string;
+}
+
+/** Review signal recorded when Paperclip reports complete — not otto Done. */
+export interface PaperclipReviewSignal {
+  otto_ticket_id: string;
+  paperclip_task_id: string;
+  review_requested_at: ISO8601;
+  receipt_id: string;
+  proposal_id?: string;
+  ticket_status: TicketStatus;
+  status_advanced: boolean;
+}
+
+export interface TicketPaperclipMeta {
+  paperclip_task_id?: string;
+  paperclip_url?: string;
+  review_requested_at?: ISO8601;
+  review_signal_receipt_id?: string;
 }
 
 export interface TicketCompileInput {
