@@ -3217,18 +3217,20 @@ const ConnectLetta: React.FC = () => {
           ↳ {settingsCopy.connectionFailedPrefix} {connectError}
         </p>
       )}
-      <div className="settingsField">
-        <label>
-          <span>{settingsCopy.connectionLocalUrlLabel}</span>
-          <input
-            style={inputStyle}
-            value={baseUrl}
-            onChange={(e) => setBaseUrl(e.target.value)}
-            placeholder={settingsCopy.connectionLocalUrlPlaceholder}
-            spellCheck={false}
-          />
-        </label>
-      </div>
+      {displayedConnectionMode !== 'embedded' ? (
+        <div className="settingsField">
+          <label>
+            <span>{settingsCopy.connectionLocalUrlLabel}</span>
+            <input
+              style={inputStyle}
+              value={baseUrl}
+              onChange={(e) => setBaseUrl(e.target.value)}
+              placeholder={settingsCopy.connectionLocalUrlPlaceholder}
+              spellCheck={false}
+            />
+          </label>
+        </div>
+      ) : null}
       <div className="settingsField">
         <label>
           <span>{settingsCopy.connectionAgentIdLabel}</span>
