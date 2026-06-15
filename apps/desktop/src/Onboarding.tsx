@@ -17,6 +17,7 @@ import {
   wasFirstMessageDuringOnboarding,
   wasOnboarded,
 } from './onboarding-storage';
+import { persistOnboardingMode } from './onboarding-mode';
 import {
   canAdvanceOnboardingModePick,
   resolveOnboardingStep,
@@ -63,6 +64,7 @@ export const Onboarding: React.FC<{ onNavigate: (id: SurfaceId) => void; activeS
   const [modeDraft, setModeDraft] = useState<OnboardingConnectionMode | null>(getOnboardingModeDraft);
   const [modePick, setModePick] = useState<OnboardingConnectionMode | null>(null);
   const [modeBusy, setModeBusy] = useState(false);
+  const [modeError, setModeError] = useState<string | null>(null);
   const [hydrated, setHydrated] = useState(!rt.electron);
 
   useEffect(() => onOnboardingFirstMessage(() => setSessionFirstMessage(true)), []);
@@ -116,15 +118,25 @@ export const Onboarding: React.FC<{ onNavigate: (id: SurfaceId) => void; activeS
 
   const persistModeAndOpenSettings = async (mode: OnboardingConnectionMode) => {
     setModeBusy(true);
+    setModeError(null);
     try {
-      setOnboardingModeDraft(mode);
-      setModeDraft(mode);
-      if (api) {
-        await api.config.set({ connectionMode: mode });
-        const next = await api.connection.save({});
-        rt.updateStatus(next);
-      }
-      onNavigate('settings');
+      await persistOnboardingMode(mode, {
+        setConfig: async (m) => {
+          if (api) await api.config.set({ connectionMode: m });
+        },
+        saveConnection: async () => {
+          if (api) {
+            const next = await api.connection.save({});
+            rt.updateStatus(next);
+          }
+        },
+        commitDraft: (m) => {
+          setOnboardingModeDraft(m);
+          setModeDraft(m);
+        },
+        onSuccess: () => onNavigate('settings'),
+        onError: (message) => setModeError(message),
+      });
     } finally {
       setModeBusy(false);
     }
@@ -234,6 +246,9 @@ export const Onboarding: React.FC<{ onNavigate: (id: SurfaceId) => void; activeS
                 onSelect={() => setModePick('existing')}
               />
             </div>
+            {modeError ? (
+              <p className="onboardError" role="alert" style={{ color: 'var(--warn)', marginTop: 12 }}>{modeError}</p>
+            ) : null}
           </OnboardingStepLayout>
         </div>
       </div>
