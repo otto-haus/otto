@@ -2220,6 +2220,12 @@ const JsonPanel: React.FC<{ title: string; value: unknown; compact?: boolean }> 
 function receiptAuthorityFromDetail(detail: ReceiptDetail): string {
   const data = detail.result?.data;
   if (data && typeof data.authority === 'string') return data.authority;
+  if (detail.action === 'check.failed') {
+    const checkId = typeof data?.check_id === 'string' ? data.check_id : detail.subject.id;
+    const standard = typeof data?.standard === 'string' ? data.standard : detail.input?.source;
+    if (checkId && standard) return `check · ${checkId} · standard · ${standard}`;
+    if (checkId) return `check · ${checkId}`;
+  }
   if (detail.subject.type === 'proposal' || detail.action.startsWith('curation.')) return 'human (curation)';
   if (detail.action.startsWith('autonomy:') || detail.action.startsWith('autonomy.')) return 'autonomy policy';
   if (detail.action.startsWith('permission:')) return 'human (permission gate)';

@@ -70,7 +70,12 @@ export class CheckRunner {
         input: { trigger: check.trigger.event, source: check.source },
         result: {
           summary: check.on_fail.message,
-          data: { check_id: check.id, trigger: check.trigger.event },
+          data: {
+            check_id: check.id,
+            trigger: check.trigger.event,
+            authority: checkFailureAuthority(check),
+            standard: standardLabelFromCheck(check),
+          },
         },
         evidence: [{ kind: 'file', ref: check.source, note: 'Check source standard' }],
         blocker: {
@@ -132,4 +137,14 @@ function inspectDoorRule(rule: string, ctx: OneWayDoorContext): boolean {
 export function hashStandardContent(filePath: string): string {
   const raw = readFileSync(filePath, 'utf8');
   return createHash('sha256').update(raw).digest('hex');
+}
+
+export function standardLabelFromCheck(check: Check): string {
+  if (check.standard_slug) return check.standard_slug;
+  const base = check.source.split('/').pop() ?? check.source;
+  return base.replace(/\.(md|yaml|yml)$/, '');
+}
+
+export function checkFailureAuthority(check: Check): string {
+  return `check · ${check.id} · standard · ${standardLabelFromCheck(check)}`;
 }
