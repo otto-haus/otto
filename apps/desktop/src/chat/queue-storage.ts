@@ -16,6 +16,16 @@
  *
  * Operator actions per row: Recall, View, Retry (failed), Send now (waiting, not next), Remove.
  * See `docs/chat-queue-states.md`.
+ *
+ * Drain order (per active thread; legacy rows with `threadId: null` match any thread):
+ * 1. First `queued` row in array order (`nextQueueItemForThread`).
+ * 2. Steer enqueue (composer submit while runtime is busy) inserts at the front of that thread's
+ *    waiting rows so the operator's interrupt sends next after abort.
+ * 3. Ordinary enqueue appends at the end (FIFO).
+ * 4. Rehydrated in-flight rows resume before other waiting rows for the same thread.
+ * 5. Retried failed rows append after existing waiting rows (retry does not jump the line).
+ * 6. Manual "Send now" promotes one waiting row to the front without touching other threads.
+ * 7. Failed rows stay visible after waiting rows and never auto-drain.
  */
 export type QueueState = 'queued' | 'sending' | 'failed';
 export type QueueItem = { id: string; text: string; createdAt: number; state: QueueState; threadId?: string | null };
@@ -126,6 +136,40 @@ export const queueDisplayItemsForThread = (
       return { ...item, isNext: sendPosition === 1, sendPosition };
     });
 };
+
+export const enqueueQueueItemForThread = (
+  items: QueueItem[],
+  text: string,
+  threadId: string | null | undefined,
+  options?: { steer?: boolean },
+): QueueItem[] => {
+  if (hasDuplicateQueueText(items, threadId, text)) return items;
+  const item = createQueueItem(text, 'queued', threadId ?? null);
+  if (!options?.steer) return [...items, item];
+
+  const insertAt = items.findIndex(
+    (candidate) => candidate.state === 'queued' && queueMatchesThread(candidate, threadId),
+  );
+  if (insertAt === -1) return [...items, item];
+  return [...items.slice(0, insertAt), item, ...items.slice(insertAt)];
+};
+
+export const mergeInflightIntoQueue = (
+  items: QueueItem[],
+  inFlight: QueueItem | null,
+): QueueItem[] => {
+  if (!inFlight) return items;
+
+  const without = items.filter((item) => item.id !== inFlight.id);
+  const insertAt = without.findIndex(
+    (item) => item.state === 'queued' && queueMatchesThread(item, inFlight.threadId),
+  );
+  if (insertAt === -1) return [...without, inFlight];
+  return [...without.slice(0, insertAt), inFlight, ...without.slice(insertAt)];
+};
+
+export const appendFailedQueueItem = (items: QueueItem[], failed: QueueItem): QueueItem[] =>
+  dedupeQueue([...items, { ...failed, state: 'failed' }]);
 
 export const promoteQueueItemForThread = (
   items: QueueItem[],
@@ -255,11 +299,10 @@ export const readQueue = (): QueueItem[] => {
       ...parseStoredQueue(legacyV1Raw),
     ];
     const items = sanitizeQueue(
-      dedupeQueue([
-        ...current,
-        ...legacy,
+      mergeInflightIntoQueue(
+        dedupeQueue([...current, ...legacy]),
         readInFlight(),
-      ]),
+      ),
     );
 
     if (legacyV2Raw) localStorage.removeItem(LEGACY_QUEUE_V2_KEY);

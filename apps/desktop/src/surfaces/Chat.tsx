@@ -20,9 +20,11 @@ import { ProposeCorrectionModal, type ProposeCorrectionContext } from '../chat/P
 import { serializeConversationMarkdown } from '../chat/conversation-markdown';
 import { runTicketCommand } from '../chat/ticket-commands';
 import {
+  appendFailedQueueItem,
   clearInFlight,
   composerDraftFromQueueText,
   createQueueItem,
+  enqueueQueueItemForThread,
   hasDuplicateQueueText,
   nextQueueItemForThread,
   persistInFlight,
@@ -383,19 +385,6 @@ const persist = (key: string, value: unknown) => {
   try { localStorage.setItem(key, JSON.stringify(value)); } catch { /* best effort */ }
 };
 
-const dedupeQueue = (items: Array<QueueItem | null>): QueueItem[] => {
-  const out: QueueItem[] = [];
-  for (const item of items) {
-    if (item && !out.some((x) => x.id === item.id)) out.push(item);
-  }
-  return out;
-};
-
-const appendQueueItem = (items: QueueItem[], text: string, threadId: string | null | undefined): QueueItem[] => {
-  if (hasDuplicateQueueText(items, threadId, text)) return items;
-  return [...items, createQueueItem(text, 'queued', threadId ?? null)];
-};
-
 const QueueStrip: React.FC<{
   queue: QueueDisplayItem[];
   recalledQueueId: string | null;
@@ -748,9 +737,10 @@ const LiveChat: React.FC<{
       const detail = (event as CustomEvent<{ text?: string; send?: boolean }>).detail;
       const action = resolveOnboardingStarterAction(detail, { ready: !!ready, hasApi: !!api });
       if (action.kind === 'queue') {
-        setQueue((items) => appendQueueItem(items, action.text, rt.activeThreadId));
+        setQueue((items) => enqueueQueueItemForThread(items, action.text, rt.activeThreadId));
       } else if (action.kind === 'draft') {
         setDraft(action.text);
+      }
       }
     };
     window.addEventListener('otto-onboarding-starter', onStarter);
@@ -980,12 +970,13 @@ const LiveChat: React.FC<{
         if (recalledId) setRecalledQueueId(null);
         return;
       }
+      const steering = rt.busy;
       setQueue((items) => {
         const withoutRecalled = recalledId ? removeQueueItem(items, recalledId) : items;
-        return appendQueueItem(withoutRecalled, text, rt.activeThreadId);
+        return enqueueQueueItemForThread(withoutRecalled, text, rt.activeThreadId, { steer: steering });
       });
       if (recalledId) setRecalledQueueId(null);
-      if (rt.busy) void rt.abort();
+      if (steering) void rt.abort();
       setDraft('');
       setAttachments([]);
     })();
@@ -1005,7 +996,7 @@ const LiveChat: React.FC<{
       })
       .catch(() => {
         clearInFlight(next.id);
-        setQueue((items) => dedupeQueue([{ ...next, state: 'failed' }, ...items]));
+        setQueue((items) => appendFailedQueueItem(items, next));
       })
       .finally(() => {
         draining.current = false;
