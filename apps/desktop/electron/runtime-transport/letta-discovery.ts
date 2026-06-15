@@ -51,14 +51,36 @@ export async function resolveLiveLocalLettaContext(config: ConfigStore): Promise
     discoverSettingsHttpBaseUrl(settings),
   ]);
   const httpCandidates = candidates.filter((url) => /^https?:\/\//i.test(url));
+  const connectionMode = config.connectionMode();
+  const loopbackHttpCandidates = httpCandidates.filter((url) =>
+    /^https?:\/\/(?:127\.0\.0\.1|localhost)(?::\d+)?/i.test(url),
+  );
+  const probeCandidates =
+    connectionMode === 'embedded' ? loopbackHttpCandidates : httpCandidates;
 
   // Nothing to probe (embedded `local:` target or no HTTP candidate) — keep sync behavior.
-  if (httpCandidates.length === 0) {
+  if (probeCandidates.length === 0) {
     const discoveredUrl = candidates[0] ?? null;
+    if (
+      connectionMode === 'embedded' &&
+      discoveredUrl &&
+      /^https?:\/\//i.test(discoveredUrl) &&
+      !/^https?:\/\/(?:127\.0\.0\.1|localhost)(?::\d+)?/i.test(discoveredUrl)
+    ) {
+      return buildLocalLettaContext(config, settings, configuredBase, null);
+    }
     return buildLocalLettaContext(config, settings, configuredBase, discoveredUrl);
   }
 
-  const liveUrl = await firstReachableBaseUrl(httpCandidates);
+  const liveUrl = await firstReachableBaseUrl(probeCandidates);
+  // Embedded boot must not pin to a dead loopback override when nothing local is reachable.
+  if (
+    !liveUrl &&
+    connectionMode === 'embedded' &&
+    !candidates.some((url) => url && /^local:/i.test(url))
+  ) {
+    return buildLocalLettaContext(config, settings, configuredBase, null);
+  }
   // If none are reachable, keep the first candidate so error messaging still has context.
   const discoveredUrl = liveUrl ?? candidates[0] ?? null;
   const staleRecovered =
@@ -139,6 +161,8 @@ export type InitBaseUrlResolution = {
   omitBaseUrl?: boolean;
   /** When set, skip SDK init and return unreachable immediately. */
   blockReason?: string;
+  /** When true, clear a persisted dead loopback override from otto config before init. */
+  clearStaleOverride?: boolean;
 };
 
 const LETTA_HTTP_PROBE_TIMEOUT_MS = 3_000;
@@ -178,12 +202,25 @@ export async function resolveInitBaseUrl(
 
   const isLocalScheme = /^local:/i.test(normalized);
   const isLoopbackHttp = /^https?:\/\/(?:127\.0\.0\.1|localhost)(?::\d+)?/i.test(normalized);
-  const listening = isLocalLettaBackendListening();
 
-  if ((isLocalScheme || isLoopbackHttp) && !listening) {
-    if (isLoopbackHttp && await probeLettaHttpBaseUrl(normalized)) {
+  if (isLoopbackHttp) {
+    if (await probeLettaHttpBaseUrl(normalized)) {
       return { baseUrl: normalized };
     }
+    if (connectionMode === 'embedded') {
+      return { baseUrl: null, omitBaseUrl: true, clearStaleOverride: true };
+    }
+    if (connectionMode === 'existing') {
+      return {
+        baseUrl: normalized,
+        blockReason:
+          'Local Letta backend is not running. Open Letta Desktop once, or switch Connection mode to Embedded in Settings.',
+      };
+    }
+    return { baseUrl: normalized };
+  }
+
+  if (isLocalScheme && !isLocalLettaBackendListening()) {
     if (connectionMode === 'embedded') {
       return { baseUrl: null, omitBaseUrl: true };
     }

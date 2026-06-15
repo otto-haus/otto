@@ -190,12 +190,16 @@ export class SdkSubprocessTransport implements OttoRuntimeTransport {
     this.rejectPendingPermissions('Letta session re-initializing.');
     const cli = resolveCli(this.config.connectionMode());
     const context = await resolveLiveLocalLettaContext(this.config);
-    const baseResolution = await resolveInitBaseUrl(context.baseUrl, this.config.connectionMode());
+    const connectionMode = this.config.connectionMode();
+    const baseResolution = await resolveInitBaseUrl(context.baseUrl, connectionMode);
+    if (baseResolution.clearStaleOverride && !SMOKE_MODE) {
+      this.config.update({ baseUrl: null });
+    }
     if (baseResolution.blockReason) {
       this.status = {
         ready: false,
         code: 'unreachable',
-        reason: friendly('unreachable', baseResolution.blockReason),
+        reason: friendly('unreachable', baseResolution.blockReason, { connectionMode }),
         agentId: context.agentCandidates[0] ?? null,
         baseUrl: context.baseUrl,
         discoverySource: context.source,
@@ -322,9 +326,10 @@ export class SdkSubprocessTransport implements OttoRuntimeTransport {
       }
       if (!SMOKE_MODE) {
         const resolvedAgentId = r.init.agentId ?? primaryAgentId;
+        const persistedBaseUrl = baseResolution.omitBaseUrl ? null : context.baseUrl;
         this.config.update({
           agentId: resolvedAgentId,
-          baseUrl: context.baseUrl,
+          baseUrl: persistedBaseUrl,
           conversationId: r.init.conversationId ?? null,
         });
         this.config.ensurePrimaryAgentId(resolvedAgentId);
@@ -353,7 +358,7 @@ export class SdkSubprocessTransport implements OttoRuntimeTransport {
       this.status = {
         ready: false,
         code,
-        reason: friendly(code, reason),
+        reason: friendly(code, reason, { connectionMode }),
         agentId: primaryAgentId,
         baseUrl: context.baseUrl,
         discoverySource: context.source,
@@ -394,7 +399,7 @@ export class SdkSubprocessTransport implements OttoRuntimeTransport {
       ...this.status,
       ready: false,
       code,
-      reason: friendly(code, reason),
+      reason: friendly(code, reason, { connectionMode: this.config.connectionMode() }),
       modelHandle: this.config.modelHandle(),
       effort: this.config.effort(),
       sessionMode: SMOKE_MODE ? 'smoke' : 'default',

@@ -177,6 +177,13 @@ describe('runtime-common status mapping', () => {
     expect(parseUsageLimitResetHint('{"error":{"resets_in":180}}')).toBe('Resets in about 3 minutes.');
   });
 
+  test('friendly embedded unreachable avoids base URL guidance', () => {
+    const message = friendly('unreachable', 'fetch failed', { connectionMode: 'embedded' });
+    expect(message).toMatch(/Embedded Letta did not start/i);
+    expect(message).not.toMatch(/base URL/i);
+    expect(nextActionFor('unreachable', { connectionMode: 'embedded' })).not.toMatch(/URL override/i);
+  });
+
   test('friendly and nextActionFor align with StatusCode', () => {
     expect(friendly('unreachable', 'ECONNREFUSED')).toMatch(/Can't reach the Letta backend/i);
     expect(friendly('unreachable', 'Local Letta backend is not running')).toMatch(/Local Letta backend is not running/i);

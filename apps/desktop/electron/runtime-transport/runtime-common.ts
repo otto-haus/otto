@@ -267,7 +267,9 @@ export function parseUsageLimitError(reason: string): { message: string; resetHi
   };
 }
 
-export function friendly(code: StatusCode, reason: string): string {
+export type FriendlyOptions = { connectionMode?: ConnectionMode };
+
+export function friendly(code: StatusCode, reason: string, opts?: FriendlyOptions): string {
   if (code === 'error') {
     const usageLimit = parseUsageLimitError(reason);
     if (usageLimit) {
@@ -290,6 +292,12 @@ export function friendly(code: StatusCode, reason: string): string {
       return 'Letta auth failed. For local v1, configure provider auth inside Letta; otto does not need its own API key.';
     case 'unreachable':
       if (reason.includes('Local Letta backend is not running')) return reason;
+      if (opts?.connectionMode === 'embedded') {
+        if (reason.includes('timed out after')) {
+          return 'Embedded Letta did not connect in time. Retry Connect, or add a provider key in Letta settings.';
+        }
+        return 'Embedded Letta did not start. Retry Connect, or add a provider key in Letta settings.';
+      }
       if (reason.includes('timed out after')) {
         return 'Letta did not connect in time. Open Letta Desktop or switch to Embedded mode in Settings, then retry.';
       }
@@ -330,11 +338,16 @@ export function normalizeRuntimeError(raw: string, hasKey: boolean): NormalizedR
   return { code, message, details };
 }
 
-export function nextActionFor(code: StatusCode): string {
+export type NextActionOptions = { connectionMode?: ConnectionMode };
+
+export function nextActionFor(code: StatusCode, opts?: NextActionOptions): string {
   switch (code) {
     case 'no-api-key':
       return 'Configure provider auth inside Letta for local v1.';
     case 'unreachable':
+      if (opts?.connectionMode === 'embedded') {
+        return 'Retry Connect in Settings. If it keeps failing, add a provider key in Letta settings.';
+      }
       return 'Check the local Letta runtime and URL override in Settings.';
     case 'no-agent':
       return 'Open Letta once or choose an Agent ID override in Settings.';
