@@ -1,8 +1,8 @@
 # Staging receipt — 072 Receipts CTA wrong dock
 
-**Date:** 2026-06-14  
-**Build:** `fff0152`  
-**App:** `/Applications/otto-staging.app` only
+**Date:** 2026-06-14 (updated for #90 ship)  
+**Build:** `main` @ onboarding intent path  
+**App:** `/Applications/otto-staging.app` only (smoke uses disposable copy — never live app)
 
 ## Smoke
 

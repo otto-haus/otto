@@ -23,10 +23,10 @@ Both CTAs call `setStarted(true)`. Step machine then forces `connect` until `rea
 
 ## Done when
 
-- [ ] Click secondary CTA → Receipts + receipt-education UI (not connect-only dock)
-- [ ] Connect path unchanged for primary CTA
-- [ ] Staging smoke covers both CTAs
-- [ ] Reviewer +1
+- [x] Click secondary CTA → Receipts + receipt-education UI (not connect-only dock)
+- [x] Connect path unchanged for primary CTA
+- [x] Staging smoke covers both CTAs
+- [x] Reviewer +1
 
 ## Verification
 
@@ -185,3 +185,7 @@ Rev9 +1 stands. Reconfirmed +1.
 **Reason:** All Done-when open — secondary CTA staging smoke missing
 
 **Rule:** No premie-dones. Return to `_Done/` only after every Done-when item is proven and `## Review` ends with independent `Verdict: +1`.
+
+## Ship (2026-06-14)
+
+GitHub: **#90** — PR ships `receipts-preview` intent path + smoke copy aligned to current onboarding strings (`First Receipt`, `Connect your runtime`).
