@@ -8,6 +8,13 @@ import { MemoryStore } from './memory-store';
 const DISPOSABLE_AGENT_ID = 'agent-disposable-memory-290';
 const DISPOSABLE_CONVERSATION_ID = 'conv-disposable-memory-290';
 
+function jsonResponse(body: unknown, status = 200): Response {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: { 'Content-Type': 'application/json' },
+  });
+}
+
 function disposableFixtureDir(prefix: string): string {
   const dir = mkdtempSync(join(tmpdir(), prefix));
   process.env.OTTO_CONFIG_DIR = join(dir, 'otto');
@@ -58,7 +65,7 @@ describe('MemoryStore', () => {
     let calledPath = '';
     globalThis.fetch = async (input) => {
       calledPath = String(input);
-      return new Response(JSON.stringify([{ id: 'b1', label: 'persona', value: 'helpful', limit: 2000 }]), { status: 200 });
+      return jsonResponse([{ id: 'b1', label: 'persona', value: 'helpful', limit: 2000 }]);
     };
     try {
       const result = await store.listBlocks();
@@ -77,7 +84,7 @@ describe('MemoryStore', () => {
     const store = new MemoryStore(config);
     const originalFetch = globalThis.fetch;
     globalThis.fetch = async () =>
-      new Response(JSON.stringify([{ id: 'b1', label: 'persona', value: 'helpful', limit: 2000 }]), { status: 200 });
+      jsonResponse([{ id: 'b1', label: 'persona', value: 'helpful', limit: 2000 }]);
     try {
       const result = await store.listBlocks();
       expect(result.error).toBeUndefined();
@@ -88,7 +95,7 @@ describe('MemoryStore', () => {
     }
   });
 
-  test('uses /v1/blocks query for local agent ids', async () => {
+  test('uses letta-client core-memory blocks path for local agent ids', async () => {
     const config = new ConfigStore();
     config.update({ agentId: 'agent-local-test', baseUrl: 'local:/tmp/letta-backend' });
     const store = new MemoryStore(config);
@@ -96,38 +103,33 @@ describe('MemoryStore', () => {
     let calledPath = '';
     globalThis.fetch = async (input) => {
       calledPath = String(input);
-      return new Response(JSON.stringify([{ id: 'b1', label: 'human', value: 'Sebastian', limit: 2000 }]), { status: 200 });
+      return jsonResponse([{ id: 'b1', label: 'human', value: 'Sebastian', limit: 2000 }]);
     };
     try {
       const result = await store.listBlocks();
       expect(result.error).toBeUndefined();
       expect(result.blocks).toHaveLength(1);
-      expect(calledPath).toContain('/v1/blocks?agent_id=agent-local-test');
+      expect(calledPath).toContain('/v1/agents/agent-local-test/core-memory/blocks');
     } finally {
       globalThis.fetch = originalFetch;
     }
   });
 
-  test('encodes agent ids in every fallback memory API path segment', async () => {
+  test('encodes agent ids in core-memory blocks path', async () => {
     const config = new ConfigStore();
     config.update({ agentId: 'agent/with space', baseUrl: 'http://127.0.0.1:8283' });
     const store = new MemoryStore(config);
     const originalFetch = globalThis.fetch;
-    const calledPaths: string[] = [];
+    let calledPath = '';
     globalThis.fetch = async (input) => {
-      calledPaths.push(String(input));
-      if (calledPaths.length < 4) return new Response('', { status: 404 });
-      return new Response(JSON.stringify([{ id: 'b1', label: 'persona', value: 'helpful' }]), { status: 200 });
+      calledPath = String(input);
+      return jsonResponse([{ id: 'b1', label: 'persona', value: 'helpful' }]);
     };
     try {
       const result = await store.listBlocks();
       expect(result.error).toBeUndefined();
       expect(result.blocks).toHaveLength(1);
-      expect(calledPaths).toHaveLength(4);
-      expect(calledPaths[0]).toContain('/v1/blocks?agent_id=agent%2Fwith%20space');
-      expect(calledPaths[1]).toContain('/v1/agents/agent%2Fwith%20space/core-memory/blocks');
-      expect(calledPaths[2]).toContain('/v1/agents/agent%2Fwith%20space/memory/blocks');
-      expect(calledPaths[3]).toContain('/v1/agents/agent%2Fwith%20space/blocks');
+      expect(calledPath).toContain('/v1/agents/agent%2Fwith%20space/core-memory/blocks');
     } finally {
       globalThis.fetch = originalFetch;
     }
@@ -154,9 +156,9 @@ describe('MemoryStore load/update round-trip (#290)', () => {
       const url = String(input);
       expect(url).toContain(DISPOSABLE_AGENT_ID);
       expect(url).not.toContain('conversation=default');
-      return new Response(JSON.stringify([
+      return jsonResponse([
         { id: 'b1', label: 'persona', value: 'seed-290', limit: 2000 },
-      ]), { status: 200 });
+      ]);
     };
     try {
       const result = await store.listBlocks();
@@ -181,17 +183,17 @@ describe('MemoryStore load/update round-trip (#290)', () => {
         const body = JSON.parse(String(init.body)) as { value?: string };
         if (!body.value) throw new Error('UPDATE failed: PATCH body missing value');
         state.persona = body.value;
-        return new Response(JSON.stringify({
+        return jsonResponse({
           id: 'b1',
           label: 'persona',
           value: body.value,
           limit: 2000,
-        }), { status: 200 });
+        });
       }
-      if (url.includes('/v1/blocks')) {
-        return new Response(JSON.stringify([
+      if (url.includes('/core-memory/blocks')) {
+        return jsonResponse([
           { id: 'b1', label: 'persona', value: state.persona, limit: 2000 },
-        ]), { status: 200 });
+        ]);
       }
       return new Response('', { status: 404 });
     };
