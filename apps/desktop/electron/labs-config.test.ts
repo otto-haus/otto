@@ -9,6 +9,7 @@ import {
   defaultLabsConfig,
   getLabsConfig,
   isImageGenEnabled,
+  isPreviewCanvasEnabled,
   isRemoteLettaCloudEnabled,
   isVoiceRealtimeEnabled,
   labsConfigToOttoPatch,
@@ -167,6 +168,13 @@ describe('labs-config', () => {
     ).toBe(true);
     expect(
       isImageGenEnabled({ enabled: true, features: { image_gen: true } }),
+    ).toBe(true);
+  });
+
+  test('preview_canvas requires master + feature (#661)', () => {
+    expect(isPreviewCanvasEnabled(defaultLabsConfig())).toBe(false);
+    expect(
+      isPreviewCanvasEnabled({ enabled: true, features: { preview_canvas: true } }),
     ).toBe(true);
   });
 

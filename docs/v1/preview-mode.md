@@ -104,6 +104,24 @@ Artifact history (session, in-memory per thread):
 
 Implementation: `apps/desktop/src/preview/preview-history.ts` · tests in `preview-history.test.ts`.
 
+## Interactive canvas (Labs — #661)
+
+When **Settings → Labs → Interactive preview canvas** is off (default), HTML preview uses the strict static sandbox — model `<button>` elements are inert (no scripts).
+
+When the Labs flag is on, HTML artifacts render with an action bridge (`preview-canvas.ts`) that only forwards **otto-defined** actions via `postMessage`:
+
+| Allowed action | Purpose |
+| --- | --- |
+| `navigate_surface` | Jump to a named otto surface (e.g. `settings`) |
+| `copy_diagnostic` | Copy diagnostics bundle to clipboard |
+| `open_receipt` | Open a linked receipt path |
+
+**Deny list (always blocked):** `shell`, `exec`, `eval`, `fetch`, `write_file`, `delete_file`, `send_message`.
+
+Model HTML dispatches via `data-otto-action` / `data-otto-target` on buttons. Arbitrary inline scripts and network fetch remain blocked by CSP + sandbox (no `allow-same-origin`, no navigation).
+
+Implementation: `preview-canvas-actions.ts` · `preview-canvas.ts` · `PreviewPane.tsx` · tests in `preview-canvas-actions.test.ts`.
+
 ## Ship vs Labs
 
 | Capability | Ship (default) | Labs / later |
@@ -115,7 +133,7 @@ Implementation: `apps/desktop/src/preview/preview-history.ts` · tests in `previ
 | Fullscreen artifact review | Yes (#655) | — |
 | Point-to-element → Propose Correction | Yes (HTML + runtime connected) | — |
 | Open from Receipts surface | Yes | #660 |
-| Interactive canvas / embedded prompts | No | Labs tier |
+| Interactive canvas / embedded prompts | No | Labs `preview_canvas` (#661) |
 
 ## Downstream slices
 
