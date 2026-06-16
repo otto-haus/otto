@@ -46,16 +46,29 @@ Detection lives in `apps/desktop/src/preview/preview-content.ts`. Renderer does 
 
 ## Security boundary (v1)
 
-HTML artifacts render in an iframe with:
+HTML artifacts render in an iframe with a **strict empty sandbox** (no `allow-scripts`, no `allow-same-origin`, no navigation or popups). Untrusted model HTML is wrapped by `wrapHtmlForSandboxPreview()` before `srcDoc` assignment.
 
-```txt
-sandbox="allow-same-origin"
-```
+### Sandbox matrix
+
+| Capability | iframe `sandbox` | CSP (injected) | Notes |
+| --- | --- | --- | --- |
+| JavaScript | **Blocked** | `default-src 'none'` (no script-src) | `<script>` tags present in source are inert at runtime |
+| Network fetch / XHR | **Blocked** | no `connect-src` | External `<script src>` and `fetch()` cannot reach network |
+| Top navigation | **Blocked** | `navigate-to 'none'` | Links get `rel="noopener noreferrer"` |
+| `window.open` / popups | **Blocked** | — | Empty sandbox denies popups |
+| Same-origin access | **Blocked** | — | No `allow-same-origin` |
+| Inline CSS | **Allowed** | `style-src 'unsafe-inline'` | Layout for model HTML snippets |
+| `data:` / `blob:` images | **Allowed** | `img-src data: blob:` | Remote `https:` images in HTML body are blocked |
+| Forms | **Blocked** | `form-action 'none'` | Empty sandbox denies forms |
+
+Diagnostics footer inside wrapped HTML: **Sandboxed preview · not live web** (`previewCopy.sandboxFooter`).
+
+Implementation: `apps/desktop/src/preview/preview-sandbox.ts` · tests in `preview-sandbox.test.ts` · renderer `PreviewPane.tsx`.
 
 v1 rules:
 
-- **No network fetch** from preview HTML unless a future slice explicitly approves it (#659 hardening).
-- **No scripts with elevated privileges** — scripts inside `srcDoc` run in sandbox; no `allow-scripts` until #659 reviews threat model.
+- **No network fetch** from preview HTML.
+- **No elevated script privileges** — sandbox + CSP defense in depth.
 - **No claim that preview content is safe, verified, or approved** — copy stays observational ("artifact preview").
 - Operator treats model HTML as **untrusted input**; sandbox reduces blast radius, not trust.
 
@@ -80,7 +93,7 @@ Persistence keys (`localStorage`, best-effort):
 | --- | --- | --- |
 | Toggle rail + empty state | Yes | — |
 | Open preview on message / HTML code block | Yes | — |
-| Sandboxed HTML `srcDoc` | Yes (baseline sandbox) | #659 hardening |
+| Sandboxed HTML `srcDoc` | Yes (strict sandbox + CSP wrapper) | — |
 | Auto-open on new artifact | No | Opt-in slice |
 | Point-to-element → Propose Correction | No | #653 |
 | Open from Receipts surface | Yes | #660 |
@@ -88,8 +101,8 @@ Persistence keys (`localStorage`, best-effort):
 
 ## Downstream slices
 
-- #659 — sandbox hardening for model HTML
-- #660 — Open in preview from Receipts
+- ~~#659 — sandbox hardening for model HTML~~ (shipped)
+- ~~#660 — Open in preview from Receipts~~ (shipped)
 - #653 — point-to-element → Propose Correction (Design Mode analog)
 
 ## Non-goals (v1)

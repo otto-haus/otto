@@ -2,6 +2,7 @@ import type React from 'react';
 import { StreamMarkdown } from '../chat/markdown/MarkdownBlock';
 import { previewCopy } from '../copy/surfaces';
 import type { PreviewContent } from '../preview/preview-content';
+import { PREVIEW_IFRAME_SANDBOX, wrapHtmlForSandboxPreview } from '../preview/preview-sandbox';
 import { EmptyState } from './ui/EmptyState';
 import { Icon } from './icons';
 
@@ -17,8 +18,9 @@ const HtmlPreview: React.FC<{ html: string }> = ({ html }) => (
   <iframe
     className="previewPane__frame"
     title={previewCopy.htmlFrameTitle}
-    sandbox="allow-same-origin"
-    srcDoc={html}
+    sandbox={PREVIEW_IFRAME_SANDBOX}
+    srcDoc={wrapHtmlForSandboxPreview(html)}
+    referrerPolicy="no-referrer"
   />
 );
 
