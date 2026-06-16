@@ -72,6 +72,62 @@ plist_env_set() {
     || /usr/libexec/PlistBuddy -c "Add :LSEnvironment:$key string $value" "$plist" >/dev/null
 }
 
+# Embedded Letta needs platform auth (LETTA_API_KEY) to boot the bundled CLI. Staging isolates
+# OTTO_HOME under ~/.codex/admin/otto-staging/otto-home — it does not inherit shell env when
+# launched via `open`. Seed otto's secret store from the deploy environment or canonical ~/.otto
+# (same pattern as scripts/otto-clean-machine-e2e-smoke.cjs). Provider keys still live in Letta.
+seed_staging_secrets() {
+  local secrets_file="$OTTO_HOME_DIR/secrets.env"
+  local key="${LETTA_API_KEY:-}"
+  if [[ -z "$key" ]] && [[ -f "${HOME}/.otto/secrets.env" ]]; then
+    while IFS= read -r line || [[ -n "$line" ]]; do
+      local trimmed="${line#"${line%%[![:space:]]*}"}"
+      trimmed="${trimmed%"${trimmed##*[![:space:]]}"}"
+      if [[ -z "$trimmed" || "$trimmed" == \#* ]]; then
+        continue
+      fi
+      if [[ "$trimmed" == LETTA_API_KEY=* ]]; then
+        key="${trimmed#LETTA_API_KEY=}"
+        break
+      fi
+    done < "${HOME}/.otto/secrets.env"
+  fi
+  if [[ -z "$key" ]]; then
+    echo "WARN: no LETTA_API_KEY for staging — embedded runtime may show auth failed until configured" >&2
+    return 0
+  fi
+  umask 077
+  printf 'LETTA_API_KEY=%s\n' "$key" > "$secrets_file"
+  chmod 600 "$secrets_file"
+  echo "seeded_secrets=$secrets_file"
+}
+
+# Staging profile can accumulate placeholder agent ids (agent-primary) that block smoke init.
+sanitize_staging_config() {
+  local config_file="$OTTO_HOME_DIR/config.json"
+  if [[ ! -f "$config_file" ]]; then
+    return 0
+  fi
+  node - "$config_file" <<'NODE'
+const fs = require('node:fs');
+const path = process.argv[2];
+let cfg = {};
+try {
+  cfg = JSON.parse(fs.readFileSync(path, 'utf8'));
+} catch {
+  process.exit(0);
+}
+const placeholders = new Set(['agent-primary', 'agent-legacy']);
+const agentId = typeof cfg.agentId === 'string' ? cfg.agentId.trim() : '';
+const primary = typeof cfg.primaryAgentId === 'string' ? cfg.primaryAgentId.trim() : '';
+if (placeholders.has(agentId)) delete cfg.agentId;
+if (placeholders.has(primary)) delete cfg.primaryAgentId;
+if (cfg.connectionMode !== 'embedded') cfg.connectionMode = 'embedded';
+fs.writeFileSync(path, `${JSON.stringify(cfg, null, 2)}\n`);
+NODE
+  echo "sanitized_config=$config_file"
+}
+
 apply_staging_icon() {
   local bundle="$1"
   local staging_icon="$APP_DIR/build/icon-staging.icns"
@@ -198,6 +254,8 @@ if [[ ! -d "$BUILT_APP" ]]; then
 fi
 
 mkdir -p "$HOME_DIR" "$OTTO_HOME_DIR" "$PROFILE_DIR"
+seed_staging_secrets
+sanitize_staging_config
 
 if [[ -d "${ROOT}/checks" ]]; then
   mkdir -p "$OTTO_HOME_DIR/checks"
@@ -219,6 +277,7 @@ stamp_bundle "$TARGET_APP"
 echo "==> Ad-hoc signing staging app"
 codesign --force --deep --sign - "$TARGET_APP" >/dev/null
 
+OPEN_FLAGS=()
 case "$STAGING_LAUNCH" in
   build-only)
     echo "staging_launch=build-only"
@@ -231,10 +290,14 @@ case "$STAGING_LAUNCH" in
     ;;
   open)
     echo "==> Opening staging app (visible — may take focus)"
-    OPEN_FLAGS=()
     ;;
   background)
     echo "==> Launching staging app in background (no focus steal)"
+    plist_env_set "$TARGET_APP/Contents/Info.plist" OTTO_WINDOW_MODE "background"
+    OPEN_FLAGS=(-g)
+    ;;
+  *)
+    echo "WARN: unknown OTTO_STAGING_LAUNCH=$STAGING_LAUNCH — defaulting to background" >&2
     plist_env_set "$TARGET_APP/Contents/Info.plist" OTTO_WINDOW_MODE "background"
     OPEN_FLAGS=(-g)
     ;;
