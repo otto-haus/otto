@@ -10,6 +10,8 @@ export const LAB_FEATURE_IDS: LabFeatureId[] = [
   'culture_export',
   'remote_letta_cloud',
   'turn_phase_timeline',
+  'voice_realtime',
+  'image_gen',
 ];
 
 const LEGACY_SURFACE_KEYS = new Set([
@@ -87,6 +89,16 @@ export function applyLabsConfigPatch(cfg: OttoConfig, patch: Partial<LabsConfig>
 /** Ship-tier gate for Settings / IPC cloud connection mode (#627 / #628 / #139). */
 export function isRemoteLettaCloudEnabled(labs: LabsConfig): boolean {
   return labs.enabled === true && labs.features?.remote_letta_cloud === true;
+}
+
+/** Labs gate for Realtime voice capture (#510 / #578). */
+export function isVoiceRealtimeEnabled(labs: LabsConfig): boolean {
+  return labs.enabled === true && labs.features?.voice_realtime === true;
+}
+
+/** Labs gate for image generation tool path (#511 / #578). */
+export function isImageGenEnabled(labs: LabsConfig): boolean {
+  return labs.enabled === true && labs.features?.image_gen === true;
 }
 
 /** Same rejection contract as `otto:config:set` — agents cannot bypass Labs via IPC. */

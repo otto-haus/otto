@@ -8,7 +8,9 @@ import {
   assertConnectionModePatchAllowed,
   defaultLabsConfig,
   getLabsConfig,
+  isImageGenEnabled,
   isRemoteLettaCloudEnabled,
+  isVoiceRealtimeEnabled,
   labsConfigToOttoPatch,
   normalizeLabsConfig,
   patchLabsConfig,
@@ -154,6 +156,17 @@ describe('labs-config', () => {
     expect(isRemoteLettaCloudEnabled({ enabled: true, features: {} })).toBe(false);
     expect(
       isRemoteLettaCloudEnabled({ enabled: true, features: { remote_letta_cloud: true } }),
+    ).toBe(true);
+  });
+
+  test('voice_realtime and image_gen require master + feature (#578)', () => {
+    expect(isVoiceRealtimeEnabled(defaultLabsConfig())).toBe(false);
+    expect(isImageGenEnabled(defaultLabsConfig())).toBe(false);
+    expect(
+      isVoiceRealtimeEnabled({ enabled: true, features: { voice_realtime: true } }),
+    ).toBe(true);
+    expect(
+      isImageGenEnabled({ enabled: true, features: { image_gen: true } }),
     ).toBe(true);
   });
 

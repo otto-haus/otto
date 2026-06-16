@@ -1,4 +1,5 @@
 import type { SurfaceId } from '../components/Sidebar';
+import type { LabFeatureId } from '../../electron/shared/types';
 
 /**
  * Canonical UI copy — builder wires data; UX owns strings.
@@ -898,6 +899,15 @@ export const settingsCopy = {
   memoryConnectWarn: 'Connect Letta in General before expecting live blocks.',
   memoryLabsGate: 'Memory observatory is Labs-only. Enable Labs → Memory observatory in Settings.',
   optionalRecallLabsGate: 'Optional recall sidecars are Labs-only. Enable Labs → Knowledge (Cognee) or pgvector recall in Settings.',
+  voiceImageTitle: 'Voice & image (Labs)',
+  voiceImageLede: 'Realtime voice capture and image generation stay off until you opt in here. Provider keys live in Letta, not otto.',
+  voiceImageLabsGate: 'Voice and image features are Labs-only. Enable Labs below, then turn on each feature explicitly.',
+  voiceImageFeatureBlocked: (id: LabFeatureId) =>
+    id === 'voice_realtime'
+      ? 'Realtime voice is off in this workspace. Enable the toggle above to unlock capture (#510).'
+      : id === 'image_gen'
+        ? 'Image generation is off in this workspace. Enable the toggle above to unlock the Letta tool path (#511).'
+        : '',
   memorySearchPlaceholder: 'Search blocks…',
   memoryNoMatch: 'No memory blocks match. Connect an agent or adjust search.',
   dreamingTitle: 'Dreaming / sleep-time',

@@ -49,7 +49,9 @@ Agents and staging scripts use the same preload surface as Settings — no React
 }
 ```
 
-`LabFeatureId` values match **137** / `docs/v1/ship-tier-matrix.md` (`knowledge_cognee`, `channels_outbound`, `culture_export`, …).
+`LabFeatureId` values match **137** / `docs/v1/ship-tier-matrix.md` (`knowledge_cognee`, `channels_outbound`, `culture_export`, `voice_realtime`, `image_gen`, …).
+
+Voice and image (`voice_realtime`, `image_gen`) default **off** on fresh profiles. Enable explicitly in **Settings → General → Voice & image (Labs)** — master Labs must be on first. Provider/API keys stay in Letta; otto stores only the boolean gate. Downstream capture (#510) and image tool (#511) slices must check `isFeatureEnabled` before wiring UI or IPC.
 
 Settings persists the **full merged object** after each toggle. Partial patches are fine for agents — main process merges with `patchLabsConfig` before writing `~/.otto/config.json`.
 
@@ -77,6 +79,24 @@ Enable culture export feature flag (export still runs via `window.otto.culture.e
 await window.otto.labs.set({
   enabled: true,
   features: { culture_export: true },
+});
+```
+
+Enable Realtime voice (capture UI checks this gate — #510):
+
+```javascript
+await window.otto.labs.set({
+  enabled: true,
+  features: { voice_realtime: true },
+});
+```
+
+Enable image generation tool path (#511):
+
+```javascript
+await window.otto.labs.set({
+  enabled: true,
+  features: { image_gen: true },
 });
 ```
 
