@@ -184,6 +184,16 @@ describe('runtime-common status mapping', () => {
     expect(nextActionFor('unreachable', { connectionMode: 'embedded' })).not.toMatch(/URL override/i);
   });
 
+  test('friendly rewrites embedded Letta CLI stderr paths (#605)', () => {
+    const raw = 'Delete ~/.letta/settings.json then run \'letta\' to re-authenticate';
+    const message = friendly('error', raw, {
+      connectionMode: 'embedded',
+      lettaSettingsPath: '/Users/seb/.otto/letta/settings.json',
+    });
+    expect(message).toContain('~/.otto/letta/settings.json');
+    expect(message).not.toContain('~/.letta/settings.json');
+  });
+
   test('friendly and nextActionFor align with StatusCode', () => {
     expect(friendly('unreachable', 'ECONNREFUSED')).toMatch(/Can't reach the Letta backend/i);
     expect(friendly('unreachable', 'Local Letta backend is not running')).toMatch(/Local Letta backend is not running/i);

@@ -1,5 +1,6 @@
 import { createRequire } from 'node:module';
 import { existsSync } from 'node:fs';
+import { homedir } from 'node:os';
 import { join } from 'node:path';
 import type { BrowserWindow } from 'electron';
 import type { EffortLevel, OttoConfig, RuntimeStatus, StatusCode } from '../shared/types';
@@ -267,9 +268,23 @@ export function parseUsageLimitError(reason: string): { message: string; resetHi
   };
 }
 
-export type FriendlyOptions = { connectionMode?: ConnectionMode };
+export type FriendlyOptions = { connectionMode?: ConnectionMode; lettaSettingsPath?: string };
+
+function tildePath(path: string): string {
+  const home = homedir();
+  return path.startsWith(home) ? `~${path.slice(home.length)}` : path;
+}
+
+/** Rewrite host ~/.letta paths in Letta CLI stderr for embedded mode (#605). */
+export function rewriteEmbeddedLettaPaths(reason: string, opts?: FriendlyOptions): string {
+  if (opts?.connectionMode !== 'embedded') return reason;
+  const embedded = tildePath(opts.lettaSettingsPath ?? join(homedir(), '.otto', 'letta', 'settings.json'));
+  const host = join(homedir(), '.letta', 'settings.json');
+  return reason.replaceAll('~/.letta/settings.json', embedded).replaceAll(host, embedded);
+}
 
 export function friendly(code: StatusCode, reason: string, opts?: FriendlyOptions): string {
+  reason = rewriteEmbeddedLettaPaths(reason, opts);
   if (code === 'error') {
     const usageLimit = parseUsageLimitError(reason);
     if (usageLimit) {
