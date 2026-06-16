@@ -39,6 +39,7 @@ import type { RuntimeSendPayload } from '../../src/attachment-message';
 import {
   EmbeddedEngineSupervisor,
   isEmbeddedEngineRecoverableError,
+  resolveSdkSubprocessPid,
 } from './embedded-engine-supervisor';
 import type { OttoRuntimeTransport, SdkTransportDiagnosticsSnapshot } from './types';
 
@@ -370,6 +371,7 @@ export class SdkSubprocessTransport implements OttoRuntimeTransport {
       };
       if (connectionMode === 'embedded') {
         this.embeddedSupervisor.reset();
+        this.embeddedSupervisor.setEnginePid(resolveSdkSubprocessPid(this.session));
         this.writeEmbeddedBootstrapReceipt(this.status);
       }
     } catch (e) {
@@ -380,6 +382,7 @@ export class SdkSubprocessTransport implements OttoRuntimeTransport {
         this.embeddedSupervisor.canRestart()
       ) {
         this.embeddedSupervisor.recordRestart(reason);
+        this.embeddedSupervisor.setEnginePid(null);
         this.session?.close();
         this.session = null;
         return this.init(opts);
@@ -650,6 +653,9 @@ export class SdkSubprocessTransport implements OttoRuntimeTransport {
     this.rejectPendingPermissions('Runtime transport closed.');
     this.session?.close();
     this.session = null;
+    if (this.config.connectionMode() === 'embedded') {
+      this.embeddedSupervisor.setEnginePid(null);
+    }
     this.status = { ...this.status, ready: false, reason: 'transport closed' };
   }
 
