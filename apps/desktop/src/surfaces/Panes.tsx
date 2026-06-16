@@ -4229,10 +4229,10 @@ const DreamSettingsPanel: React.FC<{
   memfsEnabled: boolean;
   pushToast: ReturnType<typeof useToast>['push'];
 }> = ({ memfsEnabled, pushToast }) => {
-  const [settings, setSettings] = useState<DreamSettings>({ trigger: 'compaction-event', stepCount: 25 });
+  const [settings, setSettings] = useState<DreamSettings | null>(null);
   const [hydrated, setHydrated] = useState(false);
   const [busy, setBusy] = useState(false);
-  const [stepDraft, setStepDraft] = useState('25');
+  const [stepDraft, setStepDraft] = useState('');
 
   useEffect(() => {
     const api = ottoApi();
@@ -4249,7 +4249,7 @@ const DreamSettingsPanel: React.FC<{
 
   const persist = async (next: DreamSettings, previous: DreamSettings) => {
     const api = ottoApi();
-    if (!api?.dreaming || !memfsEnabled) return;
+    if (!api?.dreaming || !memfsEnabled || !settings) return;
     setBusy(true);
     try {
       const saved = await api.dreaming.set(next);
@@ -4271,6 +4271,7 @@ const DreamSettingsPanel: React.FC<{
   };
 
   const onTriggerChange = (trigger: DreamTrigger) => {
+    if (!settings) return;
     const previous = settings;
     const next = { ...settings, trigger };
     setSettings(next);
@@ -4278,6 +4279,7 @@ const DreamSettingsPanel: React.FC<{
   };
 
   const commitStepCount = () => {
+    if (!settings) return;
     const parsed = Number.parseInt(stepDraft.trim(), 10);
     if (!Number.isInteger(parsed) || parsed <= 0) {
       setStepDraft(String(settings.stepCount));
@@ -4289,13 +4291,29 @@ const DreamSettingsPanel: React.FC<{
     void persist(next, previous);
   };
 
+  const api = ottoApi();
+  if (!memfsEnabled) {
+    return (
+      <InlineEmpty
+        title={settingsCopy.dreamingEmptyMemfsTitle}
+        body={settingsCopy.dreamingEmptyMemfsBody}
+      />
+    );
+  }
+  if (!hydrated) {
+    return <PaneLoading label={settingsCopy.dreamingLoading} variant="rows" />;
+  }
+  if (!api?.dreaming || !settings) {
+    return (
+      <InlineEmpty
+        title={settingsCopy.dreamingEmptyNotLoadedTitle}
+        body={settingsCopy.dreamingEmptyNotLoadedBody}
+      />
+    );
+  }
+
   return (
     <>
-      {!memfsEnabled && (
-        <div className="settingsStatusBanner settingsStatusBanner--warn">
-          {settingsCopy.dreamingMemfsWarn}
-        </div>
-      )}
       <div className="settingsFieldRow">
         <div className="settingsFieldRow__main">
           <div className="settingsFieldRow__title">{settingsCopy.dreamingTriggerLabel}</div>
@@ -4304,7 +4322,7 @@ const DreamSettingsPanel: React.FC<{
         <select
           className="charterInput"
           value={settings.trigger}
-          disabled={!hydrated || busy || !memfsEnabled}
+          disabled={busy}
           aria-label={settingsCopy.dreamingTriggerLabel}
           onChange={(e) => onTriggerChange(e.target.value as DreamTrigger)}
         >
@@ -4325,7 +4343,7 @@ const DreamSettingsPanel: React.FC<{
             min={1}
             step={1}
             value={stepDraft}
-            disabled={!hydrated || busy || !memfsEnabled}
+            disabled={busy}
             aria-label={settingsCopy.dreamingStepCountLabel}
             onChange={(e) => setStepDraft(e.target.value)}
             onBlur={() => commitStepCount()}
