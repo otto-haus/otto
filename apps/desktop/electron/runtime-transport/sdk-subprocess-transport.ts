@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import type { BrowserWindow } from 'electron';
-import { applyEmbeddedLettaSettingsEnv } from '../dream-settings';
+import { applyEmbeddedLettaSettingsEnv, resolveLettaSettingsPath } from '../dream-settings';
 import type { PermissionRequest, PermissionResponse, RuntimePreferences, RuntimeStatus, StatusCode, OttoConfig } from '../shared/types';
 import type { ConfigStore } from '../config-store';
 import { ReceiptWriter } from '../receipt-writer';
@@ -181,6 +181,13 @@ export class SdkSubprocessTransport implements OttoRuntimeTransport {
     return hasLettaApiKey(this.config);
   }
 
+  private friendlyOpts(connectionMode: ReturnType<ConfigStore['connectionMode']>) {
+    return {
+      connectionMode,
+      lettaSettingsPath: resolveLettaSettingsPath(this.config, connectionMode),
+    };
+  }
+
   /** Connect; recover from stale agents/conversations; never throw to the renderer. */
   async init(opts?: { freshConversation?: boolean }): Promise<RuntimeStatus> {
     // Re-init (reconnect, newChat, configure, transport switch) tears down the old session;
@@ -198,7 +205,7 @@ export class SdkSubprocessTransport implements OttoRuntimeTransport {
       this.status = {
         ready: false,
         code: 'unreachable',
-        reason: friendly('unreachable', baseResolution.blockReason, { connectionMode }),
+        reason: friendly('unreachable', baseResolution.blockReason, this.friendlyOpts(connectionMode)),
         agentId: context.agentCandidates[0] ?? null,
         baseUrl: context.baseUrl,
         discoverySource: context.source,
@@ -357,7 +364,7 @@ export class SdkSubprocessTransport implements OttoRuntimeTransport {
       this.status = {
         ready: false,
         code,
-        reason: friendly(code, reason, { connectionMode }),
+        reason: friendly(code, reason, this.friendlyOpts(connectionMode)),
         agentId: primaryAgentId,
         baseUrl: context.baseUrl,
         discoverySource: context.source,
@@ -398,7 +405,7 @@ export class SdkSubprocessTransport implements OttoRuntimeTransport {
       ...this.status,
       ready: false,
       code,
-      reason: friendly(code, reason, { connectionMode: this.config.connectionMode() }),
+      reason: friendly(code, reason, this.friendlyOpts(this.config.connectionMode())),
       modelHandle: this.config.modelHandle(),
       effort: this.config.effort(),
       sessionMode: SMOKE_MODE ? 'smoke' : 'default',
