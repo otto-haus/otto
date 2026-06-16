@@ -113,6 +113,47 @@ describe('SdkSubprocessTransport init resilience', () => {
     expect(configUpdates.some((patch) => patch.baseUrl === null)).toBe(true);
   });
 
+  test('embedded mode omits cloud LETTA_BASE_URL so init does not require LETTA_API_KEY', async () => {
+    process.env.OTTO_SKIP_LETTA_LSOF = '1';
+    process.env.OTTO_AGENT_ID = 'agent-test';
+    process.env.LETTA_BASE_URL = 'https://api.letta.com';
+    const configUpdates: Array<Partial<{ baseUrl: string | null }>> = [];
+    const { win } = mockWindow();
+    const transport = new SdkSubprocessTransport(win, {
+      ...mockConfig(),
+      connectionMode: () => 'embedded' as const,
+      baseUrl: () => 'https://api.letta.com',
+      agentCandidates: () => ['agent-test'],
+      update: (patch) => {
+        configUpdates.push(patch);
+        return {};
+      },
+    } as ConfigStore);
+
+    const session = {
+      close: () => {},
+      initialize: async () => ({
+        agentId: 'agent-test',
+        conversationId: 'conv-smoke-test',
+        model: 'test-model',
+        memfsEnabled: false,
+        tools: [],
+      }),
+      send: async () => {},
+      abort: async () => {},
+      async *stream() {},
+    };
+
+    (transport as unknown as { sdk: unknown }).sdk = {
+      createSession: () => session,
+      resumeSession: () => session,
+    };
+
+    await transport.init({ freshConversation: true });
+    expect(process.env.LETTA_BASE_URL).toBeUndefined();
+    expect(configUpdates.some((patch) => patch.baseUrl === null)).toBe(true);
+  });
+
   test('embedded mode omits stale LETTA_BASE_URL when local backend is down', async () => {
     process.env.OTTO_SKIP_LETTA_LSOF = '1';
     process.env.LETTA_BASE_URL = 'local:/Users/seb/.letta/lc-local-backend';

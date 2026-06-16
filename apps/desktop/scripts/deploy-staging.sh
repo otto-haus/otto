@@ -164,7 +164,11 @@ NODE
     plist_env_set "$plist" OTTO_AGENT_ID "$OTTO_AGENT_ID"
   fi
   if [[ -n "${LETTA_BASE_URL:-}" ]]; then
-    plist_env_set "$plist" LETTA_BASE_URL "$LETTA_BASE_URL"
+    # Embedded "This Mac" spawns its own backend — never inject Letta Cloud into staging plist.
+    if [[ "$LETTA_BASE_URL" =~ ^https?://(127\.0\.0\.1|localhost)(:[0-9]+)?(/|$) ]] \
+      || [[ "$LETTA_BASE_URL" =~ ^local: ]]; then
+      plist_env_set "$plist" LETTA_BASE_URL "$LETTA_BASE_URL"
+    fi
   else
     local letta_port=""
     letta_port="$(lsof -nP -iTCP -sTCP:LISTEN 2>/dev/null | rg -i 'letta' | rg -o '127\.0\.0\.1:[0-9]+|localhost:[0-9]+' | head -1 | cut -d: -f2 || true)"
