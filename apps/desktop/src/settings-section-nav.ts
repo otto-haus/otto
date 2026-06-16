@@ -7,6 +7,7 @@ export type SettingsSectionId =
   | 'diagnostics';
 
 export const SETTINGS_SECTION_KEY = 'otto.settings.section';
+export const SETTINGS_LAST_SECTION_KEY = 'otto.settings.lastSection';
 export const SETTINGS_SECTION_EVENT = 'otto:settings-section';
 
 const VALID_SECTIONS = new Set<SettingsSectionId>([
@@ -25,6 +26,33 @@ export function normalizeSettingsSection(raw: string | null): SettingsSectionId 
   return VALID_SECTIONS.has(section as SettingsSectionId)
     ? (section as SettingsSectionId)
     : null;
+}
+
+export function peekPendingSettingsSection(): SettingsSectionId | null {
+  try {
+    return normalizeSettingsSection(sessionStorage.getItem(SETTINGS_SECTION_KEY));
+  } catch {
+    return null;
+  }
+}
+
+export function readLastSettingsSection(): SettingsSectionId | null {
+  try {
+    return normalizeSettingsSection(sessionStorage.getItem(SETTINGS_LAST_SECTION_KEY));
+  } catch {
+    return null;
+  }
+}
+
+export function persistSettingsSection(section: SettingsSectionId): void {
+  try {
+    sessionStorage.setItem(SETTINGS_LAST_SECTION_KEY, section);
+  } catch { /* best effort */ }
+}
+
+/** Initial tab: pending deep-link wins, else last visited (#615). */
+export function initialSettingsSection(): SettingsSectionId {
+  return peekPendingSettingsSection() ?? readLastSettingsSection() ?? 'general';
 }
 
 export function readPendingSettingsSection(): SettingsSectionId | null {
