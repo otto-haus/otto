@@ -1,6 +1,8 @@
-import type { ReceiptDetail } from '../runtime';
+import type { Receipt } from '@otto-haus/core';
 import type { PreviewContent } from './preview-content';
 import { previewFromText } from './preview-content';
+
+type ReceiptPreviewDetail = Receipt & { path: string };
 
 const MARKDOWN_EXT = /\.(md|markdown)$/i;
 const HTML_EXT = /\.(html?|htm)$/i;
@@ -10,7 +12,7 @@ export type ReceiptPreviewEligibility = {
   reason?: string;
 };
 
-export function receiptPreviewEligible(detail: ReceiptDetail | null | undefined): ReceiptPreviewEligibility {
+export function receiptPreviewEligible(detail: ReceiptPreviewDetail | null | undefined): ReceiptPreviewEligibility {
   if (!detail) {
     return { eligible: false, reason: 'Select a receipt to preview.' };
   }
@@ -24,7 +26,7 @@ export function receiptPreviewEligible(detail: ReceiptDetail | null | undefined)
   return { eligible: true };
 }
 
-export function findArtifactRef(detail: ReceiptDetail): string | null {
+export function findArtifactRef(detail: ReceiptPreviewDetail): string | null {
   for (const entry of detail.evidence) {
     if (entry.kind !== 'file') continue;
     const ref = entry.ref.trim();
@@ -40,7 +42,7 @@ export function findArtifactRef(detail: ReceiptDetail): string | null {
   return null;
 }
 
-export function receiptDetailToMarkdown(detail: ReceiptDetail): string {
+export function receiptDetailToMarkdown(detail: ReceiptPreviewDetail): string {
   const lines: string[] = [
     `# Receipt \`${detail.id}\``,
     '',
@@ -82,7 +84,7 @@ export function receiptDetailToMarkdown(detail: ReceiptDetail): string {
 }
 
 export function previewContentFromReceiptDetail(
-  detail: ReceiptDetail,
+  detail: ReceiptPreviewDetail,
   artifact?: { body: string; ref: string } | null,
 ): PreviewContent | null {
   if (artifact?.body.trim()) {

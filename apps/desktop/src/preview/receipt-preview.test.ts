@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'bun:test';
-import type { ReceiptDetail } from '../runtime';
+import type { Receipt } from '@otto-haus/core';
 import {
   findArtifactRef,
   previewContentFromReceiptDetail,
@@ -7,7 +7,7 @@ import {
   receiptPreviewEligible,
 } from './receipt-preview';
 
-const fixtureReceipt: ReceiptDetail = {
+const fixtureReceipt: Receipt & { path: string } = {
   schema: 'otto.receipt.v1',
   id: 'receipt-fixture-preview',
   timestamp: '2026-06-16T10:00:00.000Z',
