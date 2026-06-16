@@ -4188,7 +4188,7 @@ const MemoryObservatory: React.FC<{ connected: boolean; onOpenLetta: () => void 
         <button type="button" className="btn" onClick={onOpenLetta}>Open in Letta</button>
       </div>
       <p className="settingsFieldHint">
-        Inspects Letta core-memory blocks via `{result?.apiPath ?? '/v1/agents/{id}/core-memory/blocks'}`. Otto does not write memory here — use Curation proposals for writeback.
+        Inspects Letta core-memory blocks via `{result?.apiPath ?? '/v1/agents/{id}/core-memory/blocks'}`. otto does not write memory here — use Curation proposals for writeback.
       </p>
         {!connected ? (
           <div className="listEmpty">
