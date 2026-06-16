@@ -1,4 +1,7 @@
-import { describe, expect, test } from 'bun:test';
+import { describe, expect, test, afterEach } from 'bun:test';
+import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import type { BrowserWindow } from 'electron';
 import { collectSystemHealth, formatSystemHealthHuman } from './system-health';
 import type { ConfigStore } from './config-store';
@@ -98,5 +101,32 @@ describe('collectSystemHealth', () => {
     const text = formatSystemHealthHuman(report);
     expect(text).toContain('NOT OK');
     expect(text).toContain('[FAIL] Runtime connected');
+  });
+
+  test('warns when session started after unclean prior exit', async () => {
+    const prevHome = process.env.OTTO_HOME;
+    const tempHome = mkdtempSync(join(tmpdir(), 'otto-health-dirty-'));
+    process.env.OTTO_HOME = tempHome;
+    writeFileSync(join(tempHome, 'session-active'), '999\n');
+    const lifecycle = await import('./shutdown-lifecycle');
+    lifecycle.noteAppSessionStart();
+
+    const win = {
+      isDestroyed: () => false,
+      isFocused: () => true,
+      webContents: {
+        isDestroyed: () => false,
+        executeJavaScript: async () => ({ queued: 0, failed: 0, sending: 0, total: 0 }),
+      },
+    } as unknown as BrowserWindow;
+
+    const report = await collectSystemHealth(makeDeps(readyStatus, win));
+    const shutdown = report.checks.find((c) => c.id === 'shutdown');
+    expect(shutdown?.status).toBe('warn');
+    expect(shutdown?.data?.dirtyShutdown).toBe(true);
+
+    if (prevHome === undefined) Reflect.deleteProperty(process.env, 'OTTO_HOME');
+    else process.env.OTTO_HOME = prevHome;
+    rmSync(tempHome, { recursive: true, force: true });
   });
 });

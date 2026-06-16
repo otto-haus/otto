@@ -201,6 +201,7 @@ First-run UI lives in `apps/desktop/src/Onboarding.tsx` (Welcome → mode pick �
 - [`docs/INSTALL.md`](../INSTALL.md) — CI/dev install (contributors)
 - [`INSTALL_FOR_AGENTS.md`](../../INSTALL_FOR_AGENTS.md) — agent protocol
 - [`docs/v1/runbooks/live-vs-staging.md`](../v1/runbooks/live-vs-staging.md) — otto.app vs otto-staging.app
+- [`docs/v1/runbooks/safe-reset-diagnostics.md`](../v1/runbooks/safe-reset-diagnostics.md) — Safe reset vs Cmd+Q (#576)
 - [`AGENTS.md`](../../AGENTS.md) — verify commands for agents
 
 ---
@@ -230,3 +231,7 @@ bun install   # ensures @letta-ai/letta-code in node_modules
 **Chat still blocked**
 
 Open **Settings → General**. Read the exact blocker (missing agent, provider auth, CLI path). Do not claim connected until ready.
+
+**Blank Chat or stuck queue after force-quit**
+
+Open **Settings → Diagnostics** or **System health**. If you see an unclean-shutdown warning, run **Safe reset** (not just relaunch). For normal shutdown use **Cmd+Q**. Full steps: [`docs/v1/runbooks/safe-reset-diagnostics.md`](../v1/runbooks/safe-reset-diagnostics.md).

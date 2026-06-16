@@ -193,3 +193,5 @@ OTTO_RUNTIME_TRANSPORT=auto bun -e "console.log(require('./electron/runtime-tran
 ```
 
 Staging-only runtime proof: see [`docs/v1/runbooks/live-vs-staging.md`](v1/runbooks/live-vs-staging.md).
+
+Operator recovery (Safe reset vs Cmd+Q): [`docs/v1/runbooks/safe-reset-diagnostics.md`](v1/runbooks/safe-reset-diagnostics.md) ([#576](https://github.com/otto-haus/otto/issues/576)).

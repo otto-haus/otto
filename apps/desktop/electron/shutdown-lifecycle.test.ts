@@ -37,16 +37,23 @@ describe('shutdown-lifecycle', () => {
     expect(third.dirtyShutdown).toBe(false);
   });
 
-  test('readShutdownStatus reflects marker and last clean timestamp', async () => {
+  test('readShutdownStatus reflects session-start dirty flag, not live marker', async () => {
     const mod = await loadFresh();
     mod.noteAppSessionStart();
-    const dirty = mod.readShutdownStatus();
-    expect(dirty.dirtyShutdown).toBe(true);
-    expect(dirty.lastCleanShutdownAt).toBeNull();
+    const runningClean = mod.readShutdownStatus();
+    expect(runningClean.dirtyShutdown).toBe(false);
+    expect(runningClean.lastCleanShutdownAt).toBeNull();
+
+    const relaunch = mod.noteAppSessionStart();
+    expect(relaunch.dirtyShutdown).toBe(true);
+    expect(mod.readShutdownStatus().dirtyShutdown).toBe(true);
+
+    mod.clearDirtyShutdownWarning();
+    expect(mod.readShutdownStatus().dirtyShutdown).toBe(false);
 
     mod.markCleanShutdown();
-    const clean = mod.readShutdownStatus();
-    expect(clean.dirtyShutdown).toBe(false);
-    expect(clean.lastCleanShutdownAt).toMatch(/^\d{4}-/);
+    const afterCleanQuit = mod.readShutdownStatus();
+    expect(afterCleanQuit.dirtyShutdown).toBe(false);
+    expect(afterCleanQuit.lastCleanShutdownAt).toMatch(/^\d{4}-/);
   });
 });

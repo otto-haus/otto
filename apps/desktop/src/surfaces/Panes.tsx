@@ -3926,7 +3926,10 @@ const healthStatusTone = (status: HealthCheck['status']): string => {
   return 'draft';
 };
 
-const HealthCheckRow: React.FC<{ item: HealthCheck }> = ({ item }) => (
+const HealthCheckRow: React.FC<{
+  item: HealthCheck;
+  action?: React.ReactNode;
+}> = ({ item, action }) => (
   <div className="settingsReadinessRow">
     <div>
       <div className="settingsReadinessRow__label">{item.label}</div>
@@ -3937,15 +3940,19 @@ const HealthCheckRow: React.FC<{ item: HealthCheck }> = ({ item }) => (
       {item.nextAction ? (
         <div className="settingsReadinessRow__meta">{settingsCopy.systemHealthNext}: {item.nextAction}</div>
       ) : null}
+      {action ? <div style={{ marginTop: 8 }}>{action}</div> : null}
     </div>
     <StatusPill status={healthStatusTone(item.status)} label={item.status} />
   </div>
 );
 
-const SystemHealthPanel: React.FC = () => {
+const SystemHealthPanel: React.FC<{
+  pushToast?: ReturnType<typeof useToast>['push'];
+}> = ({ pushToast }) => {
   const api = ottoApi();
   const [report, setReport] = useState<SystemHealthReport | null>(null);
   const [busy, setBusy] = useState(false);
+  const [resetBusy, setResetBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const refresh = async () => {
@@ -3961,11 +3968,36 @@ const SystemHealthPanel: React.FC = () => {
     }
   };
 
+  const runSafeReset = async () => {
+    if (!api?.system?.safeReset) return;
+    setResetBusy(true);
+    setError(null);
+    try {
+      const result = await api.system.safeReset();
+      pushToast?.({
+        title: settingsCopy.safeResetDoneTitle,
+        body: result.reason,
+        tone: result.reconnected ? 'ok' : 'warn',
+      });
+      await refresh();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
+    } finally {
+      setResetBusy(false);
+    }
+  };
+
   useEffect(() => {
     void refresh();
   }, [api]);
 
   if (!api?.system?.health) return null;
+
+  const shutdownCheck = report?.checks.find((c) => c.id === 'shutdown');
+  const showDirtyReset =
+    shutdownCheck?.status === 'warn' &&
+    shutdownCheck.data?.dirtyShutdown === true &&
+    !!api.system.safeReset;
 
   return (
     <>
@@ -3974,7 +4006,7 @@ const SystemHealthPanel: React.FC = () => {
           <div className="settingsFieldRow__title">{settingsCopy.systemHealthTitle}</div>
           <p className="settingsFieldRow__hint">{settingsCopy.systemHealthLede}</p>
         </div>
-        <button type="button" className="btn" disabled={busy} onClick={() => void refresh()}>
+        <button type="button" className="btn" disabled={busy || resetBusy} onClick={() => void refresh()}>
           {busy ? settingsCopy.systemHealthLoading : settingsCopy.systemHealthRefresh}
         </button>
       </div>
@@ -3989,7 +4021,24 @@ const SystemHealthPanel: React.FC = () => {
             <PaneLoading label={settingsCopy.systemHealthLoading} variant="rows" />
           ) : (
             <div className="settingsReadinessGroup">
-              {report.checks.map((check) => <HealthCheckRow key={check.id} item={check} />)}
+              {report.checks.map((check) => (
+                <HealthCheckRow
+                  key={check.id}
+                  item={check}
+                  action={
+                    check.id === 'shutdown' && showDirtyReset ? (
+                      <button
+                        type="button"
+                        className="btn btn--solid-d"
+                        disabled={resetBusy || busy}
+                        onClick={() => void runSafeReset()}
+                      >
+                        {resetBusy ? settingsCopy.safeResetBusy : settingsCopy.systemHealthSafeReset}
+                      </button>
+                    ) : undefined
+                  }
+                />
+              ))}
             </div>
           )}
         </>
@@ -4686,7 +4735,7 @@ export const Settings: React.FC = () => {
 
           <section>
             <SettingsSectionHeader title={settingsCopy.systemHealthTitle} lede={settingsCopy.systemHealthLede} />
-            <SystemHealthPanel />
+            <SystemHealthPanel pushToast={pushToast} />
           </section>
 
           <section>
@@ -4871,9 +4920,18 @@ const DiagnosticsSettingsPanel: React.FC<{
     <>
       <SettingsSectionHeader title={settingsCopy.diagnosticsTitle} lede={settingsCopy.diagnosticsLede} />
       {dirtyShutdown ? (
-        <p className="faint" style={{ color: 'var(--warn)', fontSize: 12.5, marginBottom: 10 }}>
-          {settingsCopy.safeResetDirtyBody}
-        </p>
+        <div className="settingsStatusBanner settingsStatusBanner--warn" style={{ marginBottom: 12 }}>
+          <div style={{ fontWeight: 600, marginBottom: 4 }}>{settingsCopy.safeResetDirtyTitle}</div>
+          <p className="faint" style={{ fontSize: 12.5, marginBottom: 8 }}>{settingsCopy.safeResetDirtyBody}</p>
+          <button
+            type="button"
+            className="btn btn--solid-d"
+            disabled={resetBusy || busy}
+            onClick={() => void runSafeReset()}
+          >
+            {resetBusy ? settingsCopy.safeResetBusy : settingsCopy.safeResetDirtyAction}
+          </button>
+        </div>
       ) : null}
       <div className="row" style={{ flexWrap: 'wrap', gap: 8 }}>
         <button type="button" className="btn btn--solid-d" disabled={busy} onClick={() => void exportDiagnostics()}>
@@ -4921,6 +4979,7 @@ const DiagnosticsSettingsPanel: React.FC<{
       ) : null}
       <p className="faint" style={{ fontSize: 12, marginTop: 8 }}>{settingsCopy.diagnosticsCommand}</p>
 
+      <SettingsSectionHeader title={settingsCopy.gracefulQuitTitle} lede={settingsCopy.gracefulQuitBody} />
       <SettingsSectionHeader title={settingsCopy.safeResetTitle} lede={settingsCopy.safeResetLede} />
       <p className="settingsFieldRow__hint">{settingsCopy.safeResetClears}</p>
       <p className="settingsFieldRow__hint">{settingsCopy.safeResetPreserves}</p>
