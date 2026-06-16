@@ -22,6 +22,7 @@ import {
   canAdvanceOnboardingModePick,
   resolveOnboardingStep,
   shouldShowOnboardingModePicker,
+  shouldUseConnectSettingsOverlay,
   type OnboardingIntent,
 } from './onboarding-step';
 import { OnboardingStepLayout, type OnboardingEvidence } from './OnboardingStepLayout';
@@ -264,6 +265,8 @@ export const Onboarding: React.FC<{ onNavigate: (id: SurfaceId) => void; activeS
   const statusReason = rt.status?.reason?.trim();
   const statusCode = rt.status?.code;
 
+  const connectUsesSettingsOverlay = shouldUseConnectSettingsOverlay(step, activeSurface);
+
   const stepChrome = (() => {
     if (step === 'connect') {
       return (
@@ -274,6 +277,7 @@ export const Onboarding: React.FC<{ onNavigate: (id: SurfaceId) => void; activeS
           lede={onboardingCopy.connectLede}
           canBack
           onBack={goBack}
+          fullScreen={connectUsesSettingsOverlay}
           footer={(
             <>
               <button
@@ -362,6 +366,13 @@ export const Onboarding: React.FC<{ onNavigate: (id: SurfaceId) => void; activeS
   })();
 
   if (stepChrome) {
+    if (shouldUseConnectSettingsOverlay(step, activeSurface)) {
+      return (
+        <div className="onboardOverlay onboardOverlay--step">
+          <div className="onboardFlowPanel">{stepChrome}</div>
+        </div>
+      );
+    }
     return <div className="onboardStepAnchor">{stepChrome}</div>;
   }
 
