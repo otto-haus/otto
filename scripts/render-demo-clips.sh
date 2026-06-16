@@ -80,18 +80,56 @@ case "$COMP" in
     ;;
 esac
 
+GIT_SHA="$(git -C "$ROOT" rev-parse HEAD 2>/dev/null || echo unknown)"
+GIT_SHORT="$(git -C "$ROOT" rev-parse --short HEAD 2>/dev/null || echo unknown)"
+
+# Duration + tier from composition metadata (see demo/src/features.tsx).
+case "$COMP" in
+  OttoProductDemo) FRAMES=1620; FPS=30; TIER=ship ;;
+  OttoV01DesktopWalkthrough) FRAMES=1320; FPS=30; TIER=ship ;;
+  OttoV01Channels|OttoV01Tickets|OttoV01Practices) FRAMES=455; FPS=30; TIER=ship ;;
+  OttoV01FieldNote|OttoV01Curation|OttoV01Charter) FRAMES=455; FPS=30; TIER=proposed ;;
+  *) FRAMES=0; FPS=30; TIER=unknown ;;
+esac
+if [[ "$FRAMES" -gt 0 ]]; then
+  DURATION_SEC=$((FRAMES / FPS))
+else
+  DURATION_SEC=unknown
+fi
+
+MP4=""
+case "$COMP" in
+  OttoProductDemo) MP4="$OUT/otto-product-demo.mp4" ;;
+  OttoV01DesktopWalkthrough) MP4="$OUT/otto-v01-desktop-walkthrough.mp4" ;;
+  OttoV01Curation) MP4="$OUT/otto-v01-curation.mp4" ;;
+  OttoV01Tickets) MP4="$OUT/otto-v01-tickets.mp4" ;;
+  OttoV01Charter) MP4="$OUT/otto-v01-charter.mp4" ;;
+  OttoV01Practices) MP4="$OUT/otto-v01-practices.mp4" ;;
+  OttoV01Channels) MP4="$OUT/otto-v01-channels.mp4" ;;
+  OttoV01FieldNote) MP4="$OUT/otto-v01-field-note.mp4" ;;
+esac
+MP4_BYTES=""
+if [[ -n "$MP4" && -f "$MP4" ]]; then
+  MP4_BYTES="$(wc -c <"$MP4" | tr -d ' ')"
+fi
+
 STAMP="$(date -u +%Y%m%dT%H%M%SZ)"
 RECEIPT="$RECEIPT_DIR/demo-render-$STAMP.md"
 cat >"$RECEIPT" <<EOF
 # Demo render receipt
 
 - **At:** $(date -u +%Y-%m-%dT%H:%M:%SZ)
+- **Git sha:** \`$GIT_SHORT\` ($GIT_SHA)
 - **Composition:** $COMP
+- **v0.1 tier badge:** $TIER
+- **Duration:** ${DURATION_SEC}s (${FRAMES} frames @ ${FPS}fps)
 - **Output dir:** demo/out/
+- **MP4:** ${MP4:-n/a}${MP4_BYTES:+ ($MP4_BYTES bytes)}
 - **Command:** bash scripts/render-demo-clips.sh $COMP
+- **Smoke verify:** bash scripts/demo-smoke-frame.sh $COMP
 
-Honest scope: faithful re-enactments — not live screen capture. Tried/Approved pending Sebastian.
+Honest scope: faithful re-enactments — not live screen capture. Shell mocks use no mock operational data. Tried/Approved pending Sebastian.
 EOF
 
-echo "Wrote placeholder receipt: $RECEIPT"
+echo "Wrote receipt: $RECEIPT"
 echo "Outputs: $OUT/"

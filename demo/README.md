@@ -17,6 +17,19 @@ bun run studio                     # select OttoProductDemo
 bunx remotion render src/index.ts OttoProductDemo out/otto-product-demo.mp4
 ```
 
+**Verify (no full MP4 required for CI):**
+
+```sh
+# From repo root — frame-0 smoke still (fast)
+bash scripts/demo-smoke-frame.sh OttoProductDemo
+
+# Unit metadata (tier badge + duration)
+bun test demo/src/demo-compositions.test.ts
+
+# Full cut (~54s MP4) + receipt with sha/duration/tier
+bash scripts/render-demo-clips.sh OttoProductDemo
+```
+
 ## Render locally
 
 ```sh
