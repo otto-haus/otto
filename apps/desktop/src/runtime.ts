@@ -7,6 +7,7 @@ import {
   persistActiveThread,
   persistLeavingThread,
 } from './chat/thread-messages';
+import { runtimeStatusFromInitError } from '../electron/shared/runtime-error-normalize';
 import { activityFromRuntimeMessage, type TurnActivity } from './chat/turn-activity';
 import { mergeToolResult, type ToolActivity } from './chat/tool-activity';
 import { currentTurnAssistantIndex, type TurnTrail } from './chat/turn-trail';
@@ -568,7 +569,7 @@ export function useRuntime() {
           // threads.list is retried by the dedicated hydration effect.
         }
       })
-      .catch((e) => setStatus({ ready: false, reason: String(e), cliPath: '', cliResolved: false }));
+      .catch((e) => setStatus(runtimeStatusFromInitError(e)));
     const off = api.onEvent((e) => {
       if ('status' in e) {
         setStatus(e.status);

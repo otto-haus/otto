@@ -59,6 +59,7 @@ import { MemoryStore } from './memory-store';
 import { RatificationApplier } from './ratification-apply';
 import { PgvectorStore } from './pgvector-store';
 import { safeWebContentsSend, smokeMode } from './runtime-transport/runtime-common';
+import { runtimeStatusFromInitError } from './shared/runtime-error-normalize';
 import { getMainWindow } from './main-window';
 import { readAppBuildInfo } from './build-info';
 import { showOttoDebugMenu } from './debug-menu';
@@ -200,12 +201,19 @@ export function registerIpc(): IpcRegistration {
   ipcMain.handle('otto:safe-reset', () => shutdownCoordinator.safeReset());
 
   ipcMain.handle('otto:init', async () => {
-    threads.ensureActiveThread(config.agentId());
-    const status = await initWithStaleRecovery();
-    // Runtime is ready → drain any rows that piled up while it was blocked.
-    const threadId = activeThreadId();
-    if (status.ready && threadId) outbox?.resume(threadId);
-    return status;
+    try {
+      threads.ensureActiveThread(config.agentId());
+      const status = await initWithStaleRecovery();
+      // Runtime is ready → drain any rows that piled up while it was blocked.
+      const threadId = activeThreadId();
+      if (status.ready && threadId) outbox?.resume(threadId);
+      return status;
+    } catch (e) {
+      return runtimeStatusFromInitError(e, false, {
+        connectionMode: config.get().connectionMode,
+        lettaSettingsPath: resolveLettaSettingsPath(config.get()),
+      });
+    }
   });
   ipcMain.handle('otto:new-chat', async () => {
     permissionSessionStore.clear();
