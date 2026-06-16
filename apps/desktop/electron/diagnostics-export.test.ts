@@ -12,6 +12,7 @@ describe('DiagnosticsExporter', () => {
   });
 
   test('export bundle includes snapshot and redacts secrets', async () => {
+    // zipDirectory + ReceiptWriter can exceed bun's 5s default under load (#867 verify:v0 flake).
     ottoDir = mkdtempSync(join(tmpdir(), 'otto-diagnostics-export-'));
     const exporter = new DiagnosticsExporter(ottoDir);
     const result = await exporter.exportBundle(makeInput(ottoDir));
@@ -29,7 +30,7 @@ describe('DiagnosticsExporter', () => {
     expect(snapshotText).toContain('permissionRoute');
     expect(/\b(api[_-]?key|secret|token|password|bearer)\s*[:=]\s*['"]?[A-Za-z0-9_\-]{16,}/i.test(snapshotText)).toBe(false);
     expect(snapshotText).not.toContain('super-secret-token-value-1234567890');
-  });
+  }, 15_000);
 
   test('redactDiagnosticsText strips bearer tokens', () => {
     const redacted = redactDiagnosticsText('Authorization: Bearer abcdefghijklmnopqrstuvwxyz');
@@ -83,7 +84,7 @@ describe('DiagnosticsExporter', () => {
       restoreEnv('OTTO_SMOKE', prevSmoke);
       restoreEnv('OTTO_LETTA_SETTINGS_PATH', prevSettings);
     }
-  });
+  }, 15_000);
 
   test('buildRuntimeLogsSummary includes redacted electron main tail', () => {
     ottoDir = mkdtempSync(join(tmpdir(), 'otto-diagnostics-logs-'));
