@@ -140,7 +140,7 @@ function makeInput(ottoDir: string): DiagnosticsExportInput {
     permissionSession: ['Read'],
     transport: {
       activeTransport: 'sdk',
-      sdk: { pendingPermissionCount: 1, sessionInitialized: false, aborted: false },
+      sdk: { pendingPermissionCount: 1, sessionInitialized: false, aborted: false, embeddedEngine: null },
       ws: {
         pendingPermissionCount: 0,
         wsConnected: null,

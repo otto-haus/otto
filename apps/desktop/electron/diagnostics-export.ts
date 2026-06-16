@@ -20,6 +20,15 @@ export type TransportDiagnosticsSnapshot = {
     pendingPermissionCount: number;
     sessionInitialized: boolean;
     aborted: boolean;
+    embeddedEngine: {
+      cliPath: string | null;
+      enginePid: number | null;
+      restartCount: number;
+      maxRestarts: number;
+      lastRestartAt: string | null;
+      lastFailureReason: string | null;
+      exhausted: boolean;
+    } | null;
   };
   ws: {
     pendingPermissionCount: number;
@@ -273,6 +282,7 @@ export class DiagnosticsExporter {
         wsListenerPort: input.runtimeStatus.wsListenerPort ?? null,
         transport: input.transport,
       },
+      embeddedEngine: input.transport.sdk.embeddedEngine ?? null,
       queue: {
         pendingPermissions:
           input.transport.activeTransport === 'ws'
