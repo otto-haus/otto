@@ -77,6 +77,7 @@ bun install
 bun run --cwd apps/desktop electron:build
 (cd apps/desktop && bunx electron-builder --mac dir --arm64)
 bash scripts/embedded-letta-smoke.sh   # bundle path + LICENSE + license guard + resolveCli
+bun test apps/desktop/electron/runtime-transport/runtime-common.test.ts apps/desktop/electron/connection-reconnect.test.ts  # #677 mode matrix
 ```
 
 Release gate (#678): the smoke must pass against a packaged staging/Release artifact (never against

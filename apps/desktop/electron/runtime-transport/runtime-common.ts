@@ -56,7 +56,8 @@ export async function withTimeout<T>(promise: Promise<T>, timeoutMs: number, lab
   }
 }
 
-const LETTA_DESKTOP_CLI = '/Applications/Letta.app/Contents/Resources/app.asar.unpacked/node_modules/@letta-ai/letta-code/letta.js';
+export const LETTA_DESKTOP_CLI =
+  '/Applications/Letta.app/Contents/Resources/app.asar.unpacked/node_modules/@letta-ai/letta-code/letta.js';
 
 export type ConnectionMode = NonNullable<OttoConfig['connectionMode']>;
 

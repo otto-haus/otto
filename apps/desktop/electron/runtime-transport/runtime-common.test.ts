@@ -34,7 +34,13 @@ describe('withTimeout', () => {
   });
 });
 
-describe('resolveCli connectionMode', () => {
+describe('resolveCli connectionMode (#677)', () => {
+  const restoreEnv = (prevResources: string | undefined, prevCli: string | undefined) => {
+    (process as NodeJS.Process & { resourcesPath?: string }).resourcesPath = prevResources;
+    if (prevCli === undefined) delete process.env.LETTA_CLI_PATH;
+    else process.env.LETTA_CLI_PATH = prevCli;
+  };
+
   test('embedded prefers bundled resources path', () => {
     const dir = join(tmpdir(), `otto-cli-${Date.now()}`);
     const lettaDir = join(dir, 'app', 'node_modules', '@letta-ai', 'letta-code');
@@ -50,8 +56,87 @@ describe('resolveCli connectionMode', () => {
       expect(embedded.cliResolved).toBe(true);
       expect(embedded.cliPath).toBe(bundled);
       expect(embedded.cliFallbackReason).toBeUndefined();
+      expect(embedded.cliPath).not.toContain('Letta.app');
     } finally {
-      (process as NodeJS.Process & { resourcesPath?: string }).resourcesPath = prevResources;
+      restoreEnv(prevResources, prevCli);
+    }
+  });
+
+  test('embedded never prefers Letta Desktop CLI even when installed', () => {
+    const prevCli = process.env.LETTA_CLI_PATH;
+    delete process.env.LETTA_CLI_PATH;
+    try {
+      const embedded = resolveCli('embedded');
+      expect(embedded.cliPath).not.toContain('Letta.app');
+      if (!embedded.cliResolved) {
+        expect(embedded.cliFallbackReason).toMatch(/bundled/i);
+      }
+    } finally {
+      if (prevCli === undefined) delete process.env.LETTA_CLI_PATH;
+      else process.env.LETTA_CLI_PATH = prevCli;
+    }
+  });
+
+  test('embedded with empty packaged resources surfaces bundle error, not Letta.app', () => {
+    const dir = join(tmpdir(), `otto-cli-missing-${Date.now()}`);
+    mkdirSync(dir, { recursive: true });
+    const prevResources = (process as NodeJS.Process & { resourcesPath?: string }).resourcesPath;
+    const prevCli = process.env.LETTA_CLI_PATH;
+    delete process.env.LETTA_CLI_PATH;
+    (process as NodeJS.Process & { resourcesPath?: string }).resourcesPath = dir;
+    try {
+      const embedded = resolveCli('embedded');
+      expect(embedded.cliPath).not.toContain('Letta.app');
+      if (!embedded.cliResolved) {
+        expect(embedded.cliFallbackReason).toMatch(/Embedded mode: bundled letta\.js not found/i);
+      }
+    } finally {
+      restoreEnv(prevResources, prevCli);
+    }
+  });
+
+  test('existing prefers Letta Desktop CLI when installed', () => {
+    if (!existsSync('/Applications/Letta.app/Contents/Resources/app.asar.unpacked/node_modules/@letta-ai/letta-code/letta.js')) {
+      return;
+    }
+    const prevCli = process.env.LETTA_CLI_PATH;
+    delete process.env.LETTA_CLI_PATH;
+    try {
+      const existing = resolveCli('existing');
+      expect(existing.cliPath).toContain('Letta.app');
+      expect(existing.cliResolved).toBe(true);
+      expect(existing.cliFallbackReason).toBeUndefined();
+    } finally {
+      if (prevCli === undefined) delete process.env.LETTA_CLI_PATH;
+      else process.env.LETTA_CLI_PATH = prevCli;
+    }
+  });
+
+  test('existing falls back to bundled CLI with explicit reason when Letta Desktop absent', () => {
+    const prevCli = process.env.LETTA_CLI_PATH;
+    delete process.env.LETTA_CLI_PATH;
+    try {
+      const existing = resolveCli('existing');
+      if (existsSync('/Applications/Letta.app/Contents/Resources/app.asar.unpacked/node_modules/@letta-ai/letta-code/letta.js')) {
+        return;
+      }
+      if (existing.cliResolved) {
+        expect(existing.cliFallbackReason).toMatch(/Existing mode: Letta Desktop CLI not at/i);
+        expect(existing.cliPath).not.toContain('Letta.app');
+      }
+    } finally {
+      if (prevCli === undefined) delete process.env.LETTA_CLI_PATH;
+      else process.env.LETTA_CLI_PATH = prevCli;
+    }
+  });
+
+  test('LETTA_CLI_PATH override wins for any connection mode', () => {
+    const prevCli = process.env.LETTA_CLI_PATH;
+    process.env.LETTA_CLI_PATH = '/custom/letta.js';
+    try {
+      expect(resolveCli('embedded').cliPath).toBe('/custom/letta.js');
+      expect(resolveCli('existing').cliPath).toBe('/custom/letta.js');
+    } finally {
       if (prevCli === undefined) delete process.env.LETTA_CLI_PATH;
       else process.env.LETTA_CLI_PATH = prevCli;
     }
