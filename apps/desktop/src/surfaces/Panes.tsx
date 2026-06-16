@@ -4611,8 +4611,6 @@ export const Settings: React.FC = () => {
         </div>
       ) : (
         <div className="settingsPage__content">
-          <SettingsSectionHeader title={settingsCopy.generalTitle} lede={settingsCopy.generalLede} />
-
           <section>
             <SettingsSectionHeader title={settingsCopy.connectionTitle} lede={settingsCopy.connectionLede} />
             <ConnectLetta />
