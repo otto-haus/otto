@@ -54,6 +54,11 @@ import {
 } from '../onboarding-sample-receipt';
 import { useLabs } from '../labs/labs-context';
 import { usePreviewPane } from '../preview/usePreviewPane';
+import {
+  readPreviewAutoOpenMode,
+  writePreviewAutoOpenMode,
+  type PreviewAutoOpenMode,
+} from '../preview/preview-auto-open';
 import { previewContentFromReceiptDetail, receiptPreviewEligible } from '../preview/receipt-preview';
 import { gatedConnectionMode } from '../surface-tiers';
 import { resolveLettaOpenAction } from '../letta-open-action';
@@ -4855,6 +4860,42 @@ const ConversationSortSetting: React.FC = () => {
   );
 };
 
+const PreviewAutoOpenSetting: React.FC = () => {
+  const [mode, setMode] = useState<PreviewAutoOpenMode>(readPreviewAutoOpenMode);
+
+  useEffect(() => {
+    const onChanged = (event: Event) => {
+      const next = (event as CustomEvent<{ mode?: PreviewAutoOpenMode }>).detail?.mode;
+      setMode(next ?? readPreviewAutoOpenMode());
+    };
+    window.addEventListener('otto-preview-auto-open-changed', onChanged);
+    return () => window.removeEventListener('otto-preview-auto-open-changed', onChanged);
+  }, []);
+
+  return (
+    <div className="settingsFieldRow">
+      <div className="settingsFieldRow__main">
+        <div className="settingsFieldRow__title">{previewCopy.autoOpenLabel}</div>
+        <p className="settingsFieldRow__hint">{previewCopy.autoOpenHint}</p>
+      </div>
+      <select
+        className="charterInput"
+        value={mode}
+        aria-label={previewCopy.autoOpenLabel}
+        onChange={(event) => {
+          const next = event.target.value as PreviewAutoOpenMode;
+          writePreviewAutoOpenMode(next);
+          setMode(next);
+        }}
+      >
+        <option value="off">{previewCopy.autoOpenOff}</option>
+        <option value="on-new-artifact">{previewCopy.autoOpenOnNew}</option>
+        <option value="always-on-pane">{previewCopy.autoOpenAlwaysPane}</option>
+      </select>
+    </div>
+  );
+};
+
 const ComposerSendShortcutSetting: React.FC = () => {
   const api = ottoApi();
   const [shortcut, setShortcut] = useState<ComposerSendShortcut>('enter');
@@ -5042,6 +5083,7 @@ export const Settings: React.FC = () => {
             <SettingsSectionHeader title={settingsCopy.conversationSortLabel} lede={settingsCopy.conversationSortHint} />
             <ConversationSortSetting />
             <ComposerSendShortcutSetting />
+            <PreviewAutoOpenSetting />
           </section>
 
           {optionalRecallApiAvailable ? (

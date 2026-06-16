@@ -53,6 +53,11 @@ import { useOttoDebugContextMenu } from '../debug/useOttoDebugContextMenu';
 import { TruncatedMessageRestore } from '../chat/TruncatedMessageRestore';
 import { PreviewPane } from '../components/PreviewPane';
 import { previewFromCodeBlock, previewFromText } from '../preview/preview-content';
+import {
+  readPreviewAutoOpenMode,
+  resolvePreviewAutoOpen,
+  type PreviewAutoOpenMode,
+} from '../preview/preview-auto-open';
 import { usePreviewPane } from '../preview/usePreviewPane';
 import { openSettingsSection } from '../settings-section-nav';
 import { isTypingTarget, jumpTurnAnchor, turnAnchorIndices } from '../chat/turn-navigation';
@@ -496,6 +501,8 @@ const LiveChat: React.FC<{
   const [expandedMessageTexts, setExpandedMessageTexts] = useState<Record<string, string>>({});
   const preview = usePreviewPane();
   const previewShellRef = useRef<HTMLDivElement | null>(null);
+  const [previewAutoOpenMode, setPreviewAutoOpenMode] = useState<PreviewAutoOpenMode>(readPreviewAutoOpenMode);
+  const autoOpenedMessageIdRef = useRef<string | null>(null);
   const resizeRef = useRef<{ startX: number; startWidth: number; containerWidth: number } | null>(null);
   const pickerRef = useRef<HTMLDivElement | null>(null);
   const streamRef = useRef<HTMLDivElement | null>(null);
@@ -751,6 +758,20 @@ const LiveChat: React.FC<{
 
   const wasBusyRef = useRef(rt.busy);
   useEffect(() => {
+    const onAutoOpenChanged = (event: Event) => {
+      const mode = (event as CustomEvent<{ mode?: PreviewAutoOpenMode }>).detail?.mode;
+      if (mode) setPreviewAutoOpenMode(mode);
+      else setPreviewAutoOpenMode(readPreviewAutoOpenMode());
+    };
+    window.addEventListener('otto-preview-auto-open-changed', onAutoOpenChanged);
+    return () => window.removeEventListener('otto-preview-auto-open-changed', onAutoOpenChanged);
+  }, []);
+
+  useEffect(() => {
+    autoOpenedMessageIdRef.current = null;
+  }, [rt.activeThreadId]);
+
+  useEffect(() => {
     const wasBusy = wasBusyRef.current;
     wasBusyRef.current = rt.busy;
     if (wasBusy && !rt.busy && permissionQueue.length > 0) {
@@ -760,7 +781,33 @@ const LiveChat: React.FC<{
       setProposeBusy(false);
       setContextPanel((panel) => (panel === 'permission' ? null : panel));
     }
-  }, [rt.busy, permissionQueue.length]);
+    if (!wasBusy || rt.busy) return;
+
+    const lastMessage = rt.messages[rt.messages.length - 1];
+    if (!lastMessage || lastMessage.who !== 'otto' || !lastMessage.text?.trim()) return;
+    if (autoOpenedMessageIdRef.current === lastMessage.id) return;
+
+    const decision = resolvePreviewAutoOpen({
+      mode: previewAutoOpenMode,
+      text: lastMessage.text,
+      paneOpen: preview.open,
+      runtimeConnected: ready,
+      title: previewCopy.assistantMessageTitle,
+      sourceId: lastMessage.id,
+    });
+    autoOpenedMessageIdRef.current = lastMessage.id;
+
+    if (decision.action === 'open') {
+      preview.show(decision.content);
+      return;
+    }
+    if (decision.action === 'toast-disconnected') {
+      toast.push({
+        title: previewCopy.autoOpenSkippedDisconnected,
+        tone: 'warn',
+      });
+    }
+  }, [rt.busy, rt.messages, permissionQueue.length, previewAutoOpenMode, preview.open, preview.show, ready, toast]);
 
   useEffect(() => {
     writeStoredDraft(activeThreadIdRef.current, draft);
