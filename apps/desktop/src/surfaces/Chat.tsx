@@ -69,10 +69,10 @@ import {
 } from '../chat/composer-keyboard';
 import {
   nextActionFor,
-  runtimeSetupBody,
   runtimeSetupTitle,
   type ConnectionMode,
 } from '../../electron/shared/runtime-status-ui';
+import { ReadinessPanel } from '../ReadinessPanel';
 
 // In Electron (window.otto present) → the runtime-wired LiveChat.
 // In the web preview → the file-backed PreviewChat (unchanged).
@@ -113,12 +113,6 @@ const labelForModel = (value?: string | null, options: LettaModelOption[] = FALL
 const labelForEffort = (value?: EffortLevel) => EFFORT_OPTIONS.find((e) => e.value === value)?.label ?? 'High';
 
 type ChatRuntimeStatus = NonNullable<ReturnType<typeof useRuntimeContext>['status']>;
-
-const runtimeSetupBannerBody = (st: ChatRuntimeStatus): string =>
-  runtimeSetupBody(st.code, st.reason, {
-    noAgentBody: chatCopy.runtimeNoAgentBody,
-    defaultBody: chatCopy.runtimeNotReadyBody,
-  });
 
 const runtimeSetupBannerNextAction = (
   st: ChatRuntimeStatus,
@@ -1077,15 +1071,13 @@ const LiveChat: React.FC<{
                 <>
                   <div className="inkblock__eyebrow"><span className="dot dot--warn" /> {chatCopy.runtimeNotReadyEyebrow}</div>
                   <div className="inkblock__title">{runtimeSetupTitle(st.code)}</div>
-                  <div className="inkblock__meta">
-                    <span>{runtimeSetupBannerBody(st)}</span>
-                    {st.code === 'usage-limit' ? (
-                      <span className="faint">{chatCopy.usageLimitSetupSuffix}</span>
-                    ) : null}
-                    {setupNextAction ? (
-                      <span className="faint">{chatCopy.runtimeSetupNextPrefix}: {setupNextAction}</span>
-                    ) : null}
-                  </div>
+                  <ReadinessPanel variant="onboarding" />
+                  {st.code === 'usage-limit' ? (
+                    <p className="faint inkblock__meta">{chatCopy.usageLimitSetupSuffix}</p>
+                  ) : null}
+                  {setupNextAction ? (
+                    <p className="faint inkblock__meta">{chatCopy.runtimeSetupNextPrefix}: {setupNextAction}</p>
+                  ) : null}
                 </>
               )}
               <div className="inkblock__actions">
@@ -1108,12 +1100,9 @@ const LiveChat: React.FC<{
               <p className="faint" style={{ marginTop: 8, fontSize: 13 }}>{chatCopy.diagnosticsHint}</p>
             </div>
           )}
-          {streamMessages.length === 0 && (
-            <div className={`chatEmpty${ready ? '' : ' chatEmpty--muted'}`}>
+          {streamMessages.length === 0 && ready && (
+            <div className="chatEmpty">
               <h2 className="chatEmpty__title">{chatCopy.sessionTitle}</h2>
-              {!ready ? (
-                <p className="chatEmpty__lede">{chatCopy.sessionBodyNotReady}</p>
-              ) : null}
               <div className="chatStarters" aria-label="Starter prompts">
                 {chatCopy.starterPrompts.map((prompt) => (
                   <button
