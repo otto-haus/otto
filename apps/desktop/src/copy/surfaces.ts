@@ -317,6 +317,7 @@ export const previewCopy = {
   assistantMessageTitle: 'otto reply',
   codeBlockTitle: 'Code block',
   receiptTitle: 'Receipt proof',
+  sandboxFooter: 'Sandboxed preview · not live web',
 } as const;
 
 export const onboardingCopy = {
