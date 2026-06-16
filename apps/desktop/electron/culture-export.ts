@@ -1,6 +1,5 @@
 import { cpSync, existsSync, mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import { basename, isAbsolute, join, win32 } from 'node:path';
-import { execFileSync } from 'node:child_process';
 import type { CultureExportManifest, CultureExportResult, CultureImportPreview } from '@otto-haus/core';
 import { OTTO_DIR } from './config-store';
 import { ConstitutionStore } from './constitution-store';
@@ -9,6 +8,7 @@ import { ReceiptWriter } from './receipt-writer';
 import { ReceiptStore } from './receipt-store';
 import { RoutineStore } from './routine-store';
 import { StandardStore } from './standard-store';
+import { zipDirectory } from './zip-directory';
 
 const SECRET_PATTERN = /\b(api[_-]?key|secret|token|password|bearer)\s*[:=]\s*['"]?[A-Za-z0-9_\-]{16,}/i;
 
@@ -29,7 +29,7 @@ export class CultureExporter {
     this.constitutionMd = join(this.ottoDir, 'constitution.md');
   }
 
-  exportBundle(): CultureExportResult {
+  async exportBundle(): Promise<CultureExportResult> {
     mkdirSync(this.ottoDir, { recursive: true });
     const stamp = new Date().toISOString().replace(/[:.]/g, '-');
     const bundleName = `otto-culture-export-${stamp}`;
@@ -88,12 +88,8 @@ export class CultureExporter {
     this.assertNoSecretsInDir(stagingDir);
 
     const zipPath = `${stagingDir}.zip`;
-    try {
-      execFileSync('zip', ['-r', zipPath, '.'], { cwd: stagingDir, stdio: 'pipe' });
-    } catch {
-      // Fallback: bundle directory without zip when zip CLI unavailable.
-    }
-    const bundlePath = existsSync(zipPath) ? zipPath : stagingDir;
+    await zipDirectory(stagingDir, zipPath);
+    const bundlePath = zipPath;
 
     const receipt = this.receiptWriter.write({
       status: 'success',

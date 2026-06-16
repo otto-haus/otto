@@ -11,12 +11,12 @@ describe('DiagnosticsExporter', () => {
     if (ottoDir) rmSync(ottoDir, { recursive: true, force: true });
   });
 
-  test('export bundle includes snapshot and redacts secrets', () => {
+  test('export bundle includes snapshot and redacts secrets', async () => {
     ottoDir = mkdtempSync(join(tmpdir(), 'otto-diagnostics-export-'));
     const exporter = new DiagnosticsExporter(ottoDir);
-    const result = exporter.exportBundle(makeInput(ottoDir));
+    const result = await exporter.exportBundle(makeInput(ottoDir));
 
-    expect(existsSync(result.bundlePath)).toBe(true);
+    expect(result.bundlePath.endsWith('.zip')).toBe(true);
     const stagingDir = result.bundlePath.endsWith('.zip')
       ? result.bundlePath.slice(0, -4)
       : result.bundlePath;
@@ -37,7 +37,7 @@ describe('DiagnosticsExporter', () => {
     expect(redacted).toContain('[REDACTED]');
   });
 
-  test('snapshot records window launch mode/env, theme, and Letta discovery (#684/#689/#609)', () => {
+  test('snapshot records window launch mode/env, theme, and Letta discovery (#684/#689/#609)', async () => {
     ottoDir = mkdtempSync(join(tmpdir(), 'otto-diagnostics-window-'));
     const prevMode = process.env.OTTO_WINDOW_MODE;
     const prevSmoke = process.env.OTTO_SMOKE;
@@ -51,7 +51,7 @@ describe('DiagnosticsExporter', () => {
       input.runtimeStatus.discoverySource = 'config.json';
       input.window = { visible: false, minimized: false, maximized: true, bounds: { width: 1280, height: 800 } };
 
-      const result = new DiagnosticsExporter(ottoDir).exportBundle(input);
+      const result = await new DiagnosticsExporter(ottoDir).exportBundle(input);
       const stagingDir = result.bundlePath.endsWith('.zip')
         ? result.bundlePath.slice(0, -4)
         : result.bundlePath;
