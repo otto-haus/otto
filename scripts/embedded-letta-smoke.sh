@@ -56,13 +56,14 @@ echo "  running license guard against shipped tree (#671)..."
 node "$ROOT/scripts/gen-third-party-notices.mjs" --check --root "$APP_NM"
 
 # resolveCli('embedded') must pick Resources path, never Letta.app first.
-RESULT="$(cd "$ROOT" && bun -e "
-  process.resourcesPath = ${RESOURCES@Q};
+RESULT="$(cd "$ROOT" && OTTO_SMOKE_RESOURCES="$RESOURCES" OTTO_SMOKE_DESKTOP_CLI="$DESKTOP_CLI" bun -e "
+  process.resourcesPath = process.env.OTTO_SMOKE_RESOURCES;
   delete process.env.LETTA_CLI_PATH;
+  const fs = require('fs');
   const { resolveCli } = await import('./apps/desktop/electron/runtime-transport/runtime-common.ts');
   const embedded = resolveCli('embedded');
   const existing = resolveCli('existing');
-  console.log(JSON.stringify({ embedded, existing, desktopCliExists: require('fs').existsSync(${DESKTOP_CLI@Q}) }));
+  console.log(JSON.stringify({ embedded, existing, desktopCliExists: fs.existsSync(process.env.OTTO_SMOKE_DESKTOP_CLI) }));
 ")"
 
 CLI_PATH="$(echo "$RESULT" | bun -e "const j=JSON.parse(await Bun.stdin.text()); console.log(j.embedded.cliPath);")"
@@ -89,8 +90,9 @@ if [[ -f "$DESKTOP_CLI" && "$EXISTING_PATH" != "$DESKTOP_CLI" ]]; then
 fi
 
 STAMP="$(date -u +%Y%m%dT%H%M%SZ)"
-RECEIPT="$ROOT/receipts/otto-v01/embedded-letta-smoke-$STAMP.md"
-mkdir -p "$(dirname "$RECEIPT")"
+RECEIPT_ROOT="${OTTO_RECEIPT_DIR:-$ROOT/receipts/otto-v01}"
+RECEIPT="$RECEIPT_ROOT/embedded-letta-smoke-$STAMP.md"
+mkdir -p "$RECEIPT_ROOT"
 cat >"$RECEIPT" <<EOF
 # Embedded Letta CLI smoke (076)
 
@@ -103,7 +105,7 @@ cat >"$RECEIPT" <<EOF
 Honest scope: path resolution only — use \`otto-staging-076-bootstrap-proof.cjs\` for init + chat turn, or \`OTTO_BOOTSTRAP_PROOF=1\` to chain both.
 EOF
 
-JSON_RECEIPT="$ROOT/receipts/otto-v01/embedded-letta-smoke-$STAMP.json"
+JSON_RECEIPT="$RECEIPT_ROOT/embedded-letta-smoke-$STAMP.json"
 cat >"$JSON_RECEIPT" <<EOF
 {
   "at": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
@@ -122,14 +124,14 @@ if [[ "${OTTO_BOOTSTRAP_PROOF:-}" == "1" ]]; then
     if [[ -n "$BOOT_JSON" && -f "$BOOT_JSON" ]]; then
       BOOT_OK="$(bun -e "const j=JSON.parse(await Bun.file(process.argv[1]).text()); console.log(j.bootstrapTurnCompleted===true?'true':'false');" "$BOOT_JSON")"
       if [[ "$BOOT_OK" == "true" ]]; then
-        bun -e "
+        OTTO_JSON_RECEIPT="$JSON_RECEIPT" OTTO_BOOT_JSON="$BOOT_JSON" bun -e "
           const fs = require('fs');
-          const sidecar = ${JSON_RECEIPT@Q};
-          const boot = JSON.parse(fs.readFileSync(${BOOT_JSON@Q}, 'utf8'));
+          const sidecar = process.env.OTTO_JSON_RECEIPT;
+          const boot = JSON.parse(fs.readFileSync(process.env.OTTO_BOOT_JSON, 'utf8'));
           const merged = {
             ...JSON.parse(fs.readFileSync(sidecar, 'utf8')),
             bootstrapTurnCompleted: true,
-            bootstrapProofJson: ${BOOT_JSON@Q},
+            bootstrapProofJson: process.env.OTTO_BOOT_JSON,
           };
           fs.writeFileSync(sidecar, JSON.stringify(merged, null, 2) + '\n');
         "
