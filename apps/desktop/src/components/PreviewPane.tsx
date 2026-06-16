@@ -239,14 +239,6 @@ export const PreviewPane: React.FC<PreviewPaneProps> = ({
     setAnnotateMode(false);
   }, [content, onProposeCorrection]);
 
-  const trackFocus = useCallback((node: HTMLElement | null) => ({
-    onFocusCapture: () => setFocusedInPane(true),
-    onBlurCapture: (event: React.FocusEvent) => {
-      if (node?.contains(event.relatedTarget as Node | null)) return;
-      setFocusedInPane(false);
-    },
-  }), []);
-
   if (!open) return null;
 
   const shellClassName = `previewPane${annotateMode ? ' previewPane--annotate' : ''}`;
