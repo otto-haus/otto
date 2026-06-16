@@ -3,6 +3,7 @@ import { randomUUID } from 'node:crypto';
 import { join } from 'node:path';
 import type { Receipt } from '@otto-haus/core';
 import { OTTO_DIR } from './config-store';
+import { emitBlockedReceipt, shouldEmitBlockedReceipt } from './receipt-events';
 
 export const RECEIPTS_DIR = join(OTTO_DIR, 'receipts');
 
@@ -42,7 +43,9 @@ export class ReceiptWriter {
     const filename = `${safeTimestamp(timestamp)}-${safeId(id)}.json`;
     const path = join(this.dir, filename);
     writeFileSync(path, `${JSON.stringify(receipt, null, 2)}\n`);
-    return { ...receipt, path };
+    const written = { ...receipt, path };
+    if (shouldEmitBlockedReceipt(written)) emitBlockedReceipt(written);
+    return written;
   }
 }
 

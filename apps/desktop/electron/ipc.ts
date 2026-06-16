@@ -41,6 +41,7 @@ import { WorkerRunner } from './worker-runner';
 import { ReceiptWriter, RECEIPTS_DIR } from './receipt-writer';
 import { PracticeMiningLoop } from './practice-mining';
 import { triggerPracticeMining } from './practice-mining-trigger';
+import { enableReceiptFailureProposer } from './receipt-failure-proposer';
 import { CheckRunner } from './check-runner';
 import { ThreadStore } from './thread-store';
 import { permissionSessionStore } from './permission-session-store';
@@ -100,6 +101,7 @@ export function registerIpc(): IpcRegistration {
   const standards = new StandardStore();
   const practices = new PracticeStore();
   const proposals = new ProposalStore(undefined, undefined, receipts);
+  enableReceiptFailureProposer(proposals);
   const knowledge = new KnowledgeStore();
   const autonomy = new AutonomyStore(undefined, undefined, knowledge);
   const skills = new SkillStore();
