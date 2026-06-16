@@ -4,7 +4,7 @@ import { applyEmbeddedLettaSettingsEnv } from '../dream-settings';
 import type { PermissionRequest, PermissionResponse, RuntimePreferences, RuntimeStatus, StatusCode, OttoConfig } from '../shared/types';
 import type { ConfigStore } from '../config-store';
 import { ReceiptWriter } from '../receipt-writer';
-import { getSecret, hasSecret } from '../secret-store';
+import { hasLettaApiKey, syncLettaApiKeyEnv } from '../letta-api-key';
 import { StandardStore } from '../standard-store';
 import { PracticeStore } from '../practice-store';
 import { TraceWriter } from '../trace-writer';
@@ -167,9 +167,7 @@ export class SdkSubprocessTransport implements OttoRuntimeTransport {
     // Otto launch should not repair or mutate a global Letta Code npm install.
     if (!process.env.DISABLE_AUTOUPDATER) process.env.DISABLE_AUTOUPDATER = '1';
     applyEmbeddedLettaSettingsEnv(this.config);
-    const key = getSecret('LETTA_API_KEY');
-    if (key) process.env.LETTA_API_KEY = key;
-    else Reflect.deleteProperty(process.env, 'LETTA_API_KEY');
+    syncLettaApiKeyEnv(this.config);
     if (resolution.omitBaseUrl) {
       Reflect.deleteProperty(process.env, 'LETTA_BASE_URL');
     } else {
@@ -180,7 +178,7 @@ export class SdkSubprocessTransport implements OttoRuntimeTransport {
   }
 
   private hasApiKey(): boolean {
-    return hasSecret('LETTA_API_KEY') || !!process.env.LETTA_API_KEY;
+    return hasLettaApiKey(this.config);
   }
 
   /** Connect; recover from stale agents/conversations; never throw to the renderer. */
@@ -191,7 +189,7 @@ export class SdkSubprocessTransport implements OttoRuntimeTransport {
     const cli = resolveCli(this.config.connectionMode());
     const context = await resolveLiveLocalLettaContext(this.config);
     const connectionMode = this.config.connectionMode();
-    // Probe the persisted override when live discovery dropped a dead loopback URL (#778 gap).
+    // Probe persisted/env override when live discovery dropped a dead or cloud URL (#778 / embedded auth).
     const baseResolution = await resolveInitBaseUrl(context.baseUrl ?? this.config.baseUrl(), connectionMode);
     if (baseResolution.clearStaleOverride && !SMOKE_MODE) {
       this.config.update({ baseUrl: null });

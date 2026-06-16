@@ -91,6 +91,21 @@ describe('resolveInitBaseUrl', () => {
     expect(result.clearStaleOverride).toBe(true);
   });
 
+  test('omits Letta Cloud base URL in embedded mode so bundled CLI boots locally', async () => {
+    process.env.OTTO_SKIP_LETTA_LSOF = '1';
+    const result = await resolveInitBaseUrl('https://api.letta.com', 'embedded');
+    expect(result.blockReason).toBeUndefined();
+    expect(result.baseUrl).toBeNull();
+    expect(result.omitBaseUrl).toBe(true);
+    expect(result.clearStaleOverride).toBe(true);
+  });
+
+  test('passes through Letta Cloud base URL for cloud mode', async () => {
+    process.env.OTTO_SKIP_LETTA_LSOF = '1';
+    const result = await resolveInitBaseUrl('https://api.letta.com', 'cloud');
+    expect(result.baseUrl).toBe('https://api.letta.com');
+  });
+
   test('embedded resolveLiveLocalLettaContext drops dead loopback override when nothing is live', async () => {
     const tmp = mkdtempSync(join(tmpdir(), 'otto-letta-discovery-'));
     const originalFetch = globalThis.fetch;

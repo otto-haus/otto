@@ -233,6 +233,12 @@ export async function resolveInitBaseUrl(
     }
   }
 
+  // Embedded must never pin to Letta Cloud or other remote HTTP — that forces LETTA_API_KEY
+  // and breaks "This Mac" standalone boot when host env still carries cloud LETTA_BASE_URL.
+  if (connectionMode === 'embedded' && /^https?:\/\//i.test(normalized) && !isLoopbackHttp) {
+    return { baseUrl: null, omitBaseUrl: true, clearStaleOverride: true };
+  }
+
   return { baseUrl: normalized };
 }
 

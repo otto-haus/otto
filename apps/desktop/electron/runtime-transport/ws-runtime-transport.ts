@@ -6,7 +6,7 @@ import { WebSocket, WebSocketServer } from 'ws';
 import type { PermissionRequest, PermissionResponse, RuntimePreferences, RuntimeStatus, StatusCode } from '../shared/types';
 import type { ConfigStore } from '../config-store';
 import { ReceiptWriter } from '../receipt-writer';
-import { getSecret, hasSecret } from '../secret-store';
+import { hasLettaApiKey, resolveLettaApiKey } from '../letta-api-key';
 import { StandardStore } from '../standard-store';
 import { PracticeStore } from '../practice-store';
 import { TraceWriter } from '../trace-writer';
@@ -564,7 +564,7 @@ export class WsRuntimeTransport implements OttoRuntimeTransport {
   }
 
   private hasApiKey(): boolean {
-    return hasSecret('LETTA_API_KEY') || !!process.env.LETTA_API_KEY;
+    return hasLettaApiKey(this.config);
   }
 
   private async startListener(): Promise<void> {
@@ -606,7 +606,7 @@ export class WsRuntimeTransport implements OttoRuntimeTransport {
   private async spawnRemote(cliPath: string, backendBaseUrl: string | null): Promise<void> {
     if (!this.listenerPort) throw new Error('WebSocket listener not started');
     applyEmbeddedLettaSettingsEnv(this.config);
-    const key = getSecret('LETTA_API_KEY');
+    const key = resolveLettaApiKey(this.config);
     const listenerUrl = `http://127.0.0.1:${this.listenerPort}`;
     const env = {
       ...process.env,
