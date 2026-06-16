@@ -120,7 +120,7 @@ When the Labs flag is on, HTML artifacts render with an action bridge (`preview-
 
 Model HTML dispatches via `data-otto-action` / `data-otto-target` on buttons. Arbitrary inline scripts and network fetch remain blocked by CSP + sandbox (no `allow-same-origin`, no navigation).
 
-Implementation: `preview-canvas-actions.ts` · `preview-canvas.ts` · `PreviewPane.tsx` · tests in `preview-canvas-actions.test.ts`.
+Implementation: `preview-canvas-actions.ts` · `preview-canvas-host.ts` · `preview-canvas.ts` · `PreviewPane.tsx` · tests in `preview-canvas-actions.test.ts` and `preview-canvas-host.test.ts`.
 
 ## Ship vs Labs
 
