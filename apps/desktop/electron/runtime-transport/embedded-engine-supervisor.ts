@@ -18,6 +18,14 @@ export function embeddedEngineMaxRestarts(): number {
 }
 
 /** Errors that may clear with a fresh SDK subprocess spawn in embedded mode. */
+/** Best-effort CLI subprocess pid from letta-code-sdk Session (transport is private). */
+export function resolveSdkSubprocessPid(session: unknown): number | null {
+  if (!session || typeof session !== 'object') return null;
+  const transport = (session as { transport?: { process?: { pid?: unknown } } }).transport;
+  const pid = transport?.process?.pid;
+  return typeof pid === 'number' && Number.isFinite(pid) && pid > 0 ? pid : null;
+}
+
 export function isEmbeddedEngineRecoverableError(reason: string): boolean {
   const lower = reason.toLowerCase();
   return (

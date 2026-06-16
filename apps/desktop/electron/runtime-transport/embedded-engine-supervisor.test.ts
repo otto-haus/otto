@@ -3,6 +3,7 @@ import {
   EmbeddedEngineSupervisor,
   embeddedEngineMaxRestarts,
   isEmbeddedEngineRecoverableError,
+  resolveSdkSubprocessPid,
 } from './embedded-engine-supervisor';
 
 describe('EmbeddedEngineSupervisor', () => {
@@ -43,6 +44,12 @@ describe('EmbeddedEngineSupervisor', () => {
       restartCount: 0,
       exhausted: false,
     });
+  });
+
+  test('resolveSdkSubprocessPid reads transport.process.pid when present', () => {
+    expect(resolveSdkSubprocessPid(null)).toBeNull();
+    expect(resolveSdkSubprocessPid({ transport: { process: { pid: 4242 } } })).toBe(4242);
+    expect(resolveSdkSubprocessPid({ transport: { process: { pid: 0 } } })).toBeNull();
   });
 
   test('isEmbeddedEngineRecoverableError classifies engine failures', () => {
