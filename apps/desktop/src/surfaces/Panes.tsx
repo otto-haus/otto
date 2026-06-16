@@ -71,7 +71,7 @@ import {
   readStoredStandardSelection,
 } from '../surface-selection-nav';
 import { AppSourceDetails } from '../components/AppSourceBadge';
-import type { AppBuildInfo, IsolatedAgentRecord, WorkspaceInfo, SystemHealthReport, HealthCheck } from '../../electron/shared/types';
+import type { AppBuildInfo, IsolatedAgentRecord, WorkspaceContext, WorkspaceInfo, SystemHealthReport, HealthCheck } from '../../electron/shared/types';
 import {
   ottoApi,
   type CharterDetail,
@@ -4962,6 +4962,25 @@ const DiagnosticsSettingsPanel: React.FC<{
   const [logsError, setLogsError] = useState<string | null>(null);
   const [logsSummary, setLogsSummary] = useState<Awaited<ReturnType<typeof api.diagnostics.logsSummary>> | null>(null);
   const [activeLogId, setActiveLogId] = useState('latest-trace');
+  const [connectionMode, setConnectionMode] = useState<'embedded' | 'existing' | 'cloud'>('embedded');
+  const [workspaceCtx, setWorkspaceCtx] = useState<WorkspaceContext | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    api.config.get()
+      .then((cfg) => {
+        if (!cancelled) setConnectionMode(cfg.connectionMode ?? 'embedded');
+      })
+      .catch(() => {});
+    api.workspace.context()
+      .then((ctx) => {
+        if (!cancelled) setWorkspaceCtx(ctx);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [api]);
 
   const refreshLogs = async () => {
     setLogsBusy(true);
@@ -5038,6 +5057,17 @@ const DiagnosticsSettingsPanel: React.FC<{
 
   return (
     <>
+      {connectionMode === 'embedded' && workspaceCtx ? (
+        <div className="settingsFieldRow" style={{ marginBottom: 12 }}>
+          <div className="settingsFieldRow__main">
+            <div className="settingsFieldRow__title">{settingsCopy.diagnosticsEmbeddedStateTitle}</div>
+            <p className="settingsFieldRow__hint">{settingsCopy.diagnosticsEmbeddedStateBody}</p>
+            <p className="mono faint" style={{ marginTop: 6, fontSize: 12, wordBreak: 'break-all' }}>
+              {workspaceCtx.lettaStateDir}
+            </p>
+          </div>
+        </div>
+      ) : null}
       <SettingsSectionHeader title={settingsCopy.diagnosticsTitle} lede={settingsCopy.diagnosticsLede} />
       {dirtyShutdown ? (
         <div className="settingsStatusBanner settingsStatusBanner--warn" style={{ marginBottom: 12 }}>
