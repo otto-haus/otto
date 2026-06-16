@@ -11,10 +11,9 @@ describe('chat turn navigation UI contract', () => {
     expect(chatSource).toMatch(/\[rt\.messages, cmdMessages\]/);
   });
 
-  it('resets turn focus only when the active thread changes', () => {
+  it('resets turn focus when the active thread or anchors change', () => {
     expect(chatSource).toMatch(
-      /turnFocusRef\.current = turnAnchors\[turnAnchors\.length - 1\][\s\S]*?\[rt\.activeThreadId\]/,
+      /turnFocusRef\.current = turnAnchors\.length[\s\S]*?\[rt\.activeThreadId, turnAnchors\]/,
     );
-    expect(chatSource).not.toMatch(/\[rt\.activeThreadId, turnAnchors\]/);
   });
 });

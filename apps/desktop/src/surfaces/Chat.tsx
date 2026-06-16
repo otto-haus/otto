@@ -702,8 +702,10 @@ const LiveChat: React.FC<{
   };
 
   useEffect(() => {
-    if (turnAnchors.length) turnFocusRef.current = turnAnchors[turnAnchors.length - 1] ?? 0;
-  }, [rt.activeThreadId]);
+    turnFocusRef.current = turnAnchors.length
+      ? (turnAnchors[turnAnchors.length - 1] ?? 0)
+      : 0;
+  }, [rt.activeThreadId, turnAnchors]);
 
   useEffect(() => {
     setCmdMessages([]);
