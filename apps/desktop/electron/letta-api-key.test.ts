@@ -9,12 +9,16 @@ import { setSecret } from './secret-store';
 describe('letta-api-key', () => {
   const previousHome = process.env.OTTO_HOME;
   const previousApiKey = process.env.LETTA_API_KEY;
+  const previousSettingsPath = process.env.OTTO_LETTA_SETTINGS_PATH;
 
   afterEach(() => {
     if (previousHome === undefined) Reflect.deleteProperty(process.env, 'OTTO_HOME');
     else process.env.OTTO_HOME = previousHome;
     if (previousApiKey === undefined) Reflect.deleteProperty(process.env, 'LETTA_API_KEY');
     else process.env.LETTA_API_KEY = previousApiKey;
+    if (previousSettingsPath === undefined) Reflect.deleteProperty(process.env, 'OTTO_LETTA_SETTINGS_PATH');
+    else process.env.OTTO_LETTA_SETTINGS_PATH = previousSettingsPath;
+    setSecret('LETTA_API_KEY', null);
   });
 
   test('reads LETTA_API_KEY from Letta settings env block', () => {
@@ -45,6 +49,8 @@ describe('letta-api-key', () => {
     try {
       process.env.OTTO_HOME = dir;
       Reflect.deleteProperty(process.env, 'LETTA_API_KEY');
+      Reflect.deleteProperty(process.env, 'OTTO_LETTA_SETTINGS_PATH');
+      setSecret('LETTA_API_KEY', null);
       mkdirSync(join(dir, 'letta'), { recursive: true });
       writeFileSync(join(dir, 'letta', 'settings.json'), `${JSON.stringify({ env: { LETTA_API_KEY: 'embedded-settings-key' } })}\n`);
       const config = new ConfigStore();
