@@ -374,6 +374,36 @@ export interface ThreadListResult {
   threads: ChatThreadRecord[];
 }
 
+/** BYOK Settings connect targets (#460). */
+export type ByokConnectProviderId = 'openrouter' | 'ollama' | 'lmstudio' | 'openai_compat';
+
+export type ProviderMirrorStatus = 'connected' | 'missing' | 'error' | 'unknown';
+
+export interface ProviderMirrorRow {
+  id: ByokConnectProviderId;
+  displayName: string;
+  status: ProviderMirrorStatus;
+  /** Boolean presence only — never key material (078). */
+  connected: boolean;
+  lastVerifiedAt: string | null;
+  error?: string;
+}
+
+export interface ProviderConnectInput {
+  providerId: ByokConnectProviderId;
+  /** Write-only — never returned or persisted in otto config. */
+  apiKey?: string;
+  baseUrl?: string;
+}
+
+export interface ProviderConnectResult {
+  ok: boolean;
+  status: ProviderMirrorStatus;
+  error?: string;
+  mirror: ProviderMirrorSnapshot;
+  modelCount: number;
+}
+
 /** Provider capability mirror — boolean presence only (078). */
 export interface ProviderMirrorSnapshot {
   /** True only when a live runtime session has initialized (session.initialize success). */
@@ -384,6 +414,9 @@ export interface ProviderMirrorSnapshot {
   modelHandle: string | null;
   agentId: string | null;
   note: string;
+  /** Per-provider mirror rows for BYOK connect targets (#460). */
+  providers: ProviderMirrorRow[];
+  modelCount?: number;
 }
 
 /** Letta core-memory block (047) — read-only observatory. */

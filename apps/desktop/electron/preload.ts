@@ -72,6 +72,8 @@ import type {
   ThreadListResult,
   ThreadSwitchResult,
   ProviderMirrorSnapshot,
+  ProviderConnectInput,
+  ProviderConnectResult,
   WorkspaceInfo,
   PaperclipIntakeSnapshot,
   PaperclipConnectResult,
@@ -325,6 +327,8 @@ const api = {
   },
   provider: {
     mirror: (): Promise<ProviderMirrorSnapshot> => ipcRenderer.invoke('otto:provider:mirror'),
+    connect: (input: ProviderConnectInput): Promise<ProviderConnectResult> =>
+      ipcRenderer.invoke('otto:provider:connect', input),
     setApiKey: (value: string): Promise<{ ok: boolean; hasApiKey: boolean }> =>
       ipcRenderer.invoke('otto:provider:set-api-key', value),
   },

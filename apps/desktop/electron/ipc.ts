@@ -1,6 +1,6 @@
 import { type BrowserWindow, app, clipboard, ipcMain, shell } from 'electron';
 import { join } from 'node:path';
-import type { ConnectionInfo, ConnectionInput, CreateProposalFromCorrectionInput, DecideProposalInput, DreamSettings, LabsConfig, MemoryListResult, OttoConfig, PermissionRequest, PermissionResponse, ProposalClassification, ProposalTarget, RuntimePreferences, RuntimeStatus } from './shared/types';
+import type { ConnectionInfo, ConnectionInput, CreateProposalFromCorrectionInput, DecideProposalInput, DreamSettings, LabsConfig, MemoryListResult, OttoConfig, PermissionRequest, PermissionResponse, ProposalClassification, ProposalTarget, ProviderConnectInput, RuntimePreferences, RuntimeStatus } from './shared/types';
 import { applyLabsConfigPatch, assertConnectionModePatchAllowed, getLabsConfig, isImageGenEnabled, labsConfigToOttoPatch } from './labs-config';
 import {
   applyDreamSettingsPatch,
@@ -55,7 +55,7 @@ import { ConstitutionStore, CONSTITUTION_MD, CONSTITUTION_YAML } from './constit
 import { CultureExporter } from './culture-export';
 import { DiagnosticsExporter, buildRuntimeLogsSummary, resolveLogsFolder } from './diagnostics-export';
 import { OTTO_DIR } from './config-store';
-import { buildProviderMirror } from './provider-mirror';
+import { buildProviderMirror, connectByokProvider } from './provider-connect';
 import { setSecret, hasSecret } from './secret-store';
 import { CogneeStore } from './cognee-store';
 import { PaperclipIntakeStore } from './paperclip-intake-store';
@@ -657,9 +657,13 @@ export function registerIpc(): IpcRegistration {
     checkRunner.evaluateOneWayDoor(context),
   );
 
-  ipcMain.handle('otto:provider:mirror', () => {
+  ipcMain.handle('otto:provider:mirror', async () => {
     const status = runner.getStatus();
     return buildProviderMirror(config, status.ready);
+  });
+  ipcMain.handle('otto:provider:connect', async (_e, input: ProviderConnectInput) => {
+    const status = runner.getStatus();
+    return connectByokProvider(config, status.ready, input);
   });
   ipcMain.handle('otto:provider:set-api-key', (_e, value: string) => {
     const trimmed = typeof value === 'string' ? value.trim() : '';

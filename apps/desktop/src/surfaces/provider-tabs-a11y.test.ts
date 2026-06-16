@@ -23,8 +23,9 @@ describe('ModelProviders tab accessibility contract', () => {
     expect(panesSource).toContain("querySelectorAll<HTMLButtonElement>('[role=\"tab\"]')");
   });
 
-  it('does not expose an otto-side API key entry field (#633)', () => {
-    expect(panesSource).not.toContain('type="password"');
+  it('uses write-only BYOK connect fields without otto-side Letta API key storage (#460)', () => {
+    expect(panesSource).toContain('provider.connect');
+    expect(panesSource).toContain('byokConnectTitle');
     expect(panesSource).not.toContain('setApiKey');
     expect(panesSource).toContain('providerKeysInLettaHint');
   });
