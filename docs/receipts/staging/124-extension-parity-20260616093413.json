@@ -1,0 +1,12 @@
+{
+  "ok": true,
+  "issue": 124,
+  "ottoHome": "/var/folders/22/fzs3nrw505z_m71cghqjc7j80000gn/T/otto-ext-parity-tcG9XH",
+  "charterReceiptId": "receipt-862773b7-664f-4a4d-a91e-f56571ddc3e8",
+  "reviewReceiptId": "receipt-d893506f-5b04-436c-a67e-6bf9759bfca8",
+  "receiptCount": 2,
+  "invocations": [
+    "/charter step",
+    "/review done"
+  ]
+}

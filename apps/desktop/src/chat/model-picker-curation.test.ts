@@ -3,6 +3,7 @@ import {
   curateModelOptions,
   isLegacyModelHandle,
   isPrimaryModelHandle,
+  modelProviderSubtitle,
   visiblePickerModels,
 } from './model-picker-curation';
 
@@ -60,5 +61,20 @@ describe('model-picker-curation', () => {
       'openai/gpt-3.5-turbo',
       'byok/custom-model',
     ]);
+  });
+
+  test('preserves providerCategory for BYOK rows (#459)', () => {
+    const curated = curateModelOptions([
+      { handle: 'my-vllm/custom', label: 'Custom', providerCategory: 'byok', provider: 'My vLLM' },
+      { handle: 'openai/gpt-5.5', label: 'GPT-5.5', providerCategory: 'base', provider: 'openai' },
+    ]);
+    expect(curated[0]?.providerCategory).toBe('byok');
+    expect(curated[1]?.providerCategory).toBe('base');
+  });
+
+  test('modelProviderSubtitle shows provider when distinct from handle prefix', () => {
+    expect(modelProviderSubtitle({ handle: 'openrouter/foo', provider: 'OpenRouter' })).toBeNull();
+    expect(modelProviderSubtitle({ handle: 'openai/gpt-5.5', provider: 'openai' })).toBeNull();
+    expect(modelProviderSubtitle({ handle: 'my-vllm/custom', provider: 'My vLLM' })).toBe('My vLLM');
   });
 });

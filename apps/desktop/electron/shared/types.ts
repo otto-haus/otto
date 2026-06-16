@@ -140,6 +140,8 @@ export interface LettaModelOption {
   provider?: string | null;
   displayName?: string | null;
   deprecated?: boolean;
+  /** Letta `provider_category` when present — `byok` rows get a picker badge (#459). */
+  providerCategory?: 'base' | 'byok' | null;
 }
 
 /** Renderer-provided pasted/dropped image. Saved locally before being referenced in chat. */

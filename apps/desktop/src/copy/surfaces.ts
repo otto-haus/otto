@@ -271,6 +271,7 @@ export const chatCopy = {
   customModelApply: 'Apply',
   modelDeprecatedBadge: 'deprecated',
   modelLegacyBadge: 'legacy',
+  modelByokBadge: 'BYOK',
   autoModelResolvedPrefix: 'Resolved',
   modelFallbackEyebrow: 'Model fallback:',
   reasoningTitle: 'Reasoning',

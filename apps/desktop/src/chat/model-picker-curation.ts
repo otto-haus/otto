@@ -96,3 +96,13 @@ export function visiblePickerModels(
 export function labelForCuratedModel(model: CuratedModelOption): string {
   return model.label?.trim() || model.displayName?.trim() || model.handle;
 }
+
+/** Optional subtitle when Letta provider_name differs from the handle prefix (#459). */
+export function modelProviderSubtitle(model: Pick<LettaModelOption, 'handle' | 'provider'>): string | null {
+  const provider = model.provider?.trim();
+  if (!provider) return null;
+  const prefix = model.handle.split('/')[0]?.trim().toLowerCase();
+  if (!prefix) return provider;
+  if (provider.toLowerCase() === prefix) return null;
+  return provider;
+}
