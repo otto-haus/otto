@@ -24,9 +24,20 @@ build_marker=<git short SHA>
 
 ## Smoke scripts
 
-Requires Playwright once: `npm install playwright` in `~/.codex/admin` (or set `NODE_PATH`).
+Playwright is a dev dependency (`@playwright/test` in `apps/desktop`). Two-thread and onboarding smokes use shared fixtures under `apps/desktop/e2e/` (#733).
 
-### UI proof capture (127, 046, 047, 067, 039 settings line)
+```sh
+# 046 two-thread (requires otto-staging.app)
+task smoke:staging:two-thread
+
+# 069–073 onboarding (requires dist-app build first)
+bun run --cwd apps/desktop app:dir
+task smoke:staging:onboarding
+```
+
+Legacy wrappers still work: `node scripts/otto-staging-two-thread-smoke.cjs` delegates to the Playwright spec.
+
+Other CDP smokes still require Playwright via `NODE_PATH=$HOME/.codex/admin/node_modules` until migrated.
 
 ```sh
 NODE_PATH=$HOME/.codex/admin/node_modules \
@@ -40,10 +51,9 @@ Writes `staging-proof-<runId>.json` and PNGs in this directory.
 ### Onboarding connected-first + CTA paths (069–073)
 
 ```sh
-NODE_PATH=$HOME/.codex/admin/node_modules \
-  OTTO_RECEIPT_DIR=$PWD/docs/receipts/staging \
+OTTO_RECEIPT_DIR=$PWD/docs/receipts/staging \
   OTTO_GIT_HEAD=$(git rev-parse --short HEAD) \
-  node scripts/otto-staging-onboarding-smoke.cjs
+  task smoke:staging:onboarding
 ```
 
 Phases:
@@ -60,10 +70,9 @@ Latest smoke: `onboarding-smoke-20260614062759.json` (all phases ok).
 ### Two-thread isolation (046)
 
 ```sh
-NODE_PATH=$HOME/.codex/admin/node_modules \
-  OTTO_RECEIPT_DIR=$PWD/docs/receipts/staging \
+OTTO_RECEIPT_DIR=$PWD/docs/receipts/staging \
   OTTO_GIT_HEAD=$(git rev-parse --short HEAD) \
-  node scripts/otto-staging-two-thread-smoke.cjs
+  task smoke:staging:two-thread
 ```
 
 Creates two threads (UI **New chat** + IPC), stores distinct markers per `otto.chat.messages.<threadId>.v1`, switches threads, asserts UI text and storage keys stay isolated. Writes `two-thread-smoke-<runId>.json` and PNGs `046-two-thread-{a,b}-<runId>.png`.

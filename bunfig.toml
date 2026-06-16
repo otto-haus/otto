@@ -2,4 +2,4 @@
 frozenLockfile = false
 
 [test]
-pathIgnorePatterns = [".worktrees/**"]
+pathIgnorePatterns = [".worktrees/**", ".letta/worktrees/**", "otto-r404/**", "apps/desktop/e2e/**"]

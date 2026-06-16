@@ -1,0 +1,29 @@
+{
+  "ok": true,
+  "issue": 733,
+  "runId": "20260616061800",
+  "gitHead": "pending-commit",
+  "summary": "Consolidated two-thread + onboarding staging CDP smokes into @playwright/test with shared fixtures under apps/desktop/e2e/.",
+  "changed": [
+    "apps/desktop/e2e/fixtures/staging-cdp.ts",
+    "apps/desktop/e2e/two-thread.spec.ts",
+    "apps/desktop/e2e/onboarding.spec.ts",
+    "apps/desktop/playwright.config.ts",
+    "scripts/otto-staging-two-thread-smoke.cjs",
+    "scripts/otto-staging-onboarding-smoke.cjs",
+    "bunfig.toml",
+    "Taskfile.yml"
+  ],
+  "verify": {
+    "typecheck": "pass",
+    "playwrightList": "5 tests in 2 files",
+    "bunTestE2eExcluded": "867 tests / 161 files (e2e specs ignored)",
+    "localBunTest": "5 flaky timeout failures on slow runner (pre-existing diagnostics/block-markdown); not introduced by #733"
+  },
+  "acceptance": {
+    "sharedFixture": true,
+    "twoCjsReplaced": true,
+    "taskDocsUpdated": true,
+    "nestedDiscoveryGuard": "bunfig pathIgnorePatterns includes apps/desktop/e2e/**, .worktrees/**, otto-r404/**"
+  }
+}

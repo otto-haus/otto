@@ -19,7 +19,10 @@
     "gen:practices": "node scripts/gen-practices.mjs",
     "gen:readiness": "node scripts/gen-readiness.mjs",
     "gen:staging-icon": "node scripts/generate-staging-icon.mjs",
-    "app:dir": "bun run electron:build && electron-builder --mac dir --arm64"
+    "app:dir": "bun run electron:build && electron-builder --mac dir --arm64",
+    "smoke:e2e": "playwright test",
+    "smoke:e2e:two-thread": "playwright test e2e/two-thread.spec.ts",
+    "smoke:e2e:onboarding": "playwright test e2e/onboarding.spec.ts"
   },
   "dependencies": {
     "@letta-ai/letta-client": "^1.12.1",
@@ -43,6 +46,7 @@
   },
   "devDependencies": {
     "@electron/rebuild": "^4.0.4",
+    "@playwright/test": "^1.61.0",
     "@types/archiver": "^6.0.3",
     "@types/better-sqlite3": "^7.6.13",
     "@types/node": "^22.10.0",
