@@ -113,7 +113,7 @@ export class ProposalStore {
     const proposalBody: CurationProposal = {
       schema: 'otto.proposal.v1',
       id,
-      source: 'user_correction',
+      source: input.source ?? 'user_correction',
       kind,
       summary: summarizeCorrection(input.correction),
       rationale,
