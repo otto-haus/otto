@@ -58,6 +58,12 @@ import {
   SETTINGS_SECTION_EVENT,
   type SettingsSectionId,
 } from '../settings-section-nav';
+import {
+  openReceipt,
+  openStandard,
+  readStoredReceiptSelection,
+  readStoredStandardSelection,
+} from '../surface-selection-nav';
 import { AppSourceDetails } from '../components/AppSourceBadge';
 import type { AppBuildInfo, IsolatedAgentRecord, WorkspaceInfo, SystemHealthReport, HealthCheck } from '../../electron/shared/types';
 import {
@@ -643,6 +649,11 @@ export const Standards: React.FC = () => {
       .then((next) => {
         if (cancelled) return;
         setResult(next);
+        const pendingSlug = readStoredStandardSelection();
+        if (pendingSlug && next.standards.some((standard) => standard.slug === pendingSlug)) {
+          setSelectedSlug(pendingSlug);
+          return;
+        }
         setSelectedSlug(next.standards[0]?.slug ?? null);
       })
       .catch((e) => {
@@ -1378,7 +1389,6 @@ type ProposalInboxFilter = 'pending' | 'decided' | 'all';
 type CurationMainPanel = 'inbox' | 'changelog';
 
 const CURATION_PANEL_KEY = 'otto.curation.panel';
-const RECEIPTS_SELECTED_KEY = 'otto.receipts.selectedId';
 
 function readStoredCurationPanel(): CurationMainPanel | null {
   try {
@@ -1389,23 +1399,6 @@ function readStoredCurationPanel(): CurationMainPanel | null {
     }
   } catch { /* best effort */ }
   return null;
-}
-
-function readStoredReceiptSelection(): string | null {
-  try {
-    const value = sessionStorage.getItem(RECEIPTS_SELECTED_KEY);
-    if (value) sessionStorage.removeItem(RECEIPTS_SELECTED_KEY);
-    return value || null;
-  } catch {
-    return null;
-  }
-}
-
-function openReceiptFromChangelog(receiptId: string) {
-  try {
-    sessionStorage.setItem(RECEIPTS_SELECTED_KEY, receiptId);
-  } catch { /* best effort */ }
-  location.hash = 'receipts';
 }
 
 const PENDING_STATUSES = new Set(['proposed', 'needs_approval']);
@@ -1503,7 +1496,7 @@ export const Curation: React.FC<{ initialPanel?: CurationMainPanel }> = ({ initi
             ].filter(Boolean).join('\n'),
             tone: 'ok',
             actionLabel: toastCopy.openReceipt,
-            onAction: () => { if (typeof location !== 'undefined') location.hash = 'receipts'; },
+            onAction: () => openReceipt(outcome.receipt.id),
           });
         } else {
           pushToast({
@@ -1739,7 +1732,7 @@ const BehaviorChangelogPanel: React.FC = () => {
                   type="button"
                   className="btn btn--ghost"
                   style={{ marginTop: 8, padding: 0, minHeight: 0, fontSize: 'inherit' }}
-                  onClick={() => openReceiptFromChangelog(entry.receipt_id)}
+                  onClick={() => openReceipt(entry.receipt_id)}
                 >
                   Open receipt {entry.receipt_id}
                 </button>
@@ -3005,8 +2998,8 @@ export const Tickets: React.FC = () => {
           message={checkBlock.message}
           receiptId={checkBlock.receiptId}
           standardId={checkBlock.standardId}
-          onOpenReceipt={checkBlock.receiptId ? () => { location.hash = 'receipts'; } : undefined}
-          onOpenStandard={checkBlock.standardId ? () => { location.hash = 'standards'; } : undefined}
+          onOpenReceipt={checkBlock.receiptId ? () => openReceipt(checkBlock.receiptId!) : undefined}
+          onOpenStandard={checkBlock.standardId ? () => openStandard(checkBlock.standardId!) : undefined}
         />
       )}
       {message && <div className="notice"><span className="dot dot--ok" /> {message}</div>}
