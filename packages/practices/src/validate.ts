@@ -1,12 +1,11 @@
 import { APPROVAL_FLOOR } from '@otto-haus/core';
 import type { ApprovalRequirement, PracticeSpec, PracticeStatus } from '@otto-haus/core';
+import { practiceSpecSchema } from './schema.js';
 
 export interface PracticeValidationResult {
   errors: string[];
   warnings: string[];
 }
-
-const VALID_STATUSES = new Set<PracticeStatus>(['draft', 'active', 'deprecated']);
 
 const VALID_APPROVAL_REQUIREMENTS = new Set<ApprovalRequirement>([
   'enabling-globally',
@@ -19,82 +18,81 @@ const VALID_APPROVAL_REQUIREMENTS = new Set<ApprovalRequirement>([
   'credential-or-security-change',
 ]);
 
-const REQUIRED_NON_EMPTY_STRINGS = [
-  'name',
-  'version',
-  'summary',
-  'owner',
-] as const satisfies readonly (keyof PracticeSpec)[];
+const FIELD_ERROR_MESSAGES: Partial<Record<string, string>> = {
+  name: 'name must be present and non-empty',
+  slug: 'slug must be present and non-empty',
+  version: 'version must be present and non-empty',
+  status: 'status must be one of: draft, active, deprecated',
+  summary: 'summary must be present and non-empty',
+  owner: 'owner must be present and non-empty',
+  invocations: 'invocations must be a non-empty array of strings',
+  triggers: 'triggers must be a non-empty array of strings',
+  inputs: 'inputs must be a non-empty array of strings',
+  outputs: 'outputs must be a non-empty array of strings',
+  state_paths: 'state_paths must be a non-empty array of strings',
+  guardrails: 'guardrails must be a non-empty array of strings',
+  evidence_standard: 'evidence_standard must be a non-empty array of strings',
+  metrics: 'metrics must be a non-empty array of strings',
+  approval_required_for: 'approval_required_for must be a non-empty array of strings',
+};
 
-const REQUIRED_NON_EMPTY_ARRAYS = [
-  'invocations',
-  'triggers',
-  'inputs',
-  'outputs',
-  'state_paths',
-  'guardrails',
-  'evidence_standard',
-  'metrics',
-] as const satisfies readonly (keyof PracticeSpec)[];
-
-function isNonEmptyString(value: unknown): value is string {
-  return typeof value === 'string' && value.trim().length > 0;
+function messageForIssue(path: PropertyKey[], code: string): string | null {
+  const field = String(path[0] ?? '');
+  if (FIELD_ERROR_MESSAGES[field]) {
+    return FIELD_ERROR_MESSAGES[field]!;
+  }
+  if (field === 'status' && code === 'invalid_value') {
+    return 'status must be one of: draft, active, deprecated';
+  }
+  return null;
 }
 
-function isNonEmptyStringArray(value: unknown): value is string[] {
-  return Array.isArray(value) && value.length > 0 && value.every(isNonEmptyString);
+function zodErrorsToMessages(issues: { path: PropertyKey[]; code: string; message: string }[]): string[] {
+  const errors: string[] = [];
+  for (const issue of issues) {
+    const mapped = messageForIssue(issue.path, issue.code);
+    if (mapped && !errors.includes(mapped)) {
+      errors.push(mapped);
+    }
+  }
+  return errors;
 }
 
 export function validatePracticeSpec(
   spec: Partial<PracticeSpec>,
   expectedSlug?: string,
 ): PracticeValidationResult {
-  const errors: string[] = [];
+  const parsed = practiceSpecSchema.safeParse(spec);
+  const errors = parsed.success ? [] : zodErrorsToMessages(parsed.error.issues);
   const warnings: string[] = [];
 
-  if (!isNonEmptyString(spec.slug)) {
-    errors.push('slug must be present and non-empty');
-  } else if (expectedSlug !== undefined && spec.slug !== expectedSlug) {
-    errors.push(`slug must equal directory name: expected "${expectedSlug}", got "${spec.slug}"`);
+  if (!parsed.success) {
+    return { errors, warnings };
   }
 
-  if (!isNonEmptyString(spec.status) || !VALID_STATUSES.has(spec.status as PracticeStatus)) {
-    errors.push('status must be one of: draft, active, deprecated');
+  const validated = parsed.data;
+
+  if (expectedSlug !== undefined && validated.slug !== expectedSlug) {
+    errors.push(`slug must equal directory name: expected "${expectedSlug}", got "${validated.slug}"`);
   }
 
-  for (const field of REQUIRED_NON_EMPTY_STRINGS) {
-    if (!isNonEmptyString(spec[field])) {
-      errors.push(`${field} must be present and non-empty`);
+  for (const requirement of validated.approval_required_for) {
+    if (!VALID_APPROVAL_REQUIREMENTS.has(requirement as ApprovalRequirement)) {
+      errors.push(`approval_required_for contains unknown requirement "${requirement}"`);
     }
   }
 
-  for (const field of REQUIRED_NON_EMPTY_ARRAYS) {
-    if (!isNonEmptyStringArray(spec[field])) {
-      errors.push(`${field} must be a non-empty array of strings`);
+  for (const requirement of APPROVAL_FLOOR) {
+    if (!validated.approval_required_for.includes(requirement)) {
+      errors.push(`approval_required_for must include approval floor requirement "${requirement}"`);
     }
   }
 
-  if (!isNonEmptyStringArray(spec.approval_required_for)) {
-    errors.push('approval_required_for must be a non-empty array of strings');
-  } else {
-    for (const requirement of spec.approval_required_for) {
-      if (!VALID_APPROVAL_REQUIREMENTS.has(requirement as ApprovalRequirement)) {
-        errors.push(`approval_required_for contains unknown requirement "${requirement}"`);
-      }
-    }
-
-    for (const requirement of APPROVAL_FLOOR) {
-      if (!spec.approval_required_for.includes(requirement)) {
-        errors.push(`approval_required_for must include approval floor requirement "${requirement}"`);
-      }
-    }
-  }
-
-  if (spec.status === 'active' && spec.implementation === undefined) {
+  if (validated.status === 'active' && validated.implementation === undefined) {
     errors.push('active practices must include implementation');
   }
 
-  if (spec.status === 'draft' && spec.implementation !== undefined) {
+  if (validated.status === 'draft' && validated.implementation !== undefined) {
     warnings.push('draft practices usually should not include implementation until active');
   }
 

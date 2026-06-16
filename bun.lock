@@ -69,6 +69,7 @@
       "dependencies": {
         "@otto-haus/core": "workspace:*",
         "yaml": "^2.9.0",
+        "zod": "^4.4.3",
       },
       "devDependencies": {
         "@types/node": "^25.9.3",
