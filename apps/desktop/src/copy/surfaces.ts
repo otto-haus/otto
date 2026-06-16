@@ -247,6 +247,7 @@ export const chatCopy = {
   usageLimitSetupSuffix: ' Switch model or provider in Settings, or wait for the limit to reset.',
   exportDiagnostics: 'Export diagnostics',
   diagnosticsHint: 'Attach the bundle path to GitHub issues/PRs. Secrets and chat content are redacted.',
+  runtimeSetupNextPrefix: 'Next step',
   workingPulse: 'thinking…',
   copy: 'Copy',
   copyMessage: 'Copy message',
