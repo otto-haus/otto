@@ -62,7 +62,7 @@ export const LAB_FEATURE_META: Record<LabFeatureId, LabFeatureMeta> = {
   },
   pgvector_recall: {
     label: 'pgvector recall',
-    blurb: 'Local vector recall store — env-gated; experimental retrieval path.',
+    blurb: 'Local vector recall store — env-gated retrieval path.',
   },
   channels_outbound: {
     label: 'Channels outbound',
@@ -74,7 +74,7 @@ export const LAB_FEATURE_META: Record<LabFeatureId, LabFeatureMeta> = {
     blurb: 'Deep memory block inspection in Settings when runtime is up.',
   },
   worker_autonomous_loop: {
-    label: 'Worker autonomous loop',
+    label: 'Worker loop',
     blurb: 'Ticket worker loop without manual nudge — approval-gated.',
   },
   practice_mining: {
