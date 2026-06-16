@@ -283,6 +283,7 @@ export async function listLocalLettaModels(config: ConfigStore): Promise<LettaMo
       provider: stringField(row, 'provider_name') ?? stringField(row, 'provider_type'),
       displayName: stringField(row, 'display_name') ?? stringField(row, 'name'),
       deprecated: modelDeprecated(row),
+      providerCategory: modelProviderCategory(row),
     });
   }
   return out;
@@ -373,6 +374,12 @@ function modelDeprecated(row: Record<string, unknown>): boolean {
   if (row.deprecated === true || row.is_deprecated === true) return true;
   const status = stringField(row, 'status') ?? stringField(row, 'availability');
   return status === 'deprecated' || status === 'unavailable';
+}
+
+function modelProviderCategory(row: Record<string, unknown>): 'base' | 'byok' | null {
+  const category = stringField(row, 'provider_category');
+  if (category === 'base' || category === 'byok') return category;
+  return null;
 }
 
 function modelLabel(row: Record<string, unknown>, handle: string): string {

@@ -96,6 +96,7 @@ export type LettaModelOption = {
   provider?: string | null;
   displayName?: string | null;
   deprecated?: boolean;
+  providerCategory?: 'base' | 'byok' | null;
 };
 export type AttachmentInput = { name: string; mime: string; dataUrl: string };
 export type SavedAttachment = { id: string; name: string; mime: string; path: string; url: string; size: number };

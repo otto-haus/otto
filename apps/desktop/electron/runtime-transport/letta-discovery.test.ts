@@ -3,7 +3,7 @@ import { mkdtempSync, mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { ConfigStore } from '../config-store';
-import { discoverLocalLettaContext, isLocalLettaBackendListening, probeLettaHttpBaseUrl, resolveInitBaseUrl, resolveLiveLocalLettaContext, resolveModelHandle } from './letta-discovery';
+import { discoverLocalLettaContext, isLocalLettaBackendListening, listLocalLettaModels, probeLettaHttpBaseUrl, resolveInitBaseUrl, resolveLiveLocalLettaContext, resolveModelHandle } from './letta-discovery';
 import type { LettaModelOption } from '../shared/types';
 
 const envKeys = ['OTTO_HOME', 'OTTO_LETTA_SETTINGS_PATH', 'OTTO_SKIP_LETTA_LSOF', 'OTTO_AGENT_ID', 'LETTA_BASE_URL'] as const;
@@ -202,5 +202,62 @@ describe('resolveModelHandle', () => {
       active: 'letta/auto',
       fallbackReason: null,
     });
+  });
+});
+
+describe('listLocalLettaModels', () => {
+  test('maps provider_category from Letta /v1/models/ (#459)', async () => {
+    const tmp = mkdtempSync(join(tmpdir(), 'otto-letta-models-'));
+    try {
+      process.env.OTTO_HOME = tmp;
+      process.env.OTTO_SKIP_LETTA_LSOF = '1';
+      const config = new ConfigStore();
+      config.update({ baseUrl: 'http://127.0.0.1:8283' });
+      const originalFetch = globalThis.fetch;
+      globalThis.fetch = (async (input: RequestInfo | URL) => {
+        if (String(input).includes('/v1/models/')) {
+          return new Response(JSON.stringify([
+            {
+              handle: 'openai/gpt-5.5',
+              display_name: 'GPT 5.5',
+              provider_category: 'base',
+              provider_name: 'openai',
+            },
+            {
+              handle: 'my-vllm/custom',
+              display_name: 'Custom Model',
+              provider_category: 'byok',
+              provider_name: 'My vLLM',
+            },
+          ]), { status: 200 });
+        }
+        return originalFetch(input);
+      }) as typeof fetch;
+      try {
+        const models = await listLocalLettaModels(config);
+        expect(models).toEqual([
+          {
+            handle: 'openai/gpt-5.5',
+            label: 'GPT 5.5',
+            provider: 'openai',
+            displayName: 'GPT 5.5',
+            deprecated: false,
+            providerCategory: 'base',
+          },
+          {
+            handle: 'my-vllm/custom',
+            label: 'Custom Model',
+            provider: 'My vLLM',
+            displayName: 'Custom Model',
+            deprecated: false,
+            providerCategory: 'byok',
+          },
+        ]);
+      } finally {
+        globalThis.fetch = originalFetch;
+      }
+    } finally {
+      rmSync(tmp, { recursive: true, force: true });
+    }
   });
 });

@@ -59,6 +59,7 @@ import { isTypingTarget, jumpTurnAnchor, turnAnchorIndices } from '../chat/turn-
 import {
   curateModelOptions,
   labelForCuratedModel,
+  modelProviderSubtitle,
   visiblePickerModels,
 } from '../chat/model-picker-curation';
 import {
@@ -251,6 +252,7 @@ const ModelEffortPickers: React.FC<{
           )}
           {visibleModels.map((m) => {
             const helpText = helpTextForModelOption(m);
+            const providerSubtitle = modelProviderSubtitle(m);
             const resolvedForOption = selectedModel === m.handle ? resolvedModelLabel : null;
             return (
               <button
@@ -269,12 +271,18 @@ const ModelEffortPickers: React.FC<{
                 <span className="picker__optionMain">
                   <span className="picker__optionLabel">
                     {labelForCuratedModel(m)}
+                    {m.providerCategory === 'byok' && (
+                      <span className="picker__badge">{chatCopy.modelByokBadge}</span>
+                    )}
                     {(m.deprecated || m.tier === 'legacy') && (
                       <span className="picker__badge">
                         {m.deprecated ? chatCopy.modelDeprecatedBadge : chatCopy.modelLegacyBadge}
                       </span>
                     )}
                   </span>
+                  {providerSubtitle && (
+                    <span className="picker__optionDesc">{providerSubtitle}</span>
+                  )}
                   {helpText && (
                     <span className="picker__optionDesc" id={`model-help-${m.handle}`}>{helpText}</span>
                   )}
