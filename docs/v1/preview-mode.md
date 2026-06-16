@@ -19,7 +19,7 @@ Preview is a **read-only render surface** for markdown, sandboxed HTML, and imag
 | Resizable artifact rail beside thread | **Ship** — Chat `PreviewPane` |
 | Sandboxed HTML / markdown / image render | **Ship** — `preview-content.ts` kinds |
 | ⌘⇧P toggle + honest empty state | **Ship** — `usePreviewPane` + `previewCopy` |
-| Auto-open when agent emits artifact | **Opt-in** — separate slice (not v1 default) |
+| Auto-open when agent emits artifact | **Opt-in** — Settings → Auto-open preview (#652) |
 | Click/draw on rendered UI → agent edit context | **Adapt** — point-to-correction (#653), not codegen |
 | Canvas dashboards with embedded prompt buttons | **Labs** — later slice |
 | Full IDE / multi-file tree in preview | **Out of scope** |
@@ -86,6 +86,7 @@ Persistence keys (`localStorage`, best-effort):
 | --- | --- |
 | `otto.preview.open` | `'1'` or `'0'` |
 | `otto.preview.width` | Integer pixels |
+| `otto.preview.autoOpen.v1` | `'on-new-artifact'` · `'always-on-pane'` · absent = off |
 
 ## Ship vs Labs
 
@@ -94,7 +95,7 @@ Persistence keys (`localStorage`, best-effort):
 | Toggle rail + empty state | Yes | — |
 | Open preview on message / HTML code block | Yes | — |
 | Sandboxed HTML `srcDoc` | Yes (strict sandbox + CSP wrapper) | — |
-| Auto-open on new artifact | No | Opt-in slice |
+| Auto-open on new artifact | No (opt-in via Settings) | #652 — `on-new-artifact` · `always-on-pane` |
 | Point-to-element → Propose Correction | Yes (HTML + runtime connected) | — |
 | Open from Receipts surface | Yes | #660 |
 | Interactive canvas / embedded prompts | No | Labs tier |

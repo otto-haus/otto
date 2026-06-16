@@ -326,6 +326,12 @@ export const previewCopy = {
   annotateFooter: 'Annotate mode · click one element',
   annotateDisabledNotConnected: 'Connect runtime to propose corrections from preview',
   annotateDisabledNotHtml: 'Annotate works on HTML artifacts only',
+  autoOpenLabel: 'Auto-open preview',
+  autoOpenHint: 'Open the preview pane when otto returns an HTML, markdown doc, or image artifact.',
+  autoOpenOff: 'Off (manual only)',
+  autoOpenOnNew: 'On new artifact',
+  autoOpenAlwaysPane: 'Always update pane',
+  autoOpenSkippedDisconnected: 'Preview not opened — runtime not connected',
 } as const;
 
 export const onboardingCopy = {
