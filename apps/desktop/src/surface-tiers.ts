@@ -93,6 +93,14 @@ export const LAB_FEATURE_META: Record<LabFeatureId, LabFeatureMeta> = {
     label: 'Turn phase timeline',
     blurb: 'Orient → locate → edit → verify chips on collapsed turn trail (Labs). See docs/v1/agent-turn-trail.md.',
   },
+  voice_realtime: {
+    label: 'Realtime voice',
+    blurb: 'Speak to capture a transcript artifact — Letta holds the Realtime session and API key.',
+  },
+  image_gen: {
+    label: 'Image generation',
+    blurb: 'Letta tool path for generated images saved as artifacts — not auto-canon until ratified.',
+  },
 };
 
 export function surfaceTier(id: SurfaceId): SurfaceTier {

@@ -41,6 +41,7 @@ import {
 } from '../display-preferences';
 import { requestOnboardingReplay } from '../onboarding-storage';
 import { LabsBlockedShell } from '../labs/LabsBlockedShell';
+import { LabsFeaturesPanel } from '../labs/LabsFeaturesPanel';
 import {
   getSampleReceiptDetail,
   isSampleReceiptPreview,
@@ -4661,6 +4662,11 @@ export const Settings: React.FC = () => {
               )}
             </section>
           ) : null}
+
+          <section id="settings-voice-image-labs">
+            <SettingsSectionHeader title={settingsCopy.voiceImageTitle} lede={settingsCopy.voiceImageLede} />
+            <LabsFeaturesPanel />
+          </section>
 
           <section>
             <SettingsSectionHeader title={settingsCopy.onboardingTitle} lede={settingsCopy.onboardingLede} />
