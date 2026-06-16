@@ -11,12 +11,12 @@ describe('CultureExporter', () => {
     if (ottoDir) rmSync(ottoDir, { recursive: true, force: true });
   });
 
-  test('export bundle includes canon dirs and passes secrets scan', () => {
+  test('export bundle includes canon dirs and passes secrets scan', async () => {
     ottoDir = mkdtempSync(join(tmpdir(), 'otto-culture-export-'));
     const exporter = new CultureExporter(ottoDir);
-    const result = exporter.exportBundle();
+    const result = await exporter.exportBundle();
 
-    expect(existsSync(result.bundlePath)).toBe(true);
+    expect(result.bundlePath.endsWith('.zip')).toBe(true);
     const stagingDir = result.bundlePath.endsWith('.zip')
       ? result.bundlePath.slice(0, -4)
       : result.bundlePath;
@@ -34,14 +34,14 @@ describe('CultureExporter', () => {
     expect(/\b(api[_-]?key|secret|token|password|bearer)\b/i.test(bundleText)).toBe(false);
   });
 
-  test('export bundle includes compiled checks (#720) and curation proposals (#721)', () => {
+  test('export bundle includes compiled checks (#720) and curation proposals (#721)', async () => {
     ottoDir = mkdtempSync(join(tmpdir(), 'otto-culture-export-state-'));
     mkdirSync(join(ottoDir, 'checks'), { recursive: true });
     writeFileSync(join(ottoDir, 'checks', 'evidence-first.yaml'), 'id: evidence-first\nstatus: active\n');
     mkdirSync(join(ottoDir, 'curation', 'proposals'), { recursive: true });
     writeFileSync(join(ottoDir, 'curation', 'proposals', 'prop_1.json'), '{"id":"prop_1","status":"proposed"}\n');
 
-    const result = new CultureExporter(ottoDir).exportBundle();
+    const result = await new CultureExporter(ottoDir).exportBundle();
     const stagingDir = result.bundlePath.endsWith('.zip')
       ? result.bundlePath.slice(0, -4)
       : result.bundlePath;

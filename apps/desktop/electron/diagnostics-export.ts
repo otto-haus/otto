@@ -1,4 +1,3 @@
-import { execFileSync } from 'node:child_process';
 import { existsSync, mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import { basename, join } from 'node:path';
 import type { DiagnosticsExportManifest, DiagnosticsExportResult } from '@otto-haus/core';
@@ -10,6 +9,7 @@ import { ReceiptWriter } from './receipt-writer';
 import { runsDir } from './trace-writer';
 import { resolveWindowLaunchMode } from './window-launch';
 import type { AppBuildInfo } from './shared/types';
+import { zipDirectory } from './zip-directory';
 
 const SECRET_PATTERN = /\b(api[_-]?key|secret|token|password|bearer)\s*[:=]\s*['"]?[A-Za-z0-9_\-]{16,}/gi;
 
@@ -189,7 +189,7 @@ export class DiagnosticsExporter {
     private receiptWriter = new ReceiptWriter(),
   ) {}
 
-  exportBundle(input: DiagnosticsExportInput): DiagnosticsExportResult {
+  async exportBundle(input: DiagnosticsExportInput): Promise<DiagnosticsExportResult> {
     mkdirSync(this.ottoDir, { recursive: true });
     const stamp = new Date().toISOString().replace(/[:.]/g, '-');
     const bundleName = `otto-diagnostics-${stamp}`;
@@ -350,12 +350,8 @@ export class DiagnosticsExporter {
     this.assertNoSecretsInDir(stagingDir);
 
     const zipPath = `${stagingDir}.zip`;
-    try {
-      execFileSync('zip', ['-r', zipPath, '.'], { cwd: stagingDir, stdio: 'pipe' });
-    } catch {
-      // bundle directory when zip CLI unavailable
-    }
-    const bundlePath = existsSync(zipPath) ? zipPath : stagingDir;
+    await zipDirectory(stagingDir, zipPath);
+    const bundlePath = zipPath;
 
     const receipt = this.receiptWriter.write({
       status: 'success',
