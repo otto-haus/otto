@@ -11,6 +11,17 @@ import type { SurfaceId } from '../components/Sidebar';
  * autonomous, guaranteed, fully handled, learned automatically, set it and forget it.
  * Loading: prefer thinking… over "working" theater.
  */
+export const FORBIDDEN_PRODUCT_WORDS = [
+  'beta',
+  'experimental',
+  'early access',
+  'unlock premium',
+  'autonomous',
+  'guaranteed',
+  'fully handled',
+  'learned automatically',
+  'set it and forget it',
+] as const;
 export type WebPreviewEmpty = {
   eyebrow: string;
   title: string;
@@ -587,10 +598,10 @@ export const autonomyCopy = {
   evaluateButton: 'Evaluate action',
   evaluatingButton: 'Evaluating…',
   doorsEyebrow: 'consequential doors',
-  zoneAutonomous: 'autonomous',
+  zoneAutonomous: 'self-serve',
   zoneApproval: 'approval',
   evalApprovalRequired: 'Approval required',
-  evalMayProceed: 'May proceed autonomously',
+  evalMayProceed: 'May proceed without approval',
   evalRoutingPrefix: 'Knowledge routing ·',
   evalReceiptPrefix: 'receipt ·',
   safeAutoMergeLabel: 'safe_auto_merge',
@@ -717,7 +728,7 @@ export const channelsCopy = {
 export const labsCopy = {
   eyebrow: 'labs',
   title: 'Labs features',
-  lede: 'Experimental paths stay off until you turn Labs on. Ship-tier surfaces work without Labs.',
+  lede: 'Labs paths stay off until you turn Labs on. Ship-tier surfaces work without Labs.',
   masterLabel: 'Enable Labs',
   masterWarning: 'Labs may break or change without notice. Use on a workspace you can reset.',
   masterHint: 'When off, Labs-tier nav items show coming soon.',
