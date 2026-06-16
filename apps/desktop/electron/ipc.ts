@@ -24,6 +24,7 @@ import { enqueueRequestSchema, itemIdSchema, threadScopeSchema } from './outbox/
 import { defaultOttoDir } from './config-store';
 import { listLocalLettaModels } from './runtime-transport/letta-discovery';
 import { ReceiptStore } from './receipt-store';
+import { receiptPreviewBodyFor } from './receipt-preview-body';
 import { StandardStore } from './standard-store';
 import { PracticeStore } from './practice-store';
 import { PracticeRunner } from './practice-runner';
@@ -374,6 +375,7 @@ export function registerIpc(): IpcRegistration {
 
   ipcMain.handle('otto:receipts:list', () => receipts.list());
   ipcMain.handle('otto:receipts:get', (_e, id: string) => receipts.get(id));
+  ipcMain.handle('otto:receipts:previewBody', (_e, id: string) => receiptPreviewBodyFor(receipts.get(id)));
 
   ipcMain.handle('otto:charters:list', () => charters.listResult());
   ipcMain.handle('otto:charters:get', (_e, slug: string) => charters.detail(slug));

@@ -83,7 +83,7 @@ Persistence keys (`localStorage`, best-effort):
 | Sandboxed HTML `srcDoc` | Yes (baseline sandbox) | #659 hardening |
 | Auto-open on new artifact | No | Opt-in slice |
 | Point-to-element → Propose Correction | No | #653 |
-| Open from Receipts surface | No | #660 |
+| Open from Receipts surface | Yes | #660 |
 | Interactive canvas / embedded prompts | No | Labs tier |
 
 ## Downstream slices
