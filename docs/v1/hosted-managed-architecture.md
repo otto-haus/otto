@@ -328,7 +328,7 @@ flowchart LR
 - Smoke tests use disposable Letta conversations only.
 - Secrets: CF Secrets Store per environment; no shared prod keys in dev.
 
-**Gap:** Cloud-specific dev/staging/prod runbook — **#462** (created from this doc).
+**Runbook:** [`runbooks/cloud-deploy-dev-staging-prod.md`](runbooks/cloud-deploy-dev-staging-prod.md) (**#462**).
 
 ---
 
