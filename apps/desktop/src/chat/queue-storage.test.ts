@@ -114,6 +114,21 @@ describe('queue-storage', () => {
     expect(JSON.parse(localStorage.getItem(QUEUE_KEY) ?? '[]')).toEqual(queue);
   });
 
+  test('readQueue stamps legacy null threadId rows when active thread is known', () => {
+    installStorage();
+    localStorage.setItem(LEGACY_QUEUE_V2_KEY, JSON.stringify([
+      { id: 'legacy-v2', text: 'Keep this older queued item.', createdAt: Date.now(), state: 'queued' },
+    ]));
+
+    const queue = readQueue({ activeThreadId: 'thread_a' });
+
+    expect(queue).toEqual([
+      expect.objectContaining({ id: 'legacy-v2', text: 'Keep this older queued item.', state: 'queued', threadId: 'thread_a' }),
+    ]);
+    expect(nextQueueItemForThread(queue, 'thread_a')?.id).toBe('legacy-v2');
+    expect(nextQueueItemForThread(queue, 'thread_b')).toBeUndefined();
+  });
+
   test('readQueue merges both legacy v2 and v1 storage keys', () => {
     installStorage();
     localStorage.setItem(LEGACY_QUEUE_V2_KEY, JSON.stringify([
@@ -206,8 +221,9 @@ describe('queue-storage', () => {
 
     expect(queueMatchesThread(items[0], 'thread_b')).toBe(false);
     expect(queueMatchesThread(items[1], 'thread_b')).toBe(true);
-    expect(queueMatchesThread(items[2], 'thread_b')).toBe(true);
+    expect(queueMatchesThread(items[2], 'thread_b')).toBe(false);
     expect(nextQueueItemForThread(items, 'thread_b')?.id).toBe('b');
+    expect(nextQueueItemForThread(items, 'thread_a')?.id).toBe('a');
   });
 
   test('display metadata marks the next active-thread queued item', () => {
@@ -225,7 +241,6 @@ describe('queue-storage', () => {
     }))).toEqual([
       { id: 'failed-a', isNext: false, sendPosition: null },
       { id: 'queued-a', isNext: true, sendPosition: 1 },
-      { id: 'legacy', isNext: false, sendPosition: 2 },
     ]);
   });
 
