@@ -90,6 +90,8 @@ export const v01Cutline: Record<string, "ship" | "proposed" | "deferred"> = {
   OttoV01Knowledge: "deferred",
   OttoV01Curation: "proposed",
   OttoV01Tickets: "ship",
+  OttoV01Channels: "ship",
+  OttoV01FieldNote: "proposed",
   OttoProductDemo: "ship",
 };
 
@@ -366,4 +368,48 @@ export const ticketsFeature: Feature = {
   ],
   status: { built: true, tested: true, tried: false, approved: false },
   proves: "Tickets turn intent into bounded, receipt-backed worker slices.",
+};
+
+export const channelsFeature: Feature = {
+  id: "OttoV01Channels",
+  file: "otto-v01-channels",
+  name: "Channels",
+  kicker: "ship-tier contract",
+  tagline:
+    "Configure outbound channel contracts in Settings — honest empty state until a live bot is wired.",
+  termTitle: "channels — otto",
+  lines: [
+    L("head", "Settings → Channels"),
+    L("file", "channels/channels.yaml   contract · destinations · autonomy floor"),
+    L("out", "Ship tier: contract + config pane · no mock operational traffic"),
+    L("dim", "Labs: channels_outbound stays off until Sebastian approves live send"),
+    L("cmd", "cat channels/channels.yaml"),
+    L("out", "autonomy_floor: send requires explicit approval"),
+    L("good", "pane shows contract status — not a fake connected bot"),
+    L("out", "Honest badge: Built + tested · Tried/Approved pending"),
+  ],
+  status: { built: true, tested: true, tried: false, approved: false },
+  proves: "Channels surface is contract-first — no live bot pretends to be Shipped.",
+};
+
+export const fieldNoteFeature: Feature = {
+  id: "OttoV01FieldNote",
+  file: "otto-v01-field-note",
+  name: "Field note",
+  kicker: "practice capture",
+  tagline:
+    "Capture durable notes through the field-note Practice — receipts on disk, never auto-send.",
+  termTitle: "field-note — otto",
+  lines: [
+    L("cmd", "/field-note capture \"escrow wire review — seller changed bank\""),
+    L("dim", "practice slug field-note · autonomy floor blocks send in payload"),
+    L("file", "~/.otto/field-notes/2026-06-16-wire-review.md"),
+    L("file", "~/.otto/receipts/field-note-capture-*.json"),
+    L("out", "Practice spec: purpose · guardrails · evidence_standard"),
+    L("gate", "send · spend · deploy remain RED — capture only"),
+    L("good", "receipt proves capture · no fake CRM or portal"),
+    L("dim", "Proposed tier until Sebastian signs off capture flow"),
+  ],
+  status: { built: true, tested: "manual", tried: false, approved: false },
+  proves: "Field-note capture writes honest receipts — no outbound side effects.",
 };

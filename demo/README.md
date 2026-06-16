@@ -60,7 +60,7 @@ Receipt: receipts/otto-v01/demo-render-20260614T063531Z.md
 Command: bash scripts/render-demo-clips.sh OttoV01DesktopWalkthrough
 ```
 
-Other compositions: `OttoV01Curation`, `OttoV01Tickets`, `OttoV01Charter`, `OttoV01Practices`, or `all` (see `bash scripts/render-demo-clips.sh --help`).
+Other compositions: `OttoV01Curation`, `OttoV01Tickets`, `OttoV01Channels`, `OttoV01FieldNote`, `OttoV01Charter`, `OttoV01Practices`, or `all` (see `bash scripts/render-demo-clips.sh --help`).
 
 **Curation + tickets (2026-06-14 rev10):**
 
