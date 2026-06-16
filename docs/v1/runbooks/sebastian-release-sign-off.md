@@ -16,6 +16,7 @@ Repeatable packet for each **`0.1.x`** cut. **No push, tag, or live app promotio
 | CDP port | `9445` (isolated profile under `~/.codex/admin/otto-staging/`) |
 | Unit gate | `bun run verify:v0` |
 | Release gate | `bash scripts/release-gate.sh` |
+| Embedded Letta bundle smoke | CI job `embedded-letta-release-gate` on PR; local: `bash scripts/ci-embedded-letta-gate.sh` |
 
 ```sh
 cd /Users/seb/Code/otto

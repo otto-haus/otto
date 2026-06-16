@@ -89,8 +89,9 @@ if [[ -f "$DESKTOP_CLI" && "$EXISTING_PATH" != "$DESKTOP_CLI" ]]; then
 fi
 
 STAMP="$(date -u +%Y%m%dT%H%M%SZ)"
-RECEIPT="$ROOT/receipts/otto-v01/embedded-letta-smoke-$STAMP.md"
-mkdir -p "$(dirname "$RECEIPT")"
+RECEIPT_ROOT="${OTTO_RECEIPT_DIR:-$ROOT/receipts/otto-v01}"
+RECEIPT="$RECEIPT_ROOT/embedded-letta-smoke-$STAMP.md"
+mkdir -p "$RECEIPT_ROOT"
 cat >"$RECEIPT" <<EOF
 # Embedded Letta CLI smoke (076)
 
@@ -103,7 +104,7 @@ cat >"$RECEIPT" <<EOF
 Honest scope: path resolution only — use \`otto-staging-076-bootstrap-proof.cjs\` for init + chat turn, or \`OTTO_BOOTSTRAP_PROOF=1\` to chain both.
 EOF
 
-JSON_RECEIPT="$ROOT/receipts/otto-v01/embedded-letta-smoke-$STAMP.json"
+JSON_RECEIPT="$RECEIPT_ROOT/embedded-letta-smoke-$STAMP.json"
 cat >"$JSON_RECEIPT" <<EOF
 {
   "at": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",

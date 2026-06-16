@@ -81,5 +81,7 @@ bun test apps/desktop/electron/runtime-transport/runtime-common.test.ts apps/des
 ```
 
 Release gate (#678): the smoke must pass against a packaged staging/Release artifact (never against
-`/Applications/otto.app` in agent loops). A clean-machine init + one disposable chat turn proves the
-full bootstrap (#675).
+`/Applications/otto.app` in agent loops). CI enforces the bundle path + `cliResolved` slice on every
+PR via `.github/workflows/ci.yml` job `embedded-letta-release-gate` (`bash scripts/ci-embedded-letta-gate.sh`).
+A clean-machine init + one disposable chat turn (`task smoke:clean-machine`) proves the full
+bootstrap (#675) before tag cut.
