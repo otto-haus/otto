@@ -59,3 +59,19 @@ export function shouldUseConnectSettingsOverlay(
 ): boolean {
   return step === 'connect' && activeSurface === 'settings';
 }
+
+/** Run step on Settings keeps guidance visible without blocking Save controls (#580). */
+export function shouldUseRunSettingsOverlay(
+  step: OnboardingStep,
+  activeSurface: string,
+): boolean {
+  return step === 'run' && activeSurface === 'settings';
+}
+
+export function shouldUseOnboardingSettingsOverlay(
+  step: OnboardingStep,
+  activeSurface: string,
+): boolean {
+  return shouldUseConnectSettingsOverlay(step, activeSurface)
+    || shouldUseRunSettingsOverlay(step, activeSurface);
+}

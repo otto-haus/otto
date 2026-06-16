@@ -23,6 +23,8 @@ import {
   resolveOnboardingStep,
   shouldShowOnboardingModePicker,
   shouldUseConnectSettingsOverlay,
+  shouldUseOnboardingSettingsOverlay,
+  shouldUseRunSettingsOverlay,
   type OnboardingIntent,
 } from './onboarding-step';
 import { OnboardingStepLayout, type OnboardingEvidence } from './OnboardingStepLayout';
@@ -266,6 +268,7 @@ export const Onboarding: React.FC<{ onNavigate: (id: SurfaceId) => void; activeS
   const statusCode = rt.status?.code;
 
   const connectUsesSettingsOverlay = shouldUseConnectSettingsOverlay(step, activeSurface);
+  const runUsesSettingsOverlay = shouldUseRunSettingsOverlay(step, activeSurface);
 
   const stepChrome = (() => {
     if (step === 'connect') {
@@ -309,7 +312,7 @@ export const Onboarding: React.FC<{ onNavigate: (id: SurfaceId) => void; activeS
       );
     }
 
-    if (step === 'run' && activeSurface === 'chat') {
+    if (step === 'run') {
       return (
         <OnboardingStepLayout
           step="run"
@@ -318,6 +321,7 @@ export const Onboarding: React.FC<{ onNavigate: (id: SurfaceId) => void; activeS
           lede={onboardingCopy.runLede}
           canBack
           onBack={goBack}
+          fullScreen={runUsesSettingsOverlay}
           footer={(
             <>
               {onboardingCopy.runChips.map((chip) => (
@@ -366,7 +370,7 @@ export const Onboarding: React.FC<{ onNavigate: (id: SurfaceId) => void; activeS
   })();
 
   if (stepChrome) {
-    if (shouldUseConnectSettingsOverlay(step, activeSurface)) {
+    if (shouldUseOnboardingSettingsOverlay(step, activeSurface)) {
       return (
         <div className="onboardOverlay onboardOverlay--step">
           <div className="onboardFlowPanel">{stepChrome}</div>
@@ -375,9 +379,6 @@ export const Onboarding: React.FC<{ onNavigate: (id: SurfaceId) => void; activeS
     }
     return <div className="onboardStepAnchor">{stepChrome}</div>;
   }
-
-  // Run-step chrome stays on Chat; suppress dock on Settings so Save stays reachable.
-  if (step === 'run' && activeSurface === 'settings') return null;
 
   return null;
 };
