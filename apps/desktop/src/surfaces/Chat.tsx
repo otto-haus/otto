@@ -94,12 +94,6 @@ export const Chat: React.FC<{
 /* ---------- LiveChat (Electron, wired to the Letta runtime) ---------- */
 type AttachmentDraft = SavedAttachment & { previewUrl: string };
 
-const FALLBACK_MODEL_OPTIONS: LettaModelOption[] = [
-  { label: 'GPT-5.5 (ChatGPT)', handle: 'chatgpt-plus-pro/gpt-5.5' },
-  { label: 'GPT-5.5 (OpenAI)', handle: 'openai/gpt-5.5' },
-  { label: 'Auto', handle: 'letta/auto' },
-];
-
 const EFFORT_OPTIONS: Array<{ label: string; value: EffortLevel }> = [
   { label: 'Off', value: 'off' },
   { label: 'Low', value: 'low' },
@@ -108,7 +102,7 @@ const EFFORT_OPTIONS: Array<{ label: string; value: EffortLevel }> = [
   { label: 'Max', value: 'max' },
 ];
 
-const labelForModel = (value?: string | null, options: LettaModelOption[] = FALLBACK_MODEL_OPTIONS) =>
+const labelForModel = (value?: string | null, options: LettaModelOption[] = []) =>
   options.find((m) => m.handle === value)?.label ?? value ?? 'Agent default';
 const labelForEffort = (value?: EffortLevel) => EFFORT_OPTIONS.find((e) => e.value === value)?.label ?? 'High';
 
@@ -199,9 +193,13 @@ const ModelEffortPickers: React.FC<{
   const [showLegacy, setShowLegacy] = useState(false);
   const [customOpen, setCustomOpen] = useState(false);
   const [customHandle, setCustomHandle] = useState('');
+  const modelsUnavailable = modelOptions.length === 0;
   const curatedModels = curateModelOptions(modelOptions);
   const visibleModels = visiblePickerModels(curatedModels, showLegacy, selectedModel);
   const hiddenLegacyCount = curatedModels.filter((model) => model.tier !== 'primary').length;
+  const modelButtonLabel = modelsUnavailable
+    ? chatCopy.noModelsAvailable
+    : labelForModel(selectedModel, modelOptions);
 
   const applyCustomHandle = () => {
     const handle = customHandle.trim();
@@ -222,14 +220,18 @@ const ModelEffortPickers: React.FC<{
         disabled={busy}
         aria-haspopup="menu"
         aria-expanded={modelOpen}
-        aria-label={resolvedModelLabel
-          ? `Model: ${labelForModel(selectedModel, modelOptions)} (${chatCopy.autoModelResolvedPrefix}: ${resolvedModelLabel})`
-          : `Model: ${labelForModel(selectedModel, modelOptions)}`}
-        title={resolvedModelLabel
-          ? `${chatCopy.autoModelResolvedPrefix}: ${resolvedModelLabel}`
-          : undefined}
+        aria-label={modelsUnavailable
+          ? chatCopy.noModelsAvailable
+          : resolvedModelLabel
+            ? `Model: ${labelForModel(selectedModel, modelOptions)} (${chatCopy.autoModelResolvedPrefix}: ${resolvedModelLabel})`
+            : `Model: ${labelForModel(selectedModel, modelOptions)}`}
+        title={modelsUnavailable
+          ? chatCopy.noModelsAvailable
+          : resolvedModelLabel
+            ? `${chatCopy.autoModelResolvedPrefix}: ${resolvedModelLabel}`
+            : undefined}
       >
-        <span>{labelForModel(selectedModel, modelOptions)}</span>
+        <span>{modelButtonLabel}</span>
         {resolvedModelLabel && (
           <span className="picker__resolved mono faint">{chatCopy.autoModelResolvedPrefix}: {resolvedModelLabel}</span>
         )}
@@ -242,6 +244,11 @@ const ModelEffortPickers: React.FC<{
           aria-label={chatCopy.selectModelTitle}
         >
           <div className="picker__title">{chatCopy.selectModelTitle}</div>
+          {modelsUnavailable && (
+            <div className="picker__custom">
+              <p className="picker__customLabel">{chatCopy.noModelsAvailable}</p>
+            </div>
+          )}
           {visibleModels.map((m) => {
             const helpText = helpTextForModelOption(m);
             const resolvedForOption = selectedModel === m.handle ? resolvedModelLabel : null;
@@ -465,7 +472,7 @@ const LiveChat: React.FC<{
   const [draggingImage, setDraggingImage] = useState(false);
   const outbox = useOutbox(rt.activeThreadId);
   const [recalledQueueId, setRecalledQueueId] = useState<string | null>(null);
-  const [modelOptions, setModelOptions] = useState<LettaModelOption[]>(FALLBACK_MODEL_OPTIONS);
+  const [modelOptions, setModelOptions] = useState<LettaModelOption[]>([]);
   const [modelOpen, setModelOpen] = useState(false);
   const [effortOpen, setEffortOpen] = useState(false);
   const [permissionQueue, setPermissionQueue] = useState<PermissionRequestView[]>([]);
@@ -515,12 +522,12 @@ const LiveChat: React.FC<{
     let cancelled = false;
     void api.models.list()
       .then((models) => {
-        if (cancelled || !models.length) return;
+        if (cancelled) return;
         setModelOptions(models);
         // Do not auto-rewrite the user's persisted model when discovery is transient or incomplete.
       })
       .catch(() => {
-        if (!cancelled) setModelOptions(FALLBACK_MODEL_OPTIONS);
+        if (!cancelled) setModelOptions([]);
       });
     return () => {
       cancelled = true;

@@ -87,4 +87,12 @@ describe('chat composer chrome (#48)', () => {
     expect(copySource).toContain('composerHintTab');
     expect(copySource).toContain('composerShortcutLabel');
   });
+
+  it('shows honest empty state when Letta returns no models (#656)', () => {
+    expect(chatSource).not.toContain('FALLBACK_MODEL_OPTIONS');
+    expect(chatSource).toContain('useState<LettaModelOption[]>([])');
+    expect(chatSource).toContain('chatCopy.noModelsAvailable');
+    expect(copySource).toContain('noModelsAvailable');
+    expect(copySource).not.toContain('GPT-5.5 (ChatGPT)');
+  });
 });
