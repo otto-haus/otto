@@ -64,7 +64,7 @@ const surface = (key, label, storeName, detail, source = '~/.otto') => ({
 });
 
 // --- config-derived (absent in a fresh clone → honestly missing/not-wired) ---
-const runtimeConnected = cfg.runtime?.connected === true;
+const runtimeConfigured = cfg.runtime?.connected === true;
 const agentId = cfg.agentId ?? cfg.agent?.id; // ConfigStore writes flat agentId; accept nested too
 const mcpCount = Array.isArray(cfg.mcpServers) ? cfg.mcpServers.length : 0;
 const fnCount = Array.isArray(cfg.functions) ? cfg.functions.length : 0;
@@ -76,20 +76,26 @@ const cfgSrc = hasConfig ? (customConfigPath ? 'local readiness config' : '~/.ot
 
 const items = [
   { key: 'runtime', label: 'Letta runtime', required: true,
-    status: runtimeConnected ? 'connected' : 'not-wired',
-    detail: runtimeConnected ? 'connected' : 'SDK session not connected in this preview',
+    status: runtimeConfigured ? 'configured' : 'not-wired',
+    detail: runtimeConfigured
+      ? 'Config marks runtime connected; live session not verified in this snapshot'
+      : 'SDK session not connected in this preview',
     source: cfgSrc, action: 'Connect Letta in Settings → General' },
   { key: 'agent', label: 'Agent identity', required: true,
     status: agentId ? 'configured' : 'missing',
     detail: agentId ? `agent ${agentId}` : 'No agent selected',
     source: agentId ? cfgSrc : null, action: 'Set the agent in Settings → Connect Letta' },
   { key: 'model', label: 'Model provider', required: false,
-    status: runtimeConnected ? 'connected' : 'not-wired',
-    detail: runtimeConnected ? 'owned by local Letta runtime' : 'Provider auth lives in Letta, not otto',
+    status: runtimeConfigured ? 'configured' : 'not-wired',
+    detail: runtimeConfigured
+      ? 'Config snapshot only — provider auth lives in Letta'
+      : 'Provider auth lives in Letta, not otto',
     source: cfgSrc, action: 'Configure providers in Letta Desktop / Letta local runtime' },
   { key: 'memory', label: 'Memory / MemFS', required: true,
-    status: runtimeConnected ? 'connected' : 'not-wired',
-    detail: 'Depends on a live runtime connection', source: '~/.otto',
+    status: runtimeConfigured ? 'configured' : 'not-wired',
+    detail: runtimeConfigured
+      ? 'Config snapshot only — depends on a live runtime connection'
+      : 'Depends on a live runtime connection', source: '~/.otto',
     action: 'Available once the runtime connects' },
   { key: 'workspace', label: 'Workspace root', required: false,
     status: isOttoRepo ? 'configured' : (existsSync(repoRoot) ? 'file' : 'missing'),
@@ -141,7 +147,11 @@ const items = [
   surface('channels', 'Channels', 'channel', 'Channel contract file store'),
 ];
 
-const requiredMissing = items.filter((i) => i.required && (i.status === 'missing' || i.status === 'not-wired'));
+const requiredMissing = items.filter((item) => {
+  if (!item.required) return false;
+  if (item.key === 'runtime' || item.key === 'memory') return item.status !== 'connected';
+  return item.status === 'missing' || item.status === 'not-wired';
+});
 const out = { ready: requiredMissing.length === 0, configSource: cfgSrc, items };
 writeFileSync(outputPath, JSON.stringify(out, null, 2) + '\n');
 console.log(`Wrote readiness (${items.length} items, ${requiredMissing.length} required missing, ready=${out.ready}) to ${outputPath}`);

@@ -72,6 +72,32 @@ describe('gen-readiness', () => {
     }
   });
 
+  test('local config runtime.connected does not mark preview ready (#645)', () => {
+    const tmp = mkdtempSync(join(tmpdir(), 'otto-readiness-'));
+    try {
+      const configPath = join(tmp, 'config.json');
+      const outputPath = join(tmp, 'readiness.json');
+      writeFileSync(configPath, JSON.stringify({ agentId: 'agent-local-test', runtime: { connected: true } }));
+
+      const readiness = runGenerator(
+        {
+          OTTO_READINESS_CONFIG_PATH: configPath,
+          OTTO_READINESS_INCLUDE_LOCAL_CONFIG: '1',
+        },
+        outputPath,
+      );
+      const runtime = readiness.items.find((item) => item.key === 'runtime');
+      const memory = readiness.items.find((item) => item.key === 'memory');
+
+      expect(runtime?.status).toBe('configured');
+      expect(runtime?.detail).toContain('live session not verified');
+      expect(memory?.status).toBe('configured');
+      expect(readiness.ready).toBe(false);
+    } finally {
+      rmSync(tmp, { recursive: true, force: true });
+    }
+  });
+
   test('OTTO_READINESS_IGNORE_LOCAL_CONFIG blocks opt-in diagnostic render', () => {
     const tmp = mkdtempSync(join(tmpdir(), 'otto-readiness-'));
     try {
