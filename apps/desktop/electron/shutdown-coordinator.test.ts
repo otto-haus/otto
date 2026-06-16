@@ -56,4 +56,30 @@ describe('ShutdownCoordinator', () => {
     await coordinator.gracefulShutdown();
     expect(closeCount).toBe(1);
   });
+
+  test('teardownForWindowClose aborts and closes runtime without blocking later gracefulShutdown', async () => {
+    const calls: string[] = [];
+    const mockWin = {
+      isDestroyed: () => false,
+      webContents: {
+        isDestroyed: () => false,
+        executeJavaScript: async () => ({ cleared: ['otto.chat.queue.v3'] }),
+      },
+    } as never;
+    const coordinator = new ShutdownCoordinator({
+      getWin: () => mockWin,
+      runner: {
+        abort: async () => { calls.push('abort'); },
+        close: async () => { calls.push('close'); },
+      } as never,
+      cognee: {
+        stop: () => { calls.push('cognee-stop'); return { status: 'stopped' } as never; },
+      } as never,
+      reinit: async () => ({ ready: false }),
+    });
+
+    await coordinator.teardownForWindowClose();
+    await coordinator.gracefulShutdown();
+    expect(calls).toEqual(['abort', 'close', 'cognee-stop', 'abort', 'close', 'cognee-stop']);
+  });
 });

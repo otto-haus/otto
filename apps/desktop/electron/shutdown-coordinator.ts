@@ -44,11 +44,14 @@ export class ShutdownCoordinator {
     ]);
   }
 
+  /** macOS close-window: tear down runtime without marking app shutdown (dock reopen re-inits). */
+  async teardownForWindowClose(): Promise<void> {
+    await this.teardownRuntime();
+    await this.clearRendererQueue().catch(() => []);
+  }
+
   async safeReset(): Promise<SafeResetResult> {
-    await this.deps.runner.abort().catch(() => {});
-    await this.deps.runner.close().catch(() => {});
-    permissionSessionStore.clear();
-    this.deps.cognee.stop();
+    await this.teardownRuntime();
 
     const clearedQueueKeys = await this.clearRendererQueue();
     const status = await this.deps.reinit();
@@ -64,11 +67,14 @@ export class ShutdownCoordinator {
 
   private async runShutdownSteps(reason: string): Promise<void> {
     void reason;
+    await this.teardownForWindowClose();
+  }
+
+  private async teardownRuntime(): Promise<void> {
     await this.deps.runner.abort().catch(() => {});
     await this.deps.runner.close().catch(() => {});
     permissionSessionStore.clear();
     this.deps.cognee.stop();
-    await this.clearRendererQueue().catch(() => []);
   }
 
   private async clearRendererQueue(): Promise<string[]> {
