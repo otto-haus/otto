@@ -4584,8 +4584,6 @@ export const Settings: React.FC = () => {
               <p className="faint" style={{ fontSize: 12, marginTop: 8 }}>{settingsCopy.memoryLabsGate}</p>
             )}
           </section>
-          <p className="faint mono settingsLocalFootnote">{settingsCopy.localOnlyFootnote}</p>
-          <AppSourceDetails info={buildInfo} />
         </div>
       ) : section === 'culture' ? (
         <div className="settingsPage__content">
@@ -4596,8 +4594,6 @@ export const Settings: React.FC = () => {
               <InlineEmpty title={cultureSettingsCopy.title} body={cultureSettingsCopy.lede} />
             )}
           </section>
-          <p className="faint mono settingsLocalFootnote">{settingsCopy.localOnlyFootnote}</p>
-          <AppSourceDetails info={buildInfo} />
         </div>
       ) : section === 'diagnostics' ? (
         <div className="settingsPage__content">
@@ -4623,9 +4619,6 @@ export const Settings: React.FC = () => {
               <DiagnosticsSettingsPanel api={api} pushToast={pushToast} />
             </section>
           ) : null}
-
-          <p className="faint mono settingsLocalFootnote">{settingsCopy.localOnlyFootnote}</p>
-          <AppSourceDetails info={buildInfo} />
         </div>
       ) : (
         <div className="settingsPage__content">
