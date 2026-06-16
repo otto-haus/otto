@@ -167,6 +167,40 @@ SDK transport uses the same permission and receipt patterns via `@letta-ai/letta
 - Discovers agent/base URL via `discoverLocalLettaContext()` (`letta-discovery.ts`): Otto config, env, `~/.letta/settings.json`, macOS `lsof` for Letta listen port.
 - Status codes: `ready`, `no-api-key`, `no-agent`, `stale`, `unreachable`, `sdk-missing`, `error`.
 
+## Runtime context prefix ([#568](https://github.com/otto-haus/otto/issues/568))
+
+Otto prepends a bounded `<otto_runtime_context>` block to every user send so the agent can answer model/effort/transport questions without otto calling provider APIs directly. Implementation: `runtimeContextForPrompt()` / `promptWithRuntimeContext()` in `runtime-common.ts`; used by both SDK and WS transports before `send` / `create_message`.
+
+### Letta upstream API audit (`@letta-ai/letta-code-sdk` 0.1.14)
+
+| Surface | Scope | Suitable for otto runtime mirror? |
+|---------|-------|-----------------------------------|
+| `Session.send(message)` | Per-turn user message | **Yes (current)** — prefix lives in message text / first text part |
+| `CreateAgentOptions.systemPrompt` | Agent creation only | No — static agent prompt, not per-send model/effort |
+| `CreateSessionOptions.systemPrompt` | Preset enum only at session start | No — cannot inject dynamic model handle / effort per turn |
+| `systemInfoReminder` | First-turn device/git/cwd | No — orthogonal to otto model mirror |
+| WS `input` + `create_message` | Same as send | **Yes (current)** — prefix in payload text |
+
+**Decision (2026-06-16):** Letta Code SDK exposes no dedicated session/system context channel for dynamic per-turn metadata. Keep the `<otto_runtime_context>` prefix until upstream adds one (e.g. structured context frame on `send` / `create_message`). Do not duplicate into agent `systemPrompt`.
+
+### Invariants (unchanged)
+
+- Provider auth stays in Letta; prefix states `provider_path: local Letta runtime owns provider auth/subscription`.
+- Effort floor / model fallback logic remains in `modelInitAttempts()` ([#157](https://github.com/otto-haus/otto/issues/157)); prefix reflects **selected** handle/effort only.
+- Smoke: never `conversation=default`; opt-in live turn via `LETTA_AGENT_ID` + `task smoke:cli`.
+
+### Verification
+
+```sh
+# Static — effort floor + prefix shape (no live agent required)
+bun test apps/desktop/electron/runtime-transport/runtime-common.test.ts
+bun test apps/desktop/electron/runtime-transport/runtime-context-audit.test.ts
+bun test apps/desktop/electron/provider-mirror.test.ts
+
+# Opt-in disposable turn (requires OTTO_AGENT_ID or LETTA_AGENT_ID)
+# task smoke:cli
+```
+
 ## Promotion gate (039)
 
 WS may become default over SDK only after reviewer +1 on promotion scorecard evidence:
