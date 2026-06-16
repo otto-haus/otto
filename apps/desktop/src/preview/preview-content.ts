@@ -5,6 +5,8 @@ export type PreviewContent = {
   kind: PreviewKind;
   body: string;
   sourceId?: string;
+  /** Code block index within source message (#654). */
+  blockIndex?: number;
   /** e.g. generated · not ratified (#511) */
   badge?: string;
 };

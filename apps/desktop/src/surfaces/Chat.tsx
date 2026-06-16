@@ -499,7 +499,7 @@ const LiveChat: React.FC<{
   const [proposeBusy, setProposeBusy] = useState(false);
   const [cmdMessages, setCmdMessages] = useState<ChatMsg[]>([]);
   const [expandedMessageTexts, setExpandedMessageTexts] = useState<Record<string, string>>({});
-  const preview = usePreviewPane();
+  const preview = usePreviewPane(rt.activeThreadId);
   const previewShellRef = useRef<HTMLDivElement | null>(null);
   const [previewAutoOpenMode, setPreviewAutoOpenMode] = useState<PreviewAutoOpenMode>(readPreviewAutoOpenMode);
   const autoOpenedMessageIdRef = useRef<string | null>(null);
@@ -955,13 +955,13 @@ const LiveChat: React.FC<{
 
   // Draining the durable queue is owned by the MAIN-process pump (#754).
 
-  const openMessagePreview = (message: ChatMsg) => {
+  const openMessagePreview = (message: ChatMsg, turnNumber?: number) => {
     if (!message.text?.trim()) return;
     const next = previewFromText(message.text, {
       title: message.who === 'user' ? previewCopy.userMessageTitle : previewCopy.assistantMessageTitle,
       sourceId: message.id,
     });
-    if (next) preview.show(next);
+    if (next) preview.show(next, { turnNumber });
   };
 
   const onPreviewResizeStart = (event: React.PointerEvent<HTMLDivElement>) => {
@@ -1000,8 +1000,12 @@ const LiveChat: React.FC<{
     if (!pre || !streamRef.current?.contains(pre)) return;
     const code = pre.querySelector('code')?.textContent ?? '';
     const lang = pre.getAttribute('data-preview-lang') ?? undefined;
-    const next = previewFromCodeBlock(code, lang, { title: previewCopy.codeBlockTitle });
-    if (next) preview.show(next);
+    const messageEl = pre.closest('[data-message-id]');
+    const sourceId = messageEl?.getAttribute('data-message-id') ?? undefined;
+    const blocks = messageEl?.querySelectorAll('pre.md__pre');
+    const blockIndex = blocks ? Array.from(blocks).indexOf(pre) : undefined;
+    const next = previewFromCodeBlock(code, lang, { title: previewCopy.codeBlockTitle, sourceId });
+    if (next) preview.show({ ...next, blockIndex: blockIndex != null && blockIndex >= 0 ? blockIndex : undefined });
   };
 
   return (
@@ -1203,6 +1207,7 @@ const LiveChat: React.FC<{
             return (
               <div
                 key={m.id}
+                data-message-id={m.id}
                 id={showWho ? `chat-turn-${m.id}` : undefined}
                 className={`msgRow${isUser ? ' msgRow--user' : ''}${isError ? ' msgRow--error' : ''}${showWho ? '' : ' msgRow--cont'}`}
               >
@@ -1290,7 +1295,7 @@ const LiveChat: React.FC<{
                     <MessageActions
                       disabled={proposeBusy}
                       onCopy={() => { void copyMessageText(displayText); }}
-                      onPreview={isUser ? () => openMessagePreview(m) : undefined}
+                      onPreview={isUser ? () => openMessagePreview(m, i + 1) : undefined}
                       onCorrectThis={!isUser && !isError ? () => setProposeContext({
                         messageId: m.id,
                         messageText: displayText,
@@ -1494,6 +1499,10 @@ const LiveChat: React.FC<{
       open={preview.open}
       width={preview.width}
       content={preview.content}
+      canGoBack={preview.canGoBack}
+      canGoForward={preview.canGoForward}
+      onBack={preview.back}
+      onForward={preview.forward}
       onClose={preview.close}
       onResizeStart={onPreviewResizeStart}
       runtimeConnected={ready}

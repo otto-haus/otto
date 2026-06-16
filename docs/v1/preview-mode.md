@@ -78,9 +78,10 @@ v1 rules:
 | --- | --- |
 | ⌘⇧P | Toggle preview rail open/closed (`previewCopy.toggleHint`) |
 | ⌘⇧F | Toggle fullscreen artifact review when preview pane is focused (#655) |
+| ⌘[ / ⌘] | Previous / next artifact in session history (when preview focused) |
 | Esc | Exit fullscreen (returns to split pane; selection preserved) |
 | Resize handle | Drag left edge; width clamped 280px–62% of Chat+Preview container |
-| Close button | Sets `open` false; does not clear last `content` |
+| Close button | Sets `open` false and clears artifact history for the active thread |
 | Fullscreen button | Expands selected artifact to modal overlay; same sandbox policy |
 
 Persistence keys (`localStorage`, best-effort):
@@ -90,6 +91,18 @@ Persistence keys (`localStorage`, best-effort):
 | `otto.preview.open` | `'1'` or `'0'` |
 | `otto.preview.width` | Integer pixels |
 | `otto.preview.autoOpen.v1` | `'on-new-artifact'` · `'always-on-pane'` · absent = off |
+
+Artifact history (session, in-memory per thread):
+
+| Rule | Behavior |
+| --- | --- |
+| Stack depth | Max 20 entries; oldest dropped |
+| Dedupe | Re-opening the same message/block does not fork history |
+| Thread switch | Visible stack resets; prior thread history restored if you return |
+| Close pane | Clears history for the active thread |
+| Title | First heading in body, else kind-specific fallback |
+
+Implementation: `apps/desktop/src/preview/preview-history.ts` · tests in `preview-history.test.ts`.
 
 ## Ship vs Labs
 
@@ -108,6 +121,7 @@ Persistence keys (`localStorage`, best-effort):
 
 - ~~#659 — sandbox hardening for model HTML~~ (shipped)
 - ~~#660 — Open in preview from Receipts~~ (shipped)
+- ~~#654 — artifact history back/forward in pane~~ (shipped)
 - #653 — point-to-element → Propose Correction (Design Mode analog) — shipped annotate slice
 
 ## Non-goals (v1)

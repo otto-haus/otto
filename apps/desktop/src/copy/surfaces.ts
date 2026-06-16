@@ -337,6 +337,10 @@ export const previewCopy = {
   autoOpenOnNew: 'On new artifact',
   autoOpenAlwaysPane: 'Always update pane',
   autoOpenSkippedDisconnected: 'Preview not opened — runtime not connected',
+  historyBack: 'Previous artifact',
+  historyForward: 'Next artifact',
+  historyBackHint: 'Previous artifact in preview history (⌘[)',
+  historyForwardHint: 'Next artifact in preview history (⌘])',
 } as const;
 
 export const onboardingCopy = {

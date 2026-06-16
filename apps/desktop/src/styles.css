@@ -607,6 +607,11 @@ h1, h2, h3, h4, p { margin: 0; }
   gap: 8px;
   flex: none;
 }
+.previewPane__nav {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
 .previewPane__close,
 .previewPane__iconBtn {
   display: inline-flex;
@@ -623,6 +628,14 @@ h1, h2, h3, h4, p { margin: 0; }
 .previewPane__close:hover {
   background: var(--bg-2);
   color: var(--ink);
+}
+.previewPane__iconBtn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+.previewPane__iconBtn:disabled:hover {
+  background: var(--bg);
+  color: var(--mut);
 }
 .previewFullscreen {
   position: fixed;
