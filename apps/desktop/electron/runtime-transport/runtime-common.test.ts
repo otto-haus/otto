@@ -210,6 +210,10 @@ describe('runtime-common status mapping', () => {
     expect(noKey).not.toContain('401');
     expect(noKey).not.toContain('letta_api_key');
 
+    const embeddedNoKey = friendly('no-api-key', 'Missing LETTA_API_KEY', { connectionMode: 'embedded' });
+    expect(embeddedNoKey).toMatch(/~\/\.otto\/letta|embedded Letta/i);
+    expect(embeddedNoKey).not.toBe('Letta auth failed. For local v1, configure provider auth inside Letta; otto does not need its own API key.');
+
     const stale = friendly('stale', 'conversation not-found id=conv_abc123');
     expect(stale).not.toContain('conv_abc123');
     expect(stale).not.toContain('(');

@@ -289,6 +289,13 @@ export function friendly(code: StatusCode, reason: string, opts?: FriendlyOption
     // diagnostics via normalizeRuntimeError().details, not leaked into the Chat
     // header subtitle / setup ink block (#584).
     case 'no-api-key':
+      if (opts?.connectionMode === 'embedded') {
+        const lower = reason.toLowerCase();
+        if (lower.includes('missing letta_api_key') || lower.includes('letta_api_key')) {
+          return 'Embedded Letta still needs provider auth in ~/.otto/letta — not your dev ~/.letta install. Connect in Settings, then open the Letta web UI to sign in.';
+        }
+        return 'Provider auth missing in embedded Letta (~/.otto/letta). Connect in Settings, then Settings → Model providers → Open Letta web UI to add ChatGPT or an API key.';
+      }
       return 'Letta auth failed. For local v1, configure provider auth inside Letta; otto does not need its own API key.';
     case 'unreachable':
       if (reason.includes('Local Letta backend is not running')) return reason;
@@ -343,6 +350,9 @@ export type NextActionOptions = { connectionMode?: ConnectionMode };
 export function nextActionFor(code: StatusCode, opts?: NextActionOptions): string {
   switch (code) {
     case 'no-api-key':
+      if (opts?.connectionMode === 'embedded') {
+        return 'Settings → General → Connect, then Settings → Model providers → Open Letta web UI to add provider auth in Letta.';
+      }
       return 'Configure provider auth inside Letta for local v1.';
     case 'unreachable':
       if (opts?.connectionMode === 'embedded') {
