@@ -117,6 +117,8 @@ import {
   type MemoryListResult,
   type MemoryBlockRecord,
   type ProviderMirrorSnapshot,
+  type ProviderMirrorRow,
+  type ByokConnectProviderId,
   type DreamSettings,
   type DreamTrigger,
   type ConversationSortMode,
@@ -4267,6 +4269,142 @@ const AgentConnections: React.FC<{
   );
 };
 
+const BYOK_CONNECT_UI: Array<{
+  id: ByokConnectProviderId;
+  hint: string;
+  showApiKey: boolean;
+  showBaseUrl: boolean;
+  defaultBaseUrl?: string;
+}> = [
+  { id: 'openrouter', hint: settingsCopy.byokConnectOpenRouterHint, showApiKey: true, showBaseUrl: false },
+  { id: 'ollama', hint: settingsCopy.byokConnectOllamaHint, showApiKey: false, showBaseUrl: true, defaultBaseUrl: 'http://127.0.0.1:11434/v1' },
+  { id: 'lmstudio', hint: settingsCopy.byokConnectLmStudioHint, showApiKey: false, showBaseUrl: true, defaultBaseUrl: 'http://127.0.0.1:1234/v1' },
+  { id: 'openai_compat', hint: settingsCopy.byokConnectCustomHint, showApiKey: true, showBaseUrl: true },
+];
+
+const providerMirrorStatusLabel = (status: ProviderMirrorRow['status']) => {
+  switch (status) {
+    case 'connected': return settingsCopy.byokConnectStatusConnected;
+    case 'error': return settingsCopy.byokConnectStatusError;
+    default: return settingsCopy.byokConnectStatusMissing;
+  }
+};
+
+const ByokProviderConnectPanel: React.FC<{
+  rows: ProviderMirrorRow[];
+  disabled: boolean;
+  onRefresh: () => void;
+}> = ({ rows, disabled, onRefresh }) => {
+  const api = ottoApi();
+  const [busyId, setBusyId] = useState<ByokConnectProviderId | null>(null);
+  const [drafts, setDrafts] = useState<Record<ByokConnectProviderId, { apiKey: string; baseUrl: string }>>({
+    openrouter: { apiKey: '', baseUrl: '' },
+    ollama: { apiKey: '', baseUrl: 'http://127.0.0.1:11434/v1' },
+    lmstudio: { apiKey: '', baseUrl: 'http://127.0.0.1:1234/v1' },
+    openai_compat: { apiKey: '', baseUrl: '' },
+  });
+  const [errors, setErrors] = useState<Partial<Record<ByokConnectProviderId, string>>>({});
+
+  const submit = async (id: ByokConnectProviderId) => {
+    if (!api?.provider?.connect || disabled) return;
+    setBusyId(id);
+    setErrors((prev) => ({ ...prev, [id]: undefined }));
+    try {
+      const draft = drafts[id];
+      const result = await api.provider.connect({
+        providerId: id,
+        ...(draft.apiKey.trim() ? { apiKey: draft.apiKey.trim() } : {}),
+        ...(draft.baseUrl.trim() ? { baseUrl: draft.baseUrl.trim() } : {}),
+      });
+      if (!result.ok) {
+        setErrors((prev) => ({ ...prev, [id]: result.error ?? settingsCopy.byokConnectStatusError }));
+        return;
+      }
+      setDrafts((prev) => ({
+        ...prev,
+        [id]: { apiKey: '', baseUrl: prev[id]?.baseUrl ?? '' },
+      }));
+      onRefresh();
+    } catch (error) {
+      setErrors((prev) => ({ ...prev, [id]: String(error) }));
+    } finally {
+      setBusyId(null);
+    }
+  };
+
+  return (
+    <section className="providersByokConnect">
+      <SettingsSectionHeader title={settingsCopy.byokConnectTitle} lede={settingsCopy.byokConnectLede} />
+      <ul className="providersByokConnect__list">
+        {BYOK_CONNECT_UI.map((spec) => {
+          const row = rows.find((entry) => entry.id === spec.id);
+          const draft = drafts[spec.id];
+          const busy = busyId === spec.id;
+          return (
+            <li key={spec.id} className="providersByokConnect__row">
+              <div className="providersByokConnect__main">
+                <div className="row" style={{ gap: 8, alignItems: 'center' }}>
+                  <strong>{row?.displayName ?? spec.id}</strong>
+                  <span className={`pill ${row?.status === 'connected' ? 'pill--ok' : row?.status === 'error' ? 'pill--warn' : ''}`}>
+                    {providerMirrorStatusLabel(row?.status ?? 'missing')}
+                  </span>
+                </div>
+                <p className="settingsFieldHint">{spec.hint}</p>
+                {spec.showBaseUrl && (
+                  <label className="settingsField">
+                    <span className="settingsFieldLabel">{settingsCopy.byokConnectBaseUrlLabel}</span>
+                    <input
+                      className="input mono"
+                      type="url"
+                      autoComplete="off"
+                      spellCheck={false}
+                      value={draft.baseUrl}
+                      placeholder={spec.defaultBaseUrl ?? 'https://…'}
+                      disabled={disabled || busy}
+                      onChange={(event) => setDrafts((prev) => ({
+                        ...prev,
+                        [spec.id]: { ...prev[spec.id], baseUrl: event.target.value },
+                      }))}
+                    />
+                  </label>
+                )}
+                {spec.showApiKey && (
+                  <label className="settingsField">
+                    <span className="settingsFieldLabel">{settingsCopy.byokConnectApiKeyLabel}</span>
+                    <input
+                      className="input mono"
+                      type="password"
+                      autoComplete="off"
+                      spellCheck={false}
+                      value={draft.apiKey}
+                      disabled={disabled || busy}
+                      onChange={(event) => setDrafts((prev) => ({
+                        ...prev,
+                        [spec.id]: { ...prev[spec.id], apiKey: event.target.value },
+                      }))}
+                    />
+                  </label>
+                )}
+                {errors[spec.id] && (
+                  <p className="settingsStatusBanner settingsStatusBanner--warn">{errors[spec.id]}</p>
+                )}
+              </div>
+              <button
+                type="button"
+                className="btn btn--primary"
+                disabled={disabled || busy}
+                onClick={() => void submit(spec.id)}
+              >
+                {busy ? settingsCopy.byokConnectBusy : settingsCopy.byokConnectSubmit}
+              </button>
+            </li>
+          );
+        })}
+      </ul>
+    </section>
+  );
+};
+
 const ModelProviders: React.FC<{ onShowGeneral?: () => void }> = ({ onShowGeneral }) => {
   const api = ottoApi();
   const rt = useRuntimeContext();
@@ -4347,9 +4485,18 @@ const ModelProviders: React.FC<{ onShowGeneral?: () => void }> = ({ onShowGenera
         </div>
         <p className="settingsFieldHint">{mirror?.note ?? settingsCopy.providerMirrorNote}</p>
         <p className="settingsFieldHint">{settingsCopy.providerKeysInLettaHint}</p>
+        {typeof mirror?.modelCount === 'number' && mirror.modelCount > 0 && (
+          <p className="settingsFieldHint faint">{settingsCopy.byokConnectModelsAfter(mirror.modelCount)}</p>
+        )}
         </>
         )}
       </div>
+
+      <ByokProviderConnectPanel
+        rows={mirror?.providers ?? []}
+        disabled={mirrorLoading || !mirror?.lettaConfigured}
+        onRefresh={refreshMirror}
+      />
 
       <div className="segmented" role="tablist" aria-label="Provider type" onKeyDown={handleProviderTabKeyDown}>
         {PROVIDER_TABS.map((providerTab) => (
