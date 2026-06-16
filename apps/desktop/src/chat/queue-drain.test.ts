@@ -91,7 +91,7 @@ describe('planQueueDrain', () => {
     });
   });
 
-  test('legacy null-thread rows drain once active thread is known', () => {
+  test('legacy null-thread rows do not drain on an unrelated active thread', () => {
     const queue: QueueItem[] = [
       { id: 'legacy', text: 'legacy follow-up', createdAt: 1, state: 'queued', threadId: null },
     ];
@@ -101,11 +101,7 @@ describe('planQueueDrain', () => {
       activeThreadId: 'thread_a',
       busy: false,
       draining: false,
-    })).toEqual({
-      action: 'send',
-      item: queue[0],
-      nextQueue: [],
-    });
+    })).toEqual({ action: 'idle' });
   });
 
   test('skips failed rows until retry promotes them', () => {

@@ -1,4 +1,4 @@
-import { INFLIGHT_STALE_MS, nextQueueItemForThread, type QueueItem } from './queue-storage';
+import { INFLIGHT_STALE_MS, nextQueueItemForThread, queueMatchesThread, type QueueItem } from './queue-storage';
 
 export type QueueDrainInputs = {
   queue: QueueItem[];
@@ -81,7 +81,7 @@ export async function drainRetriedQueueItem(
 ): Promise<{ queue: QueueItem[]; outcome: QueueSendOutcome | null }> {
   const retried = queue.map((item) => {
     const shouldRetry = item.state === 'failed'
-      && (item.threadId == null || (!!threadId && item.threadId === threadId))
+      && queueMatchesThread(item, threadId)
       && (!options?.retryId || item.id === options.retryId);
     return shouldRetry ? { ...item, state: 'queued' as const, failureReason: undefined } : item;
   });

@@ -17,7 +17,7 @@
  * Operator actions per row: Recall, View, Retry (failed), Send now (waiting, not next), Remove.
  * See `docs/chat-queue-states.md`.
  *
- * Drain order (per active thread; legacy rows with `threadId: null` match any thread):
+ * Drain order (per active thread; rows scope to their `threadId` only):
  * 1. First `queued` row in array order (`nextQueueItemForThread`).
  * 2. Steer enqueue (composer submit while runtime is busy) inserts at the front of that thread's
  *    waiting rows so the operator's interrupt sends next after abort.
@@ -126,7 +126,7 @@ export const createQueueItem = (text: string, state: QueueState = 'queued', thre
 };
 
 export const queueMatchesThread = (item: QueueItem, threadId: string | null | undefined): boolean =>
-  item.threadId == null || (!!threadId && item.threadId === threadId);
+  !!threadId && item.threadId === threadId;
 
 export const nextQueueItemForThread = (
   items: QueueItem[],
@@ -316,7 +316,14 @@ export const clearQueueStorage = (): string[] => {
   return keys;
 };
 
-export const readQueue = (): QueueItem[] => {
+export type ReadQueueOptions = { activeThreadId?: string | null };
+
+const stampLegacyThreadIds = (items: QueueItem[], activeThreadId?: string | null): QueueItem[] => {
+  if (!activeThreadId) return items;
+  return items.map((item) => (item.threadId == null ? { ...item, threadId: activeThreadId } : item));
+};
+
+export const readQueue = (opts?: ReadQueueOptions): QueueItem[] => {
   try {
     const legacyV2Raw = localStorage.getItem(LEGACY_QUEUE_V2_KEY);
     const legacyV1Raw = localStorage.getItem(LEGACY_QUEUE_KEY);
@@ -326,11 +333,14 @@ export const readQueue = (): QueueItem[] => {
       ...parseStoredQueue(legacyV2Raw),
       ...parseStoredQueue(legacyV1Raw),
     ];
-    const items = sanitizeQueue(
-      mergeInflightIntoQueue(
-        dedupeQueue([...current, ...legacy]),
-        readInFlight(),
+    const items = stampLegacyThreadIds(
+      sanitizeQueue(
+        mergeInflightIntoQueue(
+          dedupeQueue([...current, ...legacy]),
+          readInFlight(),
+        ),
       ),
+      opts?.activeThreadId,
     );
 
     if (legacyV2Raw) localStorage.removeItem(LEGACY_QUEUE_V2_KEY);
