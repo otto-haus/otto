@@ -262,6 +262,7 @@ export const chatCopy = {
   toolRunningHint: 'Waiting for tool output…',
   threadForkLabsNote: 'Thread fork from here ships behind Labs',
   selectModelTitle: 'Select model',
+  noModelsAvailable: 'No models available — configure a provider in Letta',
   showLegacyModels: 'Show legacy models',
   hideLegacyModels: 'Hide legacy models',
   customModelAction: 'Use custom handle…',
