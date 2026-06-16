@@ -211,7 +211,7 @@ export function registerIpc(): IpcRegistration {
     } catch (e) {
       return runtimeStatusFromInitError(e, false, {
         connectionMode: config.get().connectionMode,
-        lettaSettingsPath: resolveLettaSettingsPath(config.get()),
+        lettaSettingsPath: resolveLettaSettingsPath(config, config.get().connectionMode),
       });
     }
   });
