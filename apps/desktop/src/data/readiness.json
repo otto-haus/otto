@@ -25,7 +25,7 @@
       "label": "Model provider",
       "required": false,
       "status": "not-wired",
-      "detail": "Provider auth lives in Letta, not Otto",
+      "detail": "Provider auth lives in Letta, not otto",
       "source": null,
       "action": "Configure providers in Letta Desktop / Letta local runtime"
     },
@@ -43,7 +43,7 @@
       "label": "Workspace root",
       "required": false,
       "status": "configured",
-      "detail": "Otto repo detected",
+      "detail": "otto repo detected",
       "source": "repo root",
       "action": "Override with OTTO_HOME"
     },

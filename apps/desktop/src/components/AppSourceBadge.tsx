@@ -41,7 +41,7 @@ function buildTitle(info: AppBuildInfo): string {
     info.matchesMain === false ? 'Build is not at origin/main' : null,
     info.appPath ? `App: ${info.appPath}` : null,
     info.profilePath ? `Profile: ${info.profilePath}` : null,
-    info.homePath ? `Otto home: ${info.homePath}` : null,
+    info.homePath ? `otto home: ${info.homePath}` : null,
   ].filter(Boolean);
   return lines.join('\n');
 }
@@ -65,7 +65,7 @@ export function AppSourceDetails({ info }: { info: AppBuildInfo | null }) {
       ) : null}
       {info.appPath ? <p className="faint mono settingsLocalFootnote">App {info.appPath}</p> : null}
       {info.profilePath ? <p className="faint mono settingsLocalFootnote">Profile {info.profilePath}</p> : null}
-      {info.homePath ? <p className="faint mono settingsLocalFootnote">Otto home {info.homePath}</p> : null}
+      {info.homePath ? <p className="faint mono settingsLocalFootnote">otto home {info.homePath}</p> : null}
     </div>
   );
 }
