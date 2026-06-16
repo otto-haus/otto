@@ -11,6 +11,7 @@ import {
 } from '../preview/preview-annotate';
 import {
   isPreviewCanvasActionMessage,
+  type PreviewCanvasActionId,
   validatePreviewCanvasAction,
 } from '../preview/preview-canvas-actions';
 import {
@@ -48,6 +49,7 @@ type PreviewPaneProps = {
   onResizeStart: (event: React.PointerEvent<HTMLDivElement>) => void;
   runtimeConnected?: boolean;
   onProposeCorrection?: (context: ProposeCorrectionContext) => void;
+  onCanvasAction?: (action: PreviewCanvasActionId, target: string | null) => void;
 };
 
 const HtmlPreview: React.FC<{
@@ -252,6 +254,7 @@ export const PreviewPane: React.FC<PreviewPaneProps> = ({
   onResizeStart,
   runtimeConnected = false,
   onProposeCorrection,
+  onCanvasAction,
 }) => {
   const { isFeatureEnabled } = useLabs();
   const canvasMode = isFeatureEnabled('preview_canvas');
@@ -339,10 +342,10 @@ export const PreviewPane: React.FC<PreviewPaneProps> = ({
   }, [content, onProposeCorrection]);
 
   const handleCanvasAction = useCallback(
-    (_action: import('../preview/preview-canvas-actions').PreviewCanvasActionId, _target: string | null) => {
-      // v1 bridge validates + accepts; host handlers wired in follow-up slices (#661).
+    (action: PreviewCanvasActionId, target: string | null) => {
+      onCanvasAction?.(action, target);
     },
-    [],
+    [onCanvasAction],
   );
 
   if (!open) return null;

@@ -1,6 +1,6 @@
 import { buildRuntimeSendPayload } from '../attachment-message';
 import type React from 'react';
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { syncComposerTextareaHeight } from '../chat/composer-textarea';
 import { Icon } from '../components/icons';
 import { AppSourceBadge } from '../components/AppSourceBadge';
@@ -59,6 +59,7 @@ import {
   type PreviewAutoOpenMode,
 } from '../preview/preview-auto-open';
 import { usePreviewPane } from '../preview/usePreviewPane';
+import { executePreviewCanvasHostAction } from '../preview/preview-canvas-host';
 import { openSettingsSection } from '../settings-section-nav';
 import { isTypingTarget, jumpTurnAnchor, turnAnchorIndices } from '../chat/turn-navigation';
 import {
@@ -736,6 +737,19 @@ const LiveChat: React.FC<{
       });
     }
   };
+
+  const handlePreviewCanvasAction = useCallback(
+    (action: import('../preview/preview-canvas-actions').PreviewCanvasActionId, target: string | null) => {
+      void executePreviewCanvasHostAction({
+        action,
+        target,
+        onNavigate,
+        diagnostics: api?.diagnostics ?? null,
+        toast,
+      });
+    },
+    [api, onNavigate, toast],
+  );
 
   useEffect(() => {
     turnFocusRef.current = turnAnchors.length
@@ -1507,6 +1521,7 @@ const LiveChat: React.FC<{
       onResizeStart={onPreviewResizeStart}
       runtimeConnected={ready}
       onProposeCorrection={setProposeContext}
+      onCanvasAction={handlePreviewCanvasAction}
     />
     </div>
   );
