@@ -2,6 +2,8 @@ import { expect, test } from "bun:test";
 import {
   channelsFeature,
   fieldNoteFeature,
+  FPS,
+  productDemoTotalFrames,
   v01Cutline,
 } from "./features";
 
@@ -14,4 +16,9 @@ test("OttoV01Channels and OttoV01FieldNote use honest ship-tier badges", () => {
   expect(channelsFeature.status.approved).toBe(false);
   expect(fieldNoteFeature.status.tried).toBe(false);
   expect(fieldNoteFeature.status.approved).toBe(false);
+});
+
+test("OttoProductDemo uses honest ship tier and ~54s duration", () => {
+  expect(v01Cutline.OttoProductDemo).toBe("ship");
+  expect(productDemoTotalFrames / FPS).toBe(54);
 });
