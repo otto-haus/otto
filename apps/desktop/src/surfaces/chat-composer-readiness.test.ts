@@ -36,11 +36,15 @@ describe('chat composer readiness contract (#289, #300)', () => {
     expect(chatSource).not.toMatch(/compile ticket/i);
   });
 
-  it('uses human no-agent copy instead of raw st.reason in runtime banner (#583)', () => {
-    expect(copySource).toContain('runtimeNoAgentBody');
-    expect(chatSource).toContain('runtimeSetupBannerBody(st)');
-    expect(chatSource).toContain('chatCopy.runtimeNoAgentBody');
+  it('delegates setup blockers to ReadinessPanel instead of raw reason (#583 #600)', () => {
+    expect(chatSource).toContain('ReadinessPanel variant="onboarding"');
+    expect(chatSource).not.toContain('runtimeSetupBannerBody');
     expect(chatSource).not.toMatch(/\{st\.reason \?\? chatCopy\.runtimeNotReadyBody\}/);
+  });
+
+  it('shows empty state only when runtime is ready (#601)', () => {
+    expect(chatSource).toContain('streamMessages.length === 0 && ready');
+    expect(chatSource).not.toContain('sessionBodyNotReady');
   });
 
   it('uses StatusCode-aware setup title and next-action hints (#585)', () => {
