@@ -191,7 +191,8 @@ export class SdkSubprocessTransport implements OttoRuntimeTransport {
     const cli = resolveCli(this.config.connectionMode());
     const context = await resolveLiveLocalLettaContext(this.config);
     const connectionMode = this.config.connectionMode();
-    const baseResolution = await resolveInitBaseUrl(context.baseUrl, connectionMode);
+    // Probe the persisted override when live discovery dropped a dead loopback URL (#778 gap).
+    const baseResolution = await resolveInitBaseUrl(context.baseUrl ?? this.config.baseUrl(), connectionMode);
     if (baseResolution.clearStaleOverride && !SMOKE_MODE) {
       this.config.update({ baseUrl: null });
     }
