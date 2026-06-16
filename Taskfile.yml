@@ -181,6 +181,11 @@ tasks:
     cmds:
       - node scripts/otto-staging-sleep-wake-smoke.cjs
 
+  smoke:staging:dirty-shutdown:
+    desc: Playwright smoke — force-quit dirty marker + Safe reset (#576); requires dist-app build
+    cmds:
+      - node scripts/otto-staging-dirty-shutdown-smoke.cjs
+
   _refresh-live:
     internal: true
     preconditions:

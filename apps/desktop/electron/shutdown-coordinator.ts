@@ -2,7 +2,7 @@ import type { BrowserWindow } from 'electron';
 import type { LettaRunner } from './letta-runner';
 import type { CogneeStore } from './cognee-store';
 import { permissionSessionStore } from './permission-session-store';
-import { SHUTDOWN_TIMEOUT_MS } from './shutdown-lifecycle';
+import { SHUTDOWN_TIMEOUT_MS, clearDirtyShutdownWarning } from './shutdown-lifecycle';
 
 const QUEUE_CLEAR_SCRIPT = `(() => {
   const keys = [
@@ -54,6 +54,7 @@ export class ShutdownCoordinator {
     await this.teardownRuntime();
 
     const clearedQueueKeys = await this.clearRendererQueue();
+    clearDirtyShutdownWarning();
     const status = await this.deps.reinit();
     return {
       ok: true,

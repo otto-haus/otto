@@ -22,7 +22,8 @@
     "app:dir": "bun run electron:build && electron-builder --mac dir --arm64",
     "smoke:e2e": "playwright test",
     "smoke:e2e:two-thread": "playwright test e2e/two-thread.spec.ts",
-    "smoke:e2e:onboarding": "playwright test e2e/onboarding.spec.ts"
+    "smoke:e2e:onboarding": "playwright test e2e/onboarding.spec.ts",
+    "smoke:e2e:dirty-shutdown": "playwright test e2e/dirty-shutdown.spec.ts"
   },
   "dependencies": {
     "@letta-ai/letta-client": "^1.12.1",

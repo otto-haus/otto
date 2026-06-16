@@ -12,10 +12,14 @@ export type ShutdownStatus = {
 
 export const SHUTDOWN_TIMEOUT_MS = 8_000;
 
+/** True when this process started after an unclean prior exit (marker left on disk). */
+let sessionDirtyFromPriorUncleanExit = false;
+
 /** Mark a new app session. Returns dirty=true when the prior session never cleared its marker. */
 export function noteAppSessionStart(): ShutdownStatus {
   mkdirSync(defaultOttoDir(), { recursive: true });
   const dirtyShutdown = existsSync(sessionMarkerPath());
+  sessionDirtyFromPriorUncleanExit = dirtyShutdown;
   writeFileSync(sessionMarkerPath(), `${process.pid}\n${Date.now()}\n`);
   return {
     dirtyShutdown,
@@ -25,9 +29,14 @@ export function noteAppSessionStart(): ShutdownStatus {
 
 export function readShutdownStatus(): ShutdownStatus {
   return {
-    dirtyShutdown: existsSync(sessionMarkerPath()),
+    dirtyShutdown: sessionDirtyFromPriorUncleanExit,
     lastCleanShutdownAt: readLastCleanShutdownAt(),
   };
+}
+
+/** Clear the in-session dirty warning after Safe reset or operator acknowledgement. */
+export function clearDirtyShutdownWarning(): void {
+  sessionDirtyFromPriorUncleanExit = false;
 }
 
 export function markCleanShutdown(): void {
