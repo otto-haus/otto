@@ -49,7 +49,13 @@ describe('DiagnosticsExporter', () => {
       const input = makeInput(ottoDir);
       input.config.theme = 'dark';
       input.runtimeStatus.discoverySource = 'config.json';
-      input.window = { visible: false, minimized: false, maximized: true, bounds: { width: 1280, height: 800 } };
+      input.window = {
+        visible: false,
+        minimized: false,
+        maximized: true,
+        bounds: { x: 100, y: 50, width: 1280, height: 800 },
+        savedBounds: { x: 100, y: 50, width: 1280, height: 800, isMaximized: true },
+      };
 
       const result = await new DiagnosticsExporter(ottoDir).exportBundle(input);
       const stagingDir = result.bundlePath.endsWith('.zip')
@@ -61,6 +67,14 @@ describe('DiagnosticsExporter', () => {
       expect(snapshot.window.ottoWindowMode).toBe('background');
       expect(snapshot.window.ottoSmoke).toBe('1');
       expect(snapshot.window.maximized).toBe(true);
+      expect(snapshot.window.bounds).toEqual({ x: 100, y: 50, width: 1280, height: 800 });
+      expect(snapshot.window.savedBounds).toEqual({
+        x: 100,
+        y: 50,
+        width: 1280,
+        height: 800,
+        isMaximized: true,
+      });
       expect(snapshot.config.theme).toBe('dark');
       expect(snapshot.lettaDiscovery.discoverySource).toBe('config.json');
       expect(snapshot.lettaDiscovery.lettaSettingsPathEnv).toBe('/tmp/letta/settings.json');

@@ -66,6 +66,7 @@ import { buildDebugPacket, formatDebugPacketText, formatRuntimeStatusText } from
 import { resolveDebugEnvelope } from './debug-envelope';
 import { openOttoLogs } from './logs';
 import { syncWindowBackground, watchSystemWindowBackground } from './display-theme';
+import { readPersistedWindowState } from './window-state';
 import { openSystemTerminal, resolveWorkspaceRoot } from './open-terminal';
 import { planOpenLettaTarget } from './open-letta';
 import { getWorkspaceInfo, resolveWorkspaceRepoRoot } from './workspace-root';
@@ -394,18 +395,18 @@ export function registerIpc(): IpcRegistration {
       Promise.resolve(cognee.health()),
       Promise.resolve(pgvector.status()),
     ]);
+    const userDataPath = app.getPath('userData');
+    const savedBounds = readPersistedWindowState(userDataPath);
     const diagWin = getMainWindow();
     const windowSnapshot = diagWin
       ? {
           visible: diagWin.isVisible(),
           minimized: diagWin.isMinimized(),
           maximized: diagWin.isMaximized(),
-          bounds: (() => {
-            const b = diagWin.getBounds();
-            return { width: b.width, height: b.height };
-          })(),
+          bounds: diagWin.getBounds(),
+          savedBounds,
         }
-      : null;
+      : { visible: false, minimized: false, maximized: false, bounds: null, savedBounds };
     return diagnosticsExporter.exportBundle({
       buildInfo: {
         ...buildInfo,
@@ -415,7 +416,7 @@ export function registerIpc(): IpcRegistration {
       },
       runtimeStatus,
       config: config.get(),
-      userDataPath: app.getPath('userData'),
+      userDataPath,
       ottoDir: OTTO_DIR,
       permissionSession: permissionSessionStore.list(),
       transport: runner.getDiagnosticsSnapshot(),

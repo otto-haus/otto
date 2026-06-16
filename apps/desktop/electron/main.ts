@@ -9,6 +9,12 @@ import { getMainWindow, setMainWindow } from './main-window';
 import { resolveDevRendererUrl } from './main-security';
 import { attachWindowGeometryHandlers } from './window-geometry';
 import {
+  browserWindowOptionsFromState,
+  createMainWindowState,
+  manageWindowState,
+  restoreSavedWindowMode,
+} from './window-state';
+import {
   applyWindowLaunchMode,
   browserWindowShowsOnCreate,
   resolveActivateAction,
@@ -43,9 +49,9 @@ function ensurePath() {
 function createWindow() {
   const launchMode = resolveWindowLaunchMode();
   const config = new ConfigStore();
+  const windowState = createMainWindowState();
   const win = new BrowserWindow({
-    width: 1040,
-    height: 720,
+    ...browserWindowOptionsFromState(windowState),
     minWidth: 680,
     minHeight: 480,
     show: browserWindowShowsOnCreate(launchMode),
@@ -61,6 +67,8 @@ function createWindow() {
     },
   });
 
+  restoreSavedWindowMode(win, windowState, launchMode);
+  manageWindowState(win, windowState);
   applyWindowLaunchMode(win, launchMode);
   attachWindowGeometryHandlers(win);
   setMainWindow(win);

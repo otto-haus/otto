@@ -8,6 +8,7 @@ import { ReceiptStore } from './receipt-store';
 import { ReceiptWriter } from './receipt-writer';
 import { runsDir } from './trace-writer';
 import { resolveWindowLaunchMode } from './window-launch';
+import type { PersistedWindowState } from './window-state';
 import type { AppBuildInfo } from './shared/types';
 import { zipDirectory } from './zip-directory';
 
@@ -32,11 +33,14 @@ export type TransportDiagnosticsSnapshot = {
   };
 };
 
+export type WindowBounds = { x: number; y: number; width: number; height: number };
+
 export type WindowDiagnosticsSnapshot = {
   visible: boolean;
   minimized: boolean;
   maximized: boolean;
-  bounds: { width: number; height: number } | null;
+  bounds: WindowBounds | null;
+  savedBounds: PersistedWindowState | null;
 };
 
 export type DiagnosticsExportInput = {
@@ -87,6 +91,7 @@ function windowDiagnostics(input: DiagnosticsExportInput): Record<string, unknow
     minimized: input.window?.minimized ?? null,
     maximized: input.window?.maximized ?? null,
     bounds: input.window?.bounds ?? null,
+    savedBounds: input.window?.savedBounds ?? null,
   };
 }
 
