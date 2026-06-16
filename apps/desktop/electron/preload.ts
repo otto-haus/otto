@@ -17,6 +17,7 @@ import type {
   PermissionResponse,
   ReceiptDetail,
   ReceiptListResult,
+  ReceiptPreviewBodyResult,
   RuntimePreferences,
   RuntimeStatus,
   AppBuildInfo,
@@ -209,6 +210,7 @@ const api = {
   receipts: {
     list: (): Promise<ReceiptListResult> => ipcRenderer.invoke('otto:receipts:list'),
     get: (id: string): Promise<ReceiptDetail | null> => ipcRenderer.invoke('otto:receipts:get', id),
+    previewBody: (id: string): Promise<ReceiptPreviewBodyResult> => ipcRenderer.invoke('otto:receipts:previewBody', id),
   },
   charters: {
     list: (): Promise<CharterListResult> => ipcRenderer.invoke('otto:charters:list'),

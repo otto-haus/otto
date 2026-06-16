@@ -3,11 +3,13 @@ import { PaperclipIntakePanel } from './PaperclipIntakePanel';
 import { Icon } from '../components/icons';
 import { useToast } from '../components/toast-context';
 import { EmptyState, StatusPill, statusPill, statusCodePill, SurfaceProof, SurfacePage, SurfaceHero, InkBlock, SurfaceInk, SurfaceStatStrip, SurfaceMeta, SplitLayout, FilterBar, InlineEmpty, WebPreviewFrame, ReceiptCard, CheckBlockBanner, PaneLoading } from '../components/ui';
+import { PreviewPane } from '../components/PreviewPane';
 import {
   toastCopy,
   curationCopy,
   chatCopy,
   receiptsCopy,
+  previewCopy,
   chartersCopy,
   standardsCopy,
   practicesCopy,
@@ -51,6 +53,8 @@ import {
   SAMPLE_RECEIPT_LABEL,
 } from '../onboarding-sample-receipt';
 import { useLabs } from '../labs/labs-context';
+import { usePreviewPane } from '../preview/usePreviewPane';
+import { previewContentFromReceiptDetail, receiptPreviewEligible } from '../preview/receipt-preview';
 import { gatedConnectionMode } from '../surface-tiers';
 import { resolveLettaOpenAction } from '../letta-open-action';
 import {
@@ -1860,6 +1864,78 @@ export const Receipts: React.FC = () => {
   const [authorityFilter, setAuthorityFilter] = useState<ReceiptAuthorityFilter>('all');
   const [loading, setLoading] = useState(!!api);
   const [error, setError] = useState<string | null>(null);
+  const preview = usePreviewPane();
+  const previewShellRef = useRef<HTMLDivElement | null>(null);
+  const previewResizeRef = useRef<{ startX: number; startWidth: number; containerWidth: number } | null>(null);
+  const [previewBusy, setPreviewBusy] = useState(false);
+
+  const onPreviewResizeStart = (event: React.PointerEvent<HTMLDivElement>) => {
+    const shell = previewShellRef.current;
+    if (!shell) return;
+    event.preventDefault();
+    previewResizeRef.current = {
+      startX: event.clientX,
+      startWidth: preview.width,
+      containerWidth: shell.getBoundingClientRect().width,
+    };
+    event.currentTarget.setPointerCapture(event.pointerId);
+  };
+
+  useEffect(() => {
+    const onPointerMove = (event: PointerEvent) => {
+      const state = previewResizeRef.current;
+      if (!state) return;
+      preview.setClampedWidth(state.startWidth - (event.clientX - state.startX), state.containerWidth);
+    };
+    const onPointerUp = () => {
+      previewResizeRef.current = null;
+    };
+    window.addEventListener('pointermove', onPointerMove);
+    window.addEventListener('pointerup', onPointerUp);
+    return () => {
+      window.removeEventListener('pointermove', onPointerMove);
+      window.removeEventListener('pointerup', onPointerUp);
+    };
+  }, [preview.setClampedWidth]);
+
+  const openReceiptPreview = async (target: ReceiptDetail) => {
+    if (previewBusy) return;
+    const eligibility = receiptPreviewEligible(target);
+    if (!eligibility.eligible) return;
+    if (!api?.receipts.previewBody) {
+      const content = previewContentFromReceiptDetail(target);
+      if (content) preview.show(content);
+      return;
+    }
+    setPreviewBusy(true);
+    try {
+      const result = await api.receipts.previewBody(target.id);
+      if (result.eligible && result.content) {
+        preview.show(result.content);
+        return;
+      }
+      const fallback = previewContentFromReceiptDetail(target);
+      if (fallback) preview.show(fallback);
+    } finally {
+      setPreviewBusy(false);
+    }
+  };
+
+  const renderReceiptsPreviewShell = (body: React.ReactNode) => (
+    <div
+      className={`receiptsWithPreview${preview.open ? ' receiptsWithPreview--open' : ''}`}
+      ref={previewShellRef}
+    >
+      {body}
+      <PreviewPane
+        open={preview.open}
+        width={preview.width}
+        content={preview.content}
+        onClose={preview.close}
+        onResizeStart={onPreviewResizeStart}
+      />
+    </div>
+  );
 
   useEffect(() => {
     if (!api) return;
@@ -2000,7 +2076,8 @@ export const Receipts: React.FC = () => {
 
   if (!loading && !receipts.length && isSampleReceiptPreview()) {
     const sampleDetail = getSampleReceiptDetail();
-    return (
+    const sampleEligibility = receiptPreviewEligible(sampleDetail);
+    return renderReceiptsPreviewShell(
       <SurfacePage className="receiptsSurface">
         <div className="onboardSampleBanner">{SAMPLE_RECEIPT_LABEL}</div>
         <SurfaceHero
@@ -2016,10 +2093,19 @@ export const Receipts: React.FC = () => {
               onSelect={() => {}}
             />
           )}
-          detail={<ReceiptDetailView detail={sampleDetail} summary={sampleReceiptSummary} />}
+          detail={(
+            <ReceiptDetailView
+              detail={sampleDetail}
+              summary={sampleReceiptSummary}
+              previewEligible={sampleEligibility.eligible}
+              previewDisabledReason={sampleEligibility.reason}
+              previewBusy={previewBusy}
+              onOpenPreview={() => { void openReceiptPreview(sampleDetail); }}
+            />
+          )}
         />
         <SurfaceProof surface="receipts" />
-      </SurfacePage>
+      </SurfacePage>,
     );
   }
 
@@ -2064,7 +2150,9 @@ export const Receipts: React.FC = () => {
     );
   }
 
-  return (
+  const selectedPreviewEligibility = detail ? receiptPreviewEligible(detail) : receiptPreviewEligible(null);
+
+  return renderReceiptsPreviewShell(
     <SurfacePage className="receiptsSurface">
       <SurfaceHero
         eyebrow={receiptsCopy.eyebrow}
@@ -2169,6 +2257,10 @@ export const Receipts: React.FC = () => {
           <ReceiptDetailView
             detail={detail}
             summary={selected}
+            previewEligible={selectedPreviewEligibility.eligible}
+            previewDisabledReason={selectedPreviewEligibility.reason}
+            previewBusy={previewBusy}
+            onOpenPreview={detail ? () => { void openReceiptPreview(detail); } : undefined}
             onCorrectThis={detail && (detail.status === 'blocked' || detail.status === 'failed') && detail.blocker
               ? () => openReceiptCorrection(detail)
               : undefined}
@@ -2192,7 +2284,7 @@ export const Receipts: React.FC = () => {
       </SurfaceMeta>
 
       <SurfaceProof surface="receipts" />
-    </SurfacePage>
+    </SurfacePage>,
   );
 };
 
@@ -2200,7 +2292,19 @@ const ReceiptDetailView: React.FC<{
   detail: ReceiptDetail | null;
   summary: ReceiptListResult['receipts'][number] | null;
   onCorrectThis?: () => void;
-}> = ({ detail, summary, onCorrectThis }) => {
+  onOpenPreview?: () => void;
+  previewEligible?: boolean;
+  previewDisabledReason?: string;
+  previewBusy?: boolean;
+}> = ({
+  detail,
+  summary,
+  onCorrectThis,
+  onOpenPreview,
+  previewEligible = false,
+  previewDisabledReason,
+  previewBusy = false,
+}) => {
   if (!summary) {
     return (
       <div className="detail">
@@ -2239,6 +2343,22 @@ const ReceiptDetailView: React.FC<{
           <div><dt>subject</dt><dd>{detail.subject.type}{detail.subject.id ? `:${detail.subject.id}` : ''}</dd></div>
           <div><dt>id</dt><dd className="mono">{detail.id}</dd></div>
         </dl>
+        {onOpenPreview ? (
+          <div className="row" style={{ marginTop: 12 }}>
+            <button
+              type="button"
+              className="btn btn--ghost btn--sm"
+              disabled={!previewEligible || previewBusy}
+              title={previewEligible ? receiptsCopy.openInPreviewHint : (previewDisabledReason ?? receiptsCopy.openInPreviewDisabled)}
+              onClick={onOpenPreview}
+            >
+              {receiptsCopy.openInPreview}
+            </button>
+            {!previewEligible && previewDisabledReason ? (
+              <span className="muted">{previewDisabledReason}</span>
+            ) : null}
+          </div>
+        ) : null}
       </div>
 
       {detail.blocker && (

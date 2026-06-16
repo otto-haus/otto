@@ -316,6 +316,7 @@ export const previewCopy = {
   userMessageTitle: 'Your message',
   assistantMessageTitle: 'otto reply',
   codeBlockTitle: 'Code block',
+  receiptTitle: 'Receipt proof',
 } as const;
 
 export const onboardingCopy = {
@@ -993,6 +994,9 @@ export const receiptsCopy = {
   debugMeta: 'Raw contract (debug)',
   inlineLabel: 'Receipt',
   openInReceipts: 'Open in Receipts',
+  openInPreview: 'Open in preview',
+  openInPreviewHint: 'Render this proof record in the preview pane',
+  openInPreviewDisabled: 'No markdown or HTML body to render for this receipt.',
   filterAuthorityAll: 'All authority',
   filterAuthorityHuman: 'Human',
   filterAuthorityAutonomy: 'Autonomy',

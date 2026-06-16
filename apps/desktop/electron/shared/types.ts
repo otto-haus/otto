@@ -184,6 +184,19 @@ export interface ReceiptListResult {
   skipped: number;
 }
 
+export type ReceiptPreviewKind = 'markdown' | 'html' | 'image';
+
+export type ReceiptPreviewBodyResult = {
+  eligible: boolean;
+  reason?: string;
+  content?: {
+    title: string;
+    kind: ReceiptPreviewKind;
+    body: string;
+    sourceId?: string;
+  };
+};
+
 export interface CharterCreateInput {
   slug: string;
   objective: string;
