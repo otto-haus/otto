@@ -319,6 +319,13 @@ export const previewCopy = {
   receiptTitle: 'Receipt proof',
   sandboxFooter: 'Sandboxed preview · not live web',
   generatedNotRatified: 'generated · not ratified',
+  annotateLabel: 'Correct this',
+  annotateHint: 'Click an element in the HTML preview to propose a correction',
+  annotateActiveLabel: 'Selecting…',
+  annotateActiveHint: 'Click one element in the preview — Esc to cancel',
+  annotateFooter: 'Annotate mode · click one element',
+  annotateDisabledNotConnected: 'Connect runtime to propose corrections from preview',
+  annotateDisabledNotHtml: 'Annotate works on HTML artifacts only',
 } as const;
 
 export const onboardingCopy = {

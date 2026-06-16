@@ -95,7 +95,7 @@ Persistence keys (`localStorage`, best-effort):
 | Open preview on message / HTML code block | Yes | — |
 | Sandboxed HTML `srcDoc` | Yes (strict sandbox + CSP wrapper) | — |
 | Auto-open on new artifact | No | Opt-in slice |
-| Point-to-element → Propose Correction | No | #653 |
+| Point-to-element → Propose Correction | Yes (HTML + runtime connected) | — |
 | Open from Receipts surface | Yes | #660 |
 | Interactive canvas / embedded prompts | No | Labs tier |
 
@@ -103,7 +103,7 @@ Persistence keys (`localStorage`, best-effort):
 
 - ~~#659 — sandbox hardening for model HTML~~ (shipped)
 - ~~#660 — Open in preview from Receipts~~ (shipped)
-- #653 — point-to-element → Propose Correction (Design Mode analog)
+- #653 — point-to-element → Propose Correction (Design Mode analog) — shipped annotate slice
 
 ## Non-goals (v1)
 

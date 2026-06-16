@@ -634,6 +634,13 @@ h1, h2, h3, h4, p { margin: 0; }
   border-radius: var(--radius);
   background: #fff;
 }
+.previewPane--annotate .previewPane__frame {
+  border-color: #4a6a9f;
+  box-shadow: 0 0 0 1px rgba(107, 159, 255, 0.25);
+}
+.previewPane__annotate.is-active {
+  color: #8ab4ff;
+}
 .previewPane__imageWrap {
   display: flex;
   align-items: center;

