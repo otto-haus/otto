@@ -14,6 +14,11 @@ import {
   previewArtifactHash,
   serializePreviewElementContext,
 } from '../preview/preview-element-context';
+import {
+  canTogglePreviewFullscreen,
+  isPreviewFullscreenExitKey,
+  isPreviewFullscreenShortcut,
+} from '../preview/preview-fullscreen';
 import { PREVIEW_IFRAME_SANDBOX, wrapHtmlForSandboxPreview } from '../preview/preview-sandbox';
 import { EmptyState } from './ui/EmptyState';
 import { Icon } from './icons';
@@ -49,6 +54,7 @@ const HtmlPreview: React.FC<{
   return (
     <iframe
       ref={frameRef}
+      className="previewPane__frame"
       title={previewCopy.htmlFrameTitle}
       sandbox={annotateMode ? PREVIEW_ANNOTATE_IFRAME_SANDBOX : PREVIEW_IFRAME_SANDBOX}
       srcDoc={annotateMode ? wrapHtmlForAnnotatePreview(html) : wrapHtmlForSandboxPreview(html)}
@@ -63,6 +69,94 @@ const ImagePreview: React.FC<{ src: string; title: string }> = ({ src, title }) 
   </div>
 );
 
+const PreviewBody: React.FC<{
+  content: PreviewContent | null;
+  annotateMode: boolean;
+  onElementPick: (pick: import('../preview/preview-element-context').PreviewElementPick) => void;
+}> = ({ content, annotateMode, onElementPick }) => {
+  if (!content) {
+    return (
+      <EmptyState
+        eyebrow={previewCopy.emptyEyebrow}
+        title={previewCopy.emptyTitle}
+        body={previewCopy.emptyBody}
+        next={previewCopy.emptyNext}
+      />
+    );
+  }
+  if (content.kind === 'html') {
+    return <HtmlPreview html={content.body} annotateMode={annotateMode} onElementPick={onElementPick} />;
+  }
+  if (content.kind === 'image') {
+    return <ImagePreview src={content.body} title={content.title} />;
+  }
+  return (
+    <div className="previewPane__markdown">
+      <StreamMarkdown text={content.body} />
+    </div>
+  );
+};
+
+const PreviewHeader: React.FC<{
+  content: PreviewContent | null;
+  annotateMode: boolean;
+  canAnnotate: boolean;
+  annotateDisabledReason: string | undefined;
+  fullscreen: boolean;
+  canFullscreen: boolean;
+  onToggleAnnotate: () => void;
+  onToggleFullscreen: () => void;
+  onClose: () => void;
+  closeLabel: string;
+}> = ({
+  content,
+  annotateMode,
+  canAnnotate,
+  annotateDisabledReason,
+  fullscreen,
+  canFullscreen,
+  onToggleAnnotate,
+  onToggleFullscreen,
+  onClose,
+  closeLabel,
+}) => (
+  <header className="previewPane__head">
+    <div className="previewPane__titleBlock">
+      <div className="eyebrow">{previewCopy.eyebrow}</div>
+      <div className="previewPane__title">{content?.title ?? previewCopy.emptyTitle}</div>
+    </div>
+    <div className="previewPane__actions">
+      {content ? <span className="pill">{content.kind}</span> : null}
+      {content?.kind === 'html' ? (
+        <button
+          type="button"
+          className={`btn btn--ghost-d previewPane__annotate${annotateMode ? ' is-active' : ''}`}
+          disabled={!canAnnotate}
+          title={annotateMode ? previewCopy.annotateActiveHint : (canAnnotate ? previewCopy.annotateHint : annotateDisabledReason)}
+          aria-pressed={annotateMode}
+          onClick={() => { if (canAnnotate) onToggleAnnotate(); }}
+        >
+          {annotateMode ? previewCopy.annotateActiveLabel : previewCopy.annotateLabel}
+        </button>
+      ) : null}
+      {canFullscreen ? (
+        <button
+          type="button"
+          className="previewPane__iconBtn"
+          aria-label={fullscreen ? previewCopy.exitFullscreen : previewCopy.enterFullscreen}
+          title={fullscreen ? previewCopy.exitFullscreenHint : previewCopy.enterFullscreenHint}
+          onClick={onToggleFullscreen}
+        >
+          {fullscreen ? Icon.compress : Icon.expand}
+        </button>
+      ) : null}
+      <button type="button" className="previewPane__close" aria-label={closeLabel} onClick={onClose}>
+        {Icon.x}
+      </button>
+    </div>
+  </header>
+);
+
 export const PreviewPane: React.FC<PreviewPaneProps> = ({
   open,
   width,
@@ -73,26 +167,63 @@ export const PreviewPane: React.FC<PreviewPaneProps> = ({
   onProposeCorrection,
 }) => {
   const [annotateMode, setAnnotateMode] = useState(false);
+  const [fullscreen, setFullscreen] = useState(false);
+  const [focusedInPane, setFocusedInPane] = useState(false);
+  const paneRef = useRef<HTMLElement>(null);
+  const fullscreenRef = useRef<HTMLDivElement>(null);
+  const restoreFocusRef = useRef<HTMLElement | null>(null);
+
+  const canAnnotate = runtimeConnected && content?.kind === 'html' && !!onProposeCorrection;
+  const canFullscreen = canTogglePreviewFullscreen(open, content != null);
+  const annotateDisabledReason = !runtimeConnected
+    ? previewCopy.annotateDisabledNotConnected
+    : content?.kind !== 'html'
+      ? previewCopy.annotateDisabledNotHtml
+      : undefined;
+
+  const exitFullscreen = useCallback(() => setFullscreen(false), []);
+  const toggleFullscreen = useCallback(() => {
+    if (!canFullscreen) return;
+    setFullscreen((value) => !value);
+  }, [canFullscreen]);
 
   useEffect(() => {
     setAnnotateMode(false);
   }, [content?.body, content?.kind, content?.sourceId]);
 
   useEffect(() => {
-    if (!annotateMode) return;
+    if (!open || !content) setFullscreen(false);
+  }, [open, content]);
+
+  useEffect(() => {
+    if (!fullscreen) return;
+    restoreFocusRef.current = (document.activeElement as HTMLElement | null) ?? null;
+    fullscreenRef.current?.focus();
+    return () => restoreFocusRef.current?.focus?.();
+  }, [fullscreen]);
+
+  useEffect(() => {
+    if (!open) return;
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') setAnnotateMode(false);
+      if (isPreviewFullscreenShortcut(event) && (focusedInPane || fullscreen)) {
+        if (!canFullscreen) return;
+        event.preventDefault();
+        setFullscreen((value) => !value);
+        return;
+      }
+      if (fullscreen && isPreviewFullscreenExitKey(event.key)) {
+        event.preventDefault();
+        exitFullscreen();
+        return;
+      }
+      if (annotateMode && isPreviewFullscreenExitKey(event.key)) {
+        event.preventDefault();
+        setAnnotateMode(false);
+      }
     };
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
-  }, [annotateMode]);
-
-  const canAnnotate = runtimeConnected && content?.kind === 'html' && !!onProposeCorrection;
-  const annotateDisabledReason = !runtimeConnected
-    ? previewCopy.annotateDisabledNotConnected
-    : content?.kind !== 'html'
-      ? previewCopy.annotateDisabledNotHtml
-      : undefined;
+  }, [open, focusedInPane, fullscreen, canFullscreen, annotateMode, exitFullscreen]);
 
   const handleElementPick = useCallback((pick: import('../preview/preview-element-context').PreviewElementPick) => {
     if (!content || !onProposeCorrection) return;
@@ -108,63 +239,87 @@ export const PreviewPane: React.FC<PreviewPaneProps> = ({
     setAnnotateMode(false);
   }, [content, onProposeCorrection]);
 
+  const trackFocus = useCallback((node: HTMLElement | null) => ({
+    onFocusCapture: () => setFocusedInPane(true),
+    onBlurCapture: (event: React.FocusEvent) => {
+      if (node?.contains(event.relatedTarget as Node | null)) return;
+      setFocusedInPane(false);
+    },
+  }), []);
+
   if (!open) return null;
 
+  const shellClassName = `previewPane${annotateMode ? ' previewPane--annotate' : ''}`;
+
   return (
-    <aside
-      className={`previewPane${annotateMode ? ' previewPane--annotate' : ''}`}
-      style={{ width }}
-      aria-label={previewCopy.panelLabel}
-    >
-      <header className="previewPane__head">
-        <div className="previewPane__titleBlock">
-          <div className="eyebrow">{previewCopy.eyebrow}</div>
-          <div className="previewPane__title">{content?.title ?? previewCopy.emptyTitle}</div>
+    <>
+      <aside
+        ref={paneRef}
+        className={shellClassName}
+        style={{ width }}
+        aria-label={previewCopy.panelLabel}
+        onFocusCapture={() => setFocusedInPane(true)}
+        onBlurCapture={(event) => {
+          if (paneRef.current?.contains(event.relatedTarget as Node | null)) return;
+          setFocusedInPane(false);
+        }}
+      >
+        <PreviewHeader
+          content={content}
+          annotateMode={annotateMode}
+          canAnnotate={canAnnotate}
+          annotateDisabledReason={annotateDisabledReason}
+          fullscreen={false}
+          canFullscreen={canFullscreen}
+          onToggleAnnotate={() => setAnnotateMode((value) => !value)}
+          onToggleFullscreen={toggleFullscreen}
+          onClose={onClose}
+          closeLabel={previewCopy.close}
+        />
+        <div className="previewPane__body">
+          <PreviewBody content={content} annotateMode={annotateMode} onElementPick={handleElementPick} />
         </div>
-        <div className="previewPane__actions">
-          {content ? <span className="pill">{content.kind}</span> : null}
-          {content?.kind === 'html' ? (
-            <button
-              type="button"
-              className={`btn btn--ghost-d previewPane__annotate${annotateMode ? ' is-active' : ''}`}
-              disabled={!canAnnotate}
-              title={annotateMode ? previewCopy.annotateActiveHint : (canAnnotate ? previewCopy.annotateHint : annotateDisabledReason)}
-              aria-pressed={annotateMode}
-              onClick={() => { if (canAnnotate) setAnnotateMode((value) => !value); }}
-            >
-              {annotateMode ? previewCopy.annotateActiveLabel : previewCopy.annotateLabel}
-            </button>
-          ) : null}
-          <button type="button" className="previewPane__close" aria-label={previewCopy.close} onClick={onClose}>
-            {Icon.x}
-          </button>
-        </div>
-      </header>
-      <div className="previewPane__body">
-        {!content ? (
-          <EmptyState
-            eyebrow={previewCopy.emptyEyebrow}
-            title={previewCopy.emptyTitle}
-            body={previewCopy.emptyBody}
-            next={previewCopy.emptyNext}
-          />
-        ) : content.kind === 'html' ? (
-          <HtmlPreview html={content.body} annotateMode={annotateMode} onElementPick={handleElementPick} />
-        ) : content.kind === 'image' ? (
-          <ImagePreview src={content.body} title={content.title} />
-        ) : (
-          <div className="previewPane__markdown">
-            <StreamMarkdown text={content.body} />
+        <div
+          className="previewPane__handle"
+          role="separator"
+          aria-orientation="vertical"
+          aria-label={previewCopy.resizeHandle}
+          onPointerDown={onResizeStart}
+        />
+      </aside>
+      {fullscreen && content ? (
+        <div className="previewFullscreen" role="presentation">
+          <div
+            ref={fullscreenRef}
+            tabIndex={-1}
+            className={`previewFullscreen__dialog ${shellClassName}`}
+            role="dialog"
+            aria-modal="true"
+            aria-label={previewCopy.fullscreenLabel}
+            onFocusCapture={() => setFocusedInPane(true)}
+            onBlurCapture={(event) => {
+              if (fullscreenRef.current?.contains(event.relatedTarget as Node | null)) return;
+              setFocusedInPane(false);
+            }}
+          >
+            <PreviewHeader
+              content={content}
+              annotateMode={annotateMode}
+              canAnnotate={canAnnotate}
+              annotateDisabledReason={annotateDisabledReason}
+              fullscreen
+              canFullscreen={canFullscreen}
+              onToggleAnnotate={() => setAnnotateMode((value) => !value)}
+              onToggleFullscreen={toggleFullscreen}
+              onClose={exitFullscreen}
+              closeLabel={previewCopy.exitFullscreen}
+            />
+            <div className="previewFullscreen__body">
+              <PreviewBody content={content} annotateMode={annotateMode} onElementPick={handleElementPick} />
+            </div>
           </div>
-        )}
-      </div>
-      <div
-        className="previewPane__handle"
-        role="separator"
-        aria-orientation="vertical"
-        aria-label={previewCopy.resizeHandle}
-        onPointerDown={onResizeStart}
-      />
-    </aside>
+        </div>
+      ) : null}
+    </>
   );
 };

@@ -45,6 +45,8 @@ export const Icon = {
   archive: <S><rect x="4" y="5" width="16" height="4" rx="1.2" /><path d="M6 9v9a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V9" /><path d="M10 13h4" /></S>,
   stop: <S><rect x="7" y="7" width="10" height="10" rx="1.8" /></S>,
   x: <S><path d="M7 7l10 10M17 7 7 17" /></S>,
+  expand: <S><path d="M8 3H5a2 2 0 0 0-2 2v3" /><path d="M16 3h3a2 2 0 0 1 2 2v3" /><path d="M21 16v3a2 2 0 0 1-2 2h-3" /><path d="M3 16v3a2 2 0 0 0 2 2h3" /></S>,
+  compress: <S><path d="M4 14h6v6" /><path d="M20 10h-6V4" /><path d="M14 10l7-7" /><path d="M3 21l7-7" /></S>,
   check: <S><path d="M5 12l5 5 9-11" /></S>,
   chevronRight: <S w={1.65}><path d="M9 6.5 13 12 9 17.5" /></S>,
   chevronDown: <S w={1.65}><path d="M6.5 9 12 13 17.5 9" /></S>,

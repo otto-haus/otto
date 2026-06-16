@@ -77,8 +77,11 @@ v1 rules:
 | Control | Behavior |
 | --- | --- |
 | ⌘⇧P | Toggle preview rail open/closed (`previewCopy.toggleHint`) |
+| ⌘⇧F | Toggle fullscreen artifact review when preview pane is focused (#655) |
+| Esc | Exit fullscreen (returns to split pane; selection preserved) |
 | Resize handle | Drag left edge; width clamped 280px–62% of Chat+Preview container |
 | Close button | Sets `open` false; does not clear last `content` |
+| Fullscreen button | Expands selected artifact to modal overlay; same sandbox policy |
 
 Persistence keys (`localStorage`, best-effort):
 
@@ -96,6 +99,7 @@ Persistence keys (`localStorage`, best-effort):
 | Open preview on message / HTML code block | Yes | — |
 | Sandboxed HTML `srcDoc` | Yes (strict sandbox + CSP wrapper) | — |
 | Auto-open on new artifact | No (opt-in via Settings) | #652 — `on-new-artifact` · `always-on-pane` |
+| Fullscreen artifact review | Yes (#655) | — |
 | Point-to-element → Propose Correction | Yes (HTML + runtime connected) | — |
 | Open from Receipts surface | Yes | #660 |
 | Interactive canvas / embedded prompts | No | Labs tier |
