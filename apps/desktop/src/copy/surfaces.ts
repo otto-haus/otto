@@ -318,6 +318,7 @@ export const previewCopy = {
   codeBlockTitle: 'Code block',
   receiptTitle: 'Receipt proof',
   sandboxFooter: 'Sandboxed preview · not live web',
+  generatedNotRatified: 'generated · not ratified',
 } as const;
 
 export const onboardingCopy = {

@@ -5,10 +5,21 @@ export type PreviewContent = {
   kind: PreviewKind;
   body: string;
   sourceId?: string;
+  /** e.g. generated · not ratified (#511) */
+  badge?: string;
 };
 
 const HTML_FENCE = /```(?:html|htm)\s*\n([\s\S]*?)```/i;
 const IMAGE_URL = /\.(png|jpe?g|gif|webp|svg)(\?|$)/i;
+const ARTIFACT_PATH = /\/\.otto\/artifacts\//;
+
+function generatedArtifactBadge(src: string): string | undefined {
+  if (src.startsWith('file://') && ARTIFACT_PATH.test(decodeURIComponent(src))) {
+    return 'generated · not ratified';
+  }
+  if (ARTIFACT_PATH.test(src)) return 'generated · not ratified';
+  return undefined;
+}
 
 function isHtmlDocument(text: string): boolean {
   const trimmed = text.trim();
@@ -46,11 +57,13 @@ export function previewFromText(text: string, options?: { title?: string; source
 
   const imageMatch = trimmed.match(/^!\[[^\]]*]\(([^)]+)\)$/);
   if (imageMatch && isImageSrc(imageMatch[1])) {
+    const src = imageMatch[1].trim();
     return {
       title: options?.title ?? 'Image',
       kind: 'image',
-      body: imageMatch[1].trim(),
+      body: src,
       sourceId: options?.sourceId,
+      badge: generatedArtifactBadge(src),
     };
   }
 

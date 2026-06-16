@@ -161,6 +161,32 @@ export interface SavedAttachment {
   size: number;
 }
 
+/** Provenance for Labs image generation artifacts (#511). */
+export type GeneratedArtifactProvenance = {
+  prompt: string;
+  model: string;
+  source: 'image_gen';
+  createdAt: string;
+  ratified: false;
+};
+
+/** Generated image saved under ~/.otto/artifacts — not auto-canon until ratified. */
+export interface GeneratedArtifact {
+  id: string;
+  name: string;
+  mime: string;
+  path: string;
+  url: string;
+  size: number;
+  provenance: GeneratedArtifactProvenance;
+  receiptPath?: string;
+}
+
+export type ImageGenInput = {
+  prompt: string;
+  model?: string;
+};
+
 export interface ReceiptSummary {
   id: string;
   timestamp: string;

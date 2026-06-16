@@ -83,6 +83,7 @@ describe('buildProviderMirror', () => {
       join(desktopRoot, 'src/surfaces/Panes.tsx'),
       join(desktopRoot, 'electron/ipc.ts'),
       join(desktopRoot, 'electron/preload.ts'),
+      join(desktopRoot, 'electron/image-gen.ts'),
     ];
     const blocked = [
       /console\.(log|debug|info|warn|error)\([^)]*apiKeyDraft/,

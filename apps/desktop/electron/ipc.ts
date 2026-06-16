@@ -1,7 +1,7 @@
 import { type BrowserWindow, app, clipboard, ipcMain, shell } from 'electron';
 import { join } from 'node:path';
 import type { ConnectionInfo, ConnectionInput, CreateProposalFromCorrectionInput, DecideProposalInput, DreamSettings, LabsConfig, MemoryListResult, OttoConfig, PermissionRequest, PermissionResponse, ProposalClassification, ProposalTarget, RuntimePreferences, RuntimeStatus } from './shared/types';
-import { applyLabsConfigPatch, assertConnectionModePatchAllowed, getLabsConfig, labsConfigToOttoPatch } from './labs-config';
+import { applyLabsConfigPatch, assertConnectionModePatchAllowed, getLabsConfig, isImageGenEnabled, labsConfigToOttoPatch } from './labs-config';
 import {
   applyDreamSettingsPatch,
   dreamSettingsToOttoPatch,
@@ -11,8 +11,10 @@ import {
 } from './dream-settings';
 import type { CharterCreateInput, CharterStatus } from './shared/types';
 import type { AttachmentInput } from './shared/types';
+import type { ImageGenInput } from './shared/types';
 import type { RuntimeSendPayload } from '../src/attachment-message';
 import { saveAttachment } from './attachments';
+import { generateImage } from './image-gen';
 import { resolveAttachmentRecords } from './attachment-delivery';
 import { CharterStore } from './charter-store';
 import { ConfigStore } from './config-store';
@@ -345,6 +347,15 @@ export function registerIpc(): IpcRegistration {
   });
   ipcMain.handle('otto:attachment:save', (_e, input: AttachmentInput) => saveAttachment(input));
   ipcMain.handle('otto:attachment:resolve', (_e, ids: string[]) => resolveAttachmentRecords(ids));
+  ipcMain.handle('otto:image-gen:generate', async (_e, input: ImageGenInput) => {
+    const labs = getLabsConfig(config.get());
+    if (!isImageGenEnabled(labs)) {
+      throw new Error('Image generation is disabled. Enable Settings → General → Voice & image (Labs).');
+    }
+    const prompt = typeof input?.prompt === 'string' ? input.prompt.trim() : '';
+    if (!prompt) throw new Error('Image prompt is required.');
+    return generateImage({ prompt, model: input?.model });
+  });
 
   // Connection setup. v1 is local-only: provider auth lives in Letta, not Otto.
   ipcMain.handle(

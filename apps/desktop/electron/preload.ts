@@ -24,6 +24,8 @@ import type {
   LettaModelOption,
   SystemHealthReport,
   SavedAttachment,
+  GeneratedArtifact,
+  ImageGenInput,
   StandardCitation,
   StandardListResult,
   StandardRecord,
@@ -188,6 +190,11 @@ const api = {
   attachments: {
     save: (input: AttachmentInput): Promise<SavedAttachment> => ipcRenderer.invoke('otto:attachment:save', input),
     resolve: (ids: string[]): Promise<SavedAttachment[]> => ipcRenderer.invoke('otto:attachment:resolve', ids),
+  },
+  /** Labs image generation — gated by Settings → Voice & image (#511). Keys stay in Letta. */
+  imageGen: {
+    generate: (input: ImageGenInput): Promise<{ artifact: GeneratedArtifact; receiptPath: string }> =>
+      ipcRenderer.invoke('otto:image-gen:generate', input),
   },
   connection: {
     get: (): Promise<ConnectionInfo> => ipcRenderer.invoke('otto:connection:get'),
