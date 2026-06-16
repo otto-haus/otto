@@ -7,6 +7,16 @@ export interface SdkTransportDiagnosticsSnapshot {
   pendingPermissionCount: number;
   sessionInitialized: boolean;
   aborted: boolean;
+  /** Embedded engine supervisor state (#673) — null outside embedded mode. */
+  embeddedEngine: {
+    cliPath: string | null;
+    enginePid: number | null;
+    restartCount: number;
+    maxRestarts: number;
+    lastRestartAt: string | null;
+    lastFailureReason: string | null;
+    exhausted: boolean;
+  } | null;
 }
 
 export interface WsTransportDiagnosticsSnapshot {

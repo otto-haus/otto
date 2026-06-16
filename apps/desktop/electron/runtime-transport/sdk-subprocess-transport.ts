@@ -4,6 +4,7 @@ import { applyEmbeddedLettaSettingsEnv, resolveLettaSettingsPath } from '../drea
 import type { PermissionRequest, PermissionResponse, RuntimePreferences, RuntimeStatus, StatusCode, OttoConfig } from '../shared/types';
 import type { ConfigStore } from '../config-store';
 import { ReceiptWriter } from '../receipt-writer';
+import { ReceiptStore } from '../receipt-store';
 import { hasLettaApiKey, syncLettaApiKeyEnv } from '../letta-api-key';
 import { StandardStore } from '../standard-store';
 import { PracticeStore } from '../practice-store';
@@ -35,6 +36,10 @@ import { permissionSessionStore } from '../permission-session-store';
 import { permissionLogStore } from '../permission-log-store';
 import { prepareRuntimeSend } from '../attachment-delivery';
 import type { RuntimeSendPayload } from '../../src/attachment-message';
+import {
+  EmbeddedEngineSupervisor,
+  isEmbeddedEngineRecoverableError,
+} from './embedded-engine-supervisor';
 import type { OttoRuntimeTransport, SdkTransportDiagnosticsSnapshot } from './types';
 
 const DEFAULT_PERMISSION_TIMEOUT_MS = 120_000;
@@ -66,6 +71,7 @@ export class SdkSubprocessTransport implements OttoRuntimeTransport {
   private standards = new StandardStore();
   private practices = new PracticeStore();
   private aborted = false;
+  private embeddedSupervisor = new EmbeddedEngineSupervisor();
 
   constructor(
     private getMainWindow: () => BrowserWindow | null,
@@ -77,10 +83,14 @@ export class SdkSubprocessTransport implements OttoRuntimeTransport {
   }
 
   getDiagnosticsSnapshot(): SdkTransportDiagnosticsSnapshot {
+    const embedded = this.config.connectionMode() === 'embedded'
+      ? this.embeddedSupervisor.snapshot(this.status.cliPath ?? null)
+      : null;
     return {
       pendingPermissionCount: this.pending.size,
       sessionInitialized: !!this.session,
       aborted: this.aborted,
+      embeddedEngine: embedded,
     };
   }
 
@@ -358,13 +368,30 @@ export class SdkSubprocessTransport implements OttoRuntimeTransport {
         transportFallbackReason: null,
         ...cli,
       };
+      if (connectionMode === 'embedded') {
+        this.embeddedSupervisor.reset();
+        this.writeEmbeddedBootstrapReceipt(this.status);
+      }
     } catch (e) {
       const reason = msg(e);
+      if (
+        connectionMode === 'embedded' &&
+        isEmbeddedEngineRecoverableError(reason) &&
+        this.embeddedSupervisor.canRestart()
+      ) {
+        this.embeddedSupervisor.recordRestart(reason);
+        this.session?.close();
+        this.session = null;
+        return this.init(opts);
+      }
       const code = classify(reason, this.hasApiKey());
+      const failureReason = connectionMode === 'embedded' && this.embeddedSupervisor.exhausted
+        ? `${reason} (embedded engine restart limit reached)`
+        : reason;
       this.status = {
         ready: false,
         code,
-        reason: friendly(code, reason, this.friendlyOpts(connectionMode)),
+        reason: friendly(code, failureReason, this.friendlyOpts(connectionMode)),
         agentId: primaryAgentId,
         baseUrl: context.baseUrl,
         discoverySource: context.source,
@@ -648,6 +675,34 @@ export class SdkSubprocessTransport implements OttoRuntimeTransport {
         reason,
         uuid: randomUUID(),
       },
+    });
+  }
+
+  private writeEmbeddedBootstrapReceipt(status: RuntimeStatus): void {
+    if (SMOKE_MODE || this.config.connectionMode() !== 'embedded') return;
+    const prior = new ReceiptStore(this.receipts.directory).list().receipts.find((r) => r.action === 'embedded.bootstrap');
+    if (prior) return;
+    this.receipts.write({
+      status: 'success',
+      subject: { type: 'run', id: status.agentId ?? null },
+      action: 'embedded.bootstrap',
+      input: {
+        connectionMode: 'embedded',
+        agentId: status.agentId ?? null,
+        conversationId: status.conversationId ?? null,
+        cliPath: status.cliPath,
+      },
+      result: {
+        summary: 'Embedded Letta bootstrap completed.',
+        data: {
+          agentId: status.agentId ?? null,
+          conversationId: status.conversationId ?? null,
+          cliPath: status.cliPath,
+          model: status.model ?? null,
+        },
+      },
+      evidence: [{ kind: 'status', ref: 'runtime.status', data: { ready: true, code: status.code } }],
+      blocker: null,
     });
   }
 

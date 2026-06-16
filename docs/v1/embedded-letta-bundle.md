@@ -85,3 +85,32 @@ Release gate (#678): the smoke must pass against a packaged staging/Release arti
 PR via `.github/workflows/ci.yml` job `embedded-letta-release-gate` (`bash scripts/ci-embedded-letta-gate.sh`).
 A clean-machine init + one disposable chat turn (`task smoke:clean-machine`) proves the full
 bootstrap (#675) before tag cut.
+
+## Trust boundary (verbatim — #670)
+
+```txt
+otto supervises UI and session lifecycle.
+embedded Letta is keystore + memory system-of-record.
+Provider/API keys never live in otto config — only hasProviderKey boolean.
+```
+
+otto must **not** silently fall back to Letta.app when the bundled engine is missing (#677). Advanced
+**Existing local Letta** is explicit opt-in only.
+
+## Slice map (#670 plan gate)
+
+| Issue | Slice | Status |
+|-------|-------|--------|
+| #671 | License / attribution gate | closed (PR #753) |
+| #672 | Bundle `letta.js` packaging | closed (smoke @ a5d950d6) |
+| #673 | Runtime supervisor (spawn, health, crash recovery) | in progress |
+| #674 | Diagnostics embedded state | open |
+| #675 | First-run bootstrap — This Mac default | in progress |
+| #676 | Provider write-only UI mirror | open |
+| #677 | Existing Letta mode (no silent fallback) | shipped |
+| #678 | CI/staging embedded smoke gate | open |
+
+**Plan gate:** Sebastian must approve this contract before #670 closes. No v0.1.7 release cut without
+explicit Sebastian sign-off (`docs/v1/runbooks/sebastian-release-sign-off.md`).
+
+Related: #456 (standalone otto), #97 / #575 (zero-setup onboarding), `planning/hq-tickets/076`.
