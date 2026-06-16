@@ -295,6 +295,7 @@ type PromptRuntimeContext = Partial<Pick<
   'model' | 'modelHandle' | 'effort' | 'transportMode' | 'effectiveTransport' | 'sessionMode'
 >>;
 
+/** See docs/runtime-transport.md § Runtime context prefix (#568). */
 export function runtimeContextForPrompt(status: PromptRuntimeContext): string {
   const selectedModel = status.modelHandle ?? status.model ?? 'agent-default';
   const effort = status.effort ?? 'unknown';
