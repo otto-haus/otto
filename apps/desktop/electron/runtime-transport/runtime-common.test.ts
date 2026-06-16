@@ -1,7 +1,7 @@
 import { describe, expect, test } from 'bun:test';
 import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { tmpdir } from 'node:os';
+import { homedir, tmpdir } from 'node:os';
 import type { BrowserWindow } from 'electron';
 import { classify, friendly, isInvalidModelError, modelInitAttempts, modelSelectionForCli, nextActionFor, normalizeRuntimeError, parseUsageLimitResetHint, promptWithRuntimeContext, resolveCli, runtimeContextForPrompt, safeWebContentsSend, sessionInitTimeoutMs, withTimeout } from './runtime-common';
 
@@ -186,9 +186,10 @@ describe('runtime-common status mapping', () => {
 
   test('friendly rewrites embedded Letta CLI stderr paths (#605)', () => {
     const raw = 'Delete ~/.letta/settings.json then run \'letta\' to re-authenticate';
+    const embeddedPath = join(homedir(), '.otto', 'letta', 'settings.json');
     const message = friendly('error', raw, {
       connectionMode: 'embedded',
-      lettaSettingsPath: '/Users/seb/.otto/letta/settings.json',
+      lettaSettingsPath: embeddedPath,
     });
     expect(message).toContain('~/.otto/letta/settings.json');
     expect(message).not.toContain('~/.letta/settings.json');
