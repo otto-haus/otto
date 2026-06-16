@@ -1449,6 +1449,8 @@ const LiveChat: React.FC<{
       content={preview.content}
       onClose={preview.close}
       onResizeStart={onPreviewResizeStart}
+      runtimeConnected={ready}
+      onProposeCorrection={setProposeContext}
     />
     </div>
   );

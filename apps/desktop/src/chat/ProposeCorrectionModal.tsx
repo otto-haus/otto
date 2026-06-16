@@ -13,6 +13,7 @@ export type ProposeCorrectionContext = {
   messageId: string;
   messageText: string;
   who: 'user' | 'otto';
+  correctionDraft?: string;
 };
 
 export const ProposeCorrectionModal: React.FC<{
@@ -30,7 +31,10 @@ export const ProposeCorrectionModal: React.FC<{
 
   useEffect(() => {
     if (!open || !context) return;
-    setCorrection(context.who === 'user' ? context.messageText.slice(0, 2000) : chatCopy.correctionDefault);
+    setCorrection(
+      context.correctionDraft
+        ?? (context.who === 'user' ? context.messageText.slice(0, 2000) : chatCopy.correctionDefault),
+    );
     setRationale(context.messageText.slice(0, 2000));
   }, [open, context]);
 
