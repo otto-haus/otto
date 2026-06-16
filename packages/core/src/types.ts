@@ -521,6 +521,7 @@ export interface CreateProposalFromCorrectionInput {
   target: ProposalTarget;
   evidence?: ProposalEvidenceRef[];
   sourceReceiptId?: string;
+  source?: ProposalSource;
   created_by?: CurationProposal['created_by'];
 }
 

@@ -70,6 +70,28 @@ describe('ProposalStore', () => {
     }
   });
 
+  test('createFromCorrection accepts receipt_failure source for receipts bridge (#631)', () => {
+    const tmp = mkdtempSync(join(tmpdir(), 'otto-proposal-test-'));
+    const proposalsDir = join(tmp, 'curation', 'proposals');
+    const receiptsDir = join(tmp, 'receipts');
+    try {
+      const store = new ProposalStore(proposalsDir, new ReceiptWriter(receiptsDir));
+      const result = store.createFromCorrection({
+        correction: 'Attach verification output before claiming done.',
+        rationale: 'Blocked done claim missing evidence.',
+        target: { kind: 'standard', action: 'update' },
+        source: 'receipt_failure',
+        sourceReceiptId: 'receipt-blocked-1',
+        evidence: [{ kind: 'receipt', ref: 'receipt-blocked-1', note: 'No verification output attached' }],
+      });
+
+      expect(result.proposal.source).toBe('receipt_failure');
+      expect(result.proposal.evidence.some((entry) => entry.ref === 'receipt-blocked-1')).toBe(true);
+    } finally {
+      rmSync(tmp, { recursive: true, force: true });
+    }
+  });
+
   test('classify preview matches IPC handler contract', () => {
     const classification = classifyProposal(
       { kind: 'memory', action: 'update' },

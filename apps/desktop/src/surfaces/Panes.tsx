@@ -6,6 +6,7 @@ import { EmptyState, StatusPill, statusPill, statusCodePill, SurfaceProof, Surfa
 import {
   toastCopy,
   curationCopy,
+  chatCopy,
   receiptsCopy,
   chartersCopy,
   standardsCopy,
@@ -116,7 +117,9 @@ import {
   type DreamTrigger,
   type ConversationSortMode,
   type ComposerSendShortcut,
+  type ProposalTarget,
 } from '../runtime';
+import { ProposeCorrectionModal, type ProposeCorrectionContext } from '../chat/ProposeCorrectionModal';
 import { useRuntimeContext } from '../runtime-context';
 import { ReadinessPanel } from '../ReadinessPanel';
 import type { SurfaceId } from '../components/Sidebar';
@@ -1845,10 +1848,13 @@ function receiptAuthorityFilterLabel(filter: ReceiptAuthorityFilter): string {
 
 export const Receipts: React.FC = () => {
   const api = ottoApi();
+  const { push: pushToast } = useToast();
   const [result, setResult] = useState<ReceiptListResult | null>(null);
   const [runsResult, setRunsResult] = useState<RunListResult | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [detail, setDetail] = useState<ReceiptDetail | null>(null);
+  const [proposeContext, setProposeContext] = useState<ProposeCorrectionContext | null>(null);
+  const [proposeBusy, setProposeBusy] = useState(false);
   const [query, setQuery] = useState('');
   const [filter, setFilter] = useState<'all' | ReceiptStatus>('all');
   const [authorityFilter, setAuthorityFilter] = useState<ReceiptAuthorityFilter>('all');
@@ -1929,6 +1935,51 @@ export const Receipts: React.FC = () => {
   const selected = filtered.find((receipt) => receipt.id === selectedId)
     ?? filtered[0]
     ?? null;
+
+  const openReceiptCorrection = (next: ReceiptDetail) => {
+    const blockerText = next.blocker
+      ? [next.blocker.message, next.blocker.next_action].filter(Boolean).join('\n\n')
+      : next.result.summary;
+    setProposeContext({
+      messageId: next.id,
+      messageText: blockerText,
+      who: 'otto',
+    });
+  };
+
+  const submitReceiptProposal = async (input: { correction: string; target: ProposalTarget; rationale: string }) => {
+    if (!api || !proposeContext || proposeBusy) return;
+    setProposeBusy(true);
+    try {
+      const result = await api.curation.proposals.createFromCorrection({
+        correction: input.correction,
+        rationale: input.rationale,
+        target: input.target,
+        source: 'receipt_failure',
+        sourceReceiptId: proposeContext.messageId,
+        evidence: [{
+          kind: 'receipt',
+          ref: proposeContext.messageId,
+          note: proposeContext.messageText.slice(0, 500),
+        }],
+      });
+      setProposeContext(null);
+      pushToast({
+        title: toastCopy.proposalCreated,
+        body: `${result.proposal.id} · ${result.proposal.classification.route} · ${toastCopy.openCuration}`,
+        tone: 'ok',
+      });
+      if (typeof location !== 'undefined') location.hash = 'curation';
+    } catch (e) {
+      pushToast({
+        title: toastCopy.decisionBlocked,
+        body: e instanceof Error ? e.message : String(e),
+        tone: 'warn',
+      });
+    } finally {
+      setProposeBusy(false);
+    }
+  };
 
   useEffect(() => {
     if (!selectedId && filtered[0]) setSelectedId(filtered[0].id);
@@ -2114,7 +2165,23 @@ export const Receipts: React.FC = () => {
           </>
           )
         }
-        detail={<ReceiptDetailView detail={detail} summary={selected} />}
+        detail={(
+          <ReceiptDetailView
+            detail={detail}
+            summary={selected}
+            onCorrectThis={detail && (detail.status === 'blocked' || detail.status === 'failed') && detail.blocker
+              ? () => openReceiptCorrection(detail)
+              : undefined}
+          />
+        )}
+      />
+
+      <ProposeCorrectionModal
+        open={!!proposeContext}
+        context={proposeContext}
+        busy={proposeBusy}
+        onClose={() => { if (!proposeBusy) setProposeContext(null); }}
+        onSubmit={(input) => { void submitReceiptProposal(input); }}
       />
 
       <SurfaceMeta label={receiptsCopy.recordMeta}>
@@ -2129,7 +2196,11 @@ export const Receipts: React.FC = () => {
   );
 };
 
-const ReceiptDetailView: React.FC<{ detail: ReceiptDetail | null; summary: ReceiptListResult['receipts'][number] | null }> = ({ detail, summary }) => {
+const ReceiptDetailView: React.FC<{
+  detail: ReceiptDetail | null;
+  summary: ReceiptListResult['receipts'][number] | null;
+  onCorrectThis?: () => void;
+}> = ({ detail, summary, onCorrectThis }) => {
   if (!summary) {
     return (
       <div className="detail">
@@ -2178,6 +2249,14 @@ const ReceiptDetailView: React.FC<{ detail: ReceiptDetail | null; summary: Recei
           </div>
           <p className="lede" style={{ marginTop: 8 }}>{detail.blocker.message}</p>
           {detail.blocker.next_action && <p className="muted" style={{ marginTop: 6 }}>{detail.blocker.next_action}</p>}
+          {onCorrectThis ? (
+            <div className="row" style={{ marginTop: 12 }}>
+              <button type="button" className="btn btn--solid-d" onClick={onCorrectThis}>
+                {chatCopy.correctThis}
+              </button>
+              <span className="muted">{chatCopy.correctThisHint}</span>
+            </div>
+          ) : null}
         </div>
       )}
 
