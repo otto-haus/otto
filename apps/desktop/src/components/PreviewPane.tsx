@@ -19,6 +19,10 @@ import {
   isPreviewFullscreenExitKey,
   isPreviewFullscreenShortcut,
 } from '../preview/preview-fullscreen';
+import {
+  isPreviewHistoryBackShortcut,
+  isPreviewHistoryForwardShortcut,
+} from '../preview/preview-history';
 import { PREVIEW_IFRAME_SANDBOX, wrapHtmlForSandboxPreview } from '../preview/preview-sandbox';
 import { EmptyState } from './ui/EmptyState';
 import { Icon } from './icons';
@@ -27,6 +31,10 @@ type PreviewPaneProps = {
   open: boolean;
   width: number;
   content: PreviewContent | null;
+  canGoBack?: boolean;
+  canGoForward?: boolean;
+  onBack?: () => void;
+  onForward?: () => void;
   onClose: () => void;
   onResizeStart: (event: React.PointerEvent<HTMLDivElement>) => void;
   runtimeConnected?: boolean;
@@ -104,6 +112,10 @@ const PreviewHeader: React.FC<{
   annotateDisabledReason: string | undefined;
   fullscreen: boolean;
   canFullscreen: boolean;
+  canGoBack: boolean;
+  canGoForward: boolean;
+  onBack: () => void;
+  onForward: () => void;
   onToggleAnnotate: () => void;
   onToggleFullscreen: () => void;
   onClose: () => void;
@@ -115,6 +127,10 @@ const PreviewHeader: React.FC<{
   annotateDisabledReason,
   fullscreen,
   canFullscreen,
+  canGoBack,
+  canGoForward,
+  onBack,
+  onForward,
   onToggleAnnotate,
   onToggleFullscreen,
   onClose,
@@ -126,6 +142,28 @@ const PreviewHeader: React.FC<{
       <div className="previewPane__title">{content?.title ?? previewCopy.emptyTitle}</div>
     </div>
     <div className="previewPane__actions">
+      <div className="previewPane__nav">
+        <button
+          type="button"
+          className="previewPane__iconBtn"
+          aria-label={previewCopy.historyBack}
+          title={previewCopy.historyBackHint}
+          disabled={!canGoBack}
+          onClick={onBack}
+        >
+          {Icon.chevronLeft}
+        </button>
+        <button
+          type="button"
+          className="previewPane__iconBtn"
+          aria-label={previewCopy.historyForward}
+          title={previewCopy.historyForwardHint}
+          disabled={!canGoForward}
+          onClick={onForward}
+        >
+          {Icon.chevronRight}
+        </button>
+      </div>
       {content ? <span className="pill">{content.kind}</span> : null}
       {content?.kind === 'html' ? (
         <button
@@ -161,6 +199,10 @@ export const PreviewPane: React.FC<PreviewPaneProps> = ({
   open,
   width,
   content,
+  canGoBack = false,
+  canGoForward = false,
+  onBack,
+  onForward,
   onClose,
   onResizeStart,
   runtimeConnected = false,
@@ -205,6 +247,16 @@ export const PreviewPane: React.FC<PreviewPaneProps> = ({
   useEffect(() => {
     if (!open) return;
     const onKeyDown = (event: KeyboardEvent) => {
+      if (isPreviewHistoryBackShortcut(event) && (focusedInPane || fullscreen) && canGoBack) {
+        event.preventDefault();
+        onBack?.();
+        return;
+      }
+      if (isPreviewHistoryForwardShortcut(event) && (focusedInPane || fullscreen) && canGoForward) {
+        event.preventDefault();
+        onForward?.();
+        return;
+      }
       if (isPreviewFullscreenShortcut(event) && (focusedInPane || fullscreen)) {
         if (!canFullscreen) return;
         event.preventDefault();
@@ -223,7 +275,7 @@ export const PreviewPane: React.FC<PreviewPaneProps> = ({
     };
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
-  }, [open, focusedInPane, fullscreen, canFullscreen, annotateMode, exitFullscreen]);
+  }, [open, focusedInPane, fullscreen, canFullscreen, canGoBack, canGoForward, onBack, onForward, annotateMode, exitFullscreen]);
 
   const handleElementPick = useCallback((pick: import('../preview/preview-element-context').PreviewElementPick) => {
     if (!content || !onProposeCorrection) return;
@@ -263,6 +315,10 @@ export const PreviewPane: React.FC<PreviewPaneProps> = ({
           annotateDisabledReason={annotateDisabledReason}
           fullscreen={false}
           canFullscreen={canFullscreen}
+          canGoBack={canGoBack}
+          canGoForward={canGoForward}
+          onBack={() => onBack?.()}
+          onForward={() => onForward?.()}
           onToggleAnnotate={() => setAnnotateMode((value) => !value)}
           onToggleFullscreen={toggleFullscreen}
           onClose={onClose}
@@ -301,6 +357,10 @@ export const PreviewPane: React.FC<PreviewPaneProps> = ({
               annotateDisabledReason={annotateDisabledReason}
               fullscreen
               canFullscreen={canFullscreen}
+              canGoBack={canGoBack}
+              canGoForward={canGoForward}
+              onBack={() => onBack?.()}
+              onForward={() => onForward?.()}
               onToggleAnnotate={() => setAnnotateMode((value) => !value)}
               onToggleFullscreen={toggleFullscreen}
               onClose={exitFullscreen}

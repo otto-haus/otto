@@ -1938,6 +1938,10 @@ export const Receipts: React.FC = () => {
         open={preview.open}
         width={preview.width}
         content={preview.content}
+        canGoBack={preview.canGoBack}
+        canGoForward={preview.canGoForward}
+        onBack={preview.back}
+        onForward={preview.forward}
         onClose={preview.close}
         onResizeStart={onPreviewResizeStart}
       />

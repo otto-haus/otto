@@ -49,6 +49,7 @@ export const Icon = {
   compress: <S><path d="M4 14h6v6" /><path d="M20 10h-6V4" /><path d="M14 10l7-7" /><path d="M3 21l7-7" /></S>,
   check: <S><path d="M5 12l5 5 9-11" /></S>,
   chevronRight: <S w={1.65}><path d="M9 6.5 13 12 9 17.5" /></S>,
+  chevronLeft: <S w={1.65}><path d="M15 6.5 11 12 15 17.5" /></S>,
   chevronDown: <S w={1.65}><path d="M6.5 9 12 13 17.5 9" /></S>,
   lock: <S><rect x="5" y="11" width="14" height="9" rx="2" /><path d="M8 11V8a4 4 0 0 1 8 0v3" /></S>,
   file: <S><path d="M7 3h7l4 4v14H7z" /><path d="M13 3v5h5" /></S>,
