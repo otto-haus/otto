@@ -81,6 +81,16 @@ function createWindow() {
     win.loadFile(join(__dirname, '../renderer/index.html'));
   }
 
+  win.on('close', (event) => {
+    // macOS keeps the app alive when the red button closes the window; tear down runtime
+    // before destroy so dock reopen does not spawn a second LettaRunner (#610).
+    if (shuttingDown || process.platform !== 'darwin' || win.isDestroyed()) return;
+    event.preventDefault();
+    void ipcRegistration?.teardownForWindowClose().finally(() => {
+      if (!win.isDestroyed()) win.destroy();
+    });
+  });
+
   win.on('closed', () => {
     if (getMainWindow() === win) setMainWindow(null);
   });

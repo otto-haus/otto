@@ -80,6 +80,7 @@ import type { SafeResetResult, ShutdownStatus } from './shared/types';
 
 export type IpcRegistration = {
   shutdown: (reason?: string) => Promise<void>;
+  teardownForWindowClose: () => Promise<void>;
   safeReset: () => Promise<SafeResetResult>;
   getShutdownStatus: () => ShutdownStatus;
 };
@@ -754,6 +755,7 @@ export function registerIpc(): IpcRegistration {
 
   ipcRegistration = {
     shutdown: (reason?: string) => shutdownCoordinator.gracefulShutdown(reason),
+    teardownForWindowClose: () => shutdownCoordinator.teardownForWindowClose(),
     safeReset: () => shutdownCoordinator.safeReset(),
     getShutdownStatus: () => readShutdownStatus(),
   };
