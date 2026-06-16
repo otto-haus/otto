@@ -329,6 +329,7 @@ export const previewCopy = {
   annotateActiveLabel: 'Selecting…',
   annotateActiveHint: 'Click one element in the preview — Esc to cancel',
   annotateFooter: 'Annotate mode · click one element',
+  canvasFooter: 'Interactive canvas (Labs) · otto-defined actions only',
   annotateDisabledNotConnected: 'Connect runtime to propose corrections from preview',
   annotateDisabledNotHtml: 'Annotate works on HTML artifacts only',
   autoOpenLabel: 'Auto-open preview',
@@ -955,6 +956,8 @@ export const settingsCopy = {
       : id === 'image_gen'
         ? 'Image generation is off in this workspace. Enable the toggle above to unlock the Letta tool path (#511).'
         : '',
+  previewCanvasFeatureBlocked:
+    'Interactive canvas is off in this workspace. HTML preview stays static until you enable the toggle above (#661).',
   memorySearchPlaceholder: 'Search blocks…',
   memoryNoMatch: 'No memory blocks match. Connect an agent or adjust search.',
   dreamingTitle: 'Dreaming / sleep-time',

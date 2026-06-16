@@ -12,6 +12,7 @@ export const LAB_FEATURE_IDS: LabFeatureId[] = [
   'turn_phase_timeline',
   'voice_realtime',
   'image_gen',
+  'preview_canvas',
 ];
 
 const LEGACY_SURFACE_KEYS = new Set([
@@ -99,6 +100,11 @@ export function isVoiceRealtimeEnabled(labs: LabsConfig): boolean {
 /** Labs gate for image generation tool path (#511 / #578). */
 export function isImageGenEnabled(labs: LabsConfig): boolean {
   return labs.enabled === true && labs.features?.image_gen === true;
+}
+
+/** Labs gate for interactive preview canvas actions (#661). */
+export function isPreviewCanvasEnabled(labs: LabsConfig): boolean {
+  return labs.enabled === true && labs.features?.preview_canvas === true;
 }
 
 /** Same rejection contract as `otto:config:set` — agents cannot bypass Labs via IPC. */

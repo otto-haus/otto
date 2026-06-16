@@ -10,6 +10,14 @@ import {
   wrapHtmlForAnnotatePreview,
 } from '../preview/preview-annotate';
 import {
+  isPreviewCanvasActionMessage,
+  validatePreviewCanvasAction,
+} from '../preview/preview-canvas-actions';
+import {
+  PREVIEW_CANVAS_IFRAME_SANDBOX,
+  wrapHtmlForCanvasPreview,
+} from '../preview/preview-canvas';
+import {
   defaultPreviewCorrectionDraft,
   previewArtifactHash,
   serializePreviewElementContext,
@@ -24,6 +32,7 @@ import {
   isPreviewHistoryForwardShortcut,
 } from '../preview/preview-history';
 import { PREVIEW_IFRAME_SANDBOX, wrapHtmlForSandboxPreview } from '../preview/preview-sandbox';
+import { useLabs } from '../labs/labs-context';
 import { EmptyState } from './ui/EmptyState';
 import { Icon } from './icons';
 
@@ -44,8 +53,10 @@ type PreviewPaneProps = {
 const HtmlPreview: React.FC<{
   html: string;
   annotateMode: boolean;
+  canvasMode: boolean;
   onElementPick: (pick: import('../preview/preview-element-context').PreviewElementPick) => void;
-}> = ({ html, annotateMode, onElementPick }) => {
+  onCanvasAction?: (action: import('../preview/preview-canvas-actions').PreviewCanvasActionId, target: string | null) => void;
+}> = ({ html, annotateMode, canvasMode, onElementPick, onCanvasAction }) => {
   const frameRef = useRef<HTMLIFrameElement | null>(null);
 
   useEffect(() => {
@@ -59,13 +70,37 @@ const HtmlPreview: React.FC<{
     return () => window.removeEventListener('message', onMessage);
   }, [annotateMode, onElementPick]);
 
+  useEffect(() => {
+    if (!canvasMode || annotateMode) return;
+    const onMessage = (event: MessageEvent) => {
+      if (event.source !== frameRef.current?.contentWindow) return;
+      if (!isPreviewCanvasActionMessage(event.data)) return;
+      const validated = validatePreviewCanvasAction(event.data);
+      if (!validated.ok) return;
+      onCanvasAction?.(validated.action, validated.target);
+    };
+    window.addEventListener('message', onMessage);
+    return () => window.removeEventListener('message', onMessage);
+  }, [canvasMode, annotateMode, onCanvasAction]);
+
+  const sandbox = annotateMode
+    ? PREVIEW_ANNOTATE_IFRAME_SANDBOX
+    : canvasMode
+      ? PREVIEW_CANVAS_IFRAME_SANDBOX
+      : PREVIEW_IFRAME_SANDBOX;
+  const srcDoc = annotateMode
+    ? wrapHtmlForAnnotatePreview(html)
+    : canvasMode
+      ? wrapHtmlForCanvasPreview(html)
+      : wrapHtmlForSandboxPreview(html);
+
   return (
     <iframe
       ref={frameRef}
       className="previewPane__frame"
       title={previewCopy.htmlFrameTitle}
-      sandbox={annotateMode ? PREVIEW_ANNOTATE_IFRAME_SANDBOX : PREVIEW_IFRAME_SANDBOX}
-      srcDoc={annotateMode ? wrapHtmlForAnnotatePreview(html) : wrapHtmlForSandboxPreview(html)}
+      sandbox={sandbox}
+      srcDoc={srcDoc}
       referrerPolicy="no-referrer"
     />
   );
@@ -80,8 +115,10 @@ const ImagePreview: React.FC<{ src: string; title: string }> = ({ src, title }) 
 const PreviewBody: React.FC<{
   content: PreviewContent | null;
   annotateMode: boolean;
+  canvasMode: boolean;
   onElementPick: (pick: import('../preview/preview-element-context').PreviewElementPick) => void;
-}> = ({ content, annotateMode, onElementPick }) => {
+  onCanvasAction?: (action: import('../preview/preview-canvas-actions').PreviewCanvasActionId, target: string | null) => void;
+}> = ({ content, annotateMode, canvasMode, onElementPick, onCanvasAction }) => {
   if (!content) {
     return (
       <EmptyState
@@ -93,7 +130,15 @@ const PreviewBody: React.FC<{
     );
   }
   if (content.kind === 'html') {
-    return <HtmlPreview html={content.body} annotateMode={annotateMode} onElementPick={onElementPick} />;
+    return (
+      <HtmlPreview
+        html={content.body}
+        annotateMode={annotateMode}
+        canvasMode={canvasMode}
+        onElementPick={onElementPick}
+        onCanvasAction={onCanvasAction}
+      />
+    );
   }
   if (content.kind === 'image') {
     return <ImagePreview src={content.body} title={content.title} />;
@@ -208,6 +253,8 @@ export const PreviewPane: React.FC<PreviewPaneProps> = ({
   runtimeConnected = false,
   onProposeCorrection,
 }) => {
+  const { isFeatureEnabled } = useLabs();
+  const canvasMode = isFeatureEnabled('preview_canvas');
   const [annotateMode, setAnnotateMode] = useState(false);
   const [fullscreen, setFullscreen] = useState(false);
   const [focusedInPane, setFocusedInPane] = useState(false);
@@ -291,6 +338,13 @@ export const PreviewPane: React.FC<PreviewPaneProps> = ({
     setAnnotateMode(false);
   }, [content, onProposeCorrection]);
 
+  const handleCanvasAction = useCallback(
+    (_action: import('../preview/preview-canvas-actions').PreviewCanvasActionId, _target: string | null) => {
+      // v1 bridge validates + accepts; host handlers wired in follow-up slices (#661).
+    },
+    [],
+  );
+
   if (!open) return null;
 
   const shellClassName = `previewPane${annotateMode ? ' previewPane--annotate' : ''}`;
@@ -325,7 +379,13 @@ export const PreviewPane: React.FC<PreviewPaneProps> = ({
           closeLabel={previewCopy.close}
         />
         <div className="previewPane__body">
-          <PreviewBody content={content} annotateMode={annotateMode} onElementPick={handleElementPick} />
+          <PreviewBody
+            content={content}
+            annotateMode={annotateMode}
+            canvasMode={canvasMode}
+            onElementPick={handleElementPick}
+            onCanvasAction={handleCanvasAction}
+          />
         </div>
         <div
           className="previewPane__handle"
@@ -367,7 +427,13 @@ export const PreviewPane: React.FC<PreviewPaneProps> = ({
               closeLabel={previewCopy.exitFullscreen}
             />
             <div className="previewFullscreen__body">
-              <PreviewBody content={content} annotateMode={annotateMode} onElementPick={handleElementPick} />
+              <PreviewBody
+            content={content}
+            annotateMode={annotateMode}
+            canvasMode={canvasMode}
+            onElementPick={handleElementPick}
+            onCanvasAction={handleCanvasAction}
+          />
             </div>
           </div>
         </div>

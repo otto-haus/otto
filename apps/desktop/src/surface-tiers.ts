@@ -101,6 +101,10 @@ export const LAB_FEATURE_META: Record<LabFeatureId, LabFeatureMeta> = {
     label: 'Image generation',
     blurb: 'Letta tool path for generated images saved as artifacts — not auto-canon until ratified.',
   },
+  preview_canvas: {
+    label: 'Interactive preview canvas',
+    blurb: 'Sandboxed HTML buttons that dispatch otto-defined actions — not arbitrary shell or exec.',
+  },
 };
 
 export function surfaceTier(id: SurfaceId): SurfaceTier {

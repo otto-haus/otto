@@ -83,6 +83,7 @@ Cut   = not in product UI (spec / parked only)
 | `turn_phase_timeline` | Labs | Chat turn trail chip | Labs off → span list only | `docs/v1/agent-turn-trail.md` · turn-trail tests | 668 |
 | `voice_realtime` | Labs | Settings → Voice & image | Labs off or feature off | voice capture smoke (#510) | 510, **578** |
 | `image_gen` | Labs | Settings → Voice & image | Labs off or feature off | image artifact smoke (#511) | 511, **578** |
+| `preview_canvas` | Labs | Settings → Voice & image | Labs off or feature off | canvas action fixture (#661) | **661** |
 | `ai_frontier_review_routine` | Labs | Routines | Optional executor | ai-frontier-review-executor tests | 062 |
 
 ---

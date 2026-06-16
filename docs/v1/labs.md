@@ -53,6 +53,8 @@ Agents and staging scripts use the same preload surface as Settings — no React
 
 Voice and image (`voice_realtime`, `image_gen`) default **off** on fresh profiles. Enable explicitly in **Settings → General → Voice & image (Labs)** — master Labs must be on first. Provider/API keys stay in Letta; otto stores only the boolean gate. Downstream capture (#510) and image tool (#511) slices must check `isFeatureEnabled` before wiring UI or IPC.
 
+Interactive preview canvas (`preview_canvas`) defaults **off**. When enabled, HTML preview may dispatch otto-defined actions from sandboxed buttons — see `docs/v1/preview-mode.md` (#661). Host handlers for navigate/copy/receipt follow in later slices.
+
 Settings persists the **full merged object** after each toggle. Partial patches are fine for agents — main process merges with `patchLabsConfig` before writing `~/.otto/config.json`.
 
 ### Examples (Electron renderer / CDP)

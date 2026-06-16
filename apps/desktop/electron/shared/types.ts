@@ -623,7 +623,8 @@ export type LabFeatureId =
   | 'remote_letta_cloud'
   | 'turn_phase_timeline'
   | 'voice_realtime'
-  | 'image_gen';
+  | 'image_gen'
+  | 'preview_canvas';
 
 export type LabsConfig = {
   /** Master Labs switch — default false on fresh profile. */
