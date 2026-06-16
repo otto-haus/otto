@@ -360,32 +360,8 @@ export function normalizeRuntimeError(raw: string, hasKey: boolean): NormalizedR
   return { code, message, details };
 }
 
-export type NextActionOptions = { connectionMode?: ConnectionMode };
-
-export function nextActionFor(code: StatusCode, opts?: NextActionOptions): string {
-  switch (code) {
-    case 'no-api-key':
-      if (opts?.connectionMode === 'embedded') {
-        return 'Settings → General → Connect, then Settings → Model providers → Open Letta web UI to add provider auth in Letta.';
-      }
-      return 'Configure provider auth inside Letta for local v1.';
-    case 'unreachable':
-      if (opts?.connectionMode === 'embedded') {
-        return 'Retry Connect in Settings. If it keeps failing, add a provider key in Letta settings.';
-      }
-      return 'Check the local Letta runtime and URL override in Settings.';
-    case 'no-agent':
-      return 'Open Letta once or choose an Agent ID override in Settings.';
-    case 'stale':
-      return 'Clear the stale override or choose a valid Agent ID in Settings.';
-    case 'sdk-missing':
-      return 'Install or repair the Letta Code SDK dependency.';
-    case 'usage-limit':
-      return 'Switch to Auto/Fast, pick another provider/model in Settings, or wait for the limit to reset.';
-    default:
-      return 'Review the trace and retry after fixing the runtime error.';
-  }
-}
+export type { NextActionOptions } from '../shared/runtime-status-ui';
+export { nextActionFor } from '../shared/runtime-status-ui';
 
 export function isInvalidModelError(e: unknown): boolean {
   const m = (e instanceof Error ? e.message : String(e)).toLowerCase();

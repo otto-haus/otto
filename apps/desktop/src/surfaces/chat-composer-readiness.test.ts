@@ -43,6 +43,14 @@ describe('chat composer readiness contract (#289, #300)', () => {
     expect(chatSource).not.toMatch(/\{st\.reason \?\? chatCopy\.runtimeNotReadyBody\}/);
   });
 
+  it('uses StatusCode-aware setup title and next-action hints (#585)', () => {
+    expect(chatSource).toContain('runtimeSetupTitle(st.code)');
+    expect(chatSource).toContain('runtimeSetupBannerNextAction');
+    expect(chatSource).toContain('chatCopy.runtimeSetupNextPrefix');
+    expect(chatSource).not.toContain('{chatCopy.runtimeNotReadyTitle}');
+    expect(copySource).toContain('runtimeSetupNextPrefix');
+  });
+
   it('centralizes Chat setup/error chrome in chatCopy (#602)', () => {
     expect(chatSource).toContain('chatCopy.setupPill');
     expect(chatSource).toContain('chatCopy.connectingLabel');

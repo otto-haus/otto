@@ -67,6 +67,12 @@ import {
   normalizeComposerSendShortcut,
   shouldComposerShortcutSubmit,
 } from '../chat/composer-keyboard';
+import {
+  nextActionFor,
+  runtimeSetupBody,
+  runtimeSetupTitle,
+  type ConnectionMode,
+} from '../../electron/shared/runtime-status-ui';
 
 // In Electron (window.otto present) → the runtime-wired LiveChat.
 // In the web preview → the file-backed PreviewChat (unchanged).
@@ -109,7 +115,18 @@ const labelForEffort = (value?: EffortLevel) => EFFORT_OPTIONS.find((e) => e.val
 type ChatRuntimeStatus = NonNullable<ReturnType<typeof useRuntimeContext>['status']>;
 
 const runtimeSetupBannerBody = (st: ChatRuntimeStatus): string =>
-  st.code === 'no-agent' ? chatCopy.runtimeNoAgentBody : (st.reason ?? chatCopy.runtimeNotReadyBody);
+  runtimeSetupBody(st.code, st.reason, {
+    noAgentBody: chatCopy.runtimeNoAgentBody,
+    defaultBody: chatCopy.runtimeNotReadyBody,
+  });
+
+const runtimeSetupBannerNextAction = (
+  st: ChatRuntimeStatus,
+  connectionMode: ConnectionMode | undefined,
+): string | null => {
+  if (!st.code || st.code === 'ready') return null;
+  return nextActionFor(st.code, { connectionMode });
+};
 
 const formatRuntimeSubtitle = (
   ready: boolean,
@@ -459,6 +476,7 @@ const LiveChat: React.FC<{
   const [effortOpen, setEffortOpen] = useState(false);
   const [permissionQueue, setPermissionQueue] = useState<PermissionRequestView[]>([]);
   const [composerSendShortcut, setComposerSendShortcut] = useState(DEFAULT_COMPOSER_SEND_SHORTCUT);
+  const [connectionMode, setConnectionMode] = useState<ConnectionMode>('embedded');
   const [permissionBusy, setPermissionBusy] = useState(false);
   const permission = headPermissionRequest(permissionQueue);
   const pendingPermissionCount = permissionQueue.length;
@@ -484,6 +502,7 @@ const LiveChat: React.FC<{
   const resolvedModelLabel = formatResolvedModelLabel(requestedModel, activeModel, modelOptions, labelForModel);
   const activeThreadTitle = threads.find((t) => t.id === rt.activeThreadId)?.title;
   const headTitle = displayThreadTitle(activeThreadTitle ?? 'New chat');
+  const setupNextAction = st && !ready ? runtimeSetupBannerNextAction(st, connectionMode) : null;
   const modelStatusLabel = resolvedModelLabel
     ? `${labelForModel(requestedModel, modelOptions)} → ${resolvedModelLabel}`
     : labelForModel(selectedModel, modelOptions);
@@ -518,6 +537,7 @@ const LiveChat: React.FC<{
     if (!api?.config?.get) return;
     void api.config.get().then((cfg) => {
       setComposerSendShortcut(normalizeComposerSendShortcut(cfg.composerSendShortcut));
+      setConnectionMode(cfg.connectionMode ?? 'embedded');
     });
   }, [api]);
 
@@ -1056,11 +1076,14 @@ const LiveChat: React.FC<{
               ) : (
                 <>
                   <div className="inkblock__eyebrow"><span className="dot dot--warn" /> {chatCopy.runtimeNotReadyEyebrow}</div>
-                  <div className="inkblock__title">{chatCopy.runtimeNotReadyTitle}</div>
+                  <div className="inkblock__title">{runtimeSetupTitle(st.code)}</div>
                   <div className="inkblock__meta">
                     <span>{runtimeSetupBannerBody(st)}</span>
                     {st.code === 'usage-limit' ? (
                       <span className="faint">{chatCopy.usageLimitSetupSuffix}</span>
+                    ) : null}
+                    {setupNextAction ? (
+                      <span className="faint">{chatCopy.runtimeSetupNextPrefix}: {setupNextAction}</span>
                     ) : null}
                   </div>
                 </>
