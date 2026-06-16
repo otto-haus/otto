@@ -890,6 +890,9 @@ export const settingsCopy = {
   diagnosticsLogsFolder: 'Logs folder',
   diagnosticsRunsFolder: 'Runs folder',
   diagnosticsLogsEmpty: 'No log tail yet — run a chat turn or refresh after reproducing the issue.',
+  diagnosticsEmbeddedStateTitle: 'This Mac runtime data',
+  diagnosticsEmbeddedStateBody:
+    'Runtime data for This Mac lives in ~/.otto/letta/ — not your separate Letta.app or dev ~/.letta install. Advanced Existing local Letta keeps its own paths.',
   safeResetTitle: 'Safe reset',
   safeResetLede: 'Stop the runtime, clear unsent queue items, and reconnect — without deleting config, threads, or receipts.',
   safeResetAction: 'Safe reset…',
