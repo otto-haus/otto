@@ -51,3 +51,11 @@ export function canAdvanceOnboardingModePick(
 ): boolean {
   return modePick !== null && !modeBusy;
 }
+
+/** Connect step on Settings uses a full overlay so readiness UI is not duplicated below. */
+export function shouldUseConnectSettingsOverlay(
+  step: OnboardingStep,
+  activeSurface: string,
+): boolean {
+  return step === 'connect' && activeSurface === 'settings';
+}
