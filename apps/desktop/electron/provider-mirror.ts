@@ -1,11 +1,11 @@
-import { getSecret } from './secret-store';
 import type { ConfigStore } from './config-store';
+import { hasLettaApiKey } from './letta-api-key';
 import type { ProviderMirrorSnapshot } from './shared/types';
 import { discoverLocalLettaContext } from './runtime-transport/letta-discovery';
 
 /** Write-only BYOK mirror — boolean presence only, never key material (078). */
 export function buildProviderMirror(config: ConfigStore, runtimeReady = false): ProviderMirrorSnapshot {
-  const hasApiKey = !!(getSecret('LETTA_API_KEY') || process.env.LETTA_API_KEY);
+  const hasApiKey = hasLettaApiKey(config);
   const ctx = discoverLocalLettaContext(config);
   return {
     lettaConnected: runtimeReady,
