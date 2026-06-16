@@ -51,6 +51,7 @@ export const PreviewPane: React.FC<PreviewPaneProps> = ({
           <div className="previewPane__title">{content?.title ?? previewCopy.emptyTitle}</div>
         </div>
         <div className="previewPane__actions">
+          {content?.badge ? <span className="pill pill--warn">{content.badge}</span> : null}
           {content ? <span className="pill">{content.kind}</span> : null}
           <button type="button" className="previewPane__close" aria-label={previewCopy.close} onClick={onClose}>
             {Icon.x}
