@@ -1,7 +1,10 @@
 import { afterEach, beforeEach, describe, expect, test } from 'bun:test';
 import {
+  initialSettingsSection,
   normalizeSettingsSection,
   openSettingsSection,
+  persistSettingsSection,
+  readLastSettingsSection,
   readPendingSettingsSection,
   SETTINGS_SECTION_EVENT,
   SETTINGS_SECTION_KEY,
@@ -61,5 +64,34 @@ describe('settings-section-nav (#613)', () => {
     window.addEventListener(SETTINGS_SECTION_EVENT, onEvent);
     openSettingsSection('labs');
     expect(seen).toBe(1);
+  });
+});
+
+describe('settings-section-nav (#615 persist)', () => {
+  const priorStorage = globalThis.sessionStorage;
+
+  beforeEach(() => {
+    const store = new Map<string, string>();
+    globalThis.sessionStorage = {
+      getItem: (key: string) => store.get(key) ?? null,
+      setItem: (key: string, value: string) => { store.set(key, value); },
+      removeItem: (key: string) => { store.delete(key); },
+    } as Storage;
+  });
+
+  afterEach(() => {
+    globalThis.sessionStorage = priorStorage;
+  });
+
+  test('persistSettingsSection and readLastSettingsSection survive remount', () => {
+    persistSettingsSection('memory');
+    expect(readLastSettingsSection()).toBe('memory');
+    expect(initialSettingsSection()).toBe('memory');
+  });
+
+  test('initialSettingsSection prefers pending deep-link over last', () => {
+    persistSettingsSection('general');
+    sessionStorage.setItem(SETTINGS_SECTION_KEY, 'culture');
+    expect(initialSettingsSection()).toBe('culture');
   });
 });

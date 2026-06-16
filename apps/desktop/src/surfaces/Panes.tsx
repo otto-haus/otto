@@ -51,8 +51,13 @@ import {
 import { useLabs } from '../labs/labs-context';
 import { gatedConnectionMode } from '../surface-tiers';
 import { resolveLettaOpenAction } from '../letta-open-action';
-import type { SettingsSectionId } from '../settings-section-nav';
-import { readPendingSettingsSection, SETTINGS_SECTION_EVENT } from '../settings-section-nav';
+import {
+  initialSettingsSection,
+  persistSettingsSection,
+  readPendingSettingsSection,
+  SETTINGS_SECTION_EVENT,
+  type SettingsSectionId,
+} from '../settings-section-nav';
 import { AppSourceDetails } from '../components/AppSourceBadge';
 import type { AppBuildInfo, IsolatedAgentRecord, WorkspaceInfo, SystemHealthReport, HealthCheck } from '../../electron/shared/types';
 import {
@@ -4492,13 +4497,17 @@ export const Settings: React.FC = () => {
   const { push: pushToast } = useToast();
   const { hydrated, isFeatureEnabled } = useLabs();
   const memoryObservatoryEnabled = hydrated && isFeatureEnabled('memory_observatory');
-  const [section, setSection] = useState<SettingsSectionId>('general');
+  const [section, setSection] = useState<SettingsSectionId>(initialSettingsSection);
   const [buildInfo, setBuildInfo] = useState<AppBuildInfo | null>(null);
 
   useEffect(() => {
     if (!api?.app?.buildInfo) return;
     void api.app.buildInfo().then(setBuildInfo).catch(() => setBuildInfo(null));
   }, [api]);
+
+  useEffect(() => {
+    persistSettingsSection(section);
+  }, [section]);
 
   useEffect(() => {
     const applyPendingSection = () => {
