@@ -75,10 +75,3 @@ jobs:
         run: git diff --exit-code -- bun.lock
       - name: Embedded Letta release gate (#678)
         run: bash scripts/ci-embedded-letta-gate.sh
-      - name: Upload embedded-letta smoke receipt
-        if: always()
-        uses: actions/upload-artifact@ea165ad8906dd5b0e675b55f7c63f7fee663114b # v4.6.2
-        with:
-          name: embedded-letta-smoke-receipt
-          path: ${{ runner.temp }}/otto-embedded-letta-receipts/
-          if-no-files-found: ignore
