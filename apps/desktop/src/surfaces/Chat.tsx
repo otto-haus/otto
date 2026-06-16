@@ -13,6 +13,7 @@ import { CheckBlockBanner, ContextDrawer, MessageActions, Modal, PermissionCard,
 import { TodoPanel } from '../components/TodoPanel';
 import { displayThreadTitle } from '../components/ui/ThreadList';
 import { chatCopy, permissionCopy, previewCopy, projectCopy, toastCopy } from '../copy/surfaces';
+import { openReceipt, openStandard } from '../surface-selection-nav';
 import { ProjectWindow } from './ProjectWindow';
 import { PermissionWindow } from './PermissionWindow';
 import {
@@ -1145,8 +1146,12 @@ const LiveChat: React.FC<{
                       message={m.checkBlock.message}
                       receiptId={m.checkBlock.receiptId}
                       standardId={m.checkBlock.standardId}
-                      onOpenReceipt={m.checkBlock.receiptId ? () => onNavigate('receipts') : undefined}
-                      onOpenStandard={m.checkBlock.standardId ? () => onNavigate('standards') : undefined}
+                      onOpenReceipt={m.checkBlock.receiptId
+                        ? () => openReceipt(m.checkBlock!.receiptId!, onNavigate)
+                        : undefined}
+                      onOpenStandard={m.checkBlock.standardId
+                        ? () => openStandard(m.checkBlock!.standardId!, onNavigate)
+                        : undefined}
                     />
                   ) : null}
                   {m.receiptInline ? (
@@ -1156,7 +1161,9 @@ const LiveChat: React.FC<{
                       action={m.receiptInline.action}
                       summary={m.receiptInline.summary}
                       authority={m.receiptInline.authority}
-                      onOpenReceipts={onNavigate ? () => onNavigate('receipts') : undefined}
+                      onOpenReceipts={onNavigate && m.receiptInline
+                        ? () => openReceipt(m.receiptInline!.id, onNavigate)
+                        : undefined}
                     />
                   ) : null}
                   {isError ? (
