@@ -51,6 +51,8 @@ import {
 import { useLabs } from '../labs/labs-context';
 import { gatedConnectionMode } from '../surface-tiers';
 import { resolveLettaOpenAction } from '../letta-open-action';
+import type { SettingsSectionId } from '../settings-section-nav';
+import { readPendingSettingsSection, SETTINGS_SECTION_EVENT } from '../settings-section-nav';
 import { AppSourceDetails } from '../components/AppSourceBadge';
 import type { AppBuildInfo, IsolatedAgentRecord, WorkspaceInfo, SystemHealthReport, HealthCheck } from '../../electron/shared/types';
 import {
@@ -4441,8 +4443,6 @@ const ConversationSortSetting: React.FC = () => {
   );
 };
 
-type SettingsSectionId = 'general' | 'display' | 'providers' | 'memory' | 'culture' | 'diagnostics';
-
 const ComposerSendShortcutSetting: React.FC = () => {
   const api = ottoApi();
   const [shortcut, setShortcut] = useState<ComposerSendShortcut>('enter');
@@ -4501,21 +4501,13 @@ export const Settings: React.FC = () => {
   }, [api]);
 
   useEffect(() => {
-    try {
-      const pending = sessionStorage.getItem('otto.settings.section');
-      const legacyLabs = pending === 'labs' ? 'diagnostics' : pending;
-      if (
-        legacyLabs === 'general'
-        || legacyLabs === 'display'
-        || legacyLabs === 'providers'
-        || legacyLabs === 'memory'
-        || legacyLabs === 'culture'
-        || legacyLabs === 'diagnostics'
-      ) {
-        setSection(legacyLabs);
-        sessionStorage.removeItem('otto.settings.section');
-      }
-    } catch { /* best effort */ }
+    const applyPendingSection = () => {
+      const pending = readPendingSettingsSection();
+      if (pending) setSection(pending);
+    };
+    applyPendingSection();
+    window.addEventListener(SETTINGS_SECTION_EVENT, applyPendingSection);
+    return () => window.removeEventListener(SETTINGS_SECTION_EVENT, applyPendingSection);
   }, []);
 
   const liveConnected = rt.electron && !!rt.status?.ready;

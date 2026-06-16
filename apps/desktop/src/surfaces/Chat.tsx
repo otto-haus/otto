@@ -53,6 +53,7 @@ import { TruncatedMessageRestore } from '../chat/TruncatedMessageRestore';
 import { PreviewPane } from '../components/PreviewPane';
 import { previewFromCodeBlock, previewFromText } from '../preview/preview-content';
 import { usePreviewPane } from '../preview/usePreviewPane';
+import { openSettingsSection } from '../settings-section-nav';
 import { isTypingTarget, jumpTurnAnchor, turnAnchorIndices } from '../chat/turn-navigation';
 import {
   curateModelOptions,
@@ -490,9 +491,7 @@ const LiveChat: React.FC<{
   const memoryLabel = st && isCoreMemoryReachable(st) ? chatCopy.memoryOn : chatCopy.memoryOff;
 
   const openMemoryObservatory = () => {
-    try {
-      sessionStorage.setItem('otto.settings.section', 'memory');
-    } catch { /* best effort */ }
+    openSettingsSection('memory');
     if (onNavigate) onNavigate('settings');
     else onOpenSettings?.();
   };
