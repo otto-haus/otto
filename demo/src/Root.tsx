@@ -4,11 +4,15 @@ import { FeatureDemo } from "./FeatureDemo";
 import { OttoV01DesktopWalkthrough } from "./OttoV01DesktopWalkthrough";
 import { OttoV01Curation } from "./OttoV01Curation";
 import { OttoV01Tickets } from "./OttoV01Tickets";
+import { OttoV01Channels } from "./OttoV01Channels";
+import { OttoV01FieldNote } from "./OttoV01FieldNote";
 import { OttoProductDemo } from "./OttoProductDemo";
 import {
   features,
   curationFeature,
   ticketsFeature,
+  channelsFeature,
+  fieldNoteFeature,
   totalFrames,
   FPS,
   walkthroughTotalFrames,
@@ -51,6 +55,22 @@ export const RemotionRoot: React.FC = () => {
         id="OttoV01Tickets"
         component={OttoV01Tickets}
         durationInFrames={totalFrames(ticketsFeature.lines.length)}
+        fps={FPS}
+        width={1920}
+        height={1080}
+      />
+      <Composition
+        id="OttoV01Channels"
+        component={OttoV01Channels}
+        durationInFrames={totalFrames(channelsFeature.lines.length)}
+        fps={FPS}
+        width={1920}
+        height={1080}
+      />
+      <Composition
+        id="OttoV01FieldNote"
+        component={OttoV01FieldNote}
+        durationInFrames={totalFrames(fieldNoteFeature.lines.length)}
         fps={FPS}
         width={1920}
         height={1080}
