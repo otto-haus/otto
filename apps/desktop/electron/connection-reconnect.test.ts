@@ -81,4 +81,51 @@ describe('saveConnectionAndReconnect (#538)', () => {
 
     expect(savedBaseUrl).toBe('http://127.0.0.1:8283');
   });
+
+  it('mode switch smoke: embedded ↔ existing reconnects with honest config (#677)', async () => {
+    const configModes: string[] = [];
+    const savedBaseUrls: Array<string | null | undefined> = [];
+    const api: ConnectionReconnectApi = {
+      config: {
+        set: async (patch) => {
+          if (patch.connectionMode) configModes.push(patch.connectionMode);
+          return {} as Awaited<ReturnType<ConnectionReconnectApi['config']['set']>>;
+        },
+      },
+      connection: {
+        save: async (input) => {
+          savedBaseUrls.push(input.baseUrl);
+          return {
+            ready: false,
+            code: 'unreachable' as const,
+            cliPath: '',
+            cliResolved: true,
+            reason: 'smoke',
+          };
+        },
+      },
+    };
+
+    await saveConnectionAndReconnect(api, {
+      baseUrl: '',
+      agentId: 'agent-embedded',
+      primaryAgentId: 'agent-embedded',
+      connectionMode: 'embedded',
+    });
+    await saveConnectionAndReconnect(api, {
+      baseUrl: 'http://127.0.0.1:8283',
+      agentId: 'agent-existing',
+      primaryAgentId: 'agent-existing',
+      connectionMode: 'existing',
+    });
+    await saveConnectionAndReconnect(api, {
+      baseUrl: 'http://127.0.0.1:9999',
+      agentId: 'agent-back',
+      primaryAgentId: 'agent-back',
+      connectionMode: 'embedded',
+    });
+
+    expect(configModes).toEqual(['embedded', 'existing', 'embedded']);
+    expect(savedBaseUrls).toEqual([null, 'http://127.0.0.1:8283', null]);
+  });
 });
