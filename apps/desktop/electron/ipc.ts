@@ -266,9 +266,11 @@ export function registerIpc(): IpcRegistration {
   });
   ipcMain.handle('otto:models:list', () => listLocalLettaModels(config));
   ipcMain.handle('otto:open-letta', async () => {
+    const liveStatus = runner.getStatus();
     const plan = planOpenLettaTarget({
       connectionMode: config.connectionMode(),
       lettaStateDir: config.ensureLettaStateDir(),
+      baseUrl: liveStatus.baseUrl ?? config.baseUrl(),
     });
     if (plan.kind === 'open-external') {
       await shell.openExternal(plan.target);

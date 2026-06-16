@@ -2,7 +2,17 @@ import { describe, expect, test } from 'bun:test';
 import { LETTA_APP_PATH, LETTA_DOCS_URL, planOpenLettaTarget } from './open-letta';
 
 describe('planOpenLettaTarget (#607)', () => {
-  test('embedded reveals the otto-owned runtime home, never Letta.app', () => {
+  test('embedded with loopback base URL opens Letta web UI for provider auth', () => {
+    const plan = planOpenLettaTarget({
+      connectionMode: 'embedded',
+      lettaStateDir: '/Users/test/.otto/letta',
+      baseUrl: 'http://127.0.0.1:8283/',
+    });
+    expect(plan.kind).toBe('open-external');
+    expect(plan.target).toBe('http://127.0.0.1:8283');
+  });
+
+  test('embedded without live backend reveals isolated runtime home', () => {
     const plan = planOpenLettaTarget({
       connectionMode: 'embedded',
       lettaStateDir: '/Users/test/.otto/letta',
