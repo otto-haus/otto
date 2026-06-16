@@ -4508,6 +4508,11 @@ export const Settings: React.FC = () => {
   const { push: pushToast } = useToast();
   const { hydrated, isFeatureEnabled } = useLabs();
   const memoryObservatoryEnabled = hydrated && isFeatureEnabled('memory_observatory');
+  const cogneeRecallEnabled = hydrated && isFeatureEnabled('knowledge_cognee');
+  const pgvectorRecallEnabled = hydrated && isFeatureEnabled('pgvector_recall');
+  const optionalRecallApiAvailable = !!(api?.cognee || api?.pgvector);
+  const optionalRecallVisible =
+    optionalRecallApiAvailable && (cogneeRecallEnabled || pgvectorRecallEnabled);
   const [section, setSection] = useState<SettingsSectionId>(initialSettingsSection);
   const [buildInfo, setBuildInfo] = useState<AppBuildInfo | null>(null);
 
@@ -4643,11 +4648,17 @@ export const Settings: React.FC = () => {
             <ComposerSendShortcutSetting />
           </section>
 
-          {(api?.cognee || api?.pgvector) ? (
+          {optionalRecallApiAvailable ? (
             <section>
               <SettingsSectionHeader title={settingsCopy.optionalRecallTitle} lede={settingsCopy.optionalRecallLede} />
-              <ConnectCognee />
-              <ConnectPgvector />
+              {optionalRecallVisible ? (
+                <>
+                  {api?.cognee && cogneeRecallEnabled ? <ConnectCognee /> : null}
+                  {api?.pgvector && pgvectorRecallEnabled ? <ConnectPgvector /> : null}
+                </>
+              ) : (
+                <p className="faint" style={{ fontSize: 12, marginTop: 8 }}>{settingsCopy.optionalRecallLabsGate}</p>
+              )}
             </section>
           ) : null}
 

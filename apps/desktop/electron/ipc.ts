@@ -126,6 +126,11 @@ export function registerIpc(): IpcRegistration {
     return labs.enabled === true && labs.features?.memory_observatory === true;
   };
 
+  const cultureExportEnabled = (): boolean => {
+    const labs = getLabsConfig(config.get());
+    return labs.enabled === true && labs.features?.culture_export === true;
+  };
+
   // Durable chat outbox (#754): SQLite source of truth in MAIN. The pump drives Letta through the
   // existing runner; the renderer subscribes to `otto:outbox` snapshots (no localStorage source).
   const outboxPort: RuntimeSendPort = {
@@ -384,8 +389,14 @@ export function registerIpc(): IpcRegistration {
   );
   ipcMain.handle('otto:constitution:open', () => shell.openPath(constitution.load().yamlPath));
 
-  ipcMain.handle('otto:culture:export', () => cultureExporter.exportBundle());
-  ipcMain.handle('otto:culture:import-preview', (_e, bundlePath: string) => cultureExporter.previewImport(bundlePath));
+  ipcMain.handle('otto:culture:export', () => {
+    if (!cultureExportEnabled()) throw new Error('Culture export requires Labs master on and culture_export enabled');
+    return cultureExporter.exportBundle();
+  });
+  ipcMain.handle('otto:culture:import-preview', (_e, bundlePath: string) => {
+    if (!cultureExportEnabled()) throw new Error('Culture import preview requires Labs master on and culture_export enabled');
+    return cultureExporter.previewImport(bundlePath);
+  });
 
   ipcMain.handle('otto:diagnostics:export', async () => {
     const buildInfo = readAppBuildInfo();
