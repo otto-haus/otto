@@ -897,6 +897,7 @@ export const settingsCopy = {
   safeResetDirtyBody: 'otto did not shut down cleanly last time. Run Safe reset if Chat is blank, frozen, or queue items are stuck.',
   memoryConnectWarn: 'Connect Letta in General before expecting live blocks.',
   memoryLabsGate: 'Memory observatory is Labs-only. Enable Labs → Memory observatory in Settings.',
+  optionalRecallLabsGate: 'Optional recall sidecars are Labs-only. Enable Labs → Knowledge (Cognee) or pgvector recall in Settings.',
   memorySearchPlaceholder: 'Search blocks…',
   memoryNoMatch: 'No memory blocks match. Connect an agent or adjust search.',
   dreamingTitle: 'Dreaming / sleep-time',
