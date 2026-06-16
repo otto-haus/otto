@@ -161,6 +161,16 @@ tasks:
     cmds:
       - node scripts/otto-staging-source-marker-smoke.cjs
 
+  smoke:staging:two-thread:
+    desc: Playwright smoke — two-thread isolation (#046); requires otto-staging.app
+    cmds:
+      - bun run --cwd apps/desktop smoke:e2e:two-thread
+
+  smoke:staging:onboarding:
+    desc: Playwright smoke — onboarding CTA/dock paths (#069–073); requires dist-app build
+    cmds:
+      - bun run --cwd apps/desktop smoke:e2e:onboarding
+
   smoke:clean-machine:
     desc: Clean-machine E2E — isolated HOME through embedded first chat (#291); uses dist-app, never otto.app or otto-staging.app
     cmds:

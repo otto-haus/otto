@@ -131,7 +131,7 @@ Staging smokes (never `/Applications/otto.app`):
 
 ```sh
 bash apps/desktop/scripts/deploy-staging.sh
-NODE_PATH=$HOME/.codex/admin/node_modules OTTO_RECEIPT_DIR=$PWD/docs/receipts/staging   node scripts/otto-staging-two-thread-smoke.cjs   # 046 thread isolation
+OTTO_RECEIPT_DIR=$PWD/docs/receipts/staging task smoke:staging:two-thread   # 046 thread isolation
 ```
 
 Clean-machine E2E (#291 — isolated HOME, no host Letta config, never live/staging installs):
