@@ -21,7 +21,7 @@ describe('chat shell craft polish (#081 / #98)', () => {
 
   it('links Chat memory subtitle to Settings observatory (#73)', () => {
     expect(chatSource).toContain('openMemoryObservatory');
-    expect(chatSource).toContain("sessionStorage.setItem('otto.settings.section', 'memory')");
+    expect(chatSource).toContain("openSettingsSection('memory')");
     expect(chatSource).toContain('chat__memoryLink');
     expect(chatSource).not.toMatch(/memfsEnabled\s*\?\s*chatCopy\.memoryOn/);
   });
