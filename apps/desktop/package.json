@@ -31,7 +31,7 @@
     "@letta-ai/letta-code-sdk": "^0.1.14",
     "@otto-haus/core": "workspace:*",
     "@vitejs/plugin-react": "latest",
-    "archiver": "^7.0.1",
+    "archiver": "^8.0.0",
     "better-sqlite3": "^12.10.1",
     "drizzle-orm": "^0.45.2",
     "electron-window-state": "^5.0.3",
@@ -49,7 +49,7 @@
   "devDependencies": {
     "@electron/rebuild": "^4.0.4",
     "@playwright/test": "^1.61.0",
-    "@types/archiver": "^6.0.3",
+    "@types/archiver": "^8.0.0",
     "@types/better-sqlite3": "^7.6.13",
     "@types/node": "^22.10.0",
     "@types/pg": "^8.15.2",
