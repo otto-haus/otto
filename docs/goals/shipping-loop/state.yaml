@@ -1,0 +1,105 @@
+# Unified shipping loop — orchestrator truth
+
+version: 1
+
+program:
+  status: active
+  stop_at: null
+  repo: otto-haus/otto
+  branch: cursor/unified-shipping-loop-orchestrator-559e
+
+caps:
+  global_defer_threshold: 45
+  defer_mode:
+    intake_workers: 0
+    merge_prep_workers: 6
+    ship_review_workers: 4
+
+phase_budgets:
+  intake_workers: 1
+  merge_prep_workers: 2
+  ship_review_workers: 2
+
+verdict_labels:
+  SHIP_CANDIDATE: "status: ready for review"
+  HOLD: "status: needs codex review"
+  CLOSE_CANDIDATE: "status: needs codex review"
+
+phase_state:
+  intake:
+    no_safe_work: true
+    collision_map:
+      "890":
+        paths:
+          - docs/goals/pr-ship-review-loop/README.md
+          - docs/goals/shipping-loop/README.md
+          - docs/goals/shipping-loop/receipts/tick-001.md
+          - docs/goals/shipping-loop/state.yaml
+      "891":
+        paths:
+          - apps/desktop/package.json
+          - bun.lock
+      "892":
+        paths:
+          - apps/desktop/package.json
+          - bun.lock
+          - packages/paperclip-letta-adapter/package.json
+          - packages/practices/package.json
+      "893":
+        paths:
+          - apps/desktop/package.json
+          - bun.lock
+      "894":
+        paths:
+          - .github/workflows/ci.yml
+          - .github/workflows/codeql.yml
+          - .github/workflows/dependency-review.yml
+          - .github/workflows/scheduled-ci.yml
+          - .github/workflows/scorecard.yml
+    in_progress: []
+    awaiting_pr: []
+    last_scout_note: "0 issues with status:ready or trunk-ready; 29 p-labeled issues exist but none intake-eligible."
+  merge_prep:
+    in_flight_babysit: []
+    last_completed:
+      - pr: 891
+        head_after: f087f36d0534993e286905077c948e41b03bc1b0
+        receipt: docs/receipts/merge-queue-pr-891.md
+      - pr: 894
+        head_after: 497b7b295f995dcf61ebc2545b752344619d1e02
+        receipt: docs/receipts/merge-queue-pr-894.md
+    queued:
+      - 892
+      - 893
+  ship_review:
+    reviewed_prs: {}
+    ready_for_sebastian: []
+
+ticks:
+  - tick: 1
+    at: "2026-06-18T01:02:43Z"
+    mode: full
+    intake_spawned: 0
+    merge_prep_spawned: 0
+    ship_review_spawned: 0
+    ready_for_sebastian: []
+    verdicts:
+      SHIP_CANDIDATE: []
+      HOLD: []
+      CLOSE_CANDIDATE: []
+    notes: "Bootstrap tick. 0 open PRs; Ready queue not visible via gh labels (Project V2 empty). Global agents ~3."
+    receipt: docs/goals/shipping-loop/receipts/tick-001.md
+
+  - tick: 2
+    at: "2026-06-29T01:00:13Z"
+    mode: full
+    intake_spawned: 0
+    merge_prep_spawned: 2
+    ship_review_spawned: 0
+    ready_for_sebastian: []
+    verdicts:
+      SHIP_CANDIDATE: []
+      HOLD: []
+      CLOSE_CANDIDATE: []
+    notes: "5 open PRs; babysit #891+#894 pushed audit overrides (CI green); #892+#893 queued; intake no_safe_work; ship_review skipped (all BLOCKED)."
+    receipt: docs/goals/shipping-loop/receipts/tick-002.md
