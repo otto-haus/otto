@@ -27,8 +27,8 @@
   },
   "dependencies": {
     "@letta-ai/letta-client": "^1.12.1",
-    "@letta-ai/letta-code": "0.19.5",
-    "@letta-ai/letta-code-sdk": "^0.1.14",
+    "@letta-ai/letta-code": "0.27.18",
+    "@letta-ai/letta-code-sdk": "^0.2.1",
     "@otto-haus/core": "workspace:*",
     "@vitejs/plugin-react": "latest",
     "archiver": "^7.0.1",
@@ -36,7 +36,7 @@
     "drizzle-orm": "^0.45.2",
     "electron-window-state": "^5.0.3",
     "p-queue": "^9.3.0",
-    "pg": "^8.21.0",
+    "pg": "^8.22.0",
     "react": "latest",
     "react-dom": "latest",
     "streamdown": "2.5.0",
@@ -47,8 +47,8 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
-    "@electron/rebuild": "^4.0.4",
-    "@playwright/test": "^1.61.0",
+    "@electron/rebuild": "^4.0.6",
+    "@playwright/test": "^1.61.1",
     "@types/archiver": "^6.0.3",
     "@types/better-sqlite3": "^7.6.13",
     "@types/node": "^22.10.0",
@@ -56,7 +56,7 @@
     "@types/react": "latest",
     "@types/react-dom": "latest",
     "@types/ws": "^8.18.1",
-    "electron": "^42.4.0",
+    "electron": "^42.5.1",
     "electron-builder": "26.15.3",
     "electron-vite": "^5.0.0",
     "esbuild": "^0.28.1"
