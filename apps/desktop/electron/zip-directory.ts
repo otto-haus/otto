@@ -1,11 +1,11 @@
 import { createWriteStream } from 'node:fs';
-import archiver from 'archiver';
+import { ZipArchive } from 'archiver';
 
 /** Write a `.zip` archive for `sourceDir` contents (paths relative to `sourceDir`). */
 export function zipDirectory(sourceDir: string, zipPath: string): Promise<void> {
   return new Promise((resolve, reject) => {
     const output = createWriteStream(zipPath);
-    const archive = archiver('zip', { zlib: { level: 9 } });
+    const archive = new ZipArchive({ zlib: { level: 9 } });
 
     output.on('close', () => resolve());
     output.on('error', reject);
