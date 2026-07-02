@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import type { BrowserWindow } from 'electron';
 import { applyEmbeddedLettaSettingsEnv, resolveLettaSettingsPath } from '../dream-settings';
-import type { PermissionRequest, PermissionResponse, RuntimePreferences, RuntimeStatus, StatusCode, OttoConfig } from '../shared/types';
+import type { EffortLevel, PermissionRequest, PermissionResponse, RuntimePreferences, RuntimeStatus, StatusCode, OttoConfig } from '../shared/types';
 import type { ConfigStore } from '../config-store';
 import { ReceiptWriter } from '../receipt-writer';
 import { ReceiptStore } from '../receipt-store';
@@ -14,7 +14,6 @@ import { resolveInitBaseUrl, resolveLiveLocalLettaContext, type InitBaseUrlResol
 import {
   SMOKE_MODE,
   smokeMode,
-  WANT_MEMFS,
   classify,
   friendly,
   isInvalidModelError,
@@ -58,14 +57,27 @@ type PendingPermission = {
 };
 
 type SDK = typeof import('@letta-ai/letta-code-sdk');
-type Session = import('@letta-ai/letta-code-sdk').Session;
+type LettaCodeSession = import('@letta-ai/letta-code-sdk').LettaCodeSession;
+type SDKInitMessage = import('@letta-ai/letta-code-sdk').SDKInitMessage;
 type CreateSessionOptions = import('@letta-ai/letta-code-sdk').CreateSessionOptions;
+type ReasoningEffort = import('@letta-ai/letta-code-sdk').ReasoningEffort;
 type SendMessage = import('@letta-ai/letta-code-sdk').SendMessage;
+
+/** SDK 0.2.x subprocess sessions still implement initialize(); it's omitted from LettaCodeSession. */
+type InitializableSession = LettaCodeSession & {
+  initialize(): Promise<SDKInitMessage>;
+};
+
+function reasoningEffortForSdk(effort: EffortLevel): ReasoningEffort {
+  if (effort === 'off') return 'none';
+  if (effort === 'max') return 'xhigh';
+  return effort;
+}
 
 /** SDK/subprocess path — existing Letta Code session via @letta-ai/letta-code-sdk. */
 export class SdkSubprocessTransport implements OttoRuntimeTransport {
   private sdk: SDK | null = null;
-  private session: Session | null = null;
+  private session: LettaCodeSession | null = null;
   private status: RuntimeStatus = { ready: false, reason: 'not initialized', ...resolveCli('embedded') };
   private pending = new Map<string, PendingPermission>();
   private receipts = new ReceiptWriter();
@@ -161,13 +173,9 @@ export class SdkSubprocessTransport implements OttoRuntimeTransport {
       const model = this.config.modelHandle();
       if (model) o.model = modelSelectionForCli(model, effort);
     }
-    // Newer SDKs may expose this directly. Current CLI builds also apply effort when `model`
-    // is a preset id (see modelSelectionForCli), so this is only a forward-compatible hint.
-    if (effort !== 'off') (o as CreateSessionOptions & { reasoningEffort?: string }).reasoningEffort = effort;
-    if (WANT_MEMFS) {
-      o.memfs = true;
-      o.memfsStartup = 'background';
-    }
+    // SDK 0.2.x exposes reasoningEffort on CreateSessionOptions (max → xhigh, off → none).
+    // CLI preset ids from modelSelectionForCli remain the primary path; this is a forward hint.
+    if (effort !== 'off') o.reasoningEffort = reasoningEffortForSdk(effort);
     return o;
   }
 
@@ -273,10 +281,10 @@ export class SdkSubprocessTransport implements OttoRuntimeTransport {
       const session = resumeId
         ? (fresh || SMOKE_MODE ? sdk.createSession(resumeId, sessionOpts) : sdk.resumeSession(resumeId, sessionOpts))
         : sdk.createSession(undefined, sessionOpts);
-      let init: Awaited<ReturnType<Session['initialize']>>;
+      let init: SDKInitMessage;
       try {
         init = await withTimeout(
-          session.initialize(),
+          (session as InitializableSession).initialize(),
           sessionInitTimeoutMs(),
           'Letta session.initialize()',
         );
