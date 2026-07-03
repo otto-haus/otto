@@ -6,7 +6,7 @@ program:
   status: active
   stop_at: null
   repo: otto-haus/otto
-  branch: cursor/unified-shipping-loop-orchestrator-2c84
+  branch: cursor/unified-shipping-loop-orchestrator-a132
 
 caps:
   global_defer_threshold: 45
@@ -94,6 +94,7 @@ phase_state:
           - package.json
       "899":
         paths:
+          - bun.lock
           - docs/goals/pr-ship-review-loop/README.md
           - docs/goals/shipping-loop/README.md
           - docs/goals/shipping-loop/receipts/tick-001.md
@@ -103,6 +104,22 @@ phase_state:
           - docs/goals/shipping-loop/state.yaml
           - docs/receipts/merge-queue-pr-891.md
           - docs/receipts/merge-queue-pr-894.md
+          - docs/receipts/merge-queue-pr-899.md
+          - package.json
+      "900":
+        paths:
+          - bun.lock
+          - docs/goals/pr-ship-review-loop/README.md
+          - docs/goals/shipping-loop/README.md
+          - docs/goals/shipping-loop/receipts/tick-001.md
+          - docs/goals/shipping-loop/receipts/tick-002.md
+          - docs/goals/shipping-loop/receipts/tick-003.md
+          - docs/goals/shipping-loop/receipts/tick-004.md
+          - docs/goals/shipping-loop/receipts/tick-005.md
+          - docs/goals/shipping-loop/state.yaml
+          - docs/receipts/merge-queue-pr-891.md
+          - docs/receipts/merge-queue-pr-894.md
+          - package.json
     in_progress: []
     awaiting_pr: []
     last_scout_note: "0 issues with status:ready or trunk-ready; 29 p-labeled issues exist but none intake-eligible."
@@ -133,8 +150,10 @@ phase_state:
       - pr: 898
         head_after: 34a2f26ef1fac2af50c17430de472a16172ecfae
         receipt: docs/receipts/merge-queue-pr-898.md
-    queued:
-      - 899
+      - pr: 899
+        head_after: 88630eaef0b61e1269f25879c578d45477653b54
+        receipt: docs/receipts/merge-queue-pr-899.md
+    queued: []
   ship_review:
     reviewed_prs: {}
     ready_for_sebastian: []
@@ -209,3 +228,17 @@ ticks:
       CLOSE_CANDIDATE: []
     notes: "9 open PRs; babysit #896+#898 pushed fixes (#898 CI green, #896 CI IN_PROGRESS); #899 queued; intake no_safe_work; ship_review skipped (all BLOCKED)."
     receipt: docs/goals/shipping-loop/receipts/tick-005.md
+
+  - tick: 6
+    at: "2026-07-03T01:02:00Z"
+    mode: full
+    intake_spawned: 0
+    merge_prep_spawned: 1
+    ship_review_spawned: 0
+    ready_for_sebastian: []
+    verdicts:
+      SHIP_CANDIDATE: []
+      HOLD: []
+      CLOSE_CANDIDATE: []
+    notes: "10 open PRs; babysit #899 pushed audit overrides (CI IN_PROGRESS); merge_prep queue drained; intake no_safe_work; ship_review skipped (all BLOCKED)."
+    receipt: docs/goals/shipping-loop/receipts/tick-006.md
