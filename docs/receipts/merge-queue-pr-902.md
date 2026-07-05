@@ -12,7 +12,7 @@
 |-------|-----|
 | Before (babysit start) | `60de8ff7e05481238dbba021409978ff1206ba62` |
 | After (audit fix pushed) | `5ec2f824874856790f7501eafd031ab23fb0b052` |
-| Final branch head (receipt commit) | `78032056711cdd5c83842946f3895dda80d83e42` |
+| Final branch head (receipt commit) | `4b18505d0d7dd86117d1e8f55d208b44dcd48164` |
 
 ## Rebase
 
@@ -41,7 +41,7 @@ Commit: `5ec2f82` — `fix(deps): override dompurify and undici for clean bun au
 ## Push status
 
 - **Succeeded:** `git push origin cursor/unified-shipping-loop-orchestrator-7889`
-- Remote updated: `60de8ff..7803205` (audit fix `5ec2f82`, receipt `7803205`)
+- Remote updated: `60de8ff..4b18505` (audit fix `5ec2f82`, receipt `4b18505`)
 
 ## Blockers
 
