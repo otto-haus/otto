@@ -6,7 +6,7 @@ program:
   status: active
   stop_at: null
   repo: otto-haus/otto
-  branch: cursor/unified-shipping-loop-orchestrator-3e31
+  branch: cursor/unified-shipping-loop-orchestrator-82c3
 
 caps:
   global_defer_threshold: 45
@@ -61,6 +61,7 @@ phase_state:
           - package.json
       "895":
         paths:
+          - bun.lock
           - docs/goals/pr-ship-review-loop/README.md
           - docs/goals/shipping-loop/README.md
           - docs/goals/shipping-loop/receipts/tick-001.md
@@ -68,12 +69,7 @@ phase_state:
           - docs/goals/shipping-loop/state.yaml
           - docs/receipts/merge-queue-pr-891.md
           - docs/receipts/merge-queue-pr-894.md
-      "896":
-        paths:
-          - apps/desktop/electron/runtime-transport/sdk-subprocess-transport.ts
-          - apps/desktop/package.json
-          - bun.lock
-          - docs/receipts/merge-queue-pr-896.md
+          - docs/receipts/merge-queue-pr-895.md
           - package.json
       "897":
         paths:
@@ -90,8 +86,8 @@ phase_state:
           - docs/goals/shipping-loop/receipts/tick-002.md
           - docs/goals/shipping-loop/receipts/tick-003.md
           - docs/goals/shipping-loop/state.yaml
-          - docs/receipts/merge-queue-pr-892.md
-          - docs/receipts/merge-queue-pr-893.md
+          - docs/receipts/merge-queue-pr-891.md
+          - docs/receipts/merge-queue-pr-894.md
           - docs/receipts/merge-queue-pr-898.md
           - package.json
       "899":
@@ -167,12 +163,39 @@ phase_state:
           - docs/goals/shipping-loop/receipts/tick-006.md
           - docs/goals/shipping-loop/receipts/tick-007.md
           - docs/goals/shipping-loop/receipts/tick-008.md
+          - docs/goals/shipping-loop/state.yaml
+          - docs/receipts/merge-queue-pr-891.md
+          - docs/receipts/merge-queue-pr-894.md
+          - docs/receipts/merge-queue-pr-902.md
+          - package.json
+      "904":
+        paths:
+          - docs/goals/pr-ship-review-loop/README.md
+          - docs/goals/shipping-loop/README.md
+          - docs/goals/shipping-loop/receipts/tick-001.md
+          - docs/goals/shipping-loop/receipts/tick-002.md
+          - docs/goals/shipping-loop/receipts/tick-003.md
+          - docs/goals/shipping-loop/receipts/tick-004.md
+          - docs/goals/shipping-loop/receipts/tick-005.md
+          - docs/goals/shipping-loop/receipts/tick-006.md
+          - docs/goals/shipping-loop/receipts/tick-007.md
+          - docs/goals/shipping-loop/receipts/tick-008.md
           - docs/goals/shipping-loop/receipts/tick-009.md
           - docs/goals/shipping-loop/state.yaml
           - docs/receipts/merge-queue-pr-891.md
           - docs/receipts/merge-queue-pr-894.md
           - docs/receipts/merge-queue-pr-902.md
           - docs/receipts/merge-queue-pr-903.md
+      "905":
+        paths:
+          - apps/desktop/electron/runtime-transport/sdk-subprocess-transport.ts
+          - apps/desktop/package.json
+          - bun.lock
+          - package.json
+      "906":
+        paths:
+          - .github/workflows/codeql.yml
+          - bun.lock
           - package.json
     in_progress: []
     awaiting_pr: []
@@ -213,6 +236,12 @@ phase_state:
       - pr: 903
         head_after: 68ae614f3db529b12d0abcded2ead2a774b82713
         receipt: docs/receipts/merge-queue-pr-903.md
+      - pr: 905
+        head_after: f11d57da27955d864a8b5d41842538748724a684
+        receipt: docs/receipts/merge-queue-pr-905.md
+      - pr: 906
+        head_after: e55ea6af8852097f12bb6510248ffa9312ccd670
+        receipt: docs/receipts/merge-queue-pr-906.md
     queued: []
   ship_review:
     reviewed_prs: {}
@@ -344,3 +373,17 @@ ticks:
       CLOSE_CANDIDATE: []
     notes: "13 open PRs; babysit #903 pushed audit overrides (CI IN_PROGRESS); intake no_safe_work; ship_review skipped (all BLOCKED, none CLEAN)."
     receipt: docs/goals/shipping-loop/receipts/tick-009.md
+
+  - tick: 10
+    at: "2026-07-07T01:02:25Z"
+    mode: full
+    intake_spawned: 0
+    merge_prep_spawned: 2
+    ship_review_spawned: 0
+    ready_for_sebastian: []
+    verdicts:
+      SHIP_CANDIDATE: []
+      HOLD: []
+      CLOSE_CANDIDATE: []
+    notes: "15 open PRs; babysit #905+#906 pushed fixes (CI awaiting); #904 audit fix on orchestrator branch; intake no_safe_work; ship_review skipped (all BLOCKED, none CLEAN)."
+    receipt: docs/goals/shipping-loop/receipts/tick-010.md
