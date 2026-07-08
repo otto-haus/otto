@@ -32,7 +32,7 @@
 
 | PR | Status | Action |
 |---|---|---|
-| #904 | CI FAILURE (`checks` / `bun audit`) | babysit pushed audit overrides (`a504909`); CI **awaiting** |
+| #904 | CI FAILURE (`checks` / `bun audit`) | babysit pushed audit overrides (`a504909`); CI **green** |
 | #905 | CI green (since tick 010) | skip — already babysat |
 | #906 | CI green (since tick 010) | skip — already babysat |
 | #890–#903, #907 | CI green | skip — no red-CI |

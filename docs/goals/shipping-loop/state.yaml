@@ -425,5 +425,5 @@ ticks:
       SHIP_CANDIDATE: []
       HOLD: []
       CLOSE_CANDIDATE: []
-    notes: "16 open PRs; babysit #904 pushed audit overrides (CI awaiting); #905/#906 CI green since tick 010; merge_prep queue drained; intake no_safe_work; ship_review skipped (all BLOCKED, none CLEAN)."
+    notes: "16 open PRs; babysit #904 pushed audit overrides (CI green); #905/#906 CI green since tick 010; merge_prep queue drained; intake no_safe_work; ship_review skipped (all BLOCKED, none CLEAN)."
     receipt: docs/goals/shipping-loop/receipts/tick-011.md
