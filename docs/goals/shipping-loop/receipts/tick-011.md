@@ -57,8 +57,8 @@ No readonly reviewers spawned; no verdict labels applied.
 Ship candidates: —
 Close candidates: —
 Hold — needs fix: —
-Waiting on merge_prep: #904 (CI re-running after audit fix on branch cursor/unified-shipping-loop-orchestrator-3e31)
-CI-green, review gate BLOCKED: #890, #892, #893, #894, #895, #897, #898, #899, #900, #901, #902, #903, #905, #906, #907 (await Sebastian review / branch protection)
+Waiting on merge_prep: —
+CI-green, review gate BLOCKED: #890, #892, #893, #894, #895, #897, #898, #899, #900, #901, #902, #903, #904, #905, #906, #907 (await Sebastian review / branch protection)
 Intake: no_safe_work (mark issues Ready on Project board or add intake label)
 Orchestrator meta: this tick (#011) records state on branch cursor/unified-shipping-loop-orchestrator-5f86
 ```
