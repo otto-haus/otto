@@ -6,7 +6,7 @@ program:
   status: active
   stop_at: null
   repo: otto-haus/otto
-  branch: cursor/unified-shipping-loop-orchestrator-86f0
+  branch: cursor/unified-shipping-loop-orchestrator-f500
 
 caps:
   global_defer_threshold: 45
@@ -293,9 +293,32 @@ phase_state:
           - docs/receipts/merge-queue-pr-908.md
           - docs/receipts/merge-queue-pr-909.md
           - package.json
+      "911":
+        paths:
+          - bun.lock
+          - docs/goals/pr-ship-review-loop/README.md
+          - docs/goals/shipping-loop/README.md
+          - docs/goals/shipping-loop/receipts/tick-001.md
+          - docs/goals/shipping-loop/receipts/tick-002.md
+          - docs/goals/shipping-loop/receipts/tick-003.md
+          - docs/goals/shipping-loop/receipts/tick-004.md
+          - docs/goals/shipping-loop/receipts/tick-005.md
+          - docs/goals/shipping-loop/receipts/tick-006.md
+          - docs/goals/shipping-loop/receipts/tick-007.md
+          - docs/goals/shipping-loop/receipts/tick-008.md
+          - docs/goals/shipping-loop/receipts/tick-009.md
+          - docs/goals/shipping-loop/receipts/tick-010.md
+          - docs/goals/shipping-loop/receipts/tick-011.md
+          - docs/goals/shipping-loop/receipts/tick-012.md
+          - docs/goals/shipping-loop/receipts/tick-013.md
+          - docs/goals/shipping-loop/receipts/tick-014.md
+          - docs/goals/shipping-loop/state.yaml
+          - docs/receipts/merge-queue-pr-909.md
+          - docs/receipts/merge-queue-pr-911.md
+          - package.json
     in_progress: []
     awaiting_pr: []
-    last_scout_note: "0 issues with status:ready or trunk-ready; 29 p-labeled issues exist but none intake-eligible (tick 014)."
+    last_scout_note: "0 issues with status:ready or trunk-ready; 29 p-labeled issues exist but none intake-eligible (tick 015)."
   merge_prep:
     in_flight_babysit: []
     last_completed:
@@ -347,6 +370,9 @@ phase_state:
       - pr: 909
         head_after: c27a927824895afa8b8fbc1560a62fcaeb0e91e5
         receipt: docs/receipts/merge-queue-pr-909.md
+      - pr: 911
+        head_after: f22f63b855e5d532f79ea661e2d96060fcd0bb68
+        receipt: docs/receipts/merge-queue-pr-911.md
     queued: []
   ship_review:
     reviewed_prs: {}
@@ -548,3 +574,17 @@ ticks:
       CLOSE_CANDIDATE: []
     notes: "19 open PRs; #909 CI green since tick 013; merge_prep queue empty (no CONFLICTING/DIRTY/red-CI); intake no_safe_work; ship_review skipped (all BLOCKED, none CLEAN)."
     receipt: docs/goals/shipping-loop/receipts/tick-014.md
+
+  - tick: 15
+    at: "2026-07-12T01:02:38Z"
+    mode: full
+    intake_spawned: 0
+    merge_prep_spawned: 1
+    ship_review_spawned: 0
+    ready_for_sebastian: []
+    verdicts:
+      SHIP_CANDIDATE: []
+      HOLD: []
+      CLOSE_CANDIDATE: []
+    notes: "20 open PRs; babysit #911 pushed audit overrides (CI awaiting); #911 was red-CI from tick 014; intake no_safe_work; ship_review skipped (all BLOCKED, none CLEAN)."
+    receipt: docs/goals/shipping-loop/receipts/tick-015.md
