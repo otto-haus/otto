@@ -540,9 +540,9 @@ phase_state:
         receipt: docs/receipts/merge-queue-pr-916.md
         note: "audit fix on tick 020 branch; #916 docs-only PR superseded"
       - pr: 917
-        head_after: pending-push
+        head_after: 958a3fbe0416e68006acdf44a02df2dc5a8c6efa
         receipt: docs/receipts/merge-queue-pr-917.md
-        note: "dream-settings test isolation fix on tick 021 branch; supersedes #916/#917 draft CI failures"
+        note: "dream-settings test isolation fix on tick 021 branch (#918); supersedes #916/#917 draft CI failures"
     queued: []
   ship_review:
     reviewed_prs: {}
