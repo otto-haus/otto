@@ -647,7 +647,7 @@ phase_state:
         receipt: docs/receipts/merge-queue-pr-917.md
         note: "dream-settings test isolation fix on tick 021 branch (#918 head 01c178c); CI green confirmed tick 022"
       - pr: 921
-        head_after: 56004a735b72942b6bd7d79c8dbcbe7fa07a20c
+        head_after: 56004a76aaaca063feb21060f4f7f4848b81a3f1
         receipt: docs/receipts/merge-queue-pr-921.md
         note: "SDK 0.2.x sdk-subprocess-transport fix on tick 024 branch; mirrors #905"
     queued: []
