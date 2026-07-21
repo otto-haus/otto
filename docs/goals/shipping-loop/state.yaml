@@ -1,0 +1,993 @@
+# Unified shipping loop — orchestrator truth
+
+version: 1
+
+program:
+  status: active
+  stop_at: null
+  repo: otto-haus/otto
+  branch: cursor/unified-shipping-loop-orchestrator-0eb3
+
+caps:
+  global_defer_threshold: 45
+  defer_mode:
+    intake_workers: 0
+    merge_prep_workers: 6
+    ship_review_workers: 4
+
+phase_budgets:
+  intake_workers: 1
+  merge_prep_workers: 2
+  ship_review_workers: 2
+
+verdict_labels:
+  SHIP_CANDIDATE: "status: ready for review"
+  HOLD: "status: needs codex review"
+  CLOSE_CANDIDATE: "status: needs codex review"
+
+phase_state:
+  intake:
+    no_safe_work: true
+    collision_map:
+      "890":
+        paths:
+          - docs/goals/pr-ship-review-loop/README.md
+          - docs/goals/shipping-loop/README.md
+          - docs/goals/shipping-loop/receipts/tick-001.md
+          - docs/goals/shipping-loop/state.yaml
+      "892":
+        paths:
+          - apps/desktop/package.json
+          - bun.lock
+          - docs/receipts/merge-queue-pr-892.md
+          - package.json
+          - packages/paperclip-letta-adapter/package.json
+          - packages/practices/package.json
+      "893":
+        paths:
+          - apps/desktop/electron/zip-directory.ts
+          - apps/desktop/package.json
+          - bun.lock
+          - docs/receipts/merge-queue-pr-893.md
+          - package.json
+      "894":
+        paths:
+          - .github/workflows/ci.yml
+          - .github/workflows/codeql.yml
+          - .github/workflows/dependency-review.yml
+          - .github/workflows/scheduled-ci.yml
+          - .github/workflows/scorecard.yml
+          - bun.lock
+          - package.json
+      "895":
+        paths:
+          - bun.lock
+          - docs/goals/pr-ship-review-loop/README.md
+          - docs/goals/shipping-loop/README.md
+          - docs/goals/shipping-loop/receipts/tick-001.md
+          - docs/goals/shipping-loop/receipts/tick-002.md
+          - docs/goals/shipping-loop/state.yaml
+          - docs/receipts/merge-queue-pr-891.md
+          - docs/receipts/merge-queue-pr-894.md
+          - docs/receipts/merge-queue-pr-895.md
+          - package.json
+      "897":
+        paths:
+          - .github/workflows/ci.yml
+          - bun.lock
+          - docs/receipts/merge-queue-pr-897.md
+          - package.json
+      "898":
+        paths:
+          - bun.lock
+          - docs/goals/pr-ship-review-loop/README.md
+          - docs/goals/shipping-loop/README.md
+          - docs/goals/shipping-loop/receipts/tick-001.md
+          - docs/goals/shipping-loop/receipts/tick-002.md
+          - docs/goals/shipping-loop/receipts/tick-003.md
+          - docs/goals/shipping-loop/state.yaml
+          - docs/receipts/merge-queue-pr-891.md
+          - docs/receipts/merge-queue-pr-894.md
+          - docs/receipts/merge-queue-pr-898.md
+          - package.json
+      "899":
+        paths:
+          - bun.lock
+          - docs/goals/pr-ship-review-loop/README.md
+          - docs/goals/shipping-loop/README.md
+          - docs/goals/shipping-loop/receipts/tick-001.md
+          - docs/goals/shipping-loop/receipts/tick-002.md
+          - docs/goals/shipping-loop/receipts/tick-003.md
+          - docs/goals/shipping-loop/receipts/tick-004.md
+          - docs/goals/shipping-loop/state.yaml
+          - docs/receipts/merge-queue-pr-891.md
+          - docs/receipts/merge-queue-pr-894.md
+          - docs/receipts/merge-queue-pr-899.md
+          - package.json
+      "900":
+        paths:
+          - bun.lock
+          - docs/goals/pr-ship-review-loop/README.md
+          - docs/goals/shipping-loop/README.md
+          - docs/goals/shipping-loop/receipts/tick-001.md
+          - docs/goals/shipping-loop/receipts/tick-002.md
+          - docs/goals/shipping-loop/receipts/tick-003.md
+          - docs/goals/shipping-loop/receipts/tick-004.md
+          - docs/goals/shipping-loop/receipts/tick-005.md
+          - docs/goals/shipping-loop/state.yaml
+          - docs/receipts/merge-queue-pr-891.md
+          - docs/receipts/merge-queue-pr-894.md
+          - package.json
+      "901":
+        paths:
+          - bun.lock
+          - docs/goals/pr-ship-review-loop/README.md
+          - docs/goals/shipping-loop/README.md
+          - docs/goals/shipping-loop/receipts/tick-001.md
+          - docs/goals/shipping-loop/receipts/tick-002.md
+          - docs/goals/shipping-loop/receipts/tick-003.md
+          - docs/goals/shipping-loop/receipts/tick-004.md
+          - docs/goals/shipping-loop/receipts/tick-005.md
+          - docs/goals/shipping-loop/receipts/tick-006.md
+          - docs/goals/shipping-loop/state.yaml
+          - docs/receipts/merge-queue-pr-891.md
+          - docs/receipts/merge-queue-pr-894.md
+          - package.json
+      "902":
+        paths:
+          - bun.lock
+          - docs/goals/pr-ship-review-loop/README.md
+          - docs/goals/shipping-loop/README.md
+          - docs/goals/shipping-loop/receipts/tick-001.md
+          - docs/goals/shipping-loop/receipts/tick-002.md
+          - docs/goals/shipping-loop/receipts/tick-003.md
+          - docs/goals/shipping-loop/receipts/tick-004.md
+          - docs/goals/shipping-loop/receipts/tick-005.md
+          - docs/goals/shipping-loop/receipts/tick-006.md
+          - docs/goals/shipping-loop/receipts/tick-007.md
+          - docs/goals/shipping-loop/state.yaml
+          - docs/receipts/merge-queue-pr-891.md
+          - docs/receipts/merge-queue-pr-894.md
+          - docs/receipts/merge-queue-pr-902.md
+          - package.json
+      "903":
+        paths:
+          - bun.lock
+          - docs/goals/pr-ship-review-loop/README.md
+          - docs/goals/shipping-loop/README.md
+          - docs/goals/shipping-loop/receipts/tick-001.md
+          - docs/goals/shipping-loop/receipts/tick-002.md
+          - docs/goals/shipping-loop/receipts/tick-003.md
+          - docs/goals/shipping-loop/receipts/tick-004.md
+          - docs/goals/shipping-loop/receipts/tick-005.md
+          - docs/goals/shipping-loop/receipts/tick-006.md
+          - docs/goals/shipping-loop/receipts/tick-007.md
+          - docs/goals/shipping-loop/receipts/tick-008.md
+          - docs/goals/shipping-loop/state.yaml
+          - docs/receipts/merge-queue-pr-891.md
+          - docs/receipts/merge-queue-pr-894.md
+          - docs/receipts/merge-queue-pr-902.md
+          - package.json
+      "904":
+        paths:
+          - bun.lock
+          - docs/goals/pr-ship-review-loop/README.md
+          - docs/goals/shipping-loop/README.md
+          - docs/goals/shipping-loop/receipts/tick-001.md
+          - docs/goals/shipping-loop/receipts/tick-002.md
+          - docs/goals/shipping-loop/receipts/tick-003.md
+          - docs/goals/shipping-loop/receipts/tick-004.md
+          - docs/goals/shipping-loop/receipts/tick-005.md
+          - docs/goals/shipping-loop/receipts/tick-006.md
+          - docs/goals/shipping-loop/receipts/tick-007.md
+          - docs/goals/shipping-loop/receipts/tick-008.md
+          - docs/goals/shipping-loop/receipts/tick-009.md
+          - docs/goals/shipping-loop/state.yaml
+          - docs/receipts/merge-queue-pr-891.md
+          - docs/receipts/merge-queue-pr-894.md
+          - docs/receipts/merge-queue-pr-902.md
+          - docs/receipts/merge-queue-pr-903.md
+          - docs/receipts/merge-queue-pr-904.md
+          - package.json
+      "905":
+        paths:
+          - apps/desktop/electron/runtime-transport/sdk-subprocess-transport.ts
+          - apps/desktop/package.json
+          - bun.lock
+          - package.json
+      "906":
+        paths:
+          - .github/workflows/codeql.yml
+          - bun.lock
+          - package.json
+      "907":
+        paths:
+          - bun.lock
+          - docs/goals/pr-ship-review-loop/README.md
+          - docs/goals/shipping-loop/README.md
+          - docs/goals/shipping-loop/receipts/tick-001.md
+          - docs/goals/shipping-loop/receipts/tick-002.md
+          - docs/goals/shipping-loop/receipts/tick-003.md
+          - docs/goals/shipping-loop/receipts/tick-004.md
+          - docs/goals/shipping-loop/receipts/tick-005.md
+          - docs/goals/shipping-loop/receipts/tick-006.md
+          - docs/goals/shipping-loop/receipts/tick-007.md
+          - docs/goals/shipping-loop/receipts/tick-008.md
+          - docs/goals/shipping-loop/receipts/tick-009.md
+          - docs/goals/shipping-loop/receipts/tick-010.md
+          - docs/goals/shipping-loop/state.yaml
+          - docs/receipts/merge-queue-pr-891.md
+          - docs/receipts/merge-queue-pr-894.md
+          - docs/receipts/merge-queue-pr-902.md
+          - docs/receipts/merge-queue-pr-903.md
+          - docs/receipts/merge-queue-pr-905.md
+          - docs/receipts/merge-queue-pr-906.md
+          - package.json
+      "908":
+        paths:
+          - bun.lock
+          - docs/goals/pr-ship-review-loop/README.md
+          - docs/goals/shipping-loop/README.md
+          - docs/goals/shipping-loop/receipts/tick-001.md
+          - docs/goals/shipping-loop/receipts/tick-002.md
+          - docs/goals/shipping-loop/receipts/tick-003.md
+          - docs/goals/shipping-loop/receipts/tick-004.md
+          - docs/goals/shipping-loop/receipts/tick-005.md
+          - docs/goals/shipping-loop/receipts/tick-006.md
+          - docs/goals/shipping-loop/receipts/tick-007.md
+          - docs/goals/shipping-loop/receipts/tick-008.md
+          - docs/goals/shipping-loop/receipts/tick-009.md
+          - docs/goals/shipping-loop/receipts/tick-010.md
+          - docs/goals/shipping-loop/receipts/tick-011.md
+          - docs/goals/shipping-loop/state.yaml
+          - docs/receipts/merge-queue-pr-891.md
+          - docs/receipts/merge-queue-pr-894.md
+          - docs/receipts/merge-queue-pr-902.md
+          - docs/receipts/merge-queue-pr-903.md
+          - docs/receipts/merge-queue-pr-905.md
+          - docs/receipts/merge-queue-pr-906.md
+          - docs/receipts/merge-queue-pr-908.md
+          - package.json
+      "909":
+        paths:
+          - bun.lock
+          - docs/goals/pr-ship-review-loop/README.md
+          - docs/goals/shipping-loop/README.md
+          - docs/goals/shipping-loop/receipts/tick-001.md
+          - docs/goals/shipping-loop/receipts/tick-002.md
+          - docs/goals/shipping-loop/receipts/tick-003.md
+          - docs/goals/shipping-loop/receipts/tick-004.md
+          - docs/goals/shipping-loop/receipts/tick-005.md
+          - docs/goals/shipping-loop/receipts/tick-006.md
+          - docs/goals/shipping-loop/receipts/tick-007.md
+          - docs/goals/shipping-loop/receipts/tick-008.md
+          - docs/goals/shipping-loop/receipts/tick-009.md
+          - docs/goals/shipping-loop/receipts/tick-010.md
+          - docs/goals/shipping-loop/receipts/tick-011.md
+          - docs/goals/shipping-loop/receipts/tick-012.md
+          - docs/goals/shipping-loop/state.yaml
+          - docs/receipts/merge-queue-pr-891.md
+          - docs/receipts/merge-queue-pr-894.md
+          - docs/receipts/merge-queue-pr-902.md
+          - docs/receipts/merge-queue-pr-903.md
+          - docs/receipts/merge-queue-pr-905.md
+          - docs/receipts/merge-queue-pr-906.md
+          - docs/receipts/merge-queue-pr-908.md
+          - package.json
+      "910":
+        paths:
+          - bun.lock
+          - docs/goals/pr-ship-review-loop/README.md
+          - docs/goals/shipping-loop/README.md
+          - docs/goals/shipping-loop/receipts/tick-001.md
+          - docs/goals/shipping-loop/receipts/tick-002.md
+          - docs/goals/shipping-loop/receipts/tick-003.md
+          - docs/goals/shipping-loop/receipts/tick-004.md
+          - docs/goals/shipping-loop/receipts/tick-005.md
+          - docs/goals/shipping-loop/receipts/tick-006.md
+          - docs/goals/shipping-loop/receipts/tick-007.md
+          - docs/goals/shipping-loop/receipts/tick-008.md
+          - docs/goals/shipping-loop/receipts/tick-009.md
+          - docs/goals/shipping-loop/receipts/tick-010.md
+          - docs/goals/shipping-loop/receipts/tick-011.md
+          - docs/goals/shipping-loop/receipts/tick-012.md
+          - docs/goals/shipping-loop/receipts/tick-013.md
+          - docs/goals/shipping-loop/state.yaml
+          - docs/receipts/merge-queue-pr-908.md
+          - docs/receipts/merge-queue-pr-909.md
+          - package.json
+      "911":
+        paths:
+          - bun.lock
+          - docs/goals/pr-ship-review-loop/README.md
+          - docs/goals/shipping-loop/README.md
+          - docs/goals/shipping-loop/receipts/tick-001.md
+          - docs/goals/shipping-loop/receipts/tick-002.md
+          - docs/goals/shipping-loop/receipts/tick-003.md
+          - docs/goals/shipping-loop/receipts/tick-004.md
+          - docs/goals/shipping-loop/receipts/tick-005.md
+          - docs/goals/shipping-loop/receipts/tick-006.md
+          - docs/goals/shipping-loop/receipts/tick-007.md
+          - docs/goals/shipping-loop/receipts/tick-008.md
+          - docs/goals/shipping-loop/receipts/tick-009.md
+          - docs/goals/shipping-loop/receipts/tick-010.md
+          - docs/goals/shipping-loop/receipts/tick-011.md
+          - docs/goals/shipping-loop/receipts/tick-012.md
+          - docs/goals/shipping-loop/receipts/tick-013.md
+          - docs/goals/shipping-loop/receipts/tick-014.md
+          - docs/goals/shipping-loop/state.yaml
+          - docs/receipts/merge-queue-pr-909.md
+          - docs/receipts/merge-queue-pr-911.md
+          - package.json
+      "912":
+        paths:
+          - bun.lock
+          - docs/goals/pr-ship-review-loop/README.md
+          - docs/goals/shipping-loop/README.md
+          - docs/goals/shipping-loop/receipts/tick-001.md
+          - docs/goals/shipping-loop/receipts/tick-002.md
+          - docs/goals/shipping-loop/receipts/tick-003.md
+          - docs/goals/shipping-loop/receipts/tick-004.md
+          - docs/goals/shipping-loop/receipts/tick-005.md
+          - docs/goals/shipping-loop/receipts/tick-006.md
+          - docs/goals/shipping-loop/receipts/tick-007.md
+          - docs/goals/shipping-loop/receipts/tick-008.md
+          - docs/goals/shipping-loop/receipts/tick-009.md
+          - docs/goals/shipping-loop/receipts/tick-010.md
+          - docs/goals/shipping-loop/receipts/tick-011.md
+          - docs/goals/shipping-loop/receipts/tick-012.md
+          - docs/goals/shipping-loop/receipts/tick-013.md
+          - docs/goals/shipping-loop/receipts/tick-014.md
+          - docs/goals/shipping-loop/receipts/tick-015.md
+          - docs/goals/shipping-loop/state.yaml
+          - docs/receipts/merge-queue-pr-909.md
+          - docs/receipts/merge-queue-pr-911.md
+          - package.json
+      "913":
+        paths:
+          - bun.lock
+          - docs/goals/pr-ship-review-loop/README.md
+          - docs/goals/shipping-loop/README.md
+          - docs/goals/shipping-loop/receipts/tick-001.md
+          - docs/goals/shipping-loop/receipts/tick-002.md
+          - docs/goals/shipping-loop/receipts/tick-003.md
+          - docs/goals/shipping-loop/receipts/tick-004.md
+          - docs/goals/shipping-loop/receipts/tick-005.md
+          - docs/goals/shipping-loop/receipts/tick-006.md
+          - docs/goals/shipping-loop/receipts/tick-007.md
+          - docs/goals/shipping-loop/receipts/tick-008.md
+          - docs/goals/shipping-loop/receipts/tick-009.md
+          - docs/goals/shipping-loop/receipts/tick-010.md
+          - docs/goals/shipping-loop/receipts/tick-011.md
+          - docs/goals/shipping-loop/receipts/tick-012.md
+          - docs/goals/shipping-loop/receipts/tick-013.md
+          - docs/goals/shipping-loop/receipts/tick-014.md
+          - docs/goals/shipping-loop/receipts/tick-015.md
+          - docs/goals/shipping-loop/receipts/tick-016.md
+          - docs/goals/shipping-loop/state.yaml
+          - docs/receipts/merge-queue-pr-909.md
+          - docs/receipts/merge-queue-pr-911.md
+          - package.json
+      "914":
+        paths:
+          - bun.lock
+          - docs/goals/pr-ship-review-loop/README.md
+          - docs/goals/shipping-loop/README.md
+          - docs/goals/shipping-loop/receipts/tick-001.md
+          - docs/goals/shipping-loop/receipts/tick-002.md
+          - docs/goals/shipping-loop/receipts/tick-003.md
+          - docs/goals/shipping-loop/receipts/tick-004.md
+          - docs/goals/shipping-loop/receipts/tick-005.md
+          - docs/goals/shipping-loop/receipts/tick-006.md
+          - docs/goals/shipping-loop/receipts/tick-007.md
+          - docs/goals/shipping-loop/receipts/tick-008.md
+          - docs/goals/shipping-loop/receipts/tick-009.md
+          - docs/goals/shipping-loop/receipts/tick-010.md
+          - docs/goals/shipping-loop/receipts/tick-011.md
+          - docs/goals/shipping-loop/receipts/tick-012.md
+          - docs/goals/shipping-loop/receipts/tick-013.md
+          - docs/goals/shipping-loop/receipts/tick-014.md
+          - docs/goals/shipping-loop/receipts/tick-015.md
+          - docs/goals/shipping-loop/receipts/tick-016.md
+          - docs/goals/shipping-loop/receipts/tick-017.md
+          - docs/goals/shipping-loop/state.yaml
+          - docs/receipts/merge-queue-pr-909.md
+          - docs/receipts/merge-queue-pr-911.md
+          - package.json
+      "915":
+        paths:
+          - bun.lock
+          - docs/goals/pr-ship-review-loop/README.md
+          - docs/goals/shipping-loop/README.md
+          - docs/goals/shipping-loop/receipts/tick-001.md
+          - docs/goals/shipping-loop/receipts/tick-002.md
+          - docs/goals/shipping-loop/receipts/tick-003.md
+          - docs/goals/shipping-loop/receipts/tick-004.md
+          - docs/goals/shipping-loop/receipts/tick-005.md
+          - docs/goals/shipping-loop/receipts/tick-006.md
+          - docs/goals/shipping-loop/receipts/tick-007.md
+          - docs/goals/shipping-loop/receipts/tick-008.md
+          - docs/goals/shipping-loop/receipts/tick-009.md
+          - docs/goals/shipping-loop/receipts/tick-010.md
+          - docs/goals/shipping-loop/receipts/tick-011.md
+          - docs/goals/shipping-loop/receipts/tick-012.md
+          - docs/goals/shipping-loop/receipts/tick-013.md
+          - docs/goals/shipping-loop/receipts/tick-014.md
+          - docs/goals/shipping-loop/receipts/tick-015.md
+          - docs/goals/shipping-loop/receipts/tick-016.md
+          - docs/goals/shipping-loop/receipts/tick-017.md
+          - docs/goals/shipping-loop/receipts/tick-018.md
+          - docs/goals/shipping-loop/state.yaml
+          - docs/receipts/merge-queue-pr-909.md
+          - docs/receipts/merge-queue-pr-911.md
+          - package.json
+      "916":
+        paths:
+          - docs/goals/pr-ship-review-loop/README.md
+          - docs/goals/shipping-loop/README.md
+          - docs/goals/shipping-loop/receipts/tick-001.md
+          - docs/goals/shipping-loop/receipts/tick-002.md
+          - docs/goals/shipping-loop/receipts/tick-003.md
+          - docs/goals/shipping-loop/receipts/tick-004.md
+          - docs/goals/shipping-loop/receipts/tick-005.md
+          - docs/goals/shipping-loop/receipts/tick-006.md
+          - docs/goals/shipping-loop/receipts/tick-007.md
+          - docs/goals/shipping-loop/receipts/tick-008.md
+          - docs/goals/shipping-loop/receipts/tick-009.md
+          - docs/goals/shipping-loop/receipts/tick-010.md
+          - docs/goals/shipping-loop/receipts/tick-011.md
+          - docs/goals/shipping-loop/receipts/tick-012.md
+          - docs/goals/shipping-loop/receipts/tick-013.md
+          - docs/goals/shipping-loop/receipts/tick-014.md
+          - docs/goals/shipping-loop/receipts/tick-015.md
+          - docs/goals/shipping-loop/receipts/tick-016.md
+          - docs/goals/shipping-loop/receipts/tick-017.md
+          - docs/goals/shipping-loop/receipts/tick-018.md
+          - docs/goals/shipping-loop/receipts/tick-019.md
+          - docs/goals/shipping-loop/state.yaml
+          - docs/receipts/merge-queue-pr-909.md
+          - docs/receipts/merge-queue-pr-911.md
+      "917":
+        paths:
+          - apps/desktop/electron/dream-settings.test.ts
+          - bun.lock
+          - docs/goals/pr-ship-review-loop/README.md
+          - docs/goals/shipping-loop/README.md
+          - docs/goals/shipping-loop/receipts/tick-001.md
+          - docs/goals/shipping-loop/receipts/tick-002.md
+          - docs/goals/shipping-loop/receipts/tick-003.md
+          - docs/goals/shipping-loop/receipts/tick-004.md
+          - docs/goals/shipping-loop/receipts/tick-005.md
+          - docs/goals/shipping-loop/receipts/tick-006.md
+          - docs/goals/shipping-loop/receipts/tick-007.md
+          - docs/goals/shipping-loop/receipts/tick-008.md
+          - docs/goals/shipping-loop/receipts/tick-009.md
+          - docs/goals/shipping-loop/receipts/tick-010.md
+          - docs/goals/shipping-loop/receipts/tick-011.md
+          - docs/goals/shipping-loop/receipts/tick-012.md
+          - docs/goals/shipping-loop/receipts/tick-013.md
+          - docs/goals/shipping-loop/receipts/tick-014.md
+          - docs/goals/shipping-loop/receipts/tick-015.md
+          - docs/goals/shipping-loop/receipts/tick-016.md
+          - docs/goals/shipping-loop/receipts/tick-017.md
+          - docs/goals/shipping-loop/receipts/tick-018.md
+          - docs/goals/shipping-loop/receipts/tick-019.md
+          - docs/goals/shipping-loop/receipts/tick-020.md
+          - docs/goals/shipping-loop/receipts/tick-021.md
+          - docs/goals/shipping-loop/state.yaml
+          - docs/receipts/merge-queue-pr-916.md
+          - docs/receipts/merge-queue-pr-917.md
+          - package.json
+      "918":
+        paths:
+          - apps/desktop/electron/dream-settings.test.ts
+          - bun.lock
+          - docs/goals/pr-ship-review-loop/README.md
+          - docs/goals/shipping-loop/README.md
+          - docs/goals/shipping-loop/receipts/tick-001.md
+          - docs/goals/shipping-loop/receipts/tick-002.md
+          - docs/goals/shipping-loop/receipts/tick-003.md
+          - docs/goals/shipping-loop/receipts/tick-004.md
+          - docs/goals/shipping-loop/receipts/tick-005.md
+          - docs/goals/shipping-loop/receipts/tick-006.md
+          - docs/goals/shipping-loop/receipts/tick-007.md
+          - docs/goals/shipping-loop/receipts/tick-008.md
+          - docs/goals/shipping-loop/receipts/tick-009.md
+          - docs/goals/shipping-loop/receipts/tick-010.md
+          - docs/goals/shipping-loop/receipts/tick-011.md
+          - docs/goals/shipping-loop/receipts/tick-012.md
+          - docs/goals/shipping-loop/receipts/tick-013.md
+          - docs/goals/shipping-loop/receipts/tick-014.md
+          - docs/goals/shipping-loop/receipts/tick-015.md
+          - docs/goals/shipping-loop/receipts/tick-016.md
+          - docs/goals/shipping-loop/receipts/tick-017.md
+          - docs/goals/shipping-loop/receipts/tick-018.md
+          - docs/goals/shipping-loop/receipts/tick-019.md
+          - docs/goals/shipping-loop/receipts/tick-020.md
+          - docs/goals/shipping-loop/receipts/tick-021.md
+          - docs/goals/shipping-loop/state.yaml
+          - docs/receipts/merge-queue-pr-916.md
+          - docs/receipts/merge-queue-pr-917.md
+          - package.json
+      "919":
+        paths:
+          - apps/desktop/electron/dream-settings.test.ts
+          - bun.lock
+          - docs/goals/pr-ship-review-loop/README.md
+          - docs/goals/shipping-loop/README.md
+          - docs/goals/shipping-loop/receipts/tick-001.md
+          - docs/goals/shipping-loop/receipts/tick-002.md
+          - docs/goals/shipping-loop/receipts/tick-003.md
+          - docs/goals/shipping-loop/receipts/tick-004.md
+          - docs/goals/shipping-loop/receipts/tick-005.md
+          - docs/goals/shipping-loop/receipts/tick-006.md
+          - docs/goals/shipping-loop/receipts/tick-007.md
+          - docs/goals/shipping-loop/receipts/tick-008.md
+          - docs/goals/shipping-loop/receipts/tick-009.md
+          - docs/goals/shipping-loop/receipts/tick-010.md
+          - docs/goals/shipping-loop/receipts/tick-011.md
+          - docs/goals/shipping-loop/receipts/tick-012.md
+          - docs/goals/shipping-loop/receipts/tick-013.md
+          - docs/goals/shipping-loop/receipts/tick-014.md
+          - docs/goals/shipping-loop/receipts/tick-015.md
+          - docs/goals/shipping-loop/receipts/tick-016.md
+          - docs/goals/shipping-loop/receipts/tick-017.md
+          - docs/goals/shipping-loop/receipts/tick-018.md
+          - docs/goals/shipping-loop/receipts/tick-019.md
+          - docs/goals/shipping-loop/receipts/tick-020.md
+          - docs/goals/shipping-loop/receipts/tick-021.md
+          - docs/goals/shipping-loop/receipts/tick-022.md
+          - docs/goals/shipping-loop/state.yaml
+          - docs/receipts/merge-queue-pr-916.md
+          - docs/receipts/merge-queue-pr-917.md
+          - package.json
+      "920":
+        paths:
+          - apps/desktop/electron/dream-settings.test.ts
+          - bun.lock
+          - docs/goals/pr-ship-review-loop/README.md
+          - docs/goals/shipping-loop/README.md
+          - docs/goals/shipping-loop/receipts/tick-001.md
+          - docs/goals/shipping-loop/receipts/tick-002.md
+          - docs/goals/shipping-loop/receipts/tick-003.md
+          - docs/goals/shipping-loop/receipts/tick-004.md
+          - docs/goals/shipping-loop/receipts/tick-005.md
+          - docs/goals/shipping-loop/receipts/tick-006.md
+          - docs/goals/shipping-loop/receipts/tick-007.md
+          - docs/goals/shipping-loop/receipts/tick-008.md
+          - docs/goals/shipping-loop/receipts/tick-009.md
+          - docs/goals/shipping-loop/receipts/tick-010.md
+          - docs/goals/shipping-loop/receipts/tick-011.md
+          - docs/goals/shipping-loop/receipts/tick-012.md
+          - docs/goals/shipping-loop/receipts/tick-013.md
+          - docs/goals/shipping-loop/receipts/tick-014.md
+          - docs/goals/shipping-loop/receipts/tick-015.md
+          - docs/goals/shipping-loop/receipts/tick-016.md
+          - docs/goals/shipping-loop/receipts/tick-017.md
+          - docs/goals/shipping-loop/receipts/tick-018.md
+          - docs/goals/shipping-loop/receipts/tick-019.md
+          - docs/goals/shipping-loop/receipts/tick-020.md
+          - docs/goals/shipping-loop/receipts/tick-021.md
+          - docs/goals/shipping-loop/receipts/tick-022.md
+          - docs/goals/shipping-loop/receipts/tick-023.md
+          - docs/goals/shipping-loop/state.yaml
+          - docs/receipts/merge-queue-pr-916.md
+          - docs/receipts/merge-queue-pr-917.md
+          - package.json
+      "921":
+        paths:
+          - apps/desktop/electron/runtime-transport/sdk-subprocess-transport.ts
+          - apps/desktop/package.json
+          - bun.lock
+          - docs/receipts/merge-queue-pr-921.md
+          - package.json
+    in_progress: []
+    awaiting_pr: []
+    last_scout_note: "0 issues with status:ready; 29 p-labeled issues exist but none intake-eligible (tick 024)."
+  merge_prep:
+    in_flight_babysit: []
+    last_completed:
+      - pr: 891
+        head_after: f087f36d0534993e286905077c948e41b03bc1b0
+        receipt: docs/receipts/merge-queue-pr-891.md
+      - pr: 894
+        head_after: 497b7b295f995dcf61ebc2545b752344619d1e02
+        receipt: docs/receipts/merge-queue-pr-894.md
+      - pr: 892
+        head_after: 2cd84ed99e2052e845da219def66007edf5df963
+        receipt: docs/receipts/merge-queue-pr-892.md
+      - pr: 893
+        head_after: ee4185a6d353d21788ec6b4c56a41c90f22ecbac
+        receipt: docs/receipts/merge-queue-pr-893.md
+      - pr: 897
+        head_after: 90c80420a3552993a70738d5b9ff02ac47a2dbb6
+        receipt: docs/receipts/merge-queue-pr-897.md
+      - pr: 895
+        head_after: 303f74dc6a811265645178e2ec86a4682b35a1c3
+        receipt: docs/receipts/merge-queue-pr-895.md
+      - pr: 896
+        head_after: 1c87028df7fbfae450a3add1a7a53a0fb78272fd
+        receipt: docs/receipts/merge-queue-pr-896.md
+      - pr: 898
+        head_after: 34a2f26ef1fac2af50c17430de472a16172ecfae
+        receipt: docs/receipts/merge-queue-pr-898.md
+      - pr: 899
+        head_after: 88630eaef0b61e1269f25879c578d45477653b54
+        receipt: docs/receipts/merge-queue-pr-899.md
+      - pr: 902
+        head_after: 83b849b94f25a8420b42754426a34349656fe2ed
+        receipt: docs/receipts/merge-queue-pr-902.md
+      - pr: 903
+        head_after: 68ae614f3db529b12d0abcded2ead2a774b82713
+        receipt: docs/receipts/merge-queue-pr-903.md
+      - pr: 905
+        head_after: f11d57da27955d864a8b5d41842538748724a684
+        receipt: docs/receipts/merge-queue-pr-905.md
+      - pr: 906
+        head_after: e55ea6af8852097f12bb6510248ffa9312ccd670
+        receipt: docs/receipts/merge-queue-pr-906.md
+      - pr: 904
+        head_after: a504909ed298965d74044e57d21c690f24d2f866
+        receipt: docs/receipts/merge-queue-pr-904.md
+      - pr: 908
+        head_after: 10cc4d5929f6bc8c09706d8b02d09daa1df55ccc
+        receipt: docs/receipts/merge-queue-pr-908.md
+      - pr: 909
+        head_after: c27a927824895afa8b8fbc1560a62fcaeb0e91e5
+        receipt: docs/receipts/merge-queue-pr-909.md
+      - pr: 911
+        head_after: f22f63b855e5d532f79ea661e2d96060fcd0bb68
+        receipt: docs/receipts/merge-queue-pr-911.md
+      - pr: 916
+        head_after: fb58c49c4650828cbc339497a3705b92371f4149
+        receipt: docs/receipts/merge-queue-pr-916.md
+        note: "audit fix on tick 020 branch; #916 docs-only PR superseded"
+      - pr: 917
+        head_after: 958a3fbe0416e68006acdf44a02df2dc5a8c6efa
+        receipt: docs/receipts/merge-queue-pr-917.md
+        note: "dream-settings test isolation fix on tick 021 branch (#918 head 01c178c); CI green confirmed tick 022"
+      - pr: 921
+        head_after: 56004a76aaaca063feb21060f4f7f4848b81a3f1
+        receipt: docs/receipts/merge-queue-pr-921.md
+        note: "SDK 0.2.x sdk-subprocess-transport fix on tick 024 branch; mirrors #905"
+    queued: []
+  ship_review:
+    reviewed_prs: {}
+    ready_for_sebastian: []
+
+ticks:
+  - tick: 1
+    at: "2026-06-18T01:02:43Z"
+    mode: full
+    intake_spawned: 0
+    merge_prep_spawned: 0
+    ship_review_spawned: 0
+    ready_for_sebastian: []
+    verdicts:
+      SHIP_CANDIDATE: []
+      HOLD: []
+      CLOSE_CANDIDATE: []
+    notes: "Bootstrap tick. 0 open PRs; Ready queue not visible via gh labels (Project V2 empty). Global agents ~3."
+    receipt: docs/goals/shipping-loop/receipts/tick-001.md
+
+  - tick: 2
+    at: "2026-06-29T01:00:13Z"
+    mode: full
+    intake_spawned: 0
+    merge_prep_spawned: 2
+    ship_review_spawned: 0
+    ready_for_sebastian: []
+    verdicts:
+      SHIP_CANDIDATE: []
+      HOLD: []
+      CLOSE_CANDIDATE: []
+    notes: "5 open PRs; babysit #891+#894 pushed audit overrides (CI green); #892+#893 queued; intake no_safe_work; ship_review skipped (all BLOCKED)."
+    receipt: docs/goals/shipping-loop/receipts/tick-002.md
+
+  - tick: 3
+    at: "2026-06-30T01:00:12Z"
+    mode: full
+    intake_spawned: 0
+    merge_prep_spawned: 2
+    ship_review_spawned: 0
+    ready_for_sebastian: []
+    verdicts:
+      SHIP_CANDIDATE: []
+      HOLD: []
+      CLOSE_CANDIDATE: []
+    notes: "7 open PRs; babysit #892+#893 pushed fixes (CI re-running); #896+#897+#895 queued; intake no_safe_work; ship_review skipped (all BLOCKED)."
+    receipt: docs/goals/shipping-loop/receipts/tick-003.md
+
+  - tick: 4
+    at: "2026-07-01T01:02:08Z"
+    mode: full
+    intake_spawned: 0
+    merge_prep_spawned: 2
+    ship_review_spawned: 0
+    ready_for_sebastian: []
+    verdicts:
+      SHIP_CANDIDATE: []
+      HOLD: []
+      CLOSE_CANDIDATE: []
+    notes: "8 open PRs; babysit #897+#895 pushed audit overrides (CI re-running); #896+#898 queued; intake no_safe_work; ship_review skipped (all BLOCKED)."
+    receipt: docs/goals/shipping-loop/receipts/tick-004.md
+
+  - tick: 5
+    at: "2026-07-02T01:01:07Z"
+    mode: full
+    intake_spawned: 0
+    merge_prep_spawned: 2
+    ship_review_spawned: 0
+    ready_for_sebastian: []
+    verdicts:
+      SHIP_CANDIDATE: []
+      HOLD: []
+      CLOSE_CANDIDATE: []
+    notes: "9 open PRs; babysit #896+#898 pushed fixes (#898 CI green, #896 CI IN_PROGRESS); #899 queued; intake no_safe_work; ship_review skipped (all BLOCKED)."
+    receipt: docs/goals/shipping-loop/receipts/tick-005.md
+
+  - tick: 6
+    at: "2026-07-03T01:02:00Z"
+    mode: full
+    intake_spawned: 0
+    merge_prep_spawned: 1
+    ship_review_spawned: 0
+    ready_for_sebastian: []
+    verdicts:
+      SHIP_CANDIDATE: []
+      HOLD: []
+      CLOSE_CANDIDATE: []
+    notes: "10 open PRs; babysit #899 pushed audit overrides (CI IN_PROGRESS); merge_prep queue drained; intake no_safe_work; ship_review skipped (all BLOCKED)."
+    receipt: docs/goals/shipping-loop/receipts/tick-006.md
+
+  - tick: 7
+    at: "2026-07-04T01:02:07Z"
+    mode: full
+    intake_spawned: 0
+    merge_prep_spawned: 0
+    ship_review_spawned: 0
+    ready_for_sebastian: []
+    verdicts:
+      SHIP_CANDIDATE: []
+      HOLD: []
+      CLOSE_CANDIDATE: []
+    notes: "11 open PRs; merge_prep queue empty (#899 CI green since tick 006); intake no_safe_work; ship_review skipped (all BLOCKED, none CLEAN)."
+    receipt: docs/goals/shipping-loop/receipts/tick-007.md
+
+  - tick: 8
+    at: "2026-07-05T01:02:16Z"
+    mode: full
+    intake_spawned: 0
+    merge_prep_spawned: 1
+    ship_review_spawned: 0
+    ready_for_sebastian: []
+    verdicts:
+      SHIP_CANDIDATE: []
+      HOLD: []
+      CLOSE_CANDIDATE: []
+    notes: "12 open PRs; babysit #902 pushed audit overrides (CI IN_PROGRESS); intake no_safe_work; ship_review skipped (all BLOCKED, none CLEAN)."
+    receipt: docs/goals/shipping-loop/receipts/tick-008.md
+
+  - tick: 9
+    at: "2026-07-06T01:00:25Z"
+    mode: full
+    intake_spawned: 0
+    merge_prep_spawned: 1
+    ship_review_spawned: 0
+    ready_for_sebastian: []
+    verdicts:
+      SHIP_CANDIDATE: []
+      HOLD: []
+      CLOSE_CANDIDATE: []
+    notes: "13 open PRs; babysit #903 pushed audit overrides (CI IN_PROGRESS); intake no_safe_work; ship_review skipped (all BLOCKED, none CLEAN)."
+    receipt: docs/goals/shipping-loop/receipts/tick-009.md
+
+  - tick: 10
+    at: "2026-07-07T01:02:25Z"
+    mode: full
+    intake_spawned: 0
+    merge_prep_spawned: 2
+    ship_review_spawned: 0
+    ready_for_sebastian: []
+    verdicts:
+      SHIP_CANDIDATE: []
+      HOLD: []
+      CLOSE_CANDIDATE: []
+    notes: "15 open PRs; babysit #905+#906 pushed fixes (CI awaiting); #904 audit fix on orchestrator branch; intake no_safe_work; ship_review skipped (all BLOCKED, none CLEAN)."
+    receipt: docs/goals/shipping-loop/receipts/tick-010.md
+
+  - tick: 11
+    at: "2026-07-08T01:01:20Z"
+    mode: full
+    intake_spawned: 0
+    merge_prep_spawned: 1
+    ship_review_spawned: 0
+    ready_for_sebastian: []
+    verdicts:
+      SHIP_CANDIDATE: []
+      HOLD: []
+      CLOSE_CANDIDATE: []
+    notes: "16 open PRs; babysit #904 pushed audit overrides (CI green); #905/#906 CI green since tick 010; merge_prep queue drained; intake no_safe_work; ship_review skipped (all BLOCKED, none CLEAN)."
+    receipt: docs/goals/shipping-loop/receipts/tick-011.md
+
+  - tick: 12
+    at: "2026-07-09T01:02:00Z"
+    mode: full
+    intake_spawned: 0
+    merge_prep_spawned: 1
+    ship_review_spawned: 0
+    ready_for_sebastian: []
+    verdicts:
+      SHIP_CANDIDATE: []
+      HOLD: []
+      CLOSE_CANDIDATE: []
+    notes: "17 open PRs; babysit #908 pushed audit overrides (CI awaiting); merge_prep queue drained; intake no_safe_work; ship_review skipped (all BLOCKED, none CLEAN)."
+    receipt: docs/goals/shipping-loop/receipts/tick-012.md
+
+  - tick: 13
+    at: "2026-07-10T01:02:00Z"
+    mode: full
+    intake_spawned: 0
+    merge_prep_spawned: 1
+    ship_review_spawned: 0
+    ready_for_sebastian: []
+    verdicts:
+      SHIP_CANDIDATE: []
+      HOLD: []
+      CLOSE_CANDIDATE: []
+    notes: "18 open PRs; babysit #909 pushed audit overrides (CI awaiting); #908 CI green since tick 012; merge_prep queue drained; intake no_safe_work; ship_review skipped (all BLOCKED, none CLEAN)."
+    receipt: docs/goals/shipping-loop/receipts/tick-013.md
+
+  - tick: 14
+    at: "2026-07-11T01:02:00Z"
+    mode: full
+    intake_spawned: 0
+    merge_prep_spawned: 0
+    ship_review_spawned: 0
+    ready_for_sebastian: []
+    verdicts:
+      SHIP_CANDIDATE: []
+      HOLD: []
+      CLOSE_CANDIDATE: []
+    notes: "19 open PRs; #909 CI green since tick 013; merge_prep queue empty (no CONFLICTING/DIRTY/red-CI); intake no_safe_work; ship_review skipped (all BLOCKED, none CLEAN)."
+    receipt: docs/goals/shipping-loop/receipts/tick-014.md
+
+  - tick: 15
+    at: "2026-07-12T01:02:38Z"
+    mode: full
+    intake_spawned: 0
+    merge_prep_spawned: 1
+    ship_review_spawned: 0
+    ready_for_sebastian: []
+    verdicts:
+      SHIP_CANDIDATE: []
+      HOLD: []
+      CLOSE_CANDIDATE: []
+    notes: "20 open PRs; babysit #911 pushed audit overrides (CI awaiting); #911 was red-CI from tick 014; intake no_safe_work; ship_review skipped (all BLOCKED, none CLEAN)."
+    receipt: docs/goals/shipping-loop/receipts/tick-015.md
+
+  - tick: 16
+    at: "2026-07-13T01:02:16Z"
+    mode: full
+    intake_spawned: 0
+    merge_prep_spawned: 0
+    ship_review_spawned: 0
+    ready_for_sebastian: []
+    verdicts:
+      SHIP_CANDIDATE: []
+      HOLD: []
+      CLOSE_CANDIDATE: []
+    notes: "21 open PRs; #911 CI green since tick 015; merge_prep queue empty; intake no_safe_work; ship_review skipped (all BLOCKED, none CLEAN)."
+    receipt: docs/goals/shipping-loop/receipts/tick-016.md
+
+  - tick: 17
+    at: "2026-07-14T01:03:00Z"
+    mode: full
+    intake_spawned: 0
+    merge_prep_spawned: 0
+    ship_review_spawned: 0
+    ready_for_sebastian: []
+    verdicts:
+      SHIP_CANDIDATE: []
+      HOLD: []
+      CLOSE_CANDIDATE: []
+    notes: "22 open PRs; merge_prep queue empty (all CI green, none CONFLICTING/DIRTY); intake no_safe_work; ship_review skipped (all BLOCKED, none CLEAN)."
+    receipt: docs/goals/shipping-loop/receipts/tick-017.md
+
+  - tick: 18
+    at: "2026-07-15T01:03:00Z"
+    mode: full
+    intake_spawned: 0
+    merge_prep_spawned: 0
+    ship_review_spawned: 0
+    ready_for_sebastian: []
+    verdicts:
+      SHIP_CANDIDATE: []
+      HOLD: []
+      CLOSE_CANDIDATE: []
+    notes: "23 open PRs; merge_prep queue empty (all CI green, none CONFLICTING/DIRTY); intake no_safe_work; ship_review skipped (all BLOCKED, none CLEAN)."
+    receipt: docs/goals/shipping-loop/receipts/tick-018.md
+
+  - tick: 19
+    at: "2026-07-16T01:01:18Z"
+    mode: full
+    intake_spawned: 0
+    merge_prep_spawned: 0
+    ship_review_spawned: 0
+    ready_for_sebastian: []
+    verdicts:
+      SHIP_CANDIDATE: []
+      HOLD: []
+      CLOSE_CANDIDATE: []
+    notes: "24 open PRs; merge_prep queue empty (all CI green, none CONFLICTING/DIRTY); intake no_safe_work; ship_review skipped (all BLOCKED, none CLEAN)."
+    receipt: docs/goals/shipping-loop/receipts/tick-019.md
+
+  - tick: 20
+    at: "2026-07-17T01:02:00Z"
+    mode: full
+    intake_spawned: 0
+    merge_prep_spawned: 1
+    ship_review_spawned: 0
+    ready_for_sebastian: []
+    verdicts:
+      SHIP_CANDIDATE: []
+      HOLD: []
+      CLOSE_CANDIDATE: []
+    notes: "25 open PRs; babysit #916 audit overrides on tick 020 branch (tick 019 docs-only missed overrides); intake no_safe_work; ship_review skipped (all BLOCKED, none CLEAN)."
+    receipt: docs/goals/shipping-loop/receipts/tick-020.md
+  - tick: 21
+    at: "2026-07-18T01:02:00Z"
+    mode: full
+    intake_spawned: 0
+    merge_prep_spawned: 1
+    ship_review_spawned: 0
+    ready_for_sebastian: []
+    verdicts:
+      SHIP_CANDIDATE: []
+      HOLD: []
+      CLOSE_CANDIDATE: []
+    notes: "26 open PRs; babysit #917 dream-settings test isolation on tick 021 branch; intake no_safe_work; ship_review skipped (all BLOCKED, none CLEAN)."
+    receipt: docs/goals/shipping-loop/receipts/tick-021.md
+
+  - tick: 22
+    at: "2026-07-19T01:02:00Z"
+    mode: full
+    intake_spawned: 0
+    merge_prep_spawned: 0
+    ship_review_spawned: 0
+    ready_for_sebastian: []
+    verdicts:
+      SHIP_CANDIDATE: []
+      HOLD: []
+      CLOSE_CANDIDATE: []
+    notes: "27 open PRs; merge_prep queue empty (#918 CI green confirms tick 021 fix); intake no_safe_work; ship_review skipped (all BLOCKED, none CLEAN)."
+    receipt: docs/goals/shipping-loop/receipts/tick-022.md
+
+  - tick: 23
+    at: "2026-07-20T01:02:00Z"
+    mode: full
+    intake_spawned: 0
+    merge_prep_spawned: 0
+    ship_review_spawned: 0
+    ready_for_sebastian: []
+    verdicts:
+      SHIP_CANDIDATE: []
+      HOLD: []
+      CLOSE_CANDIDATE: []
+    notes: "28 open PRs; merge_prep queue empty (#919 CI green; #916/#917 superseded drafts retain stale red CI); intake no_safe_work; ship_review skipped (all BLOCKED, none CLEAN)."
+    receipt: docs/goals/shipping-loop/receipts/tick-023.md
+
+  - tick: 24
+    at: "2026-07-21T01:00:26Z"
+    mode: full
+    intake_spawned: 0
+    merge_prep_spawned: 1
+    ship_review_spawned: 0
+    ready_for_sebastian: []
+    verdicts:
+      SHIP_CANDIDATE: []
+      HOLD: []
+      CLOSE_CANDIDATE: []
+    notes: "29 open PRs; babysit #921 SDK 0.2.x typecheck fix on tick 024 branch (#921 dependabot red CI); intake no_safe_work; ship_review skipped (all BLOCKED, none CLEAN)."
+    receipt: docs/goals/shipping-loop/receipts/tick-024.md
+
