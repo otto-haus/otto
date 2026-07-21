@@ -6,7 +6,7 @@ program:
   status: active
   stop_at: null
   repo: otto-haus/otto
-  branch: cursor/unified-shipping-loop-orchestrator-0207
+  branch: cursor/unified-shipping-loop-orchestrator-0eb3
 
 caps:
   global_defer_threshold: 45
@@ -541,9 +541,49 @@ phase_state:
           - docs/receipts/merge-queue-pr-916.md
           - docs/receipts/merge-queue-pr-917.md
           - package.json
+      "920":
+        paths:
+          - apps/desktop/electron/dream-settings.test.ts
+          - bun.lock
+          - docs/goals/pr-ship-review-loop/README.md
+          - docs/goals/shipping-loop/README.md
+          - docs/goals/shipping-loop/receipts/tick-001.md
+          - docs/goals/shipping-loop/receipts/tick-002.md
+          - docs/goals/shipping-loop/receipts/tick-003.md
+          - docs/goals/shipping-loop/receipts/tick-004.md
+          - docs/goals/shipping-loop/receipts/tick-005.md
+          - docs/goals/shipping-loop/receipts/tick-006.md
+          - docs/goals/shipping-loop/receipts/tick-007.md
+          - docs/goals/shipping-loop/receipts/tick-008.md
+          - docs/goals/shipping-loop/receipts/tick-009.md
+          - docs/goals/shipping-loop/receipts/tick-010.md
+          - docs/goals/shipping-loop/receipts/tick-011.md
+          - docs/goals/shipping-loop/receipts/tick-012.md
+          - docs/goals/shipping-loop/receipts/tick-013.md
+          - docs/goals/shipping-loop/receipts/tick-014.md
+          - docs/goals/shipping-loop/receipts/tick-015.md
+          - docs/goals/shipping-loop/receipts/tick-016.md
+          - docs/goals/shipping-loop/receipts/tick-017.md
+          - docs/goals/shipping-loop/receipts/tick-018.md
+          - docs/goals/shipping-loop/receipts/tick-019.md
+          - docs/goals/shipping-loop/receipts/tick-020.md
+          - docs/goals/shipping-loop/receipts/tick-021.md
+          - docs/goals/shipping-loop/receipts/tick-022.md
+          - docs/goals/shipping-loop/receipts/tick-023.md
+          - docs/goals/shipping-loop/state.yaml
+          - docs/receipts/merge-queue-pr-916.md
+          - docs/receipts/merge-queue-pr-917.md
+          - package.json
+      "921":
+        paths:
+          - apps/desktop/electron/runtime-transport/sdk-subprocess-transport.ts
+          - apps/desktop/package.json
+          - bun.lock
+          - docs/receipts/merge-queue-pr-921.md
+          - package.json
     in_progress: []
     awaiting_pr: []
-    last_scout_note: "0 issues with status:ready; 29 p-labeled issues exist but none intake-eligible (tick 023)."
+    last_scout_note: "0 issues with status:ready; 29 p-labeled issues exist but none intake-eligible (tick 024)."
   merge_prep:
     in_flight_babysit: []
     last_completed:
@@ -606,6 +646,10 @@ phase_state:
         head_after: 958a3fbe0416e68006acdf44a02df2dc5a8c6efa
         receipt: docs/receipts/merge-queue-pr-917.md
         note: "dream-settings test isolation fix on tick 021 branch (#918 head 01c178c); CI green confirmed tick 022"
+      - pr: 921
+        head_after: 56004a735b72942b6bd7d79c8dbcbe7fa07a20c
+        receipt: docs/receipts/merge-queue-pr-921.md
+        note: "SDK 0.2.x sdk-subprocess-transport fix on tick 024 branch; mirrors #905"
     queued: []
   ship_review:
     reviewed_prs: {}
@@ -932,4 +976,18 @@ ticks:
       CLOSE_CANDIDATE: []
     notes: "28 open PRs; merge_prep queue empty (#919 CI green; #916/#917 superseded drafts retain stale red CI); intake no_safe_work; ship_review skipped (all BLOCKED, none CLEAN)."
     receipt: docs/goals/shipping-loop/receipts/tick-023.md
+
+  - tick: 24
+    at: "2026-07-21T01:00:26Z"
+    mode: full
+    intake_spawned: 0
+    merge_prep_spawned: 1
+    ship_review_spawned: 0
+    ready_for_sebastian: []
+    verdicts:
+      SHIP_CANDIDATE: []
+      HOLD: []
+      CLOSE_CANDIDATE: []
+    notes: "29 open PRs; babysit #921 SDK 0.2.x typecheck fix on tick 024 branch (#921 dependabot red CI); intake no_safe_work; ship_review skipped (all BLOCKED, none CLEAN)."
+    receipt: docs/goals/shipping-loop/receipts/tick-024.md
 
